@@ -78,6 +78,12 @@ public class LcsRowScanRel
      */
     boolean isFullScan;
     boolean hasExtraFilter;
+    
+    /**
+     * Array of 0-based flattened filter column ordinals.
+     */
+    final Integer [] residualColumns;
+
 
     //~ Constructors -----------------------------------------------------------
 
@@ -93,6 +99,7 @@ public class LcsRowScanRel
      * or null to project all columns
      * @param isFullScan true if doing a full scan of the table
      * @param hasExtraFilter true if the scan has residual filters
+     * @param resCols residual filter columns
      */
     public LcsRowScanRel(
         RelOptCluster cluster,
@@ -102,7 +109,8 @@ public class LcsRowScanRel
         RelOptConnection connection,
         Integer [] projectedColumns,
         boolean isFullScan,
-        boolean hasExtraFilter)
+        boolean hasExtraFilter,
+        Integer [] resCols)
     {
         super(cluster, children);
         this.lcsTable = lcsTable;
@@ -111,6 +119,7 @@ public class LcsRowScanRel
         this.connection = connection;
         this.isFullScan = isFullScan;
         this.hasExtraFilter = hasExtraFilter;
+        this.residualColumns = resCols;
 
         assert (lcsTable.getPreparingStmt()
                 == FennelRelUtil.getPreparingStmt(this));
@@ -132,7 +141,8 @@ public class LcsRowScanRel
                 connection,
                 projectedColumns,
                 isFullScan,
-                hasExtraFilter);
+                hasExtraFilter,
+                residualColumns);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -239,6 +249,7 @@ public class LcsRowScanRel
                 }
             }
         }
+        
 
         // REVIEW jvs 27-Dec-2005:  Since LcsRowScanRel is given
         // a list (implying ordering) as input, it seems to me that
@@ -257,26 +268,28 @@ public class LcsRowScanRel
         // by the column projection since we don't allow clusters to overlap),
         // but is useful in verbose mode. Can't resolve this comment until FRG-8
         // is completed.
-
-        if (inputs.length == 0) {
-            pw.explain(
-                this,
-                new String[] { "table", "projection", "clustered indexes" },
-                new Object[] {
-                    Arrays.asList(lcsTable.getQualifiedName()), projection,
-                indexNames
-                });
-        } else {
-            pw.explain(
-                this,
-                new String[] {
-                    "child", "table", "projection", "clustered indexes"
-                },
-                new Object[] {
-                    Arrays.asList(lcsTable.getQualifiedName()), projection,
-                indexNames
-                });
+        
+        int nExtraTerms = (residualColumns.length > 0) ? 1 : 0;
+        Object [] objects = new Object[3 + nExtraTerms];
+        String [] nameList = new String[inputs.length + 3 + nExtraTerms]; 
+        for (int i = 0; i < inputs.length; i++) {
+            nameList[i] = "child";
         }
+        nameList[inputs.length] = "table";
+        nameList[inputs.length + 1] = "projection";
+        nameList[inputs.length + 2] = "clustered indexes";
+        objects[0] = Arrays.asList(lcsTable.getQualifiedName());
+        objects[1] = projection;
+        objects[2] = indexNames;
+        if (residualColumns.length > 0) {
+            nameList[inputs.length + 3] = "residual columns";
+            objects[3] = Arrays.asList(residualColumns);
+        }
+        pw.explain(
+            this,
+            nameList,
+            objects
+            );
     }
 
     // overwrite FennelSingleRel
@@ -308,7 +321,10 @@ public class LcsRowScanRel
                     true);
             newInputs[0] = delIndexScan;
         } else {
-            newInputs = new RelNode[1];
+            newInputs = new RelNode[inputs.length];
+            if (inputs.length > 1) {
+                System.arraycopy(inputs, 1, newInputs, 1, inputs.length-1);
+            }
             newInputs[0] =
                 indexGuide.createMinusOfDeletionIndex(
                     this,
@@ -317,7 +333,7 @@ public class LcsRowScanRel
         }
 
         FemLcsRowScanStreamDef scanStream =
-            indexGuide.newRowScan(this, projectedColumns);
+            indexGuide.newRowScan(this, projectedColumns, residualColumns);
 
         for (int i = 0; i < newInputs.length; i++) {
             FemExecutionStreamDef inputStream =

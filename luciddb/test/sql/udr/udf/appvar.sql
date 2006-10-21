@@ -6,6 +6,10 @@ set path 'udftest';
 -- use xmlattr format so we can distinguish nulls from blanks
 !set outputformat xmlattr
 
+-- for this test, enable code cache to make sure that changes
+-- in variables do not get ignored due to stale plan cache
+alter system set "codeCacheMaxBytes" = max;
+
 -- create a context
 call applib.create_var('context1', null, 'very explicit');
 

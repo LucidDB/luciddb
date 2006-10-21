@@ -123,19 +123,51 @@ public class FlatFileDataWrapper
             new String[] {
                 Integer.toString(FlatFileParams.DEFAULT_NUM_ROWS_SCAN)
             });
-        if (FlatFileParams.DEFAULT_WITH_LOGGING) {
+        if (FlatFileParams.DEFAULT_TRIM) {
             infoMap.addPropInfo(
-                FlatFileParams.PROP_WITH_LOGGING,
+                FlatFileParams.PROP_TRIM,
                 true,
                 BOOLEAN_CHOICES_DEFAULT_TRUE);
         } else {
             infoMap.addPropInfo(
-                FlatFileParams.PROP_WITH_LOGGING,
+                FlatFileParams.PROP_TRIM,
                 true,
                 BOOLEAN_CHOICES_DEFAULT_FALSE);
         }
+        if (FlatFileParams.DEFAULT_LENIENT) {
+            infoMap.addPropInfo(
+                FlatFileParams.PROP_LENIENT,
+                true,
+                BOOLEAN_CHOICES_DEFAULT_TRUE);
+        } else {
+            infoMap.addPropInfo(
+                FlatFileParams.PROP_LENIENT,
+                true,
+                BOOLEAN_CHOICES_DEFAULT_FALSE);
+        }
+        if (FlatFileParams.DEFAULT_MAPPED) {
+            infoMap.addPropInfo(
+                FlatFileParams.PROP_MAPPED,
+                true,
+                BOOLEAN_CHOICES_DEFAULT_TRUE);
+        } else {
+            infoMap.addPropInfo(
+                FlatFileParams.PROP_MAPPED,
+                true,
+                BOOLEAN_CHOICES_DEFAULT_FALSE);
+        }        
         infoMap.addPropInfo(
-            FlatFileParams.PROP_LOG_DIRECTORY);
+            FlatFileParams.PROP_DATE_FORMAT,
+            false
+            );
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_TIME_FORMAT,
+            false
+            );
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_TIMESTAMP_FORMAT,
+            false
+            );
         return infoMap.toArray();
     }
 

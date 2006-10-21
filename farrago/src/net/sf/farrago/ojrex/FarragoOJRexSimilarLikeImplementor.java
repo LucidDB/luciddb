@@ -41,7 +41,7 @@ import org.eigenbase.util.*;
 
 /**
  * FarragoOJRexSimilarLikeImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for builtin functions
+ * OJRexImplementor} for builtin functions SIMILAR and LIKE.
  *
  * @author Xiaoyang Luo
  * @version $Id$

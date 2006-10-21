@@ -23,6 +23,7 @@
 package net.sf.farrago.ojrex;
 
 import openjava.ptree.*;
+import openjava.mop.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -47,18 +48,44 @@ public class FarragoOJRexRowImplementor
         RexCall call,
         Expression [] operands)
     {
+        // REVIEW jvs 16-Oct-2006: We currently generate code with a helper
+        // method for each value; this keeps us conservative about the total
+        // method bytecode 32K limit.  Should probably refactor together with
+        // IterCalcRel to do properly balanced decomposition.
+        
         RelDataType rowType = call.getType();
         Variable variable = translator.createScratchVariable(rowType);
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < operands.length; ++i) {
+            StatementList methodBody = translator.getSubStmtList(i);
             final RelDataTypeField field = fields[i];
-            translator.convertCastOrAssignment(
+            translator.convertCastOrAssignmentWithStmtList(
+                methodBody,
                 translator.getRepos().getLocalizedObjectName(
                     fields[i].getName()),
                 fields[i].getType(),
                 call.operands[i].getType(),
                 translator.convertFieldAccess(variable, field),
                 operands[i]);
+
+            String methodName =
+                "calc_" + variable.toString() + "_f_" + i;
+            MemberDeclaration methodDecl =
+                new MethodDeclaration(
+                    new ModifierList(
+                        ModifierList.PRIVATE | ModifierList.FINAL),
+                    TypeName.forOJClass(OJSystem.VOID),
+                    methodName,
+                    new ParameterList(),
+                    null,
+                    methodBody);
+            translator.addMember(methodDecl);
+
+            translator.addStatement(
+                new ExpressionStatement(
+                    new MethodCall(
+                        methodName,
+                        new ExpressionList())));
         }
         return variable;
     }

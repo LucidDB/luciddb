@@ -40,6 +40,7 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
+import java.util.*;
 
 /**
  * FarragoRexToOJTranslator refines {@link RexToOJTranslator} with
@@ -73,6 +74,7 @@ public class FarragoRexToOJTranslator
     private final MemberDeclarationList memberList;
     private final FarragoOJRexCastImplementor castImplementor;
     private final OJClass ojNullablePrimitive;
+    private final Map<Integer, String> localRefMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -87,6 +89,8 @@ public class FarragoRexToOJTranslator
      * @param stmtList statement list for side-effects of translation
      * @param memberList member list for class-level state required by
      * @param program Program, may be null
+     * @param localRefMap map from RexLocalRef index to
+     * name of method which computes it
      */
     public FarragoRexToOJTranslator(
         FarragoRepos repos,
@@ -95,13 +99,16 @@ public class FarragoRexToOJTranslator
         OJRexImplementorTable implementorTable,
         StatementList stmtList,
         MemberDeclarationList memberList,
-        RexProgram program)
+        RexProgram program,
+        Map<Integer, String> localRefMap)
     {
         super(relImplementor, contextRel, implementorTable);
         this.repos = repos;
         this.stmtList = stmtList;
         this.memberList = memberList;
 
+        this.localRefMap = localRefMap;
+        
         // keep a reference to the implementor for CAST, which
         // is needed for implementing assignments also
         castImplementor =
@@ -114,17 +121,33 @@ public class FarragoRexToOJTranslator
         }
     }
 
-    //~ Methods ----------------------------------------------------------------
+    public FarragoRexToOJTranslator(
+        FarragoRepos repos,
+        JavaRelImplementor relImplementor,
+        RelNode contextRel,
+        OJRexImplementorTable implementorTable,
+        StatementList stmtList,
+        MemberDeclarationList memberList,
+        RexProgram program)
+    {
+        this(
+            repos,
+            relImplementor,
+            contextRel,
+            implementorTable,
+            stmtList,
+            memberList,
+            program,
+            new HashMap<Integer, String>());
+    }
 
-    //
+    //~ Methods ----------------------------------------------------------------
 
     public RexToOJTranslator push(StatementList stmtList)
     {
-        // TODO: jhyde, 2005/11/5: The child translator should inherit the
-        //  mapping of expressions to variables, which means it should have a
-        //  pointer to this translator, or at least some of its state.
-        //  Otherwise common expressions will be translated and evaluated
-        //  more than once.
+        // NOTE jvs 16-Oct-2006: The child translator inherits important state
+        // like localRefMap.  (Otherwise common expressions would be translated
+        // and evaluated more than once.)
         return
             new FarragoRexToOJTranslator(
                 repos,
@@ -133,7 +156,8 @@ public class FarragoRexToOJTranslator
                 getImplementorTable(),
                 stmtList,
                 memberList,
-                getProgram());
+                getProgram(),
+                localRefMap);
     }
 
     public void addMember(MemberDeclaration member)
@@ -146,6 +170,80 @@ public class FarragoRexToOJTranslator
         stmtList.add(stmt);
     }
 
+    // override RexToOJTranslator
+    public Expression visitLocalRef(RexLocalRef localRef)
+    {
+        // TODO jvs 16-Oct-2006: Generate code in such a way that we compute
+        // common subexpressions on demand and only once per input row.  The
+        // codegen below causes them to be recomputed at each point of use,
+        // which is inefficient.  (But not as inefficient as the superclass
+        // behavior, which re-expands them at each point of use, causing us to
+        // quickly exceed the Java classfile limits!)  For an example of why
+        // on-demand rather than eager is necessary, see
+        // http://issues.eigenbase.org/browse/FRG-23.
+
+        // For input expressions, delegate to superclass.
+        if (isInputRef(localRef)) {
+            return super.visitLocalRef(localRef);
+        }
+
+        // If it's not a true common subexpression, just expand it
+        int [] refCounts = getProgram().getReferenceCounts();
+        int refCount = refCounts[localRef.getIndex()];
+        assert(refCount > 0);
+        if (refCount == 1) {
+            return super.visitLocalRef(localRef);
+        }
+        
+        // See if we've already generated code for this common subexpression.
+        String methodName = localRefMap.get(localRef.getIndex());
+        if (methodName != null) {
+            return setTranslation(
+                new MethodCall(
+                    methodName,
+                    new ExpressionList()));
+        }
+
+        // Nope, generate it now.
+
+        StatementList methodBody = new StatementList();
+        FarragoRexToOJTranslator subTranslator =
+            (FarragoRexToOJTranslator) push(methodBody);
+
+        Expression expr = subTranslator.translateSubExpression(localRef);
+
+        int complexity = OJUtil.countParseTreeNodes(expr);
+        if (methodBody.isEmpty() && (complexity < 5)) {
+            // The expression is very simple (like maybe just a constant);
+            // don't bother with a separate method.
+            return setTranslation(expr);
+        }
+        
+        methodName =
+            "calc_cse_" + localRef.getIndex();
+        localRefMap.put(localRef.getIndex(), methodName);
+
+        methodBody.add(
+            new ReturnStatement(expr));
+
+        MemberDeclaration methodDecl =
+            new MethodDeclaration(
+                new ModifierList(
+                    ModifierList.PRIVATE | ModifierList.FINAL),
+                TypeName.forOJClass(
+                    OJUtil.typeToOJClass(
+                        localRef.getType(),
+                        getFarragoTypeFactory())),
+                methodName,
+                new ParameterList(),
+                null,
+                methodBody);
+        addMember(methodDecl);
+
+        return setTranslation(
+            new MethodCall(methodName, new ExpressionList()));
+    }
+    
     // implement RexVisitor
     public Expression visitDynamicParam(RexDynamicParam dynamicParam)
     {
@@ -210,35 +308,51 @@ public class FarragoRexToOJTranslator
             return null;
         }
 
-        // Create a constant member.
+        // Create a constant member.  Note that it can't be static
+        // because we might be generating code inside of an anonymous
+        // inner class.  And it can't be final because we can't initialize
+        // it until first use.
         Variable variable = getRelImplementor().newVariable();
         final TypeName typeName = OJUtil.toTypeName(
                 type,
                 getTypeFactory());
         memberList.add(
             new FieldDeclaration(
-                new ModifierList(ModifierList.STATIC | ModifierList.FINAL),
+                new ModifierList(ModifierList.PRIVATE),
                 typeName,
                 variable.toString(),
-                new AllocationExpression(
-                    typeName,
-                    null,
-                    null)));
+                null));
 
-        // Generate initialization code, and add it as a static initializer.
-        // TODO: Static initializers are painful! We should generate
-        //  constructors so that all SQL types can be initialized using an
-        //  expression.
-        final StatementList statementList = new StatementList();
+        // Generate initialization code, and add it inside of
+        // an if block to be executed first time through.  Use
+        // null to represent uninitialized.  For better performance,
+        // we should do this in a constructor or a top-level
+        // static initializer.
+        
+        final StatementList initStmtList = new StatementList();
+        initStmtList.add(
+            new ExpressionStatement(
+                new AssignmentExpression(
+                    variable,
+                    AssignmentExpression.EQUALS,
+                    new AllocationExpression(
+                        typeName,
+                        null,
+                        null))));
         castImplementor.convertCastToAssignableValue(
             this,
-            statementList,
+            initStmtList,
             type,
             type,
             variable,
             getTranslation());
-        assert !statementList.isEmpty();
-        memberList.add(new MemberInitializer(statementList, true));
+        assert !initStmtList.isEmpty();
+
+        addStatement(
+            new IfStatement(
+                isNull(variable),
+                initStmtList));
+        
         return setTranslation(variable);
     }
 

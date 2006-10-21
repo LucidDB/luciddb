@@ -82,6 +82,20 @@ uint StatsTimer::getTimerIntervalMillis()
     return intervalInMillis;
 }
 
+void StatsTimer::onTimerStart()
+{
+    if (pTarget) {
+        pTarget->onTimerStart();
+    }
+}
+
+void StatsTimer::onTimerStop()
+{
+    if (pTarget) {
+        pTarget->onTimerStop();
+    }
+}
+
 void StatsTimer::onTimerInterval()
 {
     if (!pTarget) {
@@ -92,6 +106,16 @@ void StatsTimer::onTimerInterval()
         sources[i]->writeStats(*pTarget);
     }
     pTarget->endSnapshot();
+}
+
+void StatsTarget::onTimerStart()
+{
+    // by default do nothing
+}
+
+void StatsTarget::onTimerStop()
+{
+    // by default do nothing
 }
 
 FENNEL_END_CPPFILE("$Id$");

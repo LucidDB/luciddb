@@ -43,7 +43,9 @@ class StatsTimer : private TimerThreadClient
     uint intervalInMillis;
     
     virtual uint getTimerIntervalMillis();
+    virtual void onTimerStart();
     virtual void onTimerInterval();
+    virtual void onTimerStop();
     
 public:
     /**

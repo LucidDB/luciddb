@@ -31,7 +31,6 @@ import java.util.logging.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
@@ -40,14 +39,13 @@ import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
-import org.eigenbase.sql.*;
+
 import org.eigenbase.util.*;
 import org.eigenbase.trace.*;
 
@@ -308,7 +306,6 @@ public class FarragoRuntimeContext
         if (currentTime == 0) {
             // internally, we use a psuedo local time
             currentTime = System.currentTimeMillis();
-            currentTime += TimeZone.getDefault().getOffset(currentTime);
         }
         return currentTime;
     }
@@ -575,7 +572,8 @@ public class FarragoRuntimeContext
                 repos.getCurrentConfig().getFennelConfig().getCachePageSize());
     }
 
-    protected FennelStreamHandle getStreamHandle(String globalStreamName,
+    // implement FarragoSessionRuntimeContext
+    public FennelStreamHandle getStreamHandle(String globalStreamName,
         boolean isInput)
     {
         repos.beginReposTxn(true);
@@ -650,10 +648,8 @@ public class FarragoRuntimeContext
         return fennelTxnContext.getFennelDbHandle();
     }
 
-    /**
-     * @return FarragoRepos for use by extension projects
-     */
-    protected FarragoRepos getRepos()
+    // implement FarragoSessionRuntimeContext
+    public FarragoRepos getRepos()
     {
         return repos;
     }
@@ -874,17 +870,67 @@ public class FarragoRuntimeContext
      *   more informative values, such as TupleIter.NoDataReason.
      */
     public Object handleRowError(
-        SyntheticObject row, RuntimeException ex, int columnIndex, String tag) 
+        SyntheticObject row, 
+        RuntimeException ex, 
+        int columnIndex, 
+        String tag)
+    {
+        return handleRowError(row, ex, columnIndex, tag, false);
+    }
+
+    /**
+     * Handles a runtime exception, but allows warnings as well.
+     * 
+     * @see {@link #handleRowError(SyntheticObject, RuntimeException, 
+     *   int, String)}
+     */
+    public Object handleRowError(
+        SyntheticObject row, 
+        RuntimeException ex, 
+        int columnIndex, 
+        String tag,
+        boolean isWarning) 
+    {
+        return handleRowErrorHelper(
+            row.toString(), ex, columnIndex, tag, isWarning);
+    }
+
+    /**
+     * Handles a runtime exception based on an array of column values 
+     * rather than on a SyntheticObject
+     */
+    public Object handleRowError(
+        String[] columnNames,
+        Object[] columnValues,
+        RuntimeException ex,
+        int columnIndex,
+        String tag,
+        boolean isWarning)
+    {
+        return handleRowErrorHelper(
+            columnValues.toString(), ex, columnIndex, tag, isWarning);
+    }
+
+    /**
+     * Helper for various handleRowError methods
+     * FIXME: not all exceptions are errors, not all errors are calc errors
+     */
+    private EigenbaseException handleRowErrorHelper(
+        String row,
+        RuntimeException ex,
+        int columnIndex,
+        String tag,
+        boolean isWarning)
     {
         EigenbaseException ex2;
         if (columnIndex == 0) {
             ex2 = FarragoResource.instance().JavaCalcConditionError.ex(
-                row.toString(),
+                row,
                 Util.getMessages(ex));
         } else {
             ex2 = FarragoResource.instance().JavaCalcError.ex(
                 Integer.toString(columnIndex),
-                row.toString(),
+                row,
                 Util.getMessages(ex));
         }
         EigenbaseTrace.getStatementTracer().log(

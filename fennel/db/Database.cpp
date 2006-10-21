@@ -40,6 +40,10 @@
 
 #include <boost/filesystem/operations.hpp>
 
+#ifdef __MINGW32__
+#include <process.h>
+#endif
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 using namespace boost::filesystem;
@@ -162,7 +166,7 @@ void Database::prepareForRecovery()
 
 void Database::openSegments()
 {
-    FENNEL_TRACE(TRACE_INFO, "opening database");
+    FENNEL_TRACE(TRACE_INFO, "opening database; process ID = " << getpid());
     
     pCheckpointThread = SharedCheckpointThread(
         new CheckpointThread(*this),

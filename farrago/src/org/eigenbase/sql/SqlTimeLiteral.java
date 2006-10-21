@@ -21,8 +21,6 @@
 */
 package org.eigenbase.sql;
 
-import java.text.*;
-
 import java.util.*;
 
 import org.eigenbase.sql.parser.*;
@@ -87,7 +85,7 @@ public class SqlTimeLiteral
      */
     public String toFormattedString()
     {
-        String result = new SimpleDateFormat(formatString).format(getTime());
+        String result = getTime().toString(formatString);
         final Calendar cal = getCal();
         if (precision > 0) {
             assert (precision <= 3);

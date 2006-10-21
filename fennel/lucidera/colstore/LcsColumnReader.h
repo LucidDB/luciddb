@@ -122,8 +122,11 @@ class LcsColumnReader : public boost::noncopyable
      *
      * @return index of the found entry
      */
-    uint findVal(uint filterPos, bool highBound, bool bStrict,
-        TupleData &readerKeyData);
+    uint findVal(
+        uint filterPos,
+        bool highBound,
+        bool bStrict,
+        TupleDataWithBuffer &readerKeyData);
 
     /**
      * Locates the range of entries in the compressed batch
@@ -137,8 +140,11 @@ class LcsColumnReader : public boost::noncopyable
      *
      * @param readerKeyData TupleData used for comparison
      */
-    void findBounds(uint filterPos, uint &nLoVal, uint &nHiVal,
-        TupleData &readerKeyData);
+    void findBounds(
+        uint filterPos,
+        uint &nLoVal,
+        uint &nHiVal,
+        TupleDataWithBuffer &readerKeyData);
 
     /**
      * Builds the contains bitmap for compressed batch.

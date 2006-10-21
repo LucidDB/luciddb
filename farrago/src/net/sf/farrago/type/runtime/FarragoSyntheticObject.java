@@ -32,6 +32,7 @@ import java.util.*;
 
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
+import org.eigenbase.sql.fun.*;
 
 
 /**
@@ -234,6 +235,44 @@ public abstract class FarragoSyntheticObject
         // struct to string
         Object [] objs = getAttributes();
         return Arrays.asList(objs).toString();
+    }
+
+    /**
+     * Called at runtime to implement row-wise
+     * {@link SqlStdOperatorTable#isDifferentFrom}.
+     *
+     * @param row1 first row to compare
+     *
+     * @param row2 second row to compare (must be of exact same type
+     * as row1)
+     *
+     * @return whether row1 differs from row2 according to the
+     * definition of $IS_DIFFERENT_FROM
+     */
+    public static boolean testIsDifferentFrom(
+        FarragoSyntheticObject row1,
+        FarragoSyntheticObject row2)
+    {
+        assert(row1.getClass() == row2.getClass());
+        Object [] vals1 = row1.getAttributes();
+        Object [] vals2 = row2.getAttributes();
+        assert(vals1.length == vals2.length);
+        for (int i = 0; i < vals1.length; ++i) {
+            Object val1 = vals1[i];
+            Object val2 = vals2[i];
+            if ((val1 == null) != (val2 == null)) {
+                // one is NULL but the other is not
+                return true;
+            }
+            // fast object identity test also handles case of both NULL
+            if (val1 != val2) {
+                // Because types are identical, we can use equals
+                if (!val1.equals(val2)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     //~ Inner Classes ----------------------------------------------------------

@@ -26,7 +26,8 @@ import java.sql.Time;
 import java.sql.Timestamp;
 
 import java.util.Calendar;
-import java.util.TimeZone;
+
+import org.eigenbase.util14.*;
 
 
 /**
@@ -38,10 +39,6 @@ import java.util.TimeZone;
 class FarragoJdbcTimeParamDef
     extends FarragoJdbcParamDef
 {
-
-    //~ Static fields/initializers ---------------------------------------------
-
-    static final TimeZone gmtZone = TimeZone.getTimeZone("GMT");
 
     //~ Constructors -----------------------------------------------------------
 
@@ -59,7 +56,7 @@ class FarragoJdbcTimeParamDef
     {
         return scrubValue(
                 x,
-                Calendar.getInstance(gmtZone));
+                Calendar.getInstance());
     }
 
     // implement FarragoSessionStmtParamDef
@@ -72,12 +69,12 @@ class FarragoJdbcTimeParamDef
         }
 
         if (x instanceof String) {
-            try {
-                // TODO: Does this need to take cal into account?
-                return Time.valueOf((String) x);
-            } catch (IllegalArgumentException e) {
+            String s = ((String) x).trim();
+            ZonelessTime zt = ZonelessTime.parse(s);
+            if (zt == null) {
                 throw newInvalidFormat(x);
             }
+            return zt;
         }
 
         // Only java.sql.Time, java.sql.Timestamp are all OK.
@@ -86,30 +83,10 @@ class FarragoJdbcTimeParamDef
             throw newInvalidType(x);
         }
 
-        java.util.Date time = (java.util.Date) x;
-
-        // Make a copy of the calendar
-        cal = (Calendar) cal.clone();
-        cal.setTime(time);
-        final int hour = cal.get(Calendar.HOUR_OF_DAY);
-        final int minute = cal.get(Calendar.MINUTE);
-        final int second = cal.get(Calendar.SECOND);
-        final int millisecond = cal.get(Calendar.MILLISECOND);
-
-        // set date to epoch
-        cal.clear();
-
-        // shift to gmt
-        cal.setTimeZone(gmtZone);
-
-        // now restore the time part
-        cal.set(Calendar.HOUR_OF_DAY, hour);
-        cal.set(Calendar.MINUTE, minute);
-        cal.set(Calendar.SECOND, second);
-        cal.set(Calendar.MILLISECOND, millisecond);
-
-        // convert to a time object
-        return new Time(cal.getTimeInMillis());
+        java.util.Date d = (java.util.Date) x;
+        ZonelessTime zt = new ZonelessTime();
+        zt.setZonedTime(d.getTime(), DateTimeUtil.getTimeZone(cal));
+        return zt;
     }
 }
 

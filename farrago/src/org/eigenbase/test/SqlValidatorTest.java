@@ -3093,10 +3093,8 @@ public class SqlValidatorTest
 
     public void testMinMaxFunctions()
     {
-        checkFails("SELECT ^MIN(true)^ from emp",
-            "The MIN function does not support the BOOLEAN data type.");
-        checkFails("SELECT ^MAX(false)^ from emp",
-            "The MAX function does not support the BOOLEAN data type.");
+        check("SELECT MIN(true) from emp");
+        check("SELECT MAX(false) from emp");
 
         check("SELECT MIN(sal+deptno) FROM emp");
         check("SELECT MAX(ename) FROM emp");

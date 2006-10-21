@@ -45,6 +45,7 @@ import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.stat.*;
 import org.eigenbase.util.*;
 
@@ -501,9 +502,11 @@ public class LoptMetadataTest
         RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
 
         // Cumulative cost is full table access plus the filtered rowcount for
-        // the sort.
+        // the sort.  Note the filter cost uses the default equality selectivity
+        // because the filter expression effectively becomes
+        // upper(name) = 'ZELDA', which isn't sargable
         double tableRowCount = COLSTORE_EMPS_ROWCOUNT;
-        double sortRowCount = tableRowCount * .005;
+        double sortRowCount = tableRowCount * DEFAULT_EQUAL_SELECTIVITY;
         checkCost(
             tableRowCount + sortRowCount,
             cost);
@@ -751,28 +754,26 @@ public class LoptMetadataTest
         value = rexBuilder.makeBinaryLiteral(code);
         searchColumn(4, value, 0.2, 1.0);
 
-        Calendar cal = Calendar.getInstance();
+        RelDataTypeFactory factory = rexBuilder.getTypeFactory();
 
         // note: this matches a value of each column
         // be careful of 0-indexed month, and timezone
-        cal.clear();
-        cal.setTimeZone(new SimpleTimeZone(0, "GMT+00:00"));
-        cal.set(2002, 0, 1);
-        value = rexBuilder.makeDateLiteral(cal);
+        value = RexLiteral.fromJdbcString(
+            factory.createSqlType(SqlTypeName.Date),
+            SqlTypeName.Date,
+            "2002-01-01");
         searchColumn(5, value, 0.2, 1.0);
 
-        cal.clear();
-        cal.setTimeZone(new SimpleTimeZone(0, "GMT+00:00"));
-        cal.set(Calendar.HOUR_OF_DAY, 12);
-        cal.set(Calendar.MINUTE, 1);
-        cal.set(Calendar.SECOND, 1);
-        value = rexBuilder.makeTimeLiteral(cal, 3);
+        value = RexLiteral.fromJdbcString(
+            factory.createSqlType(SqlTypeName.Time),
+            SqlTypeName.Time,
+            "12:01:01");
         searchColumn(6, value, 0.2, 1.0);
 
-        cal.clear();
-        cal.setTimeZone(new SimpleTimeZone(0, "GMT+00:00"));
-        cal.set(2002, 0, 1, 12, 1, 1);
-        value = rexBuilder.makeTimestampLiteral(cal, 3);
+        value = RexLiteral.fromJdbcString(
+            factory.createSqlType(SqlTypeName.Timestamp),
+            SqlTypeName.Timestamp,
+            "2002-01-01 12:01:01");
         searchColumn(7, value, 0.4, 1.0);
 
         // all of first bar + 1/2 of second bar

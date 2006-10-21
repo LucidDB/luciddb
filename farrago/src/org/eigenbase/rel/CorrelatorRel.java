@@ -26,6 +26,7 @@ import java.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 
 
 /**
@@ -65,6 +66,7 @@ public final class CorrelatorRel
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
+        RexNode joinCond,
         List<Correlation> correlations,
         JoinRelType joinType)
     {
@@ -73,7 +75,7 @@ public final class CorrelatorRel
             new RelTraitSet(CallingConvention.NONE),
             left,
             right,
-            cluster.getRexBuilder().makeLiteral(true),
+            joinCond,
             joinType,
             (Set<String>) Collections.EMPTY_SET);
         this.correlations = correlations;
@@ -81,6 +83,22 @@ public final class CorrelatorRel
             || (joinType == JoinRelType.INNER);
     }
 
+    public CorrelatorRel(
+        RelOptCluster cluster,
+        RelNode left,
+        RelNode right,
+        List<Correlation> correlations,
+        JoinRelType joinType)
+    {
+        this(
+            cluster,
+            left,
+            right,
+            cluster.getRexBuilder().makeLiteral(true),
+            correlations,
+            joinType);
+    }
+    
     //~ Methods ----------------------------------------------------------------
 
     public CorrelatorRel clone()
@@ -114,7 +132,7 @@ public final class CorrelatorRel
             });
     }
 
-    public List getCorrelations()
+    public List<Correlation> getCorrelations()
     {
         return correlations;
     }
@@ -131,7 +149,7 @@ public final class CorrelatorRel
      * identify and set dynamic variables
      */
     public static class Correlation
-        implements Cloneable
+        implements Cloneable, Comparable<Correlation>
     {
         private final int id;
         private final int offset;
@@ -156,6 +174,12 @@ public final class CorrelatorRel
         {
             return "var" + id + "=offset" + offset;
         }
+        
+        public int compareTo(Correlation other)
+        {
+            return (id - other.id);
+        }
+        
     }
 }
 

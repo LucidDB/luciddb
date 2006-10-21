@@ -142,7 +142,10 @@ void LcsClusterAppendExecStream::init()
     // across calls(e.g. when issueing the same statement twice).
     lcsBlockBuilder = SharedLcsClusterNodeWriter(
         new LcsClusterNodeWriter(
-            treeDescriptor, scratchAccessor, getSharedTraceTarget(),
+            treeDescriptor,
+            scratchAccessor,
+            clusterColsTupleDesc,
+            getSharedTraceTarget(),
             getTraceSourceName()));
     
     allocArrays();
@@ -495,7 +498,7 @@ void LcsClusterAppendExecStream::loadExistingBlock()
 
             for (j = 0, val = aLeftOverBufs[i].get();
                 j < anLeftOvers;
-                j++, val += TupleDatum().getLcsLength(val))
+                j++, val += aiFixedSize[i])
             {
                 hash[i].insert(val, &vOrd, &undoInsert);
                 
@@ -637,7 +640,7 @@ void LcsClusterAppendExecStream::writeBatch(bool lastBatch)
                 assert(!undoInsert);
                 addValueOrdinal(i, vOrd.getValOrd());
                 rowCnt++;
-                val += TupleDatum().getLcsLength(val);
+                val += maxValueSize[i];
             }
         }
     }

@@ -111,6 +111,16 @@ public:
      */
     explicit JniEnvAutoRef();
 
+    /**
+     * Suppresses default detach-on-destruct behavior.
+     *
+     *<p>
+     *
+     * REVIEW jvs 13-Oct-2006:  Get rid of this and arrange for all
+     * native-spawned threads to attach on start and detach on end.
+     */
+    void suppressDetach();
+
     ~JniEnvAutoRef();
 };
 
@@ -188,12 +198,6 @@ class JniUtil
      * @return current thread's JNIEnv
      */
     static JNIEnv *getAttachedJavaEnv(bool &needDetach);
-
-    /**
-     * Detaches the JNIEnv for the current thread (undoes effect
-     * of getAttachedJavaEnv in the case where needDetach received true).
-     */
-    static void detachJavaEnv();
     
     /**
      * Counter for all handles opened by Farrago.
@@ -367,6 +371,12 @@ public:
      */
     static uint lookUpEnum(std::string *pSymbols,std::string const &symbol);
 
+    // TODO jvs 13-Oct-2006:  reprivate this
+    /**
+     * Detaches the JNIEnv for the current thread (undoes effect
+     * of getAttachedJavaEnv in the case where needDetach received true).
+     */
+    static void detachJavaEnv();
     
     /**
      * Increment the handle count.  The handle type is used for JNI

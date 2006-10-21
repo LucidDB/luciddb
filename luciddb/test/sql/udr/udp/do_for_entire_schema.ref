@@ -6,8 +6,12 @@
 0: jdbc:luciddb:> create table T2(col3 varchar(255), col4 integer);
 0: jdbc:luciddb:> create view V1 as select * from T2;
 0: jdbc:luciddb:> create view V2 as select col2 from T1;
-0: jdbc:luciddb:> -- try to do a select. won't show any results, but shouldn't break either
+0: jdbc:luciddb:> -- try to do a select; should fail
 0: jdbc:luciddb:> call applib.do_for_entire_schema('select * from %TABLE_NAME%', 'TESTSCHEMA', 'TABLES_AND_VIEWS');
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method execute failed
+Can't executeUpdate a query:  select * from "TESTSCHEMA"."T1" (state=,code=0)
 0: jdbc:luciddb:> -- connect as new user and try to do select on tables. should fail.
 0: jdbc:luciddb:> !connect jdbc:luciddb: MONDRIAN_USER NOPE
 1: jdbc:luciddb:> select * from T1;

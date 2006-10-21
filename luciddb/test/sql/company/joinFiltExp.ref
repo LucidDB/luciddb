@@ -46,12 +46,11 @@
 '    FennelReshapeRel'
 '      LhxJoinRel'
 '        LcsRowScanRel'
-'        IteratorToFennelConverter'
-'          IterCalcRel'
-'            FennelToIteratorConverter'
-'              LcsRowScanRel'
-'                LcsIndexSearchRel'
-'                  FennelValuesRel'
+'        FennelReshapeRel'
+'          LcsRowScanRel'
+'            LcsIndexSearchRel'
+'              FennelValuesRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> explain plan excluding attributes for select emp.lname, emp.fname, dname
 . . . . . . . . > from emp, dept
 . . . . . . . . > where emp.deptno=dept.deptno and dept.dname='Accounting'
@@ -63,12 +62,11 @@
 '    FennelReshapeRel'
 '      LhxJoinRel'
 '        LcsRowScanRel'
-'        IteratorToFennelConverter'
-'          IterCalcRel'
-'            FennelToIteratorConverter'
-'              LcsRowScanRel'
-'                LcsIndexSearchRel'
-'                  FennelValuesRel'
+'        FennelReshapeRel'
+'          LcsRowScanRel'
+'            LcsIndexSearchRel'
+'              FennelValuesRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- don't reference dept in the select list, should drop out
 0: jdbc:luciddb:> -- of select list
@@ -209,11 +207,13 @@
 '                          LcsIndexMergeRel'
 '                            LcsIndexSearchRel'
 '                              FennelValuesRel'
+'                          FennelValuesRel'
 '            FennelReshapeRel'
 '              LcsRowScanRel'
 '                LcsIndexMergeRel'
 '                  LcsIndexSearchRel'
 '                    FennelValuesRel'
+'                FennelValuesRel'
 '        FennelReshapeRel'
 '          LcsRowScanRel'
 0: jdbc:luciddb:> 
@@ -251,6 +251,7 @@
 '                LcsIndexMergeRel'
 '                  LcsIndexSearchRel'
 '                    FennelValuesRel'
+'                FennelValuesRel'
 '            LcsRowScanRel'
 '              LcsIndexIntersectRel'
 '                LcsIndexMergeRel'
@@ -278,6 +279,7 @@
 '                            LcsIndexMergeRel'
 '                              LcsIndexSearchRel'
 '                                FennelValuesRel'
+'                            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- LER-787
 0: jdbc:luciddb:> -- dimension tables not referenced in select list, should drop
@@ -315,6 +317,7 @@
 '                  LcsIndexMergeRel'
 '                    LcsIndexSearchRel'
 '                      FennelValuesRel'
+'                  FennelValuesRel'
 '              LcsRowScanRel'
 '                LcsIndexIntersectRel'
 '                  LcsIndexMergeRel'
@@ -342,6 +345,7 @@
 '                              LcsIndexMergeRel'
 '                                LcsIndexSearchRel'
 '                                  FennelValuesRel'
+'                              FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan excluding attributes for select sum(sales.price)
 . . . . . . . . > from sales
@@ -372,6 +376,7 @@
 '                  LcsIndexMergeRel'
 '                    LcsIndexSearchRel'
 '                      FennelValuesRel'
+'                  FennelValuesRel'
 '          FennelReshapeRel'
 '            LcsRowScanRel'
 '              LcsIndexMergeRel'

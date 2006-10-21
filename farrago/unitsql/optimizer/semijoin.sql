@@ -88,14 +88,11 @@ explain plan for select *
     from t inner join smalltable s
     on t.d = s.s1;
 
--- outer join
--- FIXME: Cartesian product is picked because join types do not match; however
--- cartesian product + outer join is not feasible.
--- explain plan for
--- select *
--- from t left outer join smalltable s
--- on t.b = s.s3 and s.s1 = 'this is row 1' 
--- order by a;
+-- outer joins -- should not use semijoin
+explain plan for
+select *
+from t left outer join smalltable s
+on t.b = s.s3 and s.s1 = 'this is row 1';
 
 -- this outer join uses HashJoin since join types match
 explain plan for

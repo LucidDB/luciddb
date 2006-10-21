@@ -84,6 +84,13 @@ Error: From line 1, column 17 to line 1, column 22: Column 'BAR2' not found in t
 0: jdbc:farrago:> create or replace view loop1 as select * from loop2;
 Error: Object definition contains recursive cycle (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- but a diamond should be OK
+0: jdbc:farrago:> create view diamond0 as select * from foo;
+0: jdbc:farrago:> create view diamond1 as select * from diamond0;
+0: jdbc:farrago:> create view diamond2 as select * from diamond0;
+0: jdbc:farrago:> create view diamond3 as select * from diamond1,diamond2;
+0: jdbc:farrago:> create or replace view diamond0 as select * from foo;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- Index (disallowed)
 0: jdbc:farrago:> --

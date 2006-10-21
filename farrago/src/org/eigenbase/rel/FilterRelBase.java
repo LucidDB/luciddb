@@ -91,8 +91,23 @@ public abstract class FilterRelBase
                 condition);
     }
 
-    public static double estimateFilteredRows(RelNode child,
-        RexNode condition)
+    public static double estimateFilteredRows(RelNode child, RexProgram program)
+    {
+        // convert the program's RexLocalRef condition to an expanded RexNode
+        RexLocalRef programCondition = program.getCondition();
+        RexNode condition;
+        if (programCondition == null) {
+            condition = null;
+        } else {
+            condition = program.expandLocalRef(programCondition);
+        }
+        return
+            estimateFilteredRows(
+                child,
+                condition);
+    }
+    
+    public static double estimateFilteredRows(RelNode child, RexNode condition)
     {
         return
             RelMetadataQuery.getRowCount(child)

@@ -44,6 +44,7 @@ import org.eigenbase.rex.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.runtime.Iterable;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql2rel.*;
 import org.eigenbase.trace.*;
@@ -77,6 +78,11 @@ public abstract class OJPreparingStmt
     protected final RelOptConnection connection;
 
     protected EigenbaseTimingTracer timingTracer;
+    
+    /**
+     * True if the statement contains java RelNodes
+     */
+    protected boolean containsJava;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -97,6 +103,7 @@ public abstract class OJPreparingStmt
         Util.pre(this.connection != null,
             "connection != null || this instanceof RelOptConnection");
         this.resultCallingConvention = CallingConvention.RESULT_SET;
+        this.containsJava = true;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -147,7 +154,6 @@ public abstract class OJPreparingStmt
     {
         env = OJSystem.env;
 
-        javaCompiler = createCompiler();
         String packageName = getTempPackageName();
         String className = getTempClassName();
         env = new FileEnvironment(env, packageName, className);
@@ -297,7 +303,8 @@ public abstract class OJPreparingStmt
         }
 
         rootRel = optimize(resultType, rootRel);
-
+        containsJava = treeContainsJava(rootRel);
+        
         if (timingTracer != null) {
             timingTracer.traceTime("end optimization");
         }
@@ -347,8 +354,35 @@ public abstract class OJPreparingStmt
     }
 
     /**
+     * Determines if the RelNode tree contains Java RelNodes.  Also, if the row
+     * contains an interval type, then effectively, the tree is treated as
+     * containing Java, since we currently cannot read raw interval columns.
+     * 
+     * @param rootRel root of the RelNode tree
+     * 
+     * @return true if the tree contains Java RelNodes or returns an interval
+     * type
+     */
+    protected boolean treeContainsJava(RelNode rootRel)
+    {
+        JavaRelFinder javaFinder = new JavaRelFinder();
+        javaFinder.go(rootRel);
+        if (javaFinder.containsJavaRel()) {
+            return true;
+        }
+        RelDataTypeField [] fields = rootRel.getRowType().getFields();
+        for (int i = 0; i < fields.length; i++) {
+            if (SqlTypeUtil.isInterval(fields[i].getType())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
      * Implements a physical query plan.
      *
+     * @param rowType original rowtype returned by query validator
      * @param rootRel root of the relational expression.
      * @param sqlKind SqlKind of the original statement.
      * @param decl ClassDeclaration of the generated result.
@@ -363,26 +397,57 @@ public abstract class OJPreparingStmt
         ClassDeclaration decl,
         Argument [] args)
     {
-        JavaRelImplementor relImplementor =
-            getRelImplementor(rootRel.getCluster().getRexBuilder());
-        Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
-
-        if (timingTracer != null) {
-            timingTracer.traceTime("end codegen");
-        }
-
+        BoundMethod boundMethod;
+        ParseTree parseTree;
+        RelDataType resultType = rootRel.getRowType();
         boolean isDml = sqlKind.isA(SqlKind.Dml);
-        ParseTree parseTree = expr;
-        BoundMethod boundMethod = compileAndBind(decl, parseTree, args);
+        if (containsJava) {
+            javaCompiler = createCompiler();
+            JavaRelImplementor relImplementor =
+                getRelImplementor(rootRel.getCluster().getRexBuilder());
+            Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
 
-        if (timingTracer != null) {
-            timingTracer.traceTime("end compilation");
+            if (timingTracer != null) {
+                timingTracer.traceTime("end codegen");
+            }
+
+            parseTree = expr;
+            boundMethod = compileAndBind(decl, parseTree, args);
+
+            if (timingTracer != null) {
+                timingTracer.traceTime("end compilation");
+            }
+        } else {
+            boundMethod = null;
+            parseTree = null;
+            // Need to create a new result rowtype where the field names of
+            // the row originate from the original projection list. E.g,
+            // if you have a query like:
+            //      select col1 as x, col2 as x from tab;
+            // the field names of the resulting tuples should be "x" and "x",
+            // rather than "x" and "x0".
+            //
+            // This only needs to be done for non-DML statements.  For DML, the
+            // resultant row is a single rowcount column, so we don't want to
+            // change the field name in those cases.
+            if (!isDml) {
+                assert(rowType.getFieldCount() == resultType.getFieldCount());    
+                String [] fieldNames = RelOptUtil.getFieldNames(rowType);
+                RelDataType [] types = RelOptUtil.getFieldTypes(resultType);
+                resultType =
+                    rootRel.getCluster().getTypeFactory().createStructType(
+                        types, fieldNames);
+            }
+            // strip off the topmost, special converter RelNode, now that we no
+            // longer need it        
+            rootRel = rootRel.getInput(0);           
         }
-
+       
         final PreparedExecution plan =
             new PreparedExecution(
                 parseTree,
-                rootRel.getRowType(),
+                rootRel,
+                resultType,
                 isDml,
                 boundMethod);
         return plan;
@@ -510,18 +575,15 @@ public abstract class OJPreparingStmt
                 "Before compile, parse tree",
                 new Object[] { parseTree });
         }
-        ClassCollector classCollector = new ClassCollector(env);
-        Util.discard(OJUtil.go(classCollector, parseTree));
-        OJClass [] classes = classCollector.getClasses();
-        OJSyntheticClass.addMembers(decl, classes);
 
         // NOTE jvs 14-Jan-2004:  DynamicJava doesn't correctly handle
         // the FINAL modifier on parameters.  So I made the codegen
         // for the method body copy the parameter to a final local
         // variable instead.  The only side-effect is that the parameter
         // names in the method signature is different.
-        // TODO jvs 28-June-2004:  get rid of this if DynamicJava
-        // gets tossed
+        // TODO jvs 18-Oct-2006:  get rid of this since we tossed DynamicJava
+        // long ago
+        
         // form parameter list
         String [] parameterNames = new String[arguments.length];
         String [] javaParameterNames = new String[arguments.length];
@@ -601,9 +663,13 @@ public abstract class OJPreparingStmt
 
         if (queryString != null) {
             // use single line comments to avoid issues with */ in literals
+            queryString = queryString.replaceAll("\n", "\n// ");
+
+            // have to escape backslashes, because Java thinks
+            // backslash-u means Unicode escape (LDB-141)
+            queryString = queryString.replaceAll("\\\\", "\\\\\\\\");
             compUnit.setComment(
-                "// "
-                + queryString.replaceAll("\n", "\n// ") + "\n");
+                "// " + queryString + "\n");
         }
         String s = compUnit.toString();
         String className = decl.getName();
@@ -780,6 +846,38 @@ public abstract class OJPreparingStmt
         public String getName()
         {
             return name;
+        }
+    }
+    
+    /**
+     * Walks a {@link RelNode} tree and determines if it contains any
+     * {@link JavaRel}s.
+     * 
+     * @author Zelaine Fong
+     */
+    public static class JavaRelFinder extends RelVisitor
+    {
+        private boolean javaRelFound;
+        
+        public JavaRelFinder()
+        {
+            javaRelFound = false;
+        }
+        
+        public void visit(
+            RelNode node,
+            int ordinal,
+            RelNode parent)
+        {
+            if (node instanceof JavaRel) {
+                javaRelFound = true;
+            }
+            node.childrenAccept(this);
+        }
+        
+        public boolean containsJavaRel()
+        {
+            return javaRelFound;
         }
     }
 }

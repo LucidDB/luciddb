@@ -35,7 +35,6 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -195,65 +194,17 @@ public abstract class MedAbstractColumnSet
         String serverMofId,
         RexNode [] args)
     {
-        // Parse the specific name of the UDX.
-        SqlIdentifier udxId;
-        try {
-            SqlParser parser = new SqlParser(udxSpecificName);
-            SqlNode parsedId = parser.parseExpression();
-            udxId = (SqlIdentifier) parsedId;
-        } catch (Exception ex) {
-            throw FarragoResource.instance().MedInvalidUdxId.ex(
-                udxSpecificName,
-                ex);
-        }
-
-        // Look up the UDX in the catalog.
-        List<SqlOperator> list =
-            getPreparingStmt().getSqlOperatorTable().lookupOperatorOverloads(
-                udxId,
-                SqlFunctionCategory.UserDefinedSpecificFunction,
-                SqlSyntax.Function);
-        FarragoUserDefinedRoutine udx = null;
-        if (list.size() == 1) {
-            SqlOperator obj = list.get(0);
-            if (obj instanceof FarragoUserDefinedRoutine) {
-                udx = (FarragoUserDefinedRoutine) obj;
-                if (!FarragoCatalogUtil.isTableFunction(udx.getFemRoutine())) {
-                    // Not a UDX.
-                    udx = null;
-                }
-            }
-        }
-        if (udx == null) {
-            throw FarragoResource.instance().MedUnknownUdx.ex(
-                udxId.toString());
-        }
-
-        // UDX wants all types nullable, so construct a corresponding
-        // type descriptor for the result of the call.
-        RexBuilder rexBuilder = cluster.getRexBuilder();
-        RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
-        RelDataType resultType =
-            typeFactory.createTypeWithNullability(
-                getRowType(),
-                true);
-
-        // Create a relational algebra expression for invoking the UDX.
-        RexNode rexCall = rexBuilder.makeCall(udx, args);
-        RelNode udxRel =
-            new FarragoJavaUdxRel(
-                cluster,
-                rexCall,
-                resultType,
-                serverMofId,
-                RelNode.emptyArray);
-
-        // Optimizer wants us to preserve original types,
-        // so cast back for the final result.
-        return RelOptUtil.createCastRel(
-                udxRel,
-                getRowType(),
-                true);
+        // TODO jvs 13-Oct-2006:  phase out these vestigial parameters
+        assert(cluster == getPreparingStmt().getRelOptCluster());
+        assert(connection == getPreparingStmt());
+        
+        return FarragoJavaUdxRel.newUdxRel(
+            getPreparingStmt(),
+            getRowType(),
+            udxSpecificName,
+            serverMofId,
+            args,
+            RelNode.emptyArray);
     }
 }
 

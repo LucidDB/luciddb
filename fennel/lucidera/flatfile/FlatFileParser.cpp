@@ -24,6 +24,8 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+const char SPACE_CHAR = ' ';
+
 void FlatFileColumnParseResult::setResult(
     FlatFileColumnParseResult::DelimiterType type, char *buffer, uint size)
 {
@@ -73,12 +75,13 @@ void FlatFileRowParseResult::reset()
 }
 
 FlatFileParser::FlatFileParser(
-    char fieldDelim, char rowDelim, char quote, char escape)
+    char fieldDelim, char rowDelim, char quote, char escape, bool doTrim)
 {
     this->fieldDelim = fieldDelim;
     this->rowDelim = rowDelim;
     this->quote = quote;
     this->escape = escape;
+    this->doTrim = doTrim;
 
     fixed = (fieldDelim == 0);
     if (fixed) {
@@ -241,7 +244,15 @@ void FlatFileParser::scanColumn(
     assert(buffer != NULL);
     const char *read = buffer;
     const char *end = buffer + size;
-    bool quoted = (size > 0 && *buffer == quote);
+
+    // read past leading spaces before checking for quotes
+    if (doTrim) {
+        while (read < end && SPACE_CHAR == *read) {
+            read++;
+        }
+    }
+
+    bool quoted = (read < end && *read == quote);
     bool quoteEscape = (quoted && quote == escape);
 
     FlatFileColumnParseResult::DelimiterType type =

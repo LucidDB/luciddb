@@ -24,6 +24,9 @@
 #ifndef Fennel_TupleData_Included
 #define Fennel_TupleData_Included
 
+#include "fennel/tuple/StandardTypeDescriptor.h"
+#include "fennel/tuple/TupleDescriptor.h"
+
 #include <vector>
 
 
@@ -73,7 +76,7 @@ struct TupleDatum
      * @note
      * See the note of copyFrom method.
      * 
-     * @param[in] other the source TupleDatum
+     * @param [in] other the source TupleDatum
      */
     inline TupleDatum &operator = (TupleDatum const &other);
 
@@ -85,7 +88,7 @@ struct TupleDatum
      * before this call, it will no longer point to that buffer after this
      * function call.
      * 
-     * @param[in] other the source TupleDatum 
+     * @param [in] other the source TupleDatum 
      */
     inline void copyFrom(TupleDatum const &other);
 
@@ -105,23 +108,35 @@ struct TupleDatum
      * Upon return, pData might no longer point to allocated memory if the
      * source has a null data pointer.
      * 
-     * @param[in] other the source TupleDatum
+     * @param [in] other the source TupleDatum
      */
     void memCopyFrom(TupleDatum const &other);
 
     /**
-     * Stores data with length information encoded into the buffer passed in.
+     * Stores data, including length information encoded into the buffer
+     * passed in.
      * 
      * @note
      * Two methods, storeLcsDatum and loadLcsDatum, store and load TupleDatum
-     * to and from a preallocated buffer. The length required for this buffer
-     * is determined by the number of bytes needed to store the length
-     * indicator plus the maximum length of the data field (from the associated
-     * TupleDescriptor cbStorage value). The storage format is different from
-     * the marshalled format for a tuple (see TupleAccessor), since there's
-     * only one TupleDatum involved and there is no need to store the offset
-     * needed for "constant seek time". The byte format of the buffer after
-     * storeDatum is:
+     * to and from a preallocated buffer.  The storage format is different
+     * from the marshalled format for a tuple (see TupleAccessor), since
+     * there's only one TupleDatum involved and there is no need to store
+     * the offset needed for "constant seek time".  The storage format
+     * depends on the type of the data stored and may consist of leading bytes
+     * containing the length of the data.
+     *
+     * <p>If the data is an 8-byte integer, the leading zeroes in the data are
+     * stripped, and the length of the remaining bytes is stored in the first
+     * byte, followed by the data.
+     *
+     * <p>If the data is fixed width and non-nullable, only the data
+     * itself is stored.  We do not need to store the length of the data in
+     * this case because it is fixed and can be determined from the type
+     * descriptor corresponding to the data.
+     *
+     * <p>In all other cases, a length is encoded in the leading bytes of
+     * the buffer, based on the number of bytes in the data.  The byte format
+     * of the buffer after storeDatum is:
      *
      * @par
      * One length byte encodes value length from 0(0x0000) to 127(0x007f)\n
@@ -149,29 +164,57 @@ struct TupleDatum
      * indexing into the corresponding TupleDatum location). That method
      * returns the value of TupleAttributeDescriptor.cbStorage + 2.
      *
-     *
-     * @param[in, out] pDataWithLen data buffer to store to
+     * @param [in, out] pDataWithLen data buffer to store to
+     * @param [in] attrDesc attribute descriptor for the datum being stored
      */
-    void storeLcsDatum(PBuffer pDataWithLen);
+    void storeLcsDatum(
+        PBuffer pDataWithLen,
+        TupleAttributeDescriptor const &attrDesc);
     
     /**
-     * Loads TupleDatum from a buffer with length information encoded.
+     * Loads TupleDatum from a buffer that may contain encoded length
+     * information.
      *
      * @note
      * See note on memCopyFrom method.
      *
-     * @param[in] pDataWithLen data buffer to load from
+     * @param [in] pDataWithLen data buffer to load from
+     * @param [in] attrDesc attribute descriptor for the datum being loaded
      */
-    void loadLcsDatum(PConstBuffer pDataWithLen);
+    void loadLcsDatum(
+        PConstBuffer pDataWithLen,
+        TupleAttributeDescriptor const &attrDesc);
 
     /**
-     * Gets the length information from a stored data buffer.
+     * Gets the length information corresponding to the data stored in a buffer.
      *
-     * @param[in] pDataWithLen the optional data buffer to get the length from
+     * @param [in] pDataWithLen the data buffer to get the length from
+     * @param [in] attrDesc attribute descriptor corresponding to the data
+     * stored in the buffer
      *
      * @return length of the value in storage format including the length bytes
      */
-    TupleStorageByteLength getLcsLength(PConstBuffer pDataWithLen = NULL);
+    TupleStorageByteLength getLcsLength(
+        PConstBuffer pDataWithLen,
+        TupleAttributeDescriptor const &attrDesc);
+
+    /**
+     * Compresses and stores an 8-byte integer by stripping off leading zeros.
+     * The stored value includes a leading byte indicating the length of the
+     * data.
+     *
+     * @param [in, out] pDest pointer to the buffer where the data will be
+     * stored
+     */
+    void compress8ByteInt(PBuffer pDest);
+
+    /**
+     * Uncompresses and loads an 8-byte integer, expanding it back to its
+     * original 8-byte value
+     *
+     * @param [in] pDataWithLen data buffer to load from
+     */
+    void uncompress8ByteInt(PConstBuffer pDataWithLen);
 };
 
 /**

@@ -195,6 +195,8 @@ class ExecStreamSubFactory_lu
                                             streamDef.getOutputProj());
         params.isFullScan = streamDef.isFullScan();
         params.hasExtraFilter = streamDef.isHasExtraFilter();
+        CmdInterpreter::readTupleProjection(params.residualFilterCols,
+            streamDef.getResidualFilterColumns());
         pEmbryo->init(new LcsRowScanExecStream(), params);
     }
 

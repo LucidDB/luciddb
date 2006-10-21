@@ -21,10 +21,6 @@
 */
 package org.eigenbase.sql;
 
-import java.sql.*;
-
-import java.text.*;
-
 import java.util.*;
 
 import org.eigenbase.sql.parser.*;
@@ -73,20 +69,24 @@ public class SqlTimestampLiteral
     /**
      * Converts this literal to a {@link java.sql.Timestamp} object.
      */
+    /*
     public Timestamp getTimestamp()
     {
         return new Timestamp(getCal().getTimeInMillis());
     }
+    */
 
     /**
      * Converts this literal to a {@link java.sql.Time} object.
      */
+    /*
     public Time getTime()
     {
         long millis = getCal().getTimeInMillis();
         int tzOffset = Calendar.getInstance().getTimeZone().getOffset(millis);
         return new Time(millis - tzOffset);
     }
+    */
 
     public SqlNode clone(SqlParserPos pos)
     {
@@ -108,7 +108,7 @@ public class SqlTimestampLiteral
      */
     public String toFormattedString()
     {
-        String result = new SimpleDateFormat(formatString).format(getTime());
+        String result = getTimestamp().toString(formatString);
         final Calendar cal = getCal();
         if (precision > 0) {
             assert (precision <= 3);

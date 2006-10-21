@@ -110,17 +110,18 @@ protected:
      * Reads column values based on current position of cluster reader
      *
      * @param pScan cluster reader
-     *
      * @param tupleData tupledata where data will be loaded
-     *
      * @param colStart starting column offset where first column will be
      * loaded
+     * @param tupleDesc tuple descriptor of tupleData
      *
      * @return false if column filters failed; true otherwise
      */
     bool readColVals(
-        SharedLcsClusterReader &pScan, TupleDataWithBuffer &tupleData,
-        uint colStart);
+        SharedLcsClusterReader &pScan,
+        TupleDataWithBuffer &tupleData,
+        uint colStart,
+        TupleDescriptor tupleDesc);
 
     /**
      * Builds outputProj from params.

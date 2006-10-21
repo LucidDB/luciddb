@@ -37,6 +37,8 @@ public interface JavaCompiler
     public JavaCompilerArgs getArgs();
 
     public ClassLoader getClassLoader();
+
+    public int getTotalByteCodeSize();
 }
 
 // End JavaCompiler.java

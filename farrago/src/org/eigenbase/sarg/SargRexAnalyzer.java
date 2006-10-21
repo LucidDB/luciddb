@@ -175,7 +175,7 @@ public class SargRexAnalyzer
      * Reconstructs a rex predicate from a list of SargExprs which will be
      * AND'ed together.
      */
-    public void recompCF()
+    private void recomposeConjunction()
     {
         SargBinding currBinding, nextBinding;
         RexInputRef currRef, nextRef;
@@ -270,7 +270,7 @@ public class SargRexAnalyzer
 
         // Flatten out the RexNode tree into a list of terms that
         // are AND'ed together
-        RelOptUtil.decompCF(rexPredicate, rexCFList);
+        RelOptUtil.decomposeConjunction(rexPredicate, rexCFList);
 
         // In simple mode, each input ref can only be referenced once, so
         // keep a list of them.  We also only allow one non-point expression.
@@ -312,7 +312,7 @@ public class SargRexAnalyzer
         clearLeaf();
 
         // Combine the AND terms back together.
-        recompCF();
+        recomposeConjunction();
 
         return sargBindingList;
     }

@@ -241,6 +241,35 @@ select count(*) from tempudp2.dept;
 select count(*) from tempudp2.emp;
 select count(*) from tempudp2."bench100";
 
+--
+-- export table where column names have embedded spaces
+--
+create schema hasspace;
+set schema 'hasspace';
+
+create table spacey(
+"my id" int,
+"my line two" varchar(20)
+);
+
+insert into spacey values (1, 'one line'), (2, 'two lines');
+
+call sys_root.export_schema_to_csv(null, 'HASSPACE', false, null, null, '@EXPDIR@/local/space');
+
+create server space_serv
+foreign data wrapper "FLAT FILE"
+options(
+  directory '@EXPDIR@/local/space',
+  field_delimiter '\t',
+  line_delimiter '\n',
+  with_header 'yes'
+);
+
+select * from space_serv.bcp.spacey order by 1;
+
+-- cleanup
+drop schema hasspace cascade;
+drop server space_serv cascade;
 drop schema tempudp2 cascade;
 drop server exp_server2 cascade;
 drop schema tempudp cascade;

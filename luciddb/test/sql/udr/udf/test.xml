@@ -30,6 +30,7 @@
             <test-suite-modifier value="udf"/>
           </test-suite-call>
         </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/udr/udf" target="copy-csv"/>
       </init-hook>
 
       <test name="udfInvocation">
@@ -118,6 +119,11 @@
 
       <test name="stdToDate">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/stdToDate.sql"/>
+      </test>
+
+      <test name="datetimeAddSubtract" requiresRun="stdToDate">
+        <!-- LER-1909 -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/datetimeAddSubtract.sql"/>
       </test>
 
       <test name="julianDateTests">

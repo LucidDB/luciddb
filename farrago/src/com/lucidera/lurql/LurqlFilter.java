@@ -23,6 +23,7 @@ package com.lucidera.lurql;
 import java.io.*;
 
 import java.util.*;
+import java.util.regex.*;
 
 import org.eigenbase.util.*;
 
@@ -34,6 +35,7 @@ import org.eigenbase.util.*;
  * <ul>
  * <li><code>ATTRIBUTE = 'VALUE'</code>
  * <li><code>ATTRIBUTE = ?scalar-param</code>
+ * <li><code>ATTRIBUTE MATCHES 'PATTERN'</code>
  * <li><code>ATTRIBUTE IN ('VALUE1', 'VALUE2', ...)</code>
  * <li><code>ATTRIBUTE IN ?set-param</code>
  * <li><code>ATTRIBUTE IN [SQL-QUERY]</code>
@@ -65,17 +67,31 @@ public class LurqlFilter
 
     private final LurqlExists exists;
 
+    private final boolean isPattern;
+
     private boolean hasDynamicParams;
+
+    private Matcher matcher;
 
     //~ Constructors -----------------------------------------------------------
 
     public LurqlFilter(String attributeName, Set<Object> values)
+    {
+        this(attributeName, values, false);
+    }
+    
+    public LurqlFilter(
+        String attributeName, Set<Object> values, boolean isPattern)
     {
         this.attributeName = attributeName;
         this.values = Collections.unmodifiableSet(values);
         this.sqlQuery = null;
         this.setParam = null;
         this.exists = null;
+        this.isPattern = isPattern;
+        if (isPattern) {
+            assert(values.size() == 1);
+        }
         for (Object obj : values) {
             if (obj instanceof LurqlDynamicParam) {
                 hasDynamicParams = true;
@@ -91,6 +107,7 @@ public class LurqlFilter
         this.setParam = null;
         this.sqlQuery = sqlQuery;
         this.exists = null;
+        this.isPattern = false;
     }
 
     public LurqlFilter(String attributeName, LurqlDynamicParam param)
@@ -101,6 +118,7 @@ public class LurqlFilter
         this.setParam = param;
         hasDynamicParams = true;
         this.exists = null;
+        this.isPattern = false;
     }
 
     public LurqlFilter(LurqlExists exists)
@@ -110,6 +128,7 @@ public class LurqlFilter
         this.sqlQuery = null;
         this.setParam = null;
         this.exists = exists;
+        this.isPattern = false;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -139,6 +158,22 @@ public class LurqlFilter
         return attributeName.equals("mofId");
     }
 
+    public boolean isPattern()
+    {
+        return isPattern;
+    }
+
+    public boolean patternMatch(String patternString, String value)
+    {
+        if (matcher == null) {
+            Pattern pattern = Pattern.compile(patternString);
+            matcher = pattern.matcher(value);
+        } else {
+            matcher.reset(value);
+        }
+        return matcher.matches();
+    }
+
     public boolean hasDynamicParams()
     {
         return hasDynamicParams;
@@ -166,10 +201,15 @@ public class LurqlFilter
             }
             Iterator<Object> iter = values.iterator();
             if (values.size() == 1) {
-                pw.print(" = ");
+                Object obj = iter.next();
+                if (isPattern) {
+                    pw.print(" matches ");
+                } else {
+                    pw.print(" = ");
+                }
                 unparseValue(
                     pw,
-                    iter.next());
+                    obj);
             } else {
                 pw.print(" in (");
                 while (iter.hasNext()) {

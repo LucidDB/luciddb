@@ -21,15 +21,13 @@
 */
 package org.eigenbase.sql;
 
-import java.sql.Date;
-import java.sql.Time;
-
 import java.util.Calendar;
 import java.util.TimeZone;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -55,6 +53,13 @@ abstract class SqlAbstractDateTimeLiteral
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Constructs a datetime literal based on a Calendar. If the literal 
+     * is to represent a Timestamp, the Calendar is expected to follow 
+     * java.sql semantics. If the Calendar is to represent a Time or Date, 
+     * the Calendar is expected to follow {@link GmtTime} and 
+     * {@link GmtDate} semantics.
+     */
     protected SqlAbstractDateTimeLiteral(
         Calendar d,
         boolean tz,
@@ -126,24 +131,33 @@ abstract class SqlAbstractDateTimeLiteral
     }
 
     /**
-     * Converts this literal to a {@link java.sql.Date} object.
+     * Converts this literal to a {@link ZonelessDate} object.
      */
-    protected Date getDate()
+    protected ZonelessDate getDate()
     {
-        return
-            new Date(
-                getCal().getTimeInMillis()
-                - Calendar.getInstance().getTimeZone().getRawOffset());
+        ZonelessDate zd = new ZonelessDate();
+        zd.setZonelessTime(getCal().getTimeInMillis());
+        return zd;
     }
 
     /**
-     * Converts this literal to a {@link java.sql.Time} object.
+     * Converts this literal to a {@link ZonelessTime} object.
      */
-    protected Time getTime()
+    protected ZonelessTime getTime()
     {
-        long millis = getCal().getTimeInMillis();
-        int tzOffset = Calendar.getInstance().getTimeZone().getOffset(millis);
-        return new Time(millis - tzOffset);
+        ZonelessTime zt = new ZonelessTime();
+        zt.setZonelessTime(getCal().getTimeInMillis());
+        return zt;
+    }
+
+    /**
+     * Converts this literal to a {@link ZonelessTimestamp} object.
+     */
+    protected ZonelessTimestamp getTimestamp()
+    {
+        ZonelessTimestamp zt = new ZonelessTimestamp();
+        zt.setZonelessTime(getCal().getTimeInMillis());
+        return zt;
     }
 }
 

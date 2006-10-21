@@ -79,6 +79,11 @@ public class PushProjectPastSetOpRule
     {
         ProjectRel origProj = (ProjectRel) call.rels[0];
         SetOpRel setOpRel = (SetOpRel) call.rels[1];
+        
+        // cannot push project past a distinct
+        if (setOpRel.isDistinct()) {
+            return;
+        }
 
         // locate all fields referenced in the projection; if all fields are
         // being projected and there are no special expressions, no point in

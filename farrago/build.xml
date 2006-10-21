@@ -214,6 +214,7 @@ require version '${required.ant.version}'."/>
   <path id="test.classpath">
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -876,13 +877,23 @@ require version '${required.ant.version}'."/>
     </farrago.runTests>
   </target>
 
-  <target name="test">
+  <!-- ************** test ****************** 
+  Split 'test' to 'test-only' and 'test-only-setup' so Emma can plugin a instr.
+  -->
+
+  <target name="test" depends="test-only-setup,test-only">
+  </target>
+
+  <target name="test-only-setup">
     <antcall target="checkTrace"/>
     <antcall target="cleanExamples"/>
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
     <antcall target="buildJdbcPlugin"/>
     <antcall target="retroweaveIfRequested"/>
+  </target>
+
+  <target name="test-only">
     <antcall target="testRngPlugin"/>
     <antcall target="exportCatalog"/>
     <antcall target="junit"/>

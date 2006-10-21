@@ -29,6 +29,10 @@ select min(deptno) from depts;
 
 select avg(deptno) from depts;
 
+select min(TRUE) from emps group by deptno;
+
+select max(FALSE) from depts;
+
 ------------
 -- group bys
 ------------

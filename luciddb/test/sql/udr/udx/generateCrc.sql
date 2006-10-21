@@ -29,7 +29,7 @@ insert into types values
 select * 
 from table(applib.generate_crc(
   cursor(select * from types)))
-order by crc_value;
+order by 1,2,3,4,5,6,7,8,9,10,11,12;
 
 create table temptypes(c_decimal decimal(10,5),c_tinyint tinyint,c_smallint smallint,c_int integer,c_bigint bigint,c_char char(10),c_varchar varchar(10),c_varchar2 varchar(2),c_int2 char(3),c_timestamp timestamp,c_boolean boolean);
 
@@ -40,7 +40,7 @@ insert into temptypes values
 select * 
 from table(applib.generate_crc(
   cursor(select * from temptypes)))
-order by crc_value;
+order by 1,2,3,4,5,6,7,8,9,10,11,12;
 
 -- on joined table
 select *
@@ -62,20 +62,20 @@ select c_decimal, c_tinyint, c_smallint, c_int, c_bigint, c_char, c_varchar, c_t
 select * 
 from table(applib.generate_crc(
   cursor(select * from typeview)))
-order by crc_value,1,2,3,4,5,6,7,8,9,10,11;
+order by crc_value,1,2,3,4,5,6,7,8,9;
 
 -- functions
 select * 
 from table(applib.generate_crc(
   cursor(select c_smallint/2, coalesce(c_varchar, 'null') from types)))
-order by crc_value,1,2,3,4,5,6,7,8,9,10,11;
+order by crc_value,1,2;
  
 -- recursive
 select *
 from table(applib.generate_crc(
   cursor(select * from table(applib.generate_crc(
     cursor(select * from types))))))
-order by crc_value,1,2,3,4,5,6,7,8,9,10,11;
+order by crc_value,1,2,3,4,5,6,7,8,9,10,11,12;
 
 -- cleanup
 drop view typeview cascade;

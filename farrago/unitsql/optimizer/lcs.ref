@@ -808,8 +808,11 @@
 . . . . . . . . >     where c0 = 0 and c2 = 2 and c4 = 4 and c8 = 8;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1, 2, 3, 0]], filterOp=[COMP_EQ], filterOrdinals=[[0, 1, 2, 3]], filterTuple=[[0, 2, 4, 8]], outputRowType=[RecordType(INTEGER C2, INTEGER C4, INTEGER C8, INTEGER C0) NOT NULL])'
-'    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0, 2, 4, 8]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[2, 4, 8, 0]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]], residual columns=[[0, 2, 4, 8]])'
+'    FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 0, _ISO-8859-1']', 0 }]])'
+'    FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 2, _ISO-8859-1']', 2 }]])'
+'    FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 4, _ISO-8859-1']', 4 }]])'
+'    FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 8, _ISO-8859-1']', 8 }]])'
 0: jdbc:farrago:> explain plan for select c7, c0, c5, c1 from tencols
 . . . . . . . . >     where c1 + c5 = 6;
 'column0'
@@ -824,9 +827,10 @@
 '    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0, 1, 2, 5, 7]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
 0: jdbc:farrago:> explain plan for select c0 + c1 from tencols where c0 = 0;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[=($t0, $t2)], expr#4=[+($t0, $t1)], EXPR$0=[$t4], $condition=[$t3])'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[+($t0, $t1)], EXPR$0=[$t2])'
 '  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0, 1]], clustered indexes=[[I_C0, I_C1_C2]])'
+'    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0, 1]], clustered indexes=[[I_C0, I_C1_C2]], residual columns=[[0]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 0, _ISO-8859-1']', 0 }]])'
 0: jdbc:farrago:> -- column referenced in filter is processed by the index scan so it should
 0: jdbc:farrago:> -- not be projected
 0: jdbc:farrago:> explain plan for select c0 from tencols where c9 = 9;

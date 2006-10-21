@@ -185,6 +185,14 @@ merge into emps e
             t.t_city);
 select lcs_rid(empno), * from emps order by empno;
 
+-- make sure that when the new value is the same as the old one
+-- except for trailing spaces, the update occurs
+merge into emps e
+    using tempemps t on t.t_empno = e.empno and e.name='Fred'
+    when matched then
+        update set name = 'Fred   ';
+select name||'X' from emps order by name;
+
 -- LER-1953
 -- cast in the ON clause should cast to a not null type
 merge into emps e

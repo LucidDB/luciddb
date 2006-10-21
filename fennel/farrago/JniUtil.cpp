@@ -360,6 +360,11 @@ JniEnvAutoRef::~JniEnvAutoRef()
     }
 }
 
+void JniEnvAutoRef::suppressDetach()
+{
+    needDetach = false;
+}
+
 void JniEnvRef::handleExcn(std::exception &ex)
 {
     JavaExcn *pJavaExcn = dynamic_cast<JavaExcn *>(&ex);

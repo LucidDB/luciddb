@@ -503,6 +503,8 @@ where &lt;filter&gt; [ and &lt;filter&gt; ... ]
 &lt;filter&gt; ::=
 &lt;id&gt; '=' &lt;value&gt;
 |
+&lt;id&gt; matches &lt;regular-expression-value&gt;
+|
 &lt;id&gt; in '(' &lt;value&gt; [, &lt;value&gt; ... ] ')'
 |
 &lt;id&gt; in '[' &lt;sql-query-text&gt; ']'
@@ -514,6 +516,8 @@ exists [ &lt;select-list&gt; in ] &lt;path-spec&gt;
 &lt;value&gt; ::=
 &lt;literal&gt;
 | &lt;dynamic-param&gt;
+
+&lt;regular-expression-value&gt; ::= &lt;value&gt;
 
 &lt;dynamic-param&gt; ::=
 '?' &lt;id&gt;

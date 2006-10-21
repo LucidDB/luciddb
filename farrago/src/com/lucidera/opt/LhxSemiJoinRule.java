@@ -55,7 +55,7 @@ public class LhxSemiJoinRule
                         JoinRel.class,
                         new RelOptRuleOperand[] {
                             new RelOptRuleOperand(RelNode.class, null),
-                new RelOptRuleOperand(
+                            new RelOptRuleOperand(
                                 AggregateRel.class,
                                 null)
                         })

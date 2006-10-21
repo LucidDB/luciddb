@@ -300,7 +300,7 @@ public class RelMdUtil
         double artificialSel = 1.0;
 
         List<RexNode> predList = new ArrayList<RexNode>();
-        RelOptUtil.decompCF(predicate, predList);
+        RelOptUtil.decomposeConjunction(predicate, predList);
 
         for (RexNode pred : predList) {
             if ((pred instanceof RexCall)
@@ -389,8 +389,8 @@ public class RelMdUtil
         List<RexNode> list1 = new ArrayList<RexNode>();
         List<RexNode> list2 = new ArrayList<RexNode>();
         List<RexNode> unionList = new ArrayList<RexNode>();
-        RelOptUtil.decompCF(pred1, list1);
-        RelOptUtil.decompCF(pred2, list2);
+        RelOptUtil.decomposeConjunction(pred1, list1);
+        RelOptUtil.decomposeConjunction(pred2, list2);
 
         for (RexNode rex : list1) {
             unionList.add(rex);
@@ -432,8 +432,8 @@ public class RelMdUtil
         List<RexNode> list1 = new ArrayList<RexNode>();
         List<RexNode> list2 = new ArrayList<RexNode>();
         List<RexNode> minusList = new ArrayList<RexNode>();
-        RelOptUtil.decompCF(pred1, list1);
-        RelOptUtil.decompCF(pred2, list2);
+        RelOptUtil.decomposeConjunction(pred1, list1);
+        RelOptUtil.decomposeConjunction(pred2, list2);
 
         for (RexNode rex1 : list1) {
             boolean add = true;
@@ -678,7 +678,7 @@ public class RelMdUtil
             List<RexNode> rightFilters = new ArrayList<RexNode>();
             List<RexNode> joinFilters = new ArrayList<RexNode>();
             List<RexNode> predList = new ArrayList<RexNode>();
-            RelOptUtil.decompCF(predicate, predList);
+            RelOptUtil.decomposeConjunction(predicate, predList);
 
             RelOptUtil.classifyFilters(
                 joinRel,

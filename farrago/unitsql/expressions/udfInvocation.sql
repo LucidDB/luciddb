@@ -158,6 +158,14 @@ no sql
 not deterministic
 external name 'class net.sf.farrago.test.FarragoTestUDR.generateRandomNumber';
 
+-- alias to avoid common subexpression elimination
+create function generate_random_number2(seed bigint)
+returns bigint
+language java
+no sql
+not deterministic
+external name 'class net.sf.farrago.test.FarragoTestUDR.generateRandomNumber';
+
 -- test UDF which depends on FarragoUdrRuntime, with
 -- ClosableAllocation support
 create function gargle()
@@ -202,6 +210,16 @@ language java
 parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.digest';
+
+-- UDX which specifies a calendar argument
+create function foreign_time(
+  ts timestamp, tsZoneId varchar(256), foreignZoneId varchar(256))
+returns table(
+  the_timestamp timestamp, the_date date, the_time time)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.foreignTime';
 
 create view ramp_view as select * from table(ramp(3));
 
@@ -339,12 +357,12 @@ select generate_random_number(42) as rng from sales.depts order by 1;
 
 -- runtime context:  verify that the two instances produce
 -- identical sequences independently (no interference)
-select generate_random_number(42) as rng1, generate_random_number(42) as rng2
+select generate_random_number(42) as rng1, generate_random_number2(42) as rng2
 from sales.depts order by 1;
 
 -- runtime context:  verify that the two instances produce
 -- different sequences independently (no interference)
-select generate_random_number(42) as rng1, generate_random_number(43) as rng2
+select generate_random_number(42) as rng1, generate_random_number2(43) as rng2
 from sales.depts order by 1;
 
 -- runtime context:  verify closeAllocation
@@ -390,6 +408,10 @@ select * from stringified_view;
 select * 
 from table(digest(cursor(select * from sales.depts)))
 order by row_digest;
+
+-- udx with specified calendar
+select *
+from table(foreign_time(timestamp'2006-10-09 18:32:26.992', 'PST', 'EST'));
 
 
 set path 'crypto2';

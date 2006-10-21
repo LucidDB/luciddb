@@ -294,7 +294,7 @@ public abstract class RelOptUtil
      *
      * @param type Struct type
      *
-     * @return Array of field types
+     * @return Array of field names
      *
      * @see #getFieldNameList(RelDataType)
      */
@@ -316,6 +316,7 @@ public abstract class RelOptUtil
      * @return List of field types
      *
      * @see #getFieldNameList(RelDataType)
+     * @see #getFieldTypes(RelDataType)
      */
     public static List<RelDataType> getFieldTypeList(RelDataType type)
     {
@@ -326,7 +327,26 @@ public abstract class RelOptUtil
         }
         return typeList;
     }
-
+    
+    /**
+     * Returns an array of the types of the fields in a given struct type.
+     *
+     * @param type Struct type
+     *
+     * @return Array of field types
+     *
+     * @see #getFieldTypeList(RelDataType)
+     */
+    public static RelDataType [] getFieldTypes(RelDataType type)
+    {
+        RelDataTypeField [] fields = type.getFields();
+        RelDataType [] types = new RelDataType[fields.length];
+        for (int i = 0; i < fields.length; i++) {
+            types[i] = fields[i].getType();
+        }
+        return types;
+    }
+    
     /**
      * Collects the names and types of the fields in a given struct type.
      */
@@ -433,6 +453,11 @@ public abstract class RelOptUtil
      * statements. See {@link
      * org.eigenbase.sql2rel.SqlToRelConverter#convertExists}
      *
+     * Note: this implementation of createExistsPlan is only called from
+     *     com.disruptivetech.farrago.rel
+     *  The last two arguments do not apply to those invocations and can be removed
+     *  from the method.
+     *  
      * <p>
      *
      * @param cluster
@@ -466,36 +491,135 @@ public abstract class RelOptUtil
         }
 
         if (extraExpr != null) {
+            RexBuilder rexBuilder = cluster.getRexBuilder();
+            RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
+
+            assert (extraExpr == rexBuilder.makeLiteral(true));
+        	
             // this should only be called for the exists case
             // first stick an Agg on top of the subquery
             // agg does not like no agg functions so just pretend it is
-            // doing a count
-            RelDataType returnType =
-                SqlStdOperatorTable.countOperator.getReturnType(
-                    cluster.getRexBuilder().getTypeFactory());
+            // doing a min(TRUE)
+        	
+            RexNode[] exprs = new RexNode[1];
+            exprs[0] = extraExpr;
             
-            final AggregateRelBase.Call countCall =
+            ret = CalcRel.createProject(ret, exprs, null);            
+            RelDataType[] argTypes = new RelDataType[1];
+            argTypes[0] = typeFactory.createSqlType(SqlTypeName.Boolean);
+            
+            SqlAggFunction minFunction = 
+                new SqlMinMaxAggFunction(
+                    argTypes,
+                    true,
+                        SqlMinMaxAggFunction.MINMAX_COMPARABLE);
+            
+            RelDataType returnType = minFunction.inferReturnType(typeFactory, argTypes);
+            
+            int[] pos = new int[1];
+            pos[0]=0;
+            
+            final AggregateRelBase.Call aggCall =
                 new AggregateRelBase.Call(
-                    SqlStdOperatorTable.countOperator,
+                    minFunction,
                     false,
-                    new int[0],
+                    pos,
                     returnType);
             
-            RelNode aggRel =
+            ret =
                 new AggregateRel(
                     ret.getCluster(),
                     ret,
                     0,
-                    new AggregateRel.Call[] {countCall});
+                    new AggregateRel.Call[] {aggCall});            
+        }
+
+        return ret;
+    }
+
+    public static RelNode createExistsPlan(
+        RelOptCluster cluster,
+        RelNode seekRel,
+        boolean isIn,
+        boolean isExists,
+        boolean needsOuterJoin)
+    {
+        RelNode ret = seekRel;
+
+        if (isIn || isExists) {
+            RexBuilder rexBuilder = cluster.getRexBuilder();
+            RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
+
+            RelDataType inputFieldType = ret.getRowType();
             
-            final RexNode [] expressions = new RexNode[1];
-            String [] fieldNames = new String[1];
+            int outputFieldCount;
+            if (isIn) {
+                if (needsOuterJoin) {
+                    outputFieldCount = inputFieldType.getFieldCount() + 1;
+                } else {
+                    outputFieldCount = inputFieldType.getFieldCount();
+                }
+            } else {
+                // EXISTS only projects TRUE in the subquery
+                outputFieldCount = 1;
+            }
 
-            expressions[0] = extraExpr;
-            fieldNames[0] =
-                Util.uniqueFieldName(fieldNames, 0, extraName);
-            ret = CalcRel.createProject(aggRel, expressions, fieldNames);            
+            RexNode[] exprs = new RexNode[outputFieldCount];
+            
+            // for IN/NOT IN , it needs to output the fields
+            if (isIn) {
+                for (int i = 0; i < inputFieldType.getFieldCount(); i ++) {
+                    exprs[i] = rexBuilder.makeInputRef(
+                        inputFieldType.getFields()[i].getType(), i);
+                }
+            }
+            
+            if (needsOuterJoin) {
+                // First insert an Agg on top of the subquery
+                // agg does not like no agg functions so just pretend it is
+                // doing a min(TRUE)
+                RexNode trueExp = rexBuilder.makeLiteral(true);
+                exprs[outputFieldCount-1] = trueExp;
+            
+                ret = CalcRel.createProject(ret, exprs, null);            
 
+                RelDataType[] argTypes = new RelDataType[1];
+                argTypes[0] = typeFactory.createSqlType(SqlTypeName.Boolean);
+            
+                SqlAggFunction minFunction = 
+                    new SqlMinMaxAggFunction(
+                        argTypes,
+                        true,
+                        SqlMinMaxAggFunction.MINMAX_COMPARABLE);
+            
+                RelDataType returnType = minFunction.inferReturnType(typeFactory, argTypes);
+            
+                int newProjFieldCount = ret.getRowType().getFieldCount();
+            
+                int[] pos = new int[1];
+                pos[0]=newProjFieldCount-1;
+            
+                final AggregateRelBase.Call aggCall =
+                    new AggregateRelBase.Call(
+                        minFunction,
+                        false,
+                        pos,
+                        returnType);
+  
+                ret =
+                    new AggregateRel(
+                        ret.getCluster(),
+                        ret,
+                        newProjFieldCount-1,
+                        new AggregateRel.Call[] {aggCall});
+            } else {
+                ret =
+                    new AggregateRel(
+                        ret.getCluster(),
+                        ret,
+                        ret.getRowType().getFieldCount(),
+                        new AggregateRel.Call[0]);
+            }
         }
 
         return ret;
@@ -1345,6 +1469,13 @@ public abstract class RelOptUtil
         } else {
             ret = isDistinctFromInternal(rexBuilder, x, y, neg);
         }
+
+        // The result of IS DISTINCT FROM is NOT NULL because it can
+        // only return TRUE or FALSE.
+        ret = rexBuilder.makeCast(
+            rexBuilder.getTypeFactory().createSqlType(SqlTypeName.Boolean),
+            ret);
+        
         return ret;
     }
 
@@ -1447,7 +1578,7 @@ public abstract class RelOptUtil
      * @param rexPredicate predicate to be analyzed
      * @param rexList list of decomposed RexNodes
      */
-    public static void decompCF(RexNode rexPredicate, List<RexNode> rexList)
+    public static void decomposeConjunction(RexNode rexPredicate, List<RexNode> rexList)
     {
         if (rexPredicate == null) {
             return;
@@ -1456,7 +1587,7 @@ public abstract class RelOptUtil
             final RexNode [] operands = ((RexCall) rexPredicate).getOperands();
             for (int i = 0; i < operands.length; i++) {
                 RexNode operand = operands[i];
-                decompCF(operand, rexList);
+                decomposeConjunction(operand, rexList);
             }
         } else {
             rexList.add(rexPredicate);
@@ -1676,7 +1807,7 @@ public abstract class RelOptUtil
     {
         // convert the filter to a list
         List<RexNode> filterList = new ArrayList<RexNode>();
-        RelOptUtil.decompCF(predicate, filterList);
+        RelOptUtil.decomposeConjunction(predicate, filterList);
 
         // for each filter, if the filter only references the child inputs,
         // then it can be pushed
@@ -1876,6 +2007,50 @@ public abstract class RelOptUtil
         return newSetOpRel;
     }
     
+    /**
+     * Converts a filter to the new filter that would result if the
+     * filter is pushed past a ProjectRel that it currently is referencing.
+     * 
+     * @param filter the filter to be converted
+     * @param projRel project rel underneath the filter
+     * 
+     * @return converted filter
+     */
+    public static RexNode pushFilterPastProject(
+        RexNode filter,
+        ProjectRelBase projRel)
+    {
+        // use RexPrograms to merge the filter and ProjectRel into a
+        // single program so we can convert the FilterRel condition to
+        // directly reference the ProjectRel's child
+        RexBuilder rexBuilder = projRel.getCluster().getRexBuilder();
+        RexProgram bottomProgram =
+            RexProgram.create(
+                projRel.getChild().getRowType(),
+                projRel.getProjectExps(),
+                null,
+                projRel.getRowType(),
+                rexBuilder);
+
+        RexProgramBuilder topProgramBuilder =
+            new RexProgramBuilder(
+                projRel.getRowType(),
+                rexBuilder);
+        topProgramBuilder.addIdentity();
+        topProgramBuilder.addCondition(filter);
+        RexProgram topProgram = topProgramBuilder.getProgram();
+
+        RexProgram mergedProgram =
+            RexProgramBuilder.mergePrograms(
+                topProgram,
+                bottomProgram,
+                rexBuilder);
+
+        return
+            mergedProgram.expandLocalRef(
+                mergedProgram.getCondition());
+    }
+    
     //~ Inner Classes ----------------------------------------------------------
 
     private static class VariableSetVisitor
@@ -1910,6 +2085,18 @@ public abstract class RelOptUtil
         }
     }
 
+    public static class InputReferencedVisitor
+        extends RexShuttle
+    {
+        public final SortedSet<Integer> inputPosReferenced = new TreeSet<Integer>();
+
+        public RexNode visitInputRef(RexInputRef inputRef)
+        {
+            inputPosReferenced.add(inputRef.getIndex());
+            return inputRef;
+        }
+    }
+    
     public static class TypeDumper
     {
         private final String extraIndent = "  ";
@@ -2013,7 +2200,8 @@ public abstract class RelOptUtil
         /**
          * @param rexBuilder builder for creating new RexInputRefs
          * @param srcFields fields where the RexInputRefs originally originated
-         * from
+         * from; if null, a new RexInputRef is always created, referencing
+         * the input from destFields corresponding to its current index value
          * @param destFields fields that the new RexInputRefs will be
          * referencing; if null, the types of the srcFields are the same as the
          * destFields
@@ -2053,8 +2241,9 @@ public abstract class RelOptUtil
             } else {
                 type = destFields[destIndex].getType();
             }
-            if ((adjustments[srcIndex] != 0)
-                || (type != srcFields[srcIndex].getType())) {
+            if ((adjustments[srcIndex] != 0) || srcFields == null ||
+                (type != srcFields[srcIndex].getType()))
+            {
                 return rexBuilder.makeInputRef(type, destIndex);
             } else {
                 return var;

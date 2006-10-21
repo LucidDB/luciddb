@@ -380,8 +380,18 @@ outer:
                     }
                 }
                 Set filterValues = getFilterValues(filters[i]);
-                if (!filterValues.contains(value)) {
-                    continue outer;
+                if (filters[i].isPattern()) {
+                    assert(filterValues.size() == 1);
+                    boolean match = filters[i].patternMatch(
+                        (String) filterValues.iterator().next(),
+                        value);
+                    if (!match) {
+                        continue outer;
+                    }
+                } else {
+                    if (!filterValues.contains(value)) {
+                        continue outer;
+                    }
                 }
             }
             for (int i = 0; i < existsEdges.length; ++i) {

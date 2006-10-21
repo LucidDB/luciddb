@@ -44,11 +44,9 @@ void TupleDatum::memCopyFrom(TupleDatum const &other)
     }
 }
 
-// TODO jvs 27-Nov-2005:
-// We'll probably need to implement leading/trailing zero compression for
-// numerics to match Broadbase.
-
-void TupleDatum::storeLcsDatum(PBuffer pDataWithLen)
+void TupleDatum::storeLcsDatum(
+    PBuffer pDataWithLen,
+    TupleAttributeDescriptor const &attrDesc)
 {
     PBuffer tmpDataPtr = pDataWithLen;
       
@@ -58,10 +56,6 @@ void TupleDatum::storeLcsDatum(PBuffer pDataWithLen)
      */
     assert(cbData <= TWO_BYTE_MAX_LENGTH);
       
-    /*
-     * Stores length.
-     */
-    
     if (!pData) {
         /*
          * Handle NULL.
@@ -72,77 +66,170 @@ void TupleDatum::storeLcsDatum(PBuffer pDataWithLen)
         *tmpDataPtr = 0x00;
         tmpDataPtr ++;
     } else {
-        if (cbData <= ONE_BYTE_MAX_LENGTH) {
-            *tmpDataPtr = static_cast<uint8_t>(cbData);
-            tmpDataPtr++;
+        StoredTypeDescriptor::Ordinal typeOrdinal =
+            attrDesc.pTypeDescriptor->getOrdinal();
+
+        // strip off leading zeros from 8-byte ints
+        if (typeOrdinal == STANDARD_TYPE_INT_64 ||
+            typeOrdinal == STANDARD_TYPE_UINT_64)
+        {
+            compress8ByteInt(tmpDataPtr);
         } else {
-            uint8_t higherByte = (cbData & TWO_BYTE_LENGTH_MASK1) >> 8 | TWO_BYTE_LENGTH_BIT;
-            uint8_t lowerByte  = cbData & TWO_BYTE_LENGTH_MASK2;
-            *tmpDataPtr = higherByte;
-            tmpDataPtr++;
-            *tmpDataPtr = lowerByte;
-            tmpDataPtr++;
+
+            // for varying-length data and data that is nullable, store
+            // a length byte in either 1 or 2 bytes, depending on the length
+            if (!attrDesc.isLcsFixedWidth) {
+                if (cbData <= ONE_BYTE_MAX_LENGTH) {
+                    *tmpDataPtr = static_cast<uint8_t>(cbData);
+                    tmpDataPtr++;
+                } else {
+                    uint8_t higherByte =
+                        (cbData & TWO_BYTE_LENGTH_MASK1) >> 8 |
+                            TWO_BYTE_LENGTH_BIT;
+                    uint8_t lowerByte  = cbData & TWO_BYTE_LENGTH_MASK2;
+                    *tmpDataPtr = higherByte;
+                    tmpDataPtr++;
+                    *tmpDataPtr = lowerByte;
+                    tmpDataPtr++;
+                }
+            }
+
+            // store the value
+            memcpy(tmpDataPtr, pData, cbData);
         }
-      
-        /*
-         * Stores value.
-         */
-        memcpy(tmpDataPtr, pData, cbData);
     }
 }
 
-void TupleDatum::loadLcsDatum(PConstBuffer pDataWithLen)
+void TupleDatum::compress8ByteInt(PBuffer pDest)
 {
-    assert (pData);
+    assert(cbData == 8);
+    int64_t intVal = *reinterpret_cast<int64_t const *> (pData);
+    uint len;
 
-    /*
-      if length is longer than 127, length indicator is two bytes long
-    */
-    if (*pDataWithLen & TWO_BYTE_LENGTH_BIT) {
-        cbData =
-            ((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
-            | *(pDataWithLen + 1);
-        if (cbData == 0) {
-            /*
-             * 0x8000 is used to indicate NULL value.
-             */
-            pData = NULL;
-        } else {        
-            memcpy(const_cast<PBuffer>(pData), pDataWithLen + 2, cbData);
+    if (intVal >= 0) {
+        FixedBuffer tmpBuf[8];
+        PBuffer pTmpBuf = tmpBuf + 8;
+        len = 0;
+        do {
+            *(--pTmpBuf) = intVal & 0xff;
+            len++;
+            intVal >>= 8;
+        } while (intVal);
+
+        // if the high bit is set, add an extra zero byte to distinguish this
+        // value from a negative one
+        if (*pTmpBuf & 0x80) {
+            *(--pTmpBuf) = 0;
+            len++;
         }
+        *pDest = static_cast<uint8_t>(len);
+        memcpy(pDest + 1, pTmpBuf, len);
+
     } else {
-        cbData = *pDataWithLen;
-        memcpy(const_cast<PBuffer>(pData), pDataWithLen + 1, cbData);
+        // negative case -- calculate the number of bytes based on the value
+        if (intVal >= -(0x80)) {
+            len = 1;
+        } else if (intVal >= -(0x8000)) {
+            len = 2;
+        } else if (intVal >= -(0x800000)) {
+            len = 3;
+        } else if (intVal >= -(0x80000000LL)) {
+            len = 4;
+        } else if (intVal >= -(0x8000000000LL)) {
+            len = 5;
+        } else if (intVal >= -(0x800000000000LL)) {
+            len = 6;
+        } else if (intVal >= -(0x80000000000000LL)) {
+            len = 7;
+        } else {
+            len = 8;
+        }
+        *pDest = static_cast<uint8_t>(len);
+        PBuffer pTmpBuf = pDest + 1 + len;
+        while (len--) {
+            *(--pTmpBuf) = intVal & 0xff;
+            intVal >>= 8;
+        }
     }
 }
 
-TupleStorageByteLength TupleDatum::getLcsLength(PConstBuffer pDataWithLen)
+void TupleDatum::loadLcsDatum(
+    PConstBuffer pDataWithLen,
+    TupleAttributeDescriptor const &attrDesc)
 {
-    if (pDataWithLen) {
+    assert(pData);
+    StoredTypeDescriptor::Ordinal typeOrdinal =
+        attrDesc.pTypeDescriptor->getOrdinal();
+
+    // fixed width, non-nullable data is stored without leading length byte(s)
+    if (attrDesc.isLcsFixedWidth) {
+        cbData = attrDesc.cbStorage;
+        memcpy(const_cast<PBuffer>(pData), pDataWithLen, cbData);
+
+    } else {
+        // first, check if we have null data
         if (*pDataWithLen & TWO_BYTE_LENGTH_BIT) {
-            return
-                (((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
-                    | *(pDataWithLen + 1))
-                    + 2;
+            cbData =
+                ((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
+                | *(pDataWithLen + 1);
+            if (cbData == 0) {
+                 // 0x8000 is used to indicate NULL value.
+                pData = NULL;
+            } else {        
+                // not null, so must have a length that requires 2 bytes to
+                // store
+                memcpy(const_cast<PBuffer>(pData), pDataWithLen + 2, cbData);
+            }
         } else {
-            return (*pDataWithLen + 1);
+            // 8-byte integers are stored with leading zeros stripped off
+            if (typeOrdinal == STANDARD_TYPE_INT_64 ||
+                typeOrdinal == STANDARD_TYPE_UINT_64)
+            {
+                uncompress8ByteInt(pDataWithLen);
+
+            // data that requires 1 byte to store the length
+            } else {
+                cbData = *pDataWithLen;
+                memcpy(const_cast<PBuffer>(pData), pDataWithLen + 1, cbData);
+            }
         }
+    }
+}
+
+void TupleDatum::uncompress8ByteInt(PConstBuffer pDataWithLen)
+{
+    uint len = *pDataWithLen;
+    assert(len != 0);
+    PConstBuffer pSrcBuf = pDataWithLen + 1;
+    uint signByte = *(pSrcBuf++);
+    // sign extend the high order byte if it's a negative number
+    int64_t intVal =
+        int64_t(signByte) | ((signByte & 0x80) ? 0xffffffffffffff00LL : 0);
+    while (--len > 0) {
+        intVal <<= 8;
+        intVal |= *(pSrcBuf++);
+    }
+    cbData = 8;
+    memcpy(const_cast<PBuffer>(pData), &intVal, 8);
+}
+
+TupleStorageByteLength TupleDatum::getLcsLength(
+    PConstBuffer pDataWithLen,
+    TupleAttributeDescriptor const &attrDesc)
+{
+    assert(pDataWithLen);
+
+    if (attrDesc.isLcsFixedWidth) {
+        return attrDesc.cbStorage;
+    }
+
+    if (*pDataWithLen & TWO_BYTE_LENGTH_BIT) {
+        return
+            (((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
+                | *(pDataWithLen + 1))
+                + 2;
     } else {
-        // REVIEW jvs 27-Nov-2005: What's the purpose of accepting
-        // a NULL pointer here?  If this is intended as a way to compute
-        // the required buffer size before allocation, it should be
-        // documented.  But it relies on cbData, which won't work for
-        // types like VARCHAR (only the TupleDescriptor is guaranteed to
-        // have the required info).
-        //
-        // NOTE rchen 2005-11-29: This function returns the storage length
-        // required to store the value in pData, or the pointer passed in.
-        //
-        if (cbData <= ONE_BYTE_MAX_LENGTH) {
-            return cbData + 1;
-        } else {
-            return cbData + 2;
-        }
+        return (*pDataWithLen + 1);
     }
 }    
 

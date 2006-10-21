@@ -52,20 +52,20 @@ class FarragoOJRexNextValueImplementor
         RexCall call,
         Expression [] operands)
     {
-        // make sequence a static member variable
-        // to avoid retrieving it every iteration
+        // make sequence a member variable to avoid retrieving it every
+        // iteration
         Variable sequence = translator.newVariable();
         FieldDeclaration declaration =
             translator.newMember(
-                ModifierList.STATIC,
+                ModifierList.PRIVATE,
                 OJClass.forClass(FarragoSequenceAccessor.class),
                 sequence,
                 null);
         translator.addMember(declaration);
 
         // before processing a row, inialize the sequence if
-        // it has not been intialized yet
-        // FIXME: this should be synchronized
+        // it has not been initialized yet; no need to synchronize because
+        // member is non-static
         Expression mofId = translator.toString(operands[0]);
         Expression expForSequence =
             new MethodCall(

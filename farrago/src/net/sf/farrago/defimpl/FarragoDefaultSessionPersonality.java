@@ -174,12 +174,18 @@ public class FarragoDefaultSessionPersonality
         // context. However, custom personalities may have a use for it, which
         // is why it is provided in the interface.
         FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);
+        initPreparingStmt(stmt);
+        return stmt;
+    }
+
+    protected void initPreparingStmt(FarragoPreparingStmt stmt)
+    {
+        FarragoSessionStmtValidator stmtValidator = stmt.getStmtValidator();
         FarragoSessionPlanner planner =
             stmtValidator.getSession().getPersonality().newPlanner(stmt, true);
         planner.setRuleDescExclusionFilter(
             stmtValidator.getSession().getOptRuleDescExclusionFilter());
         stmt.setPlanner(planner);
-        return stmt;
     }
 
     // implement FarragoSessionPersonality

@@ -58,6 +58,10 @@ class FarragoJdbcStringParamDef
             return x;
         }
         if (x instanceof String) {
+            if (((String) x).length() > maxCharCount) {
+                // TODO: SQLWarning
+                return ((String) x).substring(0, maxCharCount);
+            }
             return x;
         }
         if (x instanceof byte []) {

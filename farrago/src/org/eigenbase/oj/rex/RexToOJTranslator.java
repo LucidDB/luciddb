@@ -58,6 +58,9 @@ public class RexToOJTranslator
     private final JavaRelImplementor implementor;
     private final RelNode contextRel;
     private final OJRexImplementorTable implementorTable;
+
+    // TODO jvs 16-Oct-2006:  Eliminate this now that RexVisitor
+    // can return values.
     private Expression translatedExpr;
 
     /**
@@ -73,21 +76,13 @@ public class RexToOJTranslator
     private RexProgram program;
 
     /**
-     * stmtLists for case expression. each when, then or else has one
-     * statmentList.
+     * Statement lists being built up for ROW or CASE expression.
+     * For CASE expressions, each WHEN, THEN or ELSE has one
+     * statementList.  For ROW expressions, each value in a row
+     * has one statementList.
      */
     private StatementList [] stmtLists;
 
-    /**
-     * Maps expressions to the variable which has been assigned their value.
-     *
-     * <p>FIXME: Map may be too specific (if we're using identity rather than
-     * structural equivalence to match expressions) and simultaneously not
-     * specific enough (we might mistakenly match expressions which are
-     * equivalent but which come from different programs).
-     */
-    private final Map<Expression, Variable> exprMap =
-        new HashMap<Expression, Variable>();
     private final Stack<RexProgram> programStack = new Stack<RexProgram>();
 
     //~ Constructors -----------------------------------------------------------
@@ -118,9 +113,10 @@ public class RexToOJTranslator
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Returns the corresponding StatementList.
+     * Returns the StatementList corresponding to a subexpression
+     * of a CASE or ROW expression.
      */
-    public StatementList getCaseStmtList(int i)
+    public StatementList getSubStmtList(int i)
     {
         if (stmtLists == null) {
             return null;
@@ -162,7 +158,7 @@ public class RexToOJTranslator
         return implementor;
     }
 
-    protected RelNode getContextRel()
+    public RelNode getContextRel()
     {
         return contextRel;
     }
@@ -175,19 +171,43 @@ public class RexToOJTranslator
     // implement RexVisitor
     public Expression visitLocalRef(RexLocalRef localRef)
     {
-        final int index = localRef.getIndex();
         assert program != null;
-        if (program.getInputRowType().isStruct()
-            && (index < program.getInputRowType().getFields().length)) {
-            // It's a reference to an input field.
+        if (isInputRef(localRef)) {
             return translateInput(localRef.getIndex());
         } else {
             // It's a reference to a common sub-expression. Recursively
             // translate that expression.
-            final RexNode expr = program.getExprList().get(index);
-            assert expr.getType() == localRef.getType();
-            return expr.accept(this);
+            return setTranslation(translateSubExpression(localRef));
         }
+    }
+
+    /**
+     * Translates a common subexpression.
+     *
+     * @param localRef common subexpression to be translated
+     *
+     * @return translation
+     */
+    public Expression translateSubExpression(RexLocalRef localRef)
+    {
+        final RexNode expr = program.getExprList().get(localRef.getIndex());
+        assert expr.getType() == localRef.getType();
+        return translateRexNode(expr);
+    }
+
+    /**
+     * Tests whether a RexLocalRef refers to an input.
+     *
+     * @param localRef reference to test
+     *
+     * @return true if an input reference; false if a reference
+     * to a common subexpression
+     */
+    protected boolean isInputRef(RexLocalRef localRef)
+    {
+        final int index = localRef.getIndex();
+        return program.getInputRowType().isStruct()
+            && (index < program.getInputRowType().getFields().length);
     }
 
     // implement RexVisitor
@@ -198,12 +218,6 @@ public class RexToOJTranslator
             // Lookup the expression.
             final RexNode expanded = program.getExprList().get(index);
             assert expanded.getType() == inputRef.getType();
-            final Variable v = exprMap.get(expanded);
-            if (v != null) {
-                // Expression is has already been calculated and assigned to a
-                // variable.
-                return setTranslation(v);
-            }
 
             // Unset program because the new expression is in terms of the
             // program's inputs. This also prevents infinite expansion.
@@ -315,19 +329,21 @@ public class RexToOJTranslator
     // implement RexVisitor
     public Expression visitCall(RexCall call)
     {
-        boolean bInsideCase;
         RexNode [] operands = call.getOperands();
         Expression [] exprs = new Expression[operands.length];
-        StatementList [] bkupStmtLists = stmtLists;
+        StatementList [] savedStmtLists = stmtLists;
         StatementList outStmtList = null;
-        bInsideCase = false;
-        if (call.getOperator() instanceof SqlCaseOperator) {
-            bInsideCase = true;
+        // TODO jvs 16-Oct-2006:  make this properly extensible
+        boolean needSub =
+            (call.getOperator() instanceof SqlCaseOperator)
+            || (call.getOperator() instanceof SqlNewOperator)
+            || (call.getOperator() instanceof SqlRowOperator);
+        if (needSub) {
             stmtLists = new StatementList[operands.length];
         }
         for (int i = 0; i < operands.length; i++) {
             RexNode operand = operands[i];
-            if (bInsideCase) {
+            if (needSub) {
                 stmtLists[i] = new StatementList();
                 RexToOJTranslator subTranslator = push(stmtLists[i]);
                 exprs[i] = subTranslator.translateRexNode(operand);
@@ -336,8 +352,8 @@ public class RexToOJTranslator
             }
         }
         Expression callExpr = convertCall(call, exprs);
-        if (bInsideCase) {
-            stmtLists = bkupStmtLists;
+        if (needSub) {
+            stmtLists = savedStmtLists;
         }
         return setTranslation(callExpr);
     }

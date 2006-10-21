@@ -278,6 +278,11 @@ class FlatFileParams
             || (b == 2)) {
             return '\n';
         }
+        // Windows parsing seems to directly provide carriage returns; 
+        // replace these with newline too.
+        if (delim.charAt(0) == '\r') {
+            return '\n';
+        }
         return delim.charAt(0);
     }
 

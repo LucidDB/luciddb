@@ -270,6 +270,62 @@ specific applib_std_timestamp_to_char
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.timestamp_to_char';
 
+-- adds n number of days to a date
+create function applib.add_days(d date, n int)
+returns date
+specific add_days_date
+contains sql
+return (
+  d + cast(cast(n as bigint)*24*60*60*1000 as interval day)
+);
+
+-- adds n number of days to a timestamp
+create function applib.add_days(ts timestamp, n int)
+returns timestamp
+specific add_days_timestamp
+contains sql
+return (
+  ts + cast(cast(n as bigint)*24*60*60*1000 as interval day)
+);
+
+-- adds n number of hours to a timestamp
+create function applib.add_hours(ts timestamp, n int)
+returns timestamp
+specific add_hours_timestamp
+contains sql
+return (
+  ts + cast(cast(n as bigint)*60*60*1000 as interval day to hour));
+
+-- returns the difference in units of days between two dates
+create function applib.days_diff(d1 date, d2 date)
+returns bigint
+specific days_diff_dates
+contains sql
+return (
+  extract( day from ((d1 - d2) day) )
+);
+
+-- returns the difference in units of days between two timestamps. Note that
+-- partial days that are less than 24 hours will not count as a day.
+create function applib.days_diff(ts1 timestamp, ts2 timestamp)
+returns bigint
+specific days_diff_timestamps
+contains sql
+return (
+  extract( day from ((ts1 - ts2) day) )
+);
+
+-- returns the difference in units of hours between two timestamps. Note that 
+-- partial hours that are less than 60 minutes will not count as an hour.
+create function applib.hours_diff(ts1 timestamp, ts2 timestamp)
+returns bigint
+specific hours_diff_timestamps
+contains sql
+return (
+  extract( day from ((ts1 - ts2) day)) * 24  +
+  extract( hour from ((ts1 - ts2) hour))
+);
+
 -- define dayFromJulianStart
 -- 2440588 is the number of days from the Julian Calendar start date to 
 -- the epoch Jan 1, 1970 
@@ -460,6 +516,60 @@ specific time_dimension
 parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensionUdx.execute';
+
+-- Fiscal time dimension 
+create function APPLIB.FISCAL_TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int, fiscalYrStartMth int)
+returns table(
+  TIME_KEY_SEQ int,
+  TIME_KEY date,
+  DAY_OF_WEEK varchar(10),
+  WEEKEND varchar(1),
+  DAY_NUMBER_IN_WEEK int,
+  DAY_NUMBER_IN_MONTH int,
+  DAY_NUMBER_IN_QUARTER int,
+  DAY_NUMBER_IN_YEAR int,
+  DAY_NUMBER_OVERALL int,
+  DAY_FROM_JULIAN int,
+  WEEK_NUMBER_IN_MONTH int,
+  WEEK_NUMBER_IN_QUARTER int,
+  WEEK_NUMBER_IN_YEAR int,
+  WEEK_NUMBER_OVERALL int,
+  MONTH_NAME varchar(10),
+  MONTH_NUMBER_IN_QUARTER int,
+  MONTH_NUMBER_IN_YEAR int,
+  MONTH_NUMBER_OVERALL int,
+  QUARTER int,
+  YR int,
+  CALENDAR_QUARTER varchar(6),
+  WEEK_START_DATE date,
+  WEEK_END_DATE date,
+  MONTH_START_DATE date,
+  MONTH_END_DATE date,
+  QUARTER_START_DATE date,
+  QUARTER_END_DATE date,
+  YEAR_START_DATE date,
+  YEAR_END_DATE date,
+  FISCAL_YEAR int,
+  FISCAL_DAY_NUMBER_IN_QUARTER int,
+  FISCAL_DAY_NUMBER_IN_YEAR int,
+  FISCAL_WEEK_START_DATE date,
+  FISCAL_WEEK_END_DATE date,
+  FISCAL_WEEK_NUMBER_IN_MONTH int,
+  FISCAL_WEEK_NUMBER_IN_QUARTER int,
+  FISCAL_WEEK_NUMBER_IN_YEAR int,
+  FISCAL_MONTH_START_DATE date,
+  FISCAL_MONTH_END_DATE date,
+  FISCAL_MONTH_NUMBER_IN_QUARTER int,
+  FISCAL_MONTH_NUMBER_IN_YEAR int,
+  FISCAL_QUARTER_START_DATE date,
+  FISCAL_QUARTER_END_DATE date,
+  FISCAL_QUARTER_NUMBER_IN_YEAR int,
+  FISCAL_YEAR_START_DATE date,
+  FISCAL_YEAR_END_DATE date)
+language java
+parameter style system defined java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalTimeDimensionUdx.execute';
 
 -- Flatten hierarchical data
 create function applib.flatten_recursive_hierarchy(c cursor)

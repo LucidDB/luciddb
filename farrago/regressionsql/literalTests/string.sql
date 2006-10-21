@@ -2,6 +2,9 @@
 
 values 'unknown';
 
+-- LDB-141
+values 'not \u my \u problem';
+
 -- test datatype
 create schema test;
 set schema 'test';

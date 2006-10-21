@@ -10,6 +10,11 @@ EXPLAIN AND EXECUTE
 select *
 from class ModelElement where name in ('Class', 'Exception');
 
+# Test MATCHES filter
+EXPLAIN AND EXECUTE
+select *
+from class ModelElement where name matches '.*x.*';
+
 # Test IN filter with SQL query.
 EXPLAIN AND EXECUTE
 select *

@@ -23,6 +23,7 @@ package com.lucidera.luciddb.applib.datetime;
 import com.lucidera.luciddb.applib.resource.*;
 
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.syslib.*;
 
 import java.sql.*;
 import java.text.*;
@@ -38,74 +39,34 @@ public class StdConvertDateUdf
 {
     public static Date char_to_date(String format, String dateString)
     {
-        return new Date(charToDateHelper(format, dateString));
+        return FarragoConvertDatetimeUDR.char_to_date(format, dateString);
     }
 
     public static Time char_to_time(String format, String timeString)
     {
-        return new Time(charToDateHelper(format, timeString));
+        return FarragoConvertDatetimeUDR.char_to_time(format, timeString);
     }
 
     public static Timestamp char_to_timestamp(
         String format, String timestampString)
     {
-        return new Timestamp(charToDateHelper(format, timestampString));
+        return FarragoConvertDatetimeUDR.char_to_timestamp(
+            format, timestampString);
     }
 
     public static String date_to_char(String format, Date d)
     {
-        DateFormat df = getDateFormat(format);
-        return df.format(d);
+        return FarragoConvertDatetimeUDR.date_to_char(format, d);
     }
 
     public static String time_to_char(String format, Time t)
     {
-        DateFormat df = getDateFormat(format);
-        return df.format(t);
+        return FarragoConvertDatetimeUDR.time_to_char(format, t);
     }
 
     public static String timestamp_to_char(String format, Timestamp ts)
     {
-        DateFormat df = getDateFormat(format);
-        return df.format(ts);
-    }
-
-    /**
-     * Converts a string to a standard Java date, expressed in milliseconds
-     */
-    private static long charToDateHelper(String format, String s)
-    {
-        DateFormat df = getDateFormat(format, true);
-        long ret;
-        try {
-            ret = df.parse(s).getTime();
-        } catch (ParseException ex) {
-            throw ApplibResourceObject.get().InvalidDateString.ex(
-                format, s);
-        }
-        return ret;
-    }
-
-    /**
-     * Gets a date formatter, caching it in the Farrago runtime context
-     */
-    private static DateFormat getDateFormat(String format, boolean gmt)
-    {
-        SimpleDateFormat sdf =
-            (SimpleDateFormat) FarragoUdrRuntime.getContext();
-        if (sdf == null) {
-            sdf = new SimpleDateFormat(format);
-            if (gmt) {
-                sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
-            }
-            FarragoUdrRuntime.setContext(sdf);
-        }
-        return sdf;
-    }
-
-    private static DateFormat getDateFormat(String format) 
-    {
-        return getDateFormat(format, false);
+        return FarragoConvertDatetimeUDR.timestamp_to_char(format, ts);
     }
 }
 

@@ -1403,6 +1403,17 @@ public class SqlValidatorImpl
                 new JoinScope(parentScope, usingScope, join);
             scopes.put(join, joinScope);
             final SqlNode left = join.getLeft();
+            final SqlNode right = join.getRight();
+            boolean rightIsLateral = false;
+            
+            if (right.isA(SqlKind.Lateral)
+                || (
+                    right.isA(SqlKind.As)
+                    && ((SqlCall) right).operands[0].isA(SqlKind.Lateral)
+                   )) {
+                rightIsLateral = true;
+            }
+            
             boolean forceLeftNullable = forceNullable;
             boolean forceRightNullable = forceNullable;
             if (join.getJoinType() == SqlJoinOperator.JoinType.Left) {
@@ -1424,13 +1435,8 @@ public class SqlValidatorImpl
             if (newLeft != left) {
                 join.setOperand(SqlJoin.LEFT_OPERAND, newLeft);
             }
-            final SqlNode right = join.getRight();
             final SqlValidatorScope rightParentScope;
-            if (right.isA(SqlKind.Lateral)
-                || (
-                    right.isA(SqlKind.As)
-                    && ((SqlCall) right).operands[0].isA(SqlKind.Lateral)
-                   )) {
+            if (rightIsLateral) {
                 rightParentScope = joinScope;
             } else {
                 rightParentScope = parentScope;

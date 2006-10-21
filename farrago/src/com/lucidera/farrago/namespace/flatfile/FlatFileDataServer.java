@@ -103,6 +103,11 @@ class FlatFileDataServer
                 .ex();
             }
         }
+
+        if (params.getMapped() && params.getWithHeader() == false) {
+            throw FarragoResource.instance().FlatFileMappedRequiresWithHeader
+                .ex();
+        }
     }
 
     // implement FarragoMedDataServer

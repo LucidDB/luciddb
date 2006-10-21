@@ -275,6 +275,16 @@ ${farrago.test.jvmargs}
        properties file.  The properties file will take precedence. -->
   <property name="farrago.custom.classpath" value=""/>
 
+ <!-- set test.emma.classpath for emma test only -->
+  <if>
+    <not>
+      <isset property="test.emma.classpath"/>
+    </not>
+    <then>
+	    <property name="test.emma.classpath" value=""/>
+    </then>
+  </if>
+
   <!-- xerces path -->
   <path id="xerces.classpath">
     <fileset dir=".">
@@ -332,6 +342,7 @@ ${farrago.test.jvmargs}
     </fileset>
     <pathelement location="${farrago.classes.dir}"/>
     <pathelement location="${farrago.catalog.src.dir}"/>
+    <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="farrago.run.classpath" refid="farrago.run.classpath"/>
 

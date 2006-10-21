@@ -248,6 +248,8 @@ public class SqlIntervalQualifier
     public static class TimeUnit
         extends EnumeratedValues.BasicValue
     {
+        public static final String GET_VALUE_METHOD_NAME = "getValue";
+
         public static final int Year_ordinal = 0;
         public static final TimeUnit Year = new TimeUnit("Year", Year_ordinal);
         public static final int Month_ordinal = 1;
@@ -268,6 +270,16 @@ public class SqlIntervalQualifier
                 new TimeUnit[] {
                     Year, Month, Day, Hour, Minute, Second,
                 });
+
+        /**
+         * Returns the TimeUnit associated with an ordinal. The value 
+         * returned is null if the ordinal is not a member of the 
+         * TimeUnit enumeration.
+         */
+        public static TimeUnit getValue(int ordinal)
+        {
+            return (TimeUnit) enumeration.getValue(ordinal);
+        }
 
         private TimeUnit(String name, int ordinal)
         {

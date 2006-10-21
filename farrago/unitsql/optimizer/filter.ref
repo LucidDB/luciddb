@@ -33,6 +33,23 @@
 | Wilma  |
 +--------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> select name, empno, deptno from emps
+. . . . . . . . > where (empno, deptno) in ((110, 10), (120, 20)) order by name;
++--------+--------+---------+
+|  NAME  | EMPNO  | DEPTNO  |
++--------+--------+---------+
+| Wilma  | 120    | 20      |
++--------+--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select name, empno, deptno from emps 
+. . . . . . . . > where (empno - 10, deptno + 10) in ((100, 20), (110, 30))
+. . . . . . . . > order by name;
++--------+--------+---------+
+|  NAME  | EMPNO  | DEPTNO  |
++--------+--------+---------+
+| Wilma  | 120    | 20      |
++--------+--------+---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- IN filter implemented as join; have to go over
 0: jdbc:farrago:> -- the default threshold of 20 list items for this to kick in;
 0: jdbc:farrago:> -- throw in some duplicates just for fun
@@ -56,6 +73,14 @@
 '  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[120]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select name from emps where empno in (110, 120);
+'column0'
+'ProjectRel(NAME=[$1])'
+'  FilterRel(condition=[OR(=($10, 110), =($10, 120))])'
+'    ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], EMPNO=[$0])'
+'      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where empno in (110, 120);
 'column0'
@@ -63,17 +88,59 @@
 '  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[110], expr#3=[=($t0, $t2)], expr#4=[120], expr#5=[=($t0, $t4)], expr#6=[OR($t3, $t5)], NAME=[$t1], $condition=[$t6])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select name, empno, deptno from emps where (empno, deptno) in ((110, 10), (120, 20));
+'column0'
+'ProjectRel(NAME=[$1], EMPNO=[$0], DEPTNO=[$2])'
+'  FilterRel(condition=[OR(AND(=($10, 110), =($11, 10)), AND(=($10, 120), =($11, 20)))])'
+'    ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], EMPNO=[$0], DEPTNO=[$2])'
+'      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name, empno, deptno from emps where (empno, deptno) in ((110, 10), (120, 20));
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[110], expr#4=[=($t0, $t3)], expr#5=[10], expr#6=[=($t2, $t5)], expr#7=[AND($t4, $t6)], expr#8=[120], expr#9=[=($t0, $t8)], expr#10=[20], expr#11=[=($t2, $t10)], expr#12=[AND($t9, $t11)], expr#13=[OR($t7, $t12)], NAME=[$t1], EMPNO=[$t0], DEPTNO=[$t2], $condition=[$t13])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select name, empno, deptno from emps where (empno - 10, deptno + 10) in ((100, 20), (110, 30));
+'column0'
+'ProjectRel(NAME=[$1], EMPNO=[$0], DEPTNO=[$2])'
+'  FilterRel(condition=[OR(AND(=($10, 100), =($11, 20)), AND(=($10, 110), =($11, 30)))])'
+'    ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], EXPR$10=[-($0, 10)], EXPR$11=[+($2, 10)])'
+'      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name, empno, deptno from emps where (empno - 10, deptno + 10) in ((100, 20), (110, 30));
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[10], expr#4=[-($t0, $t3)], expr#5=[100], expr#6=[=($t4, $t5)], expr#7=[+($t2, $t3)], expr#8=[20], expr#9=[=($t7, $t8)], expr#10=[AND($t6, $t9)], expr#11=[110], expr#12=[=($t4, $t11)], expr#13=[30], expr#14=[=($t7, $t13)], expr#15=[AND($t12, $t14)], expr#16=[OR($t10, $t15)], NAME=[$t1], EMPNO=[$t0], DEPTNO=[$t2], $condition=[$t16])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select name from emps where empno
+. . . . . . . . > in (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+'column0'
+'ProjectRel(NAME=[$1])'
+'  FilterRel(condition=[true])'
+'    JoinRel(condition=[=($10, $11)], joinType=[inner])'
+'      ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], EMPNO=[$0])'
+'        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+'      AggregateRel(groupCount=[1])'
+'        ValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
+0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where empno
 . . . . . . . . > in (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[=($t0, $t2)], NAME=[$t1], $condition=[$t3])'
-'    FennelCalcRel(expr#0..2=[{inputs}], EMPNO=[$t1], NAME=[$t2], ROW_VALUE=[$t0])'
+'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[=($t1, $t2)], NAME=[$t0], $condition=[$t3])'
+'    FennelCalcRel(expr#0..2=[{inputs}], NAME=[$t1], EMPNO=[$t2], ROW_VALUE=[$t0])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        FennelSortRel(key=[[0]], discardDuplicates=[true])'
 '          FennelValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 0]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

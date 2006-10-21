@@ -36,24 +36,32 @@ TimerThread::TimerThread(
     
 void TimerThread::run()
 {
-    for (;;) {
-        uint millis = client.getTimerIntervalMillis();
-        if (!millis) {
-            break;
-        }
-        boost::xtime atv;
-        convertTimeout(millis,atv);
-        StrictMutexGuard mutexGuard(mutex);
-        while (!bStop) {
-            if (!condition.timed_wait(mutexGuard,atv)) {
+    // TODO jvs 13-Oct-2006:  resource acquisition as initialization
+    client.onTimerStart();
+    try {
+        for (;;) {
+            uint millis = client.getTimerIntervalMillis();
+            if (!millis) {
                 break;
             }
+            boost::xtime atv;
+            convertTimeout(millis,atv);
+            StrictMutexGuard mutexGuard(mutex);
+            while (!bStop) {
+                if (!condition.timed_wait(mutexGuard,atv)) {
+                    break;
+                }
+            }
+            if (bStop) {
+                break;
+            }
+            client.onTimerInterval();
         }
-        if (bStop) {
-            break;
-        }
-        client.onTimerInterval();
+    } catch (...) {
+        client.onTimerStop();
+        throw;
     }
+    client.onTimerStop();
 }
 
 void TimerThread::stop()
@@ -74,6 +82,16 @@ void TimerThread::signalImmediate()
 {
     StrictMutexGuard mutexGuard(mutex);
     condition.notify_all();
+}
+
+void TimerThreadClient::onTimerStart()
+{
+    // do nothing by default
+}
+
+void TimerThreadClient::onTimerStop()
+{
+    // do nothing by default
 }
 
 FENNEL_END_CPPFILE("$Id$");

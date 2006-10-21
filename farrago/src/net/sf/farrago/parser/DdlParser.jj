@@ -23,8 +23,8 @@
 
 options {
     STATIC = false;
-    JAVA_UNICODE_ESCAPE = true;
     IGNORE_CASE = true;
+    UNICODE_INPUT = true;
 }
 
 PARSER_BEGIN(FarragoParserImpl)
@@ -43,6 +43,7 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 import org.eigenbase.resource.*;
 import net.sf.farrago.resource.*;
 import java.util.*;

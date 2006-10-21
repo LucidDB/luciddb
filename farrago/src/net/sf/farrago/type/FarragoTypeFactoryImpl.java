@@ -772,12 +772,39 @@ public class FarragoTypeFactoryImpl
         OJClass declarer,
         RelDataType type)
     {
+        SqlIntervalQualifier qualifier = type.getIntervalQualifier();
+        TypeName timeUnitType =
+            OJUtil.typeNameForClass(SqlIntervalQualifier.TimeUnit.class);
+
+        MemberDeclarationList memberDecls = new MemberDeclarationList();
+        memberDecls.add(
+            generateGetter(
+                timeUnitType,
+                EncodedSqlInterval.GET_START_UNIT_METHOD_NAME,
+                lookupTimeUnit(qualifier.getStartUnit())));
+
         return
             newHolderOJClass(
                 superclass,
-                new MemberDeclarationList(),
+                memberDecls,
                 declarer,
                 type);
+    }
+
+    /**
+     * Generates an expression for a TimeUnit
+     */
+    private Expression lookupTimeUnit(SqlIntervalQualifier.TimeUnit timeUnit)
+    {
+        TypeName timeUnitType =
+            OJUtil.typeNameForClass(SqlIntervalQualifier.TimeUnit.class);
+
+        return new MethodCall(
+            timeUnitType,
+            SqlIntervalQualifier.TimeUnit.GET_VALUE_METHOD_NAME,
+            new ExpressionList(
+                Literal.makeLiteral(
+                    timeUnit.getOrdinal())));
     }
 
     private OJClass newStringOJClass(
@@ -849,18 +876,47 @@ public class FarragoTypeFactoryImpl
         return ojClass;
     }
 
+    /**
+     * Generates a protected getter method
+     * 
+     * @param returnType type of value returned by the getter method
+     * @param methodName the name of the getter method
+     * @param value the value to be returned by the getter method
+     * 
+     * @return getter method declaration
+     */
+    private MethodDeclaration generateGetter(
+        TypeName returnType,
+        String methodName,
+        Expression value)
+    {
+        return new MethodDeclaration(
+            new ModifierList(ModifierList.PROTECTED),
+            returnType,
+            methodName,
+            new ParameterList(),
+            new TypeName[0],
+            new StatementList(
+                new ReturnStatement(value)));
+    }
+
     // implement FarragoTypeFactory
     public Expression getValueAccessExpression(
         RelDataType type,
         Expression expr)
     {
-        if (SqlTypeUtil.isDatetime(type)
+        if (SqlTypeUtil.isDatetime(type)) {
+            return new FieldAccess(
+                new FieldAccess(expr, NullablePrimitive.VALUE_FIELD_NAME),
+                SqlDateTimeWithoutTZ.INTERNAL_TIME_FIELD_NAME);
+        } else if (
             // REVIEW: angel 2006-08-27 added this for interval
             // so generated java code okay for most expression
             // but shouldn't be checking expr,
             // probably need to rules to reinterpret interval 
-            || (SqlTypeUtil.isInterval(type) &&
-                (expr instanceof Variable || expr instanceof FieldAccess))
+            (SqlTypeUtil.isInterval(type) &&
+                (expr instanceof Variable || expr instanceof FieldAccess
+                    || expr instanceof MethodCall))
             || SqlTypeUtil.isDecimal(type)
             || ((getClassForPrimitive(type) != null) && type.isNullable())) {
             return new FieldAccess(expr, NullablePrimitive.VALUE_FIELD_NAME);

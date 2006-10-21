@@ -96,7 +96,7 @@ select * from table(
   two_cursor_test(
     cursor(select * from t1),
     cursor(select * from t2)))
-order by 1;
+order by 1,2;
 
 -- inserts and merges it into table
 create table t12(c1 integer, c2 varchar(20));
@@ -119,7 +119,7 @@ merge into t12 t
   when not matched then
     insert (c1, c2) values (temp.col1, temp.col2);
 
-select * from t12 order by 1;
+select * from t12 order by 1,2;
 drop table t12;
 drop table t1;
 drop table t2;
@@ -157,7 +157,7 @@ merge into dt
     insert (d, dow)
     values (temp.time_key, temp.day_of_week);
 
-select * from dt;
+select * from dt order by 1,2,3,4;
 
 drop table dt;
 

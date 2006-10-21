@@ -90,7 +90,7 @@ struct LcsResidualColumnFilters
     /**
      * contains individual predicate info
      */
-    std::vector<SharedLcsResidualFilter>  filterData;
+    std::vector<SharedLcsResidualFilter> filterData;
 
     /**
      * Values bitmap for compressed batch filtering.
@@ -102,6 +102,8 @@ struct LcsResidualColumnFilters
      */
     TupleDataWithBuffer readerKeyData;
 };
+
+typedef LcsResidualColumnFilters *PLcsResidualColumnFilters;
 
 FENNEL_END_NAMESPACE
 

@@ -159,6 +159,14 @@ Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" doe
 . . . . . . . . > not deterministic
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.generateRandomNumber';
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- alias to avoid common subexpression elimination
+0: jdbc:farrago:> create function generate_random_number2(seed bigint)
+. . . . . . . . > returns bigint
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > not deterministic
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.generateRandomNumber';
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test UDF which depends on FarragoUdrRuntime, with
 0: jdbc:farrago:> -- ClosableAllocation support
 0: jdbc:farrago:> create function gargle()
@@ -204,6 +212,16 @@ Error: Object definition contains recursive cycle (state=,code=0)
 . . . . . . . . > parameter style system defined java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.digest';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- UDX which specifies a calendar argument
+0: jdbc:farrago:> create function foreign_time(
+. . . . . . . . >   ts timestamp, tsZoneId varchar(256), foreignZoneId varchar(256))
+. . . . . . . . > returns table(
+. . . . . . . . >   the_timestamp timestamp, the_date date, the_time time)
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.foreignTime';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view ramp_view as select * from table(ramp(3));
 0: jdbc:farrago:> 
@@ -514,7 +532,7 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- runtime context:  verify that the two instances produce
 0: jdbc:farrago:> -- identical sequences independently (no interference)
-0: jdbc:farrago:> select generate_random_number(42) as rng1, generate_random_number(42) as rng2
+0: jdbc:farrago:> select generate_random_number(42) as rng1, generate_random_number2(42) as rng2
 . . . . . . . . > from sales.depts order by 1;
 +-----------------------+-----------------------+
 |         RNG1          |         RNG2          |
@@ -526,7 +544,7 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- runtime context:  verify that the two instances produce
 0: jdbc:farrago:> -- different sequences independently (no interference)
-0: jdbc:farrago:> select generate_random_number(42) as rng1, generate_random_number(43) as rng2
+0: jdbc:farrago:> select generate_random_number(42) as rng1, generate_random_number2(43) as rng2
 . . . . . . . . > from sales.depts order by 1;
 +-----------------------+-----------------------+
 |         RNG1          |         RNG2          |
@@ -645,6 +663,15 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 | 10      | Sales      | 79649014     |
 | 20      | Marketing  | 1070197274   |
 +---------+------------+--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- udx with specified calendar
+0: jdbc:farrago:> select *
+. . . . . . . . > from table(foreign_time(timestamp'2006-10-09 18:32:26.992', 'PST', 'EST'));
++--------------------------+-------------+-----------+
+|      THE_TIMESTAMP       |  THE_DATE   | THE_TIME  |
++--------------------------+-------------+-----------+
+| 2006-10-09 21:32:26.992  | 2006-10-09  | 21:32:26  |
++--------------------------+-------------+-----------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set path 'crypto2';

@@ -788,11 +788,11 @@ Messages: {1}</text>
 </exception>
 
 <exception id="460120" name="MedInvalidUdxId">
-<text>Invalid specific name for SQL/MED UDX:  {0}</text>
+<text>Invalid specific name for UDX loaded via SQL/MED or optimizer:  {0}</text>
 </exception>
 
 <exception id="460130" name="MedUnknownUdx">
-<text>Unknown specific name {0} for SQL/MED UDX</text>
+<text>Unknown specific name {0} for UDX loaded via SQL/MED or optimizer</text>
 </exception>
 
 <exception id="460140" name="MedPropertyMismatch">
@@ -870,6 +870,10 @@ Messages: {1}</text>
 <text>Invalid row {1} in control file {0}</text>
 </exception>
 
+<exception id="469100" name="FlatFileMappedRequiresWithHeader">
+<text>Mapping source columns in data files to target columns specified by control files requires column names to be provided by data file headers.</text>
+</exception>
+
 <message name="MedFlatFile_DIRECTORY_Description">
 <text>OS directory path containing flat files</text>
 </message>
@@ -912,6 +916,30 @@ Messages: {1}</text>
 
 <message name="MedFlatFile_LOG_DIRECTORY_Description">
 <text>OS directory path for writing log files</text>
+</message>
+
+<message name="MedFlatFile_TRIM_Description">
+<text>Whether to trim column values</text>
+</message>
+
+<message name="MedFlatFile_LENIENT_Description">
+<text>Whether to fill in missing columns at the end of rows with null and discard extra columns</text>
+</message>
+
+<message name="MedFlatFile_MAPPED_Description">
+<text>Whether to match source columns in a data file with target columns specified by a control file or foreign table definition. If true, then the data file must have a header and the server must be lenient. Any target columns that are not in a data file will be filled in with nulls.</text>
+</message>
+
+<message name="MedFlatFile_DATE_FORMAT_Description">
+<text>A custom datetime format for date columns</text>
+</message>
+
+<message name="MedFlatFile_TIME_FORMAT_Description">
+<text>A custom datetime format for time columns</text>
+</message>
+
+<message name="MedFlatFile_TIMESTAMP_FORMAT_Description">
+<text>A custom datetime format for timestamp columns</text>
 </message>
 
 <!-- ====================================================================== -->
@@ -1343,6 +1371,14 @@ Messages: {1}</text>
 
 <exception id="520012" name="ExportSchemaMergeTablesDiffer">
 <text>Tables differ in schemas to be merged</text>
+</exception>
+
+<exception id="520013" name="InvalidDateString">
+<text>Date format ''{0}'' could not be applied to string ''{1}''</text>
+</exception>
+
+<exception id="520014" name="InvalidConvertDatetimeCaller">
+<text>Caller type ''{0}'' for datetime conversion functions is unknown</text>
 </exception>
 
 <!-- End of last error section ============================================ -->

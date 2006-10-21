@@ -51,11 +51,15 @@ const uint oStr = oByte + nByte * lnByte + lnSep;
 const uint MaxReadBatch = 64;
 
 LcsClusterDump::LcsClusterDump(
-    const BTreeDescriptor &bTreeDescriptor, TraceLevel traceLevelInit,
-    SharedTraceTarget pTraceTargetInit, std::string nameInit) :
+    BTreeDescriptor const &bTreeDescriptor,
+    TupleDescriptor const &colTupleDescInit,
+    TraceLevel traceLevelInit,
+    SharedTraceTarget pTraceTargetInit,
+    std::string nameInit) :
         LcsClusterAccessBase(bTreeDescriptor),
         TraceSource(pTraceTargetInit, nameInit)
 {
+    colTupleDesc = colTupleDescInit;
     traceLevel = traceLevelInit;
 }
 
@@ -180,7 +184,7 @@ void LcsClusterDump::dump(
             callTrace("------------");
             pO = (uint16_t *) (pBlock + pBatch[i].oVal);
             for (j = 0; j < pBatch[i].nVal; j++)
-                fprintVal(j, pBlock + pO[j] - deltaVal);
+                fprintVal(j, pBlock + pO[j] - deltaVal, col);
 
         } else if (pBatch[i].mode == LCS_FIXED) {
             // fixed size rows
@@ -188,7 +192,7 @@ void LcsClusterDump::dump(
             callTrace("---------------");
             pR = pBlock + pBatch[i].oVal;
             for (j = 0; j < pBatch[i].nRow; j++) {
-                fprintVal(j, pR);
+                fprintVal(j, pR, col);
                 pR += pBatch[i].recSize;
             }
         } else {
@@ -197,7 +201,7 @@ void LcsClusterDump::dump(
             callTrace("------------------");
             pO = (uint16_t *) (pBlock + pBatch[i].oVal);
             for (j = 0; j < pBatch[i].nRow; j++)
-                fprintVal(j, pBlock + pO[j] - deltaVal);
+                fprintVal(j, pBlock + pO[j] - deltaVal, col);
         }
         callTrace("#############################################################");
     }
@@ -212,7 +216,7 @@ void LcsClusterDump::dump(
         if (lastVal[i] < szBlock) {
             pR = pBlock + lastVal[i];
             for (j = nVal[i]; j > 0; j--)
-                pR = fprintVal(j, pR);
+                pR = fprintVal(j, pR, i);
         } else
             callTrace("NONE.");
     }
@@ -234,7 +238,7 @@ void LcsClusterDump::callTrace(char *format, ...)
 }
 
 // print a formatted value, return pointer to next value
-PBuffer LcsClusterDump::fprintVal(uint idx, PBuffer pV)
+PBuffer LcsClusterDump::fprintVal(uint idx, PBuffer pV, uint col)
 {
     uint j, sz, k, l;
     PBuffer p = pV;
@@ -244,7 +248,7 @@ PBuffer LcsClusterDump::fprintVal(uint idx, PBuffer pV)
     memset(st, ' ', lnLen);
     callTrace("%05u:", idx);
     
-    sz = TupleDatum().getLcsLength(p);
+    sz = TupleDatum().getLcsLength(p, colTupleDesc[col]);
     l = sprintf(st + lnValIdx, "%4u: ", sz);
     st[lnValIdx + l] = 0;
 

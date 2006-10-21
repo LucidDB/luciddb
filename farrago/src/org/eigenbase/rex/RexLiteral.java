@@ -401,21 +401,23 @@ public class RexLiteral
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
             String format = getCalendarFormat(typeName);
+            TimeZone tz = DateTimeUtil.gmtZone;
             Calendar cal = null;
-            if (typeName.getOrdinal() == SqlTypeName.Timestamp_ordinal) {
-                SqlParserUtil.PrecisionTime ts =
-                    SqlParserUtil.parsePrecisionDateTimeLiteral(
+            if (typeName == SqlTypeName.Date) {
+                cal = DateTimeUtil.parseDateFormat(
+                    literal,
+                    format,
+                    tz);
+            } else {
+                // Allow fractional seconds for times and timestamps
+                DateTimeUtil.PrecisionTime ts =
+                    DateTimeUtil.parsePrecisionDateTimeLiteral(
                         literal,
                         format,
-                        null);
+                        tz);
                 if (ts != null) {
                     cal = ts.getCalendar();
                 }
-            } else {
-                cal = SqlParserUtil.parseDateFormat(
-                        literal,
-                        format,
-                        null);
             }
             if (cal == null) {
                 throw Util.newInternal(

@@ -67,7 +67,8 @@ void FlatFileExecStreamImpl::prepare(
     pBuffer.reset(new FlatFileBuffer(params.dataFilePath));
     pParser.reset(new FlatFileParser(
                       params.fieldDelim, params.rowDelim,
-                      params.quoteChar, params.escapeChar));
+                      params.quoteChar, params.escapeChar,
+                      params.trim));
 
     numRowsScan = params.numRowsScan;
 

@@ -150,6 +150,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
     <pathelement path="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"/>
+    <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -339,7 +340,17 @@ ${farrago.test.jvmargs}
 
 <!-- End Experiment-->
 
-  <target name="test" depends="cleanJars,createCatalog,gen-all-sql">
+  <!-- ************** test ****************** 
+  Split 'test' to 'test-only' and 'test-only-setup' so Emma can plugin a instr.
+  -->
+
+  <target name="test" depends="test-only-setup,test-only">
+  </target>
+
+  <target name="test-only-setup" depends="cleanJars,createCatalog,gen-all-sql">
+  </target>
+
+  <target name="test-only">
     <property name="bh.filter.knownFailures" value="false,null"/>
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
@@ -350,6 +361,9 @@ ${farrago.test.jvmargs}
       classpathref="test.classpath"/>
     <antcall target="gen-bh-report"/>
   </target>
+
+  <!-- ************** Emma ****************** 
+  -->
 
   <target name="emmaTest" depends="cleanJars,createCatalog,gen-all-sql">
     <property name="bh.filter.knownFailures" value="false,null"/>

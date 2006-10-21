@@ -60,15 +60,15 @@ public class FlatFileProgramWriter
 
     private static final SqlIdentifier toDateFuncName = 
         new SqlIdentifier(
-            new String[] {"LOCALDB","APPLIB","CHAR_TO_DATE"},
+            new String[] {"SYS_BOOT","MGMT","CHAR_TO_DATE"},
             new SqlParserPos(0,0));
     private static final SqlIdentifier toTimeFuncName = 
         new SqlIdentifier(
-            new String[] {"LOCALDB","APPLIB","CHAR_TO_TIME"},
+            new String[] {"SYS_BOOT","MGMT","CHAR_TO_TIME"},
             new SqlParserPos(0,0));
     private static final SqlIdentifier toTimestampFuncName = 
         new SqlIdentifier(
-            new String[] {"LOCALDB","APPLIB","CHAR_TO_TIMESTAMP"},
+            new String[] {"SYS_BOOT","MGMT","CHAR_TO_TIMESTAMP"},
             new SqlParserPos(0,0));
 
     private static final int DATETIME_FORMAT_ARG_LENGTH = 50;

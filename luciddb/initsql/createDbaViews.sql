@@ -11,12 +11,12 @@ create view dba_schemas as
   select
     catalog_name,
     schema_name,
-    ai."name" as creator,
+    cast(ai."name" as varchar(128)) as creator,
     creation_timestamp,
     last_modified_timestamp,
     remarks,
-    si."mofId" as mofid,
-    si."lineageId" as lineageid
+    si."mofId" as mof_id,
+    si."lineageId" as lineage_id
   from
     sys_boot.mgmt.dba_schemas_internal2 si
   inner join
@@ -417,8 +417,50 @@ parameter style java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.exportCatalog';
 
+-- Export schema to file UDP, field delimiter and file extension can be 
+-- specified by user
+create procedure export_schema_to_file(
+  in cat varchar(128),
+  in schma varchar(128),
+  in exclude boolean, 
+  in tlist varchar(65535),
+  in tpattern varchar(65535),
+  in dir varchar(65535),
+  in bcp boolean,
+  in delete_failed_file boolean,
+  in field_delimiter varchar(2),
+  in file_extension varchar(5)) 
+language java
+reads sql data
+specific export_schema_to_file
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToFile';
+
+-- Export schema to file UDP with field delimiter, file extention and
+-- datetime formats
+create procedure export_schema_to_file(
+  in cat varchar(128),
+  in schma varchar(128),
+  in exclude boolean, 
+  in tlist varchar(65535),
+  in tpattern varchar(65535),
+  in dir varchar(65535),
+  in bcp boolean,
+  in delete_failed_file boolean,
+  in field_delimiter varchar(2),
+  in file_extension varchar(5),
+  in date_format varchar(50),
+  in time_format varchar(50),
+  in timestamp_format varchar(50))
+language java
+reads sql data
+specific export_schema_to_file_2
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToFile';
+
+
 -- Export schema to csv files UDP. Standard version always creates bcp files
--- and deletes incomplete files for a failed table export
+-- and deletes incomplete files for a failed table export. 
 create procedure export_schema_to_csv(
   in cat varchar(128),
   in schma varchar(128),
@@ -427,7 +469,7 @@ create procedure export_schema_to_csv(
   in tpattern varchar(65535),
   in dir varchar(65535),
   in bcp boolean,
-  in delete_failed_file boolean) 
+  in delete_failed_file boolean)
 language java
 reads sql data
 specific export_schema_with_options
@@ -448,7 +490,7 @@ called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToCsv';
 
 -- Export foreign schema to csv files UDP. Standard version always creates bcp
--- files and deletes incomplete files for a failed table export
+-- files and deletes incomplete files for a failed table export.
 create procedure export_foreign_schema_to_csv(
   in serv varchar(128),
   in fschema varchar(128),
@@ -479,7 +521,7 @@ external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignS
 
 -- Incremental export for local schema, gets rows where 
 -- last_mod_col > last_mod_ts.  Standard version always creates bcp files and
--- deletes incomplete files for a failed table export
+-- deletes incomplete files for a failed table export.
 create procedure export_schema_incremental_to_csv(
   in cat varchar(128),
   in schma varchar(128),
@@ -514,7 +556,7 @@ external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaIn
 
 -- Incremental export for foreign schema, gets rows where 
 -- last_mod_col > last_mod_ts.  Standard version always creates bcp files and
--- deletes incomplete files for a failed table export
+-- deletes incomplete files for a failed table export.
 create procedure export_foreign_schema_incremental_to_csv(
   in serv varchar(128),
   in fschema varchar(128),
@@ -551,7 +593,7 @@ external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignS
 -- two schemas must have the same structure. Data from the original schema 
 -- which has been deleted will not be seen, only updates and new records 
 -- from the incremental schema.  Standard version always creates bcp files and
--- deletes incomplete files for a failed table export
+-- deletes incomplete files for a failed table export.
 create procedure export_merged_schemas_to_csv(
   in orig_catalog varchar(128),
   in orig_schema varchar(128),
@@ -596,5 +638,43 @@ create procedure export_query_to_file(
   in delete_failed_file boolean)
 language java
 reads sql data
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
+
+-- Export result of a single query to a file, with control over field
+-- delimiter, datafile extension, and date/time formatting
+create procedure export_query_to_file(
+  in query_sql varchar(65535),
+  in path_without_extension varchar(65535),
+  in bcp boolean,
+  in delete_failed_file boolean,
+  in field_delimiter varchar(2),
+  in file_extension varchar(5),
+  in date_format varchar(128),
+  in time_format varchar(128),
+  in timestamp_format varchar(128))
+language java
+reads sql data
+specific export_query_to_file_2
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
+
+-- Export result of a single query to a file, with control over field
+-- delimiter, datafile extension, date/time formatting, and whether
+-- to even export data at all
+create procedure export_query_to_file(
+  in query_sql varchar(65535),
+  in path_without_extension varchar(65535),
+  in bcp boolean,
+  in include_data boolean,
+  in delete_failed_file boolean,
+  in field_delimiter varchar(2),
+  in file_extension varchar(5),
+  in date_format varchar(128),
+  in time_format varchar(128),
+  in timestamp_format varchar(128))
+language java
+reads sql data
+specific export_query_to_file_3
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';

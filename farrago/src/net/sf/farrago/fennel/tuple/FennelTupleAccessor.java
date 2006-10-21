@@ -128,6 +128,12 @@ public final class FennelTupleAccessor
      * tuple byte alignment.
      */
     private int tupleAlignment;
+    
+    /**
+     * if true, set the ByteBuffer to native order after slicing, when doing
+     * unmarshals
+     */
+    private final boolean setNativeOrder;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -136,7 +142,7 @@ public final class FennelTupleAccessor
      */
     public FennelTupleAccessor()
     {
-        this(TUPLE_ALIGN4); // default 4-byte alignment
+        this(TUPLE_ALIGN4, false); // default 4-byte alignment
     }
 
     /**
@@ -146,9 +152,38 @@ public final class FennelTupleAccessor
      */
     public FennelTupleAccessor(int alignment)
     {
+        this(alignment, false);
+    }
+    
+    /**
+     * Creates tuple accessor with the default byte alignmnent and a flag
+     * indicating whether byte ordering should be set to native order after
+     * slicing.
+     *
+     * @param alignment must be multiple of 4
+     * @param setNativeOrder if true, set byte ordering to native order after
+     * slicing
+     */
+    public FennelTupleAccessor(boolean setNativeOrder)
+    {
+        this(TUPLE_ALIGN4, setNativeOrder);
+    }
+    
+    /**
+     * Creates tuple accessor with specified byte alignmnent and a flag
+     * indicating whether byte ordering should be set to native order after
+     * slicing.
+     *
+     * @param alignment must be multiple of 4
+     * @param setNativeOrder if true, set byte ordering to native order after
+     * slicing
+     */
+    public FennelTupleAccessor(int alignment, boolean setNativeOrder)
+    {
         assert ((alignment % 4) == 0) : "alignment (" + alignment
             + ") not multiple of 4";
         this.tupleAlignment = alignment;
+        this.setNativeOrder = setNativeOrder;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -595,6 +630,9 @@ public final class FennelTupleAccessor
                     currTupleBuf.position(currTupleBuf.position() + 1);
                 }
                 currTupleBuf = currTupleBuf.slice();
+                if (setNativeOrder) {
+                    currTupleBuf.order(ByteOrder.nativeOrder());
+                }
                 sliced = true;
             }
 

@@ -30,7 +30,6 @@ import openjava.mop.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
@@ -377,32 +376,51 @@ public class FarragoOJRexCastImplementor
          * <pre>
          * [NullablePrimitiveType] lhs;
          * lhs.[nullIndicator] = ...;
-         * lhs.[value] = ...;
+         * if (! lhs.[nullIndicator]) {
+         *     // check overflow ...
+         *     // round ...
+         *     lhs.[value] = ...;
+         * }
          * </pre>
          */
         private Expression castPrimitiveToNullablePrimitive()
         {
             ensureLhs();
+            boolean nullableSource = rhsType.isNullable();
             Expression rhsIsNull;
-            if (rhsType.isNullable()) {
+            if (nullableSource) {
                 rhsIsNull = getNullIndicator(rhsExp);
-                rhsExp = getValue(rhsExp);
+                rhsExp = getValue(rhsType, rhsExp);
             } else {
                 rhsIsNull = Literal.constantFalse();
             }
             
-            checkOverflow();
             addStatement(
                 assign(
                     getNullIndicator(lhsExp),
                     rhsIsNull));
-            roundAsNeeded();
-            addStatement(
-                assign(
-                    getValue(lhsExp),
-                    new CastExpression(
-                        getLhsClass(),
-                        rhsExp)));
+            StatementList setValueBlock = new StatementList();
+            StatementList oldList = borrowStmtList(setValueBlock);
+            try {
+                checkOverflow();
+                roundAsNeeded();
+                addStatement(
+                    assign(
+                        getValue(lhsType, lhsExp),
+                        new CastExpression(
+                            getLhsClass(),
+                            rhsExp)));
+            } finally {
+                returnStmtList(oldList);
+            }
+            if (nullableSource) {
+                addStatement(
+                    new IfStatement(
+                        not(getNullIndicator(lhsExp)),
+                        setValueBlock));
+            } else {
+                addStatementList(setValueBlock);
+            }
             return lhsExp;
         }
 
@@ -439,7 +457,7 @@ public class FarragoOJRexCastImplementor
                 // sometimes the Integer got slipped by.
                 if (rhsType.isNullable()
                     && (!SqlTypeUtil.isDecimal(rhsType))) {
-                    rhsExp = getValue(rhsExp);
+                    rhsExp = getValue(rhsType, rhsExp);
                 }
                 addStatement(
                     new ExpressionStatement(
@@ -451,6 +469,21 @@ public class FarragoOJRexCastImplementor
                                 Literal.makeLiteral(
                                     lhsType.getPrecision())))));
             } else {
+                // Set current_date for casting time to timestamp. If 
+                // rhsType is null then we may have to be ready for anything. 
+                // But it will be null even for current_timestamp, so the 
+                // condition below seems a bit excessive.
+                if (lhsType.getSqlTypeName() == SqlTypeName.Timestamp
+                    && (rhsType == null 
+                        || rhsType.getSqlTypeName() == SqlTypeName.Time))
+                {
+                    addStatement(
+                        new ExpressionStatement(
+                            new MethodCall(
+                                lhsExp,
+                                "setCurrentDate",
+                                new ExpressionList(getCurrentDate()))));
+                }
                 addStatement(
                     new ExpressionStatement(
                         new MethodCall(
@@ -568,7 +601,7 @@ public class FarragoOJRexCastImplementor
                 SqlTypeUtil.isDatetime(rhsType) ||
                 SqlTypeUtil.isInterval(rhsType)) 
             {
-                rhsExp = getValue(rhsExp);
+                rhsExp = getValue(rhsType, rhsExp);
             }
 
             // Get the name of the numeric class such as Byte, Short, etc.
@@ -778,6 +811,59 @@ public class FarragoOJRexCastImplementor
         }
         
         /**
+         * Adds a list of statements according to 
+         * {@link #addStatement(Statement)}
+         * 
+         * @param list list of statements to be added
+         */
+        private void addStatementList(StatementList list)
+        {
+            for (int i = 0; i < list.size(); i++) {
+                addStatement(list.get(i));
+            }
+        }
+        
+        /**
+         * Borrows the active statement list, by temporarily setting it to 
+         * the a new statement list. What is borrowed must be returned!
+         * 
+         * <p>Example:
+         * <pre>
+         * StatementList block = new StatementList();
+         * StatementList oldList = borrowStmtList(block);
+         * try {
+         *     // add statements to block
+         * } finally {
+         *     returnStmtList(oldList);
+         * }
+         * </pre>
+         * 
+         * @param newList the new statement list
+         * @return the old statement list
+         * 
+         * @see {@link #returnStmtList(StatementList)}
+         */
+        private StatementList borrowStmtList(StatementList newList)
+        {
+            StatementList oldList = stmtList;
+            stmtList = newList;
+            return oldList;
+        }
+        
+        /**
+         * Restores the active statement list. Called after borrowing a 
+         * statement list.
+         * 
+         * @param oldList the previously active statement list.
+         * 
+         * @see {@link #borrowStmtList(StatementList)}
+         */
+        private void returnStmtList(StatementList oldList)
+        {
+            stmtList = oldList;
+        }
+        
+        /**
          * Creates a simple assignment statement as in a = b.
          */
         private ExpressionStatement assign(Expression a, Expression b)
@@ -788,6 +874,14 @@ public class FarragoOJRexCastImplementor
                         a,
                         AssignmentExpression.EQUALS,
                         b));
+        }
+        
+        /**
+         * Creates a not expression as in !a.
+         */
+        private Expression not(Expression a)
+        {
+            return new UnaryExpression(UnaryExpression.NOT, a);
         }
         
         /**
@@ -803,11 +897,11 @@ public class FarragoOJRexCastImplementor
         /**
          * Creates a field access, as in expr.[value]
          */
-        private FieldAccess getValue(Expression expr) {
-            return 
-                new FieldAccess(
-                    expr, 
-                    NullablePrimitive.VALUE_FIELD_NAME);
+        private Expression getValue(RelDataType type, Expression expr) 
+        {
+            FarragoTypeFactory factory = 
+                (FarragoTypeFactory) translator.getTypeFactory();
+            return factory.getValueAccessExpression(type, expr);
         }
         
         /**
@@ -949,6 +1043,18 @@ public class FarragoOJRexCastImplementor
                 new VariableDeclarator(
                     var.toString(),
                     init));
+        }
+
+        /**
+         * Gets an expression for the current date
+         */
+        private Expression getCurrentDate()
+        {
+            // unfortunately, we hard code the method name here
+            return translator.convertVariable(
+                translator.getTypeFactory().createSqlType(SqlTypeName.Date),
+                "getContextVariable_CURRENT_DATE",
+                new ExpressionList());
         }
     }
 }

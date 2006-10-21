@@ -22,9 +22,15 @@
 */
 package org.eigenbase.javac;
 
+import java.util.*;
 import java.io.*;
+import java.nio.*;
+import java.security.*;
 
 import org.codehaus.janino.*;
+import org.codehaus.janino.util.*;
+import org.codehaus.janino.util.enumerator.*;
+import org.codehaus.janino.util.resource.*;
 
 import org.eigenbase.util.*;
 
@@ -45,7 +51,7 @@ public class JaninoCompiler
     private JaninoCompilerArgs args = new JaninoCompilerArgs();
 
     // REVIEW jvs 28-June-2004:  pool this instance?  Is it thread-safe?
-    private JavaSourceClassLoader classLoader;
+    private AccountingClassLoader classLoader;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -60,35 +66,33 @@ public class JaninoCompiler
     public void compile()
     {
         // REVIEW: SWZ: 3/12/2006: When this method is invoked multiple times,
-        // it creates a series of JavaSourceClassLoader objects, each with
+        // it creates a series of AccountingClassLoader objects, each with
         // the previous as its parent ClassLoader.  If we refactored this
         // class and its callers to specify all code to compile in one
-        // go, we could probably just use a single JavaSourceClassLoader.
-
-        // REVIEW jvs 29-Sept-2004: we used to delegate to
-        // ClassLoader.getSystemClassLoader(), but for some reason that didn't
-        // work when run from ant's junit task without forking.  Should
-        // probably take it as a parameter, but how should we decide what to
-        // use?
+        // go, we could probably just use a single AccountingClassLoader.
 
         // TODO jvs 10-Nov-2004: provide a means to request
         // DebuggingInformation.ALL
 
         assert (args.destdir != null);
         assert (args.fullClassName != null);
+        assert (args.source != null);
 
-        // TODO jvs 28-June-2004: with some glue code, we could probably get
-        // Janino to compile directly from the generated string source instead
-        // of from a file.  (It's possible to do that with the SimpleCompiler
-        // class, but then we don't avoid the bytecode storage.)
         ClassLoader parentClassLoader = args.getClassLoader();
         if (classLoader != null) {
             parentClassLoader = classLoader;
         }
+
+        Map<String, byte []> sourceMap = new HashMap<String, byte []>();
+        sourceMap.put(
+            ClassFile.getSourceResourceName(args.fullClassName),
+            args.source.getBytes());
+        MapResourceFinder sourceFinder = new MapResourceFinder(sourceMap);
+        
         classLoader =
-            new JavaSourceClassLoader(
+            new AccountingClassLoader(
                 parentClassLoader,
-                new File[] { new File(args.destdir) },
+                sourceFinder,
                 null,
                 DebuggingInformation.NONE);
         try {
@@ -110,6 +114,12 @@ public class JaninoCompiler
         return classLoader;
     }
 
+    // implement JavaCompiler
+    public int getTotalByteCodeSize()
+    {
+        return classLoader.getTotalByteCodeSize();
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     private static class JaninoCompilerArgs
@@ -117,26 +127,77 @@ public class JaninoCompiler
     {
         String destdir;
         String fullClassName;
+        String source;
 
         public JaninoCompilerArgs()
         {
         }
 
+        public boolean supportsSetSource()
+        {
+            return true;
+        }
+        
         public void setDestdir(String destdir)
         {
             super.setDestdir(destdir);
             this.destdir = destdir;
         }
-
-        // NOTE jvs 28-June-2004:  these go along with TODO above
-        /*
-        String source; public void setSource(String source, String fileName) {
-         this.source = source; addFile(fileName); }
-         */
+        
+        public void setSource(String source, String fileName)
+        {
+            this.source = source;
+            addFile(fileName);
+        }
 
         public void setFullClassName(String fullClassName)
         {
             this.fullClassName = fullClassName;
+        }
+    }
+
+    /**
+     * Refinement of JavaSourceClassLoader which keeps track of the
+     * total bytecode length of the classes it has compiled.
+     */
+    private static class AccountingClassLoader
+        extends JavaSourceClassLoader
+    {
+        private int nBytes;
+        
+        public AccountingClassLoader(
+            ClassLoader parentClassLoader,
+            ResourceFinder sourceFinder,
+            String optionalCharacterEncoding,
+            EnumeratorSet debuggingInformation)
+        {
+            super(
+                parentClassLoader, sourceFinder,
+                optionalCharacterEncoding, debuggingInformation);
+        }
+
+        int getTotalByteCodeSize()
+        {
+            return nBytes;
+        }
+
+        // override JavaSourceClassLoader
+        protected Map generateBytecodes(String name)
+            throws ClassNotFoundException
+        {
+            Map map = super.generateBytecodes(name);
+            if (map == null) {
+                return map;
+            }
+            // NOTE jvs 18-Oct-2006:  Janino has actually compiled everything
+            // to bytecode even before all of the classes have actually
+            // been loaded.  So we intercept their sizes here just
+            // after they've been compiled.
+            for (Object obj : map.values()) {
+                byte [] bytes = (byte []) obj;
+                nBytes += bytes.length;
+            }
+            return map;
         }
     }
 }

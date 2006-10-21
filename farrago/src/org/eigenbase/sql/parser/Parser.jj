@@ -27,8 +27,8 @@
 */
 options {
     STATIC = false;
-    JAVA_UNICODE_ESCAPE = true;
     IGNORE_CASE = true;
+    UNICODE_INPUT = true;
 }
 
 
@@ -41,6 +41,7 @@ import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.BitString;
+import org.eigenbase.util14.DateTimeUtil;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.resource.*;
 

@@ -268,7 +268,15 @@ public abstract class FarragoJavaUdxIterator
             } else {
                 nullableValue.setNull(false);
                 AssignableValue assignableValue = (AssignableValue) fieldObj;
-                Object scrubbedValue = dynamicParamDefs[iField].scrubValue(obj);
+                // Note: Calendar is an optional argument so it wouldn't 
+                // make sense to pass in a null Calendar as a parameter
+                Object scrubbedValue;
+                if (calendar == null) {
+                    scrubbedValue = dynamicParamDefs[iField].scrubValue(obj);
+                } else {
+                    scrubbedValue = 
+                        dynamicParamDefs[iField].scrubValue(obj, calendar);
+                }
                 assignableValue.assignFrom(scrubbedValue);
             }
         }

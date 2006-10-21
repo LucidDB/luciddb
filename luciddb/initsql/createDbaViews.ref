@@ -11,12 +11,12 @@
 . . . . . . . . >   select
 . . . . . . . . >     catalog_name,
 . . . . . . . . >     schema_name,
-. . . . . . . . >     ai."name" as creator,
+. . . . . . . . >     cast(ai."name" as varchar(128)) as creator,
 . . . . . . . . >     creation_timestamp,
 . . . . . . . . >     last_modified_timestamp,
 . . . . . . . . >     remarks,
-. . . . . . . . >     si."mofId" as mofid,
-. . . . . . . . >     si."lineageId" as lineageid
+. . . . . . . . >     si."mofId" as mof_id,
+. . . . . . . . >     si."lineageId" as lineage_id
 . . . . . . . . >   from
 . . . . . . . . >     sys_boot.mgmt.dba_schemas_internal2 si
 . . . . . . . . >   inner join
@@ -417,8 +417,50 @@
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.exportCatalog';
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Export schema to file UDP, field delimiter and file extension can be 
+0: jdbc:luciddb:> -- specified by user
+0: jdbc:luciddb:> create procedure export_schema_to_file(
+. . . . . . . . >   in cat varchar(128),
+. . . . . . . . >   in schma varchar(128),
+. . . . . . . . >   in exclude boolean, 
+. . . . . . . . >   in tlist varchar(65535),
+. . . . . . . . >   in tpattern varchar(65535),
+. . . . . . . . >   in dir varchar(65535),
+. . . . . . . . >   in bcp boolean,
+. . . . . . . . >   in delete_failed_file boolean,
+. . . . . . . . >   in field_delimiter varchar(2),
+. . . . . . . . >   in file_extension varchar(5)) 
+. . . . . . . . > language java
+. . . . . . . . > reads sql data
+. . . . . . . . > specific export_schema_to_file
+. . . . . . . . > called on null input
+. . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToFile';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Export schema to file UDP with field delimiter, file extention and
+0: jdbc:luciddb:> -- datetime formats
+0: jdbc:luciddb:> create procedure export_schema_to_file(
+. . . . . . . . >   in cat varchar(128),
+. . . . . . . . >   in schma varchar(128),
+. . . . . . . . >   in exclude boolean, 
+. . . . . . . . >   in tlist varchar(65535),
+. . . . . . . . >   in tpattern varchar(65535),
+. . . . . . . . >   in dir varchar(65535),
+. . . . . . . . >   in bcp boolean,
+. . . . . . . . >   in delete_failed_file boolean,
+. . . . . . . . >   in field_delimiter varchar(2),
+. . . . . . . . >   in file_extension varchar(5),
+. . . . . . . . >   in date_format varchar(50),
+. . . . . . . . >   in time_format varchar(50),
+. . . . . . . . >   in timestamp_format varchar(50))
+. . . . . . . . > language java
+. . . . . . . . > reads sql data
+. . . . . . . . > specific export_schema_to_file_2
+. . . . . . . . > called on null input
+. . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToFile';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Export schema to csv files UDP. Standard version always creates bcp files
-0: jdbc:luciddb:> -- and deletes incomplete files for a failed table export
+0: jdbc:luciddb:> -- and deletes incomplete files for a failed table export. 
 0: jdbc:luciddb:> create procedure export_schema_to_csv(
 . . . . . . . . >   in cat varchar(128),
 . . . . . . . . >   in schma varchar(128),
@@ -427,7 +469,7 @@
 . . . . . . . . >   in tpattern varchar(65535),
 . . . . . . . . >   in dir varchar(65535),
 . . . . . . . . >   in bcp boolean,
-. . . . . . . . >   in delete_failed_file boolean) 
+. . . . . . . . >   in delete_failed_file boolean)
 . . . . . . . . > language java
 . . . . . . . . > reads sql data
 . . . . . . . . > specific export_schema_with_options
@@ -448,7 +490,7 @@
 . . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToCsv';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Export foreign schema to csv files UDP. Standard version always creates bcp
-0: jdbc:luciddb:> -- files and deletes incomplete files for a failed table export
+0: jdbc:luciddb:> -- files and deletes incomplete files for a failed table export.
 0: jdbc:luciddb:> create procedure export_foreign_schema_to_csv(
 . . . . . . . . >   in serv varchar(128),
 . . . . . . . . >   in fschema varchar(128),
@@ -479,7 +521,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Incremental export for local schema, gets rows where 
 0: jdbc:luciddb:> -- last_mod_col > last_mod_ts.  Standard version always creates bcp files and
-0: jdbc:luciddb:> -- deletes incomplete files for a failed table export
+0: jdbc:luciddb:> -- deletes incomplete files for a failed table export.
 0: jdbc:luciddb:> create procedure export_schema_incremental_to_csv(
 . . . . . . . . >   in cat varchar(128),
 . . . . . . . . >   in schma varchar(128),
@@ -514,7 +556,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Incremental export for foreign schema, gets rows where 
 0: jdbc:luciddb:> -- last_mod_col > last_mod_ts.  Standard version always creates bcp files and
-0: jdbc:luciddb:> -- deletes incomplete files for a failed table export
+0: jdbc:luciddb:> -- deletes incomplete files for a failed table export.
 0: jdbc:luciddb:> create procedure export_foreign_schema_incremental_to_csv(
 . . . . . . . . >   in serv varchar(128),
 . . . . . . . . >   in fschema varchar(128),
@@ -551,7 +593,7 @@
 0: jdbc:luciddb:> -- two schemas must have the same structure. Data from the original schema 
 0: jdbc:luciddb:> -- which has been deleted will not be seen, only updates and new records 
 0: jdbc:luciddb:> -- from the incremental schema.  Standard version always creates bcp files and
-0: jdbc:luciddb:> -- deletes incomplete files for a failed table export
+0: jdbc:luciddb:> -- deletes incomplete files for a failed table export.
 0: jdbc:luciddb:> create procedure export_merged_schemas_to_csv(
 . . . . . . . . >   in orig_catalog varchar(128),
 . . . . . . . . >   in orig_schema varchar(128),
@@ -596,6 +638,44 @@
 . . . . . . . . >   in delete_failed_file boolean)
 . . . . . . . . > language java
 . . . . . . . . > reads sql data
+. . . . . . . . > called on null input
+. . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Export result of a single query to a file, with control over field
+0: jdbc:luciddb:> -- delimiter, datafile extension, and date/time formatting
+0: jdbc:luciddb:> create procedure export_query_to_file(
+. . . . . . . . >   in query_sql varchar(65535),
+. . . . . . . . >   in path_without_extension varchar(65535),
+. . . . . . . . >   in bcp boolean,
+. . . . . . . . >   in delete_failed_file boolean,
+. . . . . . . . >   in field_delimiter varchar(2),
+. . . . . . . . >   in file_extension varchar(5),
+. . . . . . . . >   in date_format varchar(128),
+. . . . . . . . >   in time_format varchar(128),
+. . . . . . . . >   in timestamp_format varchar(128))
+. . . . . . . . > language java
+. . . . . . . . > reads sql data
+. . . . . . . . > specific export_query_to_file_2
+. . . . . . . . > called on null input
+. . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Export result of a single query to a file, with control over field
+0: jdbc:luciddb:> -- delimiter, datafile extension, date/time formatting, and whether
+0: jdbc:luciddb:> -- to even export data at all
+0: jdbc:luciddb:> create procedure export_query_to_file(
+. . . . . . . . >   in query_sql varchar(65535),
+. . . . . . . . >   in path_without_extension varchar(65535),
+. . . . . . . . >   in bcp boolean,
+. . . . . . . . >   in include_data boolean,
+. . . . . . . . >   in delete_failed_file boolean,
+. . . . . . . . >   in field_delimiter varchar(2),
+. . . . . . . . >   in file_extension varchar(5),
+. . . . . . . . >   in date_format varchar(128),
+. . . . . . . . >   in time_format varchar(128),
+. . . . . . . . >   in timestamp_format varchar(128))
+. . . . . . . . > language java
+. . . . . . . . > reads sql data
+. . . . . . . . > specific export_query_to_file_3
 . . . . . . . . > called on null input
 . . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
 0: jdbc:luciddb:> 

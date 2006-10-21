@@ -26,6 +26,7 @@ import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 
+import net.sf.farrago.type.runtime.*;
 
 /**
  * FarragoOJRexImplementorTable implements {@link OJRexImplementorTable} with
@@ -214,6 +215,12 @@ public class FarragoOJRexImplementorTable
         registerOperator(
             SqlStdOperatorTable.nextValueFunc,
             new FarragoOJRexNextValueImplementor());
+
+        registerOperator(
+            SqlStdOperatorTable.isDifferentFromOperator,
+            new FarragoOJRexStaticMethodImplementor(
+                FarragoSyntheticObject.class,
+                "testIsDifferentFrom"));
 
         registerContextOp(SqlStdOperatorTable.userFunc);
         registerContextOp(SqlStdOperatorTable.systemUserFunc);

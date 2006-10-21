@@ -36,6 +36,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/timeDimension.sql"/>
       </test>
 
+      <test name="fiscalTimeDimension">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/fiscalTimeDimension.sql"/>
+      </test>
+
       <test name="viewTest">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/viewTest.sql"/>
       </test>
@@ -58,9 +62,6 @@
       </test>
 
       <test name="generateCrc">
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/generateCrc.sql"/>
       </test>
 

@@ -28,6 +28,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/grant_select_for_schema.sql"/>
       </test>
 
+      <test name="exportSchemaToFile">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_schema_to_file.sql"/>
+      </test>
+
       <test name="exportLocalSchema" requiresSuccess="crSource">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_local_schema.sql"/>
       </test>

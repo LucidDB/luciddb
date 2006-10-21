@@ -92,6 +92,7 @@ public class LucidDbTestCleanup
             name.equals("ORACLE")
             || name.equals("SQL SERVER")
             || name.equals("FLAT FILE")
+            || name.equals("LUCIDDB LOCAL")
             || name.equals("SALESFORCE")
             || name.equals("NETSUITE")
             || super.isBlessedWrapper(wrapper);

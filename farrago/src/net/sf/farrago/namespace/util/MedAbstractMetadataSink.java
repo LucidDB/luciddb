@@ -30,6 +30,7 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.util.*;
+import org.eigenbase.reltype.*;
 
 
 /**

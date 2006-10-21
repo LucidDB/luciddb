@@ -21,6 +21,7 @@
 */
 package net.sf.farrago.type.runtime;
 
+import org.eigenbase.sql.*;
 import org.eigenbase.util.Util;
 
 import java.text.NumberFormat;
@@ -40,6 +41,9 @@ public abstract class EncodedSqlInterval
     implements AssignableValue
 {
     //~ Static fields/initializers ---------------------------------------------
+
+    public static final String GET_START_UNIT_METHOD_NAME = "getStartUnit";
+
     protected static final NumberFormat NF2 = new DecimalFormat("00");
     protected static final NumberFormat NF3 = new DecimalFormat("000");
 
@@ -122,7 +126,10 @@ public abstract class EncodedSqlInterval
         return toString();
     }
 
-    public static class EncodedSqlIntervalYM extends EncodedSqlInterval
+    // Implemented by code generation
+    protected abstract SqlIntervalQualifier.TimeUnit getStartUnit();
+
+    public abstract static class EncodedSqlIntervalYM extends EncodedSqlInterval
     {
         public static long MONTHS_PER_YEAR = 12;
 
@@ -163,7 +170,7 @@ public abstract class EncodedSqlInterval
         }
     }
 
-    public static class EncodedSqlIntervalDT extends EncodedSqlInterval
+    public abstract static class EncodedSqlIntervalDT extends EncodedSqlInterval
     {
         public static long MS_PER_SECOND = 1000;
         public static long MS_PER_MINUTE = 60*MS_PER_SECOND;
@@ -205,9 +212,12 @@ public abstract class EncodedSqlInterval
             long seconds = v/MS_PER_SECOND;
             v = v % MS_PER_SECOND;
 
+            // REVIEW jpham 2006-10-17: it doesn't seem thread-safe for all 
+            // time intervals to share the same number formatter
             strbuf.append(sign);
-            if (days > 0) {
-                strbuf.append(NF2.format(days));
+            if (getStartUnit() == SqlIntervalQualifier.TimeUnit.Day) {
+                // Note: allow over 99 days and keep strings as short as possible
+                strbuf.append(days);
                 strbuf.append(' ');
             }
             strbuf.append(NF2.format(hours));

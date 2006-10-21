@@ -56,6 +56,12 @@ public class SqlNewOperator
         // direct call to the constructor method.
         return call.getOperands()[0];
     }
+
+    // override SqlOperator
+    public boolean requiresDecimalExpansion()
+    {
+        return false;
+    }
 }
 
 // End SqlNewOperator.java

@@ -307,8 +307,10 @@ public class PushProjector
             return true;
         }
         
-        if (childRel instanceof JoinRelBase) {
-            // if nothing is projected from join child, arbitrarily project
+        if (childRel instanceof JoinRelBase ||
+            childRel instanceof SetOpRel)
+        {
+            // if nothing is projected from child, arbitrarily project
             // the first column unless there is only one column in the child;
             // this is necessary since Fennel doesn't handle 0-column
             // projections
@@ -318,6 +320,9 @@ public class PushProjector
                 }
                 projRefs.set(0);
                 nProject = 1;
+            }
+            if (childRel instanceof SetOpRel) {
+                return false;
             }
             if ((nRightProject == 0) && (rightPreserveExprs.size() == 0)) {
                 if (nFieldsRight == 1 && childPreserveExprs.size() == 0) {

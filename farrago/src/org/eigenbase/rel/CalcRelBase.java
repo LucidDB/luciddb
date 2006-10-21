@@ -105,7 +105,7 @@ public abstract class CalcRelBase
         return
             FilterRel.estimateFilteredRows(
                 getChild(),
-                program.getCondition());
+                program);
     }
 
     public List<RelCollation> getCollationList()
