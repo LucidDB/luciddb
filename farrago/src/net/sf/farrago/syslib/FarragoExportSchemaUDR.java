@@ -1165,6 +1165,10 @@ public abstract class FarragoExportSchemaUDR
 
                 logOut.write(EXPORT_TYPES[export] + TAB);
 
+                // TODO jvs 21-Oct-2006:  For case of !withData,
+                // don't bother executing query; just prepare and
+                // use ResultSetMetaData
+                
                 tblData = stmt.executeQuery(querySql);
                 tblMeta = tblData.getMetaData();
             } catch (SQLException se) {
