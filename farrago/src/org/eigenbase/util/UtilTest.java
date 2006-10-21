@@ -60,7 +60,6 @@ public class UtilTest
         TestSuite suite = new TestSuite();
         suite.addTestSuite(UtilTest.class);
         suite.addTestSuite(BinaryHeap.BinaryHeapTestCase.class);
-        suite.addTestSuite(TimeoutIteratorTest.class);
         return suite;
     }
 
