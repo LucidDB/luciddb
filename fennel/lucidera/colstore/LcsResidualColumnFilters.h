@@ -27,6 +27,7 @@
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDataWithBuffer.h"
+#include "fennel/tuple/UnalignedAttributeAccessor.h"
 #include "fennel/common/SearchEndpoint.h"
 #include "fennel/common/SharedTypes.h"
 
@@ -66,6 +67,11 @@ struct LcsResidualColumnFilters
      * tuple descriptor for key row
      */
     TupleDescriptor inputKeyDesc;
+
+    /**
+     * accessor corresponding to inputKeyDesc
+     */
+    UnalignedAttributeAccessor attrAccessor;
 
     /**
      * projection from outputTupleData for the key data

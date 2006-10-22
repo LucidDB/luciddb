@@ -23,6 +23,7 @@
 #include "fennel/lucidera/colstore/LcsClusterDump.h"
 #include "fennel/lucidera/colstore/LcsBitOps.h"
 #include "fennel/tuple/TupleData.h"
+#include "fennel/tuple/UnalignedAttributeAccessor.h"
 #include "fennel/common/TraceSource.h"
 #include <stdarg.h>
 
@@ -247,8 +248,9 @@ PBuffer LcsClusterDump::fprintVal(uint idx, PBuffer pV, uint col)
     st[lnLen] = 0;
     memset(st, ' ', lnLen);
     callTrace("%05u:", idx);
-    
-    sz = TupleDatum().getLcsLength(p, colTupleDesc[col]);
+
+    UnalignedAttributeAccessor attrAccessor(colTupleDesc[col]);
+    sz = attrAccessor.getStoredByteCount(p);
     l = sprintf(st + lnValIdx, "%4u: ", sz);
     st[lnValIdx + l] = 0;
 

@@ -10,7 +10,8 @@ TupleDescriptor.cpp \
 TupleOverflowExcn.cpp \
 TuplePrinter.cpp \
 TupleProjectionAccessor.cpp \
-TupleDataWithBuffer.cpp
+TupleDataWithBuffer.cpp \
+UnalignedAttributeAccessor.cpp
 
 DESIGN_DOC=TupleDesign.cpp
 EXTRA_DIST=$(DESIGN_DOC)

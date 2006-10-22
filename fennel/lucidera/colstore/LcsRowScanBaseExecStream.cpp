@@ -20,8 +20,8 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/lucidera/colstore/LcsRowScanBaseExecStream.h"
+#include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -177,8 +177,7 @@ void LcsRowScanBaseExecStream::syncColumns(SharedLcsClusterReader &pScan)
 bool LcsRowScanBaseExecStream::readColVals(
     SharedLcsClusterReader &pScan,
     TupleDataWithBuffer &tupleData,
-    uint colStart,
-    TupleDescriptor tupleDesc)
+    uint colStart)
 {
     if (!allSpecial) {
         for (uint iCluCol = 0; iCluCol < pScan->nColsToRead; iCluCol++) {
@@ -187,7 +186,8 @@ bool LcsRowScanBaseExecStream::readColVals(
             // tuple datum entry 
             PBuffer curValue = pScan->clusterCols[iCluCol].getCurrentValue();
             uint idx = projMap[colStart + iCluCol];
-            tupleData[idx].loadLcsDatum(curValue, tupleDesc[idx]);
+
+            attrAccessors[idx].loadValue(tupleData[idx], curValue);
             if (pScan->clusterCols[iCluCol].getFilters().hasResidualFilters) {
                 if (!pScan->clusterCols[iCluCol].applyFilters(projDescriptor,
                     tupleData)) 

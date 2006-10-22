@@ -84,7 +84,7 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      * initializaed to 0.  On execute, the filtering inputs
      * are read sequentially, while this variable is incremented,
      * until an underflow or all filtering inputs have been read. 
-     * On return due to an underflow, this variable allows reading
+     * On return due to an underflow, this variable allows reading to
      * resume where it had left off.
      */
     uint iFilterToInitialize;

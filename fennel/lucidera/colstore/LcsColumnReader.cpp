@@ -250,9 +250,9 @@ uint LcsColumnReader::findVal(
     while (iLo < iHi) {
         uint iMid = (iLo + iHi) / 2;
 
-        readerKeyData[0].loadLcsDatum(
-            getBatchValue(iMid),
-            filters.inputKeyDesc[0]);
+        filters.attrAccessor.loadValue(
+            readerKeyData[0],
+            getBatchValue(iMid));
 
         cmp = filters.inputKeyDesc.compareTuples(
             readerKeyData, allProj,

@@ -28,6 +28,7 @@
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TuplePrinter.h"
 #include "fennel/tuple/AttributeAccessor.h"
+#include "fennel/tuple/UnalignedAttributeAccessor.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/common/TraceSource.h"
 
@@ -480,6 +481,9 @@ void TupleTest::testLoadStoreLcsDatum()
     loadStore8ByteInts(0, 0xff);
     loadStore8ByteInts(0x80, 0);
 
+    // make sure zero is handled correctly
+    loadAndStore8ByteInt(0);
+
     // test data that requires a 2-byte storage length
     loadStore2ByteLenData(128);
     loadStore2ByteLenData(129);
@@ -490,6 +494,9 @@ void TupleTest::testLoadStoreLcsDatum()
     loadStore2ByteLenData(511);
     loadStore2ByteLenData(512);
 
+    // test special case of empty string
+    loadStore2ByteLenData(0);
+    
     // test null data
     loadStoreNullData(STANDARD_TYPE_INT_64, 8);
     loadStoreNullData(STANDARD_TYPE_INT_32, 4);
@@ -503,14 +510,15 @@ void TupleTest::testLoadStoreLcsDatum()
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc_int16(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_16));
-    tupleDatum.storeLcsDatum(storageBuf, attrDesc_int16);
-    uint len = tupleDatum.getLcsLength(storageBuf, attrDesc_int16);
+    UnalignedAttributeAccessor accessor_int16(attrDesc_int16);
+    accessor_int16.storeValue(tupleDatum, storageBuf);
+    uint len = accessor_int16.getStoredByteCount(storageBuf);
     BOOST_REQUIRE(len == 2);
     
     FixedBuffer loadBuf[4];
     tupleDatum.cbData = 0xff;
     tupleDatum.pData = loadBuf;
-    tupleDatum.loadLcsDatum(storageBuf, attrDesc_int16);
+    accessor_int16.loadValue(tupleDatum, storageBuf);
 
     BOOST_REQUIRE(tupleDatum.cbData == 2);
     bool rc = (intVal == *reinterpret_cast<int16_t const *> (tupleDatum.pData));
@@ -527,13 +535,14 @@ void TupleTest::testLoadStoreLcsDatum()
         stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
         true,
         4);
-    tupleDatum.storeLcsDatum(storageBuf, attrDesc_varBinary);
-    len = tupleDatum.getLcsLength(storageBuf, attrDesc_varBinary);
+    UnalignedAttributeAccessor accessor_varBinary(attrDesc_varBinary);
+    accessor_varBinary.storeValue(tupleDatum, storageBuf);
+    len = accessor_varBinary.getStoredByteCount(storageBuf);
     BOOST_REQUIRE(len == 4);
 
     tupleDatum.cbData = 0xff;
     tupleDatum.pData = loadBuf;
-    tupleDatum.loadLcsDatum(storageBuf, attrDesc_varBinary);
+    accessor_varBinary.loadValue(tupleDatum, storageBuf);
 
     BOOST_REQUIRE(tupleDatum.cbData == 3);
     BOOST_REQUIRE(memcmp(tupleDatum.pData, data, 3) == 0);
@@ -582,13 +591,14 @@ void TupleTest::loadAndStore8ByteInt(int64_t intVal)
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
-    tupleDatum.storeLcsDatum(storageBuf, attrDesc);
+    UnalignedAttributeAccessor accessor(attrDesc);
+    accessor.storeValue(tupleDatum, storageBuf);
 
     // load the data into a different buffer so we're sure we're not reusing
     // the original stored value
     tupleDatum.cbData = 0;
     tupleDatum.pData = loadBuf;
-    tupleDatum.loadLcsDatum(storageBuf, attrDesc);
+    accessor.loadValue(tupleDatum, storageBuf);
     bool rc = (intVal == *reinterpret_cast<int64_t const *> (tupleDatum.pData));
     BOOST_REQUIRE(rc);
     BOOST_REQUIRE(tupleDatum.cbData == 8);
@@ -610,15 +620,16 @@ void TupleTest::loadStore2ByteLenData(uint dataLen)
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_BINARY), true, dataLen);
-    tupleDatum.storeLcsDatum(storageBuf.get(), attrDesc);
-    uint len = tupleDatum.getLcsLength(storageBuf.get(), attrDesc);
+    UnalignedAttributeAccessor accessor(attrDesc);
+    accessor.storeValue(tupleDatum, storageBuf.get());
+    uint len = accessor.getStoredByteCount(storageBuf.get());
     BOOST_REQUIRE(len == dataLen + 2);
 
     // load the stored value and compare it against the original data buffer
     boost::scoped_array<FixedBuffer> loadBuf(new FixedBuffer[dataLen + 2]);
     tupleDatum.cbData = 0;
     tupleDatum.pData = loadBuf.get();
-    tupleDatum.loadLcsDatum(storageBuf.get(), attrDesc);
+    accessor.loadValue(tupleDatum, storageBuf.get());
     BOOST_REQUIRE(tupleDatum.cbData == dataLen);
     BOOST_REQUIRE(memcmp(tupleDatum.pData, dataBuf.get(), dataLen) == 0);
 }
@@ -635,15 +646,16 @@ void TupleTest::loadStoreNullData(uint typeOrdinal, uint dataLen)
         stdTypeFactory.newDataType(typeOrdinal),
         true,
         dataLen);
+    UnalignedAttributeAccessor accessor(attrDesc);
 
-    tupleDatum.storeLcsDatum(storageBuf, attrDesc);
-    uint len = tupleDatum.getLcsLength(storageBuf, attrDesc);
-    BOOST_REQUIRE(len == 2);
+    accessor.storeValue(tupleDatum, storageBuf);
+    uint len = accessor.getStoredByteCount(storageBuf);
+    BOOST_REQUIRE(len == 1);
 
     FixedBuffer loadBuf[2];
     tupleDatum.cbData = 0xff;
     tupleDatum.pData = loadBuf;
-    tupleDatum.loadLcsDatum(storageBuf, attrDesc);
+    accessor.loadValue(tupleDatum, storageBuf);
 
     BOOST_REQUIRE(tupleDatum.cbData == 0);
     BOOST_REQUIRE(tupleDatum.pData == NULL);

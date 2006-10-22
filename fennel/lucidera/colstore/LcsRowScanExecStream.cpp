@@ -93,6 +93,8 @@ void LcsRowScanExecStream::prepareResidualFilters(
                         filter.readerKeyProj.push_back(valueCols[j]);
                         filter.inputKeyDesc.projectFrom(projDescriptor, 
                             filter.readerKeyProj);
+                        filter.attrAccessor.compute(
+                            filter.inputKeyDesc[0]);
 
                         filter.lowerBoundProj.push_back(1);
                         filter.upperBoundProj.push_back(3);
@@ -150,6 +152,11 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
      * real output row: projOutputTuple.
      */
     projOutputTupleData.compute(pOutAccessor->getTupleDesc());
+
+    attrAccessors.resize(projDescriptor.size());
+    for (uint i = 0; i < projDescriptor.size(); ++i) {
+        attrAccessors[i].compute(projDescriptor[i]);
+    }
 }
 
 void LcsRowScanExecStream::open(bool restart)
@@ -341,8 +348,7 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
                     readColVals(
                         pScan,
                         outputTupleData,
-                        prevClusterEnd,
-                        projDescriptor);
+                        prevClusterEnd);
                 if (!passedFilter) {
                     break;
                 }

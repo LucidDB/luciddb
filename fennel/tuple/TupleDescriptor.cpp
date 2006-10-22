@@ -41,7 +41,6 @@ TupleAttributeDescriptor::TupleAttributeDescriptor()
 {
     pTypeDescriptor = NULL;
     isNullable = false;
-    isLcsFixedWidth = false;
     cbStorage = 0;
 }
 
@@ -59,13 +58,6 @@ TupleAttributeDescriptor::TupleAttributeDescriptor(
     } else {
         cbStorage = typeDescriptor.getFixedByteCount();
     }
-    StoredTypeDescriptor::Ordinal typeOrdinal = pTypeDescriptor->getOrdinal();
-    isLcsFixedWidth =
-        (!isNullable &&
-            typeOrdinal != STANDARD_TYPE_INT_64 &&
-            typeOrdinal != STANDARD_TYPE_UINT_64 &&
-            typeOrdinal != STANDARD_TYPE_VARCHAR &&
-            typeOrdinal != STANDARD_TYPE_VARBINARY);
 }
 
 bool TupleAttributeDescriptor::operator == (

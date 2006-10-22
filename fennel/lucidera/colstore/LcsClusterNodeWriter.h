@@ -27,6 +27,7 @@
 #include "fennel/lucidera/colstore/LcsClusterDump.h"
 #include "fennel/btree/BTreeWriter.h"
 #include "fennel/tuple/TupleData.h"
+#include "fennel/tuple/UnalignedAttributeAccessor.h"
 #include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
@@ -161,6 +162,11 @@ private:
      * Max value size encountered thus far for each cluster column
      */
     boost::scoped_array<uint> maxValueSize;
+
+    /**
+     * Accessors for reading unaligned values.
+     */
+    boost::scoped_array<UnalignedAttributeAccessor> attrAccessors;
 
     /**
      * Cluster dump
