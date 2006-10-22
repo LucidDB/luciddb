@@ -95,6 +95,7 @@ void LcsClusterNodeWriter::close()
     nBits.reset();
     nextWidthChange.reset();
     maxValueSize.reset();
+    attrAccessors.reset();
 }
 
 bool LcsClusterNodeWriter::getLastClusterPageForWrite(
@@ -258,9 +259,8 @@ uint16_t LcsClusterNodeWriter::getNextVal(uint column, uint16_t thisVal)
     if (thisVal && thisVal != szBlock) {
         return
             (uint16_t) (thisVal +
-                TupleDatum().getLcsLength(
-                    pBlock[column] + thisVal,
-                    colTupleDesc[column]));
+                attrAccessors[column].getStoredByteCount(
+                    pBlock[column] + thisVal));
     } else {
         return 0;
     }
@@ -315,9 +315,8 @@ void LcsClusterNodeWriter::rollBackLastBatch(uint column, PBuffer pBuf)
             i++, pBuf += batchDirs[column].recSize)
         {
             len =
-                TupleDatum().getLcsLength(
-                    pBlock[column] + pValOffsets[rows[i]],
-                    colTupleDesc[column]);
+                attrAccessors[column].getStoredByteCount(
+                    pBlock[column] + pValOffsets[rows[i]]);
             memcpy(pBuf, pBlock[column] + pValOffsets[rows[i]], len);
         }
 
@@ -336,9 +335,8 @@ void LcsClusterNodeWriter::rollBackLastBatch(uint column, PBuffer pBuf)
             i++, pBuf += batchDirs[column].recSize)
         {
             len =
-                TupleDatum().getLcsLength(
-                    pBlock[column] + pValOffsets[i],
-                    colTupleDesc[column]);
+                attrAccessors[column].getStoredByteCount(
+                    pBlock[column] + pValOffsets[i]);
             memcpy(pBuf, pBlock[column] + pValOffsets[i], len);
         }
     }
@@ -414,7 +412,7 @@ bool LcsClusterNodeWriter::addValue(uint column, PBuffer pVal, uint16_t *oVal)
 {
     uint16_t lastValOffset;
     int oldSzLeft = szLeft;
-    uint szVal = TupleDatum().getLcsLength(pVal, colTupleDesc[column]);
+    uint szVal = attrAccessors[column].getStoredByteCount(pVal);
     
     // if we are in forced fixed compression mode,
     // see if the maximum record size in this batch has increased.
@@ -493,7 +491,7 @@ void LcsClusterNodeWriter::undoValue(
     // the batch, addValue was called to bump-up the batch value count
     // so we still need to call undoValue
     uint szVal =
-        (pVal) ? TupleDatum().getLcsLength(pVal, colTupleDesc[column]) : 0;
+        (pVal) ? attrAccessors[column].getStoredByteCount(pVal) : 0;
   
     // add back size subtracted for offset
     szLeft += (sizeof(uint16_t) + szVal) ;
@@ -555,9 +553,8 @@ void LcsClusterNodeWriter::putCompressedBatch(
         {
             iRow = ((uint16_t *) pRows)[i];
             len =
-                TupleDatum().getLcsLength(
-                    pBlock[column] + pOffs[iRow],
-                    colTupleDesc[column]);
+                attrAccessors[column].getStoredByteCount(
+                    pBlock[column] + pOffs[iRow]);
             memcpy(pBuf, pBlock[column] + pOffs[iRow], len);
         }
         batchDirs[column].nRow =
@@ -677,7 +674,7 @@ void LcsClusterNodeWriter::putFixedVarBatch(
             // the bank of from the block
             src = valueSource(localLastVal, localpValBank, localoValBank,
                                 localpBlock, pRows[i]);
-            uint len = TupleDatum().getLcsLength(src, colTupleDesc[column]);
+            uint len = attrAccessors[column].getStoredByteCount(src);
             memcpy(pVal, src, len);
             pVal += batchRecSize;
         }
@@ -706,7 +703,7 @@ void LcsClusterNodeWriter::putFixedVarBatch(
         // valueSource will get all the values fron the block
         src = valueSource(localLastVal, localpValBank, localoValBank,
                             localpBlock, pRows[i]);
-        uint len = TupleDatum().getLcsLength(src, colTupleDesc[column]);
+        uint len = attrAccessors[column].getStoredByteCount(src);
         memcpy(pVal, src, len);
         pVal += batchRecSize;
     }
@@ -1190,6 +1187,8 @@ void LcsClusterNodeWriter::allocArrays()
 
         // allocate larger buffers for the individual pages in the value bank
 
+        attrAccessors.reset(new UnalignedAttributeAccessor[nClusterCols]);
+
         for (uint col = 0; col < nClusterCols; col++) {
             bufferLock.allocatePage();
             pValBank[col] = bufferLock.getPage().getWritableData();
@@ -1198,6 +1197,8 @@ void LcsClusterNodeWriter::allocArrays()
             // The pages will be released when all other pages associated with
             // the ScratchSegment are released.
             bufferLock.unlock();
+
+            attrAccessors[col].compute(colTupleDesc[col]);
         }
 
         valBankStart.reset(new uint16_t[nClusterCols]);

@@ -20,8 +20,9 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/lucidera/bitmap/LbmGeneratorExecStream.h"
+#include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/tuple/UnalignedAttributeAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -53,6 +54,11 @@ void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
     // setup output tuple
     assert(treeDescriptor.tupleDescriptor == pOutAccessor->getTupleDesc());
     bitmapTupleDesc = treeDescriptor.tupleDescriptor;
+
+    attrAccessors.resize(bitmapTupleDesc.size());
+    for (int i = 0; i < bitmapTupleDesc.size(); ++i) {
+        attrAccessors[i].compute(bitmapTupleDesc[i]);
+    }
 
     nIdxKeys = treeDescriptor.keyProjection.size() - 1;
 
@@ -280,8 +286,7 @@ ExecStreamResult LbmGeneratorExecStream::generateMultiKeyBitmaps(
                 readColVals(
                     pScan,
                     bitmapTuple,
-                    prevClusterEnd,
-                    bitmapTupleDesc);
+                    prevClusterEnd);
                 prevClusterEnd += pScan->nColsToRead;
             }
         }
@@ -355,7 +360,8 @@ bool LbmGeneratorExecStream::generateBitmaps()
             // reset buffer before loading new value, in case previous
             // row had nulls
             bitmapTuple.resetBuffer();
-            bitmapTuple[0].loadLcsDatum(curValue, bitmapTupleDesc[0]);
+            
+            attrAccessors[0].loadValue(bitmapTuple[0], curValue);
             initRidAndBitmap(bitmapTuple, &currRid);
         }
         if (!addRidToBitmap(keyCodes[i], bitmapTuple, currRid)) {
@@ -398,7 +404,8 @@ bool LbmGeneratorExecStream::generateSingletons()
                 PBuffer curValue =
                     pScan->clusterCols[iCluCol].getCurrentValue();
                 uint idx = projMap[prevClusterEnd + iCluCol];
-                bitmapTuple[idx].loadLcsDatum(curValue, bitmapTupleDesc[idx]);
+
+                attrAccessors[idx].loadValue(bitmapTuple[idx], curValue);
             }
             prevClusterEnd += pScan->nColsToRead;
         }

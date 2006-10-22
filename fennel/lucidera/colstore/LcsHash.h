@@ -25,6 +25,7 @@
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/tuple/TupleDescriptor.h"
+#include "fennel/tuple/UnalignedAttributeAccessor.h"
 #include "fennel/lucidera/colstore/LcsClusterNodeWriter.h"
 
 
@@ -350,10 +351,7 @@ private:
      */
     TupleDescriptor          colTupleDesc;
   
-    /**
-     * Attribute descriptor of the column
-     */
-    TupleAttributeDescriptor attrDesc;
+    UnalignedAttributeAccessor attrAccessor;
 
 public:
 
@@ -368,14 +366,14 @@ public:
      *
      * @param [in] columnIdInit which column in the cluster is being compared
      *
-     * @param [in] attrDescInit attribute descriptor of the column
+     * @param [in] attrAccessorInit attribute accessor of the column
      */
     explicit LcsCompareColKeyUsingOffsetIndex(
         SharedLcsClusterNodeWriter clusterBlockWriterInit,
         LcsHashTable *hashTableInit,
         TupleDescriptor const &colTupleDescInit,
         uint columnIdInit,
-        TupleAttributeDescriptor const &attrDesc);
+        UnalignedAttributeAccessor const &attrAccessor);
 
     ~LcsCompareColKeyUsingOffsetIndex() {}
 
@@ -475,9 +473,9 @@ private:
     TupleDataWithBuffer   colTuple;
 
     /**
-     * Attribute descriptor of the column
+     * Attribute accessor of the column
      */
-    TupleAttributeDescriptor attrDesc;
+    UnalignedAttributeAccessor attrAccessor;
 
     /**
      * The column being compared against.

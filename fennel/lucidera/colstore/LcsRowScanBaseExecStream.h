@@ -26,6 +26,7 @@
 #include "fennel/ftrs/BTreeExecStream.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleDataWithBuffer.h"
+#include "fennel/tuple/UnalignedAttributeAccessor.h"
 #include "fennel/lucidera/colstore/LcsClusterReader.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -107,21 +108,24 @@ protected:
     void syncColumns(SharedLcsClusterReader &pScan);
 
     /**
+     * Accessors used for loading actual column values.
+     */
+    std::vector<UnalignedAttributeAccessor> attrAccessors;
+    
+    /**
      * Reads column values based on current position of cluster reader
      *
      * @param pScan cluster reader
      * @param tupleData tupledata where data will be loaded
      * @param colStart starting column offset where first column will be
      * loaded
-     * @param tupleDesc tuple descriptor of tupleData
      *
      * @return false if column filters failed; true otherwise
      */
     bool readColVals(
         SharedLcsClusterReader &pScan,
         TupleDataWithBuffer &tupleData,
-        uint colStart,
-        TupleDescriptor tupleDesc);
+        uint colStart);
 
     /**
      * Builds outputProj from params.
