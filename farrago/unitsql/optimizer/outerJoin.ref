@@ -1550,5 +1550,25 @@
 '            LcsRowScanRel(table=[[LOCALDB, OJ, Y]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$OJ$Y$Y0, SYS$CLUSTERED_INDEX$OJ$Y$Y1]], residual columns=[[1]])'
 '              FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, _ISO-8859-1']', 1 }]])'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- LER-2472 - cartesian product joins with outer joins -- ROJ needs to be
+0: jdbc:farrago:> -- converted to a LOJ for the cartesian product join to be valid
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select a, b from A right outer join B on a = 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER A, INTEGER NOT NULL B) NOT NULL])'
+'    FennelCartesianProductRel(leftouterjoin=[true])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$OJ$B$B]])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$OJ$A$A]], residual columns=[[1]])'
+'        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, _ISO-8859-1']', 1 }]])'
+0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> select a, b from A right outer join B on a = 1;
++----+----+
+| A  | B  |
++----+----+
+| 1  | 2  |
+| 1  | 3  |
+| 1  | 4  |
++----+----+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

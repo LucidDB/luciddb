@@ -67,11 +67,18 @@ public class FennelCartesianJoinRule
          * Joins that can use CartesianProduct will have only TRUE condition 
          * in JoinRel. Any other join conditions have to be extracted out 
          * already. This implies that only ON TRUE condition is suported for
-         * LeftOuterJoins.
+         * LeftOuterJoins or RightOuterJoins.
          */
-        boolean joinTypeFeasible = 
-            (joinRel.getJoinType() == JoinRelType.INNER) ||
-            (joinRel.getJoinType() == JoinRelType.LEFT);
+        JoinRelType joinType = joinRel.getJoinType();
+        boolean joinTypeFeasible = !(joinType == JoinRelType.FULL);
+        boolean swapped = false;
+        if (joinType == JoinRelType.RIGHT) {
+            swapped = true;
+            RelNode tmp = leftRel;
+            leftRel = rightRel;
+            rightRel = tmp;
+            joinType = JoinRelType.LEFT;
+        }
         
         /*
          * CartesianProduct relies on a post filter to do the join filtering.
@@ -92,13 +99,12 @@ public class FennelCartesianJoinRule
 
         // see if it makes sense to buffer the existing RHS; if not, try
         // the LHS, swapping the join operands if it does make sense to buffer
-        // the LHS
-        boolean swapped = false;
+        // the LHS; but only if we haven't already swapped the inputs
         FennelBufferRel bufRel =
             bufferRight(leftRel, rightRel, joinRel.getTraits());
         if (bufRel != null) {
             rightRel = bufRel;
-        } else {
+        } else if (!swapped) {
             bufRel = bufferRight(rightRel, leftRel, joinRel.getTraits());
             if (bufRel != null) {
                 swapped = true;
@@ -130,7 +136,7 @@ public class FennelCartesianJoinRule
                 joinRel.getCluster(),
                 fennelLeft,
                 fennelRight,
-                joinRel.getJoinType(),
+                joinType,
                 RelOptUtil.getFieldNameList(joinRel.getRowType()));
         
         RelNode newRel;
