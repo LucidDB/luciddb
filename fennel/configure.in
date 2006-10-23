@@ -40,7 +40,7 @@ fi
 dnl Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h limits.h malloc.h unistd.h aio.h libaio.h sched.h uuid/uuid.h uuid.h)
+AC_CHECK_HEADERS(fcntl.h limits.h malloc.h unistd.h aio.h libaio.h sched.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -54,26 +54,41 @@ dnl automatic -l append
 AC_FUNC_MMAP
 AC_CHECK_FUNCS(strerror)
 AC_CHECK_LIB(aio,io_queue_init,[ found_libaio=true ])
-AC_CHECK_LIB(uuid,uuid_generate,[ found_old_libuuid=true ])
-AC_CHECK_LIB(uuid,uuid_make,[ found_new_libuuid=true ])
 
 if test "$found_libaio" = "true"
 then
     AC_DEFINE([HAVE_LIBAIO],[1],[Define to 1 if you have the `aio' library (-laio).])
 fi
 
-dnl Starting with v0.9.4, libuuid changed APIs
-if test "$found_old_libuuid" = "true"
-then
-    AC_DEFINE([HAVE_LIBUUID],[1],[Define to 1 if you have the `uuid' library (-luuid).])
-    LIBS="-luuid $LIBS"
-fi
+dnl Check if Farrago support is desired
+AC_ARG_WITH([farrago],
+    AC_HELP_STRING([--with-farrago],[whether to include Farrago support]),
+    [ with_farrago=$withval ],
+    [ with_farrago=no ])
 
-if test "$found_new_libuuid" = "true"
+dnl Only attempt to use native libuuid if building without Farrago.
+dnl With Farrago, always use java.util.UUID via JNI.
+if test "with_farrago" = "no"
 then
-    AC_DEFINE([HAVE_LIBUUID],[1],[Define to 1 if you have the `uuid' library (-luuid).])
-    AC_DEFINE([HAVE_LIBUUID_NEW],[1],[Define to 1 if you have `uuid' library 0.9.4 or later (-luuid).])
-    LIBS="-luuid $LIBS"
+
+    AC_CHECK_HEADERS(uuid/uuid.h uuid.h)
+    AC_CHECK_LIB(uuid,uuid_generate,[ found_old_libuuid=true ])
+    AC_CHECK_LIB(uuid,uuid_make,[ found_new_libuuid=true ])
+
+    dnl Starting with v0.9.4, libuuid changed APIs
+    if test "$found_old_libuuid" = "true"
+    then
+        AC_DEFINE([HAVE_LIBUUID],[1],[Define to 1 if you have the `uuid' library (-luuid).])
+        LIBS="-luuid $LIBS"
+    fi
+
+    if test "$found_new_libuuid" = "true"
+    then
+        AC_DEFINE([HAVE_LIBUUID],[1],[Define to 1 if you have the `uuid' library (-luuid).])
+        AC_DEFINE([HAVE_LIBUUID_NEW],[1],[Define to 1 if you have `uuid' library 0.9.4 or later (-luuid).])
+        LIBS="-luuid $LIBS"
+    fi
+
 fi
 
 dnl Check for Boost location
@@ -124,12 +139,6 @@ dnl See ICU readme.html#HowToPackage for details on the various libraries
 AC_SUBST(ICU_LIB_DATA)
 AC_SUBST(ICU_LIB_COMMON)
 AC_SUBST(ICU_LIB_DIR)
-
-dnl Check if Farrago support is desired
-AC_ARG_WITH([farrago],
-    AC_HELP_STRING([--with-farrago],[whether to include Farrago support]),
-    [ with_farrago=$withval ],
-    [ with_farrago=no ])
 
 dnl Farrago requires Java
 if test "$with_farrago" = "yes"

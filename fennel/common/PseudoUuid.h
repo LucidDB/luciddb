@@ -77,18 +77,8 @@ protected:
     uint8_t data[UUID_LENGTH];
 #endif
 
-private:
-    /**
-     * Convert  an  input UUID string of the form 
-     * 1b4e28ba-2fa1-11d2-883f-b9a761bde3fb
-     * into the internal representation.
-     *
-     * @throws FennelExcn if the String is not in the correct format.
-     */
-    void parse(std::string uuid) throw(FennelExcn);
-    
 public:
-    PseudoUuid();
+    explicit PseudoUuid();
     PseudoUuid(std::string uuid);
 
     virtual ~PseudoUuid();
@@ -124,6 +114,34 @@ public:
     uint8_t getByte(int) const;
 
     const uint8_t *getBytes() const;
+    
+    /**
+     * Converts  an  input UUID string of the form 
+     * 1b4e28ba-2fa1-11d2-883f-b9a761bde3fb
+     * into the internal representation.
+     *
+     * @throws FennelExcn if the String is not in the correct format.
+     */
+    void parse(std::string uuid) throw(FennelExcn);
+};
+
+/**
+ * Generator for values of PseudoUuid.  Default implementation just
+ * calls PseudoUuid.generate() to use whatever OS implementation was
+ * supplied by the Fennel build, but subclasses may override
+ * (e.g. to call to a Java-based generator).
+ */
+class PseudoUuidGenerator
+{
+public:
+    virtual ~PseudoUuidGenerator();
+
+    /**
+     * Generates a new UUID value.
+     *
+     * @param pseudoUuid receives the generated value
+     */
+    virtual void generateUuid(PseudoUuid &pseudoUuid);
 };
 
 inline std::ostream &operator<<(std::ostream &str, PseudoUuid const &uuid)

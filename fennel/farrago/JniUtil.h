@@ -25,6 +25,7 @@
 #define Fennel_JniUtil_Included
 
 #include "fennel/common/AtomicCounter.h"
+#include "fennel/common/PseudoUuid.h"
 
 #include <jni.h>
 #include <locale>
@@ -250,6 +251,12 @@ public:
     static jmethodID methBase64Decode;
     static jclass classRhBase64;
 
+    /**
+     * Java method UUID.randomUUID.
+     */
+    static jmethodID methRandomUUID;
+    static jclass classUUID;
+
     /** 
      * Java method FarragoTransform.init.
      */
@@ -411,6 +418,12 @@ public:
     {
         return handleCount;
     }
+};
+
+class JniPseudoUuidGenerator : public PseudoUuidGenerator
+{
+public:
+    virtual void generateUuid(PseudoUuid &pseudoUuid);
 };
 
 // NOTE jvs 16-Oct-2004:  This crazy kludge is for problems arising on Linux

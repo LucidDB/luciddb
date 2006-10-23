@@ -57,7 +57,6 @@ struct DatabaseHeader : public StoredNode
      */
     PageId shadowRecoveryPageId;
 
-    // TODO:  typedef
     /**
      * Whenever a database is opened, except during recovery, a new UUID is
      * generated to represent the online lifetime of the database.  The

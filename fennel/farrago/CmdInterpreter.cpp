@@ -184,7 +184,8 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
         pCache,
         configMap,
         openMode,
-        pDbHandle->pTraceTarget);
+        pDbHandle->pTraceTarget,
+        SharedPseudoUuidGenerator(new JniPseudoUuidGenerator()));
 
     pDbHandle->pDb = pDb;
 
