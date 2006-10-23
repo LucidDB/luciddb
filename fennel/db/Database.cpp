@@ -71,10 +71,16 @@ SharedDatabase Database::newDatabase(
     SharedCache pCacheInit,
     ConfigMap const &configMapInit,
     DeviceMode openModeInit,
-    SharedTraceTarget pTraceTarget)
+    SharedTraceTarget pTraceTarget,
+    SharedPseudoUuidGenerator pUuidGenerator)
 {
+    if (!pUuidGenerator) {
+        pUuidGenerator.reset(new PseudoUuidGenerator());
+    }
     return SharedDatabase(
-        new Database(pCacheInit, configMapInit, openModeInit, pTraceTarget),
+        new Database(
+            pCacheInit, configMapInit, openModeInit, pTraceTarget,
+            pUuidGenerator),
         ClosableObjectDestructor());
 }
 
@@ -82,10 +88,12 @@ Database::Database(
     SharedCache pCacheInit,
     ConfigMap const &configMapInit,
     DeviceMode openModeInit,
-    SharedTraceTarget pTraceTarget)
+    SharedTraceTarget pTraceTarget,
+    SharedPseudoUuidGenerator pUuidGeneratorInit)
     : TraceSource(pTraceTarget,"database"),
       pCache(pCacheInit),
-      configMap(configMapInit)
+      configMap(configMapInit),
+      pUuidGenerator(pUuidGeneratorInit)
 {
     openMode = openModeInit;
 
@@ -174,7 +182,8 @@ void Database::openSegments()
     
     createTempSegment();
 
-    header.onlineUuid.generate();
+    pUuidGenerator->generateUuid(header.onlineUuid);
+    FENNEL_TRACE(TRACE_INFO, "online UUID = " << header.onlineUuid);
     
     DeviceMode txnLogMode = openMode;
     txnLogMode.create = true;

@@ -723,3 +723,9 @@ select distinct x0, y0, z0
     where
         x0 = z1 and y1 = 1 and x0 > 0;
 
+-- LER-2472 - cartesian product joins with outer joins -- ROJ needs to be
+-- converted to a LOJ for the cartesian product join to be valid
+explain plan for
+    select a, b from A right outer join B on a = 1;
+!set outputformat table
+select a, b from A right outer join B on a = 1;

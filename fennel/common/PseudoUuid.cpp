@@ -193,6 +193,15 @@ void PseudoUuid::parse(string uuid) throw (FennelExcn)
     memcpy(data, id, sizeof(data));
 }
 
+PseudoUuidGenerator::~PseudoUuidGenerator()
+{
+}
+
+void PseudoUuidGenerator::generateUuid(PseudoUuid &pseudoUuid)
+{
+    pseudoUuid.generate();
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End PseudoUuid.cpp

@@ -91,7 +91,8 @@ public:
         SharedExecStreamGraph pExecStreamGraph;
         SharedExecStreamScheduler pScheduler;
         TxnHandle *pTxnHandle;
-        jobject javaRuntimeContext;     // a global ref to the FarragoRuntimeContext
+        // a global ref to the FarragoRuntimeContext
+        jobject javaRuntimeContext;
 
         explicit StreamGraphHandle()
             : pTxnHandle(0), javaRuntimeContext(0)

@@ -104,6 +104,8 @@ class Database
 
     SharedCheckpointThread pCheckpointThread;
 
+    SharedPseudoUuidGenerator pUuidGenerator;
+
     /**
      * Cumulative counter cleared whenever writeStats is called.
      */
@@ -118,7 +120,8 @@ class Database
         SharedCache pCache,
         ConfigMap const &configMap,
         DeviceMode openMode,
-        SharedTraceTarget pTraceTarget);
+        SharedTraceTarget pTraceTarget,
+        SharedPseudoUuidGenerator pUuidGenerator);
     
     // implement ClosableObject
     virtual void closeImpl();
@@ -182,7 +185,8 @@ public:
         SharedCache pCache,
         ConfigMap const &configMap,
         DeviceMode openMode,
-        SharedTraceTarget pTraceTarget);
+        SharedTraceTarget pTraceTarget,
+        SharedPseudoUuidGenerator pUuidGenerator = SharedPseudoUuidGenerator());
     
     virtual ~Database();
 

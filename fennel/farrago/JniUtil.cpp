@@ -50,6 +50,8 @@ jmethodID JniUtil::methGetIndexRoot = 0;
 jmethodID JniUtil::methToString = 0;
 jmethodID JniUtil::methBase64Decode;
 jclass JniUtil::classRhBase64;
+jmethodID JniUtil::methRandomUUID;
+jclass JniUtil::classUUID;
 jmethodID JniUtil::methFarragoTransformInit = 0;
 jmethodID JniUtil::methFarragoTransformExecute = 0;
 jmethodID JniUtil::methFarragoTransformRestart = 0;
@@ -180,9 +182,14 @@ jint JniUtil::init(JavaVM *pVmInit)
     jclass classCollection = pEnv->FindClass("java/util/Collection");
     jclass classIterator = pEnv->FindClass("java/util/Iterator");
 
+    // REVIEW jvs 22-Oct-2006:  Why do some but not all of these
+    // classes get the NewGlobalRef treatment?
+
     // Make sure this jclass is a global ref or the JVM might move it on us.
-    jclass tempRhBase64 = pEnv->FindClass("org/eigenbase/util/RhBase64");
-    classRhBase64 = (jclass)pEnv->NewGlobalRef(tempRhBase64);
+    classRhBase64 = pEnv->FindClass("org/eigenbase/util/RhBase64");
+    classRhBase64 = (jclass) pEnv->NewGlobalRef(classRhBase64);
+    classUUID = pEnv->FindClass("java/util/UUID");
+    classUUID = (jclass) pEnv->NewGlobalRef(classUUID);
 
     jclass classFennelJavaStreamMap = pEnv->FindClass(
         "net/sf/farrago/fennel/FennelJavaStreamMap");
@@ -216,6 +223,8 @@ jint JniUtil::init(JavaVM *pVmInit)
         classObject,"toString","()Ljava/lang/String;");
     methBase64Decode = pEnv->GetStaticMethodID(
         classRhBase64,"decode","(Ljava/lang/String;)[B");
+    methRandomUUID = pEnv->GetStaticMethodID(
+        classUUID,"randomUUID","()Ljava/util/UUID;");
     methFarragoTransformInit = pEnv->GetMethodID(
         classFarragoTransform, "init", 
         "(Lnet/sf/farrago/runtime/FarragoRuntimeContext;Ljava/lang/String;[Lnet/sf/farrago/runtime/FarragoTransform$InputBinding;)V");
@@ -387,6 +396,17 @@ void JniEnvRef::handleExcn(std::exception &ex)
     jthrowable t = (jthrowable)
         pEnv->NewObject(classSQLException,constructor,jMessage);
     pEnv->Throw(t);
+}
+
+void JniPseudoUuidGenerator::generateUuid(PseudoUuid &pseudoUuid)
+{
+    JniEnvAutoRef pEnv;
+    jobject jUuid = pEnv->CallStaticObjectMethod(
+        JniUtil::classUUID,
+        JniUtil::methRandomUUID);
+    jstring jsUuid = JniUtil::toString(pEnv, jUuid);
+    std::string sUuid = JniUtil::toStdString(pEnv, jsUuid);
+    pseudoUuid.parse(sUuid);
 }
 
 FENNEL_END_CPPFILE("$Id$");

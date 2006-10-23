@@ -120,6 +120,9 @@ typedef boost::shared_ptr<BTreeRecoveryFactory> SharedBTreeRecoveryFactory;
 class Database;
 typedef boost::shared_ptr<Database> SharedDatabase;
 
+class PseudoUuidGenerator;
+typedef boost::shared_ptr<PseudoUuidGenerator> SharedPseudoUuidGenerator;
+
 class TraceTarget;
 typedef boost::shared_ptr<TraceTarget> SharedTraceTarget;
 
