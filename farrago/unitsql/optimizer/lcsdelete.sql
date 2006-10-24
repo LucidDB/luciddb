@@ -77,6 +77,17 @@ select * from deltab;
 delete from deltab;
 select * from deltab;
 
+-- Insert into a table that contains deleted rows.
+-- First, try the empty case.
+insert into deltab select * from deltab;
+select * from deltab;
+select * from deltab where b1 >= 0;
+
+-- Then, try the case where there are rows
+insert into deltab select * from matrix9x9;
+select * from deltab order by a1;
+select * from deltab where b1 >= 0 order by a1;
+
 !set outputformat csv
 explain plan for
     delete from deltab where c1 in 
