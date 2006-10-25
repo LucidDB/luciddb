@@ -26,7 +26,6 @@ import net.sf.farrago.resource.*;
 
 import java.sql.*;
 import java.text.*;
-import java.util.TimeZone;
 
 /**
  * Moved over from luciddb applib datetime package for general use. 
@@ -49,32 +48,50 @@ public abstract class FarragoConvertDatetimeUDR
 
     public static Date char_to_date(String format, String dateString)
     {
+        if (format == null || dateString == null) {
+            return null;
+        }
         return new Date(charToDateHelper(format, dateString));
     }
 
     public static Time char_to_time(String format, String timeString)
     {
+        if (format == null || timeString == null) {
+            return null;
+        }
         return new Time(charToDateHelper(format, timeString));
     }
 
     public static Timestamp char_to_timestamp(
         String format, String timestampString)
     {
+        if (format == null || timestampString == null) {
+            return null;
+        }
         return new Timestamp(charToDateHelper(format, timestampString));
     }
 
     public static String date_to_char(String format, Date d) 
     {
+        if (format == null || d == null) {
+            return null;
+        }
         return date_to_char(format, d, false);
     }
 
     public static String time_to_char(String format, Time t)
     {
+        if (format == null || t == null) {
+            return null;
+        }
         return time_to_char(format, t, false);
     }
 
     public static String timestamp_to_char(String format, Timestamp ts) 
     {
+        if (format == null || ts == null) {
+            return null;
+        }
         return timestamp_to_char(format, ts, false);
     }
 
