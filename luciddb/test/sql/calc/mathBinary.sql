@@ -28,14 +28,30 @@ FROM TEST_INTEGER_TABLE ORDER BY n1,n2,n3,n4,n5;
 -- FRG-45
 SELECT N1, N2, N3, N4, N5, (N5 - N4 - N3 - N2 - N1) AS SUMMY
 FROM TEST_NUMERIC_TABLE ORDER BY n1,n2,n3,n4,n5;
+
+-- FRG-209
 SELECT N1, N2, N3, N4, N5, (N5 - N4 - N3 - N2 - N1) AS SUMMY
-FROM TEST_REAL_TABLE ORDER BY n1,n2,n3,n4,n5;
+FROM TEST_REAL_TABLE WHERE N1 <> 1.001 OR N1 IS NULL ORDER BY n1,n2,n3,n4,n5;
+-- set numberFormat since floating point differs based on VM
+!set numberFormat 0.0000
+SELECT  N1, N2, N3, N4, N5, (N5 - N4 - N3 - N2 - N1) AS SUMMY
+FROM TEST_REAL_TABLE where N1 = CAST(1.001 as FLOAT);
+!set numberFormat default
+
 SELECT N1, N2, N3, N4, N5, (N5 - N4 - N3 - N2 - N1) AS DIFFY
 FROM TEST_INTEGER_TABLE ORDER BY n1,n2,n3,n4,n5;
 SELECT N1, N2, N3, N4, N5, (N5 - N4 - N3 - N2 - N1) AS DIFFY
 FROM TEST_NUMERIC_TABLE ORDER BY n1,n2,n3,n4,n5;
+
+-- FRG-209
 SELECT N1, N2, N3, N4, N5, (N5 - N4 - N3 - N2 - N1) AS DIFFY
-FROM TEST_REAL_TABLE ORDER BY n1,n2,n3,n4,n5;
+FROM TEST_REAL_TABLE WHERE N1 <> 1.001 OR N1 IS NULL ORDER BY n1,n2,n3,n4,n5;
+-- set numberFormat since floating point differs based on VM
+!set numberFormat 0.0000
+SELECT N1, N2, N3, N4, N5, (N5 - N4 - N3 - N2 - N1) AS DIFFY
+FROM TEST_REAL_TABLE where N1 = CAST(1.001 as FLOAT);
+!set numberFormat default
+
 -- Test association rules and precedence
 SELECT N1, N2, N3,
 ((N3 - N2) - N1) AS DIFF1, (N3 - N2 - N1) AS DIFF2,
@@ -45,10 +61,20 @@ SELECT N1, N2, N3,
 ((N3 - N2) - N1) AS DIFF1, (N3 - N2 - N1) AS DIFF2,
 (N3 - (N2 - N1)) AS DIFF3
 FROM TEST_NUMERIC_TABLE ORDER BY N1, N2, N3;
+
+-- FRG-209
 SELECT N1, N2, N3,
 ((N3 - N2) - N1) AS DIFF1, (N3 - N2 - N1) AS DIFF2,
 (N3 - (N2 - N1)) AS DIFF3
-FROM TEST_REAL_TABLE ORDER BY N1, N2, N3;
+FROM TEST_REAL_TABLE WHERE N1 <> 1.001 OR N1 IS NULL ORDER BY N1, N2, N3;
+-- set numberFormat since floating point differs based on VM
+!set numberFormat 0.0000
+SELECT N1, N2, N3,
+((N3 - N2) - N1) AS DIFF1, (N3 - N2 - N1) AS DIFF2,
+(N3 - (N2 - N1)) AS DIFF3
+FROM TEST_REAL_TABLE WHERE N1 = CAST(1.001 as FLOAT);
+!set numberFormat default
+
 SELECT N1, N2, N3,
 ((N3 * N2) - N1) AS DIFF1, (N3 * N2 - N1) AS DIFF2,
 (N3 * (N2 - N1)) AS DIFF3
@@ -69,10 +95,19 @@ SELECT N1, N2, N3,
 ((N3 + N2) * N1) AS MUL1, (N3 + N2 * N1) AS MUL2,
 (N3 + (N2 * N1)) AS MUL3
 FROM TEST_NUMERIC_TABLE ORDER BY N1, N2, N3;
+
+-- FRG-209
 SELECT N1, N2, N3,
 ((N3 + N2) * N1) AS MUL1, (N3 + N2 * N1) AS MUL2,
 (N3 + (N2 * N1)) AS MUL3
-FROM TEST_REAL_TABLE ORDER BY N1, N2, N3;
+FROM TEST_REAL_TABLE WHERE N1 <> 1.001 OR N1 IS NULL ORDER BY N1, N2, N3;
+-- set numberFormat since floating point differs based on VM
+!set numberFormat 0.0000
+SELECT N1, N2, N3,
+((N3 + N2) * N1) AS MUL1, (N3 + N2 * N1) AS MUL2,
+(N3 + (N2 * N1)) AS MUL3
+FROM TEST_REAL_TABLE WHERE N1 = CAST(1.001 as FLOAT);
+!set numberFormat default
 
 -- Tests for multiplication when either precision of scale of the
 -- result is not equal to the sum of those of operands

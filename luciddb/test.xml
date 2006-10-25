@@ -11,12 +11,8 @@
       </init-hook>
 
       <test-suite-call testfile="test/sql/txn/test.xml"/>
-
-      <test-suite-call testfile="test/sql/shortreg/sanity.xml">
-        <test-suite-modifier value="flatfile"/>
-        <property name="foreign.db" value="flatfile"/>
-      </test-suite-call>
-
+      <test-suite-call testfile="test/sql/company/test-idx.xml"/>
+      <test-suite-call testfile="test/sql/calc/test.xml"/>
       <test-suite-call testfile="test/sql/udr/udf/test.xml"/>
       <test-suite-call testfile="test/sql/udr/udx/test.xml"/>
       <test-suite-call testfile="test/sql/udr/udp/test.xml"/>

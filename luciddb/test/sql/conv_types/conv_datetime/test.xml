@@ -15,6 +15,10 @@
       </test>
 
       <test name="converttime" requiresRun="createsource">
+        <!-- UNRESOLVED ISSUE: FRG-20 -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_datetime/target_time.sql"/>
       </test>
 

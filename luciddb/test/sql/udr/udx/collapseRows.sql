@@ -82,6 +82,7 @@ insert into typetable values
   (1.115, DATE'2001-1-1')
 ;
 
+-- FRG-209 (floating point differs for VM)
 select * 
 from table( applib.collapse_rows(cursor (select * from typetable), '~'))
 where parent_value = cast(1.115 as varchar(65535));
@@ -91,6 +92,7 @@ create view vv as
 select *
 from table( applib.collapse_rows( cursor (select * from typetable), '|'));
 
+-- FRG-209 (floating point differs for VM)
 select * 
 from table(
   applib.collapse_rows( cursor(

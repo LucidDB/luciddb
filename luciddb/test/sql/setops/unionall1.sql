@@ -1,5 +1,7 @@
 set schema 'stkmkt';
 
+-- set numberFormat since floating point differs based on VM
+!set numberFormat 0.0000
 
 select * from Investor1View
 order by 1, 2, 3, 4
@@ -77,6 +79,4 @@ select * from Investor10View
 order by 1, 2, 3, 4
 ;
 
-
-
-   
+!set numberFormat default

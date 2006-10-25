@@ -89,5 +89,6 @@ insert into target_time
  select cast (coltmstamp as time) from datatype_source where colname = 'TIME'
 ;
 
+-- TODO: FRG-20
 select * from target_time order by 1
 ;

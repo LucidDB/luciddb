@@ -121,11 +121,10 @@
 0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(-12.33e30, -12.55e30, -12.77e31, -12876.32e202, -33324.443e303);
 0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(-12.33e-30, -12.55e-30, -12.77e-31, -12876.32e-202, -33324.443e-303);
 0: jdbc:luciddb:> INSERT INTO TEST_REAL_TABLE VALUES(1.0e-37, 1.0e38, 1.0e38, 1.0e-307, 1.0e308);
-0: jdbc:luciddb:> SELECT * FROM TEST_REAL_TABLE ORDER BY n1,n2,n3,n4,n5;
+0: jdbc:luciddb:> SELECT * FROM TEST_REAL_TABLE WHERE n1 <> 1.001 ORDER BY n1,n2,n3,n4,n5;
 +-------------+-------------+-------------+-----------------------+-----------------------+
 |     N1      |     N2      |     N3      |          N4           |          N5           |
 +-------------+-------------+-------------+-----------------------+-----------------------+
-|             |             |             |                       |                       |
 | -1.233E31   | -1.255E31   | -1.277E32   | -1.287632E206         | -3.3324443E307        |
 | -1234567.0  | -1234567.0  | -1234567.0  | -1.23456789012345E14  | -1.23456789012345E14  |
 | -1.0        | -2.0        | -3.0        | -4.0                  | -5.0                  |
@@ -135,10 +134,16 @@
 | 1.233E-29   | 1.255E-29   | 1.277E-30   | 1.287632E-198         | 3.3324443E-299        |
 | 0.123456    | 0.123456    | 0.123456    | 0.12345678901234      | 0.12345678901234      |
 | 1.0         | 2.0         | 3.0         | 4.0                   | 5.0                   |
-| 1.001       | 2.002       | 3.003       | 4.004                 | 5.005                 |
 | 1234567.0   | 1234567.0   | 1234567.0   | 1.23456789012345E14   | 1.23456789012345E14   |
 | 1.233E31    | 1.255E31    | 1.277E32    | 1.287632E206          | 3.3324443E307         |
 +-------------+-------------+-------------+-----------------------+-----------------------+
+0: jdbc:luciddb:> -- null row
+0: jdbc:luciddb:> SELECT * FROM TEST_REAL_TABLE WHERE n1 IS NULL;
++-----+-----+-----+-----+-----+
+| N1  | N2  | N3  | N4  | N5  |
++-----+-----+-----+-----+-----+
+|     |     |     |     |     |
++-----+-----+-----+-----+-----+
 0: jdbc:luciddb:> -- Also test the very small numbers ; IDBA doesn't display them properly.
 0: jdbc:luciddb:> SELECT n1, n1 * 1e35 FROM TEST_REAL_TABLE
 . . . . . . . . > WHERE n1 < 0.00000001 AND n1 > -0.00000001
@@ -150,7 +155,15 @@
 | 1.0E-37     | 0.01        |
 | 1.233E-29   | 1233000.0   |
 +-------------+-------------+
-0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- set numberFormat since floating point differs based on VM
+0: jdbc:luciddb:> !set numberFormat 0.0000
+0: jdbc:luciddb:> select * from TEST_REAL_TABLE where n1 = cast(1.001 as float);
++---------+---------+---------+---------+---------+
+|   N1    |   N2    |   N3    |   N4    |   N5    |
++---------+---------+---------+---------+---------+
+| 1.0010  | 2.0020  | 3.0030  | 4.0040  | 5.0050  |
++---------+---------+---------+---------+---------+
+0: jdbc:luciddb:> !set numberFormat default
 0: jdbc:luciddb:> -- CHAR table.
 0: jdbc:luciddb:> CREATE TABLE TEST_CHAR_TABLE
 . . . . . . . . > (

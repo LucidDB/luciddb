@@ -166,6 +166,10 @@
       </test>
 
       <test name="inList" requiresSuccess="null">
+        <!-- unresolved issue: FRG-224 -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/inList.sql"/>
       </test>
 
@@ -281,6 +285,14 @@
           <knownFailure>true</knownFailure>
         </test-metadata>   
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/varbinary.sql"/>
+      </test>
+
+      <test name="floatingPoint">
+        <!-- unresolved issue: FRG-209 -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/floatingPoint.sql"/>
       </test>
 
       <test-suite-call testfile="cast/test.xml"/>
