@@ -30,6 +30,8 @@ import java.util.*;
  * explained in the fennel tuple <a
  * href="http://fennel.sourceforge.net/doxygen/html/structTupleDesign.html">
  * design document</a>.
+ *
+ * This class is JDK 1.4 compatible.
  */
 public class FennelTupleData
 {

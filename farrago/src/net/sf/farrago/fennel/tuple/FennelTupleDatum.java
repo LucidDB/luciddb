@@ -34,6 +34,8 @@ package net.sf.farrago.fennel.tuple;
  * <p>Internally, this object attempts to bypass object creation during normal
  * use. It does this by wrangling all numeric primitive types into a 64-bit
  * (long) value and all array data into a byte array.
+ *
+ * This class is JDK 1.4 compatible.
  */
 // NOTE: things incomplete at this time: (11jan05)
 //  - numerics and byte arrays are tracked independently; we should

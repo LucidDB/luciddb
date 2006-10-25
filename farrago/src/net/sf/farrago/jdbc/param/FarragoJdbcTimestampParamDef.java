@@ -31,6 +31,8 @@ import java.util.TimeZone;
 /**
  * FarragoJdbcEngineTimestampParamDef defines a Timestamp parameter.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author Julian Hyde
  * @version $Id$
  */

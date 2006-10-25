@@ -32,6 +32,8 @@ import java.util.TimeZone;
 /**
  * FarragoJdbcEngineTimeParamDef defines a time parameter.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author Julian Hyde
  * @version $Id$
  */
