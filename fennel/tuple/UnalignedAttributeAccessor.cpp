@@ -62,10 +62,12 @@ inline void UnalignedAttributeAccessor::compressInt64(
     TupleDatum const &datum,
     PBuffer pDest) const
 {
-    // REVIEW jvs 22-Oct-2006:  This doesn't actually work for the full
-    // range of STANDARD_TYPE_UINT_64, does it?  This isn't a big
-    // deal since Farrago BIGINT is signed, but if anyone wants it
-    // to work at the Fennel level, it will need to be fixed.
+    // NOTE jvs 22-Oct-2006:  Although it may not be obvious,
+    // this correctly handles both STANDARD_TYPE_INT_64
+    // and STANDARD_TYPE_UINT_64 (very large unsigned values
+    // are handled as if they were negative here, but
+    // the consumer of the TupleDatum won't be aware of that,
+    // and the sign-extension in uncompress will be a no-op).
     
     assert(datum.cbData == 8);
     int64_t intVal = *reinterpret_cast<int64_t const *> (datum.pData);
@@ -133,6 +135,9 @@ inline void UnalignedAttributeAccessor::uncompressInt64(
         intVal |= *(pSrcBuf++);
     }
     datum.cbData = 8;
+
+    // REVIEW jvs 25-Oct-2006:  Do we really need memcpy here?  I
+    // think datum.pDatum is guaranteed to be aligned.
     memcpy(const_cast<PBuffer>(datum.pData), &intVal, 8);
 }
 
