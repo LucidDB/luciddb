@@ -419,6 +419,7 @@ public abstract class RelDataTypeFactoryImpl
         {
             this(clazz);
             this.isNullable = nullable;
+            computeDigest();
         }
 
         public JavaType(
@@ -433,7 +434,9 @@ public abstract class RelDataTypeFactoryImpl
                 "Need to be a chartype");
             this.isNullable = nullable;
             this.charset = charset;
-            this.collation = collation;
+            this.collation =
+                collation;
+            computeDigest();
         }
 
         public Class getJavaClass()
