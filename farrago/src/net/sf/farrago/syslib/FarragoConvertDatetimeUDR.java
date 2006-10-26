@@ -73,25 +73,16 @@ public abstract class FarragoConvertDatetimeUDR
 
     public static String date_to_char(String format, Date d) 
     {
-        if (format == null || d == null) {
-            return null;
-        }
         return date_to_char(format, d, false);
     }
 
     public static String time_to_char(String format, Time t)
     {
-        if (format == null || t == null) {
-            return null;
-        }
         return time_to_char(format, t, false);
     }
 
     public static String timestamp_to_char(String format, Timestamp ts) 
     {
-        if (format == null || ts == null) {
-            return null;
-        }
         return timestamp_to_char(format, ts, false);
     }
 
@@ -100,6 +91,9 @@ public abstract class FarragoConvertDatetimeUDR
     {
         DateFormat df;
 
+        if (format == null || d == null) {
+            return null;
+        }
         if (directCall) {
             df = getDateFormat(format, DIRECT_DATE);
         } else {
@@ -113,6 +107,9 @@ public abstract class FarragoConvertDatetimeUDR
     {
         DateFormat df;
 
+        if (format == null || t == null) {
+            return null;
+        }
         if (directCall) {
             df = getDateFormat(format, DIRECT_TIME);
         } else {
@@ -126,6 +123,9 @@ public abstract class FarragoConvertDatetimeUDR
     {
         DateFormat df;
 
+        if (format == null || ts == null) {
+            return null;
+        }
         if (directCall) {
             df = getDateFormat(format, DIRECT_TIMESTAMP);
         } else {
