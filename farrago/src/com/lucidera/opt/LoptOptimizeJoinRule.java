@@ -754,7 +754,8 @@ public class LoptOptimizeJoinRule
                         new RelOptUtil.RexInputConverter(
                             rexBuilder,
                             multiJoin.getMultiJoinFields(),
-                            multiJoin.getJoinFields(leftTree, rightTree),
+                            leftTree.getJoinTree().getRowType().getFields(),
+                            rightTree.getJoinTree().getRowType().getFields(),
                             adjustments));
             }
         }
@@ -845,7 +846,8 @@ public class LoptOptimizeJoinRule
                     new RelOptUtil.RexInputConverter(
                         rexBuilder,
                         origFields,
-                        multiJoin.getJoinFields(left, right),
+                        left.getJoinTree().getRowType().getFields(),
+                        right.getJoinTree().getRowType().getFields(),
                         adjustments));
         }
 
@@ -906,7 +908,8 @@ public class LoptOptimizeJoinRule
                         new RelOptUtil.RexInputConverter(
                             rexBuilder,
                             multiJoin.getMultiJoinFields(),
-                            multiJoin.getJoinFields(left, right),
+                            left.getJoinTree().getRowType().getFields(),
+                            right.getJoinTree().getRowType().getFields(),
                             adjustments));
             }
         }

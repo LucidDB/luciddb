@@ -331,6 +331,9 @@ public class RelDecorrelator
         AggregateRel.Call [] oldAggCalls = rel.getAggCalls();
                 
         AggregateRel.Call oldAggCall;
+        int oldChildOutputFieldCount = oldChildRel.getRowType().getFieldCount();
+        int newChildOutputFieldCount = newProjectRel.getRowType().getFieldCount();
+            
         for (int i = 0; i < oldAggCalls.length; i ++) {
             oldAggCall = oldAggCalls[i];
             int [] oldAggArgs = oldAggCall.getArgs();
@@ -356,6 +359,9 @@ public class RelDecorrelator
                     oldAggCall.isDistinct(),
                     aggArgs,
                     oldAggCall.getType()));
+            // The old to new output position mapping will be the same as that of
+            // newProjectRel, plus any aggregates that the oldAgg produces.
+            combinedMap.put(oldChildOutputFieldCount + i, newChildOutputFieldCount + i);
         }
                 
         AggregateRel newAggregateRel= 
@@ -366,8 +372,7 @@ public class RelDecorrelator
                 newAggCalls.toArray(new AggregateRel.Call[0]));
                 
         mapOldToNewRel.put(rel, newAggregateRel);
-        // The old to new output position mapping will be the same as that of
-        // newProjectRel.
+        
         mapNewRelToMapOldToNewOutputPos.put(newAggregateRel, combinedMap);
                 
         if (produceCorVar) {
@@ -393,6 +398,8 @@ public class RelDecorrelator
             // If child has not been rewritten, do not rewrite this rel.
             return;
         }
+        RexNode[] oldProj = rel.getProjectExps();
+        RelDataTypeField[] relOutput = rel.getRowType().getFields();
         
         Map<Integer, Integer> childMapOldToNewOutputPos =
             mapNewRelToMapOldToNewOutputPos.get(newChildRel);
@@ -401,27 +408,36 @@ public class RelDecorrelator
         Map<Integer, Integer> mapOldToNewOutputPos =
             new HashMap<Integer, Integer> ();
 
+        boolean produceCorVar = 
+            mapNewRelToMapCorVarToOutputPos.containsKey(newChildRel);
+
         // ProjectRel projects the original expressions,
         // plus any correlated variables the child wants to pass along.
         List<RexNode> exprs = new ArrayList<RexNode>();
         List<String> exprNames = new ArrayList<String>();
-            
-        RexNode[] oldProj = rel.getProjectExps();
-        RelDataTypeField[] relOutput = rel.getRowType().getFields();
         
+        // If this ProjectRel has correlated reference, create value generator and
+        // produce the correlated variables in the new output.
+        if (mapRefRelToCorVar.containsKey(rel)) {
+            rewriteInputWithValueGenerator(rel);
+            // The old child should be mapped to the JoinRel created by
+            // rewriteInputWithValueGenerator().
+            newChildRel = mapOldToNewRel.get(oldChildRel);            
+            produceCorVar = true;            
+        }        
+
+        // ProjectRel projects the original expressions
         int newPos;
         for (newPos = 0; newPos < oldProj.length; newPos ++) {
-            exprs.add(rewriteExpr(oldProj[newPos]));
-            exprNames.add(relOutput[newPos].getName());
+            exprs.add(newPos, rewriteExpr(oldProj[newPos]));
+            exprNames.add(newPos, relOutput[newPos].getName());
             mapOldToNewOutputPos.put(newPos, newPos);
         }
 
-        boolean produceCorVar = 
-            mapNewRelToMapCorVarToOutputPos.containsKey(newChildRel);
-
         SortedMap<CorrelatorRel.Correlation, Integer> mapCorVarToOutputPos =
             new TreeMap<CorrelatorRel.Correlation, Integer> ();
-
+        
+        // Project any correlated variables the child wants to pass along.
         if (produceCorVar) {
             SortedMap<CorrelatorRel.Correlation, Integer> childMapCorVarToOutputPos = 
                 mapNewRelToMapCorVarToOutputPos.get(newChildRel);
@@ -440,16 +456,6 @@ public class RelDecorrelator
                 mapCorVarToOutputPos.put(corVar, newPos);
                 newPos ++;
             }
-        }
-        
-        // If this ProjectRel has correlated reference, create value generator and
-        // produce the correlated variables in the new output.
-        if (mapRefRelToCorVar.containsKey(rel)) {
-            rewriteInputWithValueGenerator(rel, mapCorVarToOutputPos);
-            // The old child should be mapped to the newly created JoinRel by
-            // rewriteInputWithValueGenerator().
-            newChildRel = mapOldToNewRel.get(oldChildRel);            
-            produceCorVar = true;            
         }
         
         RelNode newProjectRel =
@@ -592,8 +598,7 @@ public class RelDecorrelator
     }
 
     private void rewriteInputWithValueGenerator(
-        RelNode rel,
-        SortedMap<CorrelatorRel.Correlation, Integer> mapCorVarToOutputPos)        
+        RelNode rel)
     {
         // currently only handles one child input
         assert (rel.getInputs().length == 1);
@@ -603,6 +608,14 @@ public class RelDecorrelator
         Map<Integer, Integer> childMapOldToNewOutputPos =
             mapNewRelToMapOldToNewOutputPos.get(newChildRel);
         assert (childMapOldToNewOutputPos != null);
+
+        SortedMap<CorrelatorRel.Correlation, Integer> mapCorVarToOutputPos =
+            new TreeMap<CorrelatorRel.Correlation, Integer> ();
+        
+        if (mapNewRelToMapCorVarToOutputPos.containsKey(newChildRel)) {
+            mapCorVarToOutputPos.putAll(
+                mapNewRelToMapCorVarToOutputPos.get(newChildRel));
+        }
         
         SortedSet<CorrelatorRel.Correlation> corVarList =
             mapRefRelToCorVar.get(rel);
@@ -669,22 +682,13 @@ public class RelDecorrelator
             mapNewRelToMapOldToNewOutputPos.get(newChildRel);
         assert (childMapOldToNewOutputPos != null);
 
-        SortedMap<CorrelatorRel.Correlation, Integer> mapCorVarToOutputPos =
-            new TreeMap<CorrelatorRel.Correlation, Integer>();
-        
         boolean produceCorVar = 
             mapNewRelToMapCorVarToOutputPos.containsKey(newChildRel);
-        
-        if (produceCorVar) {
-            // Pass along any correlated variables from the left child.
-            mapCorVarToOutputPos.putAll(
-                mapNewRelToMapCorVarToOutputPos.get(newChildRel));            
-        }
-        
+                
         // If this FilterRel has correlated reference, create value generator and
         // produce the correlated variables in the new output.
         if (mapRefRelToCorVar.containsKey(rel)) {
-            rewriteInputWithValueGenerator(rel, mapCorVarToOutputPos);
+            rewriteInputWithValueGenerator(rel);
             // The old child should be mapped to the newly created JoinRel by
             // rewriteInputWithValueGenerator().
             newChildRel = mapOldToNewRel.get(oldChildRel);            
@@ -702,7 +706,12 @@ public class RelDecorrelator
         mapNewRelToMapOldToNewOutputPos.put(newFilterRel, childMapOldToNewOutputPos);
 
         if (produceCorVar) {
-            mapNewRelToMapCorVarToOutputPos.put(newFilterRel, mapCorVarToOutputPos);
+            // filter rel does not permute the input
+            // all corvars produced by filter will have the same output positions
+            // in the child rel.
+            mapNewRelToMapCorVarToOutputPos.put(
+                newFilterRel, 
+                mapNewRelToMapCorVarToOutputPos.get(newChildRel));
         }
     }
 

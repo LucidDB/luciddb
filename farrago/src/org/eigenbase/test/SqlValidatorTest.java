@@ -2079,7 +2079,7 @@ public class SqlValidatorTest
         checkFails(
             "select * from emp as emps, dept as d" + NL
             + "where ^dept^.deptno > 5",
-            "Unknown identifier 'DEPT'");
+            "Table 'DEPT' not found");
 
         // fail: ambiguous column reference in ON clause
         checkFails(
@@ -2266,7 +2266,7 @@ public class SqlValidatorTest
             "select * from emp" + NL
             + "union" + NL
             + "select * from dept where ^empno^ < 10",
-            "Unknown identifier 'EMPNO'");
+            "Column 'EMPNO' not found in any table");
     }
 
     public void testUnionCountMismatchFails()
@@ -2860,10 +2860,9 @@ public class SqlValidatorTest
     public void testCorrelatingVariables()
     {
         // reference to unqualified correlating column
-        checkFails(
+        check(
             "select * from emp where exists (" + NL
-            + "select * from dept where deptno = sal)",
-            "Unknown identifier 'SAL'");
+            + "select * from dept where deptno = sal)");
 
         // reference to qualified correlating column
         check(
@@ -3043,7 +3042,7 @@ public class SqlValidatorTest
     {
         checkFails(
             "select * from emp, (select * from dept where emp.deptno=dept.deptno)",
-            "(?s).*Unknown identifier 'EMP'.*");
+            "Table 'EMP' not found");
 
         check(
             "select * from emp, LATERAL (select * from dept where emp.deptno=dept.deptno)");

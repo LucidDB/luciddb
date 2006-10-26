@@ -27,6 +27,7 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
 
@@ -55,9 +56,7 @@ public class LhxSemiJoinRule
                         JoinRel.class,
                         new RelOptRuleOperand[] {
                             new RelOptRuleOperand(RelNode.class, null),
-                            new RelOptRuleOperand(
-                                AggregateRel.class,
-                                null)
+                            new RelOptRuleOperand(RelNode.class, null)
                         })
                 }));
     }
@@ -70,15 +69,16 @@ public class LhxSemiJoinRule
         ProjectRel projRel = (ProjectRel) call.rels[0];
         JoinRel joinRel = (JoinRel) call.rels[1];
         RelNode leftRel = call.rels[2];
-        AggregateRel aggRel = (AggregateRel) call.rels[3];
-        RelNode rightRel = aggRel.getChild();
+        RelNode rightRel = call.rels[3];
 
+        if (!(leftRel instanceof AggregateRel) &&
+            !(rightRel instanceof AggregateRel)) {
+            return;
+        }
+            
         RexNode residualCondition = null;
 
         // determine if we have a valid join condition
-        List<Integer> leftKeys = new ArrayList<Integer>();
-        List<Integer> rightKeys = new ArrayList<Integer>();
-
         List<RexNode> leftJoinKeys = new ArrayList<RexNode>();
         List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
 
@@ -88,69 +88,119 @@ public class LhxSemiJoinRule
                 leftJoinKeys,
                 rightJoinKeys);
 
-        if ((leftJoinKeys.size() == 0) || (residualCondition != null)) {
-            // join key only references input fields directly
+        // valid join keys should only reference input fields directly, i.e. no residualCondition
+        if ((leftJoinKeys.size() == 0) || (rightJoinKeys.size() == 0) ||
+            (residualCondition != null)) {
             return;
         }
 
-        // First check if projecting only the left fields
+        // First determine which side is producing the distinct 
+        // with the other side projected after the join
         RexNode [] projExprs = projRel.getProjectExps();
         int leftFieldCount = leftRel.getRowType().getFieldCount();
-        int aggFieldCount = aggRel.getRowType().getFieldCount();
+        int rightFieldCount = rightRel.getRowType().getFieldCount();
 
-        BitSet projRefs = new BitSet(leftFieldCount + aggFieldCount);
+        BitSet projRefs = new BitSet(leftFieldCount + rightFieldCount);
 
         RelOptUtil.InputFinder inputFinder =
             new RelOptUtil.InputFinder(projRefs);
 
         inputFinder.apply(projExprs, null);
 
+        int leftRefCount = 0;
+        int rightRefCount = 0;
         for (int bit = projRefs.nextSetBit(0); bit >= 0;
             bit = projRefs.nextSetBit(bit + 1)) {
             if (bit >= leftFieldCount) {
-                return;
+                rightRefCount ++;
+            } else {
+                leftRefCount ++;
             }
         }
 
+        boolean outputLeft;
+        AggregateRel aggRel;
+        if (rightRefCount == 0) {
+            outputLeft = true;
+            if (rightRel instanceof AggregateRel) {
+                aggRel = (AggregateRel) rightRel;
+            } else {
+                return;
+            }
+        } else if (leftRefCount == 0) {
+            outputLeft = false;
+            if (leftRel instanceof AggregateRel) {
+                aggRel = (AggregateRel) leftRel;
+            } else {
+                return;
+            }
+        } else {
+            return;
+        }
+        
         if (aggRel.getAggCalls().length != 0) {
             // not guaranteed to be distinct
             return;
         }
 
-        // then check if aggregate(distinct) keys are the join keys
+        // then check if aggregate(distinct) keys are covered by the join keys
         int numGroupByKeys = aggRel.getGroupCount();
+        List<RexNode> aggJoinKeys = null;        
 
-        // only join on the group by keys
-        int numRightKeys = rightKeys.size();
+        if (outputLeft) {
+            aggJoinKeys = rightJoinKeys;
+        } else {
+            aggJoinKeys = leftJoinKeys;
+        }
 
-        for (int i = 0; i < numRightKeys; i++) {
-            if (rightKeys.get(i) >= numGroupByKeys) {
+        BitSet inputRefBitset =
+            new BitSet(aggRel.getChild().getRowType().getFieldCount());
+
+        RelOptUtil.InputFinder aggJoinInputFinder =
+            new RelOptUtil.InputFinder(inputRefBitset);
+        
+        for (RexNode expr : aggJoinKeys) {
+            expr.accept(aggJoinInputFinder);
+        }
+                    
+        // group by key positions are 0 ...numGroupByKeys -1      
+        for (int i = 0; i < numGroupByKeys; i++) {
+            if (inputRefBitset.nextSetBit(i) != i) {
                 return;
             }
         }
 
-        // now we can replace the original join(A, distinct(B)) with
-        // semiJoin(A, B)
+        // now we can replace the original Join(A, distinct(B)) with
+        // LeftSemiJoin(A, B), or Join(distinct(A), B) with RightSemiJoin(A, B)
         List<Integer> outputProj = new ArrayList<Integer>();
 
-        RelNode [] inputRels = new RelNode[] { leftRel, rightRel };
+        RelNode [] inputRels;
+        
+        if (outputLeft) {
+            inputRels = new RelNode[] { leftRel, aggRel.getChild()};
+        } else {
+            inputRels = new RelNode[] { aggRel.getChild(), rightRel};            
+        }
+        
+        List<Integer> newLeftJoinKeyPos = new ArrayList<Integer>();
+        List<Integer> newRightJoinKeyPos = new ArrayList<Integer>();
 
         RelOptUtil.projectJoinInputs(inputRels,
             leftJoinKeys,
             rightJoinKeys,
-            leftKeys,
-            rightKeys,
+            newLeftJoinKeyPos,
+            newRightJoinKeyPos,
             outputProj);
 
-        // the new leftRel and new rightRel, afte projection is added.
-        leftRel = inputRels[0];
-        rightRel = inputRels[1];
+        // the new leftRel and new rightRel, after projection is added.
+        RelNode newLeftRel = inputRels[0];
+        RelNode newRightRel = inputRels[1];
 
         RelNode fennelLeft =
             mergeTraitsAndConvert(
                 joinRel.getTraits(),
                 FennelRel.FENNEL_EXEC_CONVENTION,
-                leftRel);
+                newLeftRel);
 
         if (fennelLeft == null) {
             return;
@@ -160,7 +210,7 @@ public class LhxSemiJoinRule
             mergeTraitsAndConvert(
                 joinRel.getTraits(),
                 FennelRel.FENNEL_EXEC_CONVENTION,
-                rightRel);
+                newRightRel);
 
         if (fennelRight == null) {
             return;
@@ -172,8 +222,9 @@ public class LhxSemiJoinRule
         Double cndBuildKey;
         BitSet joinKeyMap = new BitSet();
 
-        for (int i = 0; i < rightKeys.size(); i++) {
-            joinKeyMap.set(rightKeys.get(i));
+        
+        for (int i = 0; i < newRightJoinKeyPos.size(); i++) {
+            joinKeyMap.set(newRightJoinKeyPos.get(i));
         }
 
         cndBuildKey =
@@ -186,30 +237,77 @@ public class LhxSemiJoinRule
         }
 
         boolean isSetop = false;
-        List<String> newJoinOutputNames =
-            RelOptUtil.getFieldNameList(leftRel.getRowType());
-
+        List<String> newJoinOutputNames;
+        LhxJoinRelType joinType;
+        
+        if (outputLeft) {
+            newJoinOutputNames =
+                RelOptUtil.getFieldNameList(leftRel.getRowType());
+                joinType = LhxJoinRelType.LEFTSEMI;
+        } else {
+            newJoinOutputNames =
+                RelOptUtil.getFieldNameList(rightRel.getRowType());            
+            joinType = LhxJoinRelType.RIGHTSEMI;
+        }
+        
         RelNode rel =
             new LhxJoinRel(
                 joinRel.getCluster(),
                 fennelLeft,
                 fennelRight,
-                LhxJoinRelType.LEFTSEMI,
+                joinType,
                 isSetop,
-                leftKeys,
-                rightKeys,
+                newLeftJoinKeyPos,
+                newRightJoinKeyPos,
                 newJoinOutputNames,
                 numBuildRows.longValue(),
                 cndBuildKey.longValue());
 
-        // This is a left semi join, so only fields from the left
-        // side is projected. There is no need to project the new output
-        // (left+key+right+key) to the original join output(left+right) before
-        // applying the original project.
+        RexNode [] newProjExprs;
+        
+        if (!outputLeft) {
+            // right semi join. need to convert input to the project to reference 
+            // the output of the new join
+
+            RelDataTypeField [] projInputFields = joinRel.getRowType().getFields();
+            RelDataTypeField [] newProjInputFields = rel.getRowType().getFields();
+            int [] adjustments = new int[projInputFields.length];
+            assert (projInputFields.length == leftFieldCount + rightFieldCount);
+            
+            int i;
+            for (i = 0; i < leftFieldCount; i ++) {
+                adjustments[i] = 0;
+            }
+            
+            for (; i < projInputFields.length; i ++) {
+                adjustments[i] = -leftFieldCount;
+            }
+            
+            // right semi join. need to convert input to the project to reference 
+            // the output of the join
+            int projLength = projExprs.length;
+            newProjExprs = new RexNode[projLength];
+            for (int j = 0; j < projLength; j++) {
+                newProjExprs[j] =
+                    projExprs[j].accept(
+                        new RelOptUtil.RexInputConverter(
+                            rel.getCluster().getRexBuilder(),
+                            projInputFields,
+                            newProjInputFields,
+                            adjustments));
+            }
+        } else {
+            // This is a left semi join, so only fields from the left
+            // side is projected. There is no need to project the new output
+            // (left+key+right+key) to the original join output(left+right) before
+            // applying the original project.
+            newProjExprs = projExprs;
+        }
+        
         rel =
             CalcRel.createProject(
                 rel,
-                projExprs,
+                newProjExprs,
                 RelOptUtil.getFieldNames(projRel.getRowType()));
 
         call.transformTo(rel);

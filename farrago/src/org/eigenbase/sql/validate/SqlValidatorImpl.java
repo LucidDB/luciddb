@@ -3213,6 +3213,9 @@ public class SqlValidatorImpl
             }
 
             RelDataType type = null;
+            if (!(scope instanceof EmptyScope)) {
+                id = scope.fullyQualify(id);
+            }
             for (int i = 0; i < id.names.length; i++) {
                 String name = id.names[i];
                 if (i == 0) {

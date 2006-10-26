@@ -200,13 +200,15 @@ ${farrago.test.jvmargs}
   <!-- directory for initialization scripts -->
   <property name="farrago.initsql.dir" location="${farrago.dir}/initsql"/>
 
-  <!-- Directory for SqlLine history/properties. We direct SqlLine to 
-       place its history file in sqlline.hist.file by setting the system
+  <!-- We direct SqlLine to squelch its history file by setting the system
        property sqlline.historyFile. This keeps the normal history
        file (~/.sqlline/history under Unix) free from the clutter
-       of Farrago sqlline test commands. -->
-  <property name="sqlline.hist.file"
-    location="${project.testlog.dir}/sqlline.history"/>
+       of Farrago sqlline test commands, and also speeds up 
+       SQL-based tests by avoiding reloading history on startup. -->
+  <condition property="sqlline.hist.file" value="nul">
+    <os family="windows"/>
+  </condition>
+  <property name="sqlline.hist.file" location="/dev/null"/>
   <!-- Files -->
 
   <!-- file controlling repository storage -->

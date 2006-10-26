@@ -9,7 +9,6 @@ alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 --------------------------
 -- Test Sort Aggreagtes --
 --------------------------
-alter system set "codeCacheMaxBytes"=min;
 alter session implementation set default;
 !set outputformat table
 
@@ -169,7 +168,9 @@ group by d.name;
 --------------------------
 -- Test Hash Aggreagtes --
 --------------------------
-alter system set "codeCacheMaxBytes"=max;
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+call sys_boot.mgmt.flush_code_cache();
+alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 !set outputformat table
 

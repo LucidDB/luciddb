@@ -1,0 +1,93 @@
+@nolockstep
+
+@setup
+
+-- This test exercises the codeCache, including the LRU replacement policy
+-- used when the cache becomes full.
+
+alter system set "expectedConcurrentStatements" = 5;
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+@end
+
+@thread cleanup
+@sync
+@sync
+-- reset back to original value
+alter system set "expectedConcurrentStatements" = 4;
+@end
+
+-- Set codeCacheMaxBytes to a value that's large enough to cache some but
+-- not all of the statements that will be run.  If the memory usage of cache
+-- objects is modified, then the codeCacheMaxBytes should be modified
+-- accordingly to ensure that at least 2 of the 4 statements below can be
+-- cached at all times.  Each thread is executing the same set of queries,
+-- although in different orders.
+@thread t1
+    alter system set "codeCacheMaxBytes" = 150000;
+    @sync
+	@repeat 10
+		select empno, upper(name), deptno, gender, city, empid, age
+            from sales.emps order by empno;
+        select * from sales.emps where empno + 0 = 100;
+        select empno, count(*) from sales.emps group by empno order by empno;
+        select e.empno, upper(e.name), d.* from sales.emps e, sales.depts d
+             where e.deptno = d.deptno order by empno;
+	@end
+    @sync
+@end
+
+@thread t2
+    alter system set "codeCacheMaxBytes" = 150000;
+    @sync
+	@repeat 10
+		select empno, upper(name), deptno, gender, city, empid, age
+            from sales.emps order by empno;
+        select empno, count(*) from sales.emps group by empno order by empno;
+        select * from sales.emps where empno + 0 = 100;
+        select e.empno, upper(e.name), d.* from sales.emps e, sales.depts d
+             where e.deptno = d.deptno order by empno;
+	@end
+    @sync
+@end
+
+@thread t3
+    alter system set "codeCacheMaxBytes" = 150000;
+    @sync
+	@repeat 10
+        select * from sales.emps where empno + 0 = 100;
+		select empno, upper(name), deptno, gender, city, empid, age
+            from sales.emps order by empno;
+        select e.empno, upper(e.name), d.* from sales.emps e, sales.depts d
+             where e.deptno = d.deptno order by empno;
+        select empno, count(*) from sales.emps group by empno order by empno;
+	@end
+    @sync
+@end
+
+@thread t4
+    alter system set "codeCacheMaxBytes" = 150000;
+    @sync
+	@repeat 10
+        select empno, count(*) from sales.emps group by empno order by empno;
+		select empno, upper(name), deptno, gender, city, empid, age
+            from sales.emps order by empno;
+        select * from sales.emps where empno + 0 = 100;
+        select e.empno, upper(e.name), d.* from sales.emps e, sales.depts d
+             where e.deptno = d.deptno order by empno;
+	@end
+    @sync
+@end
+
+@thread t5
+    alter system set "codeCacheMaxBytes" = 150000;
+    @sync
+	@repeat 10
+        select e.empno, upper(e.name), d.* from sales.emps e, sales.depts d
+             where e.deptno = d.deptno order by empno;
+        select * from sales.emps where empno + 0 = 100;
+        select empno, count(*) from sales.emps group by empno order by empno;
+		select empno, upper(name), deptno, gender, city, empid, age
+            from sales.emps order by empno;
+	@end
+    @sync
+@end

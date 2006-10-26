@@ -48,11 +48,6 @@ void LhxJoinExecStream::prepare(
         inputTuple[inputIndex].compute(
             inAccessors[inputIndex]->getTupleDesc());
         inputTupleSize[inputIndex] = inputTuple[inputIndex].size();
-
-        if (hashInfo.removeDuplicate[inputIndex]) {
-            assert (inputTupleSize[inputIndex] ==
-                hashInfo.keyProj[inputIndex].size());
-        }
     }
     
     /*
@@ -461,8 +456,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                             if (returnBuildOuter(curPlan)) {
                                 /*
                                  * Join types that return non-matching
-                                 * tuples from the build input: RightOuter,
-                                 * FullOuter, RightAnti,
+                                 * tuples from the build input:
+                                 *    RightOuter, FullOuter, RightAnti,
                                  *
                                  * Set the output tuple to have NULL values on
                                  * the left(probe side), and return all the
@@ -527,8 +522,14 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                              * inputs: InnerJoin, LeftOuter, RightOuter,
                              * FullOuter
                              *
-                             * Set the output tuple to include only the probe input,
-                             * and get the next matching tuple from the build side.
+                             * Join types that return matching tuples from the
+                             * build input: RightSemi(when matched for the
+                             * first time)
+                             * 
+                             * Set the output tuple to include only the probe
+                             * input and get all the matching tuples from the
+                             * build side. For RightSemi, the probeFieldLength
+                             * to be included in the output tuple is 0.
                              */
                             for (uint i = 0; i < probeFieldLength; i ++) {
                                 outputTuple[i + probeFieldOffset].copyFrom(probeTuple[i]);
@@ -547,9 +548,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                              * Join types that return (distinct) matching
                              * tuples from the probe input: LeftSemiJoin
                              *
-                             * Currently LeftSemiJoin is only used in set
-                             * matching semantics producing one output tuple
-                             * per matched tuple from the left side.
+                             * Produce one output tuple per matched tuple from
+                             * the left side.
                              *
                              * Set the output tuple to include only the probe input.
                              */
@@ -561,9 +561,11 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                             break;
                         } else {
                             /*
-                             * RightAnti falls through here.
-                             * Go back to match all probing rows and return
-                             * non-matched tuples from the hash table.
+                             * RightAnti and RightSemi(when not matched for the
+                             * first time) fall through here.
+                             * Go back to match other probing rows.
+                             * Return non-matched(for RightAnti)tuples from the
+                             * hash table.
                              */
                             probeReader.consumeTuple();
                         }
@@ -752,13 +754,42 @@ void LhxJoinExecStream::setHashInfo(
         hashInfo.inputDesc.push_back(
             inAccessors[inputIndex]->getTupleDesc());
         /*
-         * Join types LEFTSEMI and RIGHTANTI are used exclusively in
-         * set(distinct) matching operations, which by default eliminate
-         * duplicates.
+         * set(distinct) matching operations eliminate duplicates.
          */
         hashInfo.removeDuplicate.push_back(setopDistinct);
         hashInfo.numRows.push_back(params.numRows);
         hashInfo.cndKeys.push_back(params.cndKeys);
+    }
+
+    bool leftSemi =
+        (returnProbeInner() && !returnProbeOuter() && !returnBuild());
+
+    bool rightSemi =
+        (returnBuildInner() && !returnBuildOuter() && !returnProbe());
+
+    /*
+     * removeDuplicate is no longer a feature for set op only. For semi joins,
+     * e.g. IN predicates, the lookup table needs to eliminate duplicates as
+     * well. The way this is achieved is different for LEFTSEMI and RIGHTSEMI.
+     * For LEFTSEMI, if the join output row for a matched tuple from the left
+     * does not include any matched tuples from the right(the build side), then
+     * at most one output tuple is returned per left tuple. (See comment in
+     * execute() state Probe).
+     * For RIGHTSEMI, however, all the matched tuples from the build side need
+     * to be returned and only once. This is done by checking the "matched"
+     * flag per left tuple. If the same key has not been matched before, then
+     * return all matching tuples from the RHS. Otherwise, discard(and return
+     * nothing from the RHS) and go to the next tuple on the left. In this
+     * case, the call to findKey() in execute():Probe needs to pass true for
+     * parameter removeDuplicateProbe.
+     *
+     */
+    if (leftSemi) {
+        hashInfo.removeDuplicate[DefaultBuildInputIndex] = true;
+    }
+
+    if (rightSemi) {
+        hashInfo.removeDuplicate[DefaultProbeInputIndex] = true;
     }
 
     /*

@@ -443,6 +443,9 @@ public class FarragoQueryTest
     public void testTxnMgrListener()
         throws Exception
     {
+        // make sure we're starting a new txn
+        connection.commit();
+        
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         FarragoSession session = farragoConnection.getSession();
@@ -460,7 +463,7 @@ public class FarragoQueryTest
 
         List<String> expectedName =
             Arrays.asList(new String[] {
-                    "LOCALDB",
+                "LOCALDB",
                 "SALES",
                 "DEPTS"
                 });

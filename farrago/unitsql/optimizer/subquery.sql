@@ -45,6 +45,17 @@ select name from emps
 where deptno in (select deptno from depts where emps.empno < depts.deptno*10)
 order by name;
 
+-- no table qualifier is necessary if correlated reference is not ambiguous
+explain plan without implementation for
+select name from emps
+where deptno in (select deptno from depts where empno < depts.deptno*10)
+order by name;
+
+explain plan without implementation for
+select name from emps
+where deptno in (select deptno from depts where empno < deptno*10)
+order by name;
+
 -- 1.2 is a special case of correlated exists. Equivalent to:
 explain plan without implementation for
 select name from emps where
@@ -136,6 +147,12 @@ select name from emps where exists(select * from depts2) order by name;
 explain plan without implementation for
 select name from emps
 where exists(select * from depts where depts.deptno=emps.deptno)
+order by name;
+
+-- no table qualifier is necessary if correlated reference is not ambiguous
+explain plan without implementation for
+select name from emps
+where exists(select * from depts where depts.deptno=empno)
 order by name;
 
 explain plan for
@@ -378,6 +395,11 @@ explain plan without implementation for
 select last_value((select min(deptno) from depts)) over w
 from emps window w as (order by empno);
 
+-- select list contains correlated references
+explain plan without implementation for 
+select sum((select emps.empno from depts where depts.deptno = emps.deptno))
+from emps;
+
 -- 3.6 HAVING clause scalar subquery currently produces incorrect plan
 --     if HAVING clause references aggs. This is because HAVING clause is processed
 --     before agg. So the subqueries get transformed into joins too early.
@@ -385,6 +407,12 @@ from emps window w as (order by empno);
 --      are gathered -- via expression conversion).
 --     Ideally, aggs should be gathered first,
 --     then AggRels are generated, followed by processing of HAVING clause.
+--
+--     Note: SQL2003 seems to contradict itself wrt to aggregates in HAVING clause.
+--     In the rules for <set function specification>(which include aggregates),
+--     this is allowed; However, in the rules for HAVING clause, only GBY columns can
+--     be referenced "directly" in HAVING clause. The query below, probably not very
+--     useful, satisfies both rules since the aggregate references the GBY columns
 --
 explain plan without implementation for
 select name
@@ -400,6 +428,27 @@ from
  from emps
  group by name) v
 where v.min_name=(select max(name) from depts);
+
+-- 3.6.1 HAVING clause with row types
+explain plan without implementation for
+select name from emps group by empno, name 
+having (emps.name, emps.empno) in (('ab', 10), ('cd', 20));
+
+-- 3.6.2 having clause column reference should not need to name the table
+explain plan without implementation for
+select name from emps group by name
+having name in ('ab', 'cd');
+
+-- 3.6.3 will fail
+explain plan for
+select count(*) from emps
+where exists (select count(*) from depts group by emps.empno)
+group by emps.empno;
+
+explain plan for
+select count(*) from emps
+group by emps.empno
+having exists (select count(*) from depts group by emps.empno);
 
 -- 4.1 nested correlations
 insert into depts2 select * from depts;

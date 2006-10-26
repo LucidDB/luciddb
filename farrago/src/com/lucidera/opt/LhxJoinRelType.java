@@ -31,7 +31,7 @@ import org.eigenbase.rel.*;
  */
 public enum LhxJoinRelType {
     INNER(JoinRelType.INNER), LEFT(JoinRelType.LEFT), RIGHT(JoinRelType.RIGHT),
-    FULL(JoinRelType.FULL), LEFTSEMI(null), RIGHTANTI(null);
+    FULL(JoinRelType.FULL), LEFTSEMI(null), RIGHTSEMI(null), RIGHTANTI(null);
 
     private final JoinRelType logicalJoinType;
 

@@ -110,8 +110,9 @@ public class LhxJoinRel
         if (joinType == LhxJoinRelType.LEFTSEMI) {
             // intersect is implemented using left semi join
             this.rowType = left.getRowType();
-        } else if (joinType == LhxJoinRelType.RIGHTANTI) {
-            // except is implemented using right anti join
+        } else if (joinType == LhxJoinRelType.RIGHTANTI ||
+            joinType == LhxJoinRelType.RIGHTSEMI) {
+            // except is implemented using right anti or right semi join
             this.rowType = right.getRowType();
         } else {
             // regular join
@@ -225,7 +226,8 @@ public class LhxJoinRel
         // LeftOuter: non-matching tuples from the left
         // RightInner: matching tuples from the right
         // RightOuter: non-matching tuples from the right
-        if (joinType == LhxJoinRelType.RIGHTANTI) {
+        if (joinType == LhxJoinRelType.RIGHTANTI ||
+            joinType == LhxJoinRelType.RIGHTSEMI) {
             streamDef.setLeftInner(false);
         } else {
             streamDef.setLeftInner(true);

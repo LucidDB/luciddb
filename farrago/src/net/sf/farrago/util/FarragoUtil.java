@@ -33,7 +33,7 @@ import java.io.*;
  */
 public abstract class FarragoUtil
 {
-
+    
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -46,6 +46,28 @@ public abstract class FarragoUtil
     public static int getStringMemoryUsage(String s)
     {
         return s.length() * 2;
+    }
+    
+    /**
+     * Estimates the memory used by the Fennel portion of a query plan by
+     * taking the memory used by the XMI representation of the plan and
+     * multiplying by a constant factor.  That constant factor is estimated as
+     * 2, based on measurements correlating between the the XMI plan string
+     * length and the actual Fennel memory used to construct the Fennel stream
+     * graphs.  The actual measured value was between .6 and .95 of the XMI
+     * plan size.  Therefore, we use 1 as a conservative estimate.  But since
+     * we've already accounted for half of the XMI plan memory in the cache
+     * entry associated with the SQL statement, we reduce by .5 to arrive at
+     * 1.5.
+     * 
+     * @param s XMI string
+     * 
+     * @return estimated memory usage
+     */
+    public static long getFennelMemoryUsage(String s)
+    {
+        int xmiSize = FarragoUtil.getStringMemoryUsage(s);
+        return (long) ((double) xmiSize * 1.5);
     }
 
     /**

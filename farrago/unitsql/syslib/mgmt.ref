@@ -254,7 +254,4 @@
 | 42000              |
 +--------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- back to max
-0: jdbc:farrago:> alter system set "codeCacheMaxBytes" = max;
-0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

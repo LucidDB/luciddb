@@ -296,7 +296,7 @@ Error: From line 1, column 15 to line 1, column 44: Table 'MOCK_EXCLUDE_SCHEMA.M
 0: jdbc:farrago:> -- have to flush the plan cache, because the value 7 is still burned
 0: jdbc:farrago:> -- into the old plan and the optimizer doesn't know that it's supposed
 0: jdbc:farrago:> -- to read the new value
-0: jdbc:farrago:> alter system set "codeCacheMaxBytes" = min;
+0: jdbc:farrago:> call sys_boot.mgmt.flush_code_cache();
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select count(*) from mock_foreign_dynamic_server.mock_schema.mock_table;
 +---------+

@@ -1,9 +1,6 @@
 -- $Id$
 -- Tests semijoin transformations
 
--- TODO jvs 5-Sept-2006:  Get rid of this once leak is investigated.
-alter system set "codeCacheMaxBytes" = min;
-
 create schema sj;
 set schema 'sj';
 

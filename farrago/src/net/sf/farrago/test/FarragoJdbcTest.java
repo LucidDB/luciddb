@@ -2760,7 +2760,7 @@ public class FarragoJdbcTest
     public void testCachedQuery()
         throws Exception
     {
-        repeatQuery();
+        repeatQuery(false);
     }
 
     /**
@@ -2773,14 +2773,10 @@ public class FarragoJdbcTest
         throws Exception
     {
         // disable caching
-        stmt.execute("alter system set \"codeCacheMaxBytes\" = min");
-        repeatQuery();
-
-        // re-enable caching
-        stmt.execute("alter system set \"codeCacheMaxBytes\" = max");
+        repeatQuery(true);
     }
 
-    private void repeatQuery()
+    private void repeatQuery(boolean flushCache)
         throws Exception
     {
         String sql = "select * from sales.emps";
@@ -2791,6 +2787,9 @@ public class FarragoJdbcTest
                 getResultSetCount());
             resultSet.close();
             resultSet = null;
+            if (flushCache) {
+                stmt.execute("call sys_boot.mgmt.flush_code_cache()");
+            }
         }
     }
 

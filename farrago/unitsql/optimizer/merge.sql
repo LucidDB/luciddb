@@ -10,7 +10,7 @@ alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
 create table emps(
     empno int not null, name varchar(20) not null, deptno int,
-    gender char(1), city char(30), age int, salary int);
+    gender char(1), city char(30), age int, salary numeric(10,2));
 create table tempemps(
     t_empno int, t_name varchar(25), t_deptno int, t_gender char(1),
     t_city char(35), t_age int);

@@ -96,6 +96,3 @@ call sys_boot.mgmt.flush_code_cache();
 
 -- verify that flush did not modify code cache size
 select "codeCacheMaxBytes" from sys_fem."Config"."FarragoConfig";
-
--- back to max
-alter system set "codeCacheMaxBytes" = max;

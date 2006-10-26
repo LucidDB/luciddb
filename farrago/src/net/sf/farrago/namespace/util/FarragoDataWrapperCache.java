@@ -360,8 +360,8 @@ public class FarragoDataWrapperCache
                     "DataWrapperClassName",
                     options);
 
-            // TODO:  some kind of resource usage estimations for wrappers
-            entry.initialize(wrapper, 1);
+            // TODO:  better resource usage estimation for wrappers
+            entry.initialize(wrapper, 1000);
         }
     }
 
@@ -402,8 +402,8 @@ public class FarragoDataWrapperCache
                 localServer.setFennelDbHandle(fennelDbHandle);
             }
 
-            // TODO:  some kind of resource usage estimations for wrappers
-            entry.initialize(server, 1);
+            // TODO:  better resource usage estimation for servers
+            entry.initialize(server, 10000);
         }
     }
 }

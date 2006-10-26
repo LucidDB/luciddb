@@ -437,9 +437,8 @@ public class FarragoRuntimeContext
                     assert (key.equals(xmiFennelPlan));
                     streamGraph = prepareStreamGraph(xmiFennelPlan);
 
-                    // TODO:  proper memory accounting
                     long memUsage =
-                        FarragoUtil.getStringMemoryUsage(xmiFennelPlan);
+                        FarragoUtil.getFennelMemoryUsage(xmiFennelPlan);
                     entry.initialize(streamGraph, memUsage);
                 }
             };

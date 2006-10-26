@@ -191,7 +191,7 @@ public class SqlTest extends TestCase {
                 urlPrefix, username, passwd);
             Statement stmt = conn.createStatement();
             stmt.executeUpdate(
-                "alter system set \"codeCacheMaxBytes\" = min");
+                "call sys_boot.mgmt.flush_code_cache()");
         }
         SqlLine.mainWithInputRedirection(args, sequenceStream);
         printStream.flush();

@@ -10,7 +10,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table emps(
 . . . . . . . . >     empno int not null, name varchar(20) not null, deptno int,
-. . . . . . . . >     gender char(1), city char(30), age int, salary int);
+. . . . . . . . >     gender char(1), city char(30), age int, salary numeric(10,2));
 0: jdbc:farrago:> create table tempemps(
 . . . . . . . . >     t_empno int, t_name varchar(25), t_deptno int, t_gender char(1),
 . . . . . . . . >     t_city char(35), t_age int);
@@ -20,14 +20,14 @@
 . . . . . . . . >     select case when name = 'John' then 130 else empno end,
 . . . . . . . . >         name, deptno, gender, city, age, age * 900 from sales.emps;
 0: jdbc:farrago:> select * from emps order by empno;
-+--------+--------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |  NAME  | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+--------+---------+---------+---------------------------------+------+---------+
-| 100    | Fred   | 10      |         |                                 | 25   | 22500   |
-| 110    | Eric   | 20      | M       | San Francisco                   | 80   | 72000   |
-| 120    | Wilma  | 20      | F       |                                 | 50   | 45000   |
-| 130    | John   | 40      | M       | Vancouver                       |      |         |
-+--------+--------+---------+---------+---------------------------------+------+---------+
++--------+--------+---------+---------+---------------------------------+------+-----------+
+| EMPNO  |  NAME  | DEPTNO  | GENDER  |              CITY               | AGE  |  SALARY   |
++--------+--------+---------+---------+---------------------------------+------+-----------+
+| 100    | Fred   | 10      |         |                                 | 25   | 22500.00  |
+| 110    | Eric   | 20      | M       | San Francisco                   | 80   | 72000.00  |
+| 120    | Wilma  | 20      | F       |                                 | 50   | 45000.00  |
+| 130    | John   | 40      | M       | Vancouver                       |      |           |
++--------+--------+---------+---------+---------------------------------+------+-----------+
 0: jdbc:farrago:> insert into tempemps
 . . . . . . . . >     select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo'), age
 . . . . . . . . >         from emps;
@@ -56,16 +56,16 @@
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
 0: jdbc:farrago:> select * from emps order by empno;
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| 100    | Fred    | 11      |         | SAN MATEO                       | 25   | 5625    |
-| 110    | Eric    | 21      | M       | SAN FRANCISCO                   | 80   | 18000   |
-| 120    | Wilma   | 21      | F       | SAN MATEO                       | 50   | 11250   |
-| 130    | John    | 41      | M       | VANCOUVER                       |      |         |
-| 140    | BARNEY  |         | M       | San Mateo                       | 41   | 41000   |
-| 150    | BETTY   |         | F       | San Francisco                   | 40   | 40000   |
-+--------+---------+---------+---------+---------------------------------+------+---------+
++--------+---------+---------+---------+---------------------------------+------+-----------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |  SALARY   |
++--------+---------+---------+---------+---------------------------------+------+-----------+
+| 100    | Fred    | 11      |         | SAN MATEO                       | 25   | 5625.00   |
+| 110    | Eric    | 21      | M       | SAN FRANCISCO                   | 80   | 18000.00  |
+| 120    | Wilma   | 21      | F       | SAN MATEO                       | 50   | 11250.00  |
+| 130    | John    | 41      | M       | VANCOUVER                       |      |           |
+| 140    | BARNEY  |         | M       | San Mateo                       | 41   | 41000.00  |
+| 150    | BETTY   |         | F       | San Francisco                   | 40   | 40000.00  |
++--------+---------+---------+---------+---------------------------------+------+-----------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- source select is a join
 0: jdbc:farrago:> delete from emps where name in ('BARNEY', 'BETTY');
@@ -76,14 +76,14 @@
 0: jdbc:farrago:> insert into salarytable values(140, 140000);
 0: jdbc:farrago:> insert into salarytable values(150, 150000);
 0: jdbc:farrago:> select * from emps order by empno;
-+--------+--------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |  NAME  | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+--------+---------+---------+---------------------------------+------+---------+
-| 100    | Fred   | 11      |         | SAN MATEO                       | 25   | 5625    |
-| 110    | Eric   | 21      | M       | SAN FRANCISCO                   | 80   | 18000   |
-| 120    | Wilma  | 21      | F       | SAN MATEO                       | 50   | 11250   |
-| 130    | John   | 41      | M       | VANCOUVER                       |      |         |
-+--------+--------+---------+---------+---------------------------------+------+---------+
++--------+--------+---------+---------+---------------------------------+------+-----------+
+| EMPNO  |  NAME  | DEPTNO  | GENDER  |              CITY               | AGE  |  SALARY   |
++--------+--------+---------+---------+---------------------------------+------+-----------+
+| 100    | Fred   | 11      |         | SAN MATEO                       | 25   | 5625.00   |
+| 110    | Eric   | 21      | M       | SAN FRANCISCO                   | 80   | 18000.00  |
+| 120    | Wilma  | 21      | F       | SAN MATEO                       | 50   | 11250.00  |
+| 130    | John   | 41      | M       | VANCOUVER                       |      |           |
++--------+--------+---------+---------+---------------------------------+------+-----------+
 0: jdbc:farrago:> select * from salarytable order by empno;
 +--------+---------+
 | EMPNO  | SALARY  |
@@ -108,16 +108,16 @@
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.salary * .15,
 . . . . . . . . >             t.t_city);
 0: jdbc:farrago:> select * from emps order by empno;
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| 100    | Fred    | 10      |         | san mateo                       | 25   | 7031    |
-| 110    | Eric    | 20      | M       | san francisco                   | 80   | 22500   |
-| 120    | Wilma   | 20      | F       | san mateo                       | 50   | 14063   |
-| 130    | John    | 40      | M       | vancouver                       |      |         |
-| 140    | BARNEY  |         | M       | San Mateo                       | 41   | 21000   |
-| 150    | BETTY   |         | F       | San Francisco                   | 40   | 22500   |
-+--------+---------+---------+---------+---------------------------------+------+---------+
++--------+---------+---------+---------+---------------------------------+------+-----------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |  SALARY   |
++--------+---------+---------+---------+---------------------------------+------+-----------+
+| 100    | Fred    | 10      |         | san mateo                       | 25   | 7031.25   |
+| 110    | Eric    | 20      | M       | san francisco                   | 80   | 22500.00  |
+| 120    | Wilma   | 20      | F       | san mateo                       | 50   | 14062.50  |
+| 130    | John    | 40      | M       | vancouver                       |      |           |
+| 140    | BARNEY  |         | M       | San Mateo                       | 41   | 21000.00  |
+| 150    | BETTY   |         | F       | San Francisco                   | 40   | 22500.00  |
++--------+---------+---------+---------+---------------------------------+------+-----------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- no source rows; therefore, no rows should be affected
 0: jdbc:farrago:> merge into emps
@@ -129,16 +129,16 @@
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 0: jdbc:farrago:> select * from emps order by empno;
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| 100    | Fred    | 10      |         | san mateo                       | 25   | 7031    |
-| 110    | Eric    | 20      | M       | san francisco                   | 80   | 22500   |
-| 120    | Wilma   | 20      | F       | san mateo                       | 50   | 14063   |
-| 130    | John    | 40      | M       | vancouver                       |      |         |
-| 140    | BARNEY  |         | M       | San Mateo                       | 41   | 21000   |
-| 150    | BETTY   |         | F       | San Francisco                   | 40   | 22500   |
-+--------+---------+---------+---------+---------------------------------+------+---------+
++--------+---------+---------+---------+---------------------------------+------+-----------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |  SALARY   |
++--------+---------+---------+---------+---------------------------------+------+-----------+
+| 100    | Fred    | 10      |         | san mateo                       | 25   | 7031.25   |
+| 110    | Eric    | 20      | M       | san francisco                   | 80   | 22500.00  |
+| 120    | Wilma   | 20      | F       | san mateo                       | 50   | 14062.50  |
+| 130    | John    | 40      | M       | vancouver                       |      |           |
+| 140    | BARNEY  |         | M       | San Mateo                       | 41   | 21000.00  |
+| 150    | BETTY   |         | F       | San Francisco                   | 40   | 22500.00  |
++--------+---------+---------+---------+---------------------------------+------+-----------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- only updates, no inserts
 0: jdbc:farrago:> merge into emps
@@ -151,28 +151,28 @@
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 0: jdbc:farrago:> select * from emps order by empno;
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| 100    | fred    | 11      |         | SAN MATEO                       | 25   | 70310   |
-| 110    | eric    | 21      | M       | SAN FRANCISCO                   | 80   | 225000  |
-| 120    | wilma   | 21      | F       | SAN MATEO                       | 50   | 140630  |
-| 130    | john    | 41      | M       | VANCOUVER                       |      |         |
-| 140    | barney  | 10      | M       | SAN MATEO                       | 41   | 210000  |
-| 150    | betty   | 20      | F       | SAN FRANCISCO                   | 40   | 225000  |
-+--------+---------+---------+---------+---------------------------------+------+---------+
++--------+---------+---------+---------+---------------------------------+------+------------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++--------+---------+---------+---------+---------------------------------+------+------------+
+| 100    | fred    | 11      |         | SAN MATEO                       | 25   | 70312.50   |
+| 110    | eric    | 21      | M       | SAN FRANCISCO                   | 80   | 225000.00  |
+| 120    | wilma   | 21      | F       | SAN MATEO                       | 50   | 140625.00  |
+| 130    | john    | 41      | M       | VANCOUVER                       |      |            |
+| 140    | barney  | 10      | M       | SAN MATEO                       | 41   | 210000.00  |
+| 150    | betty   | 20      | F       | SAN FRANCISCO                   | 40   | 225000.00  |
++--------+---------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- only inserts, no updates
 0: jdbc:farrago:> delete from emps where empno >= 140;
 0: jdbc:farrago:> select * from emps order by empno;
-+--------+--------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |  NAME  | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+--------+---------+---------+---------------------------------+------+---------+
-| 100    | fred   | 11      |         | SAN MATEO                       | 25   | 70310   |
-| 110    | eric   | 21      | M       | SAN FRANCISCO                   | 80   | 225000  |
-| 120    | wilma  | 21      | F       | SAN MATEO                       | 50   | 140630  |
-| 130    | john   | 41      | M       | VANCOUVER                       |      |         |
-+--------+--------+---------+---------+---------------------------------+------+---------+
++--------+--------+---------+---------+---------------------------------+------+------------+
+| EMPNO  |  NAME  | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++--------+--------+---------+---------+---------------------------------+------+------------+
+| 100    | fred   | 11      |         | SAN MATEO                       | 25   | 70312.50   |
+| 110    | eric   | 21      | M       | SAN FRANCISCO                   | 80   | 225000.00  |
+| 120    | wilma  | 21      | F       | SAN MATEO                       | 50   | 140625.00  |
+| 130    | john   | 41      | M       | VANCOUVER                       |      |            |
++--------+--------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> merge into emps
 . . . . . . . . >     using (select * from tempemps where t_empno >= 140) on t_empno = empno
 . . . . . . . . >     when matched then
@@ -183,16 +183,16 @@
 . . . . . . . . >             values(t_empno, upper(t_name), t_empno-100, t_gender, t_city, t_age,
 . . . . . . . . >                 t_age * 1000);
 0: jdbc:farrago:> select * from emps order by empno;
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| 100    | fred    | 11      |         | SAN MATEO                       | 25   | 70310   |
-| 110    | eric    | 21      | M       | SAN FRANCISCO                   | 80   | 225000  |
-| 120    | wilma   | 21      | F       | SAN MATEO                       | 50   | 140630  |
-| 130    | john    | 41      | M       | VANCOUVER                       |      |         |
-| 140    | BARNEY  | 40      | M       | San Mateo                       | 41   | 41000   |
-| 150    | BETTY   | 50      | F       | San Francisco                   | 40   | 40000   |
-+--------+---------+---------+---------+---------------------------------+------+---------+
++--------+---------+---------+---------+---------------------------------+------+------------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++--------+---------+---------+---------+---------------------------------+------+------------+
+| 100    | fred    | 11      |         | SAN MATEO                       | 25   | 70312.50   |
+| 110    | eric    | 21      | M       | SAN FRANCISCO                   | 80   | 225000.00  |
+| 120    | wilma   | 21      | F       | SAN MATEO                       | 50   | 140625.00  |
+| 130    | john    | 41      | M       | VANCOUVER                       |      |            |
+| 140    | BARNEY  | 40      | M       | San Mateo                       | 41   | 41000.00   |
+| 150    | BETTY   | 50      | F       | San Francisco                   | 40   | 40000.00   |
++--------+---------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- more than 1 row in the source table matches the target; per SQL2003, this
 0: jdbc:farrago:> -- should return an error; currently, we do not return an error
@@ -218,17 +218,17 @@
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 0: jdbc:farrago:> select * from emps order by empno, name;
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| 100    | fred    | 11      |         | SAN MATEO                       | 25   | 70310   |
-| 110    | eric    | 21      | M       | SAN FRANCISCO                   | 80   | 225000  |
-| 120    | wilma   | 21      | F       | SAN MATEO                       | 50   | 140630  |
-| 130    | john    | 41      | M       | Vancouver                       |      |         |
-| 130    | john    | 41      | M       | Vancouver                       |      |         |
-| 140    | BARNEY  | 40      | M       | San Mateo                       | 41   | 41000   |
-| 150    | BETTY   | 50      | F       | San Francisco                   | 40   | 40000   |
-+--------+---------+---------+---------+---------------------------------+------+---------+
++--------+---------+---------+---------+---------------------------------+------+------------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++--------+---------+---------+---------+---------------------------------+------+------------+
+| 100    | fred    | 11      |         | SAN MATEO                       | 25   | 70312.50   |
+| 110    | eric    | 21      | M       | SAN FRANCISCO                   | 80   | 225000.00  |
+| 120    | wilma   | 21      | F       | SAN MATEO                       | 50   | 140625.00  |
+| 130    | john    | 41      | M       | Vancouver                       |      |            |
+| 130    | john    | 41      | M       | Vancouver                       |      |            |
+| 140    | BARNEY  | 40      | M       | San Mateo                       | 41   | 41000.00   |
+| 150    | BETTY   | 50      | F       | San Francisco                   | 40   | 40000.00   |
++--------+---------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> delete from tempemps where t_name = 'JohnClone';
 0: jdbc:farrago:>                 
 0: jdbc:farrago:> -- no insert substatement
@@ -250,17 +250,17 @@
 . . . . . . . . >     when matched then
 . . . . . . . . >         update set name = t_name, city = t_city;
 0: jdbc:farrago:> select * from emps order by empno, name;
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+---------+---------+---------+---------------------------------+------+---------+
-| 100    | Fred    | 11      |         | San Mateo                       | 25   | 70310   |
-| 110    | Eric    | 21      | M       | San Francisco                   | 80   | 225000  |
-| 120    | Wilma   | 21      | F       | San Mateo                       | 50   | 140630  |
-| 130    | John    | 41      | M       | Vancouver                       |      |         |
-| 130    | John    | 41      | M       | Vancouver                       |      |         |
-| 140    | Barney  | 40      | M       | San Mateo                       | 41   | 41000   |
-| 150    | Betty   | 50      | F       | San Francisco                   | 40   | 40000   |
-+--------+---------+---------+---------+---------------------------------+------+---------+
++--------+---------+---------+---------+---------------------------------+------+------------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++--------+---------+---------+---------+---------------------------------+------+------------+
+| 100    | Fred    | 11      |         | San Mateo                       | 25   | 70312.50   |
+| 110    | Eric    | 21      | M       | San Francisco                   | 80   | 225000.00  |
+| 120    | Wilma   | 21      | F       | San Mateo                       | 50   | 140625.00  |
+| 130    | John    | 41      | M       | Vancouver                       |      |            |
+| 130    | John    | 41      | M       | Vancouver                       |      |            |
+| 140    | Barney  | 40      | M       | San Mateo                       | 41   | 41000.00   |
+| 150    | Betty   | 50      | F       | San Francisco                   | 40   | 40000.00   |
++--------+---------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- no update substatement
 0: jdbc:farrago:> merge into emps
@@ -268,62 +268,62 @@
 . . . . . . . . >     when not matched then
 . . . . . . . . >         insert values (t_empno, t_name, t_deptno, t_gender, t_city, t_age, 0);
 0: jdbc:farrago:> select * from emps order by empno, name;
-+--------+----------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+----------+---------+---------+---------------------------------+------+---------+
-| 100    | Fred     | 11      |         | San Mateo                       | 25   | 70310   |
-| 110    | Eric     | 21      | M       | San Francisco                   | 80   | 225000  |
-| 120    | Wilma    | 21      | F       | San Mateo                       | 50   | 140630  |
-| 130    | John     | 41      | M       | Vancouver                       |      |         |
-| 130    | John     | 41      | M       | Vancouver                       |      |         |
-| 140    | Barney   | 40      | M       | San Mateo                       | 41   | 41000   |
-| 150    | Betty    | 50      | F       | San Francisco                   | 40   | 40000   |
-| 160    | Pebbles  | 60      | F       | Foster City                     | 2    | 0       |
-+--------+----------+---------+---------+---------------------------------+------+---------+
++--------+----------+---------+---------+---------------------------------+------+------------+
+| EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++--------+----------+---------+---------+---------------------------------+------+------------+
+| 100    | Fred     | 11      |         | San Mateo                       | 25   | 70312.50   |
+| 110    | Eric     | 21      | M       | San Francisco                   | 80   | 225000.00  |
+| 120    | Wilma    | 21      | F       | San Mateo                       | 50   | 140625.00  |
+| 130    | John     | 41      | M       | Vancouver                       |      |            |
+| 130    | John     | 41      | M       | Vancouver                       |      |            |
+| 140    | Barney   | 40      | M       | San Mateo                       | 41   | 41000.00   |
+| 150    | Betty    | 50      | F       | San Francisco                   | 40   | 40000.00   |
+| 160    | Pebbles  | 60      | F       | Foster City                     | 2    | 0.00       |
++--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- simple update via a merge
 0: jdbc:farrago:> delete from emps where empno = 130;
 0: jdbc:farrago:> select * from emps order by empno;
-+--------+----------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+----------+---------+---------+---------------------------------+------+---------+
-| 100    | Fred     | 11      |         | San Mateo                       | 25   | 70310   |
-| 110    | Eric     | 21      | M       | San Francisco                   | 80   | 225000  |
-| 120    | Wilma    | 21      | F       | San Mateo                       | 50   | 140630  |
-| 140    | Barney   | 40      | M       | San Mateo                       | 41   | 41000   |
-| 150    | Betty    | 50      | F       | San Francisco                   | 40   | 40000   |
-| 160    | Pebbles  | 60      | F       | Foster City                     | 2    | 0       |
-+--------+----------+---------+---------+---------------------------------+------+---------+
++--------+----------+---------+---------+---------------------------------+------+------------+
+| EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++--------+----------+---------+---------+---------------------------------+------+------------+
+| 100    | Fred     | 11      |         | San Mateo                       | 25   | 70312.50   |
+| 110    | Eric     | 21      | M       | San Francisco                   | 80   | 225000.00  |
+| 120    | Wilma    | 21      | F       | San Mateo                       | 50   | 140625.00  |
+| 140    | Barney   | 40      | M       | San Mateo                       | 41   | 41000.00   |
+| 150    | Betty    | 50      | F       | San Francisco                   | 40   | 40000.00   |
+| 160    | Pebbles  | 60      | F       | Foster City                     | 2    | 0.00       |
++--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> merge into emps e1
 . . . . . . . . >     using (select * from emps) e2 on e1.empno = e2.empno
 . . . . . . . . >     when matched then
 . . . . . . . . >         update set age = e1.age + 1;
 0: jdbc:farrago:> select * from emps order by empno;
-+--------+----------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+----------+---------+---------+---------------------------------+------+---------+
-| 100    | Fred     | 11      |         | San Mateo                       | 26   | 70310   |
-| 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000  |
-| 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140630  |
-| 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000   |
-| 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000   |
-| 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0       |
-+--------+----------+---------+---------+---------------------------------+------+---------+
++--------+----------+---------+---------+---------------------------------+------+------------+
+| EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++--------+----------+---------+---------+---------------------------------+------+------------+
+| 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
+| 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
+| 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
+| 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
+| 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
+| 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
++--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- the updates in the following merges are no-ops
 0: jdbc:farrago:> -- verify that no updates have occurred by ensuring that the rids haven't
 0: jdbc:farrago:> -- changed
 0: jdbc:farrago:> select lcs_rid(empno), * from emps order by empno;
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
-| EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
-| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70310   |
-| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000  |
-| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140630  |
-| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000   |
-| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000   |
-| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0       |
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
+| EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
+| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
+| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
+| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
+| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
+| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
+| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> merge into emps e
 . . . . . . . . >     using tempemps t on t.t_empno = e.empno
 . . . . . . . . >     when matched then
@@ -334,34 +334,34 @@
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
 0: jdbc:farrago:> select lcs_rid(empno), * from emps order by empno;
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
-| EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
-| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70310   |
-| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000  |
-| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140630  |
-| 40      | 130    | JOHN     |         | M       | Vancouver                       |      |         |
-| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000   |
-| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000   |
-| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0       |
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
+| EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
+| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
+| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
+| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
+| 40      | 130    | JOHN     |         | M       | Vancouver                       |      |            |
+| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
+| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
+| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> merge into emps e1
 . . . . . . . . >     using (select * from emps) e2 on e1.empno = e2.empno
 . . . . . . . . >     when matched then
 . . . . . . . . >         update set age = e1.age + e1.deptno - e1.deptno;
 0: jdbc:farrago:> select lcs_rid(empno), * from emps order by empno;
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
-| EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
-| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70310   |
-| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000  |
-| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140630  |
-| 40      | 130    | JOHN     |         | M       | Vancouver                       |      |         |
-| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000   |
-| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000   |
-| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0       |
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
+| EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
+| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
+| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
+| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
+| 40      | 130    | JOHN     |         | M       | Vancouver                       |      |            |
+| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
+| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
+| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- make sure that when the original value is null, the update does occur
 0: jdbc:farrago:> merge into emps e
@@ -374,17 +374,17 @@
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
 0: jdbc:farrago:> select lcs_rid(empno), * from emps order by empno;
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
-| EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
-| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70310   |
-| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000  |
-| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140630  |
-| 41      | 130    | JOHN     |         | M       | Vancouver                       |      | 10000   |
-| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000   |
-| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000   |
-| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0       |
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
+| EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
+| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
+| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
+| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
+| 41      | 130    | JOHN     |         | M       | Vancouver                       |      | 10000.00   |
+| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
+| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
+| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- make sure that when the new value is null, the update occurs
 0: jdbc:farrago:> merge into emps e
@@ -397,17 +397,17 @@
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
 0: jdbc:farrago:> select lcs_rid(empno), * from emps order by empno;
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
-| EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
-| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70310   |
-| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000  |
-| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140630  |
-| 42      | 130    | JOHN     |         | M       | Vancouver                       |      |         |
-| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000   |
-| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000   |
-| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0       |
-+---------+--------+----------+---------+---------+---------------------------------+------+---------+
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
+| EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
+| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
+| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
+| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
+| 42      | 130    | JOHN     |         | M       | Vancouver                       |      |            |
+| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
+| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
+| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
++---------+--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- make sure that when the new value is the same as the old one
 0: jdbc:farrago:> -- except for trailing spaces, the update occurs
@@ -436,17 +436,17 @@
 . . . . . . . . >     when matched then
 . . . . . . . . >         update set name = cast('FRED' as varchar(20));
 0: jdbc:farrago:> select * from emps order by empno;
-+--------+----------+---------+---------+---------------------------------+------+---------+
-| EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
-+--------+----------+---------+---------+---------------------------------+------+---------+
-| 100    | FRED     | 11      |         | San Mateo                       | 26   | 70310   |
-| 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000  |
-| 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140630  |
-| 130    | JOHN     |         | M       | Vancouver                       |      |         |
-| 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000   |
-| 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000   |
-| 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0       |
-+--------+----------+---------+---------+---------------------------------+------+---------+
++--------+----------+---------+---------+---------------------------------+------+------------+
+| EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++--------+----------+---------+---------+---------------------------------+------+------------+
+| 100    | FRED     | 11      |         | San Mateo                       | 26   | 70312.50   |
+| 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
+| 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
+| 130    | JOHN     |         | M       | Vancouver                       |      |            |
+| 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
+| 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
+| 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
++--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -----------------
 0: jdbc:farrago:> -- Explain output
@@ -468,11 +468,11 @@
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t13)], expr#18=[CASE($t17, $t0, $t6)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t1)], expr#21=[CASE($t17, $t20, $t7)], expr#22=[CAST($t21):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#23=[CASE($t17, $t15, $t2)], expr#24=[CASE($t17, $t3, $t9)], expr#25=[UPPER($t4)], expr#26=[CASE($t17, $t4, $t25)], expr#27=[CAST($t26):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#28=[CASE($t17, $t5, $t11)], expr#29=[1000], expr#30=[*($t5, $t29)], expr#31=[0.25], expr#32=[Reinterpret($t31)], expr#33=[*($t12, $t32)], expr#34=[Reinterpret($t33)], expr#35=[100], expr#36=[*($t30, $t35)], expr#37=[Reinterpret($t34)], expr#38=[CASE($t17, $t36, $t37)], expr#39=[Reinterpret($t38)], expr#40=[Reinterpret($t39)], expr#41=[0], expr#42=[>($t40, $t41)], expr#43=[50], expr#44=[+($t40, $t43)], expr#45=[-($t40, $t43)], expr#46=[CASE($t42, $t44, $t45)], expr#47=[/($t46, $t35)], expr#48=[CAST($t47):INTEGER], expr#49=[ROW($t8, $t10, $t12)], expr#50=[CAST($t25):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#51=[>($t37, $t41)], expr#52=[+($t37, $t43)], expr#53=[-($t37, $t43)], expr#54=[CASE($t51, $t52, $t53)], expr#55=[/($t54, $t35)], expr#56=[CAST($t55):INTEGER], expr#57=[ROW($t2, $t50, $t56)], expr#58=[$IS_DIFFERENT_FROM($t49, $t57)], expr#59=[OR($t17, $t58)], rid=[$t13], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t22], DEPTNO=[$t23], GENDER=[$t24], CITY=[$t27], AGE=[$t28], SALARY=[$t48], $condition=[$t59])'
+'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t13)], expr#18=[CASE($t17, $t0, $t6)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t1)], expr#21=[CASE($t17, $t20, $t7)], expr#22=[CAST($t21):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#23=[CASE($t17, $t15, $t2)], expr#24=[CASE($t17, $t3, $t9)], expr#25=[UPPER($t4)], expr#26=[CASE($t17, $t4, $t25)], expr#27=[CAST($t26):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#28=[CASE($t17, $t5, $t11)], expr#29=[1000], expr#30=[*($t5, $t29)], expr#31=[0.25], expr#32=[Reinterpret($t12)], expr#33=[Reinterpret($t31)], expr#34=[*($t32, $t33)], expr#35=[Reinterpret($t34)], expr#36=[10000], expr#37=[*($t30, $t36)], expr#38=[Reinterpret($t35)], expr#39=[CASE($t17, $t37, $t38)], expr#40=[Reinterpret($t39)], expr#41=[Reinterpret($t40)], expr#42=[0], expr#43=[>($t41, $t42)], expr#44=[50], expr#45=[+($t41, $t44)], expr#46=[-($t41, $t44)], expr#47=[CASE($t43, $t45, $t46)], expr#48=[100], expr#49=[/($t47, $t48)], expr#50=[true], expr#51=[Reinterpret($t49, $t50)], expr#52=[ROW($t8, $t10, $t12)], expr#53=[CAST($t25):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#54=[>($t38, $t42)], expr#55=[+($t38, $t44)], expr#56=[-($t38, $t44)], expr#57=[CASE($t54, $t55, $t56)], expr#58=[/($t57, $t48)], expr#59=[Reinterpret($t58, $t50)], expr#60=[ROW($t2, $t53, $t59)], expr#61=[$IS_DIFFERENT_FROM($t52, $t60)], expr#62=[OR($t17, $t61)], rid=[$t13], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t22], DEPTNO=[$t23], GENDER=[$t24], CITY=[$t27], AGE=[$t28], SALARY=[$t51], $condition=[$t62])'
 '        FennelToIteratorConverter'
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[8]], joinType=[LEFT])'
 '            LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, INTEGER SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
 '              LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$CITY, SYS$CLUSTERED_INDEX$M$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- source table reference is a single table select
@@ -490,10 +490,10 @@
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t7)], expr#18=[CASE($t17, $t9, $t0)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t10)], expr#21=[CASE($t17, $t20, $t1)], expr#22=[CAST($t21):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#23=[CASE($t17, $t15, $t11)], expr#24=[CASE($t17, $t12, $t3)], expr#25=[UPPER($t13)], expr#26=[CASE($t17, $t13, $t25)], expr#27=[CAST($t26):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#28=[CASE($t17, $t14, $t5)], expr#29=[1000], expr#30=[*($t14, $t29)], expr#31=[0.25], expr#32=[Reinterpret($t31)], expr#33=[*($t6, $t32)], expr#34=[Reinterpret($t33)], expr#35=[100], expr#36=[*($t30, $t35)], expr#37=[Reinterpret($t34)], expr#38=[CASE($t17, $t36, $t37)], expr#39=[Reinterpret($t38)], expr#40=[Reinterpret($t39)], expr#41=[0], expr#42=[>($t40, $t41)], expr#43=[50], expr#44=[+($t40, $t43)], expr#45=[-($t40, $t43)], expr#46=[CASE($t42, $t44, $t45)], expr#47=[/($t46, $t35)], expr#48=[CAST($t47):INTEGER], expr#49=[ROW($t2, $t4, $t6)], expr#50=[CAST($t25):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#51=[>($t37, $t41)], expr#52=[+($t37, $t43)], expr#53=[-($t37, $t43)], expr#54=[CASE($t51, $t52, $t53)], expr#55=[/($t54, $t35)], expr#56=[CAST($t55):INTEGER], expr#57=[ROW($t11, $t50, $t56)], expr#58=[$IS_DIFFERENT_FROM($t49, $t57)], expr#59=[OR($t17, $t58)], rid=[$t7], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t22], DEPTNO=[$t23], GENDER=[$t24], CITY=[$t27], AGE=[$t28], SALARY=[$t48], $condition=[$t59])'
+'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t7)], expr#18=[CASE($t17, $t9, $t0)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t10)], expr#21=[CASE($t17, $t20, $t1)], expr#22=[CAST($t21):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#23=[CASE($t17, $t15, $t11)], expr#24=[CASE($t17, $t12, $t3)], expr#25=[UPPER($t13)], expr#26=[CASE($t17, $t13, $t25)], expr#27=[CAST($t26):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#28=[CASE($t17, $t14, $t5)], expr#29=[1000], expr#30=[*($t14, $t29)], expr#31=[0.25], expr#32=[Reinterpret($t6)], expr#33=[Reinterpret($t31)], expr#34=[*($t32, $t33)], expr#35=[Reinterpret($t34)], expr#36=[10000], expr#37=[*($t30, $t36)], expr#38=[Reinterpret($t35)], expr#39=[CASE($t17, $t37, $t38)], expr#40=[Reinterpret($t39)], expr#41=[Reinterpret($t40)], expr#42=[0], expr#43=[>($t41, $t42)], expr#44=[50], expr#45=[+($t41, $t44)], expr#46=[-($t41, $t44)], expr#47=[CASE($t43, $t45, $t46)], expr#48=[100], expr#49=[/($t47, $t48)], expr#50=[true], expr#51=[Reinterpret($t49, $t50)], expr#52=[ROW($t2, $t4, $t6)], expr#53=[CAST($t25):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#54=[>($t38, $t42)], expr#55=[+($t38, $t44)], expr#56=[-($t38, $t44)], expr#57=[CASE($t54, $t55, $t56)], expr#58=[/($t57, $t48)], expr#59=[Reinterpret($t58, $t50)], expr#60=[ROW($t11, $t53, $t59)], expr#61=[$IS_DIFFERENT_FROM($t52, $t60)], expr#62=[OR($t17, $t61)], rid=[$t7], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t22], DEPTNO=[$t23], GENDER=[$t24], CITY=[$t27], AGE=[$t28], SALARY=[$t51], $condition=[$t62])'
 '        FennelToIteratorConverter'
 '          LhxJoinRel(leftKeys=[[8]], rightKeys=[[0]], joinType=[RIGHT])'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, INTEGER SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
 '              LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$CITY, SYS$CLUSTERED_INDEX$M$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 '            LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]], residual columns=[[2]])'
 '              FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 100, _ISO-8859-1']', 100 }]])'
@@ -515,16 +515,16 @@
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[IS NULL($t14)], expr#16=[ROW($t9, $t11, $t13)], expr#17=[UPPER($t5)], expr#18=[CAST($t17):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#19=[0.25], expr#20=[Reinterpret($t19)], expr#21=[*($t13, $t20)], expr#22=[Reinterpret($t21)], expr#23=[Reinterpret($t22)], expr#24=[0], expr#25=[>($t23, $t24)], expr#26=[50], expr#27=[+($t23, $t26)], expr#28=[-($t23, $t26)], expr#29=[CASE($t25, $t27, $t28)], expr#30=[100], expr#31=[/($t29, $t30)], expr#32=[CAST($t31):INTEGER], expr#33=[ROW($t3, $t18, $t32)], expr#34=[$IS_DIFFERENT_FROM($t16, $t33)], expr#35=[OR($t15, $t34)], expr#36=[null], expr#37=[CAST($t36):VARBINARY(512)], expr#38=[CASE($t15, $t1, $t7)], expr#39=[CAST($t38):INTEGER NOT NULL], expr#40=[UPPER($t2)], expr#41=[CASE($t15, $t40, $t8)], expr#42=[CAST($t41):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#43=[CASE($t15, $t36, $t3)], expr#44=[CASE($t15, $t4, $t10)], expr#45=[CASE($t15, $t5, $t17)], expr#46=[CAST($t45):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#47=[CASE($t15, $t6, $t12)], expr#48=[0.15], expr#49=[Reinterpret($t48)], expr#50=[*($t0, $t49)], expr#51=[Reinterpret($t50)], expr#52=[Reinterpret($t51)], expr#53=[CASE($t15, $t52, $t23)], expr#54=[Reinterpret($t53)], expr#55=[Reinterpret($t54)], expr#56=[>($t55, $t24)], expr#57=[+($t55, $t26)], expr#58=[-($t55, $t26)], expr#59=[CASE($t56, $t57, $t58)], expr#60=[/($t59, $t30)], expr#61=[CAST($t60):INTEGER], rid=[$t14], descriptor=[$t37], segment=[$t37], EMPNO=[$t39], NAME=[$t42], DEPTNO=[$t43], GENDER=[$t44], CITY=[$t46], AGE=[$t47], SALARY=[$t61], $condition=[$t35])'
+'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[IS NULL($t14)], expr#16=[ROW($t9, $t11, $t13)], expr#17=[UPPER($t5)], expr#18=[CAST($t17):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#19=[0.25], expr#20=[Reinterpret($t13)], expr#21=[Reinterpret($t19)], expr#22=[*($t20, $t21)], expr#23=[Reinterpret($t22)], expr#24=[Reinterpret($t23)], expr#25=[0], expr#26=[>($t24, $t25)], expr#27=[50], expr#28=[+($t24, $t27)], expr#29=[-($t24, $t27)], expr#30=[CASE($t26, $t28, $t29)], expr#31=[100], expr#32=[/($t30, $t31)], expr#33=[true], expr#34=[Reinterpret($t32, $t33)], expr#35=[ROW($t3, $t18, $t34)], expr#36=[$IS_DIFFERENT_FROM($t16, $t35)], expr#37=[OR($t15, $t36)], expr#38=[null], expr#39=[CAST($t38):VARBINARY(512)], expr#40=[CASE($t15, $t1, $t7)], expr#41=[CAST($t40):INTEGER NOT NULL], expr#42=[UPPER($t2)], expr#43=[CASE($t15, $t42, $t8)], expr#44=[CAST($t43):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#45=[CASE($t15, $t38, $t3)], expr#46=[CASE($t15, $t4, $t10)], expr#47=[CASE($t15, $t5, $t17)], expr#48=[CAST($t47):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#49=[CASE($t15, $t6, $t12)], expr#50=[0.15], expr#51=[Reinterpret($t50)], expr#52=[*($t0, $t51)], expr#53=[Reinterpret($t52)], expr#54=[Reinterpret($t53)], expr#55=[*($t54, $t31)], expr#56=[CASE($t15, $t55, $t24)], expr#57=[Reinterpret($t56)], expr#58=[Reinterpret($t57)], expr#59=[>($t58, $t25)], expr#60=[+($t58, $t27)], expr#61=[-($t58, $t27)], expr#62=[CASE($t59, $t60, $t61)], expr#63=[/($t62, $t31)], expr#64=[Reinterpret($t63, $t33)], rid=[$t14], descriptor=[$t39], segment=[$t39], EMPNO=[$t41], NAME=[$t44], DEPTNO=[$t45], GENDER=[$t46], CITY=[$t48], AGE=[$t49], SALARY=[$t64], $condition=[$t37])'
 '        FennelToIteratorConverter'
 '          FennelRenameRel(fieldNames=[[SALARY, T_EMPNO, T_NAME, T_DEPTNO, T_GENDER, T_CITY, T_AGE, EMPNO0, NAME, DEPTNO, GENDER, CITY, AGE, SALARY0, LCS_RID]])'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]], outputRowType=[RecordType(INTEGER SALARY, INTEGER T_EMPNO, VARCHAR(25) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T_NAME, INTEGER T_DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T_GENDER, CHAR(35) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T_CITY, INTEGER T_AGE, INTEGER EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, INTEGER SALARY0, BIGINT LCS_RID) NOT NULL])'
+'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]], outputRowType=[RecordType(INTEGER SALARY, INTEGER T_EMPNO, VARCHAR(25) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T_NAME, INTEGER T_DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T_GENDER, CHAR(35) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T_CITY, INTEGER T_AGE, INTEGER EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY0, BIGINT LCS_RID) NOT NULL])'
 '              LhxJoinRel(leftKeys=[[1]], rightKeys=[[8]], joinType=[LEFT])'
 '                FennelReshapeRel(projection=[[1, 2, 3, 4, 5, 6, 7]], outputRowType=[RecordType(INTEGER SALARY, INTEGER T_EMPNO, VARCHAR(25) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T_NAME, INTEGER T_DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T_GENDER, CHAR(35) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T_CITY, INTEGER T_AGE) NOT NULL])'
 '                  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '                    LcsRowScanRel(table=[[LOCALDB, M, SALARYTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$SALARYTABLE$EMPNO, SYS$CLUSTERED_INDEX$M$SALARYTABLE$SALARY]])'
 '                    LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
-'                FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, INTEGER SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
 '                  LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$CITY, SYS$CLUSTERED_INDEX$M$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- columns aren't qualified
@@ -541,10 +541,10 @@
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t7)], expr#18=[CASE($t17, $t9, $t0)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t10)], expr#21=[CASE($t17, $t20, $t1)], expr#22=[CAST($t21):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#23=[CASE($t17, $t15, $t11)], expr#24=[CASE($t17, $t12, $t3)], expr#25=[UPPER($t13)], expr#26=[CASE($t17, $t13, $t25)], expr#27=[CAST($t26):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#28=[CASE($t17, $t14, $t5)], expr#29=[1000], expr#30=[*($t14, $t29)], expr#31=[0.25], expr#32=[Reinterpret($t31)], expr#33=[*($t6, $t32)], expr#34=[Reinterpret($t33)], expr#35=[100], expr#36=[*($t30, $t35)], expr#37=[Reinterpret($t34)], expr#38=[CASE($t17, $t36, $t37)], expr#39=[Reinterpret($t38)], expr#40=[Reinterpret($t39)], expr#41=[0], expr#42=[>($t40, $t41)], expr#43=[50], expr#44=[+($t40, $t43)], expr#45=[-($t40, $t43)], expr#46=[CASE($t42, $t44, $t45)], expr#47=[/($t46, $t35)], expr#48=[CAST($t47):INTEGER], expr#49=[ROW($t2, $t4, $t6)], expr#50=[CAST($t25):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#51=[>($t37, $t41)], expr#52=[+($t37, $t43)], expr#53=[-($t37, $t43)], expr#54=[CASE($t51, $t52, $t53)], expr#55=[/($t54, $t35)], expr#56=[CAST($t55):INTEGER], expr#57=[ROW($t11, $t50, $t56)], expr#58=[$IS_DIFFERENT_FROM($t49, $t57)], expr#59=[OR($t17, $t58)], rid=[$t7], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t22], DEPTNO=[$t23], GENDER=[$t24], CITY=[$t27], AGE=[$t28], SALARY=[$t48], $condition=[$t59])'
+'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t7)], expr#18=[CASE($t17, $t9, $t0)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t10)], expr#21=[CASE($t17, $t20, $t1)], expr#22=[CAST($t21):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#23=[CASE($t17, $t15, $t11)], expr#24=[CASE($t17, $t12, $t3)], expr#25=[UPPER($t13)], expr#26=[CASE($t17, $t13, $t25)], expr#27=[CAST($t26):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#28=[CASE($t17, $t14, $t5)], expr#29=[1000], expr#30=[*($t14, $t29)], expr#31=[0.25], expr#32=[Reinterpret($t6)], expr#33=[Reinterpret($t31)], expr#34=[*($t32, $t33)], expr#35=[Reinterpret($t34)], expr#36=[10000], expr#37=[*($t30, $t36)], expr#38=[Reinterpret($t35)], expr#39=[CASE($t17, $t37, $t38)], expr#40=[Reinterpret($t39)], expr#41=[Reinterpret($t40)], expr#42=[0], expr#43=[>($t41, $t42)], expr#44=[50], expr#45=[+($t41, $t44)], expr#46=[-($t41, $t44)], expr#47=[CASE($t43, $t45, $t46)], expr#48=[100], expr#49=[/($t47, $t48)], expr#50=[true], expr#51=[Reinterpret($t49, $t50)], expr#52=[ROW($t2, $t4, $t6)], expr#53=[CAST($t25):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#54=[>($t38, $t42)], expr#55=[+($t38, $t44)], expr#56=[-($t38, $t44)], expr#57=[CASE($t54, $t55, $t56)], expr#58=[/($t57, $t48)], expr#59=[Reinterpret($t58, $t50)], expr#60=[ROW($t11, $t53, $t59)], expr#61=[$IS_DIFFERENT_FROM($t52, $t60)], expr#62=[OR($t17, $t61)], rid=[$t7], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t22], DEPTNO=[$t23], GENDER=[$t24], CITY=[$t27], AGE=[$t28], SALARY=[$t51], $condition=[$t62])'
 '        FennelToIteratorConverter'
 '          LhxJoinRel(leftKeys=[[8]], rightKeys=[[0]], joinType=[RIGHT])'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, INTEGER SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
 '              LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$CITY, SYS$CLUSTERED_INDEX$M$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 '            LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]], residual columns=[[2]])'
 '              FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 100, _ISO-8859-1']', 100 }]])'
@@ -561,11 +561,11 @@
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t13)], expr#18=[CASE($t17, $t0, $t6)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t1)], expr#21=[CASE($t17, $t20, $t7)], expr#22=[CAST($t21):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#23=[CASE($t17, $t15, $t2)], expr#24=[CASE($t17, $t3, $t9)], expr#25=[UPPER($t4)], expr#26=[CASE($t17, $t4, $t25)], expr#27=[CAST($t26):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#28=[CASE($t17, $t5, $t11)], expr#29=[1000], expr#30=[*($t5, $t29)], expr#31=[0.25], expr#32=[Reinterpret($t31)], expr#33=[*($t12, $t32)], expr#34=[Reinterpret($t33)], expr#35=[100], expr#36=[*($t30, $t35)], expr#37=[Reinterpret($t34)], expr#38=[CASE($t17, $t36, $t37)], expr#39=[Reinterpret($t38)], expr#40=[Reinterpret($t39)], expr#41=[0], expr#42=[>($t40, $t41)], expr#43=[50], expr#44=[+($t40, $t43)], expr#45=[-($t40, $t43)], expr#46=[CASE($t42, $t44, $t45)], expr#47=[/($t46, $t35)], expr#48=[CAST($t47):INTEGER], expr#49=[ROW($t8, $t10, $t12)], expr#50=[CAST($t25):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#51=[>($t37, $t41)], expr#52=[+($t37, $t43)], expr#53=[-($t37, $t43)], expr#54=[CASE($t51, $t52, $t53)], expr#55=[/($t54, $t35)], expr#56=[CAST($t55):INTEGER], expr#57=[ROW($t2, $t50, $t56)], expr#58=[$IS_DIFFERENT_FROM($t49, $t57)], expr#59=[OR($t17, $t58)], rid=[$t13], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t22], DEPTNO=[$t23], GENDER=[$t24], CITY=[$t27], AGE=[$t28], SALARY=[$t48], $condition=[$t59])'
+'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t13)], expr#18=[CASE($t17, $t0, $t6)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t1)], expr#21=[CASE($t17, $t20, $t7)], expr#22=[CAST($t21):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#23=[CASE($t17, $t15, $t2)], expr#24=[CASE($t17, $t3, $t9)], expr#25=[UPPER($t4)], expr#26=[CASE($t17, $t4, $t25)], expr#27=[CAST($t26):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#28=[CASE($t17, $t5, $t11)], expr#29=[1000], expr#30=[*($t5, $t29)], expr#31=[0.25], expr#32=[Reinterpret($t12)], expr#33=[Reinterpret($t31)], expr#34=[*($t32, $t33)], expr#35=[Reinterpret($t34)], expr#36=[10000], expr#37=[*($t30, $t36)], expr#38=[Reinterpret($t35)], expr#39=[CASE($t17, $t37, $t38)], expr#40=[Reinterpret($t39)], expr#41=[Reinterpret($t40)], expr#42=[0], expr#43=[>($t41, $t42)], expr#44=[50], expr#45=[+($t41, $t44)], expr#46=[-($t41, $t44)], expr#47=[CASE($t43, $t45, $t46)], expr#48=[100], expr#49=[/($t47, $t48)], expr#50=[true], expr#51=[Reinterpret($t49, $t50)], expr#52=[ROW($t8, $t10, $t12)], expr#53=[CAST($t25):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#54=[>($t38, $t42)], expr#55=[+($t38, $t44)], expr#56=[-($t38, $t44)], expr#57=[CASE($t54, $t55, $t56)], expr#58=[/($t57, $t48)], expr#59=[Reinterpret($t58, $t50)], expr#60=[ROW($t2, $t53, $t59)], expr#61=[$IS_DIFFERENT_FROM($t52, $t60)], expr#62=[OR($t17, $t61)], rid=[$t13], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t22], DEPTNO=[$t23], GENDER=[$t24], CITY=[$t27], AGE=[$t28], SALARY=[$t51], $condition=[$t62])'
 '        FennelToIteratorConverter'
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[8]], joinType=[LEFT])'
 '            LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, INTEGER SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
 '              LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$CITY, SYS$CLUSTERED_INDEX$M$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- no target column list in the insert
@@ -583,10 +583,10 @@
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t7)], expr#18=[CASE($t17, $t9, $t0)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t10)], expr#21=[CASE($t17, $t20, $t1)], expr#22=[CAST($t21):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#23=[CAST($t15):INTEGER], expr#24=[CASE($t17, $t23, $t11)], expr#25=[CASE($t17, $t12, $t3)], expr#26=[UPPER($t13)], expr#27=[CASE($t17, $t13, $t26)], expr#28=[CAST($t27):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#29=[CASE($t17, $t14, $t5)], expr#30=[1000], expr#31=[*($t14, $t30)], expr#32=[0.25], expr#33=[Reinterpret($t32)], expr#34=[*($t6, $t33)], expr#35=[Reinterpret($t34)], expr#36=[100], expr#37=[*($t31, $t36)], expr#38=[Reinterpret($t35)], expr#39=[CASE($t17, $t37, $t38)], expr#40=[Reinterpret($t39)], expr#41=[Reinterpret($t40)], expr#42=[0], expr#43=[>($t41, $t42)], expr#44=[50], expr#45=[+($t41, $t44)], expr#46=[-($t41, $t44)], expr#47=[CASE($t43, $t45, $t46)], expr#48=[/($t47, $t36)], expr#49=[CAST($t48):INTEGER], expr#50=[ROW($t2, $t4, $t6)], expr#51=[CAST($t26):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#52=[>($t38, $t42)], expr#53=[+($t38, $t44)], expr#54=[-($t38, $t44)], expr#55=[CASE($t52, $t53, $t54)], expr#56=[/($t55, $t36)], expr#57=[CAST($t56):INTEGER], expr#58=[ROW($t11, $t51, $t57)], expr#59=[$IS_DIFFERENT_FROM($t50, $t58)], expr#60=[OR($t17, $t59)], rid=[$t7], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t22], DEPTNO=[$t24], GENDER=[$t25], CITY=[$t28], AGE=[$t29], SALARY=[$t49], $condition=[$t60])'
+'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t7)], expr#18=[CASE($t17, $t9, $t0)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t10)], expr#21=[CASE($t17, $t20, $t1)], expr#22=[CAST($t21):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#23=[CAST($t15):INTEGER], expr#24=[CASE($t17, $t23, $t11)], expr#25=[CASE($t17, $t12, $t3)], expr#26=[UPPER($t13)], expr#27=[CASE($t17, $t13, $t26)], expr#28=[CAST($t27):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#29=[CASE($t17, $t14, $t5)], expr#30=[1000], expr#31=[*($t14, $t30)], expr#32=[0.25], expr#33=[Reinterpret($t6)], expr#34=[Reinterpret($t32)], expr#35=[*($t33, $t34)], expr#36=[Reinterpret($t35)], expr#37=[10000], expr#38=[*($t31, $t37)], expr#39=[Reinterpret($t36)], expr#40=[CASE($t17, $t38, $t39)], expr#41=[Reinterpret($t40)], expr#42=[Reinterpret($t41)], expr#43=[0], expr#44=[>($t42, $t43)], expr#45=[50], expr#46=[+($t42, $t45)], expr#47=[-($t42, $t45)], expr#48=[CASE($t44, $t46, $t47)], expr#49=[100], expr#50=[/($t48, $t49)], expr#51=[true], expr#52=[Reinterpret($t50, $t51)], expr#53=[ROW($t2, $t4, $t6)], expr#54=[CAST($t26):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#55=[>($t39, $t43)], expr#56=[+($t39, $t45)], expr#57=[-($t39, $t45)], expr#58=[CASE($t55, $t56, $t57)], expr#59=[/($t58, $t49)], expr#60=[Reinterpret($t59, $t51)], expr#61=[ROW($t11, $t54, $t60)], expr#62=[$IS_DIFFERENT_FROM($t53, $t61)], expr#63=[OR($t17, $t62)], rid=[$t7], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t22], DEPTNO=[$t24], GENDER=[$t25], CITY=[$t28], AGE=[$t29], SALARY=[$t52], $condition=[$t63])'
 '        FennelToIteratorConverter'
 '          LhxJoinRel(leftKeys=[[8]], rightKeys=[[0]], joinType=[RIGHT])'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, INTEGER SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
 '              LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$CITY, SYS$CLUSTERED_INDEX$M$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 '            LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]], residual columns=[[2]])'
 '              FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 100, _ISO-8859-1']', 100 }]])'
@@ -607,10 +607,10 @@
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t7)], expr#18=[CASE($t17, $t9, $t0)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t10)], expr#21=[CAST($t20):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#22=[CASE($t17, $t21, $t1)], expr#23=[CAST($t22):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#24=[CAST($t15):INTEGER], expr#25=[CASE($t17, $t24, $t11)], expr#26=[CASE($t17, $t12, $t3)], expr#27=[CAST($t13):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#28=[UPPER($t13)], expr#29=[CASE($t17, $t27, $t28)], expr#30=[CAST($t29):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#31=[CASE($t17, $t14, $t5)], expr#32=[1000], expr#33=[*($t14, $t32)], expr#34=[0.25], expr#35=[Reinterpret($t34)], expr#36=[*($t6, $t35)], expr#37=[Reinterpret($t36)], expr#38=[100], expr#39=[*($t33, $t38)], expr#40=[Reinterpret($t37)], expr#41=[CASE($t17, $t39, $t40)], expr#42=[Reinterpret($t41)], expr#43=[Reinterpret($t42)], expr#44=[0], expr#45=[>($t43, $t44)], expr#46=[50], expr#47=[+($t43, $t46)], expr#48=[-($t43, $t46)], expr#49=[CASE($t45, $t47, $t48)], expr#50=[/($t49, $t38)], expr#51=[CAST($t50):INTEGER], expr#52=[ROW($t2, $t4, $t6)], expr#53=[CAST($t28):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#54=[>($t40, $t44)], expr#55=[+($t40, $t46)], expr#56=[-($t40, $t46)], expr#57=[CASE($t54, $t55, $t56)], expr#58=[/($t57, $t38)], expr#59=[CAST($t58):INTEGER], expr#60=[ROW($t11, $t53, $t59)], expr#61=[$IS_DIFFERENT_FROM($t52, $t60)], expr#62=[OR($t17, $t61)], rid=[$t7], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t23], DEPTNO=[$t25], GENDER=[$t26], CITY=[$t30], AGE=[$t31], SALARY=[$t51], $condition=[$t62])'
+'      IterCalcRel(expr#0..14=[{inputs}], expr#15=[null], expr#16=[CAST($t15):VARBINARY(512)], expr#17=[IS NULL($t7)], expr#18=[CASE($t17, $t9, $t0)], expr#19=[CAST($t18):INTEGER NOT NULL], expr#20=[UPPER($t10)], expr#21=[CAST($t20):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#22=[CASE($t17, $t21, $t1)], expr#23=[CAST($t22):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#24=[CAST($t15):INTEGER], expr#25=[CASE($t17, $t24, $t11)], expr#26=[CASE($t17, $t12, $t3)], expr#27=[CAST($t13):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#28=[UPPER($t13)], expr#29=[CASE($t17, $t27, $t28)], expr#30=[CAST($t29):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#31=[CASE($t17, $t14, $t5)], expr#32=[1000], expr#33=[*($t14, $t32)], expr#34=[0.25], expr#35=[Reinterpret($t6)], expr#36=[Reinterpret($t34)], expr#37=[*($t35, $t36)], expr#38=[Reinterpret($t37)], expr#39=[10000], expr#40=[*($t33, $t39)], expr#41=[Reinterpret($t38)], expr#42=[CASE($t17, $t40, $t41)], expr#43=[Reinterpret($t42)], expr#44=[Reinterpret($t43)], expr#45=[0], expr#46=[>($t44, $t45)], expr#47=[50], expr#48=[+($t44, $t47)], expr#49=[-($t44, $t47)], expr#50=[CASE($t46, $t48, $t49)], expr#51=[100], expr#52=[/($t50, $t51)], expr#53=[true], expr#54=[Reinterpret($t52, $t53)], expr#55=[ROW($t2, $t4, $t6)], expr#56=[CAST($t28):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#57=[>($t41, $t45)], expr#58=[+($t41, $t47)], expr#59=[-($t41, $t47)], expr#60=[CASE($t57, $t58, $t59)], expr#61=[/($t60, $t51)], expr#62=[Reinterpret($t61, $t53)], expr#63=[ROW($t11, $t56, $t62)], expr#64=[$IS_DIFFERENT_FROM($t55, $t63)], expr#65=[OR($t17, $t64)], rid=[$t7], descriptor=[$t16], segment=[$t16], EMPNO=[$t19], NAME=[$t23], DEPTNO=[$t25], GENDER=[$t26], CITY=[$t30], AGE=[$t31], SALARY=[$t54], $condition=[$t65])'
 '        FennelToIteratorConverter'
 '          LhxJoinRel(leftKeys=[[8]], rightKeys=[[0]], joinType=[RIGHT])'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, INTEGER SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
 '              LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$CITY, SYS$CLUSTERED_INDEX$M$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 '            LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]], residual columns=[[2]])'
 '              FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 100, _ISO-8859-1']', 100 }]])'
@@ -629,7 +629,7 @@
 '        FennelToIteratorConverter'
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[8]], joinType=[INNER])'
 '            LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[[0, 1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, INTEGER SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
 '              LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$CITY, SYS$CLUSTERED_INDEX$M$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- no update substatement
@@ -641,7 +641,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
-'    FennelCalcRel(expr#0..8=[{inputs}], expr#9=[CAST($t0):INTEGER NOT NULL], expr#10=[CAST($t1):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#11=[CAST($t4):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#12=[0], expr#13=[CAST($t12):INTEGER], expr#14=[IS NULL($t7)], $f0=[$t9], $f1=[$t10], $f2=[$t2], $f3=[$t3], $f4=[$t11], $f5=[$t5], $f6=[$t13], $condition=[$t14])'
+'    FennelCalcRel(expr#0..8=[{inputs}], expr#9=[CAST($t0):INTEGER NOT NULL], expr#10=[CAST($t1):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#11=[CAST($t4):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#12=[0], expr#13=[100], expr#14=[*($t12, $t13)], expr#15=[true], expr#16=[Reinterpret($t14, $t15)], expr#17=[IS NULL($t7)], $f0=[$t9], $f1=[$t10], $f2=[$t2], $f3=[$t3], $f4=[$t11], $f5=[$t5], $f6=[$t16], $condition=[$t17])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[2]], joinType=[LEFT])'
 '        LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_DEPTNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
 '        FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
@@ -662,11 +662,11 @@
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..13=[{inputs}], expr#14=[null], expr#15=[CAST($t14):VARBINARY(512)], expr#16=[IS NULL($t12)], expr#17=[CASE($t16, $t0, $t5)], expr#18=[CAST($t17):INTEGER NOT NULL], expr#19=[UPPER($t1)], expr#20=[CASE($t16, $t19, $t6)], expr#21=[CAST($t20):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#22=[CASE($t16, $t14, $t7)], expr#23=[CASE($t16, $t2, $t8)], expr#24=[CASE($t16, $t3, $t9)], expr#25=[CAST($t24):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#26=[CASE($t16, $t4, $t10)], expr#27=[1000], expr#28=[*($t4, $t27)], expr#29=[CASE($t16, $t28, $t11)], expr#30=[ROW($t7, $t9, $t11)], expr#31=[$IS_DIFFERENT_FROM($t30, $t30)], expr#32=[OR($t16, $t31)], rid=[$t12], descriptor=[$t15], segment=[$t15], EMPNO=[$t18], NAME=[$t21], DEPTNO=[$t22], GENDER=[$t23], CITY=[$t25], AGE=[$t26], SALARY=[$t29], $condition=[$t32])'
+'      IterCalcRel(expr#0..13=[{inputs}], expr#14=[null], expr#15=[CAST($t14):VARBINARY(512)], expr#16=[IS NULL($t12)], expr#17=[CASE($t16, $t0, $t5)], expr#18=[CAST($t17):INTEGER NOT NULL], expr#19=[UPPER($t1)], expr#20=[CASE($t16, $t19, $t6)], expr#21=[CAST($t20):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#22=[CASE($t16, $t14, $t7)], expr#23=[CASE($t16, $t2, $t8)], expr#24=[CASE($t16, $t3, $t9)], expr#25=[CAST($t24):CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#26=[CASE($t16, $t4, $t10)], expr#27=[1000], expr#28=[*($t4, $t27)], expr#29=[100], expr#30=[*($t28, $t29)], expr#31=[Reinterpret($t11)], expr#32=[CASE($t16, $t30, $t31)], expr#33=[Reinterpret($t32)], expr#34=[Reinterpret($t33)], expr#35=[true], expr#36=[Reinterpret($t34, $t35)], expr#37=[ROW($t7, $t9, $t11)], expr#38=[$IS_DIFFERENT_FROM($t37, $t37)], expr#39=[OR($t16, $t38)], rid=[$t12], descriptor=[$t15], segment=[$t15], EMPNO=[$t18], NAME=[$t21], DEPTNO=[$t22], GENDER=[$t23], CITY=[$t25], AGE=[$t26], SALARY=[$t36], $condition=[$t39])'
 '        FennelToIteratorConverter'
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[8]], joinType=[LEFT])'
 '            LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[[0, 1, 3, 4, 5]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_AGE, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_CITY, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_GENDER, SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_NAME]])'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, INTEGER SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
 '              LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$CITY, SYS$CLUSTERED_INDEX$M$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 0: jdbc:farrago:> -- note that in this case (no-op update only), the check for non-update filter
 0: jdbc:farrago:> -- should be pushed down to the scan since there is no outer join

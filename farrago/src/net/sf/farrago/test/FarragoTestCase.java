@@ -425,9 +425,14 @@ public abstract class FarragoTestCase
         super.setUp();
         stmt = connection.createStatement();
 
-        // discard any cached query plans
-        stmt.executeUpdate("alter system set \"codeCacheMaxBytes\" = min");
-        stmt.executeUpdate("alter system set \"codeCacheMaxBytes\" = max");
+        // discard any cached query plans (can't call
+        // sys_boot.mgmt.flush_code_cache because it may not exist yet,
+        // plus it's slow)
+        FarragoObjectCache codeCache =
+            ((FarragoDbSession) getSession()).getDatabase().getCodeCache();
+        long savedBytesMax = codeCache.getBytesMax();
+        codeCache.setMaxBytes(0);
+        codeCache.setMaxBytes(savedBytesMax);
 
         resultSet = null;
     }

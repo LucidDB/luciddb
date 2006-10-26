@@ -2,9 +2,6 @@
 -- LucidDB SQL test for Hash Join and Hash Agg --
 -------------------------------------------------
 
--- TODO jvs 11-Sept-2006:  Get rid of this once leak is investigated.
-alter system set "codeCacheMaxBytes" = min;
-
 ------------------------------------------------
 -- non LDB personality uses cartesian product --
 ------------------------------------------------
