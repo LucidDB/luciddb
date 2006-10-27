@@ -1,5 +1,5 @@
 -- create oracle jdbc wrapper with browse connect
-create foreign data wrapper ORACLE 
+create or replace foreign data wrapper ORACLE 
 library '${FARRAGO_HOME}/plugin/FarragoMedJdbc3p.jar'
 language java
 options(
@@ -9,7 +9,7 @@ options(
 );
 
 -- create sql server jdbc wrapper with browse_connect
-create foreign data wrapper "SQL SERVER"
+create or replace foreign data wrapper "SQL SERVER"
 library '${FARRAGO_HOME}/plugin/FarragoMedJdbc3p.jar'
 language java
 options(
@@ -19,7 +19,7 @@ options(
 );
 
 -- create flat file wrapper with browse_connect
-create foreign data wrapper "FLAT FILE"
+create or replace foreign data wrapper "FLAT FILE"
 library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
 language java
 options(
@@ -27,7 +27,7 @@ options(
 );
 
 -- create luciddb local wrapper with browse connect
-create foreign data wrapper "LUCIDDB LOCAL"
+create or replace foreign data wrapper "LUCIDDB LOCAL"
 library '${FARRAGO_HOME}/plugin/FarragoMedJdbc3p.jar'
 language java
 options(

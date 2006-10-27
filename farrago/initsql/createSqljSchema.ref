@@ -3,11 +3,11 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema sqlj;
+0: jdbc:farrago:> create or replace schema sqlj;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sqlj';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create procedure install_jar(
+0: jdbc:farrago:> create or replace procedure install_jar(
 . . . . . . . . >     in url varchar(2000),
 . . . . . . . . >     in jar varchar(2000),
 . . . . . . . . >     in deploy integer)
@@ -15,21 +15,21 @@
 . . . . . . . . > modifies sql data
 . . . . . . . . > external name 'class net.sf.farrago.ddl.DdlSqlj.install_jar';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create procedure replace_jar(
+0: jdbc:farrago:> create or replace procedure replace_jar(
 . . . . . . . . >     in url varchar(2000),
 . . . . . . . . >     in jar varchar(2000))
 . . . . . . . . > language java
 . . . . . . . . > modifies sql data
 . . . . . . . . > external name 'class net.sf.farrago.ddl.DdlSqlj.replace_jar';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create procedure remove_jar(
+0: jdbc:farrago:> create or replace procedure remove_jar(
 . . . . . . . . >     in jar varchar(2000),
 . . . . . . . . >     in undeploy integer)
 . . . . . . . . > language java
 . . . . . . . . > modifies sql data
 . . . . . . . . > external name 'class net.sf.farrago.ddl.DdlSqlj.remove_jar';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create procedure alter_java_path(
+0: jdbc:farrago:> create or replace procedure alter_java_path(
 . . . . . . . . >     in jar varchar(2000),
 . . . . . . . . >     in path varchar(2000))
 . . . . . . . . > language java

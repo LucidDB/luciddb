@@ -109,6 +109,7 @@ ${farrago.test.jvmargs}
 
   <property name="project.testlog.dir" location="${testlog.dir}" />
   <import file="${open.dir}/farrago/buildMacros.xml" />
+  <import file="${luciddb.dir}/buildMacros.xml" />
 
    <!-- Template developer configuration file. -->
   <property name="FarragoConfTemplate.xmi"
@@ -125,9 +126,6 @@ ${farrago.test.jvmargs}
     location="${luciddb.dir}/dist"/>
 
   <property name="emma.luciddb.classes.dir" location="${luciddb.dir}/classes-cov"/>
-
-  <!-- directory for init SQL scripts -->
-  <property name="initSql.dir" value="${luciddb.dir}/initsql"/>
 
   <property name="coverage.dir" value="${luciddb.dir}/coverage"/>
 
@@ -314,8 +312,6 @@ ${farrago.test.jvmargs}
     </foreach>
   </target>
 
-<!-- Begin Experiment -->
-
   <target name="test-long">
     <property name="bh.filter.runDuration" value="long"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-long"/>
@@ -337,8 +333,6 @@ ${farrago.test.jvmargs}
       classpathref="test.classpath"/>
     <antcall target="gen-bh-report"/>
   </target>
-
-<!-- End Experiment-->
 
   <!-- ************** test ****************** 
   Split 'test' to 'test-only' and 'test-only-setup' so Emma can plugin a instr.
@@ -416,9 +410,9 @@ ${farrago.test.jvmargs}
     <antcall target="importConfig"/>
     <antcall target="configureTrace"/>
     <antcall target="populateCatalog"/>
-    <!-- runInitSql needs FarragoMedJdbc.jar in the luciddb plugin dir -->
+    <!-- runFarragoInitSql needs FarragoMedJdbc.jar in luciddb plugin dir-->
     <copy todir="${luciddb.plugin.dir}" file="${farrago.plugin.dir}/FarragoMedJdbc.jar"/>
-    <antcall target="runInitSql"/>
+    <antcall target="runFarragoInitSql"/>
     <antcall target="runLuciddbInitSql"/>
     <antcall target="backupCatalog"/>
   </target>
@@ -521,42 +515,12 @@ ${farrago.test.jvmargs}
     <classpath refid="applib.run.classpath"/>
   </taskdef>
 
-  <target name="runInitSql" >
-    <filelist dir="${farrago.initsql.dir}" id="filelist.initsql"
-      files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql,createMgmtViews.sql"/>
-    <pathconvert property="filelist.initsql" refid="filelist.initsql"
-      pathsep="${line.separator}" dirsep="${file.separator}" />
-    <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
-      tempdir="${testlog.dir}">
-      <classpath refid="farrago.sqlline.classpath"/>
-      <jvmarg line="${assertions.jvmarg}"/>
-      <jvmarg line="&FarragoSqlLineProps;"/>
-      <sysproperty key="net.sf.farrago.fileset.unitsql"
-        value="${filelist.initsql}"/>
-      <formatter type="plain"/>
-      <formatter type="xml"/> <!-- for integration builds -->
-      <test todir="${testlog.dir}" name="net.sf.farrago.test.FarragoSqlTest" />
-    </junit>
+  <target name="runFarragoInitSql">
+    <pathconvert property="farrago.initsql.prop"
+      refid="farrago.filelist.initsql" pathsep="${line.separator}"
+      dirsep="${file.separator}" />
+    <farrago.runSqlTest file="${farrago.initsql.prop}"/>
   </target>
-
-  <macrodef name="runSqlTests">
-    <attribute name="filelist" default="unspecified"/>
-    <attribute name="sqltest.classpath" default="unspecified"/>
-    <sequential>
-      <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
-        tempdir="${testlog.dir}">
-        <classpath path="@{sqltest.classpath}"/>
-        <jvmarg line="${assertions.jvmarg}"/>
-        <jvmarg line="&FarragoSqlLineProps;"/>
-        <sysproperty key="net.sf.farrago.fileset.unitsql"
-          value="@{filelist}"/>
-        <formatter type="plain"/>
-        <formatter type="xml"/> <!-- for integration builds -->
-        <test todir="${testlog.dir}"
-          name="com.lucidera.luciddb.test.LucidDbSqlTest" />
-      </junit>
-    </sequential>
-  </macrodef>
 
   <!-- create plugin/LucidDbClient.jar -->
   <target name="buildClientJar" depends="makePluginDirs">
@@ -658,12 +622,10 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="runLuciddbInitSql">
-    <filelist dir="${initSql.dir}" id="filelist.InitSql"
-      files="installApplib.sql, createTestHarness.sql, createDbaViews.sql, createForeignWrappers.sql"/>
-    <pathconvert property="filelist.InitSql"
-      refid="filelist.InitSql" pathsep="${line.separator}"
+    <pathconvert property="luciddb.initsql.prop"
+      refid="luciddb.filelist.initsql" pathsep="${line.separator}"
       dirsep="${file.separator}" />
-    <runSqlTests filelist="${filelist.InitSql}"
+    <luciddb.runSqlTests filelist="${luciddb.initsql.prop}"
       sqltest.classpath="${test.classpath}"/>
   </target>
 
@@ -1077,5 +1039,44 @@ ${farrago.test.jvmargs}
       <fileset dir="${luciddb.dir}/eclipse/.settings"/>
     </copy>
   </target>
+
+<!-- Begin Experiment -->
+
+  <target name="create-catalog-script">
+    <concat destfile="${luciddb.initsql.dir}/catalog.sql">
+      <filelist refid="farrago.filelist.initsql"/>
+      <filelist refid="luciddb.filelist.initsql"/>
+    </concat>
+  </target>
+
+  <!-- ref file doesn't quite match yet, but makes it easier to compare -->
+  <target name="test-catalog-script" depends="create-catalog-script">
+    <pathconvert property="fcatalog.ref.prop"
+      refid="farrago.filelist.initsql" pathsep="${line.separator}"
+      dirsep="${file.separator}" >
+      <globmapper from="*.sql" to="*.ref"/>
+    </pathconvert>
+    <concat destfile="${luciddb.initsql.dir}/catalog.tmp">
+      <filelist dir="${file.separator}" files="${fcatalog.ref.prop}" />
+      <filterchain>
+        <tokenfilter>
+          <replacestring from="0: jdbc:farrago:>" to="0: jdbc:luciddb:>"/>
+        </tokenfilter>
+      </filterchain>
+    </concat>
+    <pathconvert property="lcatalog.ref.prop"
+      refid="luciddb.filelist.initsql" pathsep="${line.separator}"
+      dirsep="${file.separator}" >
+      <globmapper from="*.sql" to="*.ref"/>
+    </pathconvert>
+    <concat destfile="${luciddb.initsql.dir}/catalog.ref">
+      <filelist dir="${luciddb.initsql.dir}" files="catalog.tmp"/>
+      <filelist dir="${file.separator}" files="${lcatalog.ref.prop}"/>
+    </concat>
+    <luciddb.runSqlTests filelist="${luciddb.initsql.dir}/catalog.sql"
+      sqltest.classpath="${test.classpath}"/>
+  </target>
+
+<!-- End Experiment-->
 
 </project>

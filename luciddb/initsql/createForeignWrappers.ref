@@ -1,5 +1,5 @@
 0: jdbc:luciddb:> -- create oracle jdbc wrapper with browse connect
-0: jdbc:luciddb:> create foreign data wrapper ORACLE 
+0: jdbc:luciddb:> create or replace foreign data wrapper ORACLE 
 . . . . . . . . > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc3p.jar'
 . . . . . . . . > language java
 . . . . . . . . > options(
@@ -9,7 +9,7 @@
 . . . . . . . . > );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create sql server jdbc wrapper with browse_connect
-0: jdbc:luciddb:> create foreign data wrapper "SQL SERVER"
+0: jdbc:luciddb:> create or replace foreign data wrapper "SQL SERVER"
 . . . . . . . . > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc3p.jar'
 . . . . . . . . > language java
 . . . . . . . . > options(
@@ -19,7 +19,7 @@
 . . . . . . . . > );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create flat file wrapper with browse_connect
-0: jdbc:luciddb:> create foreign data wrapper "FLAT FILE"
+0: jdbc:luciddb:> create or replace foreign data wrapper "FLAT FILE"
 . . . . . . . . > library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
 . . . . . . . . > language java
 . . . . . . . . > options(
@@ -27,7 +27,7 @@
 . . . . . . . . > );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create luciddb local wrapper with browse connect
-0: jdbc:luciddb:> create foreign data wrapper "LUCIDDB LOCAL"
+0: jdbc:luciddb:> create or replace foreign data wrapper "LUCIDDB LOCAL"
 . . . . . . . . > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc3p.jar'
 . . . . . . . . > language java
 . . . . . . . . > options(
