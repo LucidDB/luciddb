@@ -208,7 +208,8 @@ public class FlatFileFennelRel
     private String adjustLogFilePath(FlatFileParams params, String basePath)
     {
         assert(basePath != null);
-        if (params.getLogDirectory() != null) {
+        String logDirParam = params.getLogDirectory();
+        if (logDirParam != null && logDirParam.length() > 0) {
             return basePath;
         }
         String logDir = FennelRelUtil.getPreparingStmt(this).getSession()
