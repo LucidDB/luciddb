@@ -14,7 +14,7 @@ if [ -e ${STLPORT_DIR}/build ]
 then                                    # stlport version 5
   TARGET_LIST="clean install-stldbg-shared install-release-shared"
   cd ${STLPORT_DIR}/build/lib
-  make -f gcc.mak ${TARGET_LIST}
+  make SHELL=/bin/bash -f gcc.mak ${TARGET_LIST}
 
   # link like version 4
   # TODO: instead, configure fennel to link appropriately

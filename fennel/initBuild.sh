@@ -76,6 +76,7 @@ case $AUTOCONF_VERSION in
 2.57*) ;;
 2.58*) ;;
 2.59*) ;;
+2.60*) ;;
 *)
     echo "Invalid autoconf version '$AUTOCONF_VERSION'."
     echo "To fix, please run 'make autoconf' under thirdparty,"
