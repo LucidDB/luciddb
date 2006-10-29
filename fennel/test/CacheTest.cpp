@@ -51,7 +51,7 @@ public:
     BlockId makeBlockId(uint i)
     {
         assert(i < nDiskPages);
-        BlockId blockId;
+        BlockId blockId(0);
         CompoundId::setDeviceId(blockId,dataDeviceId);
         CompoundId::setBlockNum(blockId,i);
         return blockId;

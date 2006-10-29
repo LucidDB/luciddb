@@ -138,8 +138,7 @@ InstructionSignature::typeVector(bool(*typeFunction)(StandardTypeDescriptorOrdin
     assert(STANDARD_TYPE_END == STANDARD_TYPE_VARBINARY + 1);
 
     for (iter = STANDARD_TYPE_MIN; iter < STANDARD_TYPE_END; iter++) {
-        // TODO: Figure out a better way to cast an integer to an enum
-        iter2 = *(reinterpret_cast<StandardTypeDescriptorOrdinal *>(&iter));
+        iter2 = StandardTypeDescriptorOrdinal(iter);
         if (typeFunction(iter2)) {
             v.push_back(iter2);
         }
@@ -158,6 +157,6 @@ InstructionSignature::registersToTypes()
 
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/disruptivetech/calc/InstructionSignature.cpp#2 $");
 
 // End InstructionSignature.cpp

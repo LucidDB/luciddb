@@ -56,7 +56,7 @@ void SegStorageTestBase::openRandomSegment()
 SharedSegment SegStorageTestBase::createLinearDeviceSegment(
     DeviceId deviceId,uint nPages)
 {
-    BlockId blockId;
+    BlockId blockId(0);
     CompoundId::setDeviceId(blockId,deviceId);
     CompoundId::setBlockNum(blockId,0);
     LinearDeviceSegmentParams deviceParams;

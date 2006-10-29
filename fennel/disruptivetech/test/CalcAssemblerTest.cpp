@@ -92,7 +92,7 @@ public:
             (*reinterpret_cast<T*>(const_cast<PBuffer>(datum.pData))) = mValue;
              break;
         default:
-            assert(false);
+            permAssert(false);
         }
     }
 
@@ -110,7 +110,7 @@ public:
             if (datum.pData == NULL) return false;
             return (*reinterpret_cast<const T*>(datum.pData) == mValue);
         default:
-            assert(false);
+            permAssert(false);
         }
     }
 
@@ -128,7 +128,7 @@ public:
             ostr << "(" << mValue << ") for test ";
              break;
         default:
-            assert(false);
+            permAssert(false);
         }
 
         ostr << "'" << mDesc << "'" << " at PC=" << mPC;
@@ -162,7 +162,8 @@ class CalcTestInfo: public CalcChecker
 {
 public:
     explicit
-    CalcTestInfo(StandardTypeDescriptorOrdinal type): typeOrdinal(type) {}
+    CalcTestInfo(StandardTypeDescriptorOrdinal type)
+        : typeOrdinal(type) {}
     virtual ~CalcTestInfo() {}
     
     void add(string desc, T* pV, TProgramCounter pc, uint line = 0)
@@ -556,7 +557,7 @@ public:
             datum.cbData = buflen;
             break;
 
-        default: assert(0);
+        default: permAssert(false);
         }
     }
 
@@ -817,7 +818,7 @@ string CalcAssemblerTestCase::toLiteralString(TupleDatum &datum,
                                   datum.cbData);
             break;
         default:
-            assert(false);
+            permAssert(false);
         }
     }
     return ostr.str();
@@ -886,7 +887,7 @@ void CalcAssemblerTestCase::writeMaxData(TupleDatum &datum, uint typeOrdinal)
         memset(pData,0xFF,datum.cbData);
         break;
     default:
-        assert(false);
+        permAssert(false);
     }
 }
 
@@ -949,7 +950,7 @@ void CalcAssemblerTestCase::writeMinData(TupleDatum &datum,uint typeOrdinal)
         datum.cbData = 0;
         break;
     default:
-        assert(false);
+        permAssert(false);
     }
 }
 
@@ -1101,7 +1102,17 @@ void CalcAssemblerTest::testIntegralNativeInstructions(StandardTypeDescriptorOrd
     expectedCalcOut.add(shflstr, (T) (min<<mid),  pc++, __LINE__);   // I0 << I3 (min << 10)
     
     expectedCalcOut.add(shflstr, (T) (max<<min), pc++, __LINE__);    // I1 << I0 (max << min)
-    expectedCalcOut.add(shflstr, (T) (max<<max), pc++, __LINE__);    // I1 << I1 (max << max)
+    // NOTE jvs 28-Oct-2006:  I disabled the check for this because
+    // shifting by more than the number of bits in the result
+    // leads to test failure in g++ 4.1.2 optimized build.  I think
+    // the reason is that the optimizer sees max<<max here and
+    // does constant reduction, whereas when the calculator runs,
+    // it can't do that.  And the computation it uses in the
+    // constant reduction comes out different from the calculator.
+    // I don't think we should be testing for this case because
+    // doing something like (0xFFFFFFFF >> 50) gives a compiler
+    // warning "right shift count >= width of type" anyway.
+    expectedCalcOut.addRegister(shflstr, pc++);    // I1 << I1 (max << max)
     expectedCalcOut.add(shflstr, pNULL,   pc++, __LINE__);           // I1 << I2 (max << NULL)
     expectedCalcOut.add(shflstr, (T) (max<<mid), pc++, __LINE__);    // I1 << I3 (max << 10)
     
@@ -1124,7 +1135,8 @@ void CalcAssemblerTest::testIntegralNativeInstructions(StandardTypeDescriptorOrd
     expectedCalcOut.add(shfrstr, (T) (min>>mid),  pc++, __LINE__);   // I0 >> I3 (min >> 10)
         
     expectedCalcOut.add(shfrstr, (T) (max>>min), pc++, __LINE__);    // I1 >> I0 (max >> min)
-    expectedCalcOut.add(shfrstr, (T) (max>>max), pc++, __LINE__);    // I1 >> I1 (max >> max)
+    // NOTE jvs 28-Oct-2006:  see corresponding note above on (max << max)
+    expectedCalcOut.addRegister(shfrstr, pc++);    // I1 >> I1 (max >> max)
     expectedCalcOut.add(shfrstr, pNULL,   pc++, __LINE__);           // I1 >> I2 (max >> NULL)
     expectedCalcOut.add(shfrstr, (T) (max>>mid), pc++, __LINE__);    // I1 >> I3 (max >> 10)
     
@@ -1624,7 +1636,7 @@ void CalcAssemblerTest::testStandardTypes()
         // First test setting output = input (using move)
         // Also test tonull
         // For max, min, NULL
-        StandardTypeDescriptorOrdinal type = static_cast<StandardTypeDescriptorOrdinal>(i);
+        StandardTypeDescriptorOrdinal type = StandardTypeDescriptorOrdinal(i);
         string typestr = getTypeString(type, CalcAssemblerTestCase::MAX_WIDTH);
         string testdesc = "testStandardTypes: " + typestr;
         ostringstream testostr("");
