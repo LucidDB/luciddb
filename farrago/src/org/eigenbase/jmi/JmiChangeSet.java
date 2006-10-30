@@ -769,6 +769,7 @@ public class JmiChangeSet
         boolean strictlyIncreasing = true;
 
         int lastOrdinal = -1;
+        boolean zeroSeen = false;
         for (RefObject target : targets) {
             Integer ordinal;
             try {
@@ -782,6 +783,17 @@ public class JmiChangeSet
             } else {
                 if (ordinal <= lastOrdinal) {
                     strictlyIncreasing = false;
+                }
+                if (ordinal == 0) {
+                    if (zeroSeen) {
+                        // Oops, we've seen more than one ordinal with value 0.
+                        // This means we really shouldn't be sorting by
+                        // ordinal, since someone probably left the default
+                        // ordinal value set on a new object.
+                        sort = false;
+                    } else {
+                        zeroSeen = true;
+                    }
                 }
                 lastOrdinal = ordinal;
             }
