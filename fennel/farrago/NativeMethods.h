@@ -7,7 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* Inaccessible static: awtToolkit */
 #undef net_sf_farrago_fennel_FennelStorage_CLOSE_RESULT
 #define net_sf_farrago_fennel_FennelStorage_CLOSE_RESULT 0L
 #undef net_sf_farrago_fennel_FennelStorage_CLOSE_ABORT
