@@ -727,10 +727,38 @@ public abstract class FarragoTestCase
                 || name.startsWith("SYS_");
         }
 
+        /**
+         * Decides whether wrapper should be preserved as a global fixture.
+         * Extension project test case can override this method to bless
+         * additional schemas or use attributes other than the name to make the
+         * determination.
+         *
+         * @param wrapper wrapper to check
+         *
+         * @return true iff wrapper should be preserved as fixture
+         */
         protected boolean isBlessedWrapper(FemDataWrapper wrapper)
         {
             String name = wrapper.getName();
             return name.startsWith("SYS_");
+        }
+
+        /**
+         * Decides whether authId should be preserved as a global fixture.
+         * Extension project test case can override this method to bless
+         * additional authIds or use attributes other than the name to make the
+         * determination.
+         *
+         * @param authId authorization ID to check
+         *
+         * @return true iff authId should be preserved as fixture
+         */
+        protected boolean isBlessedAuthId(FemAuthId authId)
+        {
+            String name = authId.getName();
+            return name.equals(FarragoCatalogInit.SYSTEM_USER_NAME)
+                || name.equals(FarragoCatalogInit.PUBLIC_ROLE_NAME)
+                || name.equals(FarragoCatalogInit.SA_USER_NAME);
         }
 
         private void dropSchemas()
@@ -807,12 +835,7 @@ public abstract class FarragoTestCase
         {
             List<String> list = new ArrayList<String>();
             for (FemAuthId authId : getRepos().allOfType(FemAuthId.class)) {
-                if (authId.getName().equals(
-                        FarragoCatalogInit.SYSTEM_USER_NAME)
-                    || authId.getName().equals(
-                        FarragoCatalogInit.PUBLIC_ROLE_NAME)
-                    || authId.getName().equals(
-                        FarragoCatalogInit.SA_USER_NAME)) {
+                if (isBlessedAuthId(authId)) {
                     continue;
                 }
                 list.add(
