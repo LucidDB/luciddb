@@ -178,6 +178,9 @@ select count(distinct city) from emps;
 
 select count(distinct city) from emps where empno > 100000;
 
+-- multiple distinct with no non-distinct and no group by (FRG-229)
+select sum(distinct empno), sum(distinct deptno) from emps;
+
 -- mixed distinct and non-distinct aggs
 select sum(distinct empno), sum(empno) from emps;
 
@@ -291,6 +294,9 @@ select count(distinct manager), count(distinct gender),
 explain plan for
 select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
  from emps group by deptno;
+
+explain plan for
+select sum(distinct empno), sum(distinct deptno) from emps;
 
 -- verify plans for group bys
 

@@ -107,6 +107,12 @@ public final class RemoveDistinctAggregateRule
         }
 
         // Aggregate the original relation, including any non-distinct aggs.
+
+        // TODO jvs 31-Oct-2006:  In the case where there are no
+        // non-distinct aggs, avoid generating the extra aggregate and
+        // join.  Or make sure there are other optimizer rules available
+        // to remove them later.
+
         List<AggregateRelBase.Call> newAggCallList =
             new ArrayList<AggregateRelBase.Call>();
         int i = -1;
@@ -123,13 +129,21 @@ public final class RemoveDistinctAggregateRule
             newAggCallList.add(aggCall);
         }
 
-        RelNode rel =
-            new AggregateRel(
-                aggregate.getCluster(),
-                aggregate.getChild(),
-                groupCount,
-                (AggregateRelBase.Call []) newAggCallList.toArray(
-                    new AggregateRelBase.Call[newAggCallList.size()]));
+        // NOTE jvs 31-Oct-2006:  Avoid generating a pathological
+        // 0-tuple for the case where there are no non-distinct aggs
+        // and no GROUP BY columns (FRG-229).
+        RelNode rel;
+        if ((groupCount == 0) && newAggCallList.isEmpty()) {
+            rel = new OneRowRel(aggregate.getCluster());
+        } else {
+            rel =
+                new AggregateRel(
+                    aggregate.getCluster(),
+                    aggregate.getChild(),
+                    groupCount,
+                    (AggregateRelBase.Call []) newAggCallList.toArray(
+                        new AggregateRelBase.Call[newAggCallList.size()]));
+        }
 
         // For each set of operands, find and rewrite all calls which have that
         // set of operands.
@@ -226,13 +240,14 @@ public final class RemoveDistinctAggregateRule
         //     <f2 = f5>))
         //
         // E.g.
-        //   SELECT deptno, SUM(sal), COUNT(DISTINCT gender)
+        //   SELECT deptno, SUM(DISTINCT sal), COUNT(DISTINCT gender)
         //   FROM Emps
+        //   GROUP BY deptno
         //
         // becomes
         //
         //   SELECT e.deptno, adsal.sum_sal, adgender.count_gender
-        //   FROM Emps AS e
+        //   FROM (select deptno FROM Emps GROUP BY deptno) AS e
         //   JOIN (
         //     SELECT deptno, COUNT(gender) AS count_gender
         //     FROM (

@@ -451,6 +451,14 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 | 0       |
 +---------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- multiple distinct with no non-distinct and no group by (FRG-229)
+0: jdbc:farrago:> select sum(distinct empno), sum(distinct deptno) from emps;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 330     | 70      |
++---------+---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- mixed distinct and non-distinct aggs
 0: jdbc:farrago:> select sum(distinct empno), sum(empno) from emps;
 +---------+---------+
@@ -703,6 +711,25 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 . . . . . . . . > select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
 . . . . . . . . >  from emps group by deptno;
 Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in any table (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select sum(distinct empno), sum(distinct deptno) from emps;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0, EXPR$1]])'
+'    FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER $f0) NOT NULL])'
+'          FennelCartesianProductRel(leftouterjoin=[false])'
+'            FennelValuesRel(tuples=[[{ 0 }]])'
+'            FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
+'              LhxAggRel(groupCount=[1])'
+'                FennelRenameRel(fieldNames=[[$f0]])'
+'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+'        FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
+'          LhxAggRel(groupCount=[1])'
+'            FennelRenameRel(fieldNames=[[$f1]])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify plans for group bys
 0: jdbc:farrago:> 
