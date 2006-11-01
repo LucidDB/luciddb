@@ -59,6 +59,8 @@ class MedJdbcNameDirectory
 
     final boolean shouldSubstituteTypes;
 
+    final Properties substituteMapping;
+
     //~ Constructors -----------------------------------------------------------
 
     MedJdbcNameDirectory(MedJdbcDataServer server)
@@ -75,6 +77,15 @@ class MedJdbcNameDirectory
                 server.getProperties(),
                 MedJdbcDataServer.PROP_TYPE_SUBSTITUTION,
                 true);
+        this.substituteMapping = new Properties();
+        String mappingsString =
+            server.getProperties().getProperty(
+                MedJdbcDataServer.PROP_SUBSTITUTE_MAPPING, "");
+        String[] mappingsArray = mappingsString.split(",");
+        for (int i = 0; i < mappingsArray.length; i++) {
+            addSubstituteMapping(mappingsArray[i]);
+        }
+        
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -167,7 +178,8 @@ class MedJdbcNameDirectory
                 rowType =
                     typeFactory.createResultSetType(
                         md,
-                        shouldSubstituteTypes);
+                        shouldSubstituteTypes,
+                        substituteMapping);
             } finally {
                 if (rs != null) {
                     rs.close();
@@ -465,7 +477,8 @@ class MedJdbcNameDirectory
                 RelDataType type =
                     sink.getTypeFactory().createJdbcColumnType(
                         resultSet,
-                        shouldSubstituteTypes);
+                        shouldSubstituteTypes,
+                        substituteMapping);
                 String remarks = resultSet.getString(12);
                 String defaultValue = resultSet.getString(13);
                 int ordinalZeroBased = resultSet.getInt(17) - 1;
@@ -517,6 +530,26 @@ class MedJdbcNameDirectory
         }
         return s1.equals(s2);
     }
+
+    private void addSubstituteMapping(String s) 
+    {
+        String[] map = s.split(":");
+        if (map.length != 2) {
+            return;
+        }
+
+        String key = map[0].trim().toUpperCase();
+        String value = map[1].trim().toUpperCase();
+
+        SqlTypeName origType = SqlTypeName.get(key);
+        SqlTypeName newType = SqlTypeName.get(value);
+
+        if (origType != null && newType != null) {
+            this.substituteMapping.setProperty(
+                origType.toString(), newType.toString());
+        }
+    }
+    
 }
 
 // End MedJdbcNameDirectory.java

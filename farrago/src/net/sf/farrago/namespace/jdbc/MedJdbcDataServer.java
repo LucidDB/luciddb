@@ -68,6 +68,7 @@ class MedJdbcDataServer
     public static final String PROP_TABLE_TYPES = "TABLE_TYPES";
     public static final String PROP_EXT_OPTIONS = "EXTENDED_OPTIONS";
     public static final String PROP_TYPE_SUBSTITUTION = "TYPE_SUBSTITUTION";
+    public static final String PROP_SUBSTITUTE_MAPPING = "SUBSTITUTE_MAPPING";
 
     // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
@@ -155,6 +156,7 @@ class MedJdbcDataServer
         props.remove(PROP_TYPE);
         props.remove(PROP_EXT_OPTIONS);
         props.remove(PROP_TYPE_SUBSTITUTION);
+        props.remove(PROP_SUBSTITUTE_MAPPING);
     }
 
     // implement FarragoMedDataServer

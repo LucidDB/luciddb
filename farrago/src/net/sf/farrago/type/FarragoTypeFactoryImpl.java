@@ -307,6 +307,18 @@ public class FarragoTypeFactoryImpl
         final ResultSetMetaData metaData,
         final boolean substitute)
     {
+        return createResultSetType(
+            metaData,
+            substitute,
+            null);
+    }
+
+    // implement FarragoTypeFactory
+    public RelDataType createResultSetType(
+        final ResultSetMetaData metaData,
+        final boolean substitute,
+        final Properties substituteMapping)
+    {
         return createStructType(new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount()
                     {
@@ -346,7 +358,8 @@ public class FarragoTypeFactoryImpl
                                         precision,
                                         scale,
                                         isNullable,
-                                        substitute);
+                                        substitute,
+                                        substituteMapping);
                                 return (RelDataType) type;
                             } catch (Throwable ex) {
                                 throw newUnsupportedJdbcType(
@@ -368,7 +381,19 @@ public class FarragoTypeFactoryImpl
     // implement FarragoTypeFactory
     public RelDataType createJdbcColumnType(
         ResultSet getColumnsResultSet,
-        boolean substitute)
+        boolean substitute) 
+    {
+        return createJdbcColumnType(
+            getColumnsResultSet,
+            substitute,
+            null);
+    }
+
+    // implement FarragoTypeFactory
+    public RelDataType createJdbcColumnType(
+        ResultSet getColumnsResultSet,
+        boolean substitute,
+        Properties substituteMapping)
     {
         try {
             int typeOrdinal = getColumnsResultSet.getInt(5);
@@ -384,7 +409,8 @@ public class FarragoTypeFactoryImpl
                         precision,
                         scale,
                         isNullable,
-                        substitute);
+                        substitute,
+                        substituteMapping);
                 return (RelDataType) type;
             } catch (Throwable ex) {
                 throw newUnsupportedJdbcType(
@@ -406,7 +432,8 @@ public class FarragoTypeFactoryImpl
         int precision,
         int scale,
         boolean isNullable,
-        boolean substitute)
+        boolean substitute,
+        Properties substituteMapping)
         throws Throwable
     {
         RelDataType type;
@@ -417,7 +444,8 @@ public class FarragoTypeFactoryImpl
         // with type construction.  Also, supply more information in cases where
         // we currently just throw a plain UnsupportedOperationException.
         try {
-            SqlTypeName typeName = SqlTypeName.getNameForJdbcType(typeOrdinal);
+            SqlTypeName typeName = SqlTypeName.getNameForJdbcType(
+                getSubstitutedTypeOrdinal(typeOrdinal, substituteMapping));
             if (typeName == null) {
                 if (!substitute) {
                     throw new UnsupportedOperationException();
@@ -448,44 +476,46 @@ public class FarragoTypeFactoryImpl
                 int maxPrecision = SqlTypeName.Decimal.MAX_NUMERIC_PRECISION;
                 if (precision == 0) {
                     // Deal with bogus precision 0, e.g. from Oracle
-                    precision = maxPrecision;
-                }
-                if ((precision > maxPrecision) || (scale > precision)) {
-                    if (!substitute) {
-                        throw new UnsupportedOperationException();
+                    // Change such a Decmial type to Double
+                    type = createSqlType(SqlTypeName.Double);
+                } else {
+                    if ((precision > maxPrecision) || (scale > precision)) {
+                        if (!substitute) {
+                            throw new UnsupportedOperationException();
+                        }
+                        precision = maxPrecision;
+                        
+                        // In the case where we lost precision, we cap the scale at
+                        // 6.  This is an arbitrary decision just like the scale of
+                        // division, and we expect to have to revisit it; perhaps we
+                        // could allow it to be overridden via a column-level
+                        // SQL/MED storage option.
+                        int cappedScale = 6;
+                        if (scale > cappedScale) {
+                            scale = cappedScale;
+                        }
                     }
-                    precision = maxPrecision;
-
-                    // In the case where we lost precision, we cap the scale at
-                    // 6.  This is an arbitrary decision just like the scale of
-                    // division, and we expect to have to revisit it; perhaps we
-                    // could allow it to be overridden via a column-level
-                    // SQL/MED storage option.
-                    int cappedScale = 6;
-                    if (scale > cappedScale) {
-                        scale = cappedScale;
+                    if (scale < 0) {
+                        if (!substitute) {
+                            throw new UnsupportedOperationException();
+                        }
+                        scale = 0;
                     }
-                }
-                if (scale < 0) {
-                    if (!substitute) {
-                        throw new UnsupportedOperationException();
-                    }
-                    scale = 0;
-                }
-                type = createSqlType(
+                    type = createSqlType(
                         typeName,
                         precision,
                         scale);
 
-                // When external types support greater precision than native 
-                // types we map them to nullable types. External data that 
-                // would otherwise overflow can then be replaced with null. 
-                // Note that we do not fully support our stated max precision.
-                if (precision == maxPrecision && !isNullable) {
-                    if (!substitute) {
-                        throw new UnsupportedOperationException();
+                    // When external types support greater precision than native 
+                    // types we map them to nullable types. External data that 
+                    // would otherwise overflow can then be replaced with null. 
+                    // Note that we do not fully support our stated max precision.
+                    if (precision == maxPrecision && !isNullable) {
+                        if (!substitute) {
+                            throw new UnsupportedOperationException();
+                        }
+                        isNullable = true;
                     }
-                    isNullable = true;
                 }
             } else if (typeName.allowsScale()) {
                 // This is probably never used because Decimal is the
@@ -1056,6 +1086,22 @@ public class FarragoTypeFactoryImpl
         Charset charset = Charset.forName(charsetName);
         return charset;
     }
+
+    private int getSubstitutedTypeOrdinal(
+        int ordinal,
+        Properties substituteMapping)
+    {
+        SqlTypeName originalType = SqlTypeName.getNameForJdbcType(ordinal);
+        String newName =
+            substituteMapping.getProperty(originalType.toString());
+        SqlTypeName newType = SqlTypeName.get(newName);
+        if (newType != null) {
+            return newType.getJdbcOrdinal();
+        } else {
+            return ordinal;
+        }
+    }
+    
 }
 
 // End FarragoTypeFactoryImpl.java

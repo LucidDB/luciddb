@@ -5,7 +5,8 @@ language java
 options(
   browse_connect_description 'Oracle Database Connection',
   driver_class 'oracle.jdbc.driver.OracleDriver',
-  url 'jdbc:oracle:thin:@machineName:port:SID'
+  url 'jdbc:oracle:thin:@machineName:port:SID',
+  substitute_mapping 'DATE:TIMESTAMP'
 );
 
 -- create sql server jdbc wrapper with browse_connect
