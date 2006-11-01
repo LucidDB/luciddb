@@ -1,0 +1,63 @@
+create foreign data wrapper ORACLE_WRAPPER
+library '@DATA_LIBRARY@'
+language java;
+
+create server ORCL_SERVER_NO_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@'
+);
+
+-- no substitution
+select * from ORCL_SERVER_NO_SUB.@SCHEMA@.@DATATYPE_TABLE@;
+
+
+-- wrapper substitution
+create foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
+library '@DATA_LIBRARY@'
+language java
+options(
+    substitute_mapping 'DATE:TIMESTAMP'
+);
+
+create server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@'
+);
+
+
+-- with wrapper substitution only
+select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@;
+
+create or replace server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    substitute_mapping 'TIMESTAMP:DATE'
+);
+
+-- with overridden server substitution
+select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@;
+
+create or replace server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    substitute_mapping 'DATE:TIMESTAMP,TIMESTAMP:DATE'
+);
+
+-- with more than one substitution
+select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@;

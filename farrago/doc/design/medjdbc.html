@@ -127,6 +127,15 @@ by Farrago are replaced with the best available substitute.  If set to
 'FALSE', unsupported datatypes result in errors.
 </td>
 </tr>
+<tr>
+<td>SUBSTITUTE_MAPPING</td>
+<td>
+Comma-separated list of 'orig_datatype:subst_datatype'.  If specified, Farrago
+will replace each of the orig_datatype with the corresponding subst_datatype.
+Currently this option does not work with datatypes that require
+precision and/or scale.
+</td>
+</tr>
 </table>
 <p>
 

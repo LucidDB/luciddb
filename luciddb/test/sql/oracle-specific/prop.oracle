@@ -1,0 +1,23 @@
+# properties
+
+########################
+# foreign data wrapper #
+########################
+
+DATA_LIBRARY=@open.dir@/luciddb/plugin/FarragoMedJdbc3p.jar
+
+##################
+# foreign server #
+##################
+
+SERVER=akela.lucidera.com
+PORT=1521
+USERNAME=schoi
+PASSWORD=schoi
+SID=XE
+SCHEMA=SCHOI
+
+DRIVER_CLASS=oracle.jdbc.driver.OracleDriver
+URL=jdbc:oracle:thin:@@SERVER@:@PORT@:@SID@
+
+DATATYPE_TABLE=DATATYPES

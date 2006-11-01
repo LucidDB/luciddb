@@ -1,0 +1,89 @@
+0: jdbc:luciddb:> create foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > library '@DATA_LIBRARY@'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ORCL_SERVER_NO_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- no substitution
+0: jdbc:luciddb:> select * from ORCL_SERVER_NO_SUB.@SCHEMA@.@DATATYPE_TABLE@;
++-------------+------------------------+------------------+-------------------+-------------+
+|   DATECOL   |      TIMESTAMPCOL      | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  |
++-------------+------------------------+------------------+-------------------+-------------+
+| 2006-10-31  | 2006-10-31 12:00:21.0  | 100.011          | 100.000           | varchar     |
+| 2006-10-31  |                        | 0.0              | 0.000             |             |
++-------------+------------------------+------------------+-------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- wrapper substitution
+0: jdbc:luciddb:> create foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
+. . . . . . . . > library '@DATA_LIBRARY@'
+. . . . . . . . > language java
+. . . . . . . . > options(
+. . . . . . . . >     substitute_mapping 'DATE:TIMESTAMP'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ORCL_SERVER_WITH_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with wrapper substitution only
+0: jdbc:luciddb:> select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@;
++------------------------+------------------------+------------------+-------------------+-------------+
+|        DATECOL         |      TIMESTAMPCOL      | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  |
++------------------------+------------------------+------------------+-------------------+-------------+
+| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  | 100.011          | 100.000           | varchar     |
+| 2006-10-31 23:59:59.0  |                        | 0.0              | 0.000             |             |
++------------------------+------------------------+------------------+-------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_WITH_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     substitute_mapping 'TIMESTAMP:DATE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with overridden server substitution
+0: jdbc:luciddb:> select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@;
++-------------+---------------+------------------+-------------------+-------------+
+|   DATECOL   | TIMESTAMPCOL  | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  |
++-------------+---------------+------------------+-------------------+-------------+
+| 2006-10-31  | 2006-10-31    | 100.011          | 100.000           | varchar     |
+| 2006-10-31  |               | 0.0              | 0.000             |             |
++-------------+---------------+------------------+-------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_WITH_SUB
+. . . . . . . . > foreign data wrapper ORACLE_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     substitute_mapping 'DATE:TIMESTAMP,TIMESTAMP:DATE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with more than one substitution
+0: jdbc:luciddb:> select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@;
++------------------------+---------------+------------------+-------------------+-------------+
+|        DATECOL         | TIMESTAMPCOL  | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  |
++------------------------+---------------+------------------+-------------------+-------------+
+| 2006-10-31 00:00:00.0  | 2006-10-31    | 100.011          | 100.000           | varchar     |
+| 2006-10-31 23:59:59.0  |               | 0.0              | 0.000             |             |
++------------------------+---------------+------------------+-------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
