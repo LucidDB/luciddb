@@ -393,7 +393,7 @@ create or replace procedure applib.create_var(
     description varchar(65535))
 language java
 no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.CreateAppVarUdp.execute';
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeCreate';
 
 -- Deletes a variable (or a context if var_id is null), which must
 -- currently exist.
@@ -402,7 +402,7 @@ create or replace procedure applib.delete_var(
     var_id varchar(128))
 language java
 no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.DeleteAppVarUdp.execute';
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeDelete';
 
 -- Sets the value for a variable.  var_id must not be null, and must
 -- reference a previously created variable.
@@ -412,7 +412,7 @@ create or replace procedure applib.set_var(
     new_value varchar(65535))
 language java
 no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.SetAppVarUdp.execute';
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeSet';
 
 -- Flushes modifications to a variable (or a context if var_id is null).
 -- Before flush, there is no guarantee that modifications have
@@ -422,7 +422,7 @@ create or replace procedure applib.flush_var(
     var_id varchar(128))
 language java
 no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.FlushAppVarUdp.execute';
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeFlush';
 
 -- Retrieves the current value of a variable.  var_id must not be null,
 -- and must reference a previously created variable.
@@ -436,7 +436,7 @@ returns varchar(65535)
 language java
 deterministic
 no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.GetAppVarUdf.execute';
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeGet';
 
 ----
 -- UDXs
