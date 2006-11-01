@@ -439,7 +439,7 @@ ${farrago.test.jvmargs}
         inheritAll="@{inheritAll}"
         fork="true"
         classpathref="@{classpathref}">
-        <jvmarg line="-Xmx128m"/>
+        <jvmarg line="-Xmx256m"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <sysproperty key="gtlf.dtd.use.remote" value="@{gtlf.dtd.use.remote}"/>
