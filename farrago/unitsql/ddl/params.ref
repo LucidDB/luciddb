@@ -39,8 +39,8 @@ Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesMax'
 0: jdbc:farrago:> alter system set "cachePagesInit" = -1;
 Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesMax'. (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail -- cachePagesMax is 1000
-0: jdbc:farrago:> alter system set "cachePagesInit" = 1001;
+0: jdbc:farrago:> -- should fail -- cachePagesMax is 1000 or perhaps larger, but probably less than 100000
+0: jdbc:farrago:> alter system set "cachePagesInit" = 100001;
 Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesMax'. (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail
