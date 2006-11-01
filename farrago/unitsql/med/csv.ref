@@ -91,4 +91,38 @@ Error: Value required for property TABLE_NAME (state=,code=0)
 . . . . . . . . > options (table_name 'example', schema_name 'grub');
 Error: Values ('TESTDATA', 'grub') for property SCHEMA_NAME do not match (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test an extended option
+0: jdbc:farrago:> create server csv_server_with_extended_option
+. . . . . . . . > foreign data wrapper sys_jdbc
+. . . . . . . . > options(
+. . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver',
+. . . . . . . . >     url 'jdbc:relique:csv:unitsql/med',
+. . . . . . . . >     extended_options 'TRUE',
+. . . . . . . . >     schema_name 'TESTDATA',
+. . . . . . . . >     "suppressHeaders" 'true');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(*) from csv_server_with_extended_option.testdata."example";
++---------+
+| EXPR$0  |
++---------+
+| 7       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that without extended_option enabled, extra properties are
+0: jdbc:farrago:> -- not passed through
+0: jdbc:farrago:> create server csv_server_without_extended_option
+. . . . . . . . > foreign data wrapper sys_jdbc
+. . . . . . . . > options(
+. . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver',
+. . . . . . . . >     url 'jdbc:relique:csv:unitsql/med',
+. . . . . . . . >     schema_name 'TESTDATA',
+. . . . . . . . >     "suppressHeaders" 'true');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(*) from csv_server_without_extended_option.testdata."example";
++---------+
+| EXPR$0  |
++---------+
+| 6       |
++---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

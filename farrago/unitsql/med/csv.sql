@@ -65,3 +65,27 @@ create foreign table csv_schema.explicit_example(
     extra_field char(1) not null)
 server csv_server
 options (table_name 'example', schema_name 'grub');
+
+-- test an extended option
+create server csv_server_with_extended_option
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.relique.jdbc.csv.CsvDriver',
+    url 'jdbc:relique:csv:unitsql/med',
+    extended_options 'TRUE',
+    schema_name 'TESTDATA',
+    "suppressHeaders" 'true');
+
+select count(*) from csv_server_with_extended_option.testdata."example";
+
+-- verify that without extended_option enabled, extra properties are
+-- not passed through
+create server csv_server_without_extended_option
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.relique.jdbc.csv.CsvDriver',
+    url 'jdbc:relique:csv:unitsql/med',
+    schema_name 'TESTDATA',
+    "suppressHeaders" 'true');
+
+select count(*) from csv_server_without_extended_option.testdata."example";
