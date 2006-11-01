@@ -189,7 +189,9 @@ public class MedJdbcForeignDataWrapper
         if (driverClassName != null) {
             loadDriverClass(driverClassName);
         }
-        MedJdbcDataServer server = new MedJdbcDataServer(serverMofId, props);
+        Properties chainedProps = new Properties(getProperties());
+        chainedProps.putAll(props);
+        MedJdbcDataServer server = new MedJdbcDataServer(serverMofId, chainedProps);
         boolean success = false;
         try {
             server.initialize();
