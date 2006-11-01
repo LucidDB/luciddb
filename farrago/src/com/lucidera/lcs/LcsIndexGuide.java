@@ -800,7 +800,8 @@ public class LcsIndexGuide
             newSplicer(
                 rel,
                 index,
-                implementor.translateParamId(dynParamId).intValue());
+                implementor.translateParamId(dynParamId).intValue(),
+                false);
 
         // link them up
         implementor.addDataFlowFromProducerToConsumer(generator, sorter);
@@ -887,7 +888,8 @@ public class LcsIndexGuide
     protected FemLbmSplicerStreamDef newSplicer(
         FennelRel rel,
         FemLocalIndex index,
-        int dynParamId)
+        int dynParamId,
+        boolean ignoreDuplicates)
     {
         FemLbmSplicerStreamDef splicer = repos.newFemLbmSplicerStreamDef();
 
@@ -899,6 +901,7 @@ public class LcsIndexGuide
         defineIndexStream(splicer, rel, index, false);
 
         splicer.setRowCountParamId(dynParamId);
+        splicer.setIgnoreDuplicates(ignoreDuplicates);
 
         return splicer;
     }

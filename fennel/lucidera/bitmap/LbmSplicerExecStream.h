@@ -37,6 +37,8 @@ struct LbmSplicerExecStreamParams :
     public BTreeExecStreamParams, public ConduitExecStreamParams
 {
     DynamicParamId dynParamId;
+
+    bool ignoreDuplicates;
 };
 
 class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
@@ -45,6 +47,12 @@ class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
      * Parameter id of dynamic parameter containing final row count
      */
     DynamicParamId dynParamId;
+    
+    /**
+     * If true, ignore inputs containing rid values that are duplicates.  Only
+     * works when the inputs are singletons.
+     */
+    bool ignoreDuplicates;
 
     /**
      * Maximum size of an LbmEntry

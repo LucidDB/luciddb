@@ -229,6 +229,32 @@
 | 140    | BARNEY  | 40      | M       | San Mateo                       | 41   | 41000.00   |
 | 150    | BETTY   | 50      | F       | San Francisco                   | 40   | 40000.00   |
 +--------+---------+---------+---------+---------------------------------+------+------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- LER-2614 -- issue the same merge again, except modify the update values
+0: jdbc:farrago:> -- so the update is not a no-op
+0: jdbc:farrago:> merge into emps
+. . . . . . . . >     using (select * from tempemps where t_empno = 130) on t_empno = empno
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set deptno = t_deptno, city = t_city, age = t_age,
+. . . . . . . . >             gender = lower(t_gender)
+. . . . . . . . >     when not matched then
+. . . . . . . . >         insert (empno, name, age, gender, salary, city)
+. . . . . . . . >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
+0: jdbc:farrago:> select * from emps order by empno, name;
++--------+---------+---------+---------+---------------------------------+------+------------+
+| EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++--------+---------+---------+---------+---------------------------------+------+------------+
+| 100    | fred    | 11      |         | SAN MATEO                       | 25   | 70312.50   |
+| 110    | eric    | 21      | M       | SAN FRANCISCO                   | 80   | 225000.00  |
+| 120    | wilma   | 21      | F       | SAN MATEO                       | 50   | 140625.00  |
+| 130    | john    | 41      | m       | Vancouver                       |      |            |
+| 130    | john    | 41      | m       | Vancouver                       |      |            |
+| 130    | john    | 41      | m       | Vancouver                       |      |            |
+| 130    | john    | 41      | m       | Vancouver                       |      |            |
+| 140    | BARNEY  | 40      | M       | San Mateo                       | 41   | 41000.00   |
+| 150    | BETTY   | 50      | F       | San Francisco                   | 40   | 40000.00   |
++--------+---------+---------+---------+---------------------------------+------+------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> delete from tempemps where t_name = 'JohnClone';
 0: jdbc:farrago:>                 
 0: jdbc:farrago:> -- no insert substatement
@@ -256,8 +282,10 @@
 | 100    | Fred    | 11      |         | San Mateo                       | 25   | 70312.50   |
 | 110    | Eric    | 21      | M       | San Francisco                   | 80   | 225000.00  |
 | 120    | Wilma   | 21      | F       | San Mateo                       | 50   | 140625.00  |
-| 130    | John    | 41      | M       | Vancouver                       |      |            |
-| 130    | John    | 41      | M       | Vancouver                       |      |            |
+| 130    | John    | 41      | m       | Vancouver                       |      |            |
+| 130    | John    | 41      | m       | Vancouver                       |      |            |
+| 130    | John    | 41      | m       | Vancouver                       |      |            |
+| 130    | John    | 41      | m       | Vancouver                       |      |            |
 | 140    | Barney  | 40      | M       | San Mateo                       | 41   | 41000.00   |
 | 150    | Betty   | 50      | F       | San Francisco                   | 40   | 40000.00   |
 +--------+---------+---------+---------+---------------------------------+------+------------+
@@ -274,8 +302,10 @@
 | 100    | Fred     | 11      |         | San Mateo                       | 25   | 70312.50   |
 | 110    | Eric     | 21      | M       | San Francisco                   | 80   | 225000.00  |
 | 120    | Wilma    | 21      | F       | San Mateo                       | 50   | 140625.00  |
-| 130    | John     | 41      | M       | Vancouver                       |      |            |
-| 130    | John     | 41      | M       | Vancouver                       |      |            |
+| 130    | John     | 41      | m       | Vancouver                       |      |            |
+| 130    | John     | 41      | m       | Vancouver                       |      |            |
+| 130    | John     | 41      | m       | Vancouver                       |      |            |
+| 130    | John     | 41      | m       | Vancouver                       |      |            |
 | 140    | Barney   | 40      | M       | San Mateo                       | 41   | 41000.00   |
 | 150    | Betty    | 50      | F       | San Francisco                   | 40   | 40000.00   |
 | 160    | Pebbles  | 60      | F       | Foster City                     | 2    | 0.00       |
@@ -317,12 +347,12 @@
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
 | EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
-| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
-| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
-| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
-| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
-| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
-| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
+| 40      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
+| 41      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
+| 42      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
+| 43      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
+| 44      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
+| 45      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> merge into emps e
 . . . . . . . . >     using tempemps t on t.t_empno = e.empno
@@ -337,13 +367,13 @@
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
 | EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
-| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
-| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
-| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
-| 40      | 130    | JOHN     |         | M       | Vancouver                       |      |            |
-| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
-| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
-| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
+| 40      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
+| 41      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
+| 42      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
+| 46      | 130    | JOHN     |         | M       | Vancouver                       |      |            |
+| 43      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
+| 44      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
+| 45      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> merge into emps e1
@@ -354,13 +384,13 @@
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
 | EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
-| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
-| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
-| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
-| 40      | 130    | JOHN     |         | M       | Vancouver                       |      |            |
-| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
-| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
-| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
+| 40      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
+| 41      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
+| 42      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
+| 46      | 130    | JOHN     |         | M       | Vancouver                       |      |            |
+| 43      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
+| 44      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
+| 45      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- make sure that when the original value is null, the update does occur
@@ -377,13 +407,13 @@
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
 | EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
-| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
-| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
-| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
-| 41      | 130    | JOHN     |         | M       | Vancouver                       |      | 10000.00   |
-| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
-| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
-| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
+| 40      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
+| 41      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
+| 42      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
+| 47      | 130    | JOHN     |         | M       | Vancouver                       |      | 10000.00   |
+| 43      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
+| 44      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
+| 45      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- make sure that when the new value is null, the update occurs
@@ -400,13 +430,13 @@
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
 | EXPR$0  | EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
-| 34      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
-| 35      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
-| 36      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
-| 42      | 130    | JOHN     |         | M       | Vancouver                       |      |            |
-| 37      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
-| 38      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
-| 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
+| 40      | 100    | Fred     | 11      |         | San Mateo                       | 26   | 70312.50   |
+| 41      | 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000.00  |
+| 42      | 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140625.00  |
+| 48      | 130    | JOHN     |         | M       | Vancouver                       |      |            |
+| 43      | 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000.00   |
+| 44      | 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000.00   |
+| 45      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0.00       |
 +---------+--------+----------+---------+---------+---------------------------------+------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- make sure that when the new value is the same as the old one

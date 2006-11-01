@@ -2012,6 +2012,78 @@ uint LbmEntry::getMaxBitmapSize(uint bitmapColSize)
     return bitmapColSize - (bitmapColSize / LbmMaxSegSize);
 }
 
+bool LbmEntry::containsRid(LcsRid rid)
+{
+    LcsRid startRid = startRID;
+
+    if (isSingleton()) {
+        return (startRid == rid);
+    } else {
+        PBuffer pSegDesc = pSegDescStart;
+        PBuffer pSeg = pSegStart;
+        if (pSegDesc) {
+            // loop through each segment
+            while (pSegDesc < pSegDescEnd) {
+                uint nSegBytes;
+                uint nZeroBytes;
+
+                readSegDescAndAdvance(pSegDesc, nSegBytes, nZeroBytes);
+                int rc = segmentContainsRid(rid, startRid, pSeg, nSegBytes);
+                if (rc == 0) {
+                    return true;
+                } else if (rc < 0) {
+                    return false;
+                } else {
+                    // rid wasn't within the current segment range so
+                    // move to the next segment
+                    startRid += (nSegBytes + nZeroBytes) * LbmOneByteSize;
+                    pSeg -= nSegBytes;
+                    // if the rid is in the range of the zeroBytes, then it's
+                    // not contained in the entry
+                    if (rid < startRid) {
+                        return false;
+                    }
+                }
+            }
+            return false;
+        } else {
+            // single bitmap -- just check the one segment
+            int rc =
+                segmentContainsRid(
+                    rid,
+                    startRid,
+                    pSegStart,
+                    pSegStart - pSegEnd);
+            if (rc == 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+}
+
+int LbmEntry::segmentContainsRid(
+    LcsRid rid,
+    LcsRid startRid,
+    PBuffer pSeg,   
+    uint nSegBytes)
+{
+    if (rid >= startRid && rid < startRid + (nSegBytes * LbmOneByteSize)) {
+        // rid is within the current segment; check the
+        // appropriate byte
+        uint byteNum = (opaqueToInt(rid - startRid) / LbmOneByteSize) + 1;
+        uint8_t setRid = 1 << (opaqueToInt(rid) % LbmOneByteSize);
+        if (pSeg[-byteNum] & setRid) {
+            return 0;
+        } else {
+            return -1;
+        }
+    } else {
+        return 1;
+    }
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End LbmEntry.cpp

@@ -113,6 +113,19 @@ merge into emps
         insert (empno, name, age, gender, salary, city)
         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 select * from emps order by empno, name;
+
+-- LER-2614 -- issue the same merge again, except modify the update values
+-- so the update is not a no-op
+merge into emps
+    using (select * from tempemps where t_empno = 130) on t_empno = empno
+    when matched then
+        update set deptno = t_deptno, city = t_city, age = t_age,
+            gender = lower(t_gender)
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
+select * from emps order by empno, name;
+
 delete from tempemps where t_name = 'JohnClone';
                 
 -- no insert substatement

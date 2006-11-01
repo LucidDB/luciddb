@@ -254,7 +254,15 @@ public class LcsTableMergeRel
             implementor.addDataFlowFromProducerToConsumer(
                 deleteReshape,
                 sortingStream);
-            deleter = indexGuide.newSplicer(this, deletionIndex, 0);
+            // setup a splicer that ignores duplicate rid entries; this is
+            // needed because we currently do not enforce (via uniqueness
+            // constraints) the ANSI SQL requirement that there be only
+            // one source row for every target row; since this constraint
+            // is not enforced, it's possible for duplicate target rid
+            // values to be generated; therefore, we want splicer to ignore
+            // these duplicates when inserting rid values into the deletion
+            // index
+            deleter = indexGuide.newSplicer(this, deletionIndex, 0, true);
             implementor.addDataFlowFromProducerToConsumer(
                 sortingStream,
                 deleter);
