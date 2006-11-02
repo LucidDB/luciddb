@@ -81,7 +81,7 @@ select "name", "fennelDisabled", "userCatalogEnabled",
 select "databaseInitSize", "databaseIncrementSize", "databaseMaxSize",
        "tempInitSize", "tempIncrementSize", "tempMaxSize",
        "databaseShadowLogInitSize", "databaseTxnLogInitSize",
-       "cachePagesMax", "cachePagesInit", "cachePageSize"
+       "cachePagesMax" - "cachePagesInit"
     from sys_fem."Config"."FennelConfig";
 
 -- verify unique lineage ID assignment
