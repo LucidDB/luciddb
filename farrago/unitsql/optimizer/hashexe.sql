@@ -574,7 +574,7 @@ select max(ename) from lhxemps group by deptno order by 1;
 
 -- testing run time error message for row length
 drop table lhxemps;
-create table lhxemps(empno char(2000), ename char(2000));
+create table lhxemps(empno char(32000), ename char(32000));
 
 insert into lhxemps values('abc', 'abc');
 
