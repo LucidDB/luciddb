@@ -48,7 +48,6 @@ public class MedJdbcForeignDataWrapper
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String PROP_DRIVER_CLASS_NAME = "DRIVER_CLASS";
-    public static final String PROP_SUBSTITUTE_MAPPING = "SUBSTITUTE_MAPPING";
 
     //~ Constructors -----------------------------------------------------------
 

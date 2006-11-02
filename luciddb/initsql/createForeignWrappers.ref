@@ -6,7 +6,7 @@
 . . . . . . . . >   browse_connect_description 'Oracle Database Connection',
 . . . . . . . . >   driver_class 'oracle.jdbc.driver.OracleDriver',
 . . . . . . . . >   url 'jdbc:oracle:thin:@machineName:port:SID',
-. . . . . . . . >   substitute_mapping 'DATE:TIMESTAMP'
+. . . . . . . . >   type_mapping 'DATE:TIMESTAMP;DECIMAL(22,0):DOUBLE'
 . . . . . . . . > );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create sql server jdbc wrapper with browse_connect

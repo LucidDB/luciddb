@@ -59,7 +59,7 @@ class MedJdbcNameDirectory
 
     final boolean shouldSubstituteTypes;
 
-    final Properties substituteMapping;
+    final Properties typeMapping;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -77,15 +77,15 @@ class MedJdbcNameDirectory
                 server.getProperties(),
                 MedJdbcDataServer.PROP_TYPE_SUBSTITUTION,
                 true);
-        this.substituteMapping = new Properties();
+        this.typeMapping = new Properties();
         String mappingsString =
             server.getProperties().getProperty(
-                MedJdbcDataServer.PROP_SUBSTITUTE_MAPPING, "");
-        String[] mappingsArray = mappingsString.split(",");
+                MedJdbcDataServer.PROP_TYPE_MAPPING, "");
+        String[] mappingsArray = mappingsString.split(";");
         for (int i = 0; i < mappingsArray.length; i++) {
-            addSubstituteMapping(mappingsArray[i]);
+            addTypeMapping(mappingsArray[i]);
         }
-        
+
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -179,7 +179,7 @@ class MedJdbcNameDirectory
                     typeFactory.createResultSetType(
                         md,
                         shouldSubstituteTypes,
-                        substituteMapping);
+                        typeMapping);
             } finally {
                 if (rs != null) {
                     rs.close();
@@ -478,7 +478,7 @@ class MedJdbcNameDirectory
                     sink.getTypeFactory().createJdbcColumnType(
                         resultSet,
                         shouldSubstituteTypes,
-                        substituteMapping);
+                        typeMapping);
                 String remarks = resultSet.getString(12);
                 String defaultValue = resultSet.getString(13);
                 int ordinalZeroBased = resultSet.getInt(17) - 1;
@@ -531,25 +531,23 @@ class MedJdbcNameDirectory
         return s1.equals(s2);
     }
 
-    private void addSubstituteMapping(String s) 
+    private void addTypeMapping(String s)
     {
         String[] map = s.split(":");
         if (map.length != 2) {
             return;
         }
 
-        String key = map[0].trim().toUpperCase();
-        String value = map[1].trim().toUpperCase();
+        // store in Properties as DATATYPE(P,S);
+        // ie. all upper-case and lose whitespace
+        String key = map[0].trim().toUpperCase().replaceAll("\\s","");
+        String value = map[1].trim().toUpperCase().replaceAll("\\s","");;
 
-        SqlTypeName origType = SqlTypeName.get(key);
-        SqlTypeName newType = SqlTypeName.get(value);
-
-        if (origType != null && newType != null) {
-            this.substituteMapping.setProperty(
-                origType.toString(), newType.toString());
+        if (!key.equals("") && !value.equals("")) {
+            this.typeMapping.setProperty(key, value);
         }
     }
-    
+
 }
 
 // End MedJdbcNameDirectory.java

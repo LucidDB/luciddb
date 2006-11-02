@@ -12,15 +12,14 @@ options(
 );
 
 -- no substitution
-select * from ORCL_SERVER_NO_SUB.@SCHEMA@.@DATATYPE_TABLE@;
-
+select * from ORCL_SERVER_NO_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
 
 -- wrapper substitution
 create foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
 library '@DATA_LIBRARY@'
 language java
 options(
-    substitute_mapping 'DATE:TIMESTAMP'
+    type_mapping 'DATE:TIMESTAMP'
 );
 
 create server ORCL_SERVER_WITH_SUB
@@ -34,7 +33,7 @@ options(
 
 
 -- with wrapper substitution only
-select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@;
+select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
 
 create or replace server ORCL_SERVER_WITH_SUB
 foreign data wrapper ORACLE_WRAPPER_WITH_DATE_SUB
@@ -43,11 +42,11 @@ options(
     user_name '@USERNAME@',
     password '@PASSWORD@',
     driver_class '@DRIVER_CLASS@',
-    substitute_mapping 'TIMESTAMP:DATE'
+    type_mapping 'TIMESTAMP:DATE'
 );
 
 -- with overridden server substitution
-select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@;
+select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
 
 create or replace server ORCL_SERVER_WITH_SUB
 foreign data wrapper ORACLE_WRAPPER
@@ -56,8 +55,75 @@ options(
     user_name '@USERNAME@',
     password '@PASSWORD@',
     driver_class '@DRIVER_CLASS@',
-    substitute_mapping 'DATE:TIMESTAMP,TIMESTAMP:DATE'
+    type_mapping 'DATE:TIMESTAMP;TIMESTAMP:DATE'
 );
 
 -- with more than one substitution
-select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@;
+select * from ORCL_SERVER_WITH_SUB.@SCHEMA@.@DATATYPE_TABLE@ order by NUMERICCOL2WITHP,CLOBCOL;
+
+-- using precision/scale, scale does not match
+create or replace server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_mapping 'DATE:TIMESTAMP;DECIMAL(22,3):DOUBLE'
+);
+
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like 'DATATYPES' from server ORCL_SERVER_WITH_SUB into test;
+
+select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like 'DATATYPES' order by ORDINAL_POSITION;
+
+-- using precision/scale, scale matches
+create or replace server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_mapping 'DATE:TIMESTAMP;DECIMAL(30,3):DOUBLE'
+);
+
+drop schema test cascade;
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like 'DATATYPES' from server ORCL_SERVER_WITH_SUB into test;
+
+select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like 'DATATYPES' order by ORDINAL_POSITION;
+
+-- using precision/scale, with no scale
+create or replace server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_mapping 'DATE:TIMESTAMP;DECIMAL(22):DOUBLE'
+);
+
+drop schema test cascade;
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like 'DATATYPES' from server ORCL_SERVER_WITH_SUB into test;
+
+select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like 'DATATYPES' order by ORDINAL_POSITION;
+
+-- without specifying precision/scale
+create or replace server ORCL_SERVER_WITH_SUB
+foreign data wrapper ORACLE_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    type_mapping 'DATE:TIMESTAMP;DECIMAL:DOUBLE'
+);
+
+drop schema test cascade;
+create schema test;
+import foreign schema @SCHEMA@ LIMIT TO table_name like 'DATATYPES' from server ORCL_SERVER_WITH_SUB into test;
+
+select "CATALOG_NAME","SCHEMA_NAME","TABLE_NAME","COLUMN_NAME","ORDINAL_POSITION","DATATYPE","PRECISION","DEC_DIGITS","IS_NULLABLE" from sys_root.dba_columns where TABLE_NAME like 'DATATYPES' order by ORDINAL_POSITION;

@@ -116,14 +116,14 @@ public interface FarragoTypeFactory
      * @param metaData metadata for JDBC ResultSet
      * @param substitute if true, use substitutions; if false, throw exception
      * for unsupported types or type attributes
-     * @param substituteMapping types to substitute
+     * @param typeMapping types to substitute
      *
      * @return generated type
      */
     public RelDataType createResultSetType(
         ResultSetMetaData metaData,
         boolean substitute,
-        Properties substituteMapping);
+        Properties typeMapping);
 
     /**
      * Creates a type which represents column metadata returned by the {@link
@@ -150,14 +150,14 @@ public interface FarragoTypeFactory
      * from the getColumns call; result set position is unchanged by this method
      * @param substitute if true, use substitutions; if false, throw exception
      * for unsupported types or type attributes
-     * @param substituteMapping types to substitute
+     * @param typeMapping types to substitute
      *
      * @return generated type
      */
     public RelDataType createJdbcColumnType(
         ResultSet getColumnsResultSet,
         boolean substitute,
-        Properties substituteMapping);
+        Properties typeMapping);
 
     /**
      * Creates a type which represents a MOF feature.
