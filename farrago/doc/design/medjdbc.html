@@ -124,24 +124,22 @@ driver as properties; otherwise, they are ignored.  The default is 'FALSE'.
 <td>
 If set to 'TRUE' (the default), datatypes which are not supported
 by Farrago are replaced with the best available substitute.  If set to
-'FALSE', unsupported datatypes result in errors.  If TYPE_MAPPING is
-set for the unsupported datatype in question, that will override 
-the substitute set here.
+'FALSE', unsupported datatypes result in errors.  Note that any 
+TYPE_MAPPING specified is executed before TYPE_SUBSTITUTION is run.
 </td>
 </tr>
 <tr>
 <td>TYPE_MAPPING</td>
 <td>
-Semicolon-separated list of 'orig_datatype:subst_datatype'.  If set, 
-Farrago will replace each of the orig_datatype with the corresponding 
-subst_datatype.  Precision and/or precision and scale are optional for either 
-orig_datatype or subst_datatype (specified as datatype(precision) and
-datatype(precision,scale) respectively), and may be used to limit matching
-datatypes.  If the 'orig_datatype' is not a supported Farrago datatype, 
-TYPE_MAPPING must be set to 'TRUE' to not result in errors. However, 
-TYPE_MAPPING's subst_datatype will override the substitute datatype 
-from TYPE_SUBSTITUTION.  If the corresponding 'subst_datatype' is not a 
-supported Farrago datatype, the mapping is ignored.
+Semicolon-separated list of 'orig_datatype:subst_datatype'.  If set,
+Farrago will replace each of the orig_datatype with the corresponding
+subst_datatype.  Datatype(precision) or datatype(precision, scale) 
+can be set on either orig_datatype or subst_datatype.  On orig_datatype,
+precision and scale are used to more precisely limit the matching datatype.
+If precision and scale are not specified on subst_datatype, the original
+precision and scale are kept.  If the 'subst_datatype' is not a supported 
+Farrago datatype, the mapping is ignored.  Note that TYPE_MAPPING is run 
+before TYPE_SUBSTITUTION and does not depend on TYPE_SUBSTITUTION.
 </td>
 </tr>
 </table>
