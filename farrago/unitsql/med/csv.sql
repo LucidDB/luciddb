@@ -30,6 +30,11 @@ from
     csv_schema.explicit_example 
 order by 3;
 
+-- verify that we can buffer cartesian product inputs instead
+-- of trying to restart them
+select count(*) 
+from csv_schema.explicit_example e1, csv_schema.explicit_example e2;
+
 -- should fail:  required metadata support not available
 import foreign schema testdata
 from server csv_server

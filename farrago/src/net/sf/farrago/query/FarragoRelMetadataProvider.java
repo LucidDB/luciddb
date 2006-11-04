@@ -159,6 +159,20 @@ public class FarragoRelMetadataProvider
     {
         return columnMd.getDistinctRowCount(rel, groupKey, predicate);
     }
+
+    public Boolean canRestart(RelNode rel)
+    {
+        // TODO jvs 4-Nov-2006:  Override this to ignore children
+        // and return true in cases where we know buffering
+        // is already being done.
+        
+        for (RelNode child : rel.getInputs()) {
+            if (!FarragoRelMetadataQuery.canRestart(child)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 // End FarragoRelMetadataProvider.java

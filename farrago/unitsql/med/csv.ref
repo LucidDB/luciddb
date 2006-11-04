@@ -50,6 +50,16 @@
 | 235        | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
 +------------+------------------------------------------+--------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that we can buffer cartesian product inputs instead
+0: jdbc:farrago:> -- of trying to restart them
+0: jdbc:farrago:> select count(*) 
+. . . . . . . . > from csv_schema.explicit_example e1, csv_schema.explicit_example e2;
++---------+
+| EXPR$0  |
++---------+
+| 36      |
++---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  required metadata support not available
 0: jdbc:farrago:> import foreign schema testdata
 . . . . . . . . > from server csv_server

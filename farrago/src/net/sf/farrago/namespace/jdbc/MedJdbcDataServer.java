@@ -36,6 +36,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
@@ -236,6 +237,12 @@ class MedJdbcDataServer
                 stmtAlloc.closeAllocation();
             }
         }
+    }
+    
+    // implement FarragoMedDataServer
+    public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
+    {
+        chain.addProvider(new MedJdbcMetadataProvider());
     }
 
     // implement FarragoMedDataServer
