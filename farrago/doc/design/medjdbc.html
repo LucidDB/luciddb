@@ -48,6 +48,16 @@ distribution, a corresponding foreign data wrapper instance named
 <code>SYS_JDBC</code> is predefined by Farrago's initialization
 scripts.  Normally, there is no need to define additional instances.
 
+<p>
+
+However, it may be useful to define additional wrapper instances
+corresponding to specific DBMS types.  For the JDBC plugin, all
+SQL/MED options declared on the wrapper are propagated to the server,
+allowing common option settings to be factored out of individual
+server definitions.  (Note that this is not necessarily true for other
+plugins.)  Option settings on a server always take precedence over
+settings inherited from a wrapper.
+
 <h2>JDBC Foreign Server Definition</h2>
 
 In order to access a particular JDBC data source, a corresponding
@@ -62,7 +72,12 @@ can be specified:
 </tr>
 <tr>
 <td>DRIVER_CLASS</td>
-<td>Fully qualified name of the JDBC driver class to load</td>
+<td>Fully qualified name of the JDBC driver class to load; this must be 
+available on the classpath.  Currently this requires either changing
+the classpath used to invoke Farrago, or rolling the JDBC driver classes
+into a new plugin jar combined with the default Farrago plugin contents.
+(We plan to eventually support the SQL:2003 jar dependencies feature
+to eliminate this repackaging burden.)</td>
 </tr>
 <tr>
 <td>URL</td>
@@ -131,14 +146,17 @@ TYPE_MAPPING specified is executed before TYPE_SUBSTITUTION is run.
 <tr>
 <td>TYPE_MAPPING</td>
 <td>
-Semicolon-separated list of 'orig_datatype:subst_datatype'.  If set,
-Farrago will replace each of the orig_datatype with the corresponding
-subst_datatype.  Datatype(precision) or datatype(precision, scale) 
-can be set on either orig_datatype or subst_datatype.  On orig_datatype,
-precision and scale are used to more precisely limit the matching datatype.
-If precision and scale are not specified on subst_datatype, the original
-precision and scale are kept.  If the 'subst_datatype' is not a supported 
-Farrago datatype, the mapping is ignored.  Note that TYPE_MAPPING is run 
+Semicolon-separated list of orig_datatype:subst_datatype pairs.  If
+set, Farrago will replace the type of foreign columns matching
+orig_datatype with the corresponding subst_datatype.  The format for
+both datatype strings is DATATYPE_NAME[(PRECISION[,SCALE])] with no
+spaces allowed.  On orig_datatype, precision and scale (if specified)
+are used to more precisely limit the matching datatype.  In other
+words, "DECIMAL" will match any decimal type, but "DECIMAL(10,2)" will
+only match that specific precision and scale.  If precision and scale
+are not specified on subst_datatype, the original precision and scale
+are kept.  If the 'subst_datatype' is not a supported Farrago
+datatype, the mapping is ignored.  Note that TYPE_MAPPING is run
 before TYPE_SUBSTITUTION and does not depend on TYPE_SUBSTITUTION.
 </td>
 </tr>
@@ -154,8 +172,15 @@ options(
     driver_class 'oracle.jdbc.driver.OracleDriver',
     url 'jdbc:oracle:thin:@localhost:1521:ora1',
     user_name 'scott',
-    password 'tiger');
+    password 'tiger',
+    type_mapping 'DATE:TIMESTAMP;DECIMAL(22,0):DOUBLE');
 </code></pre>
+
+(The Oracle JDBC driver incorrectly exposes datetime types without
+nanoseconds as DATE, and exposes floating-point numerics as DECIMAL(22,0),
+so the mappings above are usually required.)
+
+<p>
 
 The following JDBC API calls are made in order to validate a foreign server
 definition:
