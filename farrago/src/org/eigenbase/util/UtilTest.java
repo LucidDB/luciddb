@@ -59,7 +59,6 @@ public class UtilTest
     {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(UtilTest.class);
-        suite.addTestSuite(BinaryHeap.BinaryHeapTestCase.class);
         return suite;
     }
 
