@@ -103,6 +103,11 @@ public class LoptSemiJoinOptimizer
     {
         possibleSemiJoins = new HashMap<Integer, Map<Integer, SemiJoinRel>>();
 
+        // semijoins can't be used with any type of outer join, including full
+        if (multiJoin.getMultiJoinRel().isFullOuterJoin()) {
+            return;
+        }
+
         int nJoinFactors = multiJoin.getNumJoinFactors();
         for (int factIdx = 0; factIdx < nJoinFactors; factIdx++) {
             Map<Integer, List<RexNode>> dimFilters =
@@ -133,10 +138,11 @@ public class LoptSemiJoinOptimizer
                 if (dimIdx == -1) {
                     continue;
                 }
-                // if the dimension is null generating, we cannot use it
-                // to filter a fact table because we need to preserve
-                // non-matching rows from that fact table
-                if (multiJoin.isNullGenerating(dimIdx)) {
+                // if either the fact or dimension table is null generating,
+                // we cannot use semijoins
+                if (multiJoin.isNullGenerating(factIdx) ||
+                    multiJoin.isNullGenerating(dimIdx))
+                {
                     continue;
                 }
 

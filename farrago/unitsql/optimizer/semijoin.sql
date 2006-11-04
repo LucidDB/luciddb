@@ -90,6 +90,14 @@ explain plan for
 select *
 from t left outer join smalltable s
 on t.b = s.s3 and s.s1 = 'this is row 1';
+explain plan for
+select *
+from t right outer join smalltable s
+on t.b = s.s3 and s.s1 = 'this is row 1';
+explain plan for
+select *
+from t full outer join smalltable s
+on t.b = s.s3 and s.s1 = 'this is row 1';
 
 -- this outer join uses HashJoin since join types match
 explain plan for

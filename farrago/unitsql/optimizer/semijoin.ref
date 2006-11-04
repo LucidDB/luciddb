@@ -150,6 +150,30 @@
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]], residual columns=[[0]])'
 '          FennelValuesRel(tuples=[[{ _ISO-8859-1'[', _ISO-8859-1'this is row 1', _ISO-8859-1']', _ISO-8859-1'this is row 1' }]])'
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select *
+. . . . . . . . > from t right outer join smalltable s
+. . . . . . . . > on t.b = s.s3 and s.s1 = 'this is row 1';
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[6, 7, 8, 9, 0, 1, 2, 3]], outputRowType=[RecordType(INTEGER A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[4, 5]], rightKeys=[[4, 5]], joinType=[LEFT])'
+'      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=[_ISO-8859-1'this is row 1'], expr#6=[=($t0, $t5)], proj#0..4=[{exprs}], =($0, _ISO-8859-1'this is row 1')=[$t6])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+'      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=[true], proj#0..5=[{exprs}])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$A, SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select *
+. . . . . . . . > from t full outer join smalltable s
+. . . . . . . . > on t.b = s.s3 and s.s1 = 'this is row 1';
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[6, 7, 8, 9, 0, 1, 2, 3]], outputRowType=[RecordType(INTEGER A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" S4) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[4, 5]], rightKeys=[[4, 5]], joinType=[FULL])'
+'      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=[_ISO-8859-1'this is row 1'], expr#6=[=($t0, $t5)], proj#0..4=[{exprs}], =($0, _ISO-8859-1'this is row 1')=[$t6])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
+'      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=[true], proj#0..5=[{exprs}])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$A, SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- this outer join uses HashJoin since join types match
 0: jdbc:farrago:> explain plan for
