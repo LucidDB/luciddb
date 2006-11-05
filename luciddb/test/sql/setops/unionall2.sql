@@ -1,5 +1,7 @@
 set schema 'stkmkt';
 
+-- set numberFormat since floating point differs based on VM
+!set numberFormat 0.0000
 
 -- find the total commission paid by each customer for the whole year
 select t1.account account, t2.acct_name account_name, sum(commission) 
@@ -158,3 +160,5 @@ group by t1.account, t2.acct_name
 group by account, account_name
 order by account, account_name
 ;
+
+!set numberFormat default

@@ -200,6 +200,12 @@ public class FennelCartesianJoinRule
         if (nRowsLeft == null) {
             return bufRel;
         }
+
+        // If we know that the RHS is not capable of restart, then
+        // force buffering.
+        if (!FarragoRelMetadataQuery.canRestart(right)) {
+            return bufRel;
+        }
         
         // Cost without buffering is:
         // getCumulativeCost(LHS) +

@@ -1056,8 +1056,9 @@ public abstract class RelOptUtil
                 }
             }
 
-            // all other case, try tranforming the condition transform to
-            // equality "join" conditions f(LHS) > 0 ===> ( f(LHS) > 0 ) = TRUE,
+            // all other cases: try tranforming the condition to 
+            // equality "join" conditions, e.g.
+            //     f(LHS) > 0 ===> ( f(LHS) > 0 ) = TRUE,
             // and make the RHS produce TRUE
             BitSet projRefs = new BitSet(totalFieldCount);
             RelOptUtil.InputFinder inputFinder =
@@ -2195,6 +2196,9 @@ public abstract class RelOptUtil
         protected final RexBuilder rexBuilder;
         private final RelDataTypeField [] srcFields;
         protected final RelDataTypeField [] destFields;
+        private final RelDataTypeField [] leftDestFields;
+        private final RelDataTypeField [] rightDestFields;
+        private final int nLeftDestFields;
         private final int [] adjustments;
 
         /**
@@ -2203,20 +2207,59 @@ public abstract class RelOptUtil
          * from; if null, a new RexInputRef is always created, referencing
          * the input from destFields corresponding to its current index value
          * @param destFields fields that the new RexInputRefs will be
-         * referencing; if null, the types of the srcFields are the same as the
-         * destFields
+         * referencing; if null, use the type information from the source field
+         * when creating the new RexInputRef
+         * @param leftDestFields in the case where the destination is a join,
+         * these are the fields from the left join input
+         * @param rightDestFields in the case where the destination is a join,
+         * these are the fields from the right join input
          * @param adjustments the amount to adjust each field by
          */
-        public RexInputConverter(
+        private RexInputConverter(
             RexBuilder rexBuilder,
             RelDataTypeField [] srcFields,
             RelDataTypeField [] destFields,
+            RelDataTypeField [] leftDestFields,
+            RelDataTypeField [] rightDestFields,
             int [] adjustments)
         {
             this.rexBuilder = rexBuilder;
             this.srcFields = srcFields;
             this.destFields = destFields;
             this.adjustments = adjustments;
+            this.leftDestFields = leftDestFields;
+            this.rightDestFields = rightDestFields;
+            if (leftDestFields == null) {
+                nLeftDestFields = 0;
+            } else {
+                assert(destFields == null);
+                nLeftDestFields = leftDestFields.length;
+            }
+        }
+        
+        public RexInputConverter(
+            RexBuilder rexBuilder,
+            RelDataTypeField [] srcFields,
+            RelDataTypeField [] leftDestFields,
+            RelDataTypeField [] rightDestFields,
+            int [] adjustments)
+        {
+            this(
+                rexBuilder,
+                srcFields,
+                null,
+                leftDestFields,
+                rightDestFields,
+                adjustments);
+        }
+        
+        public RexInputConverter(
+            RexBuilder rexBuilder,
+            RelDataTypeField [] srcFields,
+            RelDataTypeField [] destFields,
+            int [] adjustments)
+        {
+            this(rexBuilder, srcFields, destFields, null, null, adjustments);
         }
 
         public RexInputConverter(
@@ -2224,11 +2267,8 @@ public abstract class RelOptUtil
             RelDataTypeField [] srcFields,
             int [] adjustments)
         {
-            this.rexBuilder = rexBuilder;
-            this.srcFields = srcFields;
-            this.destFields = null;
-            this.adjustments = adjustments;
-        }
+            this(rexBuilder, srcFields, null, null, null, adjustments);
+        }  
 
         public RexNode visitInputRef(RexInputRef var)
         {
@@ -2236,10 +2276,18 @@ public abstract class RelOptUtil
             int destIndex = srcIndex + adjustments[srcIndex];
 
             RelDataType type;
-            if (destFields == null) {
-                type = srcFields[srcIndex].getType();
-            } else {
+            if (destFields != null) {
                 type = destFields[destIndex].getType();
+            } else if (leftDestFields != null) {
+                if (destIndex < nLeftDestFields) {
+                    type = leftDestFields[destIndex].getType();
+                } else {
+                    type =
+                        rightDestFields[destIndex - nLeftDestFields].
+                            getType();
+                }
+            } else {
+                type = srcFields[srcIndex].getType();
             }
             if ((adjustments[srcIndex] != 0) || srcFields == null ||
                 (type != srcFields[srcIndex].getType()))

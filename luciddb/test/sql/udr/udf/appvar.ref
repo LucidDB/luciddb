@@ -51,7 +51,7 @@
 0: jdbc:luciddb:> values (applib.get_var('context1', 'var1'));
 Error: Could not calculate result column 1 for the following row:
 [0]
-Messages: Invocation of user-defined external Java method execute failed
+Messages: Invocation of user-defined external Java method executeGet failed
 Application variable persistence error while reading context 'context1', variable 'var1'
 Application variable 'var1' has not been created in context 'context1' (state=,code=0)
 0: jdbc:luciddb:> 
@@ -59,7 +59,7 @@ Application variable 'var1' has not been created in context 'context1' (state=,c
 0: jdbc:luciddb:> values (applib.get_var('context1', 'var0'));
 Error: Could not calculate result column 1 for the following row:
 [0]
-Messages: Invocation of user-defined external Java method execute failed
+Messages: Invocation of user-defined external Java method executeGet failed
 Application variable persistence error while reading context 'context1', variable 'var0'
 Application variable 'var0' has not been created in context 'context1' (state=,code=0)
 0: jdbc:luciddb:> 
@@ -67,7 +67,7 @@ Application variable 'var0' has not been created in context 'context1' (state=,c
 0: jdbc:luciddb:> call applib.create_var('context2', 'var2', 'uncomfortably implicit');
 Error: Could not calculate result column 1 for the following row:
 [0]
-Messages: Invocation of user-defined external Java method execute failed
+Messages: Invocation of user-defined external Java method executeCreate failed
 Application variable persistence error while writing context 'context2', variable 'var2'
 Application variable context 'context2' has not been created (state=,code=0)
 0: jdbc:luciddb:> 
@@ -88,7 +88,7 @@ Application variable context 'context2' has not been created (state=,code=0)
 0: jdbc:luciddb:> values (applib.get_var('context2', 'var2'));
 Error: Could not calculate result column 1 for the following row:
 [0]
-Messages: Invocation of user-defined external Java method execute failed
+Messages: Invocation of user-defined external Java method executeGet failed
 Application variable persistence error while reading context 'context2', variable 'var2'
 Application variable context 'context2' has not been created (state=,code=0)
 0: jdbc:luciddb:> 

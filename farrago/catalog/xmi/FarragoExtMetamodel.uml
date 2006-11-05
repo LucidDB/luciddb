@@ -51,7 +51,7 @@
     <member type="todo" />
     <historyfile name="" />
   </argo>
-    <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Wed Sep 20 03:41:02 PDT 2006'>
+    <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Oct 31 12:05:34 PST 2006'>
       <XMI.header>    <XMI.documentation>
           <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
           <XMI.exporterVersion>0.20.x</XMI.exporterVersion>
@@ -2946,6 +2946,21 @@
                           changeability = 'changeable'>
                           <UML:StructuralFeature.type>
                             <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd8'/>
+                          </UML:StructuralFeature.type>
+                        </UML:Attribute>
+                        <UML:Attribute xmi.id = '127-0-0-1-1eaf3d6e:10e9ff73180:-8000:0000000000000D85'
+                          name = 'ignoreDuplicates' visibility = 'public' isSpecification = 'false'
+                          ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
+                          <UML:StructuralFeature.multiplicity>
+                            <UML:Multiplicity xmi.id = '127-0-0-1-1eaf3d6e:10e9ff73180:-8000:0000000000000D86'>
+                              <UML:Multiplicity.range>
+                                <UML:MultiplicityRange xmi.id = '127-0-0-1-1eaf3d6e:10e9ff73180:-8000:0000000000000D87'
+                                  lower = '1' upper = '1'/>
+                              </UML:Multiplicity.range>
+                            </UML:Multiplicity>
+                          </UML:StructuralFeature.multiplicity>
+                          <UML:StructuralFeature.type>
+                            <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fde'/>
                           </UML:StructuralFeature.type>
                         </UML:Attribute>
                       </UML:Classifier.feature>
@@ -7493,7 +7508,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >params [0..*] : DatabaseParam</text>
+          >params : DatabaseParam</text>
         </group>
         <rectangle name="Fig1.5"
           x="72"
@@ -8684,7 +8699,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >leafPageIdProj [0..1] : TupleProjection</text>
+          >leafPageIdProj : TupleProjection</text>
         </group>
         <rectangle name="Fig14.5"
           x="424"
@@ -9172,7 +9187,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >name : String { frozen }</text>
+          >name : String</text>
           <text name="Fig0.4.3"
             x="145"
             y="237"
@@ -9395,7 +9410,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >databaseInitSize : Integer { frozen }</text>
+          >databaseInitSize : Integer</text>
           <text name="Fig1.4.3"
             x="681"
             y="149"
@@ -9515,7 +9530,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >cachePageSize : Integer { frozen }</text>
+          >cachePageSize : Integer</text>
           <text name="Fig1.4.15"
             x="681"
             y="305"
@@ -9654,7 +9669,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >«enumeration»</text>
+          >&lt;&lt;enumeration&gt;&gt;</text>
         </group>
         <text name="Fig3.2"
           x="376"
@@ -9743,7 +9758,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >CALCVM_FENNEL : CalcVirtualMachine { frozen }</text>
+          >CALCVM_FENNEL : CalcVirtualMachine</text>
           <text name="Fig3.4.3"
             x="377"
             y="450"
@@ -9753,7 +9768,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >CALCVM_JAVA : CalcVirtualMachine { frozen }</text>
+          >CALCVM_JAVA : CalcVirtualMachine</text>
           <text name="Fig3.4.4"
             x="377"
             y="463"
@@ -9763,7 +9778,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >CALCVM_AUTO : CalcVirtualMachine { frozen }</text>
+          >CALCVM_AUTO : CalcVirtualMachine</text>
         </group>
         <rectangle name="Fig3.5"
           x="376"
@@ -9950,7 +9965,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >leafPageIdProj [0..1] : TupleProjection</text>
+          >leafPageIdProj : TupleProjection</text>
         </group>
         <rectangle name="Fig0.5"
           x="448"
@@ -12314,7 +12329,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >streamDefs [1..*] : ExecutionStreamDef</text>
+          >streamDefs : ExecutionStreamDef</text>
         </group>
         <rectangle name="Fig15.5"
           x="592"
@@ -14382,7 +14397,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >inputKeyProj [0..1] : TupleProjection</text>
+          >inputKeyProj : TupleProjection</text>
           <text name="Fig14.4.5"
             x="329"
             y="591"
@@ -14392,7 +14407,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >inputJoinProj [0..1] : TupleProjection</text>
+          >inputJoinProj : TupleProjection</text>
           <text name="Fig14.4.6"
             x="329"
             y="604"
@@ -14402,7 +14417,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >inputDirectiveProj [0..1] : TupleProjection</text>
+          >inputDirectiveProj : TupleProjection</text>
         </group>
         <rectangle name="Fig14.5"
           x="328"
@@ -14570,7 +14585,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >inputProj [0..1] : TupleProjection</text>
+          >inputProj : TupleProjection</text>
           <text name="Fig16.4.3"
             x="41"
             y="413"
@@ -14679,7 +14694,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >«enumeration»</text>
+          >&lt;&lt;enumeration&gt;&gt;</text>
         </group>
         <text name="Fig18.2"
           x="640"
@@ -14768,7 +14783,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >DUP_ALLOW : Distinctness { frozen }</text>
+          >DUP_ALLOW : Distinctness</text>
           <text name="Fig18.4.3"
             x="641"
             y="402"
@@ -14778,7 +14793,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >DUP_DISCARD : Distinctness { frozen }</text>
+          >DUP_DISCARD : Distinctness</text>
           <text name="Fig18.4.4"
             x="641"
             y="415"
@@ -14788,7 +14803,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >DUP_FAIL : Distinctness { frozen }</text>
+          >DUP_FAIL : Distinctness</text>
         </group>
         <rectangle name="Fig18.5"
           x="640"
@@ -14935,7 +14950,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >inputProj [0..1] : TupleProjection</text>
+          >inputProj : TupleProjection</text>
           <text name="Fig0.4.3"
             x="441"
             y="221"
@@ -16621,7 +16636,7 @@
           textsize="10"
         >FlatFileTupleStreamDef</text>
         <group name="Fig9.3"
-             description="org.argouml.uml.diagram.ui.FigOperationsCompartment[705, 441, 149, 20]"
+             description="org.argouml.uml.diagram.ui.FigOperationsCompartment[705, 441, 150, 20]"
              fill="1"
              fillcolor="white"
              stroke="0"
@@ -16634,7 +16649,7 @@
           <rectangle name="Fig9.3.0"
             x="705"
             y="441"
-            width="149"
+            width="150"
             height="20"
             fill="1"
             fillcolor="white"
@@ -16652,7 +16667,7 @@
           >
             <moveto x="705"
                     y="441" />
-            <lineto x="854"
+            <lineto x="855"
                     y="441" />
           </path>
         </group>
@@ -17310,7 +17325,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >correlations [0..*] : Correlation</text>
+          >correlations : Correlation</text>
         </group>
         <rectangle name="Fig1.5"
           x="10"
@@ -19894,7 +19909,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >«enumeration»</text>
+          >&lt;&lt;enumeration&gt;&gt;</text>
         </group>
         <text name="Fig5.2"
           x="552"
@@ -19983,7 +19998,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >AGG_FUNC_SUM : AggFunction { frozen }</text>
+          >AGG_FUNC_SUM : AggFunction</text>
           <text name="Fig5.4.3"
             x="553"
             y="330"
@@ -19993,7 +20008,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >AGG_FUNC_COUNT : AggFunction { frozen }</text>
+          >AGG_FUNC_COUNT : AggFunction</text>
           <text name="Fig5.4.4"
             x="553"
             y="343"
@@ -20003,7 +20018,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >AGG_FUNC_MIN : AggFunction { frozen }</text>
+          >AGG_FUNC_MIN : AggFunction</text>
           <text name="Fig5.4.5"
             x="553"
             y="356"
@@ -20013,7 +20028,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >AGG_FUNC_MAX : AggFunction { frozen }</text>
+          >AGG_FUNC_MAX : AggFunction</text>
           <text name="Fig5.4.6"
             x="553"
             y="369"
@@ -20023,7 +20038,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >AGG_FUNC_SINGLE_VALUE : AggFunction { frozen }</text>
+          >AGG_FUNC_SINGLE_VALUE : AggFunction</text>
         </group>
         <rectangle name="Fig5.5"
           x="552"
@@ -20826,7 +20841,7 @@
         </path>
       </group>
       <group name="Fig3"
-           description="org.argouml.uml.diagram.static_structure.ui.FigClass[240, 240, 138, 44]pathVisible=false;operationsVisible=false;attributesVisible=true"
+           description="org.argouml.uml.diagram.static_structure.ui.FigClass[240, 240, 138, 57]pathVisible=false;operationsVisible=false;attributesVisible=true"
            href="Im322672acm108c80ba958mm53bf"
            fill="1"
            fillcolor="white"
@@ -20840,7 +20855,7 @@
           x="240"
           y="240"
           width="138"
-          height="44"
+          height="57"
           fill="1"
           fillcolor="white"
           stroke="0"
@@ -20915,7 +20930,7 @@
           </path>
         </group>
         <group name="Fig3.4"
-             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[241, 263, 137, 21]"
+             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[241, 263, 137, 34]"
              fill="1"
              fillcolor="white"
              stroke="0"
@@ -20928,7 +20943,7 @@
             x="241"
             y="263"
             width="137"
-            height="21"
+            height="34"
             fill="1"
             fillcolor="white"
             stroke="0"
@@ -20956,12 +20971,22 @@
             font="Dialog"
             textsize="10"
           >rowCountParamId : Integer</text>
+          <text name="Fig3.4.3"
+            x="241"
+            y="277"
+            fill="0"
+            fillcolor="white"
+            stroke="0"
+            strokecolor="black"
+            font="Dialog"
+            textsize="10"
+          >ignoreDuplicates : Boolean</text>
         </group>
         <rectangle name="Fig3.5"
           x="240"
           y="240"
           width="138"
-          height="44"
+          height="57"
           fill="0"
           fillcolor="white"
           stroke="1"
@@ -21143,7 +21168,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >inputKeyProj [0..1] : TupleProjection</text>
+          >inputKeyProj : TupleProjection</text>
           <text name="Fig5.4.5"
             x="9"
             y="407"
@@ -21153,7 +21178,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >inputJoinProj [0..1] : TupleProjection</text>
+          >inputJoinProj : TupleProjection</text>
           <text name="Fig5.4.6"
             x="9"
             y="420"
@@ -21163,7 +21188,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >inputDirectiveProj [0..1] : TupleProjection</text>
+          >inputDirectiveProj : TupleProjection</text>
         </group>
         <rectangle name="Fig5.5"
           x="8"
@@ -26403,7 +26428,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >params [0..*] : DatabaseParam</text>
+          >params : DatabaseParam</text>
         </group>
         <rectangle name="Fig11.5"
           x="24"
@@ -28626,7 +28651,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >tupleCompareBytesBase64 [0..1] : String</text>
+          >tupleCompareBytesBase64 : String</text>
           <text name="Fig9.4.4"
             x="49"
             y="314"
@@ -28636,7 +28661,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >inputCompareProjection [0..1] : TupleProjection</text>
+          >inputCompareProjection : TupleProjection</text>
           <text name="Fig9.4.5"
             x="49"
             y="327"
@@ -28735,7 +28760,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >«enumeration»</text>
+          >&lt;&lt;enumeration&gt;&gt;</text>
         </group>
         <text name="Fig11.2"
           x="88"
@@ -29292,7 +29317,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >«enumeration»</text>
+          >&lt;&lt;enumeration&gt;&gt;</text>
         </group>
         <text name="Fig4.2"
           x="848"
@@ -29381,7 +29406,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >SELECT : PrivilegedAction { frozen }</text>
+          >SELECT : PrivilegedAction</text>
           <text name="Fig4.4.3"
             x="849"
             y="410"
@@ -29391,7 +29416,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >INSERT : PrivilegedAction { frozen }</text>
+          >INSERT : PrivilegedAction</text>
           <text name="Fig4.4.4"
             x="849"
             y="423"
@@ -29401,7 +29426,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >UPDATE : PrivilegedAction { frozen }</text>
+          >UPDATE : PrivilegedAction</text>
           <text name="Fig4.4.5"
             x="849"
             y="436"
@@ -29411,7 +29436,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >DELETE : PrivilegedAction { frozen }</text>
+          >DELETE : PrivilegedAction</text>
           <text name="Fig4.4.6"
             x="849"
             y="449"
@@ -29421,7 +29446,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >EXECUTE : PrivilegedAction { frozen }</text>
+          >EXECUTE : PrivilegedAction</text>
           <text name="Fig4.4.7"
             x="849"
             y="462"
@@ -29431,7 +29456,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >REFERENCES : PrivilegedAction { frozen }</text>
+          >REFERENCES : PrivilegedAction</text>
           <text name="Fig4.4.8"
             x="849"
             y="475"
@@ -29441,7 +29466,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >TRIGGER : PrivilegedAction { frozen }</text>
+          >TRIGGER : PrivilegedAction</text>
           <text name="Fig4.4.9"
             x="849"
             y="488"
@@ -29451,7 +29476,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >INHERIT_ROLE : PrivilegedAction { frozen }</text>
+          >INHERIT_ROLE : PrivilegedAction</text>
           <text name="Fig4.4.10"
             x="849"
             y="501"
@@ -29461,7 +29486,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >CREATION : PrivilegedAction { frozen }</text>
+          >CREATION : PrivilegedAction</text>
         </group>
         <rectangle name="Fig4.5"
           x="848"
@@ -30419,7 +30444,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >description [0..1] : String</text>
+          >description : String</text>
           <text name="Fig16.4.3"
             x="121"
             y="189"
@@ -30429,7 +30454,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >lineageId [0..1] : String</text>
+          >lineageId : String</text>
           <text name="Fig16.4.4"
             x="121"
             y="202"
@@ -30439,7 +30464,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >creationTimestamp [0..1] : String</text>
+          >creationTimestamp : String</text>
           <text name="Fig16.4.5"
             x="121"
             y="215"
@@ -30449,7 +30474,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >modificationTimestamp [0..1] : String</text>
+          >modificationTimestamp : String</text>
         </group>
         <rectangle name="Fig16.5"
           x="120"
@@ -31860,7 +31885,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >allowedAccess [0..1] : String</text>
+          >allowedAccess : String</text>
         </group>
         <rectangle name="Fig13.5"
           x="400"
@@ -32229,7 +32254,7 @@
           <rectangle name="Fig19.4.0"
             x="457"
             y="23"
-            width="184"
+            width="157"
             height="19"
             fill="1"
             fillcolor="white"
@@ -32427,7 +32452,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >storageId [0..1] : String</text>
+          >storageId : String</text>
           <text name="Fig21.4.4"
             x="825"
             y="154"
@@ -32437,7 +32462,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >analyzeTime [0..1] : String</text>
+          >analyzeTime : String</text>
           <text name="Fig21.4.5"
             x="825"
             y="167"
@@ -32447,7 +32472,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >pageCount [0..1] : Long</text>
+          >pageCount : Long</text>
         </group>
         <rectangle name="Fig21.5"
           x="824"
@@ -33628,7 +33653,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >analyzeTime [0..1] : String</text>
+          >analyzeTime : String</text>
           <text name="Fig36.4.4"
             x="361"
             y="186"
@@ -33638,7 +33663,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >rowCount [0..1] : Long</text>
+          >rowCount : Long</text>
         </group>
         <rectangle name="Fig36.5"
           x="360"
@@ -34487,7 +34512,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >distinctValueCount [0..1] : Long</text>
+          >distinctValueCount : Long</text>
         </group>
         <rectangle name="Fig5.5"
           x="536"
@@ -34655,7 +34680,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >startingValue [0..1] : String</text>
+          >startingValue : String</text>
           <text name="Fig7.4.3"
             x="897"
             y="173"
@@ -35138,7 +35163,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >description [0..1] : String</text>
+          >description : String</text>
           <text name="Fig3.4.3"
             x="225"
             y="117"
@@ -35148,7 +35173,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >lineageId [0..1] : String</text>
+          >lineageId : String</text>
           <text name="Fig3.4.4"
             x="225"
             y="130"
@@ -35158,7 +35183,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >creationTimestamp [0..1] : String</text>
+          >creationTimestamp : String</text>
           <text name="Fig3.4.5"
             x="225"
             y="143"
@@ -35168,7 +35193,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >modificationTimestamp [0..1] : String</text>
+          >modificationTimestamp : String</text>
         </group>
         <rectangle name="Fig3.5"
           x="224"
@@ -36491,7 +36516,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >description [0..1] : String</text>
+          >description : String</text>
           <text name="Fig0.4.3"
             x="481"
             y="93"
@@ -36501,7 +36526,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >lineageId [0..1] : String</text>
+          >lineageId : String</text>
           <text name="Fig0.4.4"
             x="481"
             y="106"
@@ -36511,7 +36536,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >creationTimestamp [0..1] : String</text>
+          >creationTimestamp : String</text>
           <text name="Fig0.4.5"
             x="481"
             y="119"
@@ -36521,7 +36546,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >modificationTimestamp [0..1] : String</text>
+          >modificationTimestamp : String</text>
         </group>
         <rectangle name="Fig0.5"
           x="480"
@@ -36674,7 +36699,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >externalName [0..1] : String</text>
+          >externalName : String</text>
           <text name="Fig1.4.4"
             x="353"
             y="274"
@@ -36714,7 +36739,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >parameterStyle [0..1] : String</text>
+          >parameterStyle : String</text>
           <text name="Fig1.4.8"
             x="353"
             y="326"
@@ -36863,7 +36888,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >«enumeration»</text>
+          >&lt;&lt;enumeration&gt;&gt;</text>
         </group>
         <text name="Fig3.2"
           x="152"
@@ -36952,7 +36977,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >SQL : ExtensionLanguage { frozen }</text>
+          >SQL : ExtensionLanguage</text>
           <text name="Fig3.4.3"
             x="153"
             y="498"
@@ -36962,7 +36987,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >JAVA : ExtensionLanguage { frozen }</text>
+          >JAVA : ExtensionLanguage</text>
         </group>
         <rectangle name="Fig3.5"
           x="152"
@@ -37273,7 +37298,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >precision [0..1] : Integer</text>
+          >precision : Integer</text>
           <text name="Fig6.4.4"
             x="673"
             y="362"
@@ -37283,7 +37308,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >scale [0..1] : Integer</text>
+          >scale : Integer</text>
           <text name="Fig6.4.5"
             x="673"
             y="375"
@@ -37293,7 +37318,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >length [0..1] : Integer</text>
+          >length : Integer</text>
           <text name="Fig6.4.6"
             x="673"
             y="388"
@@ -37303,7 +37328,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >collationName [0..1] : String</text>
+          >collationName : String</text>
           <text name="Fig6.4.7"
             x="673"
             y="401"
@@ -37313,7 +37338,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >characterSetName [0..1] : String</text>
+          >characterSetName : String</text>
         </group>
         <rectangle name="Fig6.5"
           x="672"
@@ -38034,7 +38059,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >«enumeration»</text>
+          >&lt;&lt;enumeration&gt;&gt;</text>
         </group>
         <text name="Fig16.2"
           x="48"
@@ -38123,7 +38148,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RPS_SQL : RoutineParameterStyle { frozen }</text>
+          >RPS_SQL : RoutineParameterStyle</text>
           <text name="Fig16.4.3"
             x="49"
             y="218"
@@ -38133,7 +38158,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RPS_GENERAL : RoutineParameterStyle { frozen }</text>
+          >RPS_GENERAL : RoutineParameterStyle</text>
           <text name="Fig16.4.4"
             x="49"
             y="231"
@@ -38143,7 +38168,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RPS_JAVA : RoutineParameterStyle { frozen }</text>
+          >RPS_JAVA : RoutineParameterStyle</text>
           <text name="Fig16.4.5"
             x="49"
             y="244"
@@ -38153,7 +38178,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RPS_JAVA_FARRAGO : RoutineParameterStyle { frozen }</text>
+          >RPS_JAVA_FARRAGO : RoutineParameterStyle</text>
         </group>
         <rectangle name="Fig16.5"
           x="48"
@@ -38217,7 +38242,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >«enumeration»</text>
+          >&lt;&lt;enumeration&gt;&gt;</text>
         </group>
         <text name="Fig17.2"
           x="48"
@@ -38306,7 +38331,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RDA_NO_SQL : RoutineDataAccess { frozen }</text>
+          >RDA_NO_SQL : RoutineDataAccess</text>
           <text name="Fig17.4.3"
             x="49"
             y="362"
@@ -38316,7 +38341,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RDA_CONTAINS_SQL : RoutineDataAccess { frozen }</text>
+          >RDA_CONTAINS_SQL : RoutineDataAccess</text>
           <text name="Fig17.4.4"
             x="49"
             y="375"
@@ -38326,7 +38351,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RDA_READS_SQL_DATA : RoutineDataAccess { frozen }</text>
+          >RDA_READS_SQL_DATA : RoutineDataAccess</text>
           <text name="Fig17.4.5"
             x="49"
             y="388"
@@ -38336,7 +38361,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RDA_MODIFIES_SQL_DATA : RoutineDataAccess { frozen }</text>
+          >RDA_MODIFIES_SQL_DATA : RoutineDataAccess</text>
         </group>
         <rectangle name="Fig17.5"
           x="48"
@@ -38493,7 +38518,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >baselineTimestamp [0..1] : String</text>
+          >baselineTimestamp : String</text>
         </group>
         <rectangle name="Fig0.5"
           x="224"
@@ -38804,7 +38829,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >analyzeTime [0..1] : String</text>
+          >analyzeTime : String</text>
           <text name="Fig3.4.4"
             x="697"
             y="266"
@@ -38814,7 +38839,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >rowCount [0..1] : Long</text>
+          >rowCount : Long</text>
         </group>
         <rectangle name="Fig3.5"
           x="696"
@@ -39036,7 +39061,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >description [0..1] : String</text>
+          >description : String</text>
           <text name="Fig0.4.3"
             x="297"
             y="61"
@@ -39046,7 +39071,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >lineageId [0..1] : String</text>
+          >lineageId : String</text>
           <text name="Fig0.4.4"
             x="297"
             y="74"
@@ -39056,7 +39081,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >creationTimestamp [0..1] : String</text>
+          >creationTimestamp : String</text>
           <text name="Fig0.4.5"
             x="297"
             y="87"
@@ -39066,7 +39091,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >modificationTimestamp [0..1] : String</text>
+          >modificationTimestamp : String</text>
         </group>
         <rectangle name="Fig0.5"
           x="296"
@@ -39219,7 +39244,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >value [0..1] : String</text>
+          >value : String</text>
         </group>
         <rectangle name="Fig1.5"
           x="768"
@@ -40019,7 +40044,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >originalDefinition [0..1] : String</text>
+          >originalDefinition : String</text>
         </group>
         <rectangle name="Fig11.5"
           x="168"
@@ -40355,7 +40380,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >analyzeTime [0..1] : String</text>
+          >analyzeTime : String</text>
           <text name="Fig15.4.4"
             x="25"
             y="258"
@@ -40365,7 +40390,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >rowCount [0..1] : Long</text>
+          >rowCount : Long</text>
         </group>
         <rectangle name="Fig15.5"
           x="24"
@@ -42255,7 +42280,7 @@
           <rectangle name="Fig12.4.0"
             x="265"
             y="79"
-            width="184"
+            width="157"
             height="19"
             fill="1"
             fillcolor="white"
@@ -43027,7 +43052,7 @@
           <rectangle name="Fig7.4.0"
             x="369"
             y="143"
-            width="184"
+            width="157"
             height="19"
             fill="1"
             fillcolor="white"
@@ -43857,7 +43882,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >collationName [0..1] : String</text>
+          >collationName : String</text>
           <text name="Fig17.4.3"
             x="537"
             y="501"
@@ -43867,7 +43892,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >characterSetName [0..1] : String</text>
+          >characterSetName : String</text>
         </group>
         <rectangle name="Fig17.5"
           x="536"
@@ -44934,7 +44959,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >«enumeration»</text>
+          >&lt;&lt;enumeration&gt;&gt;</text>
         </group>
         <text name="Fig31.2"
           x="536"
@@ -45023,7 +45048,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >UDOC_STATE : UserDefinedOrderingCategory { frozen }</text>
+          >UDOC_STATE : UserDefinedOrderingCategory</text>
           <text name="Fig31.4.3"
             x="537"
             y="90"
@@ -45033,7 +45058,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >UDOC_RELATIVE : UserDefinedOrderingCategory { frozen }</text>
+          >UDOC_RELATIVE : UserDefinedOrderingCategory</text>
           <text name="Fig31.4.4"
             x="537"
             y="103"
@@ -45043,7 +45068,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >UDOC_MAP : UserDefinedOrderingCategory { frozen }</text>
+          >UDOC_MAP : UserDefinedOrderingCategory</text>
         </group>
         <rectangle name="Fig31.5"
           x="536"

@@ -12,7 +12,7 @@
       name = 'Current'
       fennelDisabled = '@fennel.disabled@'
       userCatalogEnabled = 'false'
-      codeCacheMaxBytes='-1'
+      codeCacheMaxBytes='2000000'
       checkpointInterval='@checkpointInterval@'
       serverRmiRegistryPort='-1'
       serverSingleListenerPort='-1'

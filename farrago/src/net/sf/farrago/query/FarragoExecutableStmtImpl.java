@@ -23,8 +23,10 @@
 package net.sf.farrago.query;
 
 import java.util.*;
+import java.util.logging.*;
 
 import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
@@ -48,6 +50,8 @@ abstract class FarragoExecutableStmtImpl
     private final boolean isDml;
     private final RelDataType dynamicParamRowType;
     private final TableAccessMap tableAccessMap;
+    protected static final Logger tracer =
+        FarragoTrace.getClassTracer(FarragoExecutableStmtImpl.class);
 
     //~ Constructors -----------------------------------------------------------
 

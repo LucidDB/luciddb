@@ -292,7 +292,7 @@ public abstract class EncodedSqlDecimal
                 if (rounded.unscaledValue().compareTo(maxValue) == 1) {
                     setNull(true);
                 } else {
-                    value = bd.unscaledValue().longValue();
+                    value = rounded.unscaledValue().longValue();
                 }
             }
         }

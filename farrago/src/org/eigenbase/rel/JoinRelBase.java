@@ -246,9 +246,14 @@ public abstract class JoinRelBase
                );
         List<String> nameList = new ArrayList<String>();
         List<RelDataType> typeList = new ArrayList<RelDataType>();
-        addFields(leftType, typeList, nameList);
+        // use a hashset to keep track of the field names; this is needed
+        // to ensure that the contains() call to check for name uniqueness
+        // runs in constant time; otherwise, if the number of fields is large,
+        // doing a contains() on a list can be expensive
+        HashSet<String> uniqueNameList = new HashSet<String>();
+        addFields(leftType, typeList, nameList, uniqueNameList);
         if (rightType != null) {
-            addFields(rightType, typeList, nameList);
+            addFields(rightType, typeList, nameList, uniqueNameList);
         }
         if (fieldNameList != null) {
             assert fieldNameList.size() == nameList.size();
@@ -260,7 +265,8 @@ public abstract class JoinRelBase
     private static void addFields(
         RelDataType type,
         List<RelDataType> typeList,
-        List<String> nameList)
+        List<String> nameList,
+        HashSet<String> uniqueNameList)   
     {
         final RelDataTypeField [] fields = type.getFields();
         for (int i = 0; i < fields.length; i++) {
@@ -268,16 +274,17 @@ public abstract class JoinRelBase
             String name = field.getName();
 
             // Ensure that name is unique from all previous field names
-            if (nameList.contains(name)) {
+            if (uniqueNameList.contains(name)) {
                 String nameBase = name;
                 for (int j = 0;; j++) {
                     name = nameBase + j;
-                    if (!nameList.contains(name)) {
+                    if (!uniqueNameList.contains(name)) {
                         break;
                     }
                 }
             }
             nameList.add(name);
+            uniqueNameList.add(name);
             typeList.add(field.getType());
         }
     }

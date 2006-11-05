@@ -10,7 +10,7 @@ alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
 create table emps(
     empno int not null, name varchar(20) not null, deptno int,
-    gender char(1), city char(30), age int, salary int);
+    gender char(1), city char(30), age int, salary numeric(10,2));
 create table tempemps(
     t_empno int, t_name varchar(25), t_deptno int, t_gender char(1),
     t_city char(35), t_age int);
@@ -113,6 +113,19 @@ merge into emps
         insert (empno, name, age, gender, salary, city)
         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 select * from emps order by empno, name;
+
+-- LER-2614 -- issue the same merge again, except modify the update values
+-- so the update is not a no-op
+merge into emps
+    using (select * from tempemps where t_empno = 130) on t_empno = empno
+    when matched then
+        update set deptno = t_deptno, city = t_city, age = t_age,
+            gender = lower(t_gender)
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
+select * from emps order by empno, name;
+
 delete from tempemps where t_name = 'JohnClone';
                 
 -- no insert substatement

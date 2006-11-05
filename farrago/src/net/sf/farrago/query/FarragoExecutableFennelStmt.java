@@ -25,6 +25,7 @@ package net.sf.farrago.query;
 import java.sql.*;
 
 import java.util.*;
+import java.util.logging.*;
 
 import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.runtime.*;
@@ -49,12 +50,13 @@ import org.eigenbase.util.*;
 class FarragoExecutableFennelStmt
     extends FarragoExecutableStmtImpl
 {
+    
     //~ Instance fields --------------------------------------------------------
-
-    private final RelDataType rowType;
-    private final String xmiFennelPlan;
+    
+    protected final RelDataType rowType;
+    protected final String xmiFennelPlan;
+    protected final Set<String> referencedObjectIds;
     private final String streamName;
-    private final Set<String> referencedObjectIds;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -69,7 +71,6 @@ class FarragoExecutableFennelStmt
     {
         super(dynamicParamRowType, isDml, tableAccessMap);
 
-        assert(xmiFennelPlan != null);
         this.xmiFennelPlan = xmiFennelPlan;
         this.streamName = streamName;
         this.referencedObjectIds = referencedObjectIds;
@@ -134,19 +135,19 @@ class FarragoExecutableFennelStmt
     // implement FarragoSessionExecutableStmt
     public long getMemoryUsage()
     {
-        return FarragoUtil.getStringMemoryUsage(xmiFennelPlan);
-    }
-
-    // implement FarragoSessionExecutableStmt
-    public Map<String, RelDataType> getResultSetTypeMap()
-    {
-        return Collections.emptyMap();
-    }
-
-    // implement FarragoSessionExecutableStmt
-    public Map<String, RelDataType> getIterCalcTypeMap()
-    {
-        return Collections.emptyMap();
+        int xmiSize = FarragoUtil.getStringMemoryUsage(xmiFennelPlan);
+        if (tracer.isLoggable(Level.FINE)) {            
+            tracer.fine("XMI Fennel plan size = " + xmiSize + " bytes");
+        }
+        
+        // Account for half of the XMI plan here since this cache entry holds
+        // a pointer to that plan.  The other half will be accounted for in the
+        // object associated with the Fennel XMI entry itself.  That entry may
+        // be flushed from the cache while this entry is still in cache.  So,
+        // we want to need to account for the memory in both entries.  But, at
+        // the same time, we don't want to account for the entire size with
+        // both, as that would double count the memory.
+        return xmiSize / 2;
     }
 }
 

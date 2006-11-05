@@ -29,6 +29,7 @@
       </test>
 
       <test name="exportSchemaToFile">
+        <!-- LDB-148 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_schema_to_file.sql"/>
       </test>
 

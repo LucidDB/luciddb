@@ -1,9 +1,6 @@
 -- $Id$
 -- Tests semijoin transformations
 
--- TODO jvs 5-Sept-2006:  Get rid of this once leak is investigated.
-alter system set "codeCacheMaxBytes" = min;
-
 create schema sj;
 set schema 'sj';
 
@@ -92,6 +89,14 @@ explain plan for select *
 explain plan for
 select *
 from t left outer join smalltable s
+on t.b = s.s3 and s.s1 = 'this is row 1';
+explain plan for
+select *
+from t right outer join smalltable s
+on t.b = s.s3 and s.s1 = 'this is row 1';
+explain plan for
+select *
+from t full outer join smalltable s
 on t.b = s.s3 and s.s1 = 'this is row 1';
 
 -- this outer join uses HashJoin since join types match

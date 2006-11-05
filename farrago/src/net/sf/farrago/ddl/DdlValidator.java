@@ -1381,6 +1381,10 @@ public class DdlValidator
             if (!revalidateQueue.contains(e)) {
                 revalidateQueue.add(e);
 
+                // REVIEW jvs 3-Nov-2006:  Probably we should
+                // discriminate revalidation from both
+                // VALIDATE_CREATION and VALIDATE_MODIFICATION.
+
                 //REVIEW: unless we regenerate this dependency's SQL
                 //and reparse, how would we get the SqlParserPos.
                 //set to a dummy value for now.

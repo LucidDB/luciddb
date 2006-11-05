@@ -55,7 +55,7 @@ public class FarragoObjectCache
      * Map from cache key to EntryImpl. To avoid deadlock, synchronization order
      * is always map first, entry second.
      */
-    private MultiMap<Object, EntryImpl> mapKeyToEntry;
+    private MultiMap<Object, FarragoCacheEntry> mapKeyToEntry;
     private long bytesMax;
 
     /**
@@ -63,6 +63,11 @@ public class FarragoObjectCache
      * synchronized via mapKeyToEntry monitor.
      */
     private long bytesUsed;
+    
+    /**
+     * Victimization policy for this cache
+     */
+    private FarragoCacheVictimPolicy victimPolicy;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -72,15 +77,18 @@ public class FarragoObjectCache
      * @param owner FarragoAllocationOwner for this cache, to make sure
      * everything gets discarded eventually
      * @param bytesMax maximum number of bytes to cache
+     * @param victimPolicy victimization policy to use when the cache is full
      */
     public FarragoObjectCache(
         FarragoAllocationOwner owner,
-        long bytesMax)
+        long bytesMax,
+        FarragoCacheVictimPolicy victimPolicy)
     {
-        mapKeyToEntry = new MultiMap<Object, EntryImpl>();
+        mapKeyToEntry = new MultiMap<Object, FarragoCacheEntry>();
         owner.addAllocation(this);
         this.bytesMax = bytesMax;
         bytesUsed = 0;
+        this.victimPolicy = victimPolicy;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -110,10 +118,10 @@ public class FarragoObjectCache
         Thread currentThread = Thread.currentThread();
 
         // look up entry in map
-        EntryImpl entry = null;
+        FarragoCacheEntry entry = null;
 
         synchronized (mapKeyToEntry) {
-            for (EntryImpl entry1 : mapKeyToEntry.getMulti(key)) {
+            for (FarragoCacheEntry entry1 : mapKeyToEntry.getMulti(key)) {
                 entry = entry1;
                 if (exclusive && (entry.pinCount != 0)) {
                     // this one's already in use by someone else
@@ -124,14 +132,16 @@ public class FarragoObjectCache
                     // pin the entry so that it can't be discarded after map
                     // lock is released below
                     entry.pinCount++;
+                    victimPolicy.accessEntry(entry);
                     break;
                 }
             }
             if (entry == null) {
                 // create a new entry and add it to the map
-                entry = new EntryImpl();
+                entry = victimPolicy.newEntry(this);
                 entry.key = key;
                 entry.pinCount = 1;
+                victimPolicy.registerEntry(entry);
 
                 // let others know we're planning to construct it, so they
                 // shouldn't
@@ -231,7 +241,7 @@ public class FarragoObjectCache
 
     private void adjustMemoryUsage(long incBytes)
     {
-        List<EntryImpl> discards;
+        List<FarragoCacheEntry> discards;
 
         synchronized (mapKeyToEntry) {
             bytesUsed += incBytes;
@@ -242,25 +252,25 @@ public class FarragoObjectCache
                 return;
             }
 
-            discards = new ArrayList<EntryImpl>();
+            discards = new ArrayList<FarragoCacheEntry>();
 
-            // TODO:  implement a non-braindead victimization policy,
-            // preferably pluggable
-            Iterator mapIter = mapKeyToEntry.entryIterMulti();
-            while ((overdraft > 0) && mapIter.hasNext()) {
-                Map.Entry mapEntry = (Map.Entry) mapIter.next();
-                EntryImpl entry = (EntryImpl) mapEntry.getValue();
+            // get an ordered list of potential cache victims and search
+            // for unused entries
+            Iterator lruList = victimPolicy.getVictimIterator();
+            while ((overdraft > 0) && lruList.hasNext()) {
+                FarragoCacheEntry entry = (FarragoCacheEntry) lruList.next();
                 if (entry.pinCount > 0) {
                     continue;
                 }
-                mapIter.remove();
+                victimPolicy.unregisterEntry(lruList);
+                mapKeyToEntry.removeMulti(entry.getKey(), entry);
                 discards.add(entry);
                 overdraft -= entry.memoryUsage;
             }
         }
 
         // release map lock since actual discard could be time-consuming
-        for (EntryImpl discard : discards) {
+        for (FarragoCacheEntry discard : discards) {
             discardEntry(discard);
         }
         if (tracer.isLoggable(Level.FINE)) {
@@ -286,6 +296,14 @@ public class FarragoObjectCache
     }
 
     /**
+     * @return cache size limit
+     */
+    public long getBytesMax()
+    {
+        return bytesMax;
+    }
+
+    /**
      * Unpins an entry returned by pin. After unpin, the caller should
      * immediately nullify its reference to the entry, its key, its value, and
      * any sub-objects so that they can be garbage collected.
@@ -294,7 +312,7 @@ public class FarragoObjectCache
      */
     public void unpin(Entry pinnedEntry)
     {
-        EntryImpl entry = (EntryImpl) pinnedEntry;
+        FarragoCacheEntry entry = (FarragoCacheEntry) pinnedEntry;
         synchronized (mapKeyToEntry) {
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine("Unpinning key " + entry.key.toString());
@@ -316,7 +334,7 @@ public class FarragoObjectCache
      */
     public Object detach(Entry e)
     {
-        EntryImpl entry = (EntryImpl) e;
+        FarragoCacheEntry entry = (FarragoCacheEntry) e;
         Object val = entry.value;
         synchronized (mapKeyToEntry) {
             synchronized (e) {
@@ -329,6 +347,7 @@ public class FarragoObjectCache
                 mapKeyToEntry.removeMulti(
                     entry.getKey(),
                     entry);
+                victimPolicy.unregisterEntry(entry);
                 bytesUsed -= entry.memoryUsage;
                 if (tracer.isLoggable(Level.FINER)) {
                     tracer.finer("cache size now " + bytesUsed);
@@ -347,12 +366,17 @@ public class FarragoObjectCache
      */
     public void discard(Object key)
     {
-        List<EntryImpl> list;
+        List<FarragoCacheEntry> list;
         synchronized (mapKeyToEntry) {
             list = mapKeyToEntry.getMulti(key);
             mapKeyToEntry.remove(key);
+            for (FarragoCacheEntry entry : list) {
+                victimPolicy.unregisterEntry(entry);
+            }
         }
-        for (EntryImpl entry : list) {
+        // release the synch lock before discarding the actual entries,
+        // as that may take a while
+        for (FarragoCacheEntry entry : list) {
             discardEntry(entry);
         }
     }
@@ -367,14 +391,15 @@ public class FarragoObjectCache
             Iterator iter = mapKeyToEntry.entryIterMulti();
             while (iter.hasNext()) {
                 Map.Entry mapEntry = (Map.Entry) iter.next();
-                EntryImpl entry = (EntryImpl) mapEntry.getValue();
+                FarragoCacheEntry entry = (FarragoCacheEntry) mapEntry.getValue();
                 discardEntry(entry);
             }
             mapKeyToEntry.clear();
+            victimPolicy.clearCache();
         }
     }
 
-    private void discardEntry(EntryImpl entry)
+    private void discardEntry(FarragoCacheEntry entry)
     {
         synchronized (entry) {
             if (tracer.isLoggable(Level.FINE)) {
@@ -455,49 +480,6 @@ public class FarragoObjectCache
         public Object getKey();
 
         public Object getValue();
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    private class EntryImpl
-        implements Entry,
-            UninitializedEntry
-    {
-        // NOTE jvs 15-July-2004: entry attribute synchronization is
-        // fine-grained; pinCount is protected by mapKeyToEntry's
-        // monitor, while the others are protected by the entry's monitor.
-        Object key;
-        Object value;
-        int pinCount;
-        long memoryUsage;
-        Thread constructionThread;
-
-        // implement Entry
-        public Object getKey()
-        {
-            return key;
-        }
-
-        // implement Entry
-        public Object getValue()
-        {
-            return value;
-        }
-
-        // implement UninitializedEntry
-        public void initialize(
-            Object value,
-            long memoryUsage)
-        {
-            this.value = value;
-            this.memoryUsage = memoryUsage;
-        }
-
-        // implement FarragoAllocation
-        public void closeAllocation()
-        {
-            unpin(this);
-        }
     }
 }
 

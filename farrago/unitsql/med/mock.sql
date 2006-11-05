@@ -191,7 +191,7 @@ update mock_schema.dynamic_row_count set current_row_count=21;
 -- have to flush the plan cache, because the value 7 is still burned
 -- into the old plan and the optimizer doesn't know that it's supposed
 -- to read the new value
-alter system set "codeCacheMaxBytes" = min;
+call sys_boot.mgmt.flush_code_cache();
 
 select count(*) from mock_foreign_dynamic_server.mock_schema.mock_table;
 

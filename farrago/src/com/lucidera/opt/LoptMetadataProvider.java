@@ -512,7 +512,8 @@ public class LoptMetadataProvider
         
         if (joinType == LhxJoinRelType.LEFTSEMI) {
             numRows = RelMetadataQuery.getRowCount(left);
-        } else if (joinType == LhxJoinRelType.RIGHTANTI) {
+        } else if (joinType == LhxJoinRelType.RIGHTANTI ||
+            joinType == LhxJoinRelType.RIGHTSEMI) {
             numRows = RelMetadataQuery.getRowCount(right);
         } else {
             // construct a join condition consisting of the hash join keys

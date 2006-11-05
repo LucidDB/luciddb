@@ -16,12 +16,24 @@ SELECT n1, (CASE WHEN (n1 < -100) THEN -100
  ELSE 1000
 END)
 FROM TEST_NUMERIC_TABLE ORDER BY n1;
+
+-- FRG-209
 SELECT n1, (CASE WHEN (n1 < -100) THEN -100
  WHEN (n1 < 0) THEN 0
  WHEN (n1 < 100) THEN 100
  ELSE 1000
 END)
-FROM TEST_REAL_TABLE ORDER BY n1;
+FROM TEST_REAL_TABLE WHERE N1 <> 1.001 OR N1 IS NULL ORDER BY n1;
+-- set numberFormat since floating point differs based on VM
+!set numberFormat 0.0000
+SELECT n1, (CASE WHEN (n1 < -100) THEN -100
+ WHEN (n1 < 0) THEN 0
+ WHEN (n1 < 100) THEN 100
+ ELSE 1000
+END)
+FROM TEST_REAL_TABLE WHERE N1 = CAST(1.001 as FLOAT);
+!set numberFormat default
+
 
 -- Mix up strings and non-strings
 -- Return a string from a numeric value
@@ -64,10 +76,20 @@ SELECT n1, (CASE WHEN n1 IS NULL THEN 0
  ELSE n1
 END)
 FROM TEST_NUMERIC_TABLE ORDER BY n1;
+
+-- FRG-209
 SELECT n1, (CASE WHEN n1 IS NULL THEN 0
  ELSE n1
 END)
-FROM TEST_REAL_TABLE ORDER BY n1;
+FROM TEST_REAL_TABLE WHERE N1 <> 1.001 OR N1 IS NULL ORDER BY n1;
+-- set numberFormat since floating point differs based on VM
+!set numberFormat 0.0000
+SELECT n1, (CASE WHEN n1 IS NULL THEN 0
+ ELSE n1
+END)
+FROM TEST_REAL_TABLE WHERE N1 = CAST(1.001 as FLOAT);
+!set numberFormat default
+
 
 -- Do funky null <> null semantics so that it's in the regression
 SELECT n1, (CASE n1 WHEN NULL THEN 0 ELSE n1 END)

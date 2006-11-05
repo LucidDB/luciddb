@@ -457,6 +457,27 @@ bool LbmEntryTest::compareExpected(
         if (expectedRids[ridPos] != actualRids[i]) {
             break;
         }
+        // the two if blocks below are redundant but are there to test the
+        // containsRid() method; the first tests the positive case and the
+        // second the negative
+        if (!generatedEntry.containsRid(expectedRids[ridPos])) {
+            std::cout << "Positive containsRid check failed on rid = " <<
+                expectedRids[ridPos] << std::endl;
+            return false;
+        }
+        // search for the rids in between the current and next; these should
+        // not be set in the entry
+        if (ridPos + 1 < expectedRids.size()) {
+            for (LcsRid nextRid = expectedRids[ridPos] + 1;
+                nextRid < expectedRids[ridPos + 1]; nextRid++)
+            {
+                if (generatedEntry.containsRid(nextRid)) {
+                    std::cout << "Negative containsRid check failed on rid = "
+                        << nextRid << std::endl;
+                    return false;
+                }
+            }
+        }
     }
 #if 0
     std::cout << "Generated Entry:" << LbmEntry::toString(generatedTuple, true)

@@ -156,7 +156,16 @@ public class DdlRelationalHandler
                     table.refClass()));
         }
 
-        validateLocalTable(table, true);
+        boolean creation = true;
+
+        if (((DdlValidator) validator).isReplace()) {
+            // revalidation of this table is being triggered by
+            // CREATE OR REPLACE of something else, probably
+            // the local data server
+            creation = false;
+        }
+
+        validateLocalTable(table, creation);
     }
 
     // implement FarragoSessionDdlHandler

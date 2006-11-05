@@ -679,6 +679,7 @@ void LbmSearchTest::loadTableAndIndex(
         splicerParams.tupleDesc, splicerParams.keyProj, nKeys);
     initBTreeExecStreamParam(splicerParams, pBTreeDesc);
     splicerParams.dynParamId = DynamicParamId(1);
+    splicerParams.ignoreDuplicates = false;
     splicerParams.outputTupleDesc.push_back(attrDesc_int64);
     splicerParams.rootPageId = pBTreeDesc->rootPageId;
 

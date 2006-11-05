@@ -40,6 +40,7 @@ void LbmSplicerExecStream::prepare(LbmSplicerExecStreamParams const &params)
 
     dynParamId = params.dynParamId;
     computeRowCount = (opaqueToInt(dynParamId) == 0);
+    ignoreDuplicates = params.ignoreDuplicates;
 
     uint minEntrySize;
 
@@ -278,9 +279,19 @@ void LbmSplicerExecStream::findBetterEntry(TupleData const &bitmapEntry)
 
 void LbmSplicerExecStream::spliceEntry(TupleData &bitmapEntry)
 {
-     FENNEL_TRACE(TRACE_FINE, "splice two entries");
-     FENNEL_TRACE(TRACE_FINE, pCurrentEntry->toString());
-     FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(bitmapEntry));
+    FENNEL_TRACE(TRACE_FINE, "splice two entries");
+    FENNEL_TRACE(TRACE_FINE, pCurrentEntry->toString());
+    FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(bitmapEntry));
+
+    // if we're in ignore duplicate mode, ignore duplicate rid entries rather
+    // than trying to splice them
+    if (ignoreDuplicates) {
+        assert(LbmEntry::isSingleton(bitmapEntry));
+        LcsRid rid = *((LcsRid *) bitmapEntry[nIdxKeys].pData);
+        if (pCurrentEntry->containsRid(rid)) {
+            return;
+        }
+    }
 
     if (!pCurrentEntry->mergeEntry(bitmapEntry)) {
         insertBitmapEntry();

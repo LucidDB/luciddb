@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006-2006 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//  
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
+-->
+
+
+<!DOCTYPE project [
+
+<!ENTITY FarragoProps
+"
+-Dnet.sf.farrago.home=${luciddb.dir}
+-Dnet.sf.farrago.catalog=${project.catalog.dir}
+-Djava.util.logging.config.file=${project.trace.propfile}
+${farrago.test.jvmargs}
+">
+
+<!ENTITY FarragoSqlLineProps
+"
+&FarragoProps;
+-Dsqlline.historyFile=${sqlline.hist.file}
+">
+
+]>
+
+<!-- Luciddb build macro definitions -->
+
+<project name="luciddbBuildMacros" default="unspecified">
+  <taskdef resource="net/sf/antcontrib/antlib.xml" />
+
+  <!-- determine luciddb.dir based on location of this buildfile -->
+  <dirname property="luciddb.dir" file="${ant.file.luciddbBuildMacros}"/>
+  <property environment="env" />
+  <property name="open.dir" location="${luciddb.dir}/.." />
+
+  <!-- directory for luciddb initialization scripts -->
+  <property name="luciddb.initsql.dir" location="${luciddb.dir}/initsql" />
+
+  <!-- filelist for farrago init scripts which are run for luciddb -->
+  <filelist dir="${open.dir}/farrago/initsql" id="farrago.filelist.initsql"
+    files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql,createMgmtViews.sql"/>
+
+  <!-- filelist for luciddb init scripts -->
+  <filelist dir="${luciddb.initsql.dir}" id="luciddb.filelist.initsql"
+    files="installApplib.sql, createTestHarness.sql, createDbaViews.sql, createForeignWrappers.sql"/>
+
+
+  <!-- Macro to run sql scripts/tests using LucidDbSqlTest -->
+  <macrodef name="luciddb.runSqlTests">
+    <attribute name="filelist" default="unspecified"/>
+    <attribute name="sqltest.classpath" default="unspecified"/>
+    <sequential>
+      <junit printsummary="yes" fork="yes" haltonerror="yes" 
+        haltonfailure="yes" tempdir="${testlog.dir}">
+        <classpath path="@{sqltest.classpath}"/>
+        <jvmarg line="${assertions.jvmarg}"/>
+        <jvmarg line="&FarragoSqlLineProps;"/>
+        <sysproperty key="net.sf.farrago.fileset.unitsql"
+          value="@{filelist}"/>
+        <formatter type="plain"/>
+        <formatter type="xml"/> <!-- for integration builds -->
+        <test todir="${testlog.dir}"
+          name="com.lucidera.luciddb.test.LucidDbSqlTest" />
+      </junit>
+    </sequential>
+  </macrodef>
+
+</project>

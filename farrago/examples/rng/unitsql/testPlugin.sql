@@ -111,8 +111,7 @@ select distinct empno from sales.emps order by empno;
 alter session implementation set default;
 
 -- flush query cache
-alter system set "codeCacheMaxBytes" = min;
-alter system set "codeCacheMaxBytes" = max;
+call sys_boot.mgmt.flush_code_cache();
 
 -- verify that DDL personality is wiped out
 -- should fail

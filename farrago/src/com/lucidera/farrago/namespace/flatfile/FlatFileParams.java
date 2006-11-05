@@ -28,7 +28,9 @@ import java.util.*;
 
 import net.sf.farrago.namespace.impl.*;
 
+import org.eigenbase.resource.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -147,13 +149,14 @@ class FlatFileParams
     //~ Instance fields --------------------------------------------------------
 
     private Properties props;
-    private String directory, logDirectory, schemaName;
+    private String directory, logDirectory;
     private String fileExtension, controlFileExtension;
     private char fieldDelimiter, lineDelimiter;
     private char quoteChar, escapeChar;
     private boolean withHeader, withLogging;
     private int numRowsScan;
     private boolean lenient, trim, mapped;
+    private String dateFormat, timeFormat, timestampFormat;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -236,6 +239,15 @@ class FlatFileParams
         mapped = 
             getBooleanProperty(
                 props, PROP_MAPPED, DEFAULT_MAPPED);
+        dateFormat = 
+            decodeDatetimeFormat(
+                props.getProperty(PROP_DATE_FORMAT));
+        timeFormat = 
+            decodeDatetimeFormat(
+                props.getProperty(PROP_TIME_FORMAT));
+        timestampFormat = 
+            decodeDatetimeFormat(
+                props.getProperty(PROP_TIMESTAMP_FORMAT));
     }
 
     /**
@@ -343,6 +355,20 @@ class FlatFileParams
         return FILE_EXTENSION_PREFIX + extension;
     }
 
+    private String decodeDatetimeFormat(String format)
+    {
+        if (format == null) {
+            return null;
+        }
+        try {
+            DateTimeUtil.checkDateFormat(format);
+        } catch (IllegalArgumentException ex) {
+            throw EigenbaseResource.instance()
+            .InvalidDatetimeFormat.ex(format, ex);
+        }
+        return format;
+    }
+
     public String getDirectory()
     {
         return directory;
@@ -400,17 +426,17 @@ class FlatFileParams
 
     public String getDateFormat()
     {
-        return props.getProperty(PROP_DATE_FORMAT);
+        return dateFormat;
     }
 
     public String getTimeFormat()
     {
-        return props.getProperty(PROP_TIME_FORMAT);
+        return timeFormat;
     }
 
     public String getTimestampFormat()
     {
-        return props.getProperty(PROP_TIMESTAMP_FORMAT);
+        return timestampFormat;
     }
 
     public boolean getLenient()

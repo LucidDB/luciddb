@@ -91,14 +91,10 @@ public class FarragoDatabase
     private FarragoSessionTxnMgr txnMgr;
 
     /**
-     * Cache of all sorts of stuff.
+     * Cache of all sorts of stuff; see <a
+     * href="http://wiki.eigenbase.org/FarragoCodeCache">the design docs</a>.
      */
     private FarragoObjectCache codeCache;
-
-    /**
-     * Cache of FarragoMedDataWrappers.
-     */
-    private FarragoObjectCache dataWrapperCache;
 
     /**
      * File containing trace configuration.
@@ -197,10 +193,11 @@ public class FarragoDatabase
             }
 
             long codeCacheMaxBytes = getCodeCacheMaxBytes(currentConfig);
-            codeCache = new FarragoObjectCache(this, codeCacheMaxBytes);
-
-            // TODO:  parameter for cache size limit
-            dataWrapperCache = new FarragoObjectCache(this, Long.MAX_VALUE);
+            codeCache =
+                new FarragoObjectCache(
+                    this,
+                    codeCacheMaxBytes,
+                    new FarragoLruVictimPolicy());
 
             ojRexImplementorTable =
                 new FarragoOJRexImplementorTable(
@@ -269,7 +266,8 @@ public class FarragoDatabase
      */
     public FarragoObjectCache getDataWrapperCache()
     {
-        return dataWrapperCache;
+        // data wrapper caching is actually unified with the code cache
+        return codeCache;
     }
 
     /**
@@ -821,8 +819,8 @@ public class FarragoDatabase
 
                     assert (key.equals(sql));
                     FarragoSessionExecutableStmt executableStmt =
-                        stmt.prepare(validatedSqlNode, sqlNode);
-                    long memUsage =
+                        stmt.prepare(validatedSqlNode, sqlNode);               
+                    long memUsage = 
                         FarragoUtil.getStringMemoryUsage(sql)
                         + executableStmt.getMemoryUsage();
                     entry.initialize(executableStmt, memUsage);

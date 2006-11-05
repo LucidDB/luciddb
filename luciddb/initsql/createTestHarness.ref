@@ -4,13 +4,13 @@
 0: jdbc:luciddb:> -- we put them in a hidden catalog.  They can be dropped for
 0: jdbc:luciddb:> -- production instances.
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create procedure sys_boot.sys_boot.save_test_parameters()
+0: jdbc:luciddb:> create or replace procedure sys_boot.sys_boot.save_test_parameters()
 . . . . . . . . > language java
 . . . . . . . . > contains sql
 . . . . . . . . > external name 
 . . . . . . . . > 'class com.lucidera.farrago.test.LucidDbTestCleanup.saveTestParameters';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create procedure sys_boot.sys_boot.clean_test()
+0: jdbc:luciddb:> create or replace procedure sys_boot.sys_boot.clean_test()
 . . . . . . . . > language java
 . . . . . . . . > contains sql
 . . . . . . . . > external name 

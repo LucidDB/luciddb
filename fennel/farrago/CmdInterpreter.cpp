@@ -47,6 +47,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include <malloc.h>
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 int64_t CmdInterpreter::executeCommand(
@@ -498,6 +500,11 @@ void CmdInterpreter::visit(ProxyCmdRollback &cmd)
 
 void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
 {
+#if 0
+    struct mallinfo minfo = mallinfo();
+    std::cout << "Number of allocated bytes before stream graph construction = "
+        << minfo.uordblks << " bytes" << std::endl;
+#endif
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SharedExecStreamGraph pGraph =
         ExecStreamGraph::newExecStreamGraph();
@@ -542,6 +549,11 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
     streamBuilder.buildStreamGraph(cmd, true);
     pStreamGraphHandle->pExecStreamFactory.reset();
     pStreamGraphHandle->pScheduler = pScheduler;
+#if 0
+    struct mallinfo minfo = mallinfo();
+    std::cout << "Number of allocated bytes after stream graph construction = "
+        << minfo.uordblks << " bytes" << std::endl;
+#endif
 }
 
 void CmdInterpreter::visit(ProxyCmdCreateStreamHandle &cmd)

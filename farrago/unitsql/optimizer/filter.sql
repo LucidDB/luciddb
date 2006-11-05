@@ -60,3 +60,57 @@ in (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 explain plan for
 select name from emps where empno
 in (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+
+
+-- not in and null value
+-- not in requires outer join
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+explain plan without implementation for 
+select name from emps 
+where empno not in (10, null);
+
+explain plan for 
+select name from emps 
+where empno not in (10, null);
+
+select name from emps 
+where empno not in (10, null)
+order by name;
+
+explain plan without implementation for 
+select name from emps
+where empno not in (10+10, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10, null);
+
+explain plan for 
+select name from emps
+where empno not in (10+10, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10, null);
+
+select name from emps
+where empno not in (10+10, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10, null)
+order by name;
+
+explain plan without implementation for 
+select name from emps
+where empno not in (null, null, null, null, null, null, null, null,null, null, null, null,null, null, null, null,null, null, null, null);
+
+explain plan for 
+select name from emps
+where empno not in (null, null, null, null, null, null, null, null,null, null, null, null,null, null, null, null,null, null, null, null);
+
+select name from emps
+where empno not in (null, null, null, null, null, null, null, null,null, null, null, null,null, null, null, null,null, null, null, null)
+order by name;
+
+explain plan without implementation for 
+select name from emps
+where empno not in (20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20);
+
+explain plan for 
+select name from emps
+where empno not in (20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20);
+
+select name from emps
+where empno not in (20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20)
+order by name;

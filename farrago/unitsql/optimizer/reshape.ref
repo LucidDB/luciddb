@@ -241,9 +241,8 @@
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> explain plan for select * from t2 where true;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[true], proj#0..3=[{exprs}], $condition=[$t4])'
-'  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'FennelToIteratorConverter'
+'  FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> create table b(a int primary key, b boolean, c int);
 0: jdbc:farrago:> explain plan for select * from b where c = 1 and b;
 'column0'

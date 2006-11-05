@@ -3,11 +3,11 @@
 
 !set verbose true
 
-create schema sqlj;
+create or replace schema sqlj;
 
 set schema 'sqlj';
 
-create procedure install_jar(
+create or replace procedure install_jar(
     in url varchar(2000),
     in jar varchar(2000),
     in deploy integer)
@@ -15,21 +15,21 @@ language java
 modifies sql data
 external name 'class net.sf.farrago.ddl.DdlSqlj.install_jar';
 
-create procedure replace_jar(
+create or replace procedure replace_jar(
     in url varchar(2000),
     in jar varchar(2000))
 language java
 modifies sql data
 external name 'class net.sf.farrago.ddl.DdlSqlj.replace_jar';
 
-create procedure remove_jar(
+create or replace procedure remove_jar(
     in jar varchar(2000),
     in undeploy integer)
 language java
 modifies sql data
 external name 'class net.sf.farrago.ddl.DdlSqlj.remove_jar';
 
-create procedure alter_java_path(
+create or replace procedure alter_java_path(
     in jar varchar(2000),
     in path varchar(2000))
 language java

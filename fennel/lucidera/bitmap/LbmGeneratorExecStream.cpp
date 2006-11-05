@@ -157,6 +157,13 @@ ExecStreamResult LbmGeneratorExecStream::execute(
         pDynamicParamManager->writeParam(dynParamId, inputTuple[0]);
         inAccessors[0]->consumeTuple();
 
+        // special case where there are no rows -- don't bother reading
+        // from the table because we may end up reading deleted rows
+        if (!createIndex && numRowsToLoad == 0) {
+            pOutAccessor->markEOS();
+            return EXECRC_EOS;
+        }
+
         // position to the starting rid
         for (uint iClu = 0; iClu < nClusters; iClu++) {
 
@@ -622,6 +629,6 @@ bool LbmGeneratorExecStream::flushEntry(uint keycode)
     return true;
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/bitmap/LbmGeneratorExecStream.cpp#15 $");
 
 // End LbmGeneratorExecStream.cpp

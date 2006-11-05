@@ -95,5 +95,10 @@ insert into target_timestamp
 ;
 
 
-select * from target_timestamp order by 1
-;
+select * from target_timestamp
+where cast( coltimestamp as date ) <> current_date
+order by 1;
+
+select cast(coltimestamp as time) from target_timestamp
+where cast( coltimestamp as date) = current_date
+order by 1;

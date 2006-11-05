@@ -386,7 +386,7 @@ public class JmiChangeSet
             transitMap = schedulingMap;
             schedulingMap = new LinkedHashMap<String, JmiValidationAction>();
 
-            setOrdinalsInTransitMap();
+            sortOrderedAssocsInTransitMap();
 
             boolean progress = false;
             boolean unvalidatedDependency = false;
@@ -671,10 +671,10 @@ public class JmiChangeSet
     }
 
     /**
-     * Calls setOrdinals for each object being created or modified in
+     * Calls sortOrderedAssocs for each object being created or modified in
      * transitMap.
      */
-    private void setOrdinalsInTransitMap()
+    private void sortOrderedAssocsInTransitMap()
     {
         for (Map.Entry<String, JmiValidationAction> mapEntry
             : transitMap.entrySet()) {
@@ -687,19 +687,30 @@ public class JmiChangeSet
             // Check for null because object might have been deleted
             // by a trigger.
             if (refObj != null) {
-                setOrdinals(refObj);
+                sortOrderedAssocs(refObj);
             }
         }
     }
 
     /**
-     * Sets the "ordinal" attribute of all objects which are targets of ordered
-     * composite associations with the given object as the source. The ordinal
-     * attribute (if it exists) is set to match the 0-based association order.
+     * Synchronizes the "ordinal" attribute of targets in ordered composite
+     * associations of which the given object is a source.
+     *
+     *<p>
+     *
+     * If none of the targets has a null ordinal value, it is assumed that the
+     * existing ordinals should be used to reorder the association.  Otherwise,
+     * it is assumed that the ordinals should be reassigned based on existing
+     * association order (ignoring existing ordinal values).
+     *
+     *<p>
+     *
+     * Either way, the result is always a contiguous sequence of
+     * ordinals from 0 to n-1 for n targets.
      *
      * @param refObj source of associations to maintain
      */
-    private void setOrdinals(RefObject refObj)
+    private void sortOrderedAssocs(RefObject refObj)
     {
         JmiModelView modelView = dispatcher.getModelView();
         JmiClassVertex classVertex =
@@ -725,12 +736,17 @@ public class JmiChangeSet
             // It's an ordered end, so it should be a List.
             assert (targets instanceof List);
 
+            if (shouldSortByOrdinal()) {
+                sortByOrdinal((List<RefObject>) targets);
+            }
+
+            // Now reassign ordinals to match List order
             int nextOrdinal = 0;
             for (Object targetObj : targets) {
                 RefObject target = (RefObject) targetObj;
-                Integer oldOrdinal = null;
                 Integer newOrdinal = nextOrdinal;
                 ++nextOrdinal;
+                Integer oldOrdinal;
                 try {
                     oldOrdinal = (Integer) target.refGetValue("ordinal");
                 } catch (InvalidNameException ex) {
@@ -747,6 +763,63 @@ public class JmiChangeSet
         }
     }
 
+    private void sortByOrdinal(List<RefObject> targets)
+    {
+        boolean sort = true;
+        boolean strictlyIncreasing = true;
+
+        int lastOrdinal = -1;
+        boolean zeroSeen = false;
+        for (RefObject target : targets) {
+            Integer ordinal;
+            try {
+                ordinal = (Integer) target.refGetValue("ordinal");
+            } catch (InvalidNameException ex) {
+                // No ordinal attribute to be maintained.
+                return;
+            }
+            if (ordinal == null) {
+                sort = false;
+            } else {
+                if (ordinal <= lastOrdinal) {
+                    strictlyIncreasing = false;
+                }
+                if (ordinal == 0) {
+                    if (zeroSeen) {
+                        // Oops, we've seen more than one ordinal with value 0.
+                        // This means we really shouldn't be sorting by
+                        // ordinal, since someone probably left the default
+                        // ordinal value set on a new object.
+                        sort = false;
+                    } else {
+                        zeroSeen = true;
+                    }
+                }
+                lastOrdinal = ordinal;
+            }
+        }
+
+        if (strictlyIncreasing || !sort) {
+            // Avoid unnecessary updates by skipping sort if it would have
+            // no effect.
+            return;
+        }
+
+        ArrayList<RefObject> copy = new ArrayList<RefObject>(
+            (List<RefObject>) targets);
+        Collections.sort(
+            copy, new JmiOrdinalComparator());
+        targets.clear();
+        targets.addAll(copy);
+    }
+
+    protected boolean shouldSortByOrdinal()
+    {
+        // subclasses have to explicitly override this to return true
+        // if they want sort-by-ordinal behavior
+        return false;
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**
@@ -757,6 +830,23 @@ public class JmiChangeSet
     private static abstract class DeferredException
     {
         abstract RuntimeException getException();
+    }
+
+    private static class JmiOrdinalComparator implements Comparator<RefObject>
+    {
+        // implement Comparator
+        public int compare(RefObject o1, RefObject o2)
+        {
+            Integer ord1 = (Integer) o1.refGetValue("ordinal");
+            Integer ord2 = (Integer) o2.refGetValue("ordinal");
+            return ord1 - ord2;
+        }
+
+        // implement Comparator
+        public boolean equals(JmiOrdinalComparator obj)
+        {
+            return obj instanceof JmiOrdinalComparator;
+        }
     }
 }
 

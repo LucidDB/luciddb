@@ -26,7 +26,6 @@ import net.sf.farrago.resource.*;
 
 import java.sql.*;
 import java.text.*;
-import java.util.TimeZone;
 
 /**
  * Moved over from luciddb applib datetime package for general use. 
@@ -49,17 +48,26 @@ public abstract class FarragoConvertDatetimeUDR
 
     public static Date char_to_date(String format, String dateString)
     {
+        if (format == null || dateString == null) {
+            return null;
+        }
         return new Date(charToDateHelper(format, dateString));
     }
 
     public static Time char_to_time(String format, String timeString)
     {
+        if (format == null || timeString == null) {
+            return null;
+        }
         return new Time(charToDateHelper(format, timeString));
     }
 
     public static Timestamp char_to_timestamp(
         String format, String timestampString)
     {
+        if (format == null || timestampString == null) {
+            return null;
+        }
         return new Timestamp(charToDateHelper(format, timestampString));
     }
 
@@ -83,6 +91,9 @@ public abstract class FarragoConvertDatetimeUDR
     {
         DateFormat df;
 
+        if (format == null || d == null) {
+            return null;
+        }
         if (directCall) {
             df = getDateFormat(format, DIRECT_DATE);
         } else {
@@ -96,6 +107,9 @@ public abstract class FarragoConvertDatetimeUDR
     {
         DateFormat df;
 
+        if (format == null || t == null) {
+            return null;
+        }
         if (directCall) {
             df = getDateFormat(format, DIRECT_TIME);
         } else {
@@ -109,6 +123,9 @@ public abstract class FarragoConvertDatetimeUDR
     {
         DateFormat df;
 
+        if (format == null || ts == null) {
+            return null;
+        }
         if (directCall) {
             df = getDateFormat(format, DIRECT_TIMESTAMP);
         } else {

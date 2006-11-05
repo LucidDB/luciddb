@@ -4,23 +4,24 @@
 0: jdbc:farrago:> !set verbose true
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create views in system-owned schema sys_boot.jdbc_metadata
-0: jdbc:farrago:> create schema sys_boot.jdbc_metadata;
+0: jdbc:farrago:> create or replace schema sys_boot.jdbc_metadata;
 0: jdbc:farrago:> set schema 'sys_boot.jdbc_metadata';
 0: jdbc:farrago:> set path 'sys_boot.jdbc_metadata';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function null_identifier()
+0: jdbc:farrago:> create or replace function null_identifier()
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > deterministic
 . . . . . . . . > return cast(null as varchar(128));
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function null_remarks()
+0: jdbc:farrago:> create or replace function null_remarks()
 . . . . . . . . > returns varchar(1024)
 . . . . . . . . > contains sql
 . . . . . . . . > deterministic
 . . . . . . . . > return cast(null as varchar(1024));
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function convert_cwm_nullable_to_int(cwm_nullability varchar(20))
+0: jdbc:farrago:> create or replace function convert_cwm_nullable_to_int(
+. . . . . . . . >   cwm_nullability varchar(20))
 . . . . . . . . > returns integer
 . . . . . . . . > contains sql
 . . . . . . . . > deterministic
@@ -30,7 +31,8 @@
 . . . . . . . . > else 2
 . . . . . . . . > end;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function convert_cwm_nullable_to_string(cwm_nullability varchar(20))
+0: jdbc:farrago:> create or replace function convert_cwm_nullable_to_string(
+. . . . . . . . >   cwm_nullability varchar(20))
 . . . . . . . . > returns varchar(3)
 . . . . . . . . > contains sql
 . . . . . . . . > deterministic
@@ -40,7 +42,8 @@
 . . . . . . . . > else ''
 . . . . . . . . > end;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function convert_cwm_param_kind_to_int(cwm_param_kind varchar(10))
+0: jdbc:farrago:> create or replace function convert_cwm_param_kind_to_int(
+. . . . . . . . >   cwm_param_kind varchar(10))
 . . . . . . . . > returns smallint
 . . . . . . . . > contains sql
 . . . . . . . . > deterministic
@@ -52,7 +55,8 @@
 . . . . . . . . > else 0
 . . . . . . . . > end;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function convert_cwm_typename_to_literal_prefix(typename varchar(128))
+0: jdbc:farrago:> create or replace function convert_cwm_typename_to_literal_prefix(
+. . . . . . . . >   typename varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > deterministic
@@ -67,7 +71,8 @@
 . . . . . . . . > else cast(null as varchar(128))
 . . . . . . . . > end;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function convert_cwm_typename_to_literal_suffix(typename varchar(128))
+0: jdbc:farrago:> create or replace function convert_cwm_typename_to_literal_suffix(
+. . . . . . . . >   typename varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > deterministic
@@ -83,7 +88,8 @@
 . . . . . . . . > end;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE:  currently unused return codes are 0 for statistic, 2 for hashed
-0: jdbc:farrago:> create function convert_cwm_index_attributes_to_type(is_clustered boolean)
+0: jdbc:farrago:> create or replace function convert_cwm_index_attributes_to_type(
+. . . . . . . . >   is_clustered boolean)
 . . . . . . . . > returns smallint
 . . . . . . . . > contains sql
 . . . . . . . . > deterministic
@@ -92,7 +98,7 @@
 . . . . . . . . > else 3
 . . . . . . . . > end;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function convert_cwm_statistic_to_int(val numeric)
+0: jdbc:farrago:> create or replace function convert_cwm_statistic_to_int(val numeric)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > deterministic
@@ -103,7 +109,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE:  don't include ORDER BY in the view definitions
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view schemas_view_internal as
+0: jdbc:farrago:> create or replace view schemas_view_internal as
 . . . . . . . . >     select 
 . . . . . . . . >         c."name" as object_catalog,
 . . . . . . . . >         s."name" as object_schema,
@@ -116,7 +122,7 @@
 . . . . . . . . >         c."mofId" = s."namespace"
 . . . . . . . . > ;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view tables_view_internal as
+0: jdbc:farrago:> create or replace view tables_view_internal as
 . . . . . . . . >     select 
 . . . . . . . . >         s.object_catalog as table_cat,
 . . . . . . . . >         s.object_schema as table_schem,
@@ -137,7 +143,7 @@
 . . . . . . . . >         s."mofId" = t."namespace"
 . . . . . . . . > ;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view catalogs_view as
+0: jdbc:farrago:> create or replace view catalogs_view as
 . . . . . . . . >     select 
 . . . . . . . . >         c."name" as table_cat
 . . . . . . . . >     from 
@@ -145,7 +151,7 @@
 . . . . . . . . > ;
 0: jdbc:farrago:> grant select on catalogs_view to public;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view schemas_view as
+0: jdbc:farrago:> create or replace view schemas_view as
 . . . . . . . . >     select 
 . . . . . . . . >         object_schema as table_schem,
 . . . . . . . . >         object_catalog as table_catalog
@@ -155,14 +161,14 @@
 0: jdbc:farrago:> grant select on schemas_view to public;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO:  add 'GLOBAL TEMPORARY' and 'SYSTEM TABLE'
-0: jdbc:farrago:> create view table_types_view_internal(table_type,uml_class_name) as
+0: jdbc:farrago:> create or replace view table_types_view_internal(table_type,uml_class_name) as
 . . . . . . . . >     values 
 . . . . . . . . >         (trim('FOREIGN TABLE'),trim('ForeignTable')),
 . . . . . . . . >         ('TABLE','LocalTable'),
 . . . . . . . . >         ('VIEW','LocalView')
 . . . . . . . . > ;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view tables_view as
+0: jdbc:farrago:> create or replace view tables_view as
 . . . . . . . . >     select 
 . . . . . . . . >         table_cat,
 . . . . . . . . >         table_schem,
@@ -182,7 +188,7 @@
 . . . . . . . . > ;
 0: jdbc:farrago:> grant select on tables_view to public;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view table_types_view as
+0: jdbc:farrago:> create or replace view table_types_view as
 . . . . . . . . >     select distinct
 . . . . . . . . >         table_type
 . . . . . . . . >     from
@@ -196,7 +202,7 @@
 0: jdbc:farrago:> -- REVIEW: length/precision/scale/radix
 0: jdbc:farrago:> -- also all of above for attributes and procedure_columns
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view columns_view_internal as
+0: jdbc:farrago:> create or replace view columns_view_internal as
 . . . . . . . . >     select 
 . . . . . . . . >         t.table_cat,
 . . . . . . . . >         t.table_schem,
@@ -221,7 +227,7 @@
 . . . . . . . . >     on 
 . . . . . . . . >         t."mofId" = c."owner";
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view columns_view as
+0: jdbc:farrago:> create or replace view columns_view as
 . . . . . . . . >     select 
 . . . . . . . . >         c.table_cat,
 . . . . . . . . >         c.table_schem,
@@ -253,7 +259,7 @@
 . . . . . . . . >         c."type" = t."mofId";
 0: jdbc:farrago:> grant select on columns_view to public;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view udts_view_internal as
+0: jdbc:farrago:> create or replace view udts_view_internal as
 . . . . . . . . >     select
 . . . . . . . . >         s.object_catalog as type_cat,
 . . . . . . . . >         s.object_schema as type_schem,
@@ -270,7 +276,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO:  base_type for distinct types
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view udts_view as
+0: jdbc:farrago:> create or replace view udts_view as
 . . . . . . . . >     select
 . . . . . . . . >         u.type_cat,
 . . . . . . . . >         u.type_schem,
@@ -284,7 +290,7 @@
 . . . . . . . . > ;
 0: jdbc:farrago:> grant select on udts_view to public;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view attributes_view_internal as
+0: jdbc:farrago:> create or replace view attributes_view_internal as
 . . . . . . . . >     select
 . . . . . . . . >         u.type_cat,
 . . . . . . . . >         u.type_schem,
@@ -306,7 +312,7 @@
 . . . . . . . . >         u."mofId" = a."owner"
 . . . . . . . . > ;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view attributes_view as
+0: jdbc:farrago:> create or replace view attributes_view as
 . . . . . . . . >     select
 . . . . . . . . >         a.type_cat,
 . . . . . . . . >         a.type_schem,
@@ -342,7 +348,7 @@
 0: jdbc:farrago:> -- Routine doesn't work (causes assignment of null to NOT NULL).  Must be
 0: jdbc:farrago:> -- a bug in Farrago's MDR namespace support.
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view procedures_view_internal as
+0: jdbc:farrago:> create or replace view procedures_view_internal as
 . . . . . . . . >     select
 . . . . . . . . >         s.object_catalog as procedure_cat,
 . . . . . . . . >         s.object_schema as procedure_schem,
@@ -359,7 +365,7 @@
 0: jdbc:farrago:> -- TODO:  other values for procedure_type once we support procedures
 0: jdbc:farrago:> -- that return result sets
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view procedures_view as
+0: jdbc:farrago:> create or replace view procedures_view as
 . . . . . . . . >     select
 . . . . . . . . >         p.procedure_cat,
 . . . . . . . . >         p.procedure_schem,
@@ -374,7 +380,7 @@
 . . . . . . . . > ;
 0: jdbc:farrago:> grant select on procedures_view to public;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view procedure_columns_view_internal as
+0: jdbc:farrago:> create or replace view procedure_columns_view_internal as
 . . . . . . . . >     select
 . . . . . . . . >         p.procedure_cat,
 . . . . . . . . >         p.procedure_schem,
@@ -396,7 +402,7 @@
 . . . . . . . . >         p."mofId" = rp."behavioralFeature"
 . . . . . . . . > ;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view procedure_columns_view as
+0: jdbc:farrago:> create or replace view procedure_columns_view as
 . . . . . . . . >     select
 . . . . . . . . >         pc.procedure_cat,
 . . . . . . . . >         pc.procedure_schem,
@@ -426,7 +432,7 @@
 0: jdbc:farrago:> -- be null for non-numerics; case_sensitive should be null for
 0: jdbc:farrago:> -- non-character; support create_params
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view type_info_view as
+0: jdbc:farrago:> create or replace view type_info_view as
 . . . . . . . . >     select
 . . . . . . . . >         t."name" as type_name,
 . . . . . . . . >         t."typeNumber" as data_type,
@@ -454,7 +460,7 @@
 . . . . . . . . > ;
 0: jdbc:farrago:> grant select on type_info_view to public;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view primary_keys_view_internal as
+0: jdbc:farrago:> create or replace view primary_keys_view_internal as
 . . . . . . . . >     select
 . . . . . . . . >         t.table_cat,
 . . . . . . . . >         t.table_schem,
@@ -469,7 +475,7 @@
 . . . . . . . . >         t."mofId" = k."namespace"
 . . . . . . . . > ;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view primary_keys_view as
+0: jdbc:farrago:> create or replace view primary_keys_view as
 . . . . . . . . >     select
 . . . . . . . . >         k.table_cat,
 . . . . . . . . >         k.table_schem,
@@ -489,7 +495,7 @@
 0: jdbc:farrago:> -- TODO: use an outer join with histograms for index cardinality
 0: jdbc:farrago:> --   or store that statistic in the catalog
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view index_info_internal as
+0: jdbc:farrago:> create or replace view index_info_internal as
 . . . . . . . . >     select
 . . . . . . . . >         t.table_cat,
 . . . . . . . . >         t.table_schem,
@@ -510,7 +516,7 @@
 . . . . . . . . >         t."mofId" = i."spannedClass"
 . . . . . . . . > ;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view table_row_counts_internal as
+0: jdbc:farrago:> create or replace view table_row_counts_internal as
 . . . . . . . . >     select
 . . . . . . . . >         t.table_cat,
 . . . . . . . . >         t.table_schem,
@@ -527,7 +533,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: would be cleaner to have a separate view for page counts 
 0: jdbc:farrago:> --   but MedMdr joins work best when joining simple tables
-0: jdbc:farrago:> create view table_stats_internal as
+0: jdbc:farrago:> create or replace view table_stats_internal as
 . . . . . . . . >     select
 . . . . . . . . >         t.table_cat,
 . . . . . . . . >         t.table_schem,
@@ -551,7 +557,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- left outer join needed to handle cases where indexes are not associated
 0: jdbc:farrago:> -- with any specific column
-0: jdbc:farrago:> create view index_info_view as
+0: jdbc:farrago:> create or replace view index_info_view as
 . . . . . . . . >     select
 . . . . . . . . >         i.table_cat,
 . . . . . . . . >         i.table_schem,
@@ -592,10 +598,10 @@
 . . . . . . . . > ;
 0: jdbc:farrago:> grant select on index_info_view to public;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view empty_view as
+0: jdbc:farrago:> create or replace view empty_view as
 . . . . . . . . > select * from (values(0)) where false;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view super_tables_view as
+0: jdbc:farrago:> create or replace view super_tables_view as
 . . . . . . . . >     select
 . . . . . . . . >         null_identifier() as table_cat,
 . . . . . . . . >         null_identifier() as table_schem,
@@ -604,7 +610,7 @@
 . . . . . . . . >     from empty_view;
 0: jdbc:farrago:> grant select on super_tables_view to public;
 0: jdbc:farrago:>     
-0: jdbc:farrago:> create view super_types_view as
+0: jdbc:farrago:> create or replace view super_types_view as
 . . . . . . . . >     select
 . . . . . . . . >         null_identifier() as type_cat,
 . . . . . . . . >         null_identifier() as type_schem,
@@ -618,6 +624,6 @@
 0: jdbc:farrago:> -- TODO:  all the rest
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- just a placeholder for now
-0: jdbc:farrago:> create schema localdb.information_schema;
+0: jdbc:farrago:> create or replace schema localdb.information_schema;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

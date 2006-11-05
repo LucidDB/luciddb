@@ -581,7 +581,7 @@ void LcsClusterAppendExecStream::writeBatch(bool lastBatch)
 
         } else {
 
-            uint numVals;
+            uint16_t numVals;
             
             // write orderVals to oVals and remap val ords in row array
             hash[i].prepareCompressedBatch(

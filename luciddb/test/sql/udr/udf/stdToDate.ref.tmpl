@@ -13,6 +13,17 @@
 . . . . . . . . >     timestamp_format 'MM/dd/yyyy hh:mm:ss a'
 . . . . . . . . >     );
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail
+0: jdbc:luciddb:> create or replace server flatfile_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory '@DATADIR@',
+. . . . . . . . >     log_directory '@LOGDIR@',
+. . . . . . . . >     file_extension 'csv',
+. . . . . . . . >     date_format 'MM/DD/YYYY'
+. . . . . . . . >     );
+Error: java.lang.IllegalArgumentException: Illegal pattern character 'Y' (state=,code=0)
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- view the text of the file
 0: jdbc:luciddb:> select * from flatfile_server.sample."dates";
 +-------------+--------------+-------------------------+
@@ -22,6 +33,7 @@
 | 01/01/1980  | 12:00:00 AM  | 01/01/1980 12:00:00 AM  |
 | 12/31/1980  | 11:59:59 PM  | 12/31/1980 11:59:59 AM  |
 | 02/29/2004  | 12:00:00 PM  | 02/29/2004 12:00:00 PM  |
+| 01/01/2007  |              | 04/22/2006 02:30:00 PM  |
 +-------------+--------------+-------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- read the file as date and times
@@ -32,6 +44,7 @@
 | 1980-01-01  | 00:00:00    | 1980-01-01 00:00:00.0  |
 | 1980-12-31  | 23:59:59    | 1980-12-31 11:59:59.0  |
 | 2004-02-29  | 12:00:00    | 2004-02-29 12:00:00.0  |
+| 2007-01-01  |             | 2006-04-22 14:30:00.0  |
 +-------------+-------------+------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- convert back into strings
@@ -47,6 +60,7 @@
 | 01/01/1980  | 12:00:00 AM  | 01/01/1980 12:00:00 AM  |
 | 12/31/1980  | 11:59:59 PM  | 12/31/1980 11:59:59 AM  |
 | 02/29/2004  | 12:00:00 PM  | 02/29/2004 12:00:00 PM  |
+| 01/01/2007  |              | 04/22/2006 02:30:00 PM  |
 +-------------+--------------+-------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values applib.timestamp_to_char(
@@ -77,5 +91,16 @@
 +-------------+
 | 01/01/2001  |
 +-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values applib.date_to_char( 
+. . . . . . . . >     cast (null as varchar(256)),
+. . . . . . . . >     applib.char_to_date(
+. . . . . . . . >         'yyyy-MM-dd',
+. . . . . . . . >         '2001-01-01'));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

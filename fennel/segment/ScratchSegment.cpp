@@ -58,7 +58,7 @@ void ScratchSegment::clearPages()
 BlockId ScratchSegment::translatePageId(PageId pageId)
 {
     assert(isPageIdAllocated(pageId));
-    BlockId blockId;
+    BlockId blockId(0);
     CompoundId::setDeviceId(blockId,Cache::NULL_DEVICE_ID);
     CompoundId::setBlockNum(
         blockId,

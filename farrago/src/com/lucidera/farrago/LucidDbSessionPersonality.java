@@ -29,6 +29,7 @@ import com.lucidera.lcs.*;
 import com.lucidera.opt.*;
 import com.lucidera.runtime.*;
 
+import java.io.*;
 import java.util.*;
 
 import net.sf.farrago.db.*;
@@ -36,6 +37,7 @@ import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
@@ -60,7 +62,8 @@ public class LucidDbSessionPersonality
     //~ Static fields ----------------------------------------------------------
 
     public static final String LOG_DIR = "logDir";
-    public static final String LOG_DIR_DEFAULT = "log";
+    public static final String[] LOG_DIR_DEFAULT = 
+        { "log", "testlog", "trace" };
     public static final String ETL_PROCESS_ID = "etlProcessId";
     public static final String ETL_PROCESS_ID_DEFAULT = null;
     public static final String ETL_ACTION_ID = "etlActionId";
@@ -575,7 +578,20 @@ public class LucidDbSessionPersonality
         FarragoSessionVariables variables)
     {
         super.loadDefaultSessionVariables(variables);
-        variables.setDefault(LOG_DIR, LOG_DIR_DEFAULT);
+        // try to pick a good default variable for log directory. this would 
+        // not be used in practice, but could be helpful during development.
+        String homeDirPath = FarragoProperties.instance().homeDir.get();
+        File homeDir = new File(homeDirPath);
+        assert (homeDir.exists() && homeDir.isDirectory());
+        String logDirPath = homeDirPath;
+        for (String subDirPath : LOG_DIR_DEFAULT) {
+            File logDir = new File(homeDir, subDirPath);
+            if (logDir.exists()) {
+                logDirPath = logDir.getPath();
+                break;
+            }
+        }
+        variables.setDefault(LOG_DIR, logDirPath);
         variables.setDefault(ETL_PROCESS_ID, ETL_PROCESS_ID_DEFAULT);
         variables.setDefault(ETL_ACTION_ID, ETL_ACTION_ID_DEFAULT);
         variables.setDefault(ERROR_MAX, ERROR_MAX_DEFAULT);

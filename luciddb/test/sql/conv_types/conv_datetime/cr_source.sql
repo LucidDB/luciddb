@@ -95,8 +95,16 @@ values
    time '2:16:29', date '1957-9-29', timestamp '1957-9-29 2:16:29.33' )
 ;
 
-select * from datatype_source where colname = 'BAD'
+select 
+  colname, colbit, coltiny, colsmall, colint, colbig, coldec, colnum,
+  coldouble, colreal, colchar, colvchar, colvbin, coltime, coldate, coltmstamp
+from datatype_source where colname = 'BAD'
 ;
+
+-- set numberFormat since floating point differs based on VM
+!set numberFormat 0.00
+select colfloat from datatype_source where colname = 'BAD';
+!set numberFormat default
 
 select colchar, colvchar, coltime, coltmstamp
  from datatype_source where colname = 'TIME'

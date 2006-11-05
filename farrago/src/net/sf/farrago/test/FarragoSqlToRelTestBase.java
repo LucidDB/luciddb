@@ -94,7 +94,10 @@ public abstract class FarragoSqlToRelTestBase
             // create a private code cache: don't pollute the real
             // database code cache
             FarragoObjectCache objCache =
-                new FarragoObjectCache(allocations, 0);
+                new FarragoObjectCache(
+                    allocations,
+                    0,
+                    new FarragoLruVictimPolicy());
 
             // FarragoPreparingStmt does most of the work for us
             FarragoSessionStmtValidator stmtValidator =

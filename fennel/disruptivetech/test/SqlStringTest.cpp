@@ -1993,7 +1993,7 @@ SqlStringTest::testSqlStringCastToExact_Helper(uint64_t value,
                                                bool exceptionExpected)
 {
     bool caught = false;
-    int64_t newvalue;
+    int64_t newvalue = 0;
     SqlStringBuffer src(src_storage, src_len,
                         0, src_storage-src_len,
                         's', ' ');
@@ -2225,7 +2225,7 @@ SqlStringTest::testSqlStringCastToDecimal_Helper(uint64_t value,
                                                  bool invalidCharExpected)
 {
     bool caught = false;
-    int64_t newvalue;
+    int64_t newvalue = 0;
     SqlStringBuffer src(src_storage, src_len,
                         0, src_storage-src_len,
                         's', ' ');

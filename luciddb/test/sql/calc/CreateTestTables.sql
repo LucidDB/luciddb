@@ -90,12 +90,17 @@ INSERT INTO TEST_REAL_TABLE VALUES(12.33e-30, 12.55e-30, 12.77e-31, 12876.32e-20
 INSERT INTO TEST_REAL_TABLE VALUES(-12.33e30, -12.55e30, -12.77e31, -12876.32e202, -33324.443e303);
 INSERT INTO TEST_REAL_TABLE VALUES(-12.33e-30, -12.55e-30, -12.77e-31, -12876.32e-202, -33324.443e-303);
 INSERT INTO TEST_REAL_TABLE VALUES(1.0e-37, 1.0e38, 1.0e38, 1.0e-307, 1.0e308);
-SELECT * FROM TEST_REAL_TABLE ORDER BY n1,n2,n3,n4,n5;
+SELECT * FROM TEST_REAL_TABLE WHERE n1 <> 1.001 ORDER BY n1,n2,n3,n4,n5;
+-- null row
+SELECT * FROM TEST_REAL_TABLE WHERE n1 IS NULL;
 -- Also test the very small numbers ; IDBA doesn't display them properly.
 SELECT n1, n1 * 1e35 FROM TEST_REAL_TABLE
 WHERE n1 < 0.00000001 AND n1 > -0.00000001
 ORDER BY n1;
-
+-- set numberFormat since floating point differs based on VM
+!set numberFormat 0.0000
+select * from TEST_REAL_TABLE where n1 = cast(1.001 as float);
+!set numberFormat default
 -- CHAR table.
 CREATE TABLE TEST_CHAR_TABLE
 (

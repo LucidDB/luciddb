@@ -104,6 +104,7 @@
     <pattern name="lu.opt.test" class="com.lucidera.opt.test.*" />
     <pattern name="lu.query" class="com.lucidera.query.*" />
     <pattern name="lu.runtime" class="com.lucidera.runtime.*" />
+    <pattern name="lu.type" class="com.lucidera.type.*" />
 
     <pattern name="defimpl" class="net.sf.farrago.defimpl.*" />
 
@@ -173,6 +174,7 @@
       <include pattern="lu.opt.test"/>
       <include pattern="lu.query"/>
       <include pattern="lu.runtime"/>
+      <include pattern="lu.type"/>
       <include pattern="defimpl"/>
       <include pattern="test"/>
       <include pattern="dt.test"/>
@@ -1014,6 +1016,7 @@
       <include pattern="lu.query" />
       <include pattern="lu.runtime" />
       <include pattern="lu.jdbc" />
+      <include pattern="lu.type" />
       <include pattern="server" />
       <include pattern="defimpl.deps" />
     </pattern>

@@ -255,7 +255,7 @@ SqlDateTest::testSqlStrToDate_Ascii_Helper(SqlStrToDateConvAction action,
                                            bool errorExpected)
 
 {
-    int64_t t;
+    int64_t t = 0;
     bool caught = false;
 
     try {
@@ -270,7 +270,7 @@ SqlDateTest::testSqlStrToDate_Ascii_Helper(SqlStrToDateConvAction action,
             t = IsoStringToTimestamp(src, len);
             break;
         default:
-            BOOST_CHECK(false);
+            permAssert(false);
         }
     } catch (const char *str) {
         caught = true;

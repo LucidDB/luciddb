@@ -30,6 +30,11 @@ from
     csv_schema.explicit_example 
 order by 3;
 
+-- verify that we can buffer cartesian product inputs instead
+-- of trying to restart them
+select count(*) 
+from csv_schema.explicit_example e1, csv_schema.explicit_example e2;
+
 -- should fail:  required metadata support not available
 import foreign schema testdata
 from server csv_server
@@ -65,3 +70,27 @@ create foreign table csv_schema.explicit_example(
     extra_field char(1) not null)
 server csv_server
 options (table_name 'example', schema_name 'grub');
+
+-- test an extended option
+create server csv_server_with_extended_option
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.relique.jdbc.csv.CsvDriver',
+    url 'jdbc:relique:csv:unitsql/med',
+    extended_options 'TRUE',
+    schema_name 'TESTDATA',
+    "suppressHeaders" 'true');
+
+select count(*) from csv_server_with_extended_option.testdata."example";
+
+-- verify that without extended_option enabled, extra properties are
+-- not passed through
+create server csv_server_without_extended_option
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.relique.jdbc.csv.CsvDriver',
+    url 'jdbc:relique:csv:unitsql/med',
+    schema_name 'TESTDATA',
+    "suppressHeaders" 'true');
+
+select count(*) from csv_server_without_extended_option.testdata."example";

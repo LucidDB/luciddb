@@ -182,10 +182,9 @@ jint JniUtil::init(JavaVM *pVmInit)
     jclass classCollection = pEnv->FindClass("java/util/Collection");
     jclass classIterator = pEnv->FindClass("java/util/Iterator");
 
-    // REVIEW jvs 22-Oct-2006:  Why do some but not all of these
-    // classes get the NewGlobalRef treatment?
-
     // Make sure this jclass is a global ref or the JVM might move it on us.
+    // This is only required for classes on which we need to invoke
+    // static methods.
     classRhBase64 = pEnv->FindClass("org/eigenbase/util/RhBase64");
     classRhBase64 = (jclass) pEnv->NewGlobalRef(classRhBase64);
     classUUID = pEnv->FindClass("java/util/UUID");

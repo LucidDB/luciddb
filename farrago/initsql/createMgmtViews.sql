@@ -3,67 +3,67 @@
 !set verbose true
                                                                                 
 -- create views in system-owned schema sys_boot.mgmt
-create schema sys_boot.mgmt;
+create or replace schema sys_boot.mgmt;
 set schema 'sys_boot.mgmt';
 set path 'sys_boot.mgmt';
 
-create function repository_properties()
+create or replace function repository_properties()
 returns table(property_name varchar(255), property_value varchar(255))
 language java
 parameter style system defined java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.repositoryProperties';
 
-create view repository_properties_view as
+create or replace view repository_properties_view as
   select * from table(repository_properties());
 
-create function repository_integrity_violations()
+create or replace function repository_integrity_violations()
 returns table(description varchar(65535), mof_id varchar(128))
 language java
 parameter style system defined java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.repositoryIntegrityViolations';
 
-create function statements()
+create or replace function statements()
 returns table(id bigint, session_id bigint, sql_stmt varchar(1024), create_time timestamp, parameters varchar(1024))
 language java
 parameter style system defined java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.statements';
 
-create view statements_view as
+create or replace view statements_view as
   select * from table(statements());
 
 -- todo:  grant this only to a privileged user
 grant select on statements_view to public;
 
-create function sessions()
+create or replace function sessions()
 returns table(id int, url varchar(128), current_user_name varchar(128), current_role_name varchar(128), session_user_name varchar(128), system_user_name varchar(128), system_user_fullname varchar(128), session_name varchar(128), program_name varchar(128), process_id int, catalog_name varchar(128), schema_name varchar(128), is_closed boolean, is_auto_commit boolean, is_txn_in_progress boolean)
 language java
 parameter style system defined java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.sessions';
 
-create view sessions_view as
+create or replace view sessions_view as
   select * from table(sessions());
 
 -- todo:  grant this only to a privileged user
 grant select on sessions_view to public;
 
-create function objects_in_use()
+create or replace function objects_in_use()
 returns table(session_id bigint, stmt_id bigint, mof_id varchar(128))
 language java
 parameter style system defined java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.objectsInUse';
 
-create view objects_in_use_view as
+create or replace view objects_in_use_view as
   select * from table(objects_in_use());
 
 -- TODO: grant this only to a privileged user
 grant select on objects_in_use_view to public;
 
-create function threads()
+create or replace function threads()
 returns table(
     thread_id bigint, thread_group_name varchar(128), thread_name varchar(128),
     thread_priority int, thread_state varchar(128), is_alive boolean,
@@ -73,7 +73,7 @@ parameter style system defined java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.threadList';
 
-create function thread_stack_entries()
+create or replace function thread_stack_entries()
 returns table(
     thread_id bigint, stack_level int, entry_string varchar(1024),
     class_name varchar(128), method_name varchar(128), 
@@ -84,7 +84,7 @@ no sql
 external name 
 'class net.sf.farrago.syslib.FarragoManagementUDR.threadStackEntries';
 
-create function system_info()
+create or replace function system_info()
 returns table(
     source_name varchar(128), 
     item_name varchar(1024), 
@@ -96,7 +96,7 @@ no sql
 external name 
 'class net.sf.farrago.syslib.FarragoManagementUDR.systemInfo';
 
-create function performance_counters()
+create or replace function performance_counters()
 returns table(
     source_name varchar(128), 
     counter_name varchar(1024), 
@@ -110,7 +110,7 @@ external name
 
 -- lie and say this is non-deterministic, since it's usually used
 -- in cases where it would be annoying if it got optimized away
-create function sleep(millis bigint)
+create or replace function sleep(millis bigint)
 returns integer
 language java
 no sql
@@ -118,7 +118,7 @@ not deterministic
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.sleep';
 
 -- flushes all entries from the global code cache
-create procedure flush_code_cache()
+create or replace procedure flush_code_cache()
   language java
   parameter style java
   reads sql data
@@ -127,7 +127,7 @@ create procedure flush_code_cache()
 
 -- lets an administrator kill a running session
 -- TODO: grant this only to a privileged user
-create procedure kill_session(in id bigint)
+create or replace procedure kill_session(in id bigint)
   language java
   parameter style java
   no sql
@@ -137,7 +137,7 @@ create procedure kill_session(in id bigint)
 -- (like unix "kill -KILL")
 -- param ID: globally-unique statement id
 -- TODO: grant this only to a privileged user
-create procedure kill_statement(in id bigint)
+create or replace procedure kill_statement(in id bigint)
   language java
   parameter style java
   no sql
@@ -148,21 +148,21 @@ create procedure kill_statement(in id bigint)
 -- Works around lack of scalar subqueries, whuch makes kill_statement(id) hard to use
 -- param SQL: a string
 -- TODO: grant this only to a privileged user
-create procedure kill_statement_match(in s varchar(256))
+create or replace procedure kill_statement_match(in s varchar(256))
   language java
   parameter style java
   no sql
   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
 
 -- exports the catalog to an XMI file
-create procedure export_catalog_xmi(in filename varchar(65535))
+create or replace procedure export_catalog_xmi(in filename varchar(65535))
   language java
   parameter style java
   no sql
   external name 'class net.sf.farrago.syslib.FarragoManagementUDR.exportCatalog';
 
 -- exports query results to a delimited file (optionally with BCP control file)
-create procedure export_query_to_file(
+create or replace procedure export_query_to_file(
   in query_sql varchar(65535),
   in path_without_extension varchar(65535),
   in bcp boolean,
@@ -180,7 +180,7 @@ called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
 
 -- Returns session parameters
-create function session_parameters ()
+create or replace function session_parameters ()
 returns table(
   param_name varchar(128),
   param_value varchar(128))
@@ -190,7 +190,7 @@ no sql
 external name 
 'class net.sf.farrago.syslib.FarragoManagementUDR.sessionParameters';
 
-create view session_parameters_view as
+create or replace view session_parameters_view as
   select * from table(session_parameters());
 
 -- todo:  grant this only to a privileged user
@@ -201,7 +201,7 @@ grant select on session_parameters_view to public;
 --
 
 -- Set the row count of a table
-create procedure stat_set_row_count(
+create or replace procedure stat_set_row_count(
     in catalog_name varchar(2000),
     in schema_name varchar(2000),
     in table_name varchar(2000),
@@ -211,7 +211,7 @@ contains sql
 external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_row_count';
 
 -- Set the page count of an index
-create procedure stat_set_page_count(
+create or replace procedure stat_set_page_count(
     in catalog_name varchar(2000),
     in schema_name varchar(2000),
     in index_name varchar(2000),
@@ -224,7 +224,7 @@ external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_page_count';
 --
 -- distribution_type must be 0 for now
 -- value_digits are characters to use for fake column values
-create procedure stat_set_column_histogram(
+create or replace procedure stat_set_column_histogram(
     in catalog_name varchar(2000),
     in schema_name varchar(2000),
     in table_name varchar(2000),
@@ -239,7 +239,7 @@ contains sql
 external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_column_histogram';
 
 -- Statistics views
-create view page_counts_view as
+create or replace view page_counts_view as
     select 
         i.table_cat,
         i.table_schem,
@@ -252,7 +252,7 @@ create view page_counts_view as
         i.pages is not null
 ;
 
-create view row_counts_view as
+create or replace view row_counts_view as
     select
         t.table_cat,
         t.table_schem,
@@ -268,7 +268,7 @@ create view row_counts_view as
         acs."rowCount" is not null
 ;
 
-create view histograms_view_internal as
+create or replace view histograms_view_internal as
     select 
         c.table_cat,
         c.table_schem,
@@ -288,7 +288,7 @@ create view histograms_view_internal as
         c."mofId" = h."Column"
 ;
 
-create view histograms_view as
+create or replace view histograms_view as
     select
         h.table_cat,
         h.table_schem,
@@ -303,7 +303,7 @@ create view histograms_view as
         histograms_view_internal h
 ;
 
-create view histogram_bars_view as
+create or replace view histogram_bars_view as
     select 
         h.table_cat,
         h.table_schem,
@@ -324,7 +324,7 @@ create view histogram_bars_view as
 -- Sequences
 --
 
-create view sequences_view as
+create or replace view sequences_view as
     select
         c.table_cat,
         c.table_schem,
@@ -348,7 +348,7 @@ create view sequences_view as
 -- Database admin internal views
 --
 
-create view dba_schemas_internal1 as
+create or replace view dba_schemas_internal1 as
   select
     c."name" as catalog_name,
     s."name" as schema_name,
@@ -365,7 +365,7 @@ create view dba_schemas_internal1 as
     c."mofId" = s."namespace"
 ;
 
-create view dba_schemas_internal2 as
+create or replace view dba_schemas_internal2 as
   select
     catalog_name,
     schema_name,
@@ -385,7 +385,7 @@ create view dba_schemas_internal2 as
    g."action" = 'CREATION'
 ;
 
-create view dba_tables_internal1 as
+create or replace view dba_tables_internal1 as
   select 
     table_cat as catalog_name,
     table_schem as schema_name,
@@ -404,7 +404,7 @@ create view dba_tables_internal1 as
     t."mofId" = ae."mofId"
 ;
 
-create view dba_tables_internal2 as
+create or replace view dba_tables_internal2 as
   select
     catalog_name,
     schema_name,
@@ -426,7 +426,7 @@ create view dba_tables_internal2 as
     g."action" = 'CREATION'
 ;
 
-create view dba_views_internal1 as
+create or replace view dba_views_internal1 as
   select
     object_catalog as catalog_name,
     object_schema as schema_name,
@@ -446,7 +446,7 @@ create view dba_views_internal1 as
 ;
 
 
-create view dba_views_internal2 as
+create or replace view dba_views_internal2 as
   select
     catalog_name,
     schema_name,
@@ -468,7 +468,7 @@ create view dba_views_internal2 as
     g."action" = 'CREATION'
 ;
 
-create view dba_stored_tables_internal1 as
+create or replace view dba_stored_tables_internal1 as
   select
     object_catalog as catalog_name,
     object_schema as schema_name,
@@ -489,7 +489,7 @@ create view dba_stored_tables_internal1 as
     s."mofId" = t."namespace"
 ;
 
-create view dba_stored_tables_internal2 as
+create or replace view dba_stored_tables_internal2 as
   select
     catalog_name,
     schema_name,
@@ -512,7 +512,7 @@ create view dba_stored_tables_internal2 as
     g."action" = 'CREATION'
 ;
 
-create view dba_routines_internal1 as
+create or replace view dba_routines_internal1 as
   select
     s.object_catalog as catalog_name,
     s.object_schema as schema_name,
@@ -537,7 +537,7 @@ create view dba_routines_internal1 as
     s."mofId" = r."namespace"
 ;
     
-create view dba_routines_internal2 as
+create or replace view dba_routines_internal2 as
   select 
     catalog_name,
     schema_name,
@@ -565,7 +565,7 @@ create view dba_routines_internal2 as
     g."action" = 'CREATION'
 ;
 
-create view dba_routine_parameters_internal1 as
+create or replace view dba_routine_parameters_internal1 as
   select
     catalog_name,
     schema_name,
@@ -587,7 +587,7 @@ create view dba_routine_parameters_internal1 as
     ri."mofId" = rp."behavioralFeature"
 ;
 
-create view dba_foreign_wrappers_internal as
+create or replace view dba_foreign_wrappers_internal as
   select 
     dw."name" as foreign_wrapper_name,
     dw."libraryFile" as library,
@@ -608,7 +608,7 @@ create view dba_foreign_wrappers_internal as
     dw."foreign" = true and g."action" = 'CREATION'
 ;
 
-create view dba_foreign_servers_internal1 as
+create or replace view dba_foreign_servers_internal1 as
   select
     foreign_wrapper_name,
     ds."name" as foreign_server_name,
@@ -625,7 +625,7 @@ create view dba_foreign_servers_internal1 as
     fwi."mofId" = ds."Wrapper"
 ;
 
-create view dba_foreign_servers_internal2 as
+create or replace view dba_foreign_servers_internal2 as
   select
     foreign_wrapper_name,
     foreign_server_name,
@@ -645,7 +645,7 @@ create view dba_foreign_servers_internal2 as
     g."action" = 'CREATION'
 ;
 
-create view dba_foreign_tables_internal1 as
+create or replace view dba_foreign_tables_internal1 as
   select
     fs.foreign_wrapper_name,
     fs.foreign_server_name,
@@ -665,7 +665,7 @@ create view dba_foreign_tables_internal1 as
     fs."mofId" = ft."Server"
 ;
 
-create view dba_foreign_tables_internal2 as
+create or replace view dba_foreign_tables_internal2 as
   select
     fti.foreign_wrapper_name,
     fti.foreign_server_name,
@@ -691,7 +691,7 @@ create view dba_foreign_tables_internal2 as
 -- Returns the set of all foreign data wrappers which have been marked
 -- as suitable for browse connect (mark is via the presence of the
 -- BROWSE_CONNECT_DESCRIPTION option).
-create view browse_connect_foreign_wrappers as
+create or replace view browse_connect_foreign_wrappers as
   select
     dw."name" as foreign_wrapper_name,
     so."value" as browse_connect_description
@@ -718,7 +718,7 @@ create view browse_connect_foreign_wrappers as
 -- choice (either proposed by the user or chosen as default by the
 -- wrapper); other choice ordinals starting from 0 represent possible
 -- choices (if known).
-create function browse_connect_foreign_server(
+create or replace function browse_connect_foreign_server(
   foreign_wrapper_name varchar(128),
   proposed_server_options cursor)
 returns table(
@@ -736,12 +736,12 @@ external name
 
 -- A view which can be used as the input cursor for proposed_server_options
 -- when no options are set (initial browse).
-create view browse_connect_empty_options as
+create or replace view browse_connect_empty_options as
 select '' as option_name, '' as option_value
 from sys_boot.jdbc_metadata.empty_view;
 
 -- Returns foreign schemas accessible via a given foreign server.
-create function browse_foreign_schemas(
+create or replace function browse_foreign_schemas(
   foreign_server_name varchar(128))
 returns table(
   schema_name varchar(128),
@@ -757,21 +757,21 @@ external name
 --
 
 -- converts a string to a date, according to the specified format string
-create function char_to_date(format varchar(50), dateString varchar(128))
+create or replace function char_to_date(format varchar(50), dateString varchar(128))
 returns date
 language java
 specific std_char_to_date
 no sql
 external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.char_to_date';
 
-create function char_to_time(format varchar(50), timeString varchar(128))
+create or replace function char_to_time(format varchar(50), timeString varchar(128))
 returns time
 language java
 specific std_char_to_time
 no sql
 external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.char_to_time';
 
-create function char_to_timestamp(
+create or replace function char_to_timestamp(
      format varchar(50), timestampString varchar(128))
 returns timestamp
 language java
@@ -780,21 +780,21 @@ no sql
 external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.char_to_timestamp';
 
 -- formats a string as a date, according to the specified format string
-create function date_to_char(format varchar(50), d date)
+create or replace function date_to_char(format varchar(50), d date)
 returns varchar(128)
 language java
 specific std_date_to_char
 no sql
 external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.date_to_char';
 
-create function time_to_char(format varchar(50), t time)
+create or replace function time_to_char(format varchar(50), t time)
 returns varchar(128)
 language java
 specific std_time_to_char
 no sql
 external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.time_to_char';
 
-create function timestamp_to_char(format varchar(50), ts timestamp)
+create or replace function timestamp_to_char(format varchar(50), ts timestamp)
 returns varchar(128)
 language java
 specific std_timestamp_to_char

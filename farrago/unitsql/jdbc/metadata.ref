@@ -456,7 +456,7 @@ usesLocalFiles                                    false
 +----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
 |   name   | fennelDisabled  | userCatalogEnabled  | codeCacheMaxBytes  | checkpointInterval  | serverRmiRegistryPort  | serverSingleListenerPort  | calcVirtualMachine  |        javaCompilerClassName        |
 +----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
-| Current  | false           | false               | -1                 | 300                 | -1                     | -1                        | CALCVM_AUTO         | org.eigenbase.javac.JaninoCompiler  |
+| Current  | false           | false               | 2000000            | 300                 | -1                     | -1                        | CALCVM_AUTO         | org.eigenbase.javac.JaninoCompiler  |
 +----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select "databaseInitSize", "databaseIncrementSize", "databaseMaxSize",

@@ -258,6 +258,16 @@ public class DateTimeUtil
         }
         return cal.getTimeZone();
     }
+
+    /**
+     * Checks if the date/time format is valid
+     *
+     * @param pattern {@link SimpleDateFormat} pattern
+     */
+    public static void checkDateFormat(String pattern)
+    {
+        new SimpleDateFormat(pattern);
+    }
 }
 
 // End ConversionUtil.java

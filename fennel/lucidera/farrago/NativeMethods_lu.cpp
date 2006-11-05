@@ -229,6 +229,7 @@ class ExecStreamSubFactory_lu
         pExecStreamFactory->readBTreeStreamParams(params, streamDef);
         params.dynParamId =
             readDynamicParamId(streamDef.getRowCountParamId());
+        params.ignoreDuplicates = streamDef.isIgnoreDuplicates();
         pEmbryo->init(new LbmSplicerExecStream(), params);
     }
 

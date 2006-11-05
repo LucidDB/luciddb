@@ -431,8 +431,9 @@ public class FarragoDefaultSessionPersonality
     // implement FarragoSessionPersonality
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
     {
-        chain.addProvider(
-            new FarragoRelMetadataProvider(database.getSystemRepos()));
+        // Don't chain in FarragoRelMetadataProvider here; instead,
+        // that happens inside of FarragoPreparingStmt so that
+        // this provider gets low priority.
     }
 
     private class ParamDesc

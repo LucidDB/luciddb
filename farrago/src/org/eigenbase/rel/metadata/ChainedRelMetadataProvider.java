@@ -59,8 +59,6 @@ public class ChainedRelMetadataProvider
      * query is used.
      *
      * @param provider provider to add
-     * @param metadataQueryNames set of metadata query names this provider knows
-     * how to answer; if null, provider will be tried for all queries
      */
     public void addProvider(
         RelMetadataProvider provider)

@@ -9,7 +9,6 @@ alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 --------------------------
 -- Test Sort Aggreagtes --
 --------------------------
-alter system set "codeCacheMaxBytes"=min;
 alter session implementation set default;
 !set outputformat table
 
@@ -169,13 +168,18 @@ group by d.name;
 --------------------------
 -- Test Hash Aggreagtes --
 --------------------------
-alter system set "codeCacheMaxBytes"=max;
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+call sys_boot.mgmt.flush_code_cache();
+alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 !set outputformat table
 
 select count(distinct city) from emps;
 
 select count(distinct city) from emps where empno > 100000;
+
+-- multiple distinct with no non-distinct and no group by (FRG-229)
+select sum(distinct empno), sum(distinct deptno) from emps;
 
 -- mixed distinct and non-distinct aggs
 select sum(distinct empno), sum(empno) from emps;
@@ -290,6 +294,9 @@ select count(distinct manager), count(distinct gender),
 explain plan for
 select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
  from emps group by deptno;
+
+explain plan for
+select sum(distinct empno), sum(distinct deptno) from emps;
 
 -- verify plans for group bys
 

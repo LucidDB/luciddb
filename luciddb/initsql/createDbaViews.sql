@@ -1,4 +1,4 @@
-create schema localdb.sys_root;
+create or replace schema localdb.sys_root;
 set schema 'localdb.sys_root';
 set path 'localdb.sys_root';
 
@@ -7,7 +7,7 @@ set path 'localdb.sys_root';
 -- corresponding user_ views which show just the subset accessible
 -- to CURRENT_USER
 
-create view dba_schemas as
+create or replace view dba_schemas as
   select
     catalog_name,
     schema_name,
@@ -27,7 +27,7 @@ create view dba_schemas as
 
 grant select on dba_schemas to public;
 
-create view dba_tables as
+create or replace view dba_tables as
   select
     catalog_name,
     schema_name,
@@ -49,7 +49,7 @@ create view dba_tables as
 
 grant select on dba_tables to public;
 
-create view dba_columns as
+create or replace view dba_columns as
   select
     table_cat as catalog_name,
     table_schem as schema_name,
@@ -73,7 +73,7 @@ create view dba_columns as
 
 grant select on dba_columns to public;
 
-create view dba_views as
+create or replace view dba_views as
   select
     catalog_name,
     schema_name,
@@ -95,7 +95,7 @@ create view dba_views as
 
 grant select on dba_views to public;
 
-create view dba_stored_tables as
+create or replace view dba_stored_tables as
   select
     catalog_name,
     schema_name,
@@ -118,7 +118,7 @@ create view dba_stored_tables as
 
 grant select on dba_stored_tables to public;
 
-create view dba_routines as
+create or replace view dba_routines as
   select
     catalog_name,
     schema_name,
@@ -146,7 +146,7 @@ create view dba_routines as
 
 grant select on dba_routines to public;
 
-create view dba_routine_parameters as
+create or replace view dba_routine_parameters as
   select
     catalog_name,
     schema_name,
@@ -170,7 +170,7 @@ create view dba_routine_parameters as
 
 grant select on dba_routine_parameters to public;
 
-create view dba_foreign_wrappers as
+create or replace view dba_foreign_wrappers as
   select
     foreign_wrapper_name,
     library,
@@ -191,7 +191,7 @@ create view dba_foreign_wrappers as
 
 grant select on dba_foreign_wrappers to public;
 
-create view dba_foreign_wrapper_options as 
+create or replace view dba_foreign_wrapper_options as 
   select
     dw."name" as foreign_wrapper_name,
     so."name" as option_name,
@@ -209,7 +209,7 @@ create view dba_foreign_wrapper_options as
 
 grant select on dba_foreign_wrapper_options to public;
 
-create view dba_foreign_servers as
+create or replace view dba_foreign_servers as
   select
     fsi.foreign_wrapper_name,
     fsi.foreign_server_name,
@@ -229,7 +229,7 @@ create view dba_foreign_servers as
 
 grant select on dba_foreign_servers to public;
 
-create view dba_foreign_server_options as
+create or replace view dba_foreign_server_options as
   select
     foreign_wrapper_name,
     foreign_server_name,
@@ -246,7 +246,7 @@ create view dba_foreign_server_options as
 
 grant select on dba_foreign_server_options to public;
 
-create view dba_foreign_tables as
+create or replace view dba_foreign_tables as
   select
     fti.foreign_wrapper_name,
     fti.foreign_server_name,
@@ -269,7 +269,7 @@ create view dba_foreign_tables as
 
 grant select on dba_foreign_tables to public;
 
-create view dba_foreign_table_options as
+create or replace view dba_foreign_table_options as
   select
     foreign_wrapper_name,
     foreign_server_name,
@@ -287,7 +287,7 @@ create view dba_foreign_table_options as
 
 grant select on dba_foreign_table_options to public;
 
-create view dba_system_parameters as
+create or replace view dba_system_parameters as
 select col_name as param_name, col_value as param_value from 
 ((select * from table(
   applib.pivot_columns_to_rows(
@@ -302,7 +302,7 @@ where col_name not in
 
 grant select on dba_system_parameters to public;
 
-create view dba_sessions as
+create or replace view dba_sessions as
 select 
 id as session_id,
 url as connect_url,
@@ -323,7 +323,7 @@ from sys_boot.mgmt.sessions_view;
 
 grant select on dba_sessions to public;
 
-create view dba_sql_statements as
+create or replace view dba_sql_statements as
 select
 id as stmt_id,
 session_id,
@@ -334,37 +334,37 @@ from sys_boot.mgmt.statements_view;
 
 grant select on dba_sql_statements to public;
 
-create view dba_repository_properties as
+create or replace view dba_repository_properties as
 select * from sys_boot.mgmt.repository_properties_view;
 
 grant select on dba_repository_properties to public;
 
-create view dba_repository_integrity_violations as
+create or replace view dba_repository_integrity_violations as
 select * from table(sys_boot.mgmt.repository_integrity_violations());
 
 grant select on dba_repository_integrity_violations to public;
 
-create view dba_objects_in_use as
+create or replace view dba_objects_in_use as
 select * from sys_boot.mgmt.objects_in_use_view;
 
 grant select on dba_objects_in_use to public;
 
-create view dba_threads
+create or replace view dba_threads
 as select * from table(sys_boot.mgmt.threads());
 
 grant select on dba_threads to public;
 
-create view dba_thread_stack_entries
+create or replace view dba_thread_stack_entries
 as select * from table(sys_boot.mgmt.thread_stack_entries());
 
 grant select on dba_thread_stack_entries to public;
 
-create view dba_performance_counters
+create or replace view dba_performance_counters
 as select * from table(sys_boot.mgmt.performance_counters());
 
 grant select on dba_performance_counters to public;
 
-create view dba_system_info
+create or replace view dba_system_info
 as 
 (select * from table(sys_boot.mgmt.system_info()))
 union all
@@ -375,13 +375,13 @@ grant select on dba_system_info to public;
 -- NOTE jvs 17-Sept-2006:  This view is intentionally NOT prefixed
 -- with dba_ because it shows information about the current session only
 
-create view user_session_parameters as
+create or replace view user_session_parameters as
 select * from sys_boot.mgmt.session_parameters_view;
 
 grant select on user_session_parameters to public;
 
 -- Flush all entries from the global code cache
-create procedure flush_code_cache()
+create or replace procedure flush_code_cache()
   language java
   parameter style java
   reads sql data
@@ -389,14 +389,14 @@ create procedure flush_code_cache()
   'class net.sf.farrago.syslib.FarragoManagementUDR.flushCodeCache';
 
 -- Kill a session by its ID (see dba_sessions)
-create procedure kill_session(in id bigint)
+create or replace procedure kill_session(in id bigint)
 language java
 parameter style java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
 
 -- Kill a statement by its ID (see dba_sql_statements)
-create procedure kill_statement(in id bigint)
+create or replace procedure kill_statement(in id bigint)
 language java
 parameter style java
 no sql
@@ -404,14 +404,14 @@ external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
 
 -- Kill all statements whose sql_stmt text contains the input string
 -- (similar to Unix killall)
-create procedure kill_all_matching_statements(in s varchar(256))
+create or replace procedure kill_all_matching_statements(in s varchar(256))
 language java
 parameter style java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
 
 -- Exports the complete contents of the catalog to an XMI file
-create procedure export_catalog_xmi(in filename varchar(65535))
+create or replace procedure export_catalog_xmi(in filename varchar(65535))
 language java
 parameter style java
 no sql
@@ -419,7 +419,7 @@ external name 'class net.sf.farrago.syslib.FarragoManagementUDR.exportCatalog';
 
 -- Export schema to file UDP, field delimiter and file extension can be 
 -- specified by user
-create procedure export_schema_to_file(
+create or replace procedure export_schema_to_file(
   in cat varchar(128),
   in schma varchar(128),
   in exclude boolean, 
@@ -438,7 +438,7 @@ external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaTo
 
 -- Export schema to file UDP with field delimiter, file extention and
 -- datetime formats
-create procedure export_schema_to_file(
+create or replace procedure export_schema_to_file(
   in cat varchar(128),
   in schma varchar(128),
   in exclude boolean, 
@@ -461,7 +461,7 @@ external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaTo
 
 -- Export schema to csv files UDP. Standard version always creates bcp files
 -- and deletes incomplete files for a failed table export. 
-create procedure export_schema_to_csv(
+create or replace procedure export_schema_to_csv(
   in cat varchar(128),
   in schma varchar(128),
   in exclude boolean, 
@@ -476,7 +476,7 @@ specific export_schema_with_options
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToCsv';
 
-create procedure export_schema_to_csv(
+create or replace procedure export_schema_to_csv(
   in cat varchar(128),
   in schma varchar(128),
   in exclude boolean, 
@@ -491,7 +491,7 @@ external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaTo
 
 -- Export foreign schema to csv files UDP. Standard version always creates bcp
 -- files and deletes incomplete files for a failed table export.
-create procedure export_foreign_schema_to_csv(
+create or replace procedure export_foreign_schema_to_csv(
   in serv varchar(128),
   in fschema varchar(128),
   in exclude boolean,
@@ -506,7 +506,7 @@ specific export_foreign_schema_with_options
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaToCsv';
 
-create procedure export_foreign_schema_to_csv(
+create or replace procedure export_foreign_schema_to_csv(
   in serv varchar(128),
   in fschema varchar(128),
   in exclude boolean,
@@ -522,7 +522,7 @@ external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignS
 -- Incremental export for local schema, gets rows where 
 -- last_mod_col > last_mod_ts.  Standard version always creates bcp files and
 -- deletes incomplete files for a failed table export.
-create procedure export_schema_incremental_to_csv(
+create or replace procedure export_schema_incremental_to_csv(
   in cat varchar(128),
   in schma varchar(128),
   in exclude boolean, 
@@ -539,7 +539,7 @@ specific export_schema_incremental_with_options
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaIncrementalToCsv';
 
-create procedure export_schema_incremental_to_csv(
+create or replace procedure export_schema_incremental_to_csv(
   in cat varchar(128),
   in schma varchar(128),
   in exclude boolean, 
@@ -557,7 +557,7 @@ external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaIn
 -- Incremental export for foreign schema, gets rows where 
 -- last_mod_col > last_mod_ts.  Standard version always creates bcp files and
 -- deletes incomplete files for a failed table export.
-create procedure export_foreign_schema_incremental_to_csv(
+create or replace procedure export_foreign_schema_incremental_to_csv(
   in serv varchar(128),
   in fschema varchar(128),
   in exclude boolean,
@@ -574,7 +574,7 @@ specific export_foreign_schema_incremental_with_options
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaIncrementalToCsv';
 
-create procedure export_foreign_schema_incremental_to_csv(
+create or replace procedure export_foreign_schema_incremental_to_csv(
   in serv varchar(128),
   in fschema varchar(128),
   in exclude boolean,
@@ -594,7 +594,7 @@ external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignS
 -- which has been deleted will not be seen, only updates and new records 
 -- from the incremental schema.  Standard version always creates bcp files and
 -- deletes incomplete files for a failed table export.
-create procedure export_merged_schemas_to_csv(
+create or replace procedure export_merged_schemas_to_csv(
   in orig_catalog varchar(128),
   in orig_schema varchar(128),
   in incr_catalog varchar(128),
@@ -612,7 +612,7 @@ specific export_merged_schema_with_options
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportMergedSchemas';
 
-create procedure export_merged_schemas_to_csv(
+create or replace procedure export_merged_schemas_to_csv(
   in orig_catalog varchar(128),
   in orig_schema varchar(128),
   in incr_catalog varchar(128),
@@ -631,7 +631,7 @@ external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportMergedSc
 -- Export result of a single query to a file
 -- NOTE:  query must be quoted as a string literal (TODO:  UDX or
 -- support for cursor parameter to procedures)
-create procedure export_query_to_file(
+create or replace procedure export_query_to_file(
   in query_sql varchar(65535),
   in path_without_extension varchar(65535),
   in bcp boolean,
@@ -643,7 +643,7 @@ external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToF
 
 -- Export result of a single query to a file, with control over field
 -- delimiter, datafile extension, and date/time formatting
-create procedure export_query_to_file(
+create or replace procedure export_query_to_file(
   in query_sql varchar(65535),
   in path_without_extension varchar(65535),
   in bcp boolean,
@@ -662,7 +662,7 @@ external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToF
 -- Export result of a single query to a file, with control over field
 -- delimiter, datafile extension, date/time formatting, and whether
 -- to even export data at all
-create procedure export_query_to_file(
+create or replace procedure export_query_to_file(
   in query_sql varchar(65535),
   in path_without_extension varchar(65535),
   in bcp boolean,

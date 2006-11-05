@@ -1,19 +1,21 @@
 0: jdbc:luciddb:> -- $Id$
-0: jdbc:luciddb:> create schema applib;
-0: jdbc:luciddb:> set schema 'applib';
-0: jdbc:luciddb:> set path 'applib';
+0: jdbc:luciddb:> create or replace schema localdb.applib;
+0: jdbc:luciddb:> set schema 'localdb.applib';
+0: jdbc:luciddb:> set path 'localdb.applib';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> call sqlj.install_jar('file:${FARRAGO_HOME}/plugin/applib.jar','applibJar', 0);
+0: jdbc:luciddb:> create or replace jar applib.applibJar
+. . . . . . . . > library 'file:${FARRAGO_HOME}/plugin/applib.jar'
+. . . . . . . . > options(0);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- UDFs
 0: jdbc:luciddb:> -- define CharReplace functions
-0: jdbc:luciddb:> create function applib.char_replace(str varchar(128), oldC varchar(128), newC varchar(128)) 
+0: jdbc:luciddb:> create or replace function applib.char_replace(str varchar(128), oldC varchar(128), newC varchar(128)) 
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.string.CharReplaceUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.char_replace(str varchar(128), oldC integer, newC integer) 
+0: jdbc:luciddb:> create or replace function applib.char_replace(str varchar(128), oldC integer, newC integer) 
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific char_replace_int
@@ -21,35 +23,35 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.string.CharReplaceUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define CleanPhoneInternational functions
-0: jdbc:luciddb:> create function applib.clean_phone_international(str varchar(128), b boolean)
+0: jdbc:luciddb:> create or replace function applib.clean_phone_international(str varchar(128), b boolean)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneInternationalUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define CleanPhone functions
-0: jdbc:luciddb:> create function applib.clean_phone(str varchar(128))
+0: jdbc:luciddb:> create or replace function applib.clean_phone(str varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific clean_phone_no_format
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.clean_phone(inStr varchar(128), format integer)
+0: jdbc:luciddb:> create or replace function applib.clean_phone(inStr varchar(128), format integer)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific clean_phone_int_format
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.clean_phone(inStr varchar(128), format integer, reject boolean)
+0: jdbc:luciddb:> create or replace function applib.clean_phone(inStr varchar(128), format integer, reject boolean)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific clean_phone_int_format_rejectable
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.clean_phone(inStr varchar(128), format varchar(128), reject boolean)
+0: jdbc:luciddb:> create or replace function applib.clean_phone(inStr varchar(128), format varchar(128), reject boolean)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific clean_phone_str_format_rejectable
@@ -57,21 +59,21 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define ContainsNumber function
-0: jdbc:luciddb:> create function applib.contains_number(str varchar(128))
+0: jdbc:luciddb:> create or replace function applib.contains_number(str varchar(128))
 . . . . . . . . > returns boolean
 . . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.string.ContainsNumberUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define CYQuarter functions
-0: jdbc:luciddb:> create function applib.calendar_quarter(dt date)
+0: jdbc:luciddb:> create or replace function applib.calendar_quarter(dt date)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific calendar_quarter_date
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.CalendarQuarterUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.calendar_quarter(ts timestamp)
+0: jdbc:luciddb:> create or replace function applib.calendar_quarter(ts timestamp)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific calendar_quarter_ts
@@ -79,28 +81,28 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.CalendarQuarterUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define internalDate function (example function)
-0: jdbc:luciddb:> create function applib.internal_date(indate bigint)
+0: jdbc:luciddb:> create or replace function applib.internal_date(indate bigint)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.contrib.InternalDateUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define DAYINYEAR function
-0: jdbc:luciddb:> create function applib.day_in_year(dt date)
+0: jdbc:luciddb:> create or replace function applib.day_in_year(dt date)
 . . . . . . . . > returns integer
 . . . . . . . . > language java
 . . . . . . . . > specific DAYINYEAR_DATE
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayInYearUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.day_in_year(ts timestamp)
+0: jdbc:luciddb:> create or replace function applib.day_in_year(ts timestamp)
 . . . . . . . . > returns integer
 . . . . . . . . > language java
 . . . . . . . . > specific DAYINYEAR_TS
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayInYearUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.day_in_year(yr integer, mth integer, dt integer)
+0: jdbc:luciddb:> create or replace function applib.day_in_year(yr integer, mth integer, dt integer)
 . . . . . . . . > returns integer
 . . . . . . . . > language java
 . . . . . . . . > specific DAYINYEAR_YMD
@@ -108,14 +110,14 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayInYearUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define dayNumberOverall functions
-0: jdbc:luciddb:> create function applib.day_number_overall(dt Date)
+0: jdbc:luciddb:> create or replace function applib.day_number_overall(dt Date)
 . . . . . . . . > returns integer
 . . . . . . . . > language java
 . . . . . . . . > specific DAYNUMBEROVERALL_DATE
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayNumberOverallUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.day_number_overall(ts timestamp)
+0: jdbc:luciddb:> create or replace function applib.day_number_overall(ts timestamp)
 . . . . . . . . > returns integer
 . . . . . . . . > language java
 . . . . . . . . > specific DAYNUMBEROVERALL_TS
@@ -123,14 +125,14 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayNumberOverallUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define FYMonth functions
-0: jdbc:luciddb:> create function applib.fiscal_month(dt date, fm integer)
+0: jdbc:luciddb:> create or replace function applib.fiscal_month(dt date, fm integer)
 . . . . . . . . > returns integer
 . . . . . . . . > language java
 . . . . . . . . > specific FYMONTH_DATE
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalMonthUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.fiscal_month(ts timestamp, fm integer)
+0: jdbc:luciddb:> create or replace function applib.fiscal_month(ts timestamp, fm integer)
 . . . . . . . . > returns integer
 . . . . . . . . > language java
 . . . . . . . . > specific FYMONTH_TS
@@ -138,21 +140,21 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalMonthUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define FYQuarter functions
-0: jdbc:luciddb:> create function applib.fiscal_quarter(yr integer, mth integer, fm integer)
+0: jdbc:luciddb:> create or replace function applib.fiscal_quarter(yr integer, mth integer, fm integer)
 . . . . . . . . > returns varchar(10)
 . . . . . . . . > language java
 . . . . . . . . > specific FYQUARTER_YMFM
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalQuarterUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.fiscal_quarter(dt date, fm integer)
+0: jdbc:luciddb:> create or replace function applib.fiscal_quarter(dt date, fm integer)
 . . . . . . . . > returns varchar(10)
 . . . . . . . . > language java
 . . . . . . . . > specific FYQUARTER_DATE
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalQuarterUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.fiscal_quarter(ts timestamp, fm integer)
+0: jdbc:luciddb:> create or replace function applib.fiscal_quarter(ts timestamp, fm integer)
 . . . . . . . . > returns varchar(10)
 . . . . . . . . > language java
 . . . . . . . . > specific FYQUARTER_TS
@@ -160,14 +162,14 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalQuarterUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define FYYear functions
-0: jdbc:luciddb:> create function applib.fiscal_year(dt date, fm integer)
+0: jdbc:luciddb:> create or replace function applib.fiscal_year(dt date, fm integer)
 . . . . . . . . > returns integer
 . . . . . . . . > language java
 . . . . . . . . > specific FYYEAR_DATE
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalYearUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.fiscal_year(ts timestamp, fm integer)
+0: jdbc:luciddb:> create or replace function applib.fiscal_year(ts timestamp, fm integer)
 . . . . . . . . > returns integer
 . . . . . . . . > language java
 . . . . . . . . > specific FYYEAR_TS
@@ -175,14 +177,14 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalYearUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define leftN functions
-0: jdbc:luciddb:> create function applib.leftn(str varchar(128), len integer)
+0: jdbc:luciddb:> create or replace function applib.leftn(str varchar(128), len integer)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.string.LeftNUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define rand functions
-0: jdbc:luciddb:> create function applib.rand(minVal integer, maxVal integer)
+0: jdbc:luciddb:> create or replace function applib.rand(minVal integer, maxVal integer)
 . . . . . . . . > returns integer
 . . . . . . . . > language java
 . . . . . . . . > not deterministic
@@ -190,35 +192,35 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.numeric.RandUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define repeater function
-0: jdbc:luciddb:> create function applib.REPEATER(str varchar(128), times integer)
+0: jdbc:luciddb:> create or replace function applib.REPEATER(str varchar(128), times integer)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.string.RepeaterUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define rightn function
-0: jdbc:luciddb:> create function applib.RIGHTN(str varchar(128), len integer)
+0: jdbc:luciddb:> create or replace function applib.RIGHTN(str varchar(128), len integer)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.string.RightNUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define StrReplace function
-0: jdbc:luciddb:> create function applib.str_replace(inStr varchar(128), oldStr varchar(128), newStr varchar(128))
+0: jdbc:luciddb:> create or replace function applib.str_replace(inStr varchar(128), oldStr varchar(128), newStr varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name "applib.applibJar:com.lucidera.luciddb.applib.string.StrReplaceUdf.execute";
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define convert_date function
-0: jdbc:luciddb:> create function applib.convert_date(str varchar(128), mask varchar(50), rej boolean)
+0: jdbc:luciddb:> create or replace function applib.convert_date(str varchar(128), mask varchar(50), rej boolean)
 . . . . . . . . > returns date
 . . . . . . . . > language java
 . . . . . . . . > specific convert_date_rejectable
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertDateUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.convert_date(str varchar(128), mask varchar(50))
+0: jdbc:luciddb:> create or replace function applib.convert_date(str varchar(128), mask varchar(50))
 . . . . . . . . > returns date
 . . . . . . . . > language java
 . . . . . . . . > specific convert_date_not_rejectable
@@ -226,21 +228,21 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertDateUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- converts a string to a date, according to the specified format string
-0: jdbc:luciddb:> create function applib.char_to_date(format varchar(50), dateString varchar(128))
+0: jdbc:luciddb:> create or replace function applib.char_to_date(format varchar(50), dateString varchar(128))
 . . . . . . . . > returns date
 . . . . . . . . > language java
 . . . . . . . . > specific applib_std_char_to_date
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_date';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.char_to_time(format varchar(50), timeString varchar(128))
+0: jdbc:luciddb:> create or replace function applib.char_to_time(format varchar(50), timeString varchar(128))
 . . . . . . . . > returns time
 . . . . . . . . > language java
 . . . . . . . . > specific applib_std_char_to_time
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_time';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.char_to_timestamp(
+0: jdbc:luciddb:> create or replace function applib.char_to_timestamp(
 . . . . . . . . >     format varchar(50), timestampString varchar(128))
 . . . . . . . . > returns timestamp
 . . . . . . . . > language java
@@ -249,21 +251,21 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_timestamp';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- formats a string as a date, according to the specified format string
-0: jdbc:luciddb:> create function applib.date_to_char(format varchar(50), d date)
+0: jdbc:luciddb:> create or replace function applib.date_to_char(format varchar(50), d date)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific applib_std_date_to_char
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.date_to_char';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.time_to_char(format varchar(50), t time)
+0: jdbc:luciddb:> create or replace function applib.time_to_char(format varchar(50), t time)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific applib_std_time_to_char
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.time_to_char';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.timestamp_to_char(format varchar(50), ts timestamp)
+0: jdbc:luciddb:> create or replace function applib.timestamp_to_char(format varchar(50), ts timestamp)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > specific applib_std_timestamp_to_char
@@ -271,7 +273,7 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.timestamp_to_char';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- adds n number of days to a date
-0: jdbc:luciddb:> create function applib.add_days(d date, n int)
+0: jdbc:luciddb:> create or replace function applib.add_days(d date, n int)
 . . . . . . . . > returns date
 . . . . . . . . > specific add_days_date
 . . . . . . . . > contains sql
@@ -280,7 +282,7 @@
 . . . . . . . . > );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- adds n number of days to a timestamp
-0: jdbc:luciddb:> create function applib.add_days(ts timestamp, n int)
+0: jdbc:luciddb:> create or replace function applib.add_days(ts timestamp, n int)
 . . . . . . . . > returns timestamp
 . . . . . . . . > specific add_days_timestamp
 . . . . . . . . > contains sql
@@ -289,7 +291,7 @@
 . . . . . . . . > );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- adds n number of hours to a timestamp
-0: jdbc:luciddb:> create function applib.add_hours(ts timestamp, n int)
+0: jdbc:luciddb:> create or replace function applib.add_hours(ts timestamp, n int)
 . . . . . . . . > returns timestamp
 . . . . . . . . > specific add_hours_timestamp
 . . . . . . . . > contains sql
@@ -297,7 +299,7 @@
 . . . . . . . . >   ts + cast(cast(n as bigint)*60*60*1000 as interval day to hour));
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- returns the difference in units of days between two dates
-0: jdbc:luciddb:> create function applib.days_diff(d1 date, d2 date)
+0: jdbc:luciddb:> create or replace function applib.days_diff(d1 date, d2 date)
 . . . . . . . . > returns bigint
 . . . . . . . . > specific days_diff_dates
 . . . . . . . . > contains sql
@@ -307,7 +309,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- returns the difference in units of days between two timestamps. Note that
 0: jdbc:luciddb:> -- partial days that are less than 24 hours will not count as a day.
-0: jdbc:luciddb:> create function applib.days_diff(ts1 timestamp, ts2 timestamp)
+0: jdbc:luciddb:> create or replace function applib.days_diff(ts1 timestamp, ts2 timestamp)
 . . . . . . . . > returns bigint
 . . . . . . . . > specific days_diff_timestamps
 . . . . . . . . > contains sql
@@ -317,7 +319,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- returns the difference in units of hours between two timestamps. Note that 
 0: jdbc:luciddb:> -- partial hours that are less than 60 minutes will not count as an hour.
-0: jdbc:luciddb:> create function applib.hours_diff(ts1 timestamp, ts2 timestamp)
+0: jdbc:luciddb:> create or replace function applib.hours_diff(ts1 timestamp, ts2 timestamp)
 . . . . . . . . > returns bigint
 . . . . . . . . > specific hours_diff_timestamps
 . . . . . . . . > contains sql
@@ -329,7 +331,7 @@
 0: jdbc:luciddb:> -- define dayFromJulianStart
 0: jdbc:luciddb:> -- 2440588 is the number of days from the Julian Calendar start date to 
 0: jdbc:luciddb:> -- the epoch Jan 1, 1970 
-0: jdbc:luciddb:> create function applib.day_from_julian_start(dt Date)
+0: jdbc:luciddb:> create or replace function applib.day_from_julian_start(dt Date)
 . . . . . . . . > returns integer
 . . . . . . . . > language sql
 . . . . . . . . > contains sql
@@ -348,7 +350,7 @@
 . . . . . . . . > );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define padweeknumber
-0: jdbc:luciddb:> create function applib.padweeknumber(wk_num_as_yr integer)
+0: jdbc:luciddb:> create or replace function applib.padweeknumber(wk_num_as_yr integer)
 . . . . . . . . > returns varchar(16)
 . . . . . . . . > language sql
 . . . . . . . . > contains sql
@@ -360,14 +362,14 @@
 . . . . . . . . > );
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define INSTR
-0: jdbc:luciddb:> create function applib.instr(str varchar(65535), subStr varchar(65535), startPos int, nthAppearance int)
+0: jdbc:luciddb:> create or replace function applib.instr(str varchar(65535), subStr varchar(65535), startPos int, nthAppearance int)
 . . . . . . . . > returns int
 . . . . . . . . > language java
 . . . . . . . . > specific instr_with_optional_vars
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.execute';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create function applib.instr(str varchar(65535), subStr varchar(65535))
+0: jdbc:luciddb:> create or replace function applib.instr(str varchar(65535), subStr varchar(65535))
 . . . . . . . . > returns int
 . . . . . . . . > language java
 . . . . . . . . > specific instr_without_optional_vars
@@ -385,63 +387,63 @@
 0: jdbc:luciddb:> -- Creates a variable (or a context if var_id is null).
 0: jdbc:luciddb:> -- The initial value for a new variable is null.  It is an error
 0: jdbc:luciddb:> -- to attempt to create a context or variable which already exists.
-0: jdbc:luciddb:> create procedure applib.create_var(
+0: jdbc:luciddb:> create or replace procedure applib.create_var(
 . . . . . . . . >     context_id varchar(128), 
 . . . . . . . . >     var_id varchar(128),
 . . . . . . . . >     description varchar(65535))
 . . . . . . . . > language java
 . . . . . . . . > no sql
-. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.CreateAppVarUdp.execute';
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeCreate';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Deletes a variable (or a context if var_id is null), which must
 0: jdbc:luciddb:> -- currently exist.
-0: jdbc:luciddb:> create procedure applib.delete_var(
+0: jdbc:luciddb:> create or replace procedure applib.delete_var(
 . . . . . . . . >     context_id varchar(128), 
 . . . . . . . . >     var_id varchar(128))
 . . . . . . . . > language java
 . . . . . . . . > no sql
-. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.DeleteAppVarUdp.execute';
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeDelete';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Sets the value for a variable.  var_id must not be null, and must
 0: jdbc:luciddb:> -- reference a previously created variable.
-0: jdbc:luciddb:> create procedure applib.set_var(
+0: jdbc:luciddb:> create or replace procedure applib.set_var(
 . . . . . . . . >     context_id varchar(128), 
 . . . . . . . . >     var_id varchar(128), 
 . . . . . . . . >     new_value varchar(65535))
 . . . . . . . . > language java
 . . . . . . . . > no sql
-. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.SetAppVarUdp.execute';
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeSet';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Flushes modifications to a variable (or a context if var_id is null).
 0: jdbc:luciddb:> -- Before flush, there is no guarantee that modifications have
 0: jdbc:luciddb:> -- been made permanent.
-0: jdbc:luciddb:> create procedure applib.flush_var(
+0: jdbc:luciddb:> create or replace procedure applib.flush_var(
 . . . . . . . . >     context_id varchar(128), 
 . . . . . . . . >     var_id varchar(128))
 . . . . . . . . > language java
 . . . . . . . . > no sql
-. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.FlushAppVarUdp.execute';
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeFlush';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Retrieves the current value of a variable.  var_id must not be null,
 0: jdbc:luciddb:> -- and must reference a previously created variable.
 0: jdbc:luciddb:> -- Declared as deterministic to let the optimizer know that it should
 0: jdbc:luciddb:> -- be evaluated once per statement (rather than once per row) when
 0: jdbc:luciddb:> -- the arguments are constant literals.
-0: jdbc:luciddb:> create function applib.get_var(
+0: jdbc:luciddb:> create or replace function applib.get_var(
 . . . . . . . . >     context_id varchar(128), 
 . . . . . . . . >     var_id varchar(128)) 
 . . . . . . . . > returns varchar(65535)
 . . . . . . . . > language java
 . . . . . . . . > deterministic
 . . . . . . . . > no sql
-. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.GetAppVarUdf.execute';
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeGet';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> ----
 0: jdbc:luciddb:> -- UDXs
 0: jdbc:luciddb:> ----
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define TIMEDIMENSION
-0: jdbc:luciddb:> create function APPLIB.TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int, fiscalYrStartMth int)
+0: jdbc:luciddb:> create or replace function APPLIB.TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int, fiscalYrStartMth int)
 . . . . . . . . > returns table(
 . . . . . . . . >   TIME_KEY_SEQ int,
 . . . . . . . . >   TIME_KEY date,
@@ -492,7 +494,7 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensionUdx.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- time dimension without fiscal information
-0: jdbc:luciddb:> create function APPLIB.TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int)
+0: jdbc:luciddb:> create or replace function APPLIB.TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int)
 . . . . . . . . > returns table(
 . . . . . . . . >   TIME_KEY_SEQ int,
 . . . . . . . . >   TIME_KEY date,
@@ -518,7 +520,7 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensionUdx.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Fiscal time dimension 
-0: jdbc:luciddb:> create function APPLIB.FISCAL_TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int, fiscalYrStartMth int)
+0: jdbc:luciddb:> create or replace function APPLIB.FISCAL_TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int, fiscalYrStartMth int)
 . . . . . . . . > returns table(
 . . . . . . . . >   TIME_KEY_SEQ int,
 . . . . . . . . >   TIME_KEY date,
@@ -572,7 +574,7 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalTimeDimensionUdx.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Flatten hierarchical data
-0: jdbc:luciddb:> create function applib.flatten_recursive_hierarchy(c cursor)
+0: jdbc:luciddb:> create or replace function applib.flatten_recursive_hierarchy(c cursor)
 . . . . . . . . > returns table(
 . . . . . . . . >     vertices integer,
 . . . . . . . . >     multipath boolean,
@@ -598,7 +600,7 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.FlattenRecursiveHierarchyUdx.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Generate CRC udx
-0: jdbc:luciddb:> create function generate_crc(c cursor)
+0: jdbc:luciddb:> create or replace function generate_crc(c cursor)
 . . . . . . . . > returns table(c.*, crc_value bigint)
 . . . . . . . . > language java
 . . . . . . . . > parameter style system defined java
@@ -606,7 +608,7 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateCrcUdx.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Pivot columns to rows
-0: jdbc:luciddb:> create function pivot_columns_to_rows(c cursor)
+0: jdbc:luciddb:> create or replace function pivot_columns_to_rows(c cursor)
 . . . . . . . . > returns table(col_name varchar(65535), col_value varchar(65535))
 . . . . . . . . > language java
 . . . . . . . . > parameter style system defined java
@@ -614,7 +616,7 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PivotColumnsToRowsUdx.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- collapse rows
-0: jdbc:luciddb:> create function collapse_rows(c cursor, delimiter varchar(1))
+0: jdbc:luciddb:> create or replace function collapse_rows(c cursor, delimiter varchar(1))
 . . . . . . . . > returns table(
 . . . . . . . . >   parent_value varchar(65535), 
 . . . . . . . . >   concatenated_child_values varchar(65535),
@@ -629,7 +631,7 @@
 0: jdbc:luciddb:> ----
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- UDP for granting a user select privileges for all tables and views in a schema
-0: jdbc:luciddb:> create procedure grant_select_for_schema(
+0: jdbc:luciddb:> create or replace procedure grant_select_for_schema(
 . . . . . . . . > in schemaname varchar(255), 
 . . . . . . . . > in username varchar(255))
 . . . . . . . . > language java
@@ -638,7 +640,7 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- UDP for executing a sql statement for each table and view in an entire schema
-0: jdbc:luciddb:> create procedure do_for_entire_schema(
+0: jdbc:luciddb:> create or replace procedure do_for_entire_schema(
 . . . . . . . . > in sqlString varchar(65535),
 . . . . . . . . > in schemaName varchar(255),
 . . . . . . . . > in objTypeStr varchar(128))
@@ -648,7 +650,7 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.util.DoForEntireSchemaUdp.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- UDP for computing statistics for all tables in a schema
-0: jdbc:luciddb:> create procedure compute_statistics_for_schema(
+0: jdbc:luciddb:> create or replace procedure compute_statistics_for_schema(
 . . . . . . . . > in schemaName varchar(255))
 . . . . . . . . > language java
 . . . . . . . . > parameter style java

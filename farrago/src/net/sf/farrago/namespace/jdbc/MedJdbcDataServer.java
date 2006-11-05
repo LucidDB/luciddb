@@ -36,6 +36,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
@@ -68,6 +69,7 @@ class MedJdbcDataServer
     public static final String PROP_TABLE_TYPES = "TABLE_TYPES";
     public static final String PROP_EXT_OPTIONS = "EXTENDED_OPTIONS";
     public static final String PROP_TYPE_SUBSTITUTION = "TYPE_SUBSTITUTION";
+    public static final String PROP_TYPE_MAPPING = "TYPE_MAPPING";
 
     // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
@@ -122,6 +124,12 @@ class MedJdbcDataServer
         }
 
         if (connectProps != null) {
+            if (userName != null) {
+                connectProps.setProperty("user", userName);
+            }
+            if (password != null) {
+                connectProps.setProperty("password", password);
+            }
             connection = DriverManager.getConnection(url, connectProps);
         } else if (userName == null) {
             connection = DriverManager.getConnection(url);
@@ -149,12 +157,17 @@ class MedJdbcDataServer
         // TODO jvs 19-June-2006:  Make this metadata-driven.
         props.remove(PROP_URL);
         props.remove(PROP_DRIVER_CLASS);
+        props.remove(PROP_CATALOG_NAME);
         props.remove(PROP_SCHEMA_NAME);
+        props.remove(PROP_USER_NAME);
+        props.remove(PROP_PASSWORD);
         props.remove(PROP_VERSION);
         props.remove(PROP_NAME);
         props.remove(PROP_TYPE);
         props.remove(PROP_EXT_OPTIONS);
         props.remove(PROP_TYPE_SUBSTITUTION);
+        props.remove(PROP_TYPE_MAPPING);
+        props.remove(PROP_TABLE_TYPES);
     }
 
     // implement FarragoMedDataServer
@@ -224,6 +237,12 @@ class MedJdbcDataServer
                 stmtAlloc.closeAllocation();
             }
         }
+    }
+    
+    // implement FarragoMedDataServer
+    public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
+    {
+        chain.addProvider(new MedJdbcMetadataProvider());
     }
 
     // implement FarragoMedDataServer
