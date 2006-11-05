@@ -985,6 +985,27 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
+     * Updates system-maintained attributes of an object.
+     *
+     * @param annotatedElement object to update
+     *
+     * @param timestamp timestamp to use for creation/modification
+     *
+     * @parem isNew true iff object is being created
+     */
+    public static void updateAnnotatedElement(
+        FemAnnotatedElement annotatedElement,
+        String timestamp,
+        boolean isNew)
+    {
+        annotatedElement.setModificationTimestamp(timestamp);
+        if (isNew) {
+            annotatedElement.setCreationTimestamp(timestamp);
+            annotatedElement.setLineageId(UUID.randomUUID().toString());
+        }
+    }
+
+    /**
      * Creates a timestamp reflecting the current time
      *
      * @return the timestamp encoded as a string

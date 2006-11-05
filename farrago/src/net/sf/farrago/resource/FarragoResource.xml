@@ -96,6 +96,10 @@
 <text>Failed to modify boot URL list</text>
 </exception>
 
+<message name="CatalogBootstrapObjDescription">
+<text>Created by system initialization</text>
+</message>
+
 <!-- ====================================================================== -->
 <!-- JDBC resources 410,000 - 420,000 -->
 <!-- ====================================================================== -->
