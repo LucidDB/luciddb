@@ -209,7 +209,9 @@ class MedJdbcNameDirectory
     String normalizeQueryString(String sql)
     {
         // some drivers don't like multi-line SQL, so convert all
-        // whitespace into plain spaces
+        // whitespace into plain spaces, and also mask Windows
+        // line-ending diffs
+        sql = sql.replaceAll("\\r\\n", " ");
         return sql.replaceAll("\\s", " ");
     }
 
