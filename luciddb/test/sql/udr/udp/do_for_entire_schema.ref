@@ -6,12 +6,14 @@
 0: jdbc:luciddb:> create table T2(col3 varchar(255), col4 integer);
 0: jdbc:luciddb:> create view V1 as select * from T2;
 0: jdbc:luciddb:> create view V2 as select col2 from T1;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- try to do a select; should fail
 0: jdbc:luciddb:> call applib.do_for_entire_schema('select * from %TABLE_NAME%', 'TESTSCHEMA', 'TABLES_AND_VIEWS');
 Error: Could not calculate result column 1 for the following row:
 [0]
 Messages: Invocation of user-defined external Java method execute failed
 Can't executeUpdate a query:  select * from "TESTSCHEMA"."T1" (state=,code=0)
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- connect as new user and try to do select on tables. should fail.
 0: jdbc:luciddb:> !connect jdbc:luciddb: MONDRIAN_USER NOPE
 1: jdbc:luciddb:> select * from T1;
@@ -19,9 +21,11 @@ Error: Privilege "SELECT" required for access to table "TESTSCHEMA"."T1" (state=
 1: jdbc:luciddb:> select * from V2;
 Error: Privilege "SELECT" required for access to view "TESTSCHEMA"."V2" (state=,code=0)
 1: jdbc:luciddb:> !closeall
+sqlline> 
 sqlline> -- connect as sysadmin and give new user select privs for everything in schema
 sqlline> !connect jdbc:luciddb: sa sa
 0: jdbc:luciddb:> call applib.do_for_entire_schema('grant select on %TABLE_NAME% to MONDRIAN_USER', 'TESTSCHEMA', 'TABLES');
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- try again. should succeed for table but fail for view
 0: jdbc:luciddb:> !connect jdbc:luciddb: MONDRIAN_USER NOPE
 1: jdbc:luciddb:> select * from T1;
@@ -34,6 +38,7 @@ Error: Privilege "SELECT" required for access to view "TESTSCHEMA"."V1" (state=,
 1: jdbc:luciddb:> !closeall
 sqlline> !connect jdbc:luciddb: sa sa
 0: jdbc:luciddb:> call applib.do_for_entire_schema('grant select on %TABLE_NAME% to MONDRIAN_USER', 'TESTSCHEMA', 'VIEWS');
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should succeed for both this time
 0: jdbc:luciddb:> !connect jdbc:luciddb: MONDRIAN_USER NOPE
 1: jdbc:luciddb:> select * from T1;
@@ -52,5 +57,12 @@ sqlline> !connect jdbc:luciddb: sa sa
 0: jdbc:luciddb:> drop table TESTSCHEMA.T2 cascade;
 0: jdbc:luciddb:> drop user MONDRIAN_USER;
 0: jdbc:luciddb:> drop schema TESTSCHEMA;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- if schema doesn't exist, it should give a nice error (LER-2608)
+0: jdbc:luciddb:> call applib.do_for_entire_schema('select * from %TABLE_NAME%', 'IMAGINARY_SCHEMA', 'TABLES');
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method execute failed
+Schema 'IMAGINARY_SCHEMA' could not be found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

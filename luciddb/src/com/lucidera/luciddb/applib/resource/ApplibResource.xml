@@ -211,6 +211,10 @@
 <text>Date format ''{0}'' could not be applied to string ''{1}''</text>
 </exception>
 
+<exception id="900400" name="NoSuchSchema">
+<text>Schema ''{0}'' could not be found</text>
+</exception>
+
 
 <!-- ====================================================================== -->
  Messages
