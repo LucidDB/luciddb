@@ -462,13 +462,13 @@ usesLocalFiles                                    false
 0: jdbc:farrago:> select "databaseInitSize", "databaseIncrementSize", "databaseMaxSize",
 . . . . . . . . >        "tempInitSize", "tempIncrementSize", "tempMaxSize",
 . . . . . . . . >        "databaseShadowLogInitSize", "databaseTxnLogInitSize",
-. . . . . . . . >        "cachePagesMax" - "cachePagesInit"
+. . . . . . . . >        "cachePagesMax", "cachePagesInit", "cachePageSize"
 . . . . . . . . >     from sys_fem."Config"."FennelConfig";
-+-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+---------+
-| databaseInitSize  | databaseIncrementSize  | databaseMaxSize  | tempInitSize  | tempIncrementSize  | tempMaxSize  | databaseShadowLogInitSize  | databaseTxnLogInitSize  | EXPR$8  |
-+-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+---------+
-| 1000              | 1000                   | 0                | 1000          | 1000               | 0            | 2000                       | 2000                    | 0       |
-+-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+---------+
++-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+----------------+-----------------+----------------+
+| databaseInitSize  | databaseIncrementSize  | databaseMaxSize  | tempInitSize  | tempIncrementSize  | tempMaxSize  | databaseShadowLogInitSize  | databaseTxnLogInitSize  | cachePagesMax  | cachePagesInit  | cachePageSize  |
++-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+----------------+-----------------+----------------+
+| 1000              | 1000                   | 0                | 1000          | 1000               | 0            | 2000                       | 2000                    | 1000           | 1000            | 4096           |
++-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+----------------+-----------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify unique lineage ID assignment
 0: jdbc:farrago:> select count(distinct "lineageId") from sys_fem."SQL2003"."LocalSchema";
