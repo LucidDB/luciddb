@@ -596,42 +596,47 @@ public class LoptOptimizeJoinRule
         // adjust the join condition from the original join tree to reflect
         // pushdown of the new factor as well as any swapping that may have
         // been done during the pushdown
-        RexNode origCondition =
+        RexNode newCondition =
             ((JoinRel) joinTree.getJoinTree()).getCondition();
-        origCondition =
+        newCondition =
             adjustFilter(
                 multiJoin,
                 left,
                 right,
-                origCondition,
+                newCondition,
                 factorToAdd,
                 origJoinOrder,
                 joinTree.getJoinTree().getRowType().getFields());
 
         // determine if additional filters apply as a result of adding the
-        // new factor
-        RexNode condition =
-            addFilters(
-                multiJoin,
-                left,
-                right,
-                filtersToAdd,
-                true);
-        RexBuilder rexBuilder =
-            multiJoin.getMultiJoinRel().getCluster().getRexBuilder();
-        condition =
-            RelOptUtil.andJoinFilters(
-                rexBuilder,
-                origCondition,
-                condition);
+        // new factor, provided this isn't a left or right outer join; for
+        // those cases, the additional filters will be added on top of the
+        // join in createJoinSubtree
+        if (joinType != JoinRelType.LEFT && joinType != JoinRelType.RIGHT) {
+            RexNode condition =
+                addFilters(
+                    multiJoin,
+                    left,
+                    right,
+                    filtersToAdd,
+                    true);
+            RexBuilder rexBuilder =
+                multiJoin.getMultiJoinRel().getCluster().getRexBuilder();
+            newCondition =
+                RelOptUtil.andJoinFilters(
+                    rexBuilder,
+                    newCondition,
+                    condition);
+        }
 
         // create the new join tree with the factor pushed down
         return createJoinSubtree(
             multiJoin,
             left,
             right,
-            condition,
+            newCondition,
             joinType,
+            filtersToAdd,
             false);
     }
 
@@ -654,18 +659,6 @@ public class LoptOptimizeJoinRule
         int factorToAdd,
         List<RexNode> filtersToAdd)
     {
-        LoptJoinTree rightTree =
-            new LoptJoinTree(
-                semiJoinOpt.getChosenSemiJoin(factorToAdd),
-                factorToAdd);
-        RexNode condition =
-            addFilters(
-                multiJoin,
-                joinTree,
-                rightTree,
-                filtersToAdd,
-                false);
-
         // if the factor being added is null-generating, create the join
         // as a left outer join since it's being added to the RHS side of
         // the join; createJoinSubTree may swap the inputs and therefore
@@ -681,6 +674,27 @@ public class LoptOptimizeJoinRule
         } else {
             joinType = JoinRelType.INNER;
         }
+        
+        LoptJoinTree rightTree =
+            new LoptJoinTree(
+                semiJoinOpt.getChosenSemiJoin(factorToAdd),
+                factorToAdd);
+
+        // in the case of a left or right outer join, use the specific
+        // outer join condition
+        RexNode condition;
+        if (joinType == JoinRelType.LEFT || joinType == JoinRelType.RIGHT) {
+            condition = multiJoin.getOuterJoinCond(factorToAdd);
+        } else {
+            condition =
+                addFilters(
+                    multiJoin,
+                    joinTree,
+                    rightTree,
+                    filtersToAdd,
+                    false);
+        }
+        
         return
             createJoinSubtree(
                 multiJoin,
@@ -688,6 +702,7 @@ public class LoptOptimizeJoinRule
                 rightTree,
                 condition,
                 joinType,
+                filtersToAdd,
                 true);
     }
 
@@ -867,6 +882,8 @@ public class LoptOptimizeJoinRule
      * ordering and therefore has not gone through any type of adjustment yet;
      * otherwise, the condition has already been partially adjusted and only
      * needs to be further adjusted if swapping is done
+     * @param filtersToAdd additional filters that may be added on top of the
+     * resulting JoinRel, if the join is a left or right outer join
      *
      * @return created JoinRel
      */
@@ -876,6 +893,7 @@ public class LoptOptimizeJoinRule
         LoptJoinTree right,
         RexNode condition,
         JoinRelType joinType,
+        List<RexNode> filtersToAdd,
         boolean fullAdjust)
     {
         RexBuilder rexBuilder =
@@ -914,7 +932,7 @@ public class LoptOptimizeJoinRule
             }
         }
 
-        JoinRel joinTree =
+        RelNode joinTree =
             new JoinRel(
                 multiJoin.getMultiJoinRel().getCluster(),
                 left.getJoinTree(),
@@ -924,6 +942,23 @@ public class LoptOptimizeJoinRule
                 Collections.EMPTY_SET,
                 true,
                 true);
+        
+        // if this is a left or right outer join, and additional filters can
+        // be applied to the resulting join, then they need to be applied
+        // as a filter on top of the outer join result
+        if (joinType == JoinRelType.LEFT || joinType == JoinRelType.RIGHT) {
+            RexNode filterCond =
+                addFilters(
+                    multiJoin,
+                    left,
+                    right,
+                    filtersToAdd,
+                    true);
+            if (!filterCond.isAlwaysTrue()) {
+                joinTree = CalcRel.createFilter(joinTree, filterCond);
+            }
+        }
+
         return
             new LoptJoinTree(
                 joinTree,

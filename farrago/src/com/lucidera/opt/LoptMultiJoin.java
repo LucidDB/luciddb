@@ -48,9 +48,16 @@ public class LoptMultiJoin
     MultiJoinRel multiJoin;
 
     /**
-     * Join filters associated with the MultiJoinRel, decomposed into a list
+     * Join filters associated with the MultiJoinRel, decomposed into a list.
+     * Excludes left/right outer join filters.
      */
     private List<RexNode> joinFilters;
+
+    /**
+     * All join filters associated with the MultiJoinRel, decomposed into a
+     * list.  Includes left/right outer join filters.
+     */
+    private List<RexNode> allJoinFilters;
 
     /**
      * Number of factors into the MultiJoinRel
@@ -131,6 +138,14 @@ public class LoptMultiJoin
         RelOptUtil.decomposeConjunction(
             multiJoin.getJoinFilter(),
             joinFilters);
+        
+        allJoinFilters = new ArrayList<RexNode>(joinFilters);
+        RexNode [] outerJoinFilters = multiJoin.getOuterJoinConditions();
+        for (int i = 0; i < nJoinFactors; i++) {
+            List<RexNode> ojFilters = new ArrayList<RexNode>();
+            RelOptUtil.decomposeConjunction(outerJoinFilters[i], ojFilters);
+            allJoinFilters.addAll(ojFilters);
+        }
 
         int start = 0;
         nTotalFields = multiJoin.getRowType().getFields().length;
@@ -276,7 +291,7 @@ public class LoptMultiJoin
     
     /**
      * @param factIdx factor for which information will be returned
-     * 
+     *
      * @return bitmap containing the factors that a null generating factor
      * is dependent upon, if the factor is null generating in a left or right
      * outer join; otherwise null is returned
@@ -284,6 +299,17 @@ public class LoptMultiJoin
     public BitSet getOuterJoinFactors(int factIdx)
     {
         return outerJoinFactors[factIdx];
+    }
+
+    /**
+     * @param factIdx factor for which information will be returned
+     *
+     * @return outer join conditions associated with the specified null
+     * generating factor
+     */
+    public RexNode getOuterJoinCond(int factIdx)
+    {
+        return multiJoin.getOuterJoinConditions()[factIdx];
     }
 
     /**
@@ -341,7 +367,7 @@ public class LoptMultiJoin
     {
         fieldsRefByJoinFilter = new HashMap<RexNode, BitSet>();
         factorsRefByJoinFilter = new HashMap<RexNode, BitSet>();
-        ListIterator<RexNode> filterIter = joinFilters.listIterator();
+        ListIterator<RexNode> filterIter = allJoinFilters.listIterator();
         while (filterIter.hasNext()) {
             RexNode joinFilter = filterIter.next();
 
@@ -408,7 +434,7 @@ public class LoptMultiJoin
             factorsRefByFactor[i] = new BitSet(nJoinFactors);
         }
 
-        for (RexNode joinFilter : joinFilters) {
+        for (RexNode joinFilter : allJoinFilters) {
             BitSet factorRefs = factorsRefByJoinFilter.get(joinFilter);
 
             // don't give weights to non-comparison expressions

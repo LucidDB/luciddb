@@ -386,8 +386,13 @@ public class ConvertMultiJoinRule
             }
         }
 
-        // AND everything together
-        RexNode newFilter = joinRel.getCondition();
+        // AND the join condition if this isn't a left or right outer join;
+        // in those cases, the outer join condition is already tracked
+        // separately
+        RexNode newFilter = null;
+        if (joinType != JoinRelType.LEFT && joinType != JoinRelType.RIGHT) {
+            newFilter = joinRel.getCondition();
+        }
         if (canCombine(left, joinType.generatesNullsOnLeft())) {
             RexNode leftFilter = ((MultiJoinRel) left).getJoinFilter();
             newFilter =
@@ -396,7 +401,7 @@ public class ConvertMultiJoinRule
                     newFilter,
                     leftFilter);
         }
-        newFilter = 
+        newFilter =
             RelOptUtil.andJoinFilters(
                 rexBuilder,
                 newFilter,
