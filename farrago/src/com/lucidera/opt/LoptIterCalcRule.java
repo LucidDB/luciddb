@@ -144,9 +144,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
 
     // index acess rule, hash rules
 
-    private static String tagTimestampFormat = "yyyy-MM-dd_HH:mm:ss";
-    private static DateFormat tagTimestampFormatter = 
-        new SimpleDateFormat(tagTimestampFormat);
+    private static String tagTimestampFormat = "yyyy-MM-dd_HH_mm_ss";
 
     //~ Constructors -----------------------------------------------------------
 
@@ -224,7 +222,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
         }
         if (rel != null) {
             sb.append("." + rel.getId());
-            sb.append("_" + tagTimestampFormatter.format(new Date()));
+            sb.append("_" + getTimestampString());
         }
         return sb.toString();
     }
@@ -238,8 +236,14 @@ public abstract class LoptIterCalcRule extends RelOptRule
     {
         // the timestamp should guarantee a unique default tag
         // and might be more readable than a uuid
-        return "IterCalcRel" + rel.getId() + "_" 
-            + tagTimestampFormatter.format(new Date());
+        return "IterCalcRel" + rel.getId() + "_" + getTimestampString();
+    }
+
+    protected String getTimestampString()
+    {
+        DateFormat tagTimestampFormatter = 
+            new SimpleDateFormat(tagTimestampFormat);
+        return tagTimestampFormatter.format(new Date());
     }
 
     protected void setIterCalcTypeMap(
