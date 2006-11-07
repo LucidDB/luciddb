@@ -258,6 +258,46 @@ public class SqlToRelConverter
         }        
     }
     
+    public RelNode flattenTypes(
+        RelNode rootRel, 
+        boolean restructure)
+    {
+        
+        RelStructuredTypeFlattener typeFlattener =
+            new RelStructuredTypeFlattener(rexBuilder);
+        RelNode newRootRel = typeFlattener.rewrite(rootRel, restructure);
+        
+        // There are three maps constructed during convertQuery which need to
+        // to be maintained for use in decorrelation.
+        // 1. mapRefRelToCorVar: 
+        //    - map a rel node to the coorrelated variables it references
+        // 2. mapCorVarToCorRel:
+        //    - map a correlated variable to the correlatorRel providing it
+        // 3. mapFieldAccessToCorVar:
+        //    - map a rex field access to the cor var it represents.
+        //    because typeFlattener does not clone or modify a correlated field access
+        //    this map does not need to be updated.
+        //
+        typeFlattener.updateRelInMap(mapRefRelToCorVar);
+        typeFlattener.updateRelInMap(mapCorVarToCorRel); 
+        
+        return newRootRel;
+    }
+    
+    public RelNode decorrelate(SqlNode query, RelNode rootRel)
+    {
+        RelNode result = rootRel;
+
+        // If subquery is correlated and decorrelation is enabled, perform
+        // decorrelation.
+        if (enableDecorrelation() &&
+            hasCorrelation()) {
+            result = decorrelateQuery(result);
+            checkConvertedType(query, result);
+        }
+        return result;
+    }
+    
     /**
      * Converts an unvalidated query's parse tree into a relational expression.
      *
@@ -289,23 +329,7 @@ public class SqlToRelConverter
                     false,
                     SqlExplainLevel.EXPPLAN_ATTRIBUTES));            
         }
-        
-        // If subquery is correlated and decorrelation is enabled, perform
-        // decorrelation.
-        if (enableDecorrelation() &&
-            !mapCorVarToCorRel.isEmpty()) {
-            result = decorrelateQuery(result);
-            checkConvertedType(query, result);
-            if (dumpPlan) {
-                sqlToRelTracer.fine(
-                    RelOptUtil.dumpPlan(
-                        "Plan after decorrelating RelNode",
-                        result,
-                        false,
-                        SqlExplainLevel.EXPPLAN_ATTRIBUTES));            
-            }
-        }
-        
+                
         return result;
     }
 
@@ -1798,6 +1822,11 @@ public class SqlToRelConverter
         // disable subquery decorrelation when needed.
         // e.g. if outer joins are not supported.
         return decorrelationEnabled;
+    }
+
+    public boolean hasCorrelation()
+    {
+        return !mapCorVarToCorRel.isEmpty();
     }
     
     protected RelNode decorrelateQuery(RelNode rootRel)

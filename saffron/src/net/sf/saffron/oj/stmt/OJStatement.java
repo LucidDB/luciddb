@@ -42,6 +42,7 @@ import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.runtime.*;
@@ -209,6 +210,16 @@ public class OJStatement extends OJPreparingStmt
         } catch (MOPException e) {
             throw Util.newInternal(e, "while parsing [" + queryString + "]");
         }
+    }
+
+    protected RelNode flattenTypes(RelNode rootRel, boolean restructure)
+    {
+        return rootRel;
+    }
+
+    protected RelNode decorrelate(SqlNode query, RelNode rootRel)
+    {
+        return rootRel;
     }
 
     /**

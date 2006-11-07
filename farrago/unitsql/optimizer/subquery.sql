@@ -376,6 +376,11 @@ select deptno, min((select name from emps2 where emps2.deptno=emps.deptno))
 from emps
 group by deptno;
 
+explain plan for
+select deptno, min((select name from emps2 where emps2.deptno=emps.deptno))
+from emps
+group by deptno;
+
 select deptno, min((select name from emps2 where emps2.deptno=emps.deptno))
 from emps
 group by deptno;
@@ -400,13 +405,11 @@ explain plan without implementation for
 select sum((select emps.empno from depts where depts.deptno = emps.deptno))
 from emps;
 
--- 3.6 HAVING clause scalar subquery currently produces incorrect plan
---     if HAVING clause references aggs. This is because HAVING clause is processed
---     before agg. So the subqueries get transformed into joins too early.
---     (Currently having clause is processed before agg processing because the way aggs
---      are gathered -- via expression conversion).
---     Ideally, aggs should be gathered first,
---     then AggRels are generated, followed by processing of HAVING clause.
+explain plan for 
+select sum((select emps.empno from depts where depts.deptno = emps.deptno))
+from emps;
+
+-- 3.6 HAVING clause scalar subquery.
 --
 --     Note: SQL2003 seems to contradict itself wrt to aggregates in HAVING clause.
 --     In the rules for <set function specification>(which include aggregates),
@@ -420,7 +423,7 @@ from emps
 group by name
 having min(emps.name)=(select max(name) from depts);
 
--- work around is to rewrite the above query into this
+-- the above query can also be rewritten into this
 explain plan without implementation for
 select name
 from
@@ -439,13 +442,14 @@ explain plan without implementation for
 select name from emps group by name
 having name in ('ab', 'cd');
 
--- 3.6.3 will fail
-explain plan for
+-- 3.6.3 will fail when looking up emps.empno in group by clause
+explain plan without implementation for
 select count(*) from emps
 where exists (select count(*) from depts group by emps.empno)
 group by emps.empno;
 
-explain plan for
+-- will not decorrelate
+explain plan without implementation for
 select count(*) from emps
 group by emps.empno
 having exists (select count(*) from depts group by emps.empno);
@@ -666,11 +670,24 @@ select empno from emps
 where exists (select * from depts where depts.deptno = emps.deptno) 
       or exists (select * from depts2 where depts2.deptno <> emps.empno);
 
+explain plan for 
+select empno from emps
+where exists (select * from depts where depts.deptno = emps.deptno) 
+      or exists (select * from depts2 where depts2.deptno <> emps.empno);
+
 -- 6.1.2 The following, less complex, equivalent plan is possible with OR-expansion.
 -- Note the IN lookup is required because union all does not remove duplicates.
 -- Similarly, if using union the lookup is also required because union removes duplicates.
 -- This could be a better plan than 6.1.1 because there're one fewer joins.
 explain plan without implementation for
+select empno from emps where empno in (
+    select empno from emps
+    where exists (select * from depts where depts.deptno = emps.deptno)
+    union all
+    select empno from emps
+    where exists (select * from depts2 where depts2.deptno <> emps.empno));
+
+explain plan for
 select empno from emps where empno in (
     select empno from emps
     where exists (select * from depts where depts.deptno = emps.deptno)
@@ -690,9 +707,23 @@ select empno from emps
 where exists (select * from depts where depts.deptno = emps.deptno) 
       and exists (select * from depts2 where depts2.deptno <> emps.empno);
 
+explain plan for 
+select empno from emps
+where exists (select * from depts where depts.deptno = emps.deptno) 
+      and exists (select * from depts2 where depts2.deptno <> emps.empno);
+
 -- 6.2.2 The following plan is equivalent to 6.2.1 and has one fewer joins.
 -- Note the IN lookup is required because intersect removes duplicates.
 explain plan without implementation for
+select empno from emps
+where empno in (
+    select empno from emps
+    where exists (select * from depts where depts.deptno = emps.deptno)
+    intersect
+    select empno from emps
+    where exists (select * from depts2 where depts2.deptno <> emps.empno));
+
+explain plan for
 select empno from emps
 where empno in (
     select empno from emps
@@ -713,9 +744,23 @@ select empno from emps
 where exists (select * from depts where depts.deptno = emps.deptno) 
       and not exists (select * from depts2 where depts2.deptno <> emps.empno);
 
+explain plan for 
+select empno from emps
+where exists (select * from depts where depts.deptno = emps.deptno) 
+      and not exists (select * from depts2 where depts2.deptno <> emps.empno);
+
 -- 6.3.2 The following plan is equivalent to 6.3.1 and has one fewer joins.
 -- Note the IN lookup is required because intersect removes duplicates.
 explain plan without implementation for
+select empno from emps
+where empno in (
+    select empno from emps
+    where exists (select * from depts where depts.deptno = emps.deptno)
+    except
+    select empno from emps
+    where exists (select * from depts2 where depts2.deptno <> emps.empno));
+
+explain plan for
 select empno from emps
 where empno in (
     select empno from emps
@@ -751,6 +796,11 @@ where emps.deptno = (select min(deptno) from depts2);
 
 -- so does this
 explain plan without implementation for
+select * from emps left outer join depts
+on emps.deptno = depts.deptno
+where emps.deptno = (select min(deptno) from depts2 where depts2.deptno = depts.deptno);
+
+explain plan for
 select * from emps left outer join depts
 on emps.deptno = depts.deptno
 where emps.deptno = (select min(deptno) from depts2 where depts2.deptno = depts.deptno);

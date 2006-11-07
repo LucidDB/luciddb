@@ -25,7 +25,6 @@ import com.disruptivetech.farrago.calc.*;
 import com.disruptivetech.farrago.fennel.*;
 
 import com.lucidera.farrago.fennel.*;
-import com.lucidera.farrago.namespace.flatfile.*;
 import com.lucidera.lurql.*;
 
 import java.io.*;
@@ -35,24 +34,22 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.datatypes.*;
-import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.ddl.*;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.type.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
@@ -75,8 +72,18 @@ public class FarragoDefaultSessionPersonality
 
     //~ Static fields ----------------------------------------------------------
 
+    /**
+     * Numeric data from external data sources may have a greater precision 
+     * than Farrago. Whether data of greater precision should be replaced 
+     * with null when it overflows due to the greater precision.
+     */
     public static final String SQUEEZE_JDBC_NUMERIC = "squeezeJdbcNumeric";
     public static final String SQUEEZE_JDBC_NUMERIC_DEFAULT = "true";
+    /**
+     * Whether statement caching is enabled for a session
+     */
+    public static final String CACHE_STATEMENTS = "cacheStatements";
+    public static final String CACHE_STATEMENTS_DEFAULT = "true";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -92,6 +99,8 @@ public class FarragoDefaultSessionPersonality
         paramValidator = new ParamValidator();
         paramValidator.registerBoolParam(
             SQUEEZE_JDBC_NUMERIC, false);
+        paramValidator.registerBoolParam(
+            CACHE_STATEMENTS, false);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -334,6 +343,13 @@ public class FarragoDefaultSessionPersonality
     }
 
     // implement FarragoSessionPersonality
+    public RelDataTypeFactory newTypeFactory(
+        FarragoRepos repos)
+    {
+        return new FarragoTypeFactoryImpl(repos);
+    }
+
+    // implement FarragoSessionPersonality
     public void validate(
         FarragoSessionStmtValidator stmtValidator,
         SqlNode sqlNode)
@@ -347,6 +363,9 @@ public class FarragoDefaultSessionPersonality
         variables.setDefault(
             SQUEEZE_JDBC_NUMERIC,
             SQUEEZE_JDBC_NUMERIC_DEFAULT);
+        variables.setDefault(
+            CACHE_STATEMENTS,
+            CACHE_STATEMENTS_DEFAULT);
     }
 
     // implement FarragoSessionPersonality
@@ -436,6 +455,9 @@ public class FarragoDefaultSessionPersonality
         // this provider gets low priority.
     }
 
+    /**
+     * ParamDesc represents a session parameter descriptor
+     */
     private class ParamDesc
     {
         int type;
@@ -455,6 +477,9 @@ public class FarragoDefaultSessionPersonality
         }
     }
     
+    /**
+     * ParamValidator is a basic session parameter validator
+     */
     public class ParamValidator 
     {
         private final int BOOLEAN_TYPE = 1;

@@ -804,55 +804,17 @@ public abstract class SqlTypeStrategies
     /**
      * Type-inference strategy whereby the result type of a call is the decimal
      * product of two exact numeric operands where at least one of the operands
-     * is a decimal. Let p1, s1 be the precision and scale of the first operand
-     * Let p2, s2 be the precision and scale of the second operand Let p, s be
-     * the precision and scale of the result, Then the result type is a decimal
-     * with:
-     *
-     * <ul>
-     * <li>p = p1 + p2</li>
-     * <li>s = s1 + s2</li>
-     * </ul>
-     *
-     * p and s are capped at their maximum values
-     *
-     * @sql.2003 Part 2 Section 6.26
+     * is a decimal. 
      */
     public static final SqlReturnTypeInference rtiDecimalProduct =
         new SqlReturnTypeInference() {
             public RelDataType inferReturnType(
                 SqlOperatorBinding opBinding)
             {
+                RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
                 RelDataType type1 = opBinding.getOperandType(0);
                 RelDataType type2 = opBinding.getOperandType(1);
-                if (SqlTypeUtil.isExactNumeric(type1)
-                    && SqlTypeUtil.isExactNumeric(type2)) {
-                    if (SqlTypeUtil.isDecimal(type1)
-                        || SqlTypeUtil.isDecimal(type2)) {
-                        int p1 = type1.getPrecision();
-                        int p2 = type2.getPrecision();
-                        int s1 = type1.getScale();
-                        int s2 = type2.getScale();
-
-                        int scale = s1 + s2;
-                        scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
-                        int precision = p1 + p2;
-                        precision =
-                            Math.min(precision,
-                                SqlTypeName.MAX_NUMERIC_PRECISION);
-
-                        RelDataType ret;
-                        ret =
-                            opBinding.getTypeFactory().createSqlType(
-                                SqlTypeName.Decimal,
-                                precision,
-                                scale);
-
-                        return ret;
-                    }
-                }
-
-                return null;
+                return typeFactory.createDecimalProduct(type1, type2);
             }
         };
 
@@ -883,63 +845,17 @@ public abstract class SqlTypeStrategies
     /**
      * Type-inference strategy whereby the result type of a call is the decimal
      * product of two exact numeric operands where at least one of the operands
-     * is a decimal. Let p1, s1 be the precision and scale of the first operand
-     * Let p2, s2 be the precision and scale of the second operand Let p, s be
-     * the precision and scale of the result, Let d be the number of whole
-     * digits in the result Then the result type is a decimal with:
-     *
-     * <ul>
-     * <li>d = p1 - s1 + s2</li>
-     * <li>s <= max(6, s1 + p2 + 1)</li>
-     * <li>p = d + s</li>
-     * </ul>
-     *
-     * p and s are capped at their maximum values
-     *
-     * @sql.2003 Part 2 Section 6.26
+     * is a decimal.
      */
     public static final SqlReturnTypeInference rtiDecimalQuotient =
         new SqlReturnTypeInference() {
             public RelDataType inferReturnType(
                 SqlOperatorBinding opBinding)
             {
+                RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
                 RelDataType type1 = opBinding.getOperandType(0);
                 RelDataType type2 = opBinding.getOperandType(1);
-                if (SqlTypeUtil.isExactNumeric(type1)
-                    && SqlTypeUtil.isExactNumeric(type2)) {
-                    if (SqlTypeUtil.isDecimal(type1)
-                        || SqlTypeUtil.isDecimal(type2)) {
-                        int p1 = type1.getPrecision();
-                        int p2 = type2.getPrecision();
-                        int s1 = type1.getScale();
-                        int s2 = type2.getScale();
-
-                        int dout =
-                            Math.min(p1 - s1 + s2,
-                                SqlTypeName.MAX_NUMERIC_PRECISION);
-
-                        int scale = Math.max(6, s1 + p2 + 1);
-                        scale =
-                            Math.min(scale,
-                                SqlTypeName.MAX_NUMERIC_PRECISION - dout);
-                        scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
-
-                        int precision = dout + scale;
-                        assert (precision <= SqlTypeName.MAX_NUMERIC_PRECISION);
-                        assert (precision > 0);
-
-                        RelDataType ret;
-                        ret =
-                            opBinding.getTypeFactory().createSqlType(
-                                SqlTypeName.Decimal,
-                                precision,
-                                scale);
-
-                        return ret;
-                    }
-                }
-
-                return null;
+                return typeFactory.createDecimalQuotient(type1, type2);
             }
         };
 

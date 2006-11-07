@@ -28,10 +28,12 @@ import com.disruptivetech.farrago.rel.*;
 import com.lucidera.lcs.*;
 import com.lucidera.opt.*;
 import com.lucidera.runtime.*;
+import com.lucidera.type.*;
 
 import java.io.*;
 import java.util.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.config.*;
@@ -45,6 +47,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.hep.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
@@ -224,11 +227,7 @@ public class LucidDbSessionPersonality
         // Need to fire delete and merge rules before any projection rules
         // since they modify the projection
         builder.addRuleInstance(new LcsTableDeleteRule());
-        builder.addRuleInstance(new LcsTableMergeRule());
-        
-        // Remove trivial projects first to avoid having to fire the pull
-        // projection rules below
-        builder.addRuleInstance(new RemoveTrivialProjectRule());
+        builder.addRuleInstance(new LcsTableMergeRule());    
         
         // Execute rules that are needed to do proper join optimization:
         // 1) push filters past joins
@@ -324,13 +323,20 @@ public class LucidDbSessionPersonality
         // but once we start taking more kinds of join factors, it won't be.)
         builder.addGroupBegin();
         builder.addRuleInstance(new PushSemiJoinPastFilterRule());
+        builder.addRuleInstance(new PushSemiJoinPastProjectRule());
         builder.addRuleInstance(new PushSemiJoinPastJoinRule());
         builder.addGroupEnd();
 
         // Convert semijoins to physical index access.
         builder.addRuleClass(LcsIndexSemiJoinRule.class);
 
-        // Remove any semijoins that couldn't be converted
+        // TODO zfong 10/27/06 - This rule is currently a no-op because we
+        // won't generate a semijoin if it can't be converted to physical
+        // RelNodes.  But it's currently left in place in case of bugs.
+        // In the future, change it to a rule that converts the leftover
+        // SemiJoinRel to a pattern that can be processed by LhxSemiJoinRule so
+        // we instead use hash semijoins to process the semijoin rather than
+        // removing the semijoin, which could result in a poor query plan.
         builder.addRuleInstance(new RemoveSemiJoinRule());
     
         builder.addGroupBegin();
@@ -614,6 +620,13 @@ public class LucidDbSessionPersonality
             new LucidDbPreparingStmt(stmtValidator);
         initPreparingStmt(stmt);
         return stmt;
+    }
+
+    // implement FarragoSessionPersonality
+    public RelDataTypeFactory newTypeFactory(
+        FarragoRepos repos)
+    {
+        return new LucidDbTypeFactory(repos);
     }
 }
 

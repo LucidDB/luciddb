@@ -106,6 +106,7 @@ from t full outer join smalltable s
 on t.d = s.s1 where s.s2 > 0
 order by a;
 
+!set outputformat table
 select *
 from t full outer join smalltable s
 on t.d = s.s1 where s.s2 > 0
@@ -114,7 +115,7 @@ order by a;
 ---------------------
 -- multi-column joins
 ---------------------
-
+!set outputformat csv
 explain plan for select *
     from t inner join smalltable s
     on t.d = s.s1 and t.b = s.s3 where s.s2 > 0 order by a;
@@ -321,8 +322,7 @@ explain plan for
     select * from sales where customer in
         (select id from customer where id < 10);
 
--- semijoin that needs to be removed
-
+-- semijoin can't be used here because we don't push semijoins past aggregates
 explain plan for
     select s.product_id from
         (select sum(quantity), product_id from sales group by product_id) s,
@@ -409,3 +409,37 @@ select * from sales where customer in
 select * from sales where customer in
     (select id from customer where id < 10)
     order by sid;
+
+-- test semijoins on views
+create view vt(vc, vd, vb, vbd) as
+    select upper(c), trim(d), b, b || d from t;
+select * from vt;
+!set outputformat csv
+
+-- semijoin should be usable in these two cases; for the second and third,
+-- should only use the index on column b
+explain plan for
+    select * from vt, smalltable s
+        where vt.vb = s.s3 and s.s1 = 'this is row 1';
+explain plan for
+    select * from vt, smalltable s
+        where vt.vb = s.s3 and vt.vbd = s.s1 and s.s2 > 0;
+explain plan for
+    select * from vt, smalltable s
+        where vt.vb = s.s3 and vt.vd = s.s1 and s.s2 > 0;
+
+-- but not in these cases
+explain plan for
+    select * from vt, smalltable s where vt.vd = s.s1 and s.s2 > 0;
+explain plan for
+    select * from vt, smalltable s
+        where vt.vbd = s.s3 and s.s1 = 'this is row 1';
+
+-- run the queries corresponding to the cases where semijoins can be used
+!set outputformat table
+select * from vt, smalltable s
+    where vt.vb = s.s3 and s.s1 = 'this is row 1' order by vc;
+select * from vt, smalltable s
+    where vt.vb = s.s3 and vt.vbd = s.s1 and s.s2 > 0 order by vc;
+select * from vt, smalltable s
+    where vt.vb = s.s3 and vt.vd = s.s1 and s.s2 > 0 order by vc;

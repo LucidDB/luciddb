@@ -34,6 +34,7 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.ddl.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.sql2003.*;
@@ -747,8 +748,12 @@ public class FarragoDatabase
         // EXPLAIN PLAN?
 
         // It would be silly to cache EXPLAIN PLAN results, so deal with them
-        // directly.
-        if (sqlNode.isA(SqlKind.Explain)) {
+        // directly. Also check for whether statement caching is turned off 
+        // for the session before continuing.
+        boolean cacheStatements =
+            stmt.getSession().getSessionVariables().getBoolean(
+                FarragoDefaultSessionPersonality.CACHE_STATEMENTS);
+        if (sqlNode.isA(SqlKind.Explain) || cacheStatements == false) {
             FarragoSessionExecutableStmt executableStmt =
                 stmt.prepare(sqlNode, sqlNode);
             owner.addAllocation(executableStmt);
@@ -868,11 +873,21 @@ public class FarragoDatabase
         for (String mofid : stmt.getReferencedObjectIds()) {
             RefBaseObject obj = repos.getMdrRepos().getByMofId(mofid);
             if (obj == null) {
-                // TODO jvs 17-July-2004:  Once we support ALTER TABLE, this
-                // won't be good enough.  In addition to checking that the
-                // object still exists, we'll need to verify that its version
-                // number is the same as it was at the time stmt was prepared.
+                // the object was deleted
                 return true;
+            }
+            if (obj instanceof FemAnnotatedElement) {
+                String cachedModTime = stmt.getReferencedObjectModTime(mofid);
+                if (cachedModTime == null) {
+                    continue;
+                }
+                FemAnnotatedElement annotated = (FemAnnotatedElement) obj;
+                String lastModTime = annotated.getModificationTimestamp();
+                if (!cachedModTime.equals(lastModTime))
+                {
+                    // the object was modified
+                    return true;
+                }
             }
         }
         return false;

@@ -1427,10 +1427,17 @@ DdlStmt AlterTableStmt() :
 }
 {
     table = TableIdentifier()
-    <ALTER> <COLUMN> ddlStmt = AlterColumnStmt(table)
-    {
-        return ddlStmt;
-    }
+    (
+        <ALTER> <COLUMN> ddlStmt = AlterColumnStmt(table)
+        {
+            return ddlStmt;
+        }
+        |
+        <REBUILD>
+        {
+            return new DdlRebuildTableStmt(table);
+        }
+    )
 }
 
 DdlStmt AlterColumnStmt(CwmTable table) :
@@ -2821,6 +2828,7 @@ TOKEN :
     | < INDEX: "INDEX" >
     | < JAR: "JAR" >
     | < PERCENT: "PERCENT" >
+    | < REBUILD: "REBUILD" >
     | < RENAME: "RENAME" >
     | < REPLACE: "REPLACE" >
     | < SAMPLE: "SAMPLE" >
@@ -2855,6 +2863,7 @@ String DdlNonReservedKeyWord() :
         | <INDEX>
         | <JAR>
         | <PERCENT>
+        | <REBUILD>
         | <RENAME>
         | <REPLACE>
         | <SAMPLE>

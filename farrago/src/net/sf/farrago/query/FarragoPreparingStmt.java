@@ -117,6 +117,7 @@ public class FarragoPreparingStmt
     private boolean allowPartialImplementation;
     private final Map<String, RelDataType> resultSetTypeMap;
     private final Map<String, RelDataType> iterCalcTypeMap;
+    private boolean cachingDisabled;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -197,7 +198,15 @@ public class FarragoPreparingStmt
     // implement FarragoSessionPreparingStmt: cache everything
     public boolean mayCacheImplementation()
     {
+        if (cachingDisabled) {
+            return false;
+        }
         return true;
+    }
+
+    public void disableStatementCaching()
+    {
+        cachingDisabled = true;
     }
 
     public FarragoSessionStmtValidator getStmtValidator()
@@ -555,7 +564,7 @@ public class FarragoPreparingStmt
                         preparedExecution.getMethod(),
                         xmiFennelPlan,
                         preparedResult.isDml(),
-                        getReferencedObjectIds(),
+                        getReferencedObjectTimestampMap(),
                         tableAccessMap,
                         resultSetTypeMap,
                         iterCalcTypeMap,
@@ -568,7 +577,7 @@ public class FarragoPreparingStmt
                         xmiFennelPlan,
                         streamName,
                         preparedResult.isDml(),
-                        getReferencedObjectIds(),
+                        getReferencedObjectTimestampMap(),
                         tableAccessMap);
             }
         } else {
@@ -624,10 +633,9 @@ public class FarragoPreparingStmt
 
         // For queries, fill in some more information.
         if (rootRel != null) {
-            // Make sure we have RelMetadataProvider set up.
-            finalizeRelMetadata(rootRel);
-
             if (analyzedSql.optimized) {
+                rootRel = flattenTypes(rootRel, true);
+
                 rootRel = optimize(
                         rootRel.getRowType(),
                         rootRel);
@@ -686,13 +694,18 @@ public class FarragoPreparingStmt
         sqlNode.accept(udfInvocationFinder);
     }
 
-    protected Set<String> getReferencedObjectIds()
+    protected Map<String, String> getReferencedObjectTimestampMap()
     {
-        Set<String> set = new HashSet<String>();
+        Map<String, String> map = new HashMap<String, String>();
         for (CwmModelElement refObj : allDependencies) {
-            set.add(refObj.refMofId());
+            String modTime = null;
+            if (refObj instanceof FemAnnotatedElement) {
+                FemAnnotatedElement annotated = (FemAnnotatedElement) refObj;
+                modTime = annotated.getModificationTimestamp();
+            }
+            map.put(refObj.refMofId(), modTime);
         }
-        return set;
+        return map;
     }
 
     // implement FarragoSessionPreparingStmt
@@ -707,10 +720,12 @@ public class FarragoPreparingStmt
         return getSqlToRelConverter().getCluster();
     }
 
-    // override OJPreparingStmt
-    protected RelNode optimize(RelDataType rowType, RelNode rootRel)
+    protected RelNode flattenTypes(
+        RelNode rootRel, 
+        boolean restructure)
     {
         boolean dumpPlan = planDumpTracer.isLoggable(Level.FINE);
+
         if (dumpPlan) {
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(
@@ -718,9 +733,11 @@ public class FarragoPreparingStmt
                     rootRel,
                     false,
                     SqlExplainLevel.EXPPLAN_ATTRIBUTES));
-        }
-        originalRowType = rowType;
-        rootRel = flattenTypes(rootRel, true);
+        }        
+
+        RelNode newRootRel =
+            getSqlToRelConverter().flattenTypes(rootRel, restructure);
+        
         if (timingTracer != null) {
             timingTracer.traceTime("end type flattening and view expansion");
         }
@@ -728,14 +745,46 @@ public class FarragoPreparingStmt
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(
                     "Plan after flattening",
-                    rootRel,
+                    newRootRel,
                     false,
                     SqlExplainLevel.EXPPLAN_ATTRIBUTES));
-        }
-
+        }        
+        return newRootRel;
+    }
+        
+    protected RelNode decorrelate(
+        SqlNode query,
+        RelNode rootRel) 
+    {
+        boolean dumpPlan = planDumpTracer.isLoggable(Level.FINE);
+        
         // Now that all plugins have been seen (flattening above expanded
-        // views), we can finalize the relational expression metadata query
-        // providers to use during optimization.
+        // views), finalize the relational expression metadata query providers
+        // to use during decorrelation.
+        finalizeRelMetadata(rootRel);
+
+        RelNode newRootRel =
+            getSqlToRelConverter().decorrelate(query, rootRel);
+        
+        if (dumpPlan) {
+            planDumpTracer.fine(
+                RelOptUtil.dumpPlan(
+                    "Plan after decorrelating RelNode",
+                    newRootRel,
+                    false,
+                    SqlExplainLevel.EXPPLAN_ATTRIBUTES));
+        }        
+        return newRootRel;
+    }
+    
+    // override OJPreparingStmt
+    protected RelNode optimize(RelDataType rowType, RelNode rootRel)
+    {
+        boolean dumpPlan = planDumpTracer.isLoggable(Level.FINE);
+        originalRowType = rowType;
+
+        // Since rootRel might have changed, first finalize the relational 
+        // expression metadata query providers to use during optimization.
         finalizeRelMetadata(rootRel);
 
         RelTraitSet desiredTraits = getDesiredRootTraitSet(rootRel);
@@ -835,16 +884,7 @@ public class FarragoPreparingStmt
         // so any further access to it is an error.
         relMetadataProvider = null;
     }
-
-    protected RelNode flattenTypes(RelNode rootRel, boolean restructure)
-    {
-        RelStructuredTypeFlattener typeFlattener =
-            new RelStructuredTypeFlattener(
-                sqlToRelConverter.getRexBuilder());
-        rootRel = typeFlattener.rewrite(rootRel, restructure);
-        return rootRel;
-    }
-
+    
     protected RelDataType getParamRowType()
     {
         return

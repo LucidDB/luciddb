@@ -463,4 +463,30 @@ MultiJoinRel(joinFilter=[AND(AND(=($0, $8), =($7, $9)), =($8, $9))], isFullOuter
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testPushSemiJoinPastProject">
+        <Resource name="sql">
+            <![CDATA[select e.* from (select name, trim(city), age * 2, deptno from sales.emps) e, sales.depts d where e.deptno = d.deptno]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[$2], DEPTNO=[$3])
+  FilterRel(condition=[=($3, $4)])
+    JoinRel(condition=[true], joinType=[inner])
+      ProjectRel(NAME=[$1], EXPR$1=[TRIM(FLAG(Both), _ISO-8859-1' ', $4)], EXPR$2=[*($6, 2)], DEPTNO=[$2])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[$2], DEPTNO=[$3])
+  JoinRel(condition=[=($3, $4)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+    ProjectRel(NAME=[$1], EXPR$1=[TRIM(FLAG(Both), _ISO-8859-1' ', $4)], EXPR$2=[*($6, 2)], DEPTNO=[$2])
+      SemiJoinRel(condition=[=($2, $10)], joinType=[inner])
+        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

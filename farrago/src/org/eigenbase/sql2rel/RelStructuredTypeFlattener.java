@@ -89,6 +89,7 @@ public class RelStructuredTypeFlattener
     private RelDataType flattenedRootType;
     boolean restructured;
 
+
     //~ Constructors -----------------------------------------------------------
 
     public RelStructuredTypeFlattener(RexBuilder rexBuilder)
@@ -98,6 +99,35 @@ public class RelStructuredTypeFlattener
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    public void updateRelInMap(
+        Map<RelNode, SortedSet<CorrelatorRel.Correlation> > mapRefRelToCorVar)
+    {
+        Set<RelNode> oldRefRelSet = new HashSet<RelNode> ();
+        oldRefRelSet.addAll(mapRefRelToCorVar.keySet());
+        for (RelNode rel : oldRefRelSet) {
+            if (oldToNewRelMap.containsKey(rel)) {
+                SortedSet<CorrelatorRel.Correlation> corVarSet =
+                    new TreeSet<CorrelatorRel.Correlation> ();
+                corVarSet.addAll(mapRefRelToCorVar.get(rel));
+                mapRefRelToCorVar.remove(rel);
+                mapRefRelToCorVar.put(oldToNewRelMap.get(rel), corVarSet);
+            }
+        }
+    }
+    
+    public void updateRelInMap(
+        SortedMap<CorrelatorRel.Correlation, CorrelatorRel>  mapCorVarToCorRel)
+    {
+        for (CorrelatorRel.Correlation corVar : mapCorVarToCorRel.keySet()) {
+            CorrelatorRel oldRel = mapCorVarToCorRel.get(corVar);
+            if (oldToNewRelMap.containsKey(oldRel)) {
+                RelNode newRel = oldToNewRelMap.get(oldRel);
+                assert (newRel instanceof CorrelatorRel);
+                mapCorVarToCorRel.put(corVar, (CorrelatorRel)newRel);
+            }
+        }
+    }
 
     public RelNode rewrite(RelNode root, boolean restructure)
     {
@@ -375,8 +405,9 @@ public class RelStructuredTypeFlattener
                 rel.getCluster(),
                 getNewForOldRel(rel.getLeft()),
                 getNewForOldRel(rel.getRight()),
+                rel.getCondition(),
                 newCorrelations,
-                JoinRelType.LEFT);
+                rel.getJoinType());
         setNewForOldRel(rel, newRel);
     }
 
@@ -759,7 +790,9 @@ public class RelStructuredTypeFlattener
                     RexInputRef inputRef = (RexInputRef) refExp;
                     iInput += getNewForOldInput(inputRef.getIndex());
                     return new RexInputRef(iInput, fieldType);
-                } else if (refExp.isA(RexKind.Cast)) {
+                } else if (refExp instanceof RexCorrelVariable) {
+                    return fieldAccess;
+                } else if(refExp.isA(RexKind.Cast)) {
                     // REVIEW jvs 27-Feb-2005:  what about a cast between
                     // different user-defined types (once supported)?
                     RexCall cast = (RexCall) refExp;

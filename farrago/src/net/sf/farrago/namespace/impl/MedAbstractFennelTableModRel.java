@@ -25,8 +25,11 @@ package net.sf.farrago.namespace.impl;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
@@ -114,14 +117,63 @@ public abstract class MedAbstractFennelTableModRel
         //Except for Delete, if the target table is also the source, buffering
         //is required.
         if (!getOperation().equals(TableModificationRel.Operation.DELETE)) {
-            TableAccessMap tableAccessMap = new TableAccessMap(this);
-            List<String> tableName = tableAccessMap.getQualifiedName(table);
-            if (tableAccessMap.isTableAccessedForRead(tableName)) {
-                needBuffer = true;
+            if (isTableAccessedForRead()) {
+                if (table instanceof MedAbstractColumnSet) {
+                    CwmNamedColumnSet cwmColumnSet =
+                        ((MedAbstractColumnSet) table).getCwmColumnSet();
+                    if (cwmColumnSet instanceof CwmTable) {
+                        CwmTable cwmTable = (CwmTable) cwmColumnSet;
+                        needBuffer = isIndexRootSelfReferencing(cwmTable);
+                    }
+                }
             }
         }
 
         return needBuffer;
+    }
+
+    /**
+     * @return whether the table to be modified is also accessed for reading
+     */
+    private boolean isTableAccessedForRead()
+    {
+        TableAccessMap tableAccessMap = new TableAccessMap(this);
+        List<String> tableName = tableAccessMap.getQualifiedName(table);
+        return tableAccessMap.isTableAccessedForRead(tableName);
+    }
+
+    /**
+     * @return for a table modification that is self referencing (i.e. same 
+     *   table is accessed for both input and output), determines whether  
+     *   any index roots will be accessed for both input and output. In the 
+     *   case of insertions, the deletion index is not taken into account, 
+     *   because insertions produce no deleted entries.
+     */
+    private boolean isIndexRootSelfReferencing(CwmTable cwmTable)
+    {
+        FarragoPreparingStmt stmt =
+            FennelRelUtil.getPreparingStmt(this);
+        FarragoRepos repos = stmt.getRepos();
+        FarragoSessionIndexMap indexMap = 
+            stmt.getSession().getSessionIndexMap();
+
+        boolean selfReferencing = false;
+        Collection<FemLocalIndex> indexes =
+            FarragoCatalogUtil.getTableIndexes(repos, cwmTable);
+        for (FemLocalIndex index: indexes) {
+            if (getOperation().equals(TableModificationRel.Operation.INSERT)
+                && FarragoCatalogUtil.isDeletionIndex(index)) 
+            {
+                continue;
+            }
+            long readRoot = indexMap.getIndexRoot(index, false);
+            long writeRoot = indexMap.getIndexRoot(index, true);
+            if (readRoot == writeRoot) {
+                selfReferencing = true;
+                break;
+            }
+        }
+        return selfReferencing;
     }
 
     /**

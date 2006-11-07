@@ -721,7 +721,7 @@ public class LcsIndexGuide
         FemLcsClusterAppendStreamDef clusterAppend =
             repos.newFemLcsClusterAppendStreamDef();
 
-        defineIndexStream(clusterAppend, rel, clusterIndex, true);
+        defineIndexStream(clusterAppend, rel, clusterIndex, true, true);
 
         //
         // Set up FemLcsClusterAppendStreamDef
@@ -760,7 +760,7 @@ public class LcsIndexGuide
     {
         FemLcsRowScanStreamDef scanStream = repos.newFemLcsRowScanStreamDef();
 
-        defineScanStream(scanStream, rel);
+        defineScanStream(scanStream, rel, false);
 
         // setup the output projection relative to the ordered list of
         // clustered indexes
@@ -820,9 +820,10 @@ public class LcsIndexGuide
             repos.newFemLbmGeneratorStreamDef();
 
         //
-        // Setup cluster scans
+        // Setup cluster scans. The generator scans are based on the new 
+        // clusters being written.
         //
-        defineScanStream(generator, rel);
+        defineScanStream(generator, rel, true);
 
         //
         // Setup projection used by unclustered index
@@ -852,7 +853,7 @@ public class LcsIndexGuide
         //
         // Setup Btree accessor parameters
         //
-        defineIndexAccessor(generator, rel, index, false);
+        defineIndexAccessor(generator, rel, index, false, true);
 
         //
         // Set up FemExecutionStreamDef
@@ -860,6 +861,13 @@ public class LcsIndexGuide
         //
         generator.setOutputDesc(
             createUnclusteredBTreeTupleDesc(index));
+
+        //
+        // This to keeps the repository validator happy
+        //
+        Integer[] clusterResidualColumns = new Integer[] {};
+        generator.setResidualFilterColumns(
+            FennelRelUtil.createTupleProjection(repos, clusterResidualColumns));
 
         return generator;
     }
@@ -898,7 +906,7 @@ public class LcsIndexGuide
         // It's output type is the same as the rel's: the standard
         // Dml output type.
         //
-        defineIndexStream(splicer, rel, index, false);
+        defineIndexStream(splicer, rel, index, false, true);
 
         splicer.setRowCountParamId(dynParamId);
         splicer.setIgnoreDuplicates(ignoreDuplicates);
@@ -962,7 +970,7 @@ public class LcsIndexGuide
         FemLocalIndex index,
         Integer [] outputProj)
     {
-        defineIndexStream(scanStream, rel, index, false);
+        defineIndexStream(scanStream, rel, index, false, false);
 
         // set FemIndexScanDef
         if (outputProj == null) {
@@ -982,7 +990,8 @@ public class LcsIndexGuide
         FemIndexStreamDef indexStream,
         FennelRel rel,
         FemLocalIndex index,
-        boolean clustered)
+        boolean clustered,
+        boolean write)
     {
         //
         // Set up FemExecutionStreamDef
@@ -994,14 +1003,15 @@ public class LcsIndexGuide
                 typeFactory,
                 rel.getRowType()));
 
-        defineIndexAccessor(indexStream, rel, index, clustered);
+        defineIndexAccessor(indexStream, rel, index, clustered, write);
     }
 
     private void defineIndexAccessor(
         FemIndexAccessorDef indexAccessor,
         FennelRel rel,
         FemLocalIndex index,
-        boolean clustered)
+        boolean clustered,
+        boolean write)
     {
         final FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(rel);
 
@@ -1013,7 +1023,7 @@ public class LcsIndexGuide
         //        - setKeyProj
         //
         indexAccessor.setRootPageId(
-            stmt.getIndexMap().getIndexRoot(index));
+            stmt.getIndexMap().getIndexRoot(index, write));
 
         indexAccessor.setSegmentId(
             LcsDataServer.getIndexSegmentId(index));
@@ -1050,12 +1060,13 @@ public class LcsIndexGuide
      */
     private void defineScanStream(
         FemLcsRowScanStreamDef scanStream,
-        FennelRel rel)
+        FennelRel rel,
+        boolean write)
     {
         // setup each cluster scan def
         for (FemLocalIndex index : clusteredIndexes) {
             FemLcsClusterScanDef clusterScan = repos.newFemLcsClusterScanDef();
-            defineClusterScan(index, rel, clusterScan);
+            defineClusterScan(index, rel, clusterScan, write);
             scanStream.getClusterScan().add(clusterScan);
         }
     }
@@ -1069,7 +1080,8 @@ public class LcsIndexGuide
     private void defineClusterScan(
         FemLocalIndex index,
         FennelRel rel,
-        FemLcsClusterScanDef clusterScan)
+        FemLcsClusterScanDef clusterScan, 
+        boolean write)
     {
         final FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(rel);
 
@@ -1080,7 +1092,8 @@ public class LcsIndexGuide
         // setup index accessor def fields
 
         if (!FarragoCatalogUtil.isIndexTemporary(index)) {
-            clusterScan.setRootPageId(stmt.getIndexMap().getIndexRoot(index));
+            clusterScan.setRootPageId(
+                stmt.getIndexMap().getIndexRoot(index, write));
         } else {
             // For a temporary index, each execution needs to bind to
             // a session-private root.  So don't burn anything into

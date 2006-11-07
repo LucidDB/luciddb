@@ -731,6 +731,48 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Source t
 | 0       |
 +---------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- decimal multiplication, luciddb semantics
+0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- fewer than 19 digits, keep fractional digits
+0: jdbc:farrago:> values 1.000000 * 1.000000;
++-----------------+
+|     EXPR$0      |
++-----------------+
+| 1.000000000000  |
++-----------------+
+0: jdbc:farrago:> -- greater than 19 digits, take off a few fractional digits
+0: jdbc:farrago:> values 123456789.000000 * 1.000000;
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 123456789.000000000  |
++----------------------+
+0: jdbc:farrago:> -- many integer digits, limit fractional digits to 6 digits
+0: jdbc:farrago:> values 123456789.000 
+. . . . . . . . >   * cast(1.000000 as decimal(18,6))
+. . . . . . . . >   * cast(1.000000 as decimal(18,6));
++-------------------+
+|      EXPR$0       |
++-------------------+
+| 123456789.000000  |
++-------------------+
+0: jdbc:farrago:> -- check large value
+0: jdbc:farrago:> values cast(123456789.000000 * 10000.000000 as decimal(18,3));
++--------------------+
+|       EXPR$0       |
++--------------------+
+| 1234567890000.000  |
++--------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- decimal division, luciddb semantics
+0: jdbc:farrago:> values ((1.0/1000000.0) + 123456789012);
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 123456789012.000001  |
++----------------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- end selectSimple.sql
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

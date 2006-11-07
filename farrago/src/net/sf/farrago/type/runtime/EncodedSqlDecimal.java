@@ -25,6 +25,7 @@ import java.math.*;
 
 import net.sf.farrago.resource.*;
 
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util14.*;
 
 
@@ -44,12 +45,8 @@ import org.eigenbase.util14.*;
  * runtime. As usual, the method <code>getNullableData</code> returns an
  * external data type, conforming to SQL standards.
  *
- * FIXME: this code is quite inefficient. First, it relies heavily on 
- * Java libraries for decimal support. As a result it allocates memory 
- * on a per row basis. Second, it is inefficient in other ways. 
- * It relies on AssignableDecimal to assign values and NarrowedDecimal 
- * to squeeze external data values. This should all be optimized, into 
- * simple low-level operations.
+ * <p>Note: the code may be inefficient, since it relies on Java libraries 
+ * for decimal support and allocates memory on a per row basis.
  *
  * @author jpham
  * @version $Id$
@@ -66,6 +63,10 @@ public abstract class EncodedSqlDecimal
     public static final String REINTERPRET_METHOD_NAME = "reinterpret";
     public static final String ASSIGN_TO_METHOD_NAME = "assignTo";
     public static final String VALUE_FIELD_NAME = "value";
+    public static final String NARROW_CAST_METHOD_NAME = "narrowCast";
+
+    private static final BigInteger maxValue = 
+        NumberUtil.getMaxUnscaled(SqlTypeName.MAX_NUMERIC_PRECISION);
 
     //~ Instance fields --------------------------------------------------------
 
@@ -139,7 +140,8 @@ public abstract class EncodedSqlDecimal
     }
 
     /**
-     * Encodes a long value as an EncodedSqlDecimal.
+     * Encodes a long value as an EncodedSqlDecimal, with an optional 
+     * overflow check.
      *
      * @param value value to be encoded as an EncodedSqlDecimal
      * @param overflowCheck whether to check for overflow
@@ -148,8 +150,8 @@ public abstract class EncodedSqlDecimal
     {
         if (overflowCheck && (getPrecision() < 19)) {
             if (overflowValue == 0) {
-                overflowValue = BigInteger.TEN.pow(
-                        getPrecision()).longValue();
+                overflowValue = 
+                    NumberUtil.getMaxUnscaled(getPrecision()).longValue() + 1;
             }
             if (Math.abs(value) >= overflowValue) {
                 throw FarragoResource.instance().Overflow.ex();
@@ -158,11 +160,23 @@ public abstract class EncodedSqlDecimal
         assignFrom(value);
     }
 
+    /**
+     * Encodes a long value as an EncodedSqlDecimal without an overflow check.
+     * 
+     * @param value value to be encoded as an EncodedSqlDecimal
+     */
     public void reinterpret(long value)
     {
         reinterpret(value, false);
     }
 
+    /**
+     * Encodes a long value as an EncodedSqlDecimal, with an optional 
+     * overflow check.
+     *
+     * @param value value to be encoded as an EncodedSqlDecimal
+     * @param overflowCheck whether to check for overflow
+     */
     public void reinterpret(
         NullablePrimitive.NullableLong primitive,
         boolean overflowCheck)
@@ -174,11 +188,21 @@ public abstract class EncodedSqlDecimal
         reinterpret(primitive.value, overflowCheck);
     }
 
+    /**
+     * Encodes a long value as an EncodedSqlDecimal without an overflow check.
+     * 
+     * @param value value to be encoded as an EncodedSqlDecimal
+     */
     public void reinterpret(NullablePrimitive.NullableLong primitive)
     {
         reinterpret(primitive, false);
     }
 
+    /**
+     * Assigns the internal value of this decimal to a long variable
+     * 
+     * @param target the variable to be assigned
+     */
     public void assignTo(NullablePrimitive.NullableLong target)
     {
         target.setNull(isNull());
@@ -192,10 +216,37 @@ public abstract class EncodedSqlDecimal
         return (o == null) ? null : o.toString();
     }
 
+    /**
+     * Narrows an external BigDecimal value (potentially larger than the 
+     * database can handle) into a native value. Unsupported values are 
+     * replaced with null.
+     * 
+     * @param o the BigDecimal value
+     */
+    public void narrowCast(Object o)
+    {
+        BigDecimal bd = (BigDecimal) o;
+        if (bd == null) {
+            setNull(true);
+            return;
+        }
+        
+        BigDecimal rounded = 
+            bd.setScale(getScale(), BigDecimal.ROUND_HALF_UP);
+        if (rounded.unscaledValue().compareTo(maxValue) == 1) {
+            setNull(true);
+        } else {
+            assignFrom(bd.unscaledValue().longValue());
+        }
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * Class which assigns a value to an {@link EncodedSqlDecimal}.
+     * Class which assigns a value to an {@link EncodedSqlDecimal}. 
+     * Note that EncodedSqlDecimal cannot inherit from NullablePrimitive 
+     * because EncodedSqlDecimal supports "NOT NULL" data and 
+     * NullablePrimitive tags data as nullable.
      */
     public class AssignableDecimal
         extends NullablePrimitive.NullableLong
@@ -231,8 +282,18 @@ public abstract class EncodedSqlDecimal
         // implement NullablePrimitive
         protected void setLong(long n)
         {
-            // TODO jvs 18-Aug-2006:  optimize
             setNumber(n);
+
+            // REVIEW jvs 4-Nov-2006:  I used to have a TODO above
+            // saying "optimize".  John Pham added the code
+            // below, which didn't do the right thing (the incoming
+            // value n is supposed to be converted, not
+            // just reinterpreted).  The original optimization
+            // I was thinking of was probably to avoid BigDecimal
+            // altogether somehow.
+            /*
+            parent.reinterpret(n, true);
+            */
         }
         
         // implement AssignableValue

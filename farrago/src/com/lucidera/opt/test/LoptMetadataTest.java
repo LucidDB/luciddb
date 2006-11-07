@@ -1291,6 +1291,89 @@ public class LoptMetadataTest
         Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
         assertTrue(result.equals(expected));
     }
+    
+    private Set<RelColumnOrigin> checkSimpleColumnOrigin(String sql)
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(),
+            sql);
+        return LoptMetadataQuery.getSimpleColumnOrigins(rootRel, 0);
+    }
+
+    private void checkNoSimpleColumnOrigin(String sql)
+        throws Exception
+    {
+        Set<RelColumnOrigin> result = checkSimpleColumnOrigin(sql);
+        assertTrue(result == null);
+    }
+
+    public static void checkSimpleColumnOrigin(
+        RelColumnOrigin rco,
+        String expectedTableName,
+        String expectedColumnName,
+        boolean expectedDerived)
+    {
+        RelOptTable actualTable = rco.getOriginTable();
+        String [] actualTableName = actualTable.getQualifiedName();
+        assertEquals(
+            actualTableName[actualTableName.length - 1],
+            expectedTableName);
+        assertEquals(
+            actualTable.getRowType().getFields()[rco.getOriginColumnOrdinal()]
+            .getName(),
+            expectedColumnName);
+        assertEquals(
+            rco.isDerived(),
+            expectedDerived);
+    }
+
+    private void checkSingleColumnOrigin(
+        String sql,
+        String expectedTableName,
+        String expectedColumnName,
+        boolean expectedDerived)
+        throws Exception
+    {
+        Set<RelColumnOrigin> result = checkSimpleColumnOrigin(sql);
+        assertTrue(result != null);
+        assertEquals(
+            1,
+            result.size());
+        RelColumnOrigin rco = result.iterator().next();
+        checkSimpleColumnOrigin(
+            rco,
+            expectedTableName,
+            expectedColumnName,
+            expectedDerived);
+    }
+
+    public void testSimpleColumnOriginsProjFilter()
+        throws Exception
+    {
+        // projects and filters are ok
+        checkSingleColumnOrigin(
+            "select dname as name from depts where deptno = 10",
+            "DEPTS",
+            "DNAME",
+            false);
+    }
+    
+    public void testSimpleColumnOriginsAggregate()
+        throws Exception
+    {
+        checkNoSimpleColumnOrigin(
+            "select x from (select min(deptno) as x from depts)");
+    }
+    
+    public void testSimpleColumnOriginsUnion()
+        throws Exception
+    {
+        checkNoSimpleColumnOrigin(
+            "select dname from " +
+            "(select dname from depts union select name from emps)");
+    }
 }
 
 // End LoptMetadataTest.java

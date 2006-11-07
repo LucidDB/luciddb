@@ -49,13 +49,35 @@ public interface FarragoSessionIndexMap
     public FemLocalIndex getIndexById(long id);
 
     /**
-     * Gets the root PageId of an index.
+     * Gets the root PageId of an index to be used for reading.
      *
      * @param index the index of interest
      *
      * @return root PageId as a long
      */
     public long getIndexRoot(FemLocalIndex index);
+
+    /**
+     * Gets the root PageId of an index to be used for reading or 
+     * for writing.
+     *
+     * @param index the index of interest
+     * @param write whether to access a root for reading or writing. A root 
+     *   for reading reflects the index before modifications. A root for 
+     *   writing may be the same root, or may reflect an updated index,
+     *   depending on the implementation of the session index map.
+     *
+     * @return root PageId as a long
+     */
+    public long getIndexRoot(FemLocalIndex index, boolean write);
+
+    /**
+     * Sets the root PageId of an index.
+     * 
+     * @param index the index to be updated
+     * @param pageId the root PageId
+     */
+    public void setIndexRoot(FemLocalIndex index, long pageId);
 
     /**
      * Called on every reference to a temporary table. Some implementations may
@@ -77,6 +99,20 @@ public interface FarragoSessionIndexMap
     public void createIndexStorage(
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index);
+
+    /**
+     * Creates an index and optionally records its root in this map.
+     *
+     * @param wrapperCache cache for looking up data wrappers
+     * @param index the index to create
+     * @param updateMap whether to record the new root in the map
+     * 
+     * @return the root of the newly created index storage
+     */
+    public long createIndexStorage(
+        FarragoDataWrapperCache wrapperCache,
+        FemLocalIndex index,
+        boolean updateMap);
 
     /**
      * Drops an index and removes its root from this map.
@@ -101,6 +137,11 @@ public interface FarragoSessionIndexMap
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index,
         boolean estimate);
+
+    /**
+     * Commit hook
+     */
+    public void onCommit();
 }
 
 // End FarragoSessionIndexMap.java

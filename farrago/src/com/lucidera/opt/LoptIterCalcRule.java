@@ -144,7 +144,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
 
     // index acess rule, hash rules
 
-    private static String tagTimestampFormat = "yyyy-MM-dd-HH-mm-ss";
+    private static String tagTimestampFormat = "yyyy-MM-dd_HH:mm:ss";
     private static DateFormat tagTimestampFormatter = 
         new SimpleDateFormat(tagTimestampFormat);
 

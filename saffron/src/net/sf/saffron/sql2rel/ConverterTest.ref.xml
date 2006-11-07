@@ -141,18 +141,13 @@ ProjectRel(EXPR$0=[1])
         </Resource>
         <Resource name="plan">
             <![CDATA[
-ProjectRel(gender=[$3], EXPR$1=[$7])
-  JoinRel(condition=[=($2, $6)], joinType=[left])
-    ExpressionReaderRel(expression=[Java((sales.Emp[]) (sales.Emp[]) {sales}.emps)])
-    AggregateRel(groupCount=[1], agg#0=[SINGLE_VALUE(1)])
-      ProjectRel($f0=[$1], name=[$0])
-        ProjectRel(name=[$1], $f0=[$2])
-          FilterRel(condition=[=($0, $2)])
-            JoinRel(condition=[true], joinType=[inner])
-              ExpressionReaderRel(expression=[Java((sales.Dept[]) (sales.Dept[]) {sales}.depts)])
-              AggregateRel(groupCount=[1])
-                ProjectRel($f0=[$2])
-                  ExpressionReaderRel(expression=[Java((sales.Emp[]) (sales.Emp[]) {sales}.emps)])
+ProjectRel(gender=[$3], EXPR$1=[$6])
+  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])
+    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+    AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])
+      ProjectRel(name=[$1])
+        FilterRel(condition=[=($0, $cor0.deptno)])
+          ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
 ]]>
         </Resource>
     </TestCase>

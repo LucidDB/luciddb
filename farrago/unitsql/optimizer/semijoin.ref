@@ -189,21 +189,25 @@
 '        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$A, SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> select *
 . . . . . . . . > from t full outer join smalltable s
 . . . . . . . . > on t.d = s.s1 where s.s2 > 0
 . . . . . . . . > order by a;
-'A','B','C','D','S1','S2','S3','S4'
-'','','','','this is row 5','5','abcdef','ghijkl'
-'1','abcdef              ','no match','this is row 1','this is row 1','1','abcdef','ghijkl'
-'2','abcdef              ','ghijkl','this is row 2','this is row 2','2','abcdef','ghijkl'
-'3','abcdef              ','ghijkl','this is row 3','this is row 3','3','abcdef','ghijkl'
-'4','','ghijkl','this is row 4','this is row 4','4','abcdef','ghijkl'
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+| A  |           B           |     C     |       D        |       S1       | S2  |   S3    |   S4    |
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
+|    |                       |           |                | this is row 5  | 5   | abcdef  | ghijkl  |
+| 1  | abcdef                | no match  | this is row 1  | this is row 1  | 1   | abcdef  | ghijkl  |
+| 2  | abcdef                | ghijkl    | this is row 2  | this is row 2  | 2   | abcdef  | ghijkl  |
+| 3  | abcdef                | ghijkl    | this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
+| 4  |                       | ghijkl    | this is row 4  | this is row 4  | 4   | abcdef  | ghijkl  |
++----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---------------------
 0: jdbc:farrago:> -- multi-column joins
 0: jdbc:farrago:> ---------------------
-0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> explain plan for select *
 . . . . . . . . >     from t inner join smalltable s
 . . . . . . . . >     on t.d = s.s1 and t.b = s.s3 where s.s2 > 0 order by a;
@@ -758,8 +762,7 @@
 '      LcsRowScanRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$CUSTOMER$ID]], residual columns=[[0]])'
 '        FennelValuesRel(tuples=[[{ _ISO-8859-1'(', null, _ISO-8859-1')', 10 }]])'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- semijoin that needs to be removed
-0: jdbc:farrago:> 
+0: jdbc:farrago:> -- semijoin can't be used here because we don't push semijoins past aggregates
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select s.product_id from
 . . . . . . . . >         (select sum(quantity), product_id from sales group by product_id) s,
@@ -955,5 +958,135 @@
 | 7    | 2           | 2            | 1         | 70        |
 | 8    | 2           | 2            | 2         | 80        |
 +------+-------------+--------------+-----------+-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test semijoins on views
+0: jdbc:farrago:> create view vt(vc, vd, vb, vbd) as
+. . . . . . . . >     select upper(c), trim(d), b, b || d from t;
+0: jdbc:farrago:> select * from vt;
++-----------+----------------+-----------------------+------------------------------------+
+|    VC     |       VD       |          VB           |                VBD                 |
++-----------+----------------+-----------------------+------------------------------------+
+| NO MATCH  | this is row 1  | abcdef                | abcdef              this is row 1  |
+| GHIJKL    | this is row 2  | abcdef                | abcdef              this is row 2  |
+| GHIJKL    | this is row 3  | abcdef                | abcdef              this is row 3  |
+| GHIJKL    | this is row 4  |                       |                                    |
+| GHIJKL    | no match       |                       |                                    |
++-----------+----------------+-----------------------+------------------------------------+
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- semijoin should be usable in these two cases; for the second and third,
+0: jdbc:farrago:> -- should only use the index on column b
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select * from vt, smalltable s
+. . . . . . . . >         where vt.vb = s.s3 and s.s1 = 'this is row 1';
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[VC, VD, VB, VBD, S1, S2, S3, S4]])'
+'    FennelCalcRel(expr#0..8=[{inputs}], expr#9=[UPPER($t1)], expr#10=[FLAG(Both)], expr#11=[_ISO-8859-1' '], expr#12=[TRIM($t10, $t11, $t2)], expr#13=[||($t0, $t2)], EXPR$0=[$t9], EXPR$1=[$t12], B=[$t0], EXPR$3=[$t13], S1=[$t4], S2=[$t5], S3=[$t6], S4=[$t7])'
+'      LhxJoinRel(leftKeys=[[3]], rightKeys=[[4]], joinType=[INNER])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL C, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[[1, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+'            LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'              LcsIndexSearchRel(table=[[LOCALDB, SJ, T]], index=[IT_BD], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                  LhxAggRel(groupCount=[1])'
+'                    FennelCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t1])'
+'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3]], residual columns=[[0]])'
+'                        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', _ISO-8859-1'this is row 1', _ISO-8859-1']', _ISO-8859-1'this is row 1' }]])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]], residual columns=[[0]])'
+'            FennelValuesRel(tuples=[[{ _ISO-8859-1'[', _ISO-8859-1'this is row 1', _ISO-8859-1']', _ISO-8859-1'this is row 1' }]])'
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select * from vt, smalltable s
+. . . . . . . . >         where vt.vb = s.s3 and vt.vbd = s.s1 and s.s2 > 0;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[VC, VD, VB, VBD, S1, S2, S3, S4]])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 5, 6, 7, 8]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL EXPR$0, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL EXPR$1, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[4, 3]], rightKeys=[[4, 5]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[UPPER($t1)], expr#4=[FLAG(Both)], expr#5=[_ISO-8859-1' '], expr#6=[TRIM($t4, $t5, $t2)], expr#7=[||($t0, $t2)], expr#8=[CAST($t0):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$0=[$t3], EXPR$1=[$t6], B=[$t0], EXPR$3=[$t7], CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"=[$t8])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[[1, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+'            LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'              LcsIndexSearchRel(table=[[LOCALDB, SJ, T]], index=[IT_BD], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                  LhxAggRel(groupCount=[1])'
+'                    FennelCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t1])'
+'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3]], residual columns=[[1]])'
+'                        FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 0, _ISO-8859-1'+', null }]])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 3, 2, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary", VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]], residual columns=[[1]])'
+'            FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 0, _ISO-8859-1'+', null }]])'
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select * from vt, smalltable s
+. . . . . . . . >         where vt.vb = s.s3 and vt.vd = s.s1 and s.s2 > 0;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[VC, VD, VB, VBD, S1, S2, S3, S4]])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 5, 6, 7, 8]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL EXPR$0, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL EXPR$1, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[4, 1]], rightKeys=[[4, 0]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[UPPER($t1)], expr#4=[FLAG(Both)], expr#5=[_ISO-8859-1' '], expr#6=[TRIM($t4, $t5, $t2)], expr#7=[||($t0, $t2)], expr#8=[CAST($t0):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], EXPR$0=[$t3], EXPR$1=[$t6], B=[$t0], EXPR$3=[$t7], CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"=[$t8])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[[1, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+'            LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'              LcsIndexSearchRel(table=[[LOCALDB, SJ, T]], index=[IT_BD], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                  LhxAggRel(groupCount=[1])'
+'                    FennelCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t1])'
+'                      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3]], residual columns=[[1]])'
+'                        FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 0, _ISO-8859-1'+', null }]])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]], residual columns=[[1]])'
+'            FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 0, _ISO-8859-1'+', null }]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- but not in these cases
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select * from vt, smalltable s where vt.vd = s.s1 and s.s2 > 0;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[VC, VD, VB, VBD, S1, S2, S3, S4]])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
+'      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[UPPER($t1)], expr#4=[FLAG(Both)], expr#5=[_ISO-8859-1' '], expr#6=[TRIM($t4, $t5, $t2)], expr#7=[||($t0, $t2)], EXPR$0=[$t3], EXPR$1=[$t6], B=[$t0], EXPR$3=[$t7])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[[1, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+'      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]], residual columns=[[1]])'
+'        FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 0, _ISO-8859-1'+', null }]])'
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select * from vt, smalltable s
+. . . . . . . . >         where vt.vbd = s.s3 and s.s1 = 'this is row 1';
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[VC, VD, VB, VBD, S1, S2, S3, S4]])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL EXPR$0, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL EXPR$1, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[3]], rightKeys=[[4]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[UPPER($t1)], expr#4=[FLAG(Both)], expr#5=[_ISO-8859-1' '], expr#6=[TRIM($t4, $t5, $t2)], expr#7=[||($t0, $t2)], EXPR$0=[$t3], EXPR$1=[$t6], B=[$t0], EXPR$3=[$t7])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[[1, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]], residual columns=[[0]])'
+'            FennelValuesRel(tuples=[[{ _ISO-8859-1'[', _ISO-8859-1'this is row 1', _ISO-8859-1']', _ISO-8859-1'this is row 1' }]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- run the queries corresponding to the cases where semijoins can be used
+0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> select * from vt, smalltable s
+. . . . . . . . >     where vt.vb = s.s3 and s.s1 = 'this is row 1' order by vc;
++-----------+----------------+-----------------------+------------------------------------+----------------+-----+---------+---------+
+|    VC     |       VD       |          VB           |                VBD                 |       S1       | S2  |   S3    |   S4    |
++-----------+----------------+-----------------------+------------------------------------+----------------+-----+---------+---------+
+| GHIJKL    | this is row 2  | abcdef                | abcdef              this is row 2  | this is row 1  | 1   | abcdef  | ghijkl  |
+| GHIJKL    | this is row 3  | abcdef                | abcdef              this is row 3  | this is row 1  | 1   | abcdef  | ghijkl  |
+| NO MATCH  | this is row 1  | abcdef                | abcdef              this is row 1  | this is row 1  | 1   | abcdef  | ghijkl  |
++-----------+----------------+-----------------------+------------------------------------+----------------+-----+---------+---------+
+0: jdbc:farrago:> select * from vt, smalltable s
+. . . . . . . . >     where vt.vb = s.s3 and vt.vbd = s.s1 and s.s2 > 0 order by vc;
++-----+-----+-----+------+-----+-----+-----+-----+
+| VC  | VD  | VB  | VBD  | S1  | S2  | S3  | S4  |
++-----+-----+-----+------+-----+-----+-----+-----+
++-----+-----+-----+------+-----+-----+-----+-----+
+0: jdbc:farrago:> select * from vt, smalltable s
+. . . . . . . . >     where vt.vb = s.s3 and vt.vd = s.s1 and s.s2 > 0 order by vc;
++-----------+----------------+-----------------------+------------------------------------+----------------+-----+---------+---------+
+|    VC     |       VD       |          VB           |                VBD                 |       S1       | S2  |   S3    |   S4    |
++-----------+----------------+-----------------------+------------------------------------+----------------+-----+---------+---------+
+| GHIJKL    | this is row 2  | abcdef                | abcdef              this is row 2  | this is row 2  | 2   | abcdef  | ghijkl  |
+| GHIJKL    | this is row 3  | abcdef                | abcdef              this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
+| NO MATCH  | this is row 1  | abcdef                | abcdef              this is row 1  | this is row 1  | 1   | abcdef  | ghijkl  |
++-----------+----------------+-----------------------+------------------------------------+----------------+-----+---------+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

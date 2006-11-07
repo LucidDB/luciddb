@@ -380,6 +380,122 @@ public abstract class RelDataTypeFactoryImpl
         throw Util.newInternal("array of non-Java type unsupported");
     }
 
+    /**
+     * implement RelDataTypeFactory with SQL 2003 compliant behavior.
+     * 
+     * Let p1, s1 be the precision and scale of the first operand
+     * Let p2, s2 be the precision and scale of the second operand Let p, s be
+     * the precision and scale of the result, Then the result type is a decimal
+     * with:
+     *
+     * <ul>
+     * <li>p = p1 + p2</li>
+     * <li>s = s1 + s2</li>
+     * </ul>
+     *
+     * p and s are capped at their maximum values
+     *
+     * @sql.2003 Part 2 Section 6.26
+     */
+    public RelDataType createDecimalProduct(
+        RelDataType type1, RelDataType type2)
+    {
+        if (SqlTypeUtil.isExactNumeric(type1)
+            && SqlTypeUtil.isExactNumeric(type2)) {
+            if (SqlTypeUtil.isDecimal(type1)
+                || SqlTypeUtil.isDecimal(type2)) {
+                int p1 = type1.getPrecision();
+                int p2 = type2.getPrecision();
+                int s1 = type1.getScale();
+                int s2 = type2.getScale();
+
+                int scale = s1 + s2;
+                scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
+                int precision = p1 + p2;
+                precision =
+                    Math.min(precision,
+                        SqlTypeName.MAX_NUMERIC_PRECISION);
+
+                RelDataType ret;
+                ret =
+                    createSqlType(
+                        SqlTypeName.Decimal,
+                        precision,
+                        scale);
+
+                return ret;
+            }
+        }
+
+        return null;
+    }
+
+    // implement RelDataTypeFactory
+    public boolean useDoubleMultiplication(
+        RelDataType type1, RelDataType type2)
+    {
+        assert(createDecimalProduct(type1, type2) != null);
+        return false;
+    }
+
+    /**
+     * implement RelDataTypeFactory
+     * 
+     * Let p1, s1 be the precision and scale of the first operand
+     * Let p2, s2 be the precision and scale of the second operand Let p, s be
+     * the precision and scale of the result, Let d be the number of whole
+     * digits in the result Then the result type is a decimal with:
+     *
+     * <ul>
+     * <li>d = p1 - s1 + s2</li>
+     * <li>s <= max(6, s1 + p2 + 1)</li>
+     * <li>p = d + s</li>
+     * </ul>
+     *
+     * p and s are capped at their maximum values
+     *
+     * @sql.2003 Part 2 Section 6.26
+     */
+    public RelDataType createDecimalQuotient(
+        RelDataType type1, RelDataType type2)
+    {
+        if (SqlTypeUtil.isExactNumeric(type1)
+            && SqlTypeUtil.isExactNumeric(type2)) {
+            if (SqlTypeUtil.isDecimal(type1)
+                || SqlTypeUtil.isDecimal(type2)) {
+                int p1 = type1.getPrecision();
+                int p2 = type2.getPrecision();
+                int s1 = type1.getScale();
+                int s2 = type2.getScale();
+
+                int dout =
+                    Math.min(p1 - s1 + s2,
+                        SqlTypeName.MAX_NUMERIC_PRECISION);
+
+                int scale = Math.max(6, s1 + p2 + 1);
+                scale =
+                    Math.min(scale,
+                        SqlTypeName.MAX_NUMERIC_PRECISION - dout);
+                scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
+
+                int precision = dout + scale;
+                assert (precision <= SqlTypeName.MAX_NUMERIC_PRECISION);
+                assert (precision > 0);
+
+                RelDataType ret;
+                ret =
+                    createSqlType(
+                        SqlTypeName.Decimal,
+                        precision,
+                        scale);
+
+                return ret;
+            }
+        }
+
+        return null;
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     // TODO jvs 13-Dec-2004:  move to OJTypeFactoryImpl?

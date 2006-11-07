@@ -140,4 +140,21 @@ values ceil(0.0000000000000000001);
 values ceil(-0.0000000000000000001);
 values ceil(-0.8876543210987654321);
 
+-- decimal multiplication, luciddb semantics
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+-- fewer than 19 digits, keep fractional digits
+values 1.000000 * 1.000000;
+-- greater than 19 digits, take off a few fractional digits
+values 123456789.000000 * 1.000000;
+-- many integer digits, limit fractional digits to 6 digits
+values 123456789.000 
+  * cast(1.000000 as decimal(18,6))
+  * cast(1.000000 as decimal(18,6));
+-- check large value
+values cast(123456789.000000 * 10000.000000 as decimal(18,3));
+
+-- decimal division, luciddb semantics
+values ((1.0/1000000.0) + 123456789012);
+
 -- end selectSimple.sql

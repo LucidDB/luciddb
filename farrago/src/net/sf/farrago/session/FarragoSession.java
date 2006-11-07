@@ -182,6 +182,11 @@ public interface FarragoSession
     public FarragoSessionConnectionSource getConnectionSource();
 
     /**
+     * @return session index map
+     */
+    public FarragoSessionIndexMap getSessionIndexMap();
+
+    /**
      * Initializes the database metadata associated with this session.
      *
      * @param dbMetaData metadata to set
@@ -194,6 +199,13 @@ public interface FarragoSession
      * @param source connection source to set
      */
     public void setConnectionSource(FarragoSessionConnectionSource source);
+
+    /**
+     * Overrides the index map associated with this session
+     * 
+     * @param sessionIndexMap index map to set
+     */
+    public void setSessionIndexMap(FarragoSessionIndexMap sessionIndexMap);
 
     /**
      * Clones this session. TODO: document what this entails.

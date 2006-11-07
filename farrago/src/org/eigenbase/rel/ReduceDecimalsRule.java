@@ -34,6 +34,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -364,14 +365,20 @@ public class ReduceDecimalsRule
         /**
          * Makes an approximate literal to be used for scaling
          *
-         * @param scale a scale from 0 to 99
+         * @param scale a scale from -99 to 99
          *
          * @return 10^scale as an approximate value
          */
         protected RexNode makeApproxScaleFactor(int scale)
         {
-            assert (scale >= 0) && (scale < 100);
-            return makeApproxLiteral(BigDecimal.TEN.pow(scale));
+            assert (-100 < scale && scale < 100) 
+                : "could not make approximate scale factor";
+            if (scale >= 0) {
+                return makeApproxLiteral(BigDecimal.TEN.pow(scale));
+            } else {
+                BigDecimal tenth = BigDecimal.valueOf(1, 1);
+                return makeApproxLiteral(tenth.pow(-scale));
+            }
         }
 
         /**
@@ -1010,13 +1017,36 @@ public class ReduceDecimalsRule
 
         private RexNode expandTimes(RexCall call, RexNode [] operands)
         {
-            return
-                encodeValue(
-                    builder.makeCall(
-                        call.getOperator(),
-                        accessValue(operands[0]),
-                        accessValue(operands[1])),
-                    call.getType());
+            // Multiplying the internal values of the two arguments leads to
+            // a number with scale = scaleA + scaleB. If the result type has 
+            // a lower scale, then the number should be scaled down.
+            int divisor = scaleA + scaleB - call.getType().getScale();
+
+            if (builder.getTypeFactory().useDoubleMultiplication(
+                typeA, typeB))
+            {
+                // Approximate implementation:
+                // cast (a as double) * cast (b as double) 
+                //     / 10^divisor
+                RexNode division =
+                    makeDivide(
+                        makeMultiply(
+                            ensureType(real8, accessValue(operands[0])),
+                            ensureType(real8, accessValue(operands[1]))),
+                        makeApproxLiteral(BigDecimal.TEN.pow(divisor)));
+                return encodeValue(division, call.getType(), true);
+            } else {
+                // Exact implementation: scaleDown(a * b)
+                return
+                    encodeValue(
+                        scaleDown(
+                            builder.makeCall(
+                                call.getOperator(),
+                                accessValue(operands[0]),
+                                accessValue(operands[1])),
+                            divisor),
+                        call.getType());
+            }
         }
 
         private RexNode expandComparison(RexCall call, RexNode [] operands)

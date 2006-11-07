@@ -137,7 +137,7 @@ public class FarragoDbSession
     /**
      * Map of temporary indexes created by this session.
      */
-    private FarragoDbSessionIndexMap sessionIndexMap;
+    private FarragoSessionIndexMap sessionIndexMap;
 
     /**
      * The connection source for this session.
@@ -623,9 +623,14 @@ public class FarragoDbSession
         return database;
     }
 
-    public FarragoDbSessionIndexMap getSessionIndexMap()
+    public FarragoSessionIndexMap getSessionIndexMap()
     {
         return sessionIndexMap;
+    }
+
+    public void setSessionIndexMap(FarragoSessionIndexMap sessionIndexMap)
+    {
+        this.sessionIndexMap = sessionIndexMap;
     }
 
     Map getTxnCodeCache()

@@ -20,6 +20,8 @@
 */
 package com.lucidera.opt;
 
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rex.*;
@@ -59,6 +61,34 @@ public abstract class LoptMetadataQuery
                 rel,
                 "getCostWithFilters",
                 new Object[] { filters });
+    }
+    
+    /**
+     * Like {@link RelMetadataQuery#getColumnOrigins}, for a given output
+     * column of an expression, determines all columns of underlying tables
+     * which contribute to result values.  The difference is if the column
+     * is derived from a complex RelNode, then null is returned instead.
+     * 
+     * <p>Complex RelNodes are RelNodes that we do not push {@link SemiJoinRel}s
+     * past.
+     *
+     * @param rel the relational expression
+     * @param iOutputColumn 0-based ordinal for output column of interest
+     *
+     * @return set of origin columns, or null if this information cannot be
+     * determined (whereas empty set indicates definitely no origin columns at
+     * all) or the column is derived from a complex RelNode.
+     */
+    public static Set<RelColumnOrigin> getSimpleColumnOrigins(
+        RelNode rel,
+        int iOutputColumn)
+    {
+        return
+        (Set<RelColumnOrigin>) rel.getCluster().getMetadataProvider()
+        .getRelMetadata(
+            rel,
+            "getSimpleColumnOrigins",
+            new Object[] { iOutputColumn });
     }
 }
 

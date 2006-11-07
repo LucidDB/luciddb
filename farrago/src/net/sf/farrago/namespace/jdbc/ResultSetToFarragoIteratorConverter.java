@@ -22,6 +22,7 @@
 */
 package net.sf.farrago.namespace.jdbc;
 
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
@@ -159,22 +160,40 @@ class ResultSetToFarragoIteratorConverter
                     new MethodCall(castResultSet, methodName, colPosExpList);
             }
 
-            // cast to target type, or narrow if necessary
+            // cast to target type, or perhaps narrow the external data if  
+            // it is of greater precision that Farrago supports
             boolean narrow = false;
             if (type.getSqlTypeName() == SqlTypeName.Decimal
-                && type.getPrecision() >= SqlTypeName.MAX_NUMERIC_PRECISION) {
-                narrow = true;
+                && type.getPrecision() >= SqlTypeName.MAX_NUMERIC_PRECISION) 
+            {
+                FarragoPreparingStmt stmt = 
+                    FarragoRelUtil.getPreparingStmt(this);
+                narrow = stmt.getSession().getSessionVariables().getBoolean(
+                    FarragoDefaultSessionPersonality.SQUEEZE_JDBC_NUMERIC);
             }
             if (narrow) {
-                ExpressionList args = 
-                    new ExpressionList(
-                        rhsExp,
-                        Literal.makeLiteral(type.getPrecision()),
-                        Literal.makeLiteral(type.getScale()));
-                rhsExp = new MethodCall(
-                    OJClass.forClass(EncodedSqlDecimal.class),
-                    "narrowCast",
-                    args);
+                // allocate a high precision object as class data member
+                OJClass highPrecisionClazz =
+                    OJUtil.typeToOJClass(type, getCluster().getTypeFactory());
+                Variable varNarrow = implementor.newVariable();
+                memberList.add(
+                    new FieldDeclaration(
+                        new ModifierList(ModifierList.PRIVATE),
+                        TypeName.forOJClass(highPrecisionClazz),
+                        varNarrow.toString(),
+                        new AllocationExpression(
+                            highPrecisionClazz,
+                            new ExpressionList())));
+                
+                methodBody.add(
+                    new ExpressionStatement(
+                        new MethodCall(
+                            varNarrow,
+                            EncodedSqlDecimal.NARROW_CAST_METHOD_NAME,
+                            new ExpressionList(rhsExp))));
+                rhsExp = varNarrow;
+                getCluster().getEnv().bindVariable(
+                    rhsExp.toString(), highPrecisionClazz);
             }
             RexNode rhs =
                 javaRexBuilder.makeJava(

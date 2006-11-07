@@ -108,6 +108,12 @@ class FarragoDbSessionIndexMap
     // implement FarragoSessionIndexMap
     public long getIndexRoot(FemLocalIndex index)
     {
+        return getIndexRoot(index, false);
+    }
+
+    // implement FarragoSessionIndexMap
+    public long getIndexRoot(FemLocalIndex index, boolean write)
+    {
         if (FarragoCatalogUtil.isIndexTemporary(index)) {
             Long root = tempIndexRootMap.get(index);
             assert (root != null);
@@ -117,7 +123,8 @@ class FarragoDbSessionIndexMap
         }
     }
 
-    private void setIndexRoot(
+    // implement FarragoSessionIndexMap
+    public void setIndexRoot(
         FemLocalIndex index,
         long root)
     {
@@ -186,11 +193,20 @@ class FarragoDbSessionIndexMap
         }
     }
 
-    // REVIEW:  rollback issues
     // implement FarragoSessionIndexMap
     public void createIndexStorage(
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index)
+    {
+        createIndexStorage(wrapperCache, index, true);
+    }
+
+    // REVIEW:  rollback issues
+    // implement FarragoSessionIndexMap
+    public long createIndexStorage(
+        FarragoDataWrapperCache wrapperCache,
+        FemLocalIndex index,
+        boolean updateMap)
     {
         FarragoMedLocalDataServer server =
             getIndexDataServer(wrapperCache, index);
@@ -202,10 +218,13 @@ class FarragoDbSessionIndexMap
                 repos.getLocalizedObjectName(index),
                 ex);
         }
-        setIndexRoot(index, indexRoot);
+        if (updateMap) {
+            setIndexRoot(index, indexRoot);
+        }
         indexIdMap.put(
             new Long(JmiUtil.getObjectId(index)),
             index);
+        return indexRoot;
     }
 
     // implement FarragoSessionIndexMap
