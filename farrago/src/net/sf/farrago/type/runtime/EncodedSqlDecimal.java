@@ -26,6 +26,7 @@ import java.math.*;
 import net.sf.farrago.resource.*;
 
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
 
@@ -225,19 +226,23 @@ public abstract class EncodedSqlDecimal
      */
     public void narrowCast(Object o)
     {
+        // get the external decimal
         BigDecimal bd = (BigDecimal) o;
         if (bd == null) {
             setNull(true);
             return;
         }
         
+        // round it to the correct scale; if it's too large, then 
+        // replace it with null
         BigDecimal rounded = 
             bd.setScale(getScale(), BigDecimal.ROUND_HALF_UP);
         if (rounded.unscaledValue().compareTo(maxValue) == 1) {
             setNull(true);
-        } else {
-            assignFrom(bd.unscaledValue().longValue());
+            return;
         }
+        
+        assignFrom(rounded.unscaledValue().longValue());
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -251,7 +256,19 @@ public abstract class EncodedSqlDecimal
     public class AssignableDecimal
         extends NullablePrimitive.NullableLong
     {
-        EncodedSqlDecimal parent;
+        private EncodedSqlDecimal parent;
+
+        /**
+         * The maximum LONG value that can be assigned to this decimal. 
+         * No overflow check is performed when this value is set to 
+         * Long.MAX_VALUE.
+         */
+        private long longOverflow;
+
+        /**
+         * The scale factor applied to integers assigned to this decimal
+         */
+        private long longScaleFactor;
 
         public AssignableDecimal(EncodedSqlDecimal parent)
         {
@@ -282,18 +299,37 @@ public abstract class EncodedSqlDecimal
         // implement NullablePrimitive
         protected void setLong(long n)
         {
-            setNumber(n);
+            // Check for overflow if the number of whole digits is less than 
+            // 19, the maximum for a long. Also set the scaling factor used 
+            // to convert a long into a decimal of the specified scale.
+            if (longOverflow == 0) {
+                int precision = parent.getPrecision();
+                int scale = parent.getScale();
+                int wholeDigits = precision - scale;
 
-            // REVIEW jvs 4-Nov-2006:  I used to have a TODO above
-            // saying "optimize".  John Pham added the code
-            // below, which didn't do the right thing (the incoming
-            // value n is supposed to be converted, not
-            // just reinterpreted).  The original optimization
-            // I was thinking of was probably to avoid BigDecimal
-            // altogether somehow.
-            /*
-            parent.reinterpret(n, true);
-            */
+                // Scale must be less than 19 to generate a scale factor.
+                // The scale factor is 10^scale.
+                Util.permAssert(
+                    scale < 19, "decimal scale exceeded limit for setLong");
+                longScaleFactor = 
+                    BigInteger.TEN.pow(parent.getScale()).longValue();
+
+                if (wholeDigits >= 19) {
+                    longOverflow = Long.MAX_VALUE;
+                } else if (precision == 19) {
+                    longOverflow = (Long.MAX_VALUE / longScaleFactor) + 1;
+                } else {
+                    longOverflow = 
+                        BigInteger.TEN.pow(wholeDigits).longValue();
+                }
+            }
+            if (longOverflow != Long.MAX_VALUE 
+                && Math.abs(n) >= longOverflow) 
+            {
+                throw FarragoResource.instance().Overflow.ex();
+            }
+
+            reinterpret(n*longScaleFactor);
         }
         
         // implement AssignableValue
@@ -314,52 +350,6 @@ public abstract class EncodedSqlDecimal
                 super.assignFrom(obj);
             }
         }
-    }
-
-    /**
-     * Narrows an external BigDecimal value (potentially larger than the 
-     * database can handle) into a native value. Unsupported values are 
-     * replaced with null.
-     * 
-     * @param o the BigDecimal value
-     * @param prec the precision of the native type
-     * @param scale the scale of the native type
-     * 
-     * @return a new sql decimal value of the specified precision and scale
-     */
-    public static EncodedSqlDecimal narrowCast(Object o, int prec, int scale)
-    {
-        BigDecimal bd = (BigDecimal)o;
-        return new NarrowedDecimal(bd, prec, scale);
-    }
-
-    private static class NarrowedDecimal extends EncodedSqlDecimal 
-        implements NullableValue
-    {
-        static private BigInteger maxValue = 
-            BigInteger.valueOf(Long.MAX_VALUE);
-        
-        private int prec;
-        private int scale;
-
-        public NarrowedDecimal(BigDecimal bd, int prec, int scale) {
-            this.prec = prec;
-            this.scale = scale;
-            if (bd == null) {
-                setNull(true);
-            } else {
-                BigDecimal rounded = 
-                    bd.setScale(scale, BigDecimal.ROUND_HALF_UP);
-                if (rounded.unscaledValue().compareTo(maxValue) == 1) {
-                    setNull(true);
-                } else {
-                    value = rounded.unscaledValue().longValue();
-                }
-            }
-        }
-        
-        protected int getPrecision() { return prec; }
-        protected int getScale() { return scale; }
     }
 }
 

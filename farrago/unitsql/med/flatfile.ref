@@ -833,4 +833,25 @@ Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8
 . . . . . . . . >     mapped 'yes');
 Error: Mapping source columns in data files to target columns specified by control files requires column names to be provided by data file headers. (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test decimals from long values and overflows
+0: jdbc:farrago:> alter session set "errorMax" = 25;
+0: jdbc:farrago:> select * from flatfile_server.bcp."decimal";
++-----+-----------------------+------------------------+-------------------+--------------------+----------------+
+| F1  |          F2           |           F3           |        F4         |         F5         |       F6       |
++-----+-----------------------+------------------------+-------------------+--------------------+----------------+
+| 0   | 15                    | 25.00                  | 35                | 45.00              | typical data   |
+| 1   | 9223372036854775807   | 0.00                   | 0                 | 0.00               | max dec(19.0)  |
+| 3   | -9223372036854775808  | 0.00                   | 0                 | 0.00               | min dec(19.0)  |
+| 5   | 0                     | 92233720368547758.00   | 0                 | 0.00               | max dec(19.2)  |
+| 7   | 0                     | -92233720368547758.00  | 0                 | 0.00               | min dec(19.2)  |
+| 9   | 0                     | 92233720368547758.07   | 0                 | 0.00               | max dec(19.2)  |
+| 11  | 0                     | -92233720368547758.08  | 0                 | 0.00               | min dec(19.2)  |
+| 13  | 0                     | 0.00                   | 999999999999999   | 0.00               | max dec(15.0)  |
+| 15  | 0                     | 0.00                   | -999999999999999  | 0.00               | min dec(15.0)  |
+| 17  | 0                     | 0.00                   | 0                 | 9999999999999.00   | max dec(15.2)  |
+| 19  | 0                     | 0.00                   | 0                 | -9999999999999.00  | min dec(15.2)  |
+| 21  | 0                     | 0.00                   | 0                 | 9999999999999.99   | max dec(15.2)  |
+| 23  | 0                     | 0.00                   | 0                 | -9999999999999.99  | min dec(15.2)  |
++-----+-----------------------+------------------------+-------------------+--------------------+----------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

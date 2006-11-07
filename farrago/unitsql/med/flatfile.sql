@@ -533,3 +533,7 @@ options (
     file_extension 'log',
     with_header 'no',
     mapped 'yes');
+
+-- test decimals from long values and overflows
+alter session set "errorMax" = 25;
+select * from flatfile_server.bcp."decimal";

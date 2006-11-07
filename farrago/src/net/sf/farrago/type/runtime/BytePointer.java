@@ -737,7 +737,8 @@ public class BytePointer
             }
         }
         
-        if (start >= end) {
+        // read up to 19 digits, the most for a long value
+        if (start >= end || end - start > 19) {
             return Long.MAX_VALUE;
         }
         long value = 0;
@@ -748,6 +749,10 @@ public class BytePointer
             }
             value *= 10;
             value += x;
+        }
+        // handle overflow
+        if (value < 0) {
+            return Long.MAX_VALUE;
         }
         return value;
     }
