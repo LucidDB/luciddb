@@ -366,4 +366,8 @@ from emps
 group by name 
 having exists (select * from depts where depts.deptno = max(emps.deptno));
 
+-- LER 2746 cast(agg() as datatype) triggers an error
+explain plan for
+select cast(sum(empno) as decimal(10, 2)) from emps;
+
 -- End agg.sql

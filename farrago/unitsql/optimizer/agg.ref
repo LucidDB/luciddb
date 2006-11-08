@@ -874,6 +874,16 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not
 . . . . . . . . > having exists (select * from depts where depts.deptno = max(emps.deptno));
 Error: From line 5, column 57 to line 5, column 72: Aggregate expression is illegal in WHERE clause (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- LER 2746 cast(agg() as datatype) triggers an error
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select cast(sum(empno) as decimal(10, 2)) from emps;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[100], expr#2=[*($t0, $t1)], expr#3=[true], expr#4=[Reinterpret($t2, $t3)], EXPR$0=[$t4])'
+'  FennelToIteratorConverter'
+'    FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- End agg.sql
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

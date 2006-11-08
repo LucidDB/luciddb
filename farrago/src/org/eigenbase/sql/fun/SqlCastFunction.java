@@ -68,9 +68,14 @@ public class SqlCastFunction
                 firstType.isNullable());
         if (opBinding instanceof SqlCallBinding) {
             SqlCallBinding callBinding = (SqlCallBinding) opBinding;
-            callBinding.getValidator().setValidatedNodeType(
-                callBinding.getCall().operands[0],
-                ret);
+            SqlNode operand0 = callBinding.getCall().operands[0];
+            if ((operand0 instanceof SqlLiteral &&
+                 ((SqlLiteral)operand0).getValue() == null) ||
+                operand0 instanceof SqlDynamicParam) {
+            	callBinding.getValidator().setValidatedNodeType(
+            			operand0,
+            			ret);
+            }
         }
         return ret;
     }
