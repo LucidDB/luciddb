@@ -65,8 +65,8 @@ void LbmBitOpExecStream::open(bool restart)
 
         // allocate output buffer; the output buffer size is based on the size
         // required for building a LbmEntry
-        uint bitmapColSize = pOutAccessor->getTupleDesc()[nKeys+1].cbStorage;
-        uint outputBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
+        bitmapBufSize = pOutAccessor->getTupleDesc()[nKeys+1].cbStorage;
+        uint outputBufSize = LbmEntry::getScratchBufferSize(bitmapBufSize);
         outputBuf.reset(new FixedBuffer[outputBufSize]);
 
         // initialize the writer to produce bitmap tuples; the second input
@@ -74,7 +74,6 @@ void LbmBitOpExecStream::open(bool restart)
         segmentWriter.init(
             outputBuf.get(), outputBufSize,
             inAccessors[1]->getTupleDesc(), true);
-        bitmapBufSize = LbmEntry::getMaxBitmapSize(bitmapColSize);
 
         // allocate a temporary buffer for the bit operation; the temporary
         // buffer should not be larger than what a LbmEntry supports
