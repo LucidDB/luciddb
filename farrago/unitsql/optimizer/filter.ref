@@ -527,4 +527,69 @@
 'John'
 'Wilma'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- http://jira.lucidera.com/browse/LER-2691
+0: jdbc:farrago:> create table test1(col varchar(2));
+0: jdbc:farrago:> insert into test1 values 'B', 'A1';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select col from test1
+. . . . . . . . > where col in (
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'B', 'A1', 'A1', 'A1');
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COL) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[LEFTSEMI])'
+'      LcsRowScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$TEST1$COL]])'
+'      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ROW_VALUE, VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'        FennelValuesRel(tuples=[[{ _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'B ' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select col from test1
+. . . . . . . . > where col in (
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'B', 'A1', 'A1', 'A1')
+. . . . . . . . > order by col;
+'COL'
+'A1'
+'B '
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table test2(col char(2));
+0: jdbc:farrago:> insert into test2 values 'B', 'A1';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select col from test2
+. . . . . . . . > where col in (
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'B', 'A1', 'A1', 'A1');
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COL) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[LEFTSEMI])'
+'      LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$TEST2$COL]])'
+'      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ROW_VALUE, CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'        FennelValuesRel(tuples=[[{ _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'B ' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }, { _ISO-8859-1'A1' }]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select col from test2
+. . . . . . . . > where col in (
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'B', 'A1', 'A1', 'A1')
+. . . . . . . . > order by col;
+'COL'
+'A1'
+'B '
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table test1;
+0: jdbc:farrago:> drop table test2;
 0: jdbc:farrago:> !quit

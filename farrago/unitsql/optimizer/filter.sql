@@ -114,3 +114,49 @@ where empno not in (20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 
 select name from emps
 where empno not in (20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20)
 order by name;
+
+-- http://jira.lucidera.com/browse/LER-2691
+create table test1(col varchar(2));
+insert into test1 values 'B', 'A1';
+
+explain plan for 
+select col from test1
+where col in (
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'B', 'A1', 'A1', 'A1');
+
+select col from test1
+where col in (
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'B', 'A1', 'A1', 'A1')
+order by col;
+
+create table test2(col char(2));
+insert into test2 values 'B', 'A1';
+
+explain plan for 
+select col from test2
+where col in (
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'B', 'A1', 'A1', 'A1');
+
+select col from test2
+where col in (
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'B', 'A1', 'A1', 'A1')
+order by col;
+
+drop table test1;
+drop table test2;

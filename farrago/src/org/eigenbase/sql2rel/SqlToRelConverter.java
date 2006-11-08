@@ -1005,14 +1005,27 @@ public class SqlToRelConverter
         RelDataTypeField field =
             (RelDataTypeField) rowType.getFieldList().get(iField);
         RelDataType type = field.getType();
-        if (!SqlTypeUtil.isExactNumeric(type)) {
-            return literal;
+        Comparable value = literal.getValue();
+        
+        if (SqlTypeUtil.isExactNumeric(type)) {
+            BigDecimal roundedValue = 
+                ((BigDecimal)value).setScale(type.getScale());
+            return rexBuilder.makeExactLiteral(
+                    roundedValue,
+                    type);
         }
-        BigDecimal value = (BigDecimal) literal.getValue();
-        BigDecimal roundedValue = value.setScale(type.getScale());
-        return rexBuilder.makeExactLiteral(
-                roundedValue,
-                type);
+        
+        if (value instanceof NlsString &&
+            type.getSqlTypeName() == SqlTypeName.Char) {
+            // pad fixed character type
+            return rexBuilder.makeCharLiteral(
+                new NlsString(
+                    Util.rpad(((NlsString)value).getValue(),
+                        type.getPrecision()),
+                    ((NlsString)value).getCharsetName(),
+                    ((NlsString)value).getCollation()));
+        }
+        return literal;
     }
 
     private boolean isRowConstructor(SqlNode node)
@@ -3284,7 +3297,7 @@ public class SqlToRelConverter
         // implement SqlVisitor
         public Void visit(SqlDataTypeSpec type)
         {
-            throw null;
+            return null;
         }
 
         // implement SqlVisitor
@@ -3302,49 +3315,49 @@ public class SqlToRelConverter
         public Void visit(SqlCall call)
         {
             if (call.getOperator().isAggregator()) {
-            assert bb.agg == this;
-            int [] args = new int[call.operands.length];
-            try {
-                // switch out of agg mode
-                bb.agg = null;
-                for (int i = 0; i < call.operands.length; i++) {
-                    SqlNode operand = call.operands[i];
-                    RexNode convertedExpr = null;
+                assert bb.agg == this;
+                int [] args = new int[call.operands.length];
+                try {
+                    // switch out of agg mode
+                    bb.agg = null;
+                    for (int i = 0; i < call.operands.length; i++) {
+                        SqlNode operand = call.operands[i];
+                        RexNode convertedExpr = null;
 
-                    // special case for COUNT(*):  delete the *
-                    if (operand instanceof SqlIdentifier) {
-                        SqlIdentifier id = (SqlIdentifier) operand;
-                        if (id.isStar()) {
-                            assert (call.operands.length == 1);
-                            args = new int[0];
-                            break;
+                        // special case for COUNT(*):  delete the *
+                        if (operand instanceof SqlIdentifier) {
+                            SqlIdentifier id = (SqlIdentifier) operand;
+                            if (id.isStar()) {
+                                assert (call.operands.length == 1);
+                                args = new int[0];
+                                break;
+                            }
                         }
+                        if (convertedExpr == null) {
+                            convertedExpr = bb.convertExpression(operand);
+                            assert convertedExpr != null;
+                        }
+                        args[i] = lookupOrCreateGroupExpr(convertedExpr);
                     }
-                    if (convertedExpr == null) {
-                        convertedExpr = bb.convertExpression(operand);
-                        assert convertedExpr != null;
-                    }
-                    args[i] = lookupOrCreateGroupExpr(convertedExpr);
+                } finally {
+                    // switch back into agg mode
+                    bb.agg = this;
                 }
-            } finally {
-                // switch back into agg mode
-                bb.agg = this;
-            }
             
-            final Aggregation aggregation = (Aggregation) call.getOperator();
-            RelDataType type = validator.deriveType(bb.scope, call);
-            boolean distinct = false;
-            SqlLiteral quantifier = call.getFunctionQuantifier();
-            if ((null != quantifier)
-                && (quantifier.getValue() == SqlSelectKeyword.Distinct)) {
-                distinct = true;
-            }
-            final AggregateRel.Call aggCall =
-                new AggregateRel.Call(aggregation, distinct, args, type);
-            int index = aggCalls.size() + groupExprs.size();
-            aggCalls.add(aggCall);
-            final RexNode rex = rexBuilder.makeInputRef(type, index);
-            aggMapping.put(call, rex);
+                final Aggregation aggregation = (Aggregation) call.getOperator();
+                RelDataType type = validator.deriveType(bb.scope, call);
+                boolean distinct = false;
+                SqlLiteral quantifier = call.getFunctionQuantifier();
+                if ((null != quantifier)
+                    && (quantifier.getValue() == SqlSelectKeyword.Distinct)) {
+                    distinct = true;
+                }
+                final AggregateRel.Call aggCall =
+                    new AggregateRel.Call(aggregation, distinct, args, type);
+                int index = aggCalls.size() + groupExprs.size();
+                aggCalls.add(aggCall);
+                final RexNode rex = rexBuilder.makeInputRef(type, index);
+                aggMapping.put(call, rex);
             } else if (call instanceof SqlSelect) {
                 // rchen 2006-10-17:
                 // for now do not detect aggregates in subqueries.                   

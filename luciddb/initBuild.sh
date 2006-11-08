@@ -21,10 +21,10 @@ set -e
 
 usage() {
     echo "Usage:  initBuild.sh "
+    echo "            [--without-fennel[-thirdparty]-build] (default w/both) "
     echo "            [--with[out]-fennel] (default with) "
     echo "            [--with[out]-optimization] (default without) "
     echo "            [--with[out]-debug] (default with) "
-    echo "            [--without-fennel[-thirdparty]-build] (default w/both) "
     echo ""
     echo "            [--with[out]-tests] (default without) "
     echo "            [--with-nightly-tests] (default without) "
