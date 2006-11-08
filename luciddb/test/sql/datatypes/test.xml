@@ -2,6 +2,10 @@
   <target name="datatypes">
     <test-suite name="datatypes">
 
+      <test-metadata>
+        <db>%{foreign.db}</db>
+      </test-metadata>
+
       <init-hook>
         <test-suite name="init">
           <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
@@ -12,36 +16,54 @@
       </init-hook>
 
       <test name="creschema">
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="flatfile,oracle,sqlserver,csvjdbc"/>
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/creschema.sql"/>
       </test>
 
       <test name="importschema" requiresRun="creschema">
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="flatfile,oracle,sqlserver"/>
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/importschema.sql"/>
       </test>
 
       <test name="foreigntable" requiresRun="creschema">
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="flatfile,oracle,sqlserver,csvjdbc"/>
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/foreigntabl.sql"/>
       </test>
 
       <test name="tableload" requiresRun="creschema">
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="flatfile,oracle,sqlserver,csvjdbc"/>
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/tblload.sql"/>
       </test>
 
       <test name="views" requiresRun="creschema">
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="flatfile,oracle,sqlserver,csvjdbc"/>
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/createviews.sql"/>
       </test>
 
       <test name="metadata">
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="flatfile,oracle,sqlserver,csvjdbc"/>
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/metadatatypes.sql"/>
       </test>
 
       <test name="joins">
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="flatfile,oracle,sqlserver"/>
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/joins.sql"/>
       </test>
 
       <!-- jira: LDB-119 -->
       <test name="joinforeigntables" requiresRun="creschema">
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="flatfile,oracle,sqlserver,csvjdbc"/>
         <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/joinforeigntables.sql"/>
+      </test>
+
+      <!-- Database specific tests below -->
+      <test name="oracleDatatypes">
+        <!-- unresolved issue: LER-2768 -->
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="oracle"/>
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/datatypes/gen/${foreign.db}/oracleDatatypes.sql"/>
       </test>
 
       <cleanup-hook>
