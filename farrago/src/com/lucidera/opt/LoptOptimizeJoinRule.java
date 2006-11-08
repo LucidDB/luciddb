@@ -30,7 +30,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
 
-
 /**
  * LoptOptimizeJoinRule implements the heuristic planner for determining optimal
  * join orderings. It is triggered by the pattern ProjectRel(MultiJoinRel).
@@ -44,19 +43,10 @@ public class LoptOptimizeJoinRule
 
     //~ Constructors -----------------------------------------------------------
 
-    public LoptOptimizeJoinRule(RelOptRuleOperand rule, String id)
+    public LoptOptimizeJoinRule()
     {
-        // This rule is fired for either of the following two patterns:
-        //
-        // RelOptRuleOperand(
-        //     ProjectRel.class,
-        //     new RelOptRuleOperand [] {
-        //         new RelOptRuleOperand(MultiJoinRel.class, null)})
-        //
-        // RelOptRuleOperand(MultiJoinRel.class, null)
-        //
-        super(rule);
-        description = "LoptOptimizeJoinRule: " + id;
+        super(
+            new RelOptRuleOperand(MultiJoinRel.class, null));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -64,13 +54,7 @@ public class LoptOptimizeJoinRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
-        MultiJoinRel multiJoinRel;
-        if (call.rels.length == 1) {
-            multiJoinRel = (MultiJoinRel) call.rels[0];
-        } else {
-            multiJoinRel = (MultiJoinRel) call.rels[1];
-        }
-        
+        MultiJoinRel multiJoinRel = (MultiJoinRel) call.rels[0];
         LoptMultiJoin multiJoin = new LoptMultiJoin(multiJoinRel);
 
         RexBuilder rexBuilder = multiJoinRel.getCluster().getRexBuilder();
@@ -114,32 +98,18 @@ public class LoptOptimizeJoinRule
         LoptSemiJoinOptimizer semiJoinOpt,
         RelOptRuleCall call)
     {
-        // Setup the fieldnames for the projection.  The type of projection
-        // we create depends on whether this rule was matched with or
-        // without a projection.  In the case of the former, the projection
-        // will consist of all the join fields, reordered to match the
-        // original join ordering
-        int nJoinFactors = multiJoin.getNumJoinFactors();
-        String [] fieldNames;
-        if (call.rels.length == 1) {
-            fieldNames =
-                RelOptUtil.getFieldNames(
-                    multiJoin.getMultiJoinRel().getRowType());
-        } else {
-            ProjectRel project = (ProjectRel) call.rels[0];
-            fieldNames =
-                RelOptUtil.getFieldNames(project.getRowType());
-        }
-
         List<RelNode> plans = new ArrayList<RelNode>();
 
         Double [] cardJoinCols =
             computeJoinCardinalities(
                 multiJoin,
                 semiJoinOpt);
+        String [] fieldNames =
+            RelOptUtil.getFieldNames(
+                multiJoin.getMultiJoinRel().getRowType());
 
         // generate the N join orderings
-        for (int i = 0; i < nJoinFactors; i++) {
+        for (int i = 0; i < multiJoin.getNumJoinFactors(); i++) {
             // first factor cannot be null generating
             if (multiJoin.isNullGenerating(i)) {
                 continue;
@@ -155,12 +125,7 @@ public class LoptOptimizeJoinRule
             }
 
             ProjectRel newProject =
-                createTopProject(
-                    multiJoin,
-                    joinTree,
-                    fieldNames,
-                    call);
-
+                createTopProject(multiJoin, joinTree, fieldNames);
             plans.add(newProject);
         }
 
@@ -174,79 +139,51 @@ public class LoptOptimizeJoinRule
 
     /**
      * Creates the topmost projection that will sit on top of the selected join
-     * ordering. Depending on whether this rule was matched with or without a
-     * projection, the projection expressions are created accordingly.
+     * ordering.  The projection needs to match the original join ordering.
      *
      * @param multiJoin join factors being optimized
      * @param joinTree selected join ordering
      * @param fieldNames fieldnames corresponding to the proejction expressions
-     * @param call relopt call
      *
      * @return created projection
      */
     private ProjectRel createTopProject(
         LoptMultiJoin multiJoin,
         LoptJoinTree joinTree,
-        String [] fieldNames,
-        RelOptRuleCall call)
+        String [] fieldNames)
     {
         int nTotalFields = multiJoin.getNumTotalFields();
         RexNode [] newProjExprs;
         RexBuilder rexBuilder =
             multiJoin.getMultiJoinRel().getCluster().getRexBuilder();
 
-        if (call.rels.length == 1) {
-            // create a projection on top of the joins, matching the original
-            // join order
-            newProjExprs = new RexNode[nTotalFields];
-            List<Integer> newJoinOrder = new ArrayList<Integer>();
-            joinTree.getTreeOrder(newJoinOrder);
-            int currField = 0;
-            int nJoinFactors = multiJoin.getNumJoinFactors();
-            RelDataTypeField [] fields = multiJoin.getMultiJoinFields();
-            for (int currFactor = 0; currFactor < nJoinFactors; currFactor++) {
-                // locate the join factor in the new join ordering
-                int fieldStart = 0;
-                for (int pos = 0; pos < nJoinFactors; pos++) {
-                    if (newJoinOrder.get(pos) == currFactor) {
-                        break;
-                    }
-                    fieldStart +=
-                        multiJoin.getNumFieldsInJoinFactor(
-                            newJoinOrder.get(pos));
+        // create a projection on top of the joins, matching the original
+        // join order
+        newProjExprs = new RexNode[nTotalFields];
+        List<Integer> newJoinOrder = new ArrayList<Integer>();
+        joinTree.getTreeOrder(newJoinOrder);
+        int currField = 0;
+        int nJoinFactors = multiJoin.getNumJoinFactors();
+        RelDataTypeField [] fields = multiJoin.getMultiJoinFields();
+        for (int currFactor = 0; currFactor < nJoinFactors; currFactor++) {
+            // locate the join factor in the new join ordering
+            int fieldStart = 0;
+            for (int pos = 0; pos < nJoinFactors; pos++) {
+                if (newJoinOrder.get(pos) == currFactor) {
+                    break;
                 }
-                
-                for (int fieldPos = 0;
-                     fieldPos < multiJoin.getNumFieldsInJoinFactor(currFactor);
-                     fieldPos++) {
-                    newProjExprs[currField] =
-                        rexBuilder.makeInputRef(
-                            fields[currField].getType(),
-                            fieldStart + fieldPos);
-                    currField++;
-                }
+                fieldStart +=
+                    multiJoin.getNumFieldsInJoinFactor(newJoinOrder.get(pos));
             }
-        } else {
-            // maintain the original projection, but we need to adjust
-            // the references based on the selected join ordering
-            ProjectRel project = (ProjectRel) call.rels[0];
-            int [] adjustments = new int[nTotalFields];
-            RexNode [] origProjExprs = project.getProjectExps();
-            if (needsAdjustment(multiJoin, adjustments, joinTree, null)) {
-                // adjust projection expressions
-                int projLength = project.getProjectExps().length;
-                newProjExprs = new RexNode[projLength];
-                for (int j = 0; j < projLength; j++) {
-                    newProjExprs[j] =
-                        origProjExprs[j].accept(
-                            new RelOptUtil.RexInputConverter(
-                                rexBuilder,
-                                multiJoin.getMultiJoinFields(),
-                                joinTree.getJoinTree().getRowType().getFields(),
-                                adjustments));
-                }
-            } else {
-                newProjExprs = origProjExprs;
+            
+            for (int fieldPos = 0;
+                 fieldPos < multiJoin.getNumFieldsInJoinFactor(currFactor);
+                 fieldPos++) {
+                newProjExprs[currField] =
+                    rexBuilder.makeInputRef(
+                        fields[currField].getType(),
+                        fieldStart + fieldPos);
+                currField++;
             }
         }
 
@@ -463,13 +400,28 @@ public class LoptOptimizeJoinRule
         BitSet factorsNeeded,
         List<RexNode> filtersToAdd)
     {
+        // if the factor corresponds to a dimension table whose join we
+        // can remove, create a replacement join if the corresponding fact
+        // table is in the current join tree
+        if (multiJoin.getJoinRemovalFactor(factorToAdd) != null) {
+            return
+                createReplacementJoin(
+                    multiJoin,
+                    semiJoinOpt,
+                    joinTree,
+                    factorToAdd,
+                    filtersToAdd);
+        }
+
+        // if this is the first factor in the tree, create a join tree with
+        // the single factor
         if (joinTree == null) {
             return
                 new LoptJoinTree(
                     semiJoinOpt.getChosenSemiJoin(factorToAdd),
                     factorToAdd);
-        }
-
+        }      
+        
         // create a temporary copy of the filter list as we need the original
         // list to pass into addToTop()
         List<RexNode> tmpFilters = new ArrayList<RexNode>(filtersToAdd);
@@ -868,7 +820,143 @@ public class LoptOptimizeJoinRule
 
         return condition;
     }
-
+    
+    /**
+     * In the event that a dimension table does not need to be joined because
+     * of a semijoin, this method creates a join tree that consists of a
+     * projection on top of an existing join tree.  The existing join tree must
+     * contain the fact table in the semijoin that allows the dimension table
+     * to be removed.
+     * 
+     * <p>The projection created on top of the join tree mimics a join of
+     * the fact and dimension tables.  In order for the dimension table to have
+     * been removed, the only fields referenced from the dimension table are
+     * its dimension keys.  Therefore, we can replace these dimension fields
+     * with the fields corresponding to the semijoin keys from the fact table
+     * in the projection.
+     * 
+     * @param multiJoin join factors being optimized
+     * @param semiJoinOpt optimal semijoins for each factor
+     * @param factTree existing join tree containing the fact table
+     * @param dimIdx dimension table factor id
+     * @param filtersToAdd filters remaining to be added; filters added to the
+     * new join tree are removed from the list
+     * 
+     * @return created join tree or null if the corresponding fact table has
+     * not been joined in yet
+     */
+    private LoptJoinTree createReplacementJoin(
+        LoptMultiJoin multiJoin,
+        LoptSemiJoinOptimizer semiJoinOpt,
+        LoptJoinTree factTree,
+        int dimIdx,
+        List<RexNode> filtersToAdd)
+    {
+        // if the current join tree doesn't contain the fact table, then
+        // don't bother trying to create the replacement join just yet
+        if (factTree == null) {
+            return null;
+        }
+        int factIdx = multiJoin.getJoinRemovalFactor(dimIdx);
+        List<Integer> joinOrder = new ArrayList<Integer>();
+        factTree.getTreeOrder(joinOrder);
+        if (!joinOrder.contains(factIdx)) {
+            return null;
+        }
+        
+        // figure out the position of the fact table in the current jointree
+        int adjustment = 0;
+        for (Integer factor : joinOrder) {
+            if (factor == factIdx) {
+                break;
+            }
+            adjustment += multiJoin.getNumFieldsInJoinFactor(factor);
+        }
+        
+        // map the dimension keys to the corresponding keys from the fact 
+        // table, based on the fact table's position in the current jointree
+        RelDataTypeField [] dimFields =
+            multiJoin.getJoinFactor(dimIdx).getRowType().getFields();
+        int nDimFields = dimFields.length;
+        int [] replacementKeys = new int[nDimFields];
+        SemiJoinRel semiJoin = multiJoin.getJoinRemovalSemiJoin(dimIdx);
+        List<Integer> dimKeys = semiJoin.getRightKeys();
+        List<Integer> factKeys = semiJoin.getLeftKeys();
+        for (int i = 0; i < dimKeys.size(); i++) {
+            replacementKeys[dimKeys.get(i)] = factKeys.get(i) + adjustment;
+        }
+        
+        // create the projection, projecting the fields from the join tree
+        // containing the fact table and the replacementKeys computed above;
+        // for the dimension table fields that are not projected, just create
+        // a null expression as a placeholder for the column; this is done
+        // so we don't have to adjust the offsets of other expressions that
+        // reference the dimension table; the placeholder expression values
+        // should never be referenced, so that's why it's ok to create these
+        // possibly invalid expressions
+        RelNode factRel = factTree.getJoinTree();
+        RelDataTypeField [] factFields = factRel.getRowType().getFields();
+        int nFactFields = factFields.length;
+        RexNode [] projExprs = new RexNode[nFactFields + nDimFields];
+        String [] fieldNames = new String[nFactFields + nDimFields];
+        RexBuilder rexBuilder = factRel.getCluster().getRexBuilder();
+        
+        for (int i = 0; i < nFactFields; i++) {
+            projExprs[i] = rexBuilder.makeInputRef(factFields[i].getType(), i);
+            fieldNames[i] = factFields[i].getName();
+        }
+        for (int i = 0; i < nDimFields; i++) {
+            RexNode projExpr;
+            RelDataType dimType = dimFields[i].getType();
+            if (!dimKeys.contains(i)) {
+                projExpr =
+                    rexBuilder.makeCast(dimType, rexBuilder.constantNull());
+            } else {
+                RelDataTypeField mappedField = factFields[replacementKeys[i]];
+                RexNode mappedInput =
+                    rexBuilder.makeInputRef(
+                        mappedField.getType(),
+                        replacementKeys[i]);
+                // if the types aren't the same, create a cast
+                if (mappedField.getType() == dimType) {
+                    projExpr = mappedInput;
+                } else {
+                    projExpr =
+                        rexBuilder.makeCast(
+                            dimFields[i].getType(),
+                            mappedInput);
+                }
+            }
+            projExprs[i + nFactFields] = projExpr;
+            fieldNames[i + nFactFields] = dimFields[i].getName();
+        }
+        ProjectRel projRel =
+            (ProjectRel) CalcRel.createProject(
+                factRel,
+                projExprs,
+                fieldNames);
+        
+        // remove the join conditions corresponding to the join we're removing;
+        // we don't actually need to use them, but we need to remove them
+        // from the list since they're no longer needed
+        LoptJoinTree dimTree =
+            new LoptJoinTree(
+                semiJoinOpt.getChosenSemiJoin(dimIdx),
+                dimIdx);
+        addFilters(multiJoin, factTree, dimTree, filtersToAdd, false);
+ 
+        // finally, create a join tree consisting of the fact table's join
+        // tree with the newly created projection; note that in the factor
+        // tree, we act as if we're joining in the dimension table, even
+        // though we really aren't; this is needed so we can map the columns
+        // from the dimension table as we go up in the join tree
+        return
+            new LoptJoinTree(
+                projRel,
+                factTree.getFactorTree(),
+                dimTree.getFactorTree());
+    }
+    
     /**
      * Creates a JoinRel given left and right operands and a join condition.
      * Swaps the operands if beneficial.

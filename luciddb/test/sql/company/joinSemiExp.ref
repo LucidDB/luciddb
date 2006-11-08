@@ -257,6 +257,12 @@
 '        FennelToIteratorConverter'
 '          LhxJoinRel'
 '            LcsRowScanRel'
+'              LcsIndexMergeRel'
+'                LcsIndexSearchRel'
+'                  FennelSortRel'
+'                    LhxAggRel'
+'                      FennelReshapeRel'
+'                        LcsRowScanRel'
 '            FennelReshapeRel'
 '              LcsRowScanRel'
 0: jdbc:luciddb:> 

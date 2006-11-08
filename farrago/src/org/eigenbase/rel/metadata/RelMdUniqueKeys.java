@@ -59,56 +59,71 @@ public class RelMdUniqueKeys
     {
         // TODO - need to account for outer joins
 
+        RelNode left = rel.getLeft();
+        RelNode right = rel.getRight();
+
+        // first add the concatenated unique keys from the left and the right
+        Set<BitSet> retSet = new HashSet<BitSet>();
+        Set<BitSet> leftSet = RelMetadataQuery.getUniqueKeys(left);
+        Set<BitSet> rightSet = null;
+        
+        Set<BitSet> tmpRightSet = RelMetadataQuery.getUniqueKeys(right);
+        int nFieldsOnLeft = left.getRowType().getFieldCount();
+
+        if (tmpRightSet != null) {
+            rightSet = new HashSet<BitSet>();
+            Iterator itRight = tmpRightSet.iterator();
+            while (itRight.hasNext()) {
+                BitSet colMask = (BitSet) itRight.next();
+                BitSet tmpMask = new BitSet();
+                for (int bit = colMask.nextSetBit(0); bit >= 0;
+                    bit = colMask.nextSetBit(bit + 1)) {
+                    tmpMask.set(bit + nFieldsOnLeft);
+                }
+                rightSet.add(tmpMask);
+            }
+        
+            if (leftSet != null) {
+                itRight = rightSet.iterator();
+                while (itRight.hasNext()) {
+                    BitSet colMaskRight = (BitSet) itRight.next();
+                    Iterator itLeft = leftSet.iterator();
+                    while (itLeft.hasNext()) {
+                        BitSet colMaskLeft = (BitSet) itLeft.next();
+                        BitSet colMaskConcat = new BitSet();
+                        colMaskConcat.or(colMaskLeft);
+                        colMaskConcat.or(colMaskRight);                
+                        retSet.add(colMaskConcat);
+                    }
+                }
+            }
+        }
+            
         // locate the columns that participate in equijoins
         BitSet leftJoinCols = new BitSet();
         BitSet rightJoinCols = new BitSet();
         RelMdUtil.findEquiJoinCols(
-            rel.getLeft(),
-            rel.getRight(),
+            left,
+            right,
             rel.getCondition(),
             leftJoinCols,
             rightJoinCols);
 
         // determine if either or both the LHS and RHS are unique on the
         // equijoin columns
-        RelNode left = rel.getLeft();
-        RelNode right = rel.getRight();
         Boolean leftUnique = RelMdUtil.areColumnsUnique(left, leftJoinCols);
         Boolean rightUnique = RelMdUtil.areColumnsUnique(right, rightJoinCols);
 
         // add bits from left and/or right depending on which sides are
         // unique
-        Set<BitSet> retSet = new HashSet<BitSet>();
-        if ((rightUnique != null) && rightUnique) {
-            Set<BitSet> leftSet = RelMetadataQuery.getUniqueKeys(left);
-            if (leftSet == null) {
-                return null;
-            }
-            retSet.addAll(leftSet);
+        if ((rightUnique != null) && rightUnique && leftSet != null) {
+            retSet.addAll(leftSet);            
         }
 
         // bits on the right need to be adjusted to reflect addition of left
         // input
-        if ((leftUnique != null) && leftUnique) {
-            int nFieldsOnLeft = left.getRowType().getFieldCount();
-            Set<BitSet> rightSet = RelMetadataQuery.getUniqueKeys(right);
-            if (rightSet == null) {
-                return null;
-            }
-            Iterator it = rightSet.iterator();
-            while (it.hasNext()) {
-                BitSet colMask = (BitSet) it.next();
-                BitSet tmpMask = new BitSet();
-                for (int bit = colMask.nextSetBit(0); bit >= 0;
-                    bit = colMask.nextSetBit(bit + 1)) {
-                    tmpMask.set(bit + nFieldsOnLeft);
-                }
-                retSet.add(tmpMask);
-            }
-        }
-
-        if ((leftUnique == null) && (rightUnique == null)) {
-            return null;
+        if ((leftUnique != null) && leftUnique && rightSet != null) {
+            retSet.addAll(rightSet);
         }
 
         return retSet;

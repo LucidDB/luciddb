@@ -1847,7 +1847,21 @@ public class SqlToRelConverter
         RelDecorrelator decorrelator =
             new RelDecorrelator(rexBuilder, mapRefRelToCorVar,
                 mapCorVarToCorRel, mapFieldAccessToCorVar);
-        RelNode newRootRel = decorrelator.decorrelate(rootRel);
+        boolean dumpPlan = sqlToRelTracer.isLoggable(Level.FINE);
+        
+        RelNode newRootRel =
+            decorrelator.removeCorrelation(rootRel);
+        
+        if (dumpPlan && newRootRel != rootRel) {
+            sqlToRelTracer.fine(
+                RelOptUtil.dumpPlan(
+                    "Plan after removing CorrelatorRel",
+                    newRootRel,
+                    false,
+                    SqlExplainLevel.EXPPLAN_ATTRIBUTES));            
+        }
+        
+        newRootRel = decorrelator.decorrelate(newRootRel);
         return newRootRel;
     }
         

@@ -22,13 +22,18 @@
 package org.eigenbase.sql2rel;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.*;
+import org.eigenbase.rel.metadata.*;
+
 
 /**
  * RelDecorrelator replaces all correlated expressions(corExp) in a relational
@@ -46,11 +51,15 @@ public class RelDecorrelator
     SortedMap<CorrelatorRel.Correlation, CorrelatorRel> mapCorVarToCorRel;
     Map<RexFieldAccess, CorrelatorRel.Correlation> mapFieldAccessToCorVar;
 
-    private final RewriteRelVisitor visitor;
+    private final DecorrelateRelVisitor decorrelateVisitor;
+    private final RemoveCorrelationVisitor removeCorrelationVisitor;
     
     private final RexBuilder rexBuilder;
     
+    // The rel which is being visited
     private RelNode currentRel;
+    private boolean projectPulledAboveCorrelator;
+    private RexInputRef nullIndicator;
     
     // maps built during decorrelation
     private Map<RelNode, RelNode> mapOldToNewRel;
@@ -61,9 +70,9 @@ public class RelDecorrelator
     // another map to map old input positions to new input positions
     // this is from the view point of the parent rel of a new rel.
     private Map<RelNode, Map<Integer, Integer> > mapNewRelToMapOldToNewOutputPos;
-    
-    // also need to map between corVar and position this corVar appears in the child
-    // perhaps could merge this with mapNewRelToCorVarOutputPos
+
+    private static final Logger sqlToRelTracer =
+        EigenbaseTrace.getSqlToRelTracer();
     
     public RelDecorrelator(
         RexBuilder rexBuilder,
@@ -76,12 +85,13 @@ public class RelDecorrelator
         this.mapCorVarToCorRel = mapCorVarToCorRel;
         this.mapFieldAccessToCorVar = mapFieldAccessToCorVar;
 
-        visitor = new RewriteRelVisitor();
+        decorrelateVisitor = new DecorrelateRelVisitor();
+        removeCorrelationVisitor = new RemoveCorrelationVisitor();
     }
     
     public RelNode decorrelate(RelNode root) 
     {
-        // Perform flattening.
+        // Perform decorrelation.
         mapOldToNewRel =
             new HashMap<RelNode, RelNode>();
         
@@ -91,7 +101,7 @@ public class RelDecorrelator
         mapNewRelToMapOldToNewOutputPos =
             new HashMap<RelNode, Map<Integer, Integer> >();
         
-        visitor.visit(root, 0, null);
+        decorrelateVisitor.visit(root, 0, null);
         
         if (mapOldToNewRel.containsKey(root)) {
             // has been rewritten
@@ -101,14 +111,36 @@ public class RelDecorrelator
             return root;
         }
     }
-    
-    protected RexNode rewriteExpr(RexNode exp)
+
+    public RelNode removeCorrelation(RelNode root) 
     {
-        RewriteRexShuttle shuttle = new RewriteRexShuttle();
+        mapOldToNewRel =
+            new HashMap<RelNode, RelNode>();
+
+        removeCorrelationVisitor.visit(root, 0, null);
+            
+        if (mapOldToNewRel.containsKey(root)) {
+            // has been rewritten
+            return mapOldToNewRel.get(root);
+        } else {
+            // not rewritten
+            return root;
+        }
+    }
+
+    protected RexNode decorrelateExpr(RexNode exp)
+    {
+        DecorrelateRexShuttle shuttle = new DecorrelateRexShuttle();
+        return exp.accept(shuttle);
+    }
+
+    protected RexNode removeCorrelationExpr(RexNode exp)
+    {
+        RemoveCorrelationRexShuttle shuttle = new RemoveCorrelationRexShuttle();
         return exp.accept(shuttle);
     }
     
-    public void rewriteRelGeneric(RelNode rel)
+    public void decorrelateRelGeneric(RelNode rel)
     {
         RelNode newRel = rel.clone();
 
@@ -121,8 +153,9 @@ public class RelDecorrelator
                     // if child is not rewritten, or if it produces correlated
                     // variables, terminate rewrite
                     return;
+                } else {
+                    newRel.replaceInput(i, newInputRel);
                 }
-                newRel.replaceInput(i, newInputRel);
             }            
         }
         
@@ -137,6 +170,226 @@ public class RelDecorrelator
         mapNewRelToMapOldToNewOutputPos.put(newRel, mapOldToNewOutputPos);
     }
     
+    public void removeCorrelationRelGeneric(RelNode rel)
+    {
+        RelNode newRel = rel.clone();
+
+        if (rel.getInputs().length > 0) {
+            RelNode [] oldInputs = rel.getInputs();
+            for (int i = 0; i < oldInputs.length; ++i) {
+                RelNode newInputRel = mapOldToNewRel.get(oldInputs[i]);
+                if (newInputRel == null) {
+                    return;
+                } else {
+                    newRel.replaceInput(i, newInputRel);                    
+                }
+            }
+        }
+        
+        mapOldToNewRel.put(rel, newRel);
+    }
+
+    public void removeCorrelationRel(CorrelatorRel corRel)
+    {
+        RelNode leftInputRel = corRel.getLeft();
+        RelDataTypeFactory typeFactory = corRel.getCluster().getTypeFactory();
+        
+        if (corRel.getJoinType() != JoinRelType.LEFT) {
+            return;
+        }
+        // check for this pattern
+        // The pattern matching could be simplified if rules can be applied
+        // during decorrelation,
+        //
+        // CorrelateRel
+        //   leftInputRel
+        //   AggregateRel (rightInputRel)
+        //     ProjectRel
+        //       FilterRel
+        //         filterInputRel
+        if (!(corRel.getRight() instanceof AggregateRel)) {
+            return;
+        }
+        AggregateRel aggRel = (AggregateRel) corRel.getRight();
+        
+        if (!(aggRel.getChild() instanceof ProjectRel)) {
+            return;
+        }
+        ProjectRel projRel = (ProjectRel) aggRel.getChild();
+        
+        if (!(projRel.getChild() instanceof FilterRel)) {
+            return;
+        }
+        FilterRel filterRel = (FilterRel) projRel.getChild();
+        if (!mapRefRelToCorVar.containsKey((RelNode)filterRel)) {
+            // this filterRel does not contain any correlated reference
+            return;
+        }
+
+        HashSet<CorrelatorRel.Correlation> corVarInFilter =
+            new HashSet<CorrelatorRel.Correlation> ();        
+        corVarInFilter.addAll(mapRefRelToCorVar.get(filterRel));
+        
+        RelNode filterInputRel = filterRel.getChild();
+        
+        // extract the correlation out of the filterRel
+        
+        // first break up the filter conditions into equality comparisons
+        // AND'ed together
+        List<RexInputRef>  joinKeys = new ArrayList<RexInputRef> ();
+        List<RexFieldAccess>  correlatedJoinKeys = new ArrayList<RexFieldAccess> ();
+        RexNode nonEquiCond = 
+            RelOptUtil.splitCorrelatedFilterCondition(
+                filterRel, 
+                joinKeys,
+                correlatedJoinKeys);
+        
+        // check that the columns referenced in these comparisons form an unique
+        // key of the filterInputRel
+        if (joinKeys.isEmpty() ||
+            !RelMdUtil.areColumnsUnique(filterInputRel, joinKeys)) {
+        	
+            if (!RelMdUtil.areColumnsUnique(filterInputRel, joinKeys)) {
+                sqlToRelTracer.fine(
+                		joinKeys.toString() + 
+                		"are not unique keys for " +
+                		filterInputRel.toString());
+            }
+            return;
+        }
+        
+        // remember the columns from filterInputRel
+        // check that all filter's correlated refs are used in the join
+        for (RexFieldAccess fieldAccess : correlatedJoinKeys) {
+            corVarInFilter.remove(mapFieldAccessToCorVar.get(fieldAccess));
+        }
+        
+        if (!corVarInFilter.isEmpty()) {
+            return;
+        }
+        
+        // Check that the correlated variables referenced in these comparisons
+        // have to come from the correlatorRel.
+        corVarInFilter.addAll(mapRefRelToCorVar.get(filterRel));
+        
+        for (CorrelatorRel.Correlation corVar : corVarInFilter) {
+            if (mapCorVarToCorRel.get(corVar) != corRel) {
+                return;
+            }
+        }
+        
+        JoinRelType newJoinType = corRel.getJoinType();
+        
+        // if projRel has any correlated reference, make sure they are also provided
+        // by the current corRel. They will be projected out of the LHS of the corRel.
+        if (mapRefRelToCorVar.containsKey(projRel)) {
+            // Joins cannot produce null on the RHS for a row from the right which 
+            // does not match any row from the LHS. Change the join type to INNER
+            // here so that non matching rows from the RHS is not included in the result
+            // set. Note that this limits the type of scalar subqueries that can
+            // benefit from decorrelation without value generator.
+            
+            // newJoinType = JoinRelType.INNER;
+            
+            SortedSet<CorrelatorRel.Correlation> corVarInProj =
+                mapRefRelToCorVar.get(projRel);
+            for (CorrelatorRel.Correlation corVar : corVarInProj) {
+                if (mapCorVarToCorRel.get(corVar) != corRel) {
+                    return;
+                }
+            }
+        }
+        
+        // check that the agg is simply doing single_value() on the entire 
+        // input
+        if (aggRel.getGroupCount() != 0 ||
+            aggRel.getAggCalls().length != 1) {
+            return;
+        }
+        
+        AggregateRel.Call aggCall = aggRel.getAggCalls()[0];
+        if (!(aggCall.getAggregation() instanceof SqlSingleValueAggFunction)) {
+            return;
+        }
+        
+        // change the plan to this structure
+        // Note that the aggregateRel is removed
+        //
+        // ProjectRel (replace corvar to input ref coming from the JoinRel)
+        //     JoinRel (replace corvar to input ref coming from the JoinRel)
+        //       leftInputRel
+        //       filterInputRel        
+        
+        // make the new join rel
+        
+        // first change the filter condition into a join condition
+        RexNode joinCond = removeCorrelationExpr(filterRel.getCondition());
+        
+        JoinRel joinRel = 
+            new JoinRel(
+                corRel.getCluster(),
+                leftInputRel,
+                filterInputRel,
+                joinCond,
+                newJoinType,
+                Collections.EMPTY_SET);
+        
+        List<Integer>  leftJoinKeys = new ArrayList<Integer> ();
+        List<Integer>  rightJoinKeys = new ArrayList<Integer> ();
+
+        nonEquiCond  =
+            RelOptUtil.splitJoinCondition(
+                joinRel.getLeft(),
+                joinRel.getRight(),
+                joinRel.getCondition(), 
+                leftJoinKeys,
+                rightJoinKeys);
+
+        assert (rightJoinKeys.size() >= 1);
+        
+        int nullIndicatorPos = 
+            rightJoinKeys.get(0) + 
+            joinRel.getLeft().getRowType().getFieldCount();
+        
+        nullIndicator =
+            new RexInputRef(
+                nullIndicatorPos,
+                typeFactory.createTypeWithNullability(
+                    (joinRel.getRowType().getFields()[nullIndicatorPos]).getType(),
+                    true));            
+        
+        // now create the new project
+        List<String> newFieldNames = new ArrayList<String>();
+        List<RexNode> newProjExprs = new ArrayList<RexNode>();
+        
+        RexNode[] origProjExprs = projRel.getProjectExps();
+        
+        // project everything from the LHS and then those from the original projRel
+        RelDataTypeField[] leftInputFields = 
+            leftInputRel.getRowType().getFields();
+        
+        for (int i = 0; i < leftInputFields.length; i ++) {
+            RelDataType newType = leftInputFields[i].getType();
+            newProjExprs.add(new RexInputRef(i, newType));
+            newFieldNames.add(leftInputFields[i].getName());            
+        }
+
+        // Marked where the projected expr is coming from so that the types will
+        // become nullable for the original projections which are now coming out 
+        // of the nullable side of the OJ.
+        projectPulledAboveCorrelator = newJoinType.generatesNullsOnRight();
+
+        for (int i = 0; i < origProjExprs.length; i ++) {
+            newProjExprs.add(removeCorrelationExpr(origProjExprs[i]));
+            newFieldNames.add((projRel.getRowType().getFields()[i]).getName());
+        }
+        
+        RelNode newProjRel =
+            CalcRel.createProject(joinRel, newProjExprs, newFieldNames);
+
+        mapOldToNewRel.put(corRel, newProjRel);
+    }
+    
     /**
      * Rewrite SortRel.
      * 
@@ -144,7 +397,7 @@ public class RelDecorrelator
      * 
      * @param rel SortRel to be rewritten
      */
-    public void rewriteRel(SortRel rel)
+    public void decorrelateRel(SortRel rel)
     {
         // SortRel itself should not reference cor vars.
         assert (!mapRefRelToCorVar.containsKey(rel));
@@ -201,7 +454,7 @@ public class RelDecorrelator
      *  
      * @param rel the project rel to rewrite
      */
-    public void rewriteRel(AggregateRel rel)
+    public void decorrelateRel(AggregateRel rel)
     {   
         // AggregaterRel itself should not reference cor vars.
         assert (!mapRefRelToCorVar.containsKey(rel));
@@ -389,7 +642,7 @@ public class RelDecorrelator
      * 
      * @param rel the project rel to rewrite
      */
-    public void rewriteRel(ProjectRel rel)
+    public void decorrelateRel(ProjectRel rel)
     {        
         RelNode oldChildRel = rel.getChild();
 
@@ -419,7 +672,7 @@ public class RelDecorrelator
         // If this ProjectRel has correlated reference, create value generator and
         // produce the correlated variables in the new output.
         if (mapRefRelToCorVar.containsKey(rel)) {
-            rewriteInputWithValueGenerator(rel);
+            decorrelateInputWithValueGenerator(rel);
             // The old child should be mapped to the JoinRel created by
             // rewriteInputWithValueGenerator().
             newChildRel = mapOldToNewRel.get(oldChildRel);            
@@ -429,7 +682,7 @@ public class RelDecorrelator
         // ProjectRel projects the original expressions
         int newPos;
         for (newPos = 0; newPos < oldProj.length; newPos ++) {
-            exprs.add(newPos, rewriteExpr(oldProj[newPos]));
+            exprs.add(newPos, decorrelateExpr(oldProj[newPos]));
             exprNames.add(newPos, relOutput[newPos].getName());
             mapOldToNewOutputPos.put(newPos, newPos);
         }
@@ -597,7 +850,7 @@ public class RelDecorrelator
         return resultRel;
     }
 
-    private void rewriteInputWithValueGenerator(
+    private void decorrelateInputWithValueGenerator(
         RelNode rel)
     {
         // currently only handles one child input
@@ -668,7 +921,7 @@ public class RelDecorrelator
      * 
      * @param rel the filter rel to rewrite
      */
-    public void rewriteRel(FilterRel rel)
+    public void decorrelateRel(FilterRel rel)
     { 
         RelNode oldChildRel = rel.getChild();
 
@@ -688,7 +941,7 @@ public class RelDecorrelator
         // If this FilterRel has correlated reference, create value generator and
         // produce the correlated variables in the new output.
         if (mapRefRelToCorVar.containsKey(rel)) {
-            rewriteInputWithValueGenerator(rel);
+            decorrelateInputWithValueGenerator(rel);
             // The old child should be mapped to the newly created JoinRel by
             // rewriteInputWithValueGenerator().
             newChildRel = mapOldToNewRel.get(oldChildRel);            
@@ -699,7 +952,7 @@ public class RelDecorrelator
         // Map filter to the new filter over join
         RelNode newFilterRel =
             CalcRel.createFilter(newChildRel, 
-                rewriteExpr(rel.getCondition()));
+                decorrelateExpr(rel.getCondition()));
             
         mapOldToNewRel.put(rel, newFilterRel);
         // Filter does not change the input ordering.
@@ -725,7 +978,7 @@ public class RelDecorrelator
      * 
      * @param rel CorrelatorRel
      */
-    public void rewriteRel(CorrelatorRel rel)
+    public void decorrelateRel(CorrelatorRel rel)
     {
         // the right input to CorrelatorRel should produce correlated variables
         RelNode oldLeftRel = rel.getInputs()[0];
@@ -857,7 +1110,7 @@ public class RelDecorrelator
      * 
      * @param rel JoinRel
      */
-    public void rewriteRel(JoinRel rel)
+    public void decorrelateRel(JoinRel rel)
     {
         RelNode oldLeftRel = rel.getInputs()[0];
         RelNode oldRightRel = rel.getInputs()[1];
@@ -885,7 +1138,7 @@ public class RelDecorrelator
             rel.getCluster(),
             newLeftRel,
             newRightRel,
-            rewriteExpr(rel.getCondition()),
+            decorrelateExpr(rel.getCondition()),
             rel.getJoinType(),
             Collections.EMPTY_SET);
         
@@ -935,7 +1188,7 @@ public class RelDecorrelator
     
     //~ Inner Classes ----------------------------------------------------------
 
-    private class RewriteRelVisitor
+    private class DecorrelateRelVisitor
         extends RelVisitor
     {
         // implement RelVisitor
@@ -946,7 +1199,7 @@ public class RelDecorrelator
 
             currentRel = p;
             
-            final String visitMethodName = "rewriteRel";
+            final String visitMethodName = "decorrelateRel";
             boolean found =
                 ReflectUtil.invokeVisitor(
                     RelDecorrelator.this,
@@ -956,7 +1209,7 @@ public class RelDecorrelator
             currentRel = null;
             
             if (!found) {
-                rewriteRelGeneric(p);
+                decorrelateRelGeneric(p);
             }
             //else no rewrite will occur. This will terminate the bottom-up
             // rewrite. If root node of a RelNode tree is not rewritten, the
@@ -964,6 +1217,37 @@ public class RelDecorrelator
         }
     }
     
+    private class RemoveCorrelationVisitor
+        extends RelVisitor
+    {
+        // implement RelVisitor
+        public void visit(RelNode p, int ordinal, RelNode parent)
+        {
+            // rewrite children first  (from left to right)
+            super.visit(p, ordinal, parent);
+
+            currentRel = p;
+            projectPulledAboveCorrelator = false;
+            nullIndicator = null;
+            
+            final String visitMethodName = "removeCorrelationRel";
+            boolean found =
+                ReflectUtil.invokeVisitor(
+                    RelDecorrelator.this,
+                    currentRel,
+                    RelNode.class,
+                    visitMethodName);
+            currentRel = null;
+        
+            if (!found) {
+                removeCorrelationRelGeneric(p);
+            }
+            //else no rewrite will occur. This will terminate the bottom-up
+            // rewrite. If root node of a RelNode tree is not rewritten, the
+            // original tree will be returned. See decorrelate() method.
+        }
+    }
+
     private RexInputRef getNewForOldInputRef(RexInputRef oldInputRef)
     {
         assert (currentRel != null);
@@ -1012,7 +1296,7 @@ public class RelDecorrelator
             newInputRel.getRowType().getFields()[newLocalOrdinal].getType());
     }
 
-    private class RewriteRexShuttle
+    private class DecorrelateRexShuttle
     extends RexShuttle
     {
         // override RexShuttle
@@ -1022,6 +1306,7 @@ public class RelDecorrelator
             RelNode oldInputRel;
             RelNode newInputRel;
             Integer newInputPos;
+            
             for (int i = 0; i < currentRel.getInputs().length; i ++) {
                 oldInputRel = currentRel.getInputs()[i];
                 newInputRel = mapOldToNewRel.get(oldInputRel);
@@ -1066,6 +1351,92 @@ public class RelDecorrelator
             return newInputRef;
         }
     }
+    
+    private class RemoveCorrelationRexShuttle
+    extends RexShuttle
+    {
+        // override RexShuttle
+        public RexNode visitFieldAccess(RexFieldAccess fieldAccess)
+        {
+            if (mapFieldAccessToCorVar.containsKey(fieldAccess)) {
+                // if it is a corVar, change it to be input ref.
+                CorrelatorRel.Correlation corVar = 
+                    mapFieldAccessToCorVar.get(fieldAccess);
+                // corVar offset shuold point to the leftInput of currentRel,
+                // which is the CorrelatorRel.
+                RexInputRef newInput =
+                    new RexInputRef(corVar.getOffset(), fieldAccess.getType());
+                
+                if (projectPulledAboveCorrelator && nullIndicator != null) {
+                    RelDataTypeFactory typeFactory =
+                        currentRel.getCluster().getTypeFactory();
+                    
+                    // Construct a CASE expression to handle the null
+                    // indicator.
+                    RexNode [] caseOperands = new RexNode[3];
+                        
+                    // WHEN indicator IS NULL
+                    caseOperands[0] =
+                        rexBuilder.makeCall(
+                            SqlStdOperatorTable.isNullOperator,
+                            new RexInputRef(
+                                nullIndicator.getIndex(),
+                                typeFactory.createTypeWithNullability(
+                                    nullIndicator.getType(), true)));
+
+                    // THEN CAST(NULL AS newInputTypeNullable)
+                    caseOperands[1] =
+                        rexBuilder.makeCast(
+                            typeFactory.createTypeWithNullability(
+                                newInput.getType(), true),
+                            rexBuilder.constantNull());
+                    
+                    // ELSE case (newInput AS newInputTypeNullable) END
+                    caseOperands[2] = 
+                        rexBuilder.makeCast(
+                            typeFactory.createTypeWithNullability(
+                                newInput.getType(), true),
+                            newInput);
+
+                    return
+                        rexBuilder.makeCall(
+                            SqlStdOperatorTable.caseOperator,
+                            caseOperands);
+                } else {
+                    return newInput;
+                }
+            }
+            return fieldAccess;
+        }
+
+        // override RexShuttle
+        public RexNode visitInputRef(RexInputRef inputRef)
+        {
+            if (currentRel != null && currentRel instanceof CorrelatorRel) {
+                // if this rel references corVar
+                // and now it needs to be rewritten
+                // it must have been pulled above the CorrelatorRel
+                // replace the input ref to account for the LHS of the
+                // CorrelatorRel
+                int leftInputFieldCount = 
+                    ((CorrelatorRel)currentRel).getLeft().getRowType().getFieldCount();
+                RelDataType newType = inputRef.getType();
+                if (projectPulledAboveCorrelator) {
+                    RelDataTypeFactory typeFactory =
+                        currentRel.getCluster().getTypeFactory();
+                    newType = 
+                        typeFactory.createTypeWithNullability(newType, true);
+                }
+                
+                RexInputRef newInputRef =
+                    new RexInputRef(
+                        leftInputFieldCount + inputRef.getIndex(), 
+                        newType);
+                return newInputRef;
+            }
+            return inputRef;
+        }
+    }    
 }
 
 // End RelDecorrelator.java

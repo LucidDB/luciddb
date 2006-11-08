@@ -109,10 +109,9 @@ public class LcsIndexSemiJoinRule
         SemiJoinRel semiJoin = (SemiJoinRel) call.rels[0];
         LcsRowScanRel origRowScan = (LcsRowScanRel) call.rels[1];
 
-        // if the rowscan has an intersect or merge child, then let those
-        // rules handle those cases
-        if ((call.rels.length == 2) && (origRowScan.getInputs().length == 1)
-            && !origRowScan.hasExtraFilter) {
+        // if the rowscan is already being used with an index, then let one
+        // of the other rules handle those cases
+        if ((call.rels.length == 2) && !origRowScan.isFullScan()) {
             return;
         }
         RelNode rightRel = semiJoin.getRight();

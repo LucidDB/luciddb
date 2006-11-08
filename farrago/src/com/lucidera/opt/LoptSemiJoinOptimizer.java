@@ -24,8 +24,6 @@ import com.lucidera.lcs.*;
 
 import java.util.*;
 
-import net.sf.farrago.fem.med.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
@@ -102,7 +100,7 @@ public class LoptSemiJoinOptimizer
     public void makePossibleSemiJoins(LoptMultiJoin multiJoin)
     {
         possibleSemiJoins = new HashMap<Integer, Map<Integer, SemiJoinRel>>();
-
+       
         // semijoins can't be used with any type of outer join, including full
         if (multiJoin.getMultiJoinRel().isFullOuterJoin()) {
             return;
@@ -597,7 +595,11 @@ public class LoptSemiJoinOptimizer
                         semiJoin.getLeftKeys(),
                         semiJoin.getRightKeys());
                 chosenSemiJoins[factIdx] = chosenSemiJoin;
-
+                
+                // determine if the dimension table doesn't need to be joined
+                // as a result of this semijoin
+                removeJoin(multiJoin, chosenSemiJoin, factIdx, bestDimIdx);
+                
                 removePossibleSemiJoin(
                     possibleDimensions,
                     factIdx,
@@ -680,6 +682,87 @@ public class LoptSemiJoinOptimizer
         return savings / dimRows;
     }
 
+    /**
+     * Determines whether a join of the dimension table in a semijoin can be
+     * removed.  It can be if the dimension keys are unique and the only fields 
+     * referenced from the dimension table are its semijoin keys.  The
+     * semijoin keys can be mapped to the corresponding keys from the fact
+     * table (because of the equality condition associated with the semijoin
+     * keys).  Therefore, that's why the dimension table can be removed even
+     * though those fields are referenced elsewhere in the query tree.
+     * 
+     * @param multiJoin join factors being optimized
+     * @param semiJoin semijoin under consideration
+     * @param factIdx id of the fact table in the semijoin
+     * @param dimIdx id of the dimension table in the semijoin
+     */
+    private void removeJoin(
+        LoptMultiJoin multiJoin,
+        SemiJoinRel semiJoin,
+        int factIdx,
+        int dimIdx)
+    {
+        // if the dimension can be removed because of another semijoin, then
+        // no need to proceed any further
+        if (multiJoin.getJoinRemovalFactor(dimIdx) != null) {
+            return;
+        }
+        
+        // check if the semijoin keys corresponding to the dimension table
+        // are unique
+        BitSet dimKeys = new BitSet();
+        for (Integer key : semiJoin.getRightKeys()) {
+            dimKeys.set(key);
+        }
+        RelNode dimRel = multiJoin.getJoinFactor(dimIdx);
+        if (!RelMdUtil.areColumnsUnique(dimRel, dimKeys)) {
+            return;
+        }
+        
+        // check that the only fields referenced from the dimension table
+        // in either its projection or join conditions are the dimension
+        // keys
+        BitSet dimProjRefs = multiJoin.getProjFields(dimIdx);
+        if (!RelOptUtil.contains(dimKeys, dimProjRefs)) {
+            return;
+        }
+        int [] dimJoinRefCounts = multiJoin.getJoinFieldRefCounts(dimIdx);
+        for (int i = 0; i < dimJoinRefCounts.length; i++) {
+            if (dimJoinRefCounts[i] > 0) {
+                if (!dimKeys.get(i)) {
+                    return;
+                }
+            }
+        }
+        
+        // criteria met; keep track of the fact table and the semijoin that
+        // allow the join of this dimension table to be removed
+        multiJoin.setJoinRemovalFactor(dimIdx, factIdx);
+        multiJoin.setJoinRemovalSemiJoin(dimIdx, semiJoin);
+        
+        // if the dimension table doesn't reference anything in its projection
+        // and the only fields referenced in its joins are the dimension keys
+        // of this semijoin, then we can decrement the join reference counts
+        // corresponding to the fact table's semijoin keys, since the
+        // dimension table doesn't need to use those keys
+        if (dimProjRefs.cardinality() != 0) {
+            return;
+        }
+        for (int i = 0; i < dimJoinRefCounts.length; i++) {
+            if (dimJoinRefCounts[i] > 1) {
+                return;
+            } else if (dimJoinRefCounts[i] == 1) {
+                if (!dimKeys.get(i)) {
+                    return;
+                }
+            }
+        }
+        int [] factJoinRefCounts = multiJoin.getJoinFieldRefCounts(factIdx);
+        for (Integer key : semiJoin.getLeftKeys()) {
+            factJoinRefCounts[key]--;
+        }    
+    }
+    
     /**
      * Removes a dimension table from a fact table's list of possible semijoins
      *

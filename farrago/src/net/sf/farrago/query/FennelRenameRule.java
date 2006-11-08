@@ -47,6 +47,11 @@ public class FennelRenameRule
                 ProjectRel.class,
                 null));
     }
+    
+    public FennelRenameRule(RelOptRuleOperand rule)
+    {
+        super(rule);
+    }
 
     //~ Methods ----------------------------------------------------------------
 
@@ -60,6 +65,26 @@ public class FennelRenameRule
     public void onMatch(RelOptRuleCall call)
     {
         ProjectRel project = (ProjectRel) call.rels[0];
+        
+        FennelRenameRel rename = renameChild(project);
+        if (rename == null) {
+            return;
+        }
+        
+        call.transformTo(rename);
+    }
+    
+    /**
+     * If appropriate, creates a FennelRenameRel to replace an existing
+     * ProjectRel.
+     * 
+     * @param project the existing ProjectRel
+     * 
+     * @return the replacement FennelRenameRel or null if the project cannot
+     * be replaced with a FennelRenameRel
+     */
+    protected FennelRenameRel renameChild(ProjectRel project)
+    {
         boolean needRename =
             RelOptUtil.checkProjAndChildInputs(project, true);
         
@@ -67,7 +92,7 @@ public class FennelRenameRule
         // matching field names; in the case of the latter, let
         // RemoveTrivialProjectRule handle removing the redundant project
         if (!needRename) {
-            return;
+            return null;
         }
 
         RelNode fennelInput =
@@ -76,10 +101,10 @@ public class FennelRenameRule
                 FennelRel.FENNEL_EXEC_CONVENTION,
                 project.getChild());
         if (fennelInput == null) {
-            return;
+            return null;
         }
 
-        FennelRenameRel rename =
+        return
             new FennelRenameRel(
                 project.getCluster(),
                 fennelInput,
@@ -87,7 +112,6 @@ public class FennelRenameRule
                 RelOptUtil.mergeTraits(
                     fennelInput.getTraits(),
                     new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION)));
-        call.transformTo(rename);
     }
 }
 

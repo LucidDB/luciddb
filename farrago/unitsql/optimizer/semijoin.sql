@@ -179,10 +179,12 @@ create index i_sales_pid on sales(product_id);
 create index i_sales_sp on sales(salesperson);
 create index i_sales_cust on sales(customer);
 
-create table product(id int, name char(20), color char(10), size char(1));
-create table salesperson(id int, name char(20), age int);
-create table customer(id int, company char(20), city char(20));
-create table state(city char(20), state char(20));
+create table product(
+    id int unique not null, name char(20), color char(10), size char(1));
+create table salesperson(id int unique not null, name char(20), age int);
+create table customer(
+    id int unique not null, company char(20), city char(20) not null);
+create table state(city char(20) unique not null, state char(20));
 
 create index i_customer_city on customer(city);
 
@@ -313,15 +315,6 @@ explain plan for
             s.salesperson > 0 and s.customer > 0
         order by sid;
 
--- semijoin used for IN clause; customer column has 100 distinct values so
--- the semijoin should be worthwhile
-explain plan for
-    select * from sales where customer in
-        (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-explain plan for
-    select * from sales where customer in
-        (select id from customer where id < 10);
-
 -- semijoin can't be used here because we don't push semijoins past aggregates
 explain plan for
     select s.product_id from
@@ -331,9 +324,9 @@ explain plan for
             s.product_id = p.id and p.size = 'S'
         order by 1;
 
-------------------
--- run the queries
-------------------
+-----------------------------
+-- run the n-way join queries
+-----------------------------
 !set outputformat table
 
 select sid, p.name, p.color, p.size, s.quantity
@@ -402,6 +395,19 @@ select sid, p.name, p.color, p.size, s.quantity
         s.salesperson > 0 and s.customer > 0
     order by sid;
 
+--------------------------------------------------------------------------
+-- semijoin used for IN clause; customer column has 100 distinct values so
+-- the semijoin should be worthwhile
+--------------------------------------------------------------------------
+!set outputformat csv
+explain plan for
+    select * from sales where customer in
+        (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+explain plan for
+    select * from sales where customer in
+        (select id from customer where id < 10);
+
+!set outputformat table
 select * from sales where customer in
     (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     order by sid;
@@ -410,7 +416,9 @@ select * from sales where customer in
     (select id from customer where id < 10)
     order by sid;
 
+--------------------------
 -- test semijoins on views
+--------------------------
 create view vt(vc, vd, vb, vbd) as
     select upper(c), trim(d), b, b || d from t;
 select * from vt;
@@ -443,3 +451,205 @@ select * from vt, smalltable s
     where vt.vb = s.s3 and vt.vbd = s.s1 and s.s2 > 0 order by vc;
 select * from vt, smalltable s
     where vt.vb = s.s3 and vt.vd = s.s1 and s.s2 > 0 order by vc;
+
+-------------------------------------------------------
+-- cases where join with dimension table can be removed
+-------------------------------------------------------
+!set outputformat csv
+explain plan for
+    select sid, p.id, s.quantity
+        from sales s, product p
+        where
+            s.product_id = p.id and p.size = 'S'
+        order by sid;
+explain plan for
+    select sid
+        from product p, sales s
+        where
+            s.product_id = p.id and p.size = 'S' and sid > 2
+        order by sid;
+explain plan for
+    select sid, p.id as pid, sp.id spid, s.quantity
+        from sales s, product p, salesperson sp
+        where
+            p.id = s.product_id and
+            s.salesperson = sp.id and
+            p.size = 'M' and sp.age = 30
+        order by sid;
+explain plan for
+    select sid
+        from customer c, salesperson sp, product p, sales s
+        where
+            s.product_id = p.id and
+            s.salesperson = sp.id and 
+            s.customer = c.id and
+            p.size = 'S' and sp.age = 40 and c.city >= 'N'
+        order by sid;
+explain plan for
+    select sid, s.quantity
+        from product p, sales s, salesperson sp
+        where
+            s.sid < 3 and
+            s.product_id = p.id and
+            s.salesperson = sp.id and
+            p.size >= 'M' and sp.age >= 30
+        order by sid;
+explain plan for
+    select sid, c.id
+        from sales s, state st, customer c
+        where
+            s.customer = c.id and
+            c.city = st.city and st.state = 'New York'
+        order by sid;
+
+-- product can be removed because its join key with t can be obtained from
+-- sales
+explain plan for
+    select sid, s.quantity, t.c
+        from sales s, product p, t
+        where
+            s.product_id = p.id and p.size = 'S' and
+            p.id = t.a
+        order by sid;
+
+-- run the queries
+!set outputformat table
+select sid, p.id, s.quantity
+    from sales s, product p
+    where
+        s.product_id = p.id and p.size = 'S'
+    order by sid;
+select sid
+    from product p, sales s
+    where
+        s.product_id = p.id and p.size = 'S' and sid > 2
+    order by sid;
+select sid, p.id as pid, sp.id spid, s.quantity
+    from sales s, product p, salesperson sp
+    where
+        p.id = s.product_id and
+        s.salesperson = sp.id and
+        p.size = 'M' and sp.age = 30
+    order by sid;
+select sid
+    from customer c, salesperson sp, product p, sales s
+    where
+        s.product_id = p.id and
+        s.salesperson = sp.id and 
+        s.customer = c.id and
+        p.size = 'S' and sp.age = 40 and c.city >= 'N'
+    order by sid;
+select sid, s.quantity
+    from product p, sales s, salesperson sp
+    where
+        s.sid < 3 and
+        s.product_id = p.id and
+        s.salesperson = sp.id and
+        p.size >= 'M' and sp.age >= 30
+    order by sid;
+select sid, c.id
+    from sales s, state st, customer c
+    where
+        s.customer = c.id and
+        c.city = st.city and st.state = 'New York'
+    order by sid;
+select sid, s.quantity, t.c
+    from sales s, product p, t
+    where
+        s.product_id = p.id and p.size = 'S' and
+        p.id = t.a
+    order by sid;
+
+-----------------------------------------
+-- cases where the join cannot be removed
+-----------------------------------------
+!set outputformat csv
+
+-- extra join filters
+explain plan for select t.*
+    from t inner join smalltable s
+    on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
+    order by a;
+
+-- semijoin keys not unique
+explain plan for select t.*
+    from t inner join smalltable s
+    on t.b = s.s3 and s.s1 = 'this is row 1' 
+    order by a;
+
+-- reference to non-semijoin key column in projection list
+explain plan for
+    select sid, p.name, s.quantity
+        from sales s, product p
+        where
+            s.product_id = p.id and p.size = 'S'
+        order by sid;
+
+-- state can be removed because city can be retrieved from customer; note that
+-- we can't remove customer instead of state because if we were to retrieve
+-- city from state instead of customer, we'd also need the city column from
+-- customer to join with state, resulting in neither join being removed
+explain plan for
+    select sid, st.city
+        from sales s, state st, customer c
+        where
+            s.customer = c.id and
+            c.city = st.city and st.state = 'New York'
+        order by sid;
+
+-- neither customer or state can be removed because state is referenced in the
+-- projection list; therefore customer needs to be joined with state in order
+-- to retrieve the state column
+explain plan for
+    select sid, st.state
+        from sales s, state st, customer c
+        where
+            s.customer = c.id and
+            c.city = st.city and st.state = 'New York'
+        order by sid;
+
+-- although customer doesn't need to be joined with either state or sales
+-- because of semijoins with those two tables, it needs to be joined with t;
+-- so its join can't be removed
+explain plan for
+    select sid
+        from sales s, state st, customer c, t
+        where
+            s.customer = c.id and
+            c.city = st.city and st.state = 'New York' and
+            c.city = t.c
+        order by sid;
+
+!set outputformat table
+select t.*
+    from t inner join smalltable s
+    on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
+    order by a;
+select t.*
+    from t inner join smalltable s
+    on t.b = s.s3 and s.s1 = 'this is row 1' 
+    order by a;
+select sid, p.name, s.quantity
+    from sales s, product p
+    where
+        s.product_id = p.id and p.size = 'S'
+    order by sid;
+select sid, st.city
+    from sales s, state st, customer c
+    where
+        s.customer = c.id and
+        c.city = st.city and st.state = 'New York'
+    order by sid;
+select sid, st.state
+    from sales s, state st, customer c
+    where
+        s.customer = c.id and
+        c.city = st.city and st.state = 'New York'
+    order by sid;
+select sid
+    from sales s, state st, customer c, t
+    where
+        s.customer = c.id and
+        c.city = st.city and st.state = 'New York' and
+        c.city = t.c
+    order by sid;

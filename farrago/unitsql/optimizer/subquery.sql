@@ -910,6 +910,112 @@ drop view v5;
 drop view v1;
 drop view v2;
 
+-- 10 --
+-- Optimization to decorrelate without usign value generator.
+-- This can be done when the inner relation itself can be the lookup table
+-- without having to join with the outer relation first
+
+-- 10.1 outer relations are not referenced in the select list of the subquery.
+explain plan without implementation for
+select avg((select deptno from depts where deptno = emps.deptno))
+from emps;
+
+explain plan for
+select avg((select deptno from depts where deptno = emps.deptno))
+from emps;
+
+select avg((select deptno from depts where deptno = emps.deptno))
+from emps;
+
+-- check results against this query
+explain plan for
+select (select deptno from depts where deptno = emps.deptno)
+from emps;
+
+select (select deptno from depts where deptno = emps.deptno) 
+from emps
+order by 1;
+
+
+-- 10.2 outer relations are referenced in the select list of the subquery.
+explain plan without implementation for
+select avg((select emps.deptno from depts where deptno = emps.deptno))
+from emps;
+
+explain plan for
+select avg((select emps.deptno from depts where deptno = emps.deptno))
+from emps;
+
+select avg((select emps.deptno from depts where deptno = emps.deptno))
+from emps;
+
+-- check result against this query
+explain plan for
+select (select emps.deptno from depts where deptno = emps.deptno) 
+from emps;
+
+select (select emps.deptno from depts where deptno = emps.deptno) 
+from emps
+order by 1;
+
+-- negative cases
+explain plan without implementation for
+select (select deptno from emps where deptno = depts.deptno) 
+from depts;
+
+explain plan for
+select (select deptno from emps where deptno = depts.deptno) 
+from depts;
+
+explain plan without implementation for
+select (select depts.deptno from emps where deptno = depts.deptno) 
+from depts;
+
+explain plan for
+select (select depts.deptno from emps where deptno = depts.deptno) 
+from depts;
+
+-- could be a bug: unique column property is not detected by metadata query
+create table test1(a int primary key, b int);
+create table test2(a int primary key, b int);
+create table test3(a int primary key, b int unique);
+create table test4(a int primary key, b int not null unique);
+
+explain plan for 
+select (select test1.b from test1 where test1.a = test2.a) from test2;
+
+explain plan for 
+select (select test1.b from test1 where test1.b = test2.a) from test2;
+
+explain plan for 
+select (select test2.b from test1 where test1.a = test2.a) from test2;
+
+explain plan for 
+select (select test3.b from test3 where test3.b = test2.a) from test2;
+
+explain plan for 
+select (select test4.b from test4 where test4.b = test2.a) from test2;
+
+-- lookup table is a join
+explain plan for
+select 
+    (select (test1.b + test3.b) 
+     from test1, test3 
+     where test3.a = test2.b and test1.a = test2.a) 
+from test2;
+
+explain plan for
+select 
+    (select (test1.b + test4.b) 
+     from test1, test4 
+     where test4.b = test2.b and test1.a = test2.a) 
+from test2;
+
+drop table test1;
+drop table test2;
+drop table test3;
+drop table test4;
+
 --------------
 -- clean up --
 --------------

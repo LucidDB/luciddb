@@ -389,7 +389,7 @@ public class FarragoMetadataTest
         throws Exception
     {
         Set<BitSet> expected = new HashSet<BitSet>();
-
+        
         // left side has a unique join key, so the right side unique keys
         // should be returned
         BitSet keys = new BitSet();
@@ -401,6 +401,36 @@ public class FarragoMetadataTest
         keys.set(5 + 2);
         expected.add(keys);
 
+        // add concat unique keys
+        // left: 0, (1, 2)
+        // right 0, (1, 2)
+        // left field length == 5
+        // concatenated unqiue keys are
+        // (0, 5), (0, 6, 7), (1, 2, 5), (1, 2, 6, 7)
+        keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 0);
+        expected.add(keys);
+
+        keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        expected.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 0);
+        expected.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        expected.add(keys);
+        
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2 where t1.c0 = t2.c3",
             expected);
@@ -422,6 +452,36 @@ public class FarragoMetadataTest
         keys.set(2);
         expected.add(keys);
 
+        // add concat unique keys
+        // left: 0, (1, 2)
+        // right 0, (1, 2)
+        // left field length == 5
+        // concatenated unqiue keys are
+        // (0, 5), (0, 6, 7), (1, 2, 5), (1, 2, 6, 7)
+        keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 0);
+        expected.add(keys);
+
+        keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        expected.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 0);
+        expected.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        expected.add(keys);
+
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2 where t1.c3 = t2.c1 and t1.c4 = t2.c2",
             expected);
@@ -433,11 +493,82 @@ public class FarragoMetadataTest
         // no equijoins on unique keys so there should be no unique keys
         Set<BitSet> expected = new HashSet<BitSet>();
 
+        // add concat unique keys
+        // left: 0, (1, 2)
+        // right 0, (1, 2)
+        // left field length == 5
+        // concatenated unqiue keys are
+        // (0, 5), (0, 6, 7), (1, 2, 5), (1, 2, 6, 7)
+        BitSet keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 0);
+        expected.add(keys);
+
+        keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        expected.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 0);
+        expected.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        expected.add(keys);
+        
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2 where t1.c3 = t2.c3",
             expected);
     }
 
+    public void testUniqueKeysCartesianProduct()
+    throws Exception
+    {
+        // no equijoins on unique keys so there should be no unique keys
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        // add concatenated unique keys
+        // left: 0, (1, 2)
+        // right 0, (1, 2)
+        // left field length == 5
+        // concatenated unqiue keys are
+        // (0, 5), (0, 6, 7), (1, 2, 5), (1, 2, 6, 7)
+        BitSet keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 0);
+        expected.add(keys);
+
+        keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        expected.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 0);
+        expected.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        expected.add(keys);
+        
+        checkUniqueKeysJoin(
+            "select * from tab t1, tab t2",
+            expected);
+    }
+    
     private void checkDistinctRowCount(
         RelNode rel,
         BitSet groupKey,
