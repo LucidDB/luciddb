@@ -2141,7 +2141,7 @@ public class SqlValidatorImpl
         validateOrderList(select);
     }
 
-    private void validateWindowClause(SqlSelect select)
+    protected void validateWindowClause(SqlSelect select)
     {
         final SqlNodeList windowList = select.getWindowList();
         if ((windowList == null) || (windowList.size() == 0)) {
@@ -2189,7 +2189,12 @@ public class SqlValidatorImpl
         windowList.validate(this, windowScope);
     }
 
-    private void validateOrderList(SqlSelect select)
+    /**
+     * Validates the ORDER BY clause of a SELECT statement.
+     *
+     * @param select Select statement
+     */
+    protected void validateOrderList(SqlSelect select)
     {
         // ORDER BY is validated in a scope where aliases in the SELECT clause
         // are visible. For example, "SELECT empno AS x FROM emp ORDER BY x"

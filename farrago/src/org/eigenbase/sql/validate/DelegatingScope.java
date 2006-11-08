@@ -56,6 +56,11 @@ public abstract class DelegatingScope
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a <code>DelegatingScope</code>.
+     *
+     * @param parent Parent scope
+     */
     DelegatingScope(SqlValidatorScope parent)
     {
         super();
@@ -245,6 +250,9 @@ public abstract class DelegatingScope
         return parent.getOrderList();
     }
 
+    /**
+     * Returns the parent scope of this <code>DelegatingScope</code>.
+     */
     public SqlValidatorScope getParent()
     {
         return parent;
