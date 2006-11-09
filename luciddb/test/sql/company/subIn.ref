@@ -1,0 +1,161 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Sub query tests: IN
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Uncorrelated
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where deptno in (select deptno from dept where dname='Marketing')
+. . . . . . . . > order by 1;
++---------+
+|  LNAME  |
++---------+
+| Webber  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where deptno in (select deptno from dept where dname='Bogus')
+. . . . . . . . > order by 1;
++--------+
+| LNAME  |
++--------+
++--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where deptno in (select deptno from dept)
+. . . . . . . . > order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Andrews   |
+| Brown     |
+| Bush      |
+| Fratz     |
+| Guy       |
+| Jones     |
+| Nife      |
+| Reynolds  |
+| Roy       |
+| Webber    |
+| Williams  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where deptno not in (select deptno from dept where dname='Marketing')
+. . . . . . . . > order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Andrews   |
+| Brown     |
+| Bush      |
+| Fratz     |
+| Guy       |
+| Jones     |
+| Nife      |
+| Reynolds  |
+| Roy       |
+| Williams  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where deptno not in (select deptno from dept where dname='Bogus')
+. . . . . . . . > order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Andrews   |
+| Brown     |
+| Bush      |
+| Fratz     |
+| Guy       |
+| Jones     |
+| Nife      |
+| Reynolds  |
+| Roy       |
+| Webber    |
+| Williams  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where deptno not in (select deptno from dept)
+. . . . . . . . > order by 1;
++--------+
+| LNAME  |
++--------+
++--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Correlated
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where deptno IN (select deptno from dept where dname='Marketing'
+. . . . . . . . >                           and dept.deptno=emp.deptno)
+. . . . . . . . > order by 1;
++---------+
+|  LNAME  |
++---------+
+| Webber  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where deptno in (select deptno from dept where LNAME<dname)
+. . . . . . . . > order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Andrews   |
+| Brown     |
+| Bush      |
+| Nife      |
+| Reynolds  |
+| Roy       |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Fix problem with context of nested In Rewrites ( Bugid 1859 )
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp where deptno in (select deptno from dept where deptno in (select deptno from dept where
+. . . . . . . . > LNAME < dname group by deptno) and LNAME<dname group by deptno) order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Andrews   |
+| Brown     |
+| Bush      |
+| Nife      |
+| Reynolds  |
+| Roy       |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Fix problem with NOT ALL transformation collapsing two NOTs ( Bugid 1866 )
+0: jdbc:luciddb:> -- ALL not supported
+0: jdbc:luciddb:> -- select LNAME from emp where deptno in (select deptno from dept) and not (deptno !=ALL (select deptno from dept )) 
+0: jdbc:luciddb:> -- order by 1;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Fix problem with counting results of NOT IN  ( Bugid 2259)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from emp
+. . . . . . . . > where deptno not in (select deptno from dept where dname='Marketing');
++---------+
+| EXPR$0  |
++---------+
+| 10      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Add a test to test null in the in list
+0: jdbc:luciddb:> create table t_null(i integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t_null values(5);
+0: jdbc:luciddb:> insert into t_null values(null);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t_null where i in (select i from t_null); 
++----+
+| I  |
++----+
+| 5  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table t_null;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

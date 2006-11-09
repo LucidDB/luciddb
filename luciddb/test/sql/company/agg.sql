@@ -22,12 +22,8 @@ select floor(min(PRICE)), floor(max(PRICE)) from SALES;
 
 select PRODID, floor(sum(PRICE)) from SALES group by PRODID order by PRODID;
 
-select count(PRICE) 
-, PRODID
-from SALES group by PRODID order by PRODID;
-select count(*)
-, PRODID
-from SALES group by PRODID order by PRODID;
+select count(PRICE) from SALES group by PRODID order by PRODID;
+select count(*) from SALES group by PRODID order by PRODID;
 
 select floor(avg(PRICE)), PRODID, floor(avg(PRICE)) from SALES group by PRODID order by PRODID;
 
@@ -35,26 +31,22 @@ select PRODID, min(PRICE), max(PRICE) from SALES group by PRODID order by PRODID
 
 -- having
 
--- TODO: FRG-115
+-- FRG-115
 select sum(PRICE)
-, PRODID
  from SALES group by PRODID having PRODID < 10010 order by PRODID;
 
 select count(PRICE)
-, PRODID
  from SALES group by PRODID having PRODID > 10010 and PRODID/2<5007 order by PRODID;
 
 select count(*)
-, PRODID
  from SALES group by PRODID having PRODID > 10010 and PRODID/2<5007 order by PRODID;
 -- end FRG-115
 
--- TODO: FRG-165
+-- FRG-165
 select floor(avg(PRICE))
-, PRODID 
 from SALES group by PRODID having PRODID in (10005, 10007, 10009) order by PRODID;
 
--- TODO: FRG-115
+-- FRG-115
 select min(PRICE), max(PRICE), PRODID from SALES group by PRODID having PRODID between 10005 and 10010 order by PRODID;
 
 
@@ -63,39 +55,32 @@ select min(PRICE), max(PRICE), PRODID from SALES group by PRODID having PRODID b
 select sum(PRICE) from SALES  where PRODID in (10005, 10010) group by PRODID order by PRODID;
 
 select count(PRICE)
-, PRODID
  from SALES where PRICE+0 < 5.00 group by PRODID order by PRODID;
 select count(*)
-, PRODID
  from SALES where PRICE+0 < 5.00 group by PRODID order by PRODID;
 
 select floor(avg(PRICE))
-, PRODID
  from SALES where EMPNO < 100 or EMPNO > 107 group by PRODID order by PRODID;
 
 select min(PRICE), max(PRICE)
-, PRODID
  from SALES where EMPNO*2 between 204 and 212 group by PRODID order by PRODID;
 
 -- having and where clauses
 
--- TODO: FRG-115
+-- FRG-115
 select sum(PRICE)
-, PRODID
  from SALES
 where custid>50
 group by PRODID having PRODID < 10010
 order by PRODID;
 
 select count(PRICE)
-PRODID
  from SALES
 where custid>50
 group by PRODID having PRODID > 10010 and PRODID/2<5007
 order by PRODID;
 
 select count(*)
-, PRODID
  from SALES
 where custid>50
 group by PRODID
@@ -103,7 +88,7 @@ having PRODID > 10010 and PRODID/2<5007
 order by PRODID;
 -- END FRG-115
 
--- TODO: FRG-165
+-- FRG-165
 select floor(avg(PRICE)) from SALES
 where custid>50
 group by PRODID

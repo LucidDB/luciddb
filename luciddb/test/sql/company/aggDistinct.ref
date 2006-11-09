@@ -1,0 +1,417 @@
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- aggDistinct.sql
+0: jdbc:luciddb:> -- test aggregation of distinct columns
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- plain single distincts
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT sex)
+. . . . . . . . > FROM EMP
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT SUM(DISTINCT sal)
+. . . . . . . . > FROM emp
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 50000   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT MIN(DISTINCT SEX)
+. . . . . . . . > FROM EMP
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| F       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT MAX(DISTINCT SAL)
+. . . . . . . . > FROM EMP
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 50000   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT AVG(DISTINCT SAL)
+. . . . . . . . > FROM EMP
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 50000   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- plain single distincts with group bys
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT SEX), DEPTNO
+. . . . . . . . > FROM EMP
+. . . . . . . . > GROUP BY DEPTNO
+. . . . . . . . > --ORDER BY *
+. . . . . . . . > ORDER BY 1,2
+. . . . . . . . > ;
++---------+---------+
+| EXPR$0  | DEPTNO  |
++---------+---------+
+| 1       | 10      |
+| 1       | 20      |
+| 1       | 40      |
+| 2       | 30      |
+| 2       | 50      |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT SUM(DISTINCT SAL), LNAME
+. . . . . . . . > FROM EMP
+. . . . . . . . > GROUP BY DEPTNO, LNAME
+. . . . . . . . > --ORDER BY *
+. . . . . . . . > ORDER BY 1,2
+. . . . . . . . > ;
++---------+-----------+
+| EXPR$0  |   LNAME   |
++---------+-----------+
+| 50000   | Andrews   |
+| 50000   | Brown     |
+| 50000   | Bush      |
+| 50000   | Fratz     |
+| 50000   | Guy       |
+| 50000   | Jones     |
+| 50000   | Nife      |
+| 50000   | Reynolds  |
+| 50000   | Roy       |
+| 50000   | Webber    |
+| 50000   | Williams  |
++---------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- plain multiple distincts
+0: jdbc:luciddb:> -- FRG-229
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT sex), SUM(DISTINCT sal)
+. . . . . . . . > FROM emp
+. . . . . . . . > ;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 2       | 50000   |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- FRG-229
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT SAL), COUNT(DISTINCT SEX)
+. . . . . . . . > FROM EMP
+. . . . . . . . > ;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 1       | 2       |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- FRG-229
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT SEX), SUM(DISTINCT SAL),
+. . . . . . . . > MIN(DISTINCT SEX), MAX(DISTINCT SAL)
+. . . . . . . . > FROM EMP
+. . . . . . . . > ;
++---------+---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  |
++---------+---------+---------+---------+
+| 2       | 50000   | F       | 50000   |
++---------+---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- mixing distinct and non-distinct, changing orders around, etc.
+0: jdbc:luciddb:> -- FRG-
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT SEX), COUNT(SEX), SUM(DISTINCT SAL), SUM(SAL), DEPTNO
+. . . . . . . . > FROM EMP GROUP BY DEPTNO 
+. . . . . . . . > --ORDER BY *
+. . . . . . . . > ORDER BY 1,2,3,4,5
+. . . . . . . . > ;
++---------+---------+---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  | DEPTNO  |
++---------+---------+---------+---------+---------+
+| 1       | 1       | 50000   | 50000   | 10      |
+| 1       | 1       | 50000   | 50000   | 20      |
+| 1       | 3       | 50000   | 150000  | 40      |
+| 2       | 2       | 50000   | 100000  | 50      |
+| 2       | 4       | 50000   | 200000  | 30      |
++---------+---------+---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT SEX), COUNT(SEX), SUM(DISTINCT SAL),
+. . . . . . . . > SUM(SAL), DEPTNO, LNAME
+. . . . . . . . > FROM EMP GROUP BY DEPTNO, LNAME 
+. . . . . . . . > --ORDER BY *
+. . . . . . . . > ORDER BY 1,2,3,4,5,6
+. . . . . . . . > ;
++---------+---------+---------+---------+---------+-----------+
+| EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  | DEPTNO  |   LNAME   |
++---------+---------+---------+---------+---------+-----------+
+| 1       | 1       | 50000   | 50000   | 10      | Fratz     |
+| 1       | 1       | 50000   | 50000   | 20      | Webber    |
+| 1       | 1       | 50000   | 50000   | 30      | Andrews   |
+| 1       | 1       | 50000   | 50000   | 30      | Bush      |
+| 1       | 1       | 50000   | 50000   | 30      | Guy       |
+| 1       | 1       | 50000   | 50000   | 30      | Jones     |
+| 1       | 1       | 50000   | 50000   | 40      | Nife      |
+| 1       | 1       | 50000   | 50000   | 40      | Roy       |
+| 1       | 1       | 50000   | 50000   | 40      | Williams  |
+| 1       | 1       | 50000   | 50000   | 50      | Brown     |
+| 1       | 1       | 50000   | 50000   | 50      | Reynolds  |
++---------+---------+---------+---------+---------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT SEX), COUNT(SEX), DEPTNO, MIN(DISTINCT SAL),
+. . . . . . . . > SUM(DISTINCT SAL), SUM(SAL), DEPTNO
+. . . . . . . . > FROM EMP GROUP BY DEPTNO 
+. . . . . . . . > --ORDER BY *
+. . . . . . . . > ORDER BY 1,2,3,4,5,6,7
+. . . . . . . . > ;
++---------+---------+---------+---------+---------+---------+---------+
+| EXPR$0  | EXPR$1  | DEPTNO  | EXPR$3  | EXPR$4  | EXPR$5  | DEPTNO  |
++---------+---------+---------+---------+---------+---------+---------+
+| 1       | 1       | 10      | 50000   | 50000   | 50000   | 10      |
+| 1       | 1       | 20      | 50000   | 50000   | 50000   | 20      |
+| 1       | 3       | 40      | 50000   | 50000   | 150000  | 40      |
+| 2       | 2       | 50      | 50000   | 50000   | 100000  | 50      |
+| 2       | 4       | 30      | 50000   | 50000   | 200000  | 30      |
++---------+---------+---------+---------+---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- joins, baby, joins
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT SEX), DEPT.DEPTNO, SUM(DISTINCT SAL)
+. . . . . . . . > FROM EMP, DEPT
+. . . . . . . . > WHERE DEPT.DEPTNO = EMP.DEPTNO
+. . . . . . . . > GROUP BY DEPT.DEPTNO
+. . . . . . . . > --ORDER BY *
+. . . . . . . . > ORDER BY 1,2,3
+. . . . . . . . > ;
++---------+---------+---------+
+| EXPR$0  | DEPTNO  | EXPR$2  |
++---------+---------+---------+
+| 1       | 10      | 50000   |
+| 1       | 20      | 50000   |
+| 1       | 40      | 50000   |
+| 2       | 30      | 50000   |
+| 2       | 50      | 50000   |
++---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Select in from list
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT SEX), SUM(DISTINCT SAL), DEPTNO
+. . . . . . . . > FROM
+. . . . . . . . >         (SELECT DNAME, DEPT.DEPTNO AS DEPTNO, SEX, SAL, LNAME
+. . . . . . . . >          FROM EMP, DEPT
+. . . . . . . . >          WHERE EMP.DEPTNO = DEPT.DEPTNO)
+. . . . . . . . > GROUP BY
+. . . . . . . . >         DEPTNO, DNAME
+. . . . . . . . > --ORDER BY *
+. . . . . . . . > ORDER BY 1,2,3
+. . . . . . . . > ;
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | DEPTNO  |
++---------+---------+---------+
+| 1       | 50000   | 10      |
+| 1       | 50000   | 20      |
+| 1       | 50000   | 40      |
+| 2       | 50000   | 30      |
+| 2       | 50000   | 50      |
++---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT
+. . . . . . . . >         COUNT(DISTINCT SEX),
+. . . . . . . . >         SUM(DISTINCT SAL),
+. . . . . . . . >         DEPTNO,
+. . . . . . . . >         MIN(SAL),
+. . . . . . . . >         MAX(DISTINCT SAL),
+. . . . . . . . >         DNAME,
+. . . . . . . . >         AVG(DISTINCT SAL),
+. . . . . . . . >         COUNT(SEX),
+. . . . . . . . >         MIN(SEX),
+. . . . . . . . >         MIN(DISTINCT SEX)
+. . . . . . . . > FROM
+. . . . . . . . >         (SELECT DNAME, DEPT.DEPTNO AS DEPTNO, SEX, SAL, LNAME
+. . . . . . . . >          FROM EMP, DEPT
+. . . . . . . . >          WHERE EMP.DEPTNO = DEPT.DEPTNO)
+. . . . . . . . > GROUP BY
+. . . . . . . . >         DEPTNO, DNAME
+. . . . . . . . > --ORDER BY *
+. . . . . . . . > ORDER BY 1,2,3,4,5,6,7,8,9,10
+. . . . . . . . > ;
++---------+---------+---------+---------+---------+--------------+---------+---------+---------+---------+
+| EXPR$0  | EXPR$1  | DEPTNO  | EXPR$3  | EXPR$4  |    DNAME     | EXPR$6  | EXPR$7  | EXPR$8  | EXPR$9  |
++---------+---------+---------+---------+---------+--------------+---------+---------+---------+---------+
+| 1       | 50000   | 10      | 50000   | 50000   | Accounting   | 50000   | 1       | M       | M       |
+| 1       | 50000   | 20      | 50000   | 50000   | Marketing    | 50000   | 1       | M       | M       |
+| 1       | 50000   | 40      | 50000   | 50000   | Sales        | 50000   | 3       | M       | M       |
+| 2       | 50000   | 30      | 50000   | 50000   | Development  | 50000   | 4       | F       | F       |
+| 2       | 50000   | 50      | 50000   | 50000   | Support      | 50000   | 2       | F       | F       |
++---------+---------+---------+---------+---------+--------------+---------+---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- SAME THING, DIFFERENT COLUMN ORDERS
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT
+. . . . . . . . >         MIN(SAL),
+. . . . . . . . >         DEPTNO,
+. . . . . . . . >         COUNT(SEX),
+. . . . . . . . >         MAX(DISTINCT SAL),
+. . . . . . . . >         DNAME,
+. . . . . . . . >         AVG(DISTINCT SAL),
+. . . . . . . . >         MIN(DISTINCT SEX),
+. . . . . . . . >         COUNT(DISTINCT SEX),
+. . . . . . . . >         SUM(DISTINCT SAL),
+. . . . . . . . >         MIN(SEX)
+. . . . . . . . > FROM
+. . . . . . . . >         (SELECT DEPT.DEPTNO AS DEPTNO, DNAME, SEX, SAL, LNAME
+. . . . . . . . >          FROM EMP, DEPT
+. . . . . . . . >          WHERE EMP.DEPTNO = DEPT.DEPTNO)
+. . . . . . . . > GROUP BY
+. . . . . . . . >         DEPTNO, DNAME
+. . . . . . . . > -- ORDER BY *
+. . . . . . . . > ORDER BY 1,2,3,4,5,6,7,8,9,10
+. . . . . . . . > ;
++---------+---------+---------+---------+--------------+---------+---------+---------+---------+---------+
+| EXPR$0  | DEPTNO  | EXPR$2  | EXPR$3  |    DNAME     | EXPR$5  | EXPR$6  | EXPR$7  | EXPR$8  | EXPR$9  |
++---------+---------+---------+---------+--------------+---------+---------+---------+---------+---------+
+| 50000   | 10      | 1       | 50000   | Accounting   | 50000   | M       | 1       | 50000   | M       |
+| 50000   | 20      | 1       | 50000   | Marketing    | 50000   | M       | 1       | 50000   | M       |
+| 50000   | 30      | 4       | 50000   | Development  | 50000   | F       | 2       | 50000   | F       |
+| 50000   | 40      | 3       | 50000   | Sales        | 50000   | M       | 1       | 50000   | M       |
+| 50000   | 50      | 2       | 50000   | Support      | 50000   | F       | 2       | 50000   | F       |
++---------+---------+---------+---------+--------------+---------+---------+---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- EVEN WORSE...
+0: jdbc:luciddb:> -- Subquery in order not supported yet
+0: jdbc:luciddb:> -- SELECT
+0: jdbc:luciddb:> --         MIN(SAL),
+0: jdbc:luciddb:> --         DEPTNO,
+0: jdbc:luciddb:> --         COUNT(SEX),
+0: jdbc:luciddb:> --         MAX(DISTINCT SAL),
+0: jdbc:luciddb:> --         DNAME,
+0: jdbc:luciddb:> --         AVG(DISTINCT SAL),
+0: jdbc:luciddb:> --         MIN(DISTINCT SEX),
+0: jdbc:luciddb:> --         COUNT(DISTINCT SEX),
+0: jdbc:luciddb:> --         SUM(DISTINCT SAL),
+0: jdbc:luciddb:> --         MIN(SEX)
+0: jdbc:luciddb:> -- FROM
+0: jdbc:luciddb:> --         (SELECT DEPT.DEPTNO AS DEPTNO, DNAME, SEX, SAL, LNAME
+0: jdbc:luciddb:> --          FROM EMP, DEPT
+0: jdbc:luciddb:> --          WHERE EMP.DEPTNO = DEPT.DEPTNO)
+0: jdbc:luciddb:> -- GROUP BY
+0: jdbc:luciddb:> --         DEPTNO, DNAME
+0: jdbc:luciddb:> -- ORDER BY
+0: jdbc:luciddb:> --         (SELECT COUNT(DISTINCT SEX) FROM EMP), DEPTNO
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- AGg in group by
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT DEPTNO) FROM EMP GROUP BY DEPTNO ORDER BY DEPTNO
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
+| 1       |
+| 1       |
+| 1       |
+| 1       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT SEX) FROM EMP GROUP BY DEPTNO, SEX ORDER BY DEPTNO
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
+| 1       |
+| 1       |
+| 1       |
+| 1       |
+| 1       |
+| 1       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT SEX), DEPTNO FROM EMP
+. . . . . . . . > GROUP BY DEPTNO, SEX 
+. . . . . . . . > --ORDER BY *
+. . . . . . . . > ORDER BY 1,2;
++---------+---------+
+| EXPR$0  | DEPTNO  |
++---------+---------+
+| 1       | 10      |
+| 1       | 20      |
+| 1       | 30      |
+| 1       | 30      |
+| 1       | 40      |
+| 1       | 50      |
+| 1       | 50      |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT
+. . . . . . . . >         DEPTNO, DNAME, COUNT(DISTINCT SEX), MIN(DISTINCT DNAME)
+. . . . . . . . > FROM
+. . . . . . . . >         (SELECT DEPT.DEPTNO AS DEPTNO, DNAME, SEX, SAL, LNAME
+. . . . . . . . >          FROM EMP, DEPT
+. . . . . . . . >          WHERE EMP.DEPTNO = DEPT.DEPTNO)
+. . . . . . . . > GROUP BY
+. . . . . . . . >         DEPTNO, DNAME
+. . . . . . . . > --ORDER BY *
+. . . . . . . . > ORDER BY 1,2,3,4;
++---------+--------------+---------+--------------+
+| DEPTNO  |    DNAME     | EXPR$2  |    EXPR$3    |
++---------+--------------+---------+--------------+
+| 10      | Accounting   | 1       | Accounting   |
+| 20      | Marketing    | 1       | Marketing    |
+| 30      | Development  | 2       | Development  |
+| 40      | Sales        | 1       | Sales        |
+| 50      | Support      | 2       | Support      |
++---------+--------------+---------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- FRINGE CASES
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT 1) FROM EMP GROUP BY DEPTNO 
+. . . . . . . . > --ORDER BY *
+. . . . . . . . > ORDER BY 1;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
+| 1       |
+| 1       |
+| 1       |
+| 1       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT SEX) * 5 + 15 FROM EMP
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 25      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- USER DEFINED
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT COUNT(DISTINCT SEX) FROM EMP GROUP BY DEPTNO
+. . . . . . . . > -- ORDER BY *
+. . . . . . . . > ORDER BY 1;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
+| 1       |
+| 1       |
+| 2       |
+| 2       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT SUM(DISTINCT SAL), COUNT(DISTINCT SEX) FROM EMP
+. . . . . . . . > ;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 50000   | 2       |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

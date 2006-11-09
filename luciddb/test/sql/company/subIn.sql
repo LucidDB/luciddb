@@ -34,7 +34,7 @@ order by 1;
 
 select LNAME from emp
 where deptno IN (select deptno from dept where dname='Marketing'
-			  and dept.deptno=emp.deptno)
+                          and dept.deptno=emp.deptno)
 order by 1;
 
 select LNAME from emp
@@ -47,9 +47,9 @@ select LNAME from emp where deptno in (select deptno from dept where deptno in (
 LNAME < dname group by deptno) and LNAME<dname group by deptno) order by 1;
 
 -- Fix problem with NOT ALL transformation collapsing two NOTs ( Bugid 1866 )
-
-select LNAME from emp where deptno in (select deptno from dept) and not (deptno !=ALL (select deptno from dept )) 
-order by 1;
+-- ALL not supported
+-- select LNAME from emp where deptno in (select deptno from dept) and not (deptno !=ALL (select deptno from dept )) 
+-- order by 1;
 
 -- Fix problem with counting results of NOT IN  ( Bugid 2259)
 

@@ -7,34 +7,32 @@
 0: jdbc:luciddb:> !set outputformat csv
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- a bunch of equi-joins
-0: jdbc:luciddb:> -- Workarounds added for LER-92 & LER-93, and filters added so semijoins happen
+0: jdbc:luciddb:> -- LER-92 & LER-93, and filters added so semijoins happen
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > -- two way
 . . . . . . . . > select EMP.LNAME 
-. . . . . . . . > , EMP.EMPNO
 . . . . . . . . > from EMP, DEPT
 . . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO 
 . . . . . . . . >   and DEPT.DEPTNO > 100
-. . . . . . . . > --order by EMP.EMPNO;
-. . . . . . . . > order by EMPNO;
+. . . . . . . . > order by EMP.EMPNO;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel'
-'    FennelReshapeRel'
-'      LhxJoinRel'
-'        LcsRowScanRel'
-'        FennelReshapeRel'
-'          LcsNormalizerRel'
-'            LcsIndexOnlyScanRel'
-'              FennelValuesRel'
+'  FennelReshapeRel'
+'    FennelSortRel'
+'      FennelReshapeRel'
+'        LhxJoinRel'
+'          LcsRowScanRel'
+'          FennelReshapeRel'
+'            LcsNormalizerRel'
+'              LcsIndexOnlyScanRel'
+'                FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select DEPT.DNAME 
 . . . . . . . . > from EMP, DEPT
 . . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO 
 . . . . . . . . >   and DEPT.DEPTNO > 100
-. . . . . . . . > --order by DEPT.DNAME;
-. . . . . . . . > order by DNAME;
+. . . . . . . . > order by DEPT.DNAME;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel'
@@ -53,8 +51,7 @@
 . . . . . . . . > from EMP, LOCATION, DEPT
 . . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
 . . . . . . . . >  and LOCATION.ZIP > 94000
-. . . . . . . . > --order by EMP.LNAME;
-. . . . . . . . > order by LNAME;
+. . . . . . . . > order by EMP.LNAME;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel'
@@ -74,8 +71,7 @@
 . . . . . . . . > from EMP, DEPT, LOCATION
 . . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
 . . . . . . . . >   and LOCATION.ZIP > 94000
-. . . . . . . . > --order by DEPT.DNAME;
-. . . . . . . . > order by DNAME;
+. . . . . . . . > order by DEPT.DNAME;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel'
@@ -96,8 +92,7 @@
 . . . . . . . . > from EMP, DEPT, LOCATION
 . . . . . . . . > where EMP.DEPTNO=DEPT.DEPTNO and DEPT.LOCID=LOCATION.LOCID
 . . . . . . . . >   and LOCATION.ZIP > 94000
-. . . . . . . . > --order by LOCATION.STREET;
-. . . . . . . . > order by STREET;
+. . . . . . . . > order by LOCATION.STREET;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel'
@@ -115,49 +110,46 @@
 0: jdbc:luciddb:> -- semi joins of a self join
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select M.LNAME 
-. . . . . . . . > , M.EMPNO
 . . . . . . . . > from EMP M, EMP R
 . . . . . . . . > where M.EMPNO = R.MANAGER
 . . . . . . . . >  and R.SEX='M'
-. . . . . . . . > --order by M.EMPNO;
-. . . . . . . . > order by EMPNO;
+. . . . . . . . > order by M.EMPNO;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel'
-'    FennelReshapeRel'
-'      LhxJoinRel'
-'        FennelReshapeRel'
+'  FennelReshapeRel'
+'    FennelSortRel'
+'      FennelReshapeRel'
+'        LhxJoinRel'
+'          FennelReshapeRel'
+'            LcsRowScanRel'
 '          LcsRowScanRel'
-'        LcsRowScanRel'
-'          LcsIndexSearchRel'
-'            FennelValuesRel'
+'            LcsIndexSearchRel'
+'              FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select R.LNAME 
-. . . . . . . . > , R.EMPNO
 . . . . . . . . > from EMP M, EMP R
 . . . . . . . . > where M.EMPNO = R.MANAGER 
 . . . . . . . . > and R.SEX='M'
-. . . . . . . . > --order by R.EMPNO;
-. . . . . . . . > order by EMPNO;
+. . . . . . . . > order by R.EMPNO;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel'
-'    FennelReshapeRel'
-'      LhxJoinRel'
-'        FennelReshapeRel'
+'  FennelReshapeRel'
+'    FennelSortRel'
+'      FennelReshapeRel'
+'        LhxJoinRel'
+'          FennelReshapeRel'
+'            LcsRowScanRel'
 '          LcsRowScanRel'
-'        LcsRowScanRel'
-'          LcsIndexSearchRel'
-'            FennelValuesRel'
+'            LcsIndexSearchRel'
+'              FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- double reference of a table
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select EMP.LNAME, DEPT.DNAME
 . . . . . . . . > from LOCATION EL, LOCATION DL, EMP, DEPT
 . . . . . . . . > where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
-. . . . . . . . > --order by EMP.LNAME, DEPT.DNAME;
-. . . . . . . . > order by LNAME, DNAME;
+. . . . . . . . > order by EMP.LNAME, DEPT.DNAME;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel'
@@ -182,8 +174,8 @@
 . . . . . . . . > select EL.CITY, DL.CITY
 . . . . . . . . > from LOCATION EL, LOCATION DL, EMP, DEPT
 . . . . . . . . > where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
-. . . . . . . . > --order by EL.CITY, DL.CITY;
-. . . . . . . . > order by CITY, CITY;
+. . . . . . . . > --order by 1, 2;
+. . . . . . . . > order by EL.CITY, DL.CITY;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel'
@@ -211,8 +203,7 @@
 . . . . . . . . > WHERE M.LNAME = F.LNAME
 . . . . . . . . > AND M.SEX = 'M'
 . . . . . . . . > AND F.SEX = 'F'
-. . . . . . . . > --order by F.FNAME;
-. . . . . . . . > order by FNAME;
+. . . . . . . . > order by F.FNAME;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel'
@@ -229,8 +220,7 @@
 . . . . . . . . > WHERE M.LNAME = F.LNAME
 . . . . . . . . > AND M.SEX = 'M'
 . . . . . . . . > AND F.SEX = 'F'
-. . . . . . . . > --order by M.FNAME, M.LNAME;
-. . . . . . . . > order by FNAME, LNAME;
+. . . . . . . . > order by M.FNAME, M.LNAME;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel'
@@ -311,7 +301,6 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select PRODUCTS.NAME, CUSTOMERS.FNAME, CUSTOMERS.LNAME, PRODUCTS.PRICE
-. . . . . . . . > , CUSTOMERS.CUSTID
 . . . . . . . . > from SALES, PRODUCTS, CUSTOMERS
 . . . . . . . . > where SALES.PRICE - PRODUCTS.PRICE < 0.5
 . . . . . . . . > and PRODUCTS.PRICE - SALES.PRICE < 0.25
@@ -319,17 +308,19 @@
 . . . . . . . . > order by PRODUCTS.NAME, CUSTOMERS.CUSTID;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel'
-'    IteratorToFennelConverter'
-'      IterCalcRel'
-'        FennelToIteratorConverter'
-'          FennelCartesianProductRel'
-'            FennelReshapeRel'
-'              LhxJoinRel'
-'                LcsRowScanRel'
-'                FennelReshapeRel'
+'  FennelReshapeRel'
+'    FennelSortRel'
+'      IteratorToFennelConverter'
+'        IterCalcRel'
+'          FennelToIteratorConverter'
+'            FennelCartesianProductRel'
+'              FennelReshapeRel'
+'                LhxJoinRel'
 '                  LcsRowScanRel'
-'            LcsRowScanRel'
+'                  FennelReshapeRel'
+'                    LcsRowScanRel'
+'              LcsRowScanRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !set outputformat table
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

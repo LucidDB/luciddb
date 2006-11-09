@@ -102,7 +102,7 @@ select * from EMP O
 where EXISTS
   (select * from EMP I
   where I.EMPNO>O.EMPNO
-  and I.SEX!=O.SEX)
+  and I.SEX<>O.SEX)
 order by 1;
 
 select * from EMP O
@@ -116,7 +116,7 @@ select * from EMP O
 where NOT EXISTS
   (select * from EMP I
   where I.EMPNO>O.EMPNO
-  and I.SEX!=O.SEX)
+  and I.SEX<>O.SEX)
 order by 1;
 
 -- multi variable correlation with aggregate on top
