@@ -98,7 +98,7 @@ public abstract class FarragoUtil
     
     public static String exceptionToString(final Throwable ex)
     {
-        exceptionToString(ex, "; ");
+        return exceptionToString(ex, "; ");
     }
     
     /**
