@@ -2005,11 +2005,14 @@ uint LbmEntry::getScratchBufferSize(uint bitmapColSize)
 
 uint LbmEntry::getMaxBitmapSize(uint bitmapColSize)
 {
-    // reserve a portion of the bitmap for building a segment
-    // directory; this is actually slightly more than necessary, but
-    // it's not too much of a loss
-    assert (bitmapColSize % LbmMaxSegSize == 0);
-    return bitmapColSize - (bitmapColSize / LbmMaxSegSize);
+    // The maximum size of the segments combined is when the bitmep entry
+    // is packed with as many LbmMaxSegSize segments as possible. There could
+    // be a non-max length segment at the end.
+    uint descriptorBytesPerSegment = 1;
+    uint maxNumSegments = 
+        (bitmapColSize / (LbmMaxSegSize + descriptorBytesPerSegment))
+        + ((bitmapColSize % (LbmMaxSegSize + descriptorBytesPerSegment)) == 0 ? 0 : 1);
+    return (bitmapColSize - maxNumSegments * descriptorBytesPerSegment);
 }
 
 bool LbmEntry::containsRid(LcsRid rid)

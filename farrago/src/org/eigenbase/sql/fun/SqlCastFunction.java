@@ -69,6 +69,8 @@ public class SqlCastFunction
         if (opBinding instanceof SqlCallBinding) {
             SqlCallBinding callBinding = (SqlCallBinding) opBinding;
             SqlNode operand0 = callBinding.getCall().operands[0];
+            // dynamic parameters and null constants need their types asssigned
+            // to them using the type they are casted to.
             if ((operand0 instanceof SqlLiteral &&
                  ((SqlLiteral)operand0).getValue() == null) ||
                 operand0 instanceof SqlDynamicParam) {
