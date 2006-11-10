@@ -5,7 +5,7 @@
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EXPR$0=[$0])
-  ProjectRel(EXPR$0=[CASE(=(_ISO-8859-1'a', _ISO-8859-1'a'), 1, CAST(null):INTEGER)])
+  ProjectRel(EXPR$0=[CASE(=('a', 'a'), 1, CAST(null):INTEGER)])
     OneRowRel
 ]]>
         </Resource>
@@ -257,7 +257,7 @@ ProjectRel(EXPR$0=[$1])
     <TestCase name="testMultiset">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EXPR$0=[_ISO-8859-1'a'], EXPR$1=[$SLICE($2)])
+ProjectRel(EXPR$0=['a'], EXPR$1=[$SLICE($2)])
   JoinRel(condition=[true], joinType=[inner])
     TableAccessRel(table=[[SALES, DEPT]])
     CollectRel
@@ -282,7 +282,7 @@ ProjectRel(EXPR$0=[_ISO-8859-1'a'], EXPR$1=[$SLICE($2)])
     <TestCase name="testMultisetOfColumns">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EXPR$0=[_ISO-8859-1'abc'], EXPR$1=[$SLICE($9)])
+ProjectRel(EXPR$0=['abc'], EXPR$1=[$SLICE($9)])
   CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset7, var1=offset5]])
     TableAccessRel(table=[[SALES, EMP]])
     CollectRel
@@ -691,7 +691,7 @@ ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NULL(2), IS NULL(2), IS NULL(1), =(1, 2))
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EXPR$0=[$0])
-  ProjectRel(EXPR$0=[NOT(LIKE(_ISO-8859-1'a', _ISO-8859-1'b', _ISO-8859-1'c'))])
+  ProjectRel(EXPR$0=[NOT(LIKE('a', 'b', 'c'))])
     OneRowRel
 ]]>
         </Resource>
@@ -736,7 +736,7 @@ ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)],
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EXPR$0=[$0])
-  ProjectRel(EXPR$0=[CHAR_LENGTH(_ISO-8859-1'foo')])
+  ProjectRel(EXPR$0=[CHAR_LENGTH('foo')])
     OneRowRel
 ]]>
         </Resource>
@@ -898,7 +898,7 @@ ProjectRel(EMPNO=[$0])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(NAME=[$0])
-  TableFunctionRel(invocation=[DEDUP($0, $1, _ISO-8859-1'NAME')])
+  TableFunctionRel(invocation=[DEDUP($0, $1, 'NAME')])
     ProjectRel(ENAME=[$1])
       TableAccessRel(table=[[SALES, EMP]])
     ProjectRel(NAME=[$1])

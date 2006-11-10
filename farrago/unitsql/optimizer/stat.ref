@@ -69,13 +69,13 @@
 . . . . . . . . >     R_COMMENT    VARCHAR(152));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> call sys_boot.mgmt.stat_set_page_count(
-. . . . . . . . >     'LOCALDB','TPCD','SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY',1);
+. . . . . . . . >     'LOCALDB','TPCD','SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DUMMY_REGION',1);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 +------------+--------------+---------------+----------------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  |  TABLE_NAME   |                     INDEX_NAME                     | PAGES  |
 +------------+--------------+---------------+----------------------------------------------------+--------+
-| LOCALDB    | TPCD         | DUMMY_REGION  | SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY  | 1      |
+| LOCALDB    | TPCD         | DUMMY_REGION  | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DUMMY_REGION  | 1      |
 +------------+--------------+---------------+----------------------------------------------------+--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
@@ -579,11 +579,11 @@
 +------------+--------------+-------------+-------------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
 +------------+--------------+-------------+-------------------------------------------------+--------+
-| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$DEPTS_UNIQUE_NAME    | 1      |
-| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY      | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS_UNIQUE_NAME          | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS      | 1      |
 | LOCALDB    | STAT         | EMPS        | EMPS_UX                                         | 1      |
-| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1      |
-| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID  | 1      |
 +------------+--------------+-------------+-------------------------------------------------+--------+
 0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
@@ -620,11 +620,11 @@
 +------------+--------------+-------------+-------------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
 +------------+--------------+-------------+-------------------------------------------------+--------+
-| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$DEPTS_UNIQUE_NAME    | 1      |
-| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY      | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS_UNIQUE_NAME          | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS      | 1      |
 | LOCALDB    | STAT         | EMPS        | EMPS_UX                                         | 1      |
-| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1      |
-| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID  | 1      |
 +------------+--------------+-------------+-------------------------------------------------+--------+
 0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
@@ -674,11 +674,11 @@
 +------------+--------------+-------------+-------------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
 +------------+--------------+-------------+-------------------------------------------------+--------+
-| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$DEPTS_UNIQUE_NAME    | 1      |
-| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY      | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS_UNIQUE_NAME          | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS      | 1      |
 | LOCALDB    | STAT         | EMPS        | EMPS_UX                                         | 1      |
-| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1      |
-| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID  | 1      |
 +------------+--------------+-------------+-------------------------------------------------+--------+
 0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
@@ -727,11 +727,11 @@
 +------------+--------------+-------------+-------------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
 +------------+--------------+-------------+-------------------------------------------------+--------+
-| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$DEPTS_UNIQUE_NAME    | 1      |
-| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY      | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS_UNIQUE_NAME          | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS      | 1      |
 | LOCALDB    | STAT         | EMPS        | EMPS_UX                                         | 1      |
-| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1      |
-| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID  | 1      |
 +------------+--------------+-------------+-------------------------------------------------+--------+
 0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
@@ -909,9 +909,9 @@
 +------------+--------------+-------------+-----------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                  INDEX_NAME                   | PAGES  |
 +------------+--------------+-------------+-----------------------------------------------+--------+
-| LOCALDB    | STAT         | HUNDRED     | SYS$CLUSTERED_INDEX$STAT$HUNDRED$I            | 2      |
-| LOCALDB    | STAT         | HUNDRED     | SYS$CONSTRAINT_INDEX$HUNDRED$SYS$PRIMARY_KEY  | 1      |
-| LOCALDB    | STAT         | HUNDRED     | SYS$DELETION_INDEX$STAT$HUNDRED               | 1      |
+| LOCALDB    | STAT         | HUNDRED     | SYS$CLUSTERED_INDEX$HUNDRED$I                 | 2      |
+| LOCALDB    | STAT         | HUNDRED     | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$HUNDRED  | 1      |
+| LOCALDB    | STAT         | HUNDRED     | SYS$DELETION_INDEX$HUNDRED                    | 1      |
 +------------+--------------+-------------+-----------------------------------------------+--------+
 0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+

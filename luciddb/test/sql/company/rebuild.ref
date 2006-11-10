@@ -36,38 +36,38 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> analyze table rsales compute statistics for all columns;
 0: jdbc:luciddb:> select * from index_page_counts order by 1;
-+--------------------------------------+------------+
-|                 name                 | pageCount  |
-+--------------------------------------+------------+
-| RSALES_CUSTID                        | 3          |
-| RSALES_EMPNO                         | 1          |
-| RSALES_PRICE                         | 4          |
-| RSALES_PRODID                        | 1          |
-| SYS$CLUSTERED_INDEX$S$RSALES$CUSTID  | 2          |
-| SYS$CLUSTERED_INDEX$S$RSALES$EMPNO   | 2          |
-| SYS$CLUSTERED_INDEX$S$RSALES$PRICE   | 2          |
-| SYS$CLUSTERED_INDEX$S$RSALES$PRODID  | 2          |
-| SYS$DELETION_INDEX$S$RSALES          | 1          |
-+--------------------------------------+------------+
++------------------------------------+------------+
+|                name                | pageCount  |
++------------------------------------+------------+
+| RSALES_CUSTID                      | 3          |
+| RSALES_EMPNO                       | 1          |
+| RSALES_PRICE                       | 4          |
+| RSALES_PRODID                      | 1          |
+| SYS$CLUSTERED_INDEX$RSALES$CUSTID  | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$EMPNO   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRICE   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRODID  | 2          |
+| SYS$DELETION_INDEX$RSALES          | 1          |
++------------------------------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- basic rebuild on a table without deleted entries
 0: jdbc:luciddb:> alter table s.rsales rebuild;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> analyze table rsales compute statistics for all columns;
 0: jdbc:luciddb:> select * from index_page_counts order by 1;
-+--------------------------------------+------------+
-|                 name                 | pageCount  |
-+--------------------------------------+------------+
-| RSALES_CUSTID                        | 3          |
-| RSALES_EMPNO                         | 1          |
-| RSALES_PRICE                         | 3          |
-| RSALES_PRODID                        | 1          |
-| SYS$CLUSTERED_INDEX$S$RSALES$CUSTID  | 2          |
-| SYS$CLUSTERED_INDEX$S$RSALES$EMPNO   | 2          |
-| SYS$CLUSTERED_INDEX$S$RSALES$PRICE   | 2          |
-| SYS$CLUSTERED_INDEX$S$RSALES$PRODID  | 2          |
-| SYS$DELETION_INDEX$S$RSALES          | 1          |
-+--------------------------------------+------------+
++------------------------------------+------------+
+|                name                | pageCount  |
++------------------------------------+------------+
+| RSALES_CUSTID                      | 3          |
+| RSALES_EMPNO                       | 1          |
+| RSALES_PRICE                       | 3          |
+| RSALES_PRODID                      | 1          |
+| SYS$CLUSTERED_INDEX$RSALES$CUSTID  | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$EMPNO   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRICE   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRODID  | 2          |
+| SYS$DELETION_INDEX$RSALES          | 1          |
++------------------------------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- deleted entries
 0: jdbc:luciddb:> delete from rsales 
@@ -90,19 +90,19 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> analyze table rsales compute statistics for all columns;
 0: jdbc:luciddb:> select * from index_page_counts order by 1;
-+--------------------------------------+------------+
-|                 name                 | pageCount  |
-+--------------------------------------+------------+
-| RSALES_CUSTID                        | 3          |
-| RSALES_EMPNO                         | 1          |
-| RSALES_PRICE                         | 3          |
-| RSALES_PRODID                        | 1          |
-| SYS$CLUSTERED_INDEX$S$RSALES$CUSTID  | 2          |
-| SYS$CLUSTERED_INDEX$S$RSALES$EMPNO   | 2          |
-| SYS$CLUSTERED_INDEX$S$RSALES$PRICE   | 2          |
-| SYS$CLUSTERED_INDEX$S$RSALES$PRODID  | 2          |
-| SYS$DELETION_INDEX$S$RSALES          | 1          |
-+--------------------------------------+------------+
++------------------------------------+------------+
+|                name                | pageCount  |
++------------------------------------+------------+
+| RSALES_CUSTID                      | 3          |
+| RSALES_EMPNO                       | 1          |
+| RSALES_PRICE                       | 3          |
+| RSALES_PRODID                      | 1          |
+| SYS$CLUSTERED_INDEX$RSALES$CUSTID  | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$EMPNO   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRICE   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRODID  | 2          |
+| SYS$DELETION_INDEX$RSALES          | 1          |
++------------------------------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- repeated rebuild, rebuild deleted entries
 0: jdbc:luciddb:> alter table s.rsales rebuild;
@@ -116,19 +116,19 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> analyze table rsales compute statistics for all columns;
 0: jdbc:luciddb:> select * from index_page_counts order by 1;
-+--------------------------------------+------------+
-|                 name                 | pageCount  |
-+--------------------------------------+------------+
-| RSALES_CUSTID                        | 1          |
-| RSALES_EMPNO                         | 1          |
-| RSALES_PRICE                         | 1          |
-| RSALES_PRODID                        | 1          |
-| SYS$CLUSTERED_INDEX$S$RSALES$CUSTID  | 2          |
-| SYS$CLUSTERED_INDEX$S$RSALES$EMPNO   | 2          |
-| SYS$CLUSTERED_INDEX$S$RSALES$PRICE   | 2          |
-| SYS$CLUSTERED_INDEX$S$RSALES$PRODID  | 2          |
-| SYS$DELETION_INDEX$S$RSALES          | 1          |
-+--------------------------------------+------------+
++------------------------------------+------------+
+|                name                | pageCount  |
++------------------------------------+------------+
+| RSALES_CUSTID                      | 1          |
+| RSALES_EMPNO                       | 1          |
+| RSALES_PRICE                       | 1          |
+| RSALES_PRODID                      | 1          |
+| SYS$CLUSTERED_INDEX$RSALES$CUSTID  | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$EMPNO   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRICE   | 2          |
+| SYS$CLUSTERED_INDEX$RSALES$PRODID  | 2          |
+| SYS$DELETION_INDEX$RSALES          | 1          |
++------------------------------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- make sure rebuild doesn't change a table's contents by altering sales
 0: jdbc:luciddb:> -- and running through the rest of the tests with a rebuilt table

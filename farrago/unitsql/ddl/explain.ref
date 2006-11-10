@@ -52,7 +52,7 @@
 +-----------------------------------------------------------------------------------------------------------------------------------------------------+
 | IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])                                                                                            |
 |   FennelToIteratorConverter                                                                                                                         |
-|     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
+|     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])  |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Explain physical plan verbose
@@ -63,7 +63,7 @@
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1]): rowcount = 100.0, cumulative cost = 1200.0                                                                                            |
 |   FennelToIteratorConverter: rowcount = 100.0, cumulative cost = 1100.0                                                                                                                         |
-|     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]): rowcount = 100.0, cumulative cost = 1000.0  |
+|     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]): rowcount = 100.0, cumulative cost = 1000.0  |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Explain physical plan in XML format.
@@ -88,7 +88,7 @@
 | 					<Property name="projection">                                 |
 | 						[0]					</Property>                                         |
 | 					<Property name="index">                                      |
-| 						SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY					</Property>  |
+| 						SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS					</Property>  |
 | 					<Property name="preserveOrder">                              |
 | 						false					</Property>                                       |
 | 					<Inputs/>                                                    |
@@ -116,6 +116,18 @@
 +--------------------------+
 | EXPR$0 INTEGER NOT NULL  |
 +--------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Verify rendering of literals in plans
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > values (1, -1.25, 1.0e50, true, 'bonjour', _ISO-8859-1'bonjour', 
+. . . . . . . . > _US-ASCII'bonjour', date '2006-11-08', time '15:05:05', 
+. . . . . . . . > timestamp '2006-11-08 15:05:05', X'CAFEBABE');
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                                                                 column0                                                                                                                                                                                                 |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[-1.25], expr#3=[1.0E50], expr#4=[true], expr#5=['bonjour'], expr#6=[_US-ASCII'bonjour'], expr#7=[2006-11-08], expr#8=[15:05:05], expr#9=[2006-11-08 15:05:05.0], expr#10=[X'CAFEBABE'], EXPR$0=[$t1], EXPR$1=[$t2], EXPR$2=[$t3], EXPR$3=[$t4], EXPR$4=[$t5], EXPR$5=[$t5], EXPR$6=[$t6], EXPR$7=[$t7], EXPR$8=[$t8], EXPR$9=[$t9], EXPR$10=[$t10])  |
+|   IterOneRowRel                                                                                                                                                                                                                                                                                                                                                                                         |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Apply a tweak to the session personality and verify that
 0: jdbc:farrago:> -- the costing changes accordingly.

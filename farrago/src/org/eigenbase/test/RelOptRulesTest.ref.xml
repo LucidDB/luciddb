@@ -76,7 +76,7 @@ ProjectRel(EXPR$0=[1])
         <Resource name="planBefore">
             <![CDATA[
 ProjectRel(EXPR$0=[1])
-  FilterRel(condition=[=($1, _ISO-8859-1'Charlie')])
+  FilterRel(condition=[=($1, 'Charlie')])
     JoinRel(condition=[=($0, $9)], joinType=[left])
       TableAccessRel(table=[[SALES, DEPT]])
       TableAccessRel(table=[[SALES, EMP]])
@@ -86,7 +86,7 @@ ProjectRel(EXPR$0=[1])
             <![CDATA[
 ProjectRel(EXPR$0=[1])
   JoinRel(condition=[=($0, $9)], joinType=[left])
-    FilterRel(condition=[=($1, _ISO-8859-1'Charlie')])
+    FilterRel(condition=[=($1, 'Charlie')])
       TableAccessRel(table=[[SALES, DEPT]])
     TableAccessRel(table=[[SALES, EMP]])
 ]]>
@@ -121,14 +121,14 @@ ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[$3])
         <Resource name="planBefore">
             <![CDATA[
 ProjectRel(EXPR$0=[+($0, $7)])
-  FilterRel(condition=[AND(=($5, *(10, $6)), =(UPPER($1), _ISO-8859-1'FOO'))])
+  FilterRel(condition=[AND(=($5, *(10, $6)), =(UPPER($1), 'FOO'))])
     TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(EXPR$0=[+($0, $4)])
-  FilterRel(condition=[AND(=($2, *(10, $3)), =(UPPER($1), _ISO-8859-1'FOO'))])
+  FilterRel(condition=[AND(=($2, *(10, $3)), =(UPPER($1), 'FOO'))])
     ProjectRel(EMPNO=[$0], ENAME=[$1], SAL=[$5], COMM=[$6], DEPTNO=[$7])
       TableAccessRel(table=[[SALES, EMP]])
 ]]>

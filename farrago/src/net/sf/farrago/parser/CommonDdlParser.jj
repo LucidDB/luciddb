@@ -1101,13 +1101,16 @@ CwmModelElement TableConstraint(CwmTable table) :
     [ <CONSTRAINT> constraintName = Identifier() ]
     constraint = TableUniqueConstraint(table)
     {
+        // NOTE jvs 6-Nov-2006:  We store contraints as owned
+        // by tables because CWM doesn't give us a good way
+        // to associate them directly.
+        table.getOwnedElement().add(constraint);
         if (constraintName != null) {
             constraint.setName(constraintName);
         } else {
             FarragoCatalogUtil.generateConstraintName(
                 getRepos(), constraint);
         }
-        table.getOwnedElement().add(constraint);
         return constraint;
     }
 }
@@ -1171,6 +1174,8 @@ void ColumnConstraint(CwmNamedColumnSet table,CwmColumn column) :
     (
         <NOT> <NULL>
         {
+            // TODO jvs 7-Nov-2006:  Model explicit named constraint
+            // object for NOT NULL constraints.
             column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
         }
         | constraint = UniqueConstraint()

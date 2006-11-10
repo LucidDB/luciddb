@@ -17,7 +17,7 @@ ProjectRel(EXPR$0=[1])
         </Resource>
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EXPR$0=[_ISO-8859-1'foo'])
+ProjectRel(EXPR$0=['foo'])
   ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
 ]]>
         </Resource>
@@ -28,7 +28,7 @@ ProjectRel(EXPR$0=[_ISO-8859-1'foo'])
         </Resource>
         <Resource name="plan">
             <![CDATA[
-ProjectRel(ONE=[1], FOO=[_ISO-8859-1'foo'], BAR=[1])
+ProjectRel(ONE=[1], FOO=['foo'], BAR=[1])
   ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
 ]]>
         </Resource>
@@ -106,7 +106,7 @@ ProjectRel(EXPR$0=[1])
       ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
       ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
     ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])
-      FilterRel(condition=[=($3, _ISO-8859-1'F')])
+      FilterRel(condition=[=($3, 'F')])
         ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
 ]]>
         </Resource>
@@ -118,7 +118,7 @@ ProjectRel(EXPR$0=[1])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EXPR$0=[1])
-  FilterRel(condition=[=($3, _ISO-8859-1'F')])
+  FilterRel(condition=[=($3, 'F')])
     ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
 ]]>
         </Resource>
@@ -130,7 +130,7 @@ ProjectRel(EXPR$0=[1])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EXPR$0=[1])
-  FilterRel(condition=[AND(=($3, _ISO-8859-1'F'), =($2, 10))])
+  FilterRel(condition=[AND(=($3, 'F'), =($2, 10))])
     ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
 ]]>
         </Resource>
@@ -186,8 +186,8 @@ ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[
                 ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
       AggregateRel(groupCount=[0], agg#0=[MIN(0)])
         ProjectRel($f0=[true])
-          ProjectRel(EXPR$0=[_ISO-8859-1'foo'])
-            FilterRel(condition=[=($3, _ISO-8859-1'Pig')])
+          ProjectRel(EXPR$0=['foo'])
+            FilterRel(condition=[=($3, 'Pig')])
               ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
 ]]>
         </Resource>

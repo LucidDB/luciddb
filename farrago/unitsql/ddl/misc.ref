@@ -30,11 +30,11 @@ Error: DDL validation error near line 2, column 14: Target schema "LOCALDB"."MIS
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- likewise for constraint name uniqueness
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create table t1(i int not null constraint lucy primary key);
-Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."MISC" already contains table "T1" with same name (state=,code=0)
+0: jdbc:farrago:> create table t3(i int not null constraint lucy primary key);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> create table t2(i int not null constraint lucy primary key);
+0: jdbc:farrago:> create table t4(i int not null constraint lucy primary key);
+Error: DDL validation error near line 1, column 56: Target schema "LOCALDB"."MISC" already contains PRIMARY KEY constraint "LUCY" with same name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- FTRS-specific table validation rules
 0: jdbc:farrago:> 
@@ -140,19 +140,19 @@ Error: PRIMARY KEY constraint required for table "MISC"."MISSING_PK" (state=,cod
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$T$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select h from t order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select j from t order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[2]], index=[SYS$CONSTRAINT_INDEX$T$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, MISC, T]], projection=[[2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
@@ -166,13 +166,13 @@ Error: PRIMARY KEY constraint required for table "MISC"."MISSING_PK" (state=,cod
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify creation of system-defined clustered index
 0: jdbc:farrago:> !indexes LCS_TABLE
-+------------+--------------+-------------+-------------+------------------+---------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |              INDEX_NAME               | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+---------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | MISC         | LCS_TABLE   | false       |                  |                                       | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | MISC         | LCS_TABLE   | false       | LOCALDB          | SYS$DELETION_INDEX$MISC$LCS_TABLE     | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | MISC         | LCS_TABLE   | true        | LOCALDB          | SYS$CLUSTERED_INDEX$MISC$LCS_TABLE$I  | 1     | 1                 | I            | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+---------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+----------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |            INDEX_NAME            | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+----------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | MISC         | LCS_TABLE   | false       |                  |                                  | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | MISC         | LCS_TABLE   | false       | LOCALDB          | SYS$DELETION_INDEX$LCS_TABLE     | 3     |                   |              | A             | 0            | 0      |                   |
+| LOCALDB    | MISC         | LCS_TABLE   | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS_TABLE$I  | 1     | 1                 | I            | A             | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+----------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- LCS tables may have multiple clustered indexes
 0: jdbc:farrago:> create table lcs_table_explicit(i int not null,j int not null,k int not null)
@@ -183,15 +183,15 @@ Error: PRIMARY KEY constraint required for table "MISC"."MISSING_PK" (state=,cod
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify creation of user-defined clustered indexes
 0: jdbc:farrago:> !indexes LCS_TABLE_EXPLICIT
-+------------+--------------+---------------------+-------------+------------------+---------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  |     TABLE_NAME      | NON_UNIQUE  | INDEX_QUALIFIER  |                 INDEX_NAME                  | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+---------------------+-------------+------------------+---------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | false       |                  |                                             | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | false       | LOCALDB          | SYS$DELETION_INDEX$MISC$LCS_TABLE_EXPLICIT  | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | true        | LOCALDB          | EXPLICIT_I                                  | 1     | 1                 | I            | A             | 0            | 0      |                   |
-| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | true        | LOCALDB          | EXPLICIT_JK1                                | 1     | 1                 | J            | A             | 0            | 0      |                   |
-| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | true        | LOCALDB          | EXPLICIT_JK1                                | 1     | 2                 | K            | A             | 0            | 0      |                   |
-+------------+--------------+---------------------+-------------+------------------+---------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+---------------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  |     TABLE_NAME      | NON_UNIQUE  | INDEX_QUALIFIER  |               INDEX_NAME               | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+---------------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | false       |                  |                                        | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | false       | LOCALDB          | SYS$DELETION_INDEX$LCS_TABLE_EXPLICIT  | 3     |                   |              | A             | 0            | 0      |                   |
+| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | true        | LOCALDB          | EXPLICIT_I                             | 1     | 1                 | I            | A             | 0            | 0      |                   |
+| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | true        | LOCALDB          | EXPLICIT_JK1                           | 1     | 1                 | J            | A             | 0            | 0      |                   |
+| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | true        | LOCALDB          | EXPLICIT_JK1                           | 1     | 2                 | K            | A             | 0            | 0      |                   |
++------------+--------------+---------------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't drop a clustered index
 0: jdbc:farrago:> drop index explicit_jk1;

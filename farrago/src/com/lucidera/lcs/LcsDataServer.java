@@ -237,9 +237,7 @@ class LcsDataServer
         boolean unique)
     {
         FemLocalIndex index = repos.newFemLocalIndex();
-        String name =
-            namePrefix + "$" + table.getNamespace().getName()
-            + "$" + table.getName();
+        String name = namePrefix + "$" + table.getName();
         if (col != null) {
             name = name + "$" + col.getName();
         }

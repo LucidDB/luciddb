@@ -86,9 +86,23 @@ public class DdlRelationalHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemLocalSchema schema)
     {
+        // NOTE jvs 7-Nov-2006:  CWM specifies table constraints as
+        // owned by tables, but SQL:2003 specifies them as identified
+        // directly by schemas.  So we have to flatten out the
+        // schema namespace here.
+
+        List<CwmModelElement> elements =
+            new ArrayList<CwmModelElement>(schema.getOwnedElement());
+
+        for (CwmModelElement element : schema.getOwnedElement()) {
+            if (element instanceof CwmTable) {
+                elements.addAll(((CwmTable) element).getOwnedElement());
+            }
+        }
+        
         validator.validateUniqueNames(
             schema,
-            schema.getOwnedElement(),
+            elements,
             true);
     }
 

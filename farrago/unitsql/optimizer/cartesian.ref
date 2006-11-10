@@ -79,7 +79,7 @@
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select emps.name as ename,depts.name as dname from emps,depts
@@ -91,7 +91,7 @@
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select emps.name as ename,d.dnoplus 
@@ -105,7 +105,7 @@
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[+($t0, $t1)], DNOPLUS=[$t2])'
 '            FennelToIteratorConverter'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select depts.name from emps left outer join depts on TRUE;
@@ -115,7 +115,7 @@
 '    FennelCartesianProductRel(leftouterjoin=[true])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- try lcs tables; lcs costing doesn't have a weird fudge factor so there will
 0: jdbc:farrago:> -- be cases where it doesn't make sense to buffer
@@ -209,8 +209,8 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1, 2, 3, 4, 5, 6, 7, 8]], discardDuplicates=[false])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
-'      LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSEMPS$AGE, SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSEMPS$CITY, SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSEMPS$EMPID, SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSEMPS$EMPNO, SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSEMPS$GENDER, SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSEMPS$NAME]])'
-'      LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSDEPTS$DEPTNO, SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSDEPTS$NAME]])'
+'      LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$AGE, SYS$CLUSTERED_INDEX$LCSEMPS$CITY, SYS$CLUSTERED_INDEX$LCSEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LCSEMPS$EMPID, SYS$CLUSTERED_INDEX$LCSEMPS$EMPNO, SYS$CLUSTERED_INDEX$LCSEMPS$GENDER, SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
+'      LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO, SYS$CLUSTERED_INDEX$LCSDEPTS$NAME]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select e.name, d.deptno from lcsemps e, lcsdepts d order by 1, 2;
@@ -218,8 +218,8 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
-'      LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSEMPS$NAME]])'
-'      LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSDEPTS$DEPTNO]])'
+'      LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
+'      LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should use buffering
 0: jdbc:farrago:> explain plan for
@@ -230,11 +230,11 @@
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelRenameRel(fieldNames=[[NAME, EXPR$0]])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
-'        LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSEMPS$NAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
 '          FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
 '            FennelRenameRel(fieldNames=[[$f0]])'
-'              LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSDEPTS$DEPTNO]])'
+'              LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should still use buffering, swapping the join operands
 0: jdbc:farrago:> explain plan for
@@ -245,11 +245,11 @@
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelRenameRel(fieldNames=[[NAME, EXPR$0]])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
-'        LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSEMPS$NAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
 '          FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
 '            FennelRenameRel(fieldNames=[[$f0]])'
-'              LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSDEPTS$DEPTNO]])'
+'              LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select d.*, e.name
 . . . . . . . . >     from (select min(deptno) from lcsdepts) d, lcsemps e order by 2;
@@ -258,10 +258,10 @@
 '  FennelSortRel(key=[[1]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER EXPR$0, VARCHAR(12) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
-'        LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSEMPS$NAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
 '          FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
 '            FennelRenameRel(fieldNames=[[$f0]])'
-'              LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSDEPTS$DEPTNO]])'
+'              LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

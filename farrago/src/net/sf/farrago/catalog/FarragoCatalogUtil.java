@@ -179,7 +179,8 @@ public abstract class FarragoCatalogUtil
      */
     public static boolean isIndexPrimaryKey(FemLocalIndex index)
     {
-        return index.getName().startsWith("SYS$PRIMARY_KEY");
+        return index.getName().startsWith(
+            "SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY");
     }
 
     /**
@@ -346,8 +347,7 @@ public abstract class FarragoCatalogUtil
         CwmSqlindex index)
     {
         String name =
-            "SYS$CONSTRAINT_INDEX$" + constraint.getNamespace().getName()
-            + "$" + constraint.getName();
+            "SYS$CONSTRAINT_INDEX$" + constraint.getName();
         index.setName(uniquifyGeneratedName(repos, constraint, name));
     }
 
@@ -361,14 +361,18 @@ public abstract class FarragoCatalogUtil
         FarragoRepos repos,
         FemAbstractUniqueConstraint constraint)
     {
+        String name;
         if (constraint instanceof FemPrimaryKeyConstraint) {
-            constraint.setName("SYS$PRIMARY_KEY");
+            name = "SYS$PRIMARY_KEY$"
+                + constraint.getNamespace().getName();
         } else {
-            String name =
+            name =
                 "SYS$UNIQUE_KEY$"
+                + constraint.getNamespace().getName()
+                + "$"
                 + generateUniqueConstraintColumnList(constraint);
-            constraint.setName(uniquifyGeneratedName(repos, constraint, name));
         }
+        constraint.setName(uniquifyGeneratedName(repos, constraint, name));
     }
 
     /**

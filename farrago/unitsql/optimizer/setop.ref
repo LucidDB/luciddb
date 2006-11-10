@@ -36,43 +36,43 @@
 0: jdbc:farrago:> ------------------
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 union select * from emps2 order by 1;
-+---------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                column0                                                                |
-+---------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                             |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                 |
-|     LhxAggRel(groupCount=[1])                                                                                                         |
-|       FennelMergeRel                                                                                                                  |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])      |
-|         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
-|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])  |
-+---------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------+
+|                                                              column0                                                              |
++-----------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                         |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                             |
+|     LhxAggRel(groupCount=[1])                                                                                                     |
+|       FennelMergeRel                                                                                                              |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
+|         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
+|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
++-----------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 union all select * from emps2 order by 1;
-+-------------------------------------------------------------------------------------------------------------------------------------+
-|                                                               column0                                                               |
-+-------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                           |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                               |
-|     FennelMergeRel                                                                                                                  |
-|       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])      |
-|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])  |
-+-------------------------------------------------------------------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------------------------------------------+
+|                                                             column0                                                             |
++---------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                       |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                           |
+|     FennelMergeRel                                                                                                              |
+|       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
+|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
++---------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 intersect select * from emps2 order by 1;
-+-------------------------------------------------------------------------------------------------------------------------------------+
-|                                                               column0                                                               |
-+-------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                           |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                               |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                                  |
-|       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])      |
-|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])  |
-+-------------------------------------------------------------------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------------------------------------------+
+|                                                             column0                                                             |
++---------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                       |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                           |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                              |
+|       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
+|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
++---------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 intersect all select * from emps2 order by 1;
@@ -80,16 +80,16 @@ Error: java.lang.AssertionError: Internal error: set operator INTERSECT ALL not 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 except select * from emps2 order by 1;
-+-------------------------------------------------------------------------------------------------------------------------------------+
-|                                                               column0                                                               |
-+-------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                           |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                               |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                                 |
-|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])  |
-|       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])      |
-+-------------------------------------------------------------------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------------------------------------------+
+|                                                             column0                                                             |
++---------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                       |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                           |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                             |
+|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
+|       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
++---------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 except all select * from emps2 order by 1;
@@ -134,18 +134,18 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 intersect select * from emps2 intersect select * from emps1
 . . . . . . . . > order by 1;
-+---------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                column0                                                                |
-+---------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                             |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                 |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                                    |
-|       LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                                  |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])      |
-|         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
-|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])  |
-|       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])        |
-+---------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------+
+|                                                              column0                                                              |
++-----------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                         |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                             |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                                |
+|       LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                              |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
+|         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
+|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
+|       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])        |
++-----------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from emps1 intersect select * from emps2 intersect select * from emps1
 . . . . . . . . > order by 1;
@@ -159,19 +159,19 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 intersect select * from emps2 intersect select * from emps2
 . . . . . . . . > order by 1;
-+---------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                column0                                                                |
-+---------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                             |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                 |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                                    |
-|       LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                                  |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])      |
-|         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
-|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])  |
-|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                          |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])    |
-+---------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------+
+|                                                              column0                                                              |
++-----------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                         |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                             |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                                |
+|       LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                              |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
+|         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
+|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
+|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                      |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])    |
++-----------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from emps1 intersect select * from emps2 intersect select * from emps2
 . . . . . . . . > order by 1;
@@ -185,18 +185,18 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 except select * from emps2 except select * from emps1
 . . . . . . . . > order by 1;
-+---------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                column0                                                                |
-+---------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                             |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                 |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                                   |
-|       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])        |
-|       LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                                 |
-|         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
-|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])  |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])      |
-+---------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------+
+|                                                              column0                                                              |
++-----------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                         |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                             |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                               |
+|       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])        |
+|       LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                             |
+|         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
+|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
++-----------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from emps1 except select * from emps2 except select * from emps1
 . . . . . . . . > order by 1;
@@ -208,19 +208,19 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 except select * from emps2 except select * from emps2
 . . . . . . . . > order by 1;
-+---------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                column0                                                                |
-+---------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                             |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                 |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                                   |
-|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                          |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])    |
-|       LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                                 |
-|         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
-|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])  |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])      |
-+---------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------+
+|                                                              column0                                                              |
++-----------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                         |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                             |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                               |
+|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                      |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])    |
+|       LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                             |
+|         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
+|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
++-----------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from emps1 except select * from emps2 except select * from emps2
 . . . . . . . . > order by 1;
@@ -234,18 +234,18 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 intersect select * from emps1 except select * from emps2
 . . . . . . . . > order by 1;
-+-------------------------------------------------------------------------------------------------------------------------------------+
-|                                                               column0                                                               |
-+-------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                           |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                               |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                                 |
-|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])  |
-|       LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                                |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])    |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])    |
-+-------------------------------------------------------------------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------------------------------------------+
+|                                                             column0                                                             |
++---------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                       |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                           |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                             |
+|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
+|       LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                            |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])    |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])    |
++---------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from emps1 intersect select * from emps1 except select * from emps2
 . . . . . . . . > order by 1;
@@ -258,19 +258,19 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 except select * from emps2 intersect select * from emps1
 . . . . . . . . > order by 1;
-+-----------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                 column0                                                                 |
-+-----------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                               |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                   |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                                     |
-|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                            |
-|         LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                                  |
-|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])      |
-|           FennelRenameRel(fieldNames=[[ENAME2]])                                                                                        |
-|             LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])  |
-|       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])          |
-+-----------------------------------------------------------------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------------------------------------+
+|                                                               column0                                                               |
++-------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                           |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                               |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                                 |
+|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
+|         LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                              |
+|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])      |
+|           FennelRenameRel(fieldNames=[[ENAME2]])                                                                                    |
+|             LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])  |
+|       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])          |
++-------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from emps1 except select * from emps2 intersect select * from emps1
 . . . . . . . . > order by 1;
@@ -283,20 +283,20 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 union select * from emps2 intersect select * from emps1
 . . . . . . . . > order by 1;
-+-------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                  column0                                                                  |
-+-------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                 |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                     |
-|     LhxAggRel(groupCount=[1])                                                                                                             |
-|       FennelMergeRel                                                                                                                      |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])          |
-|         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                            |
-|           LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                                  |
-|             LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])      |
-|             FennelRenameRel(fieldNames=[[ENAME2]])                                                                                        |
-|               LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])  |
-+-------------------------------------------------------------------------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                column0                                                                |
++---------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                             |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                 |
+|     LhxAggRel(groupCount=[1])                                                                                                         |
+|       FennelMergeRel                                                                                                                  |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])          |
+|         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
+|           LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])                                              |
+|             LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])      |
+|             FennelRenameRel(fieldNames=[[ENAME2]])                                                                                    |
+|               LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])  |
++---------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from emps1 union select * from emps2 intersect select * from emps1
 . . . . . . . . > order by 1;
@@ -311,19 +311,19 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 except select * from emps2 union select * from emps1
 . . . . . . . . > order by 1;
-+-----------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                 column0                                                                 |
-+-----------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                               |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                   |
-|     LhxAggRel(groupCount=[1])                                                                                                           |
-|       FennelMergeRel                                                                                                                    |
-|         LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                                 |
-|           FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
-|             LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])  |
-|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])      |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])        |
-+-----------------------------------------------------------------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------------------------------------+
+|                                                               column0                                                               |
++-------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                           |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                               |
+|     LhxAggRel(groupCount=[1])                                                                                                       |
+|       FennelMergeRel                                                                                                                |
+|         LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                             |
+|           FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
+|             LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
+|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])        |
++-------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from emps1 except select * from emps2 union select * from emps1
 . . . . . . . . > order by 1;
@@ -338,20 +338,20 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps1 union select * from emps2 except select * from emps2
 . . . . . . . . > order by 1;
-+-----------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                 column0                                                                 |
-+-----------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                               |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                   |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                                     |
-|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                            |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])      |
-|       LhxAggRel(groupCount=[1])                                                                                                         |
-|         FennelMergeRel                                                                                                                  |
-|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])      |
-|           FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
-|             LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])  |
-+-----------------------------------------------------------------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------------------------------------+
+|                                                               column0                                                               |
++-------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                           |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                               |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])                                                 |
+|       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                        |
+|         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])      |
+|       LhxAggRel(groupCount=[1])                                                                                                     |
+|         FennelMergeRel                                                                                                              |
+|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
+|           FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
+|             LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
++-------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from emps1 union select * from emps2 except select * from emps2
 . . . . . . . . > order by 1;
@@ -375,12 +375,12 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |         FennelRenameRel(fieldNames=[[ENAME1, ENAME10]])                                                                                                                                                                                              |
 |           LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[LEFTSEMI], setop=[true])                                                                                                                                                       |
 |             FennelRenameRel(fieldNames=[[ENAME2, ENAME20]])                                                                                                                                                                                          |
-|               LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])                                                                                                          |
+|               LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])                                                                                                              |
 |             FennelRenameRel(fieldNames=[[ENAME2, ENAME20]])                                                                                                                                                                                          |
 |               FennelRenameRel(fieldNames=[[ENAME1, ENAME10]])                                                                                                                                                                                        |
-|                 LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])                                                                                                        |
+|                 LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])                                                                                                            |
 |         FennelRenameRel(fieldNames=[[ENAME1, ENAME10]])                                                                                                                                                                                              |
-|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])                                                                                                              |
+|           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])                                                                                                                  |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select ename1, ename1 from emps1 except select ename2, ename2 from emps2
@@ -412,16 +412,16 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- make sure this does not fail during physical plan generation
 0: jdbc:farrago:> explain plan for select * from s1 union all (select * from s2 where a = 1);
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                     column0                                                                                      |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                        |
-|   FennelMergeRel                                                                                                                                                                 |
-|     LcsRowScanRel(table=[[LOCALDB, LHX, S1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$S1$A, SYS$CLUSTERED_INDEX$LHX$S1$B]])                                  |
-|     FennelRenameRel(fieldNames=[[A, B]])                                                                                                                                         |
-|       LcsRowScanRel(table=[[LOCALDB, LHX, S2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$S2$A, SYS$CLUSTERED_INDEX$LHX$S2$BB]], residual columns=[[0]])  |
-|         FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, _ISO-8859-1']', 1 }]])                                                                                                     |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                 column0                                                                                  |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                |
+|   FennelMergeRel                                                                                                                                                         |
+|     LcsRowScanRel(table=[[LOCALDB, LHX, S1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S1$A, SYS$CLUSTERED_INDEX$S1$B]])                                  |
+|     FennelRenameRel(fieldNames=[[A, B]])                                                                                                                                 |
+|       LcsRowScanRel(table=[[LOCALDB, LHX, S2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$S2$A, SYS$CLUSTERED_INDEX$S2$BB]], residual columns=[[0]])  |
+|         FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])                                                                                                                   |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --------------
 0: jdbc:farrago:> -- Clean up --
