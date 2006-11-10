@@ -205,8 +205,13 @@ public class FarragoAutoCalcRule
             }
         }
 
+        RelNode root = calc.getCluster().getPlanner().getRoot();
+        boolean promoteIteratorConvention = 
+            root.getConvention() == CallingConvention.ITERATOR;
+        
         AutoCalcRelSplitter transform =
-            new AutoCalcRelSplitter(calc, relImplementor, translator);
+            new AutoCalcRelSplitter(
+                calc, relImplementor, translator, promoteIteratorConvention);
 
         if (transform.canImplement(calc)) {
             RelNode resultCalcRelTree = transform.execute();
@@ -216,63 +221,99 @@ public class FarragoAutoCalcRule
 
     //~ Inner Classes ----------------------------------------------------------
 
+    private static class FennelRelType extends CalcRelSplitter.RelType
+    {
+        private final RexToCalcTranslator translator;
+        
+        private FennelRelType(RexToCalcTranslator translator)
+        {
+            super("REL_TYPE_FENNEL");
+            
+            this.translator = translator;
+        }
+
+        protected boolean canImplement(RexFieldAccess field)
+        {
+                // Field access rex nodes are Java-only
+            return false;
+        }
+
+        protected boolean canImplement(RexDynamicParam param)
+        {
+                // Dynamic param rex nodes are Java-only
+            return false;
+        }
+
+        protected boolean canImplement(RexLiteral literal)
+        {
+            return true;
+        }
+
+        protected boolean canImplement(RexCall call)
+        {
+            return translator.canTranslate(call, false);
+        }
+    }
+    
+    private static class JavaRelType extends CalcRelSplitter.RelType
+    {
+        private final CalcRel calc;
+        private final JavaRelImplementor relImplementor;
+        
+        private JavaRelType(CalcRel calc, JavaRelImplementor relImplementor)
+        {
+            super("REL_TYPE_JAVA");
+            
+            this.calc = calc;
+            this.relImplementor = relImplementor;
+        }
+
+        protected boolean canImplement(RexFieldAccess field)
+        {
+            return true;
+        }
+
+        protected boolean canImplement(RexDynamicParam param)
+        {
+            return true;
+        }
+
+        protected boolean canImplement(RexLiteral literal)
+        {
+            return true;
+        }
+
+        protected boolean canImplement(RexCall call)
+        {
+            return relImplementor.canTranslate(calc, call, false);
+        }
+    }
+    
     private static class AutoCalcRelSplitter
         extends CalcRelSplitter
     {
         private AutoCalcRelSplitter(
-            final CalcRel calc,
-            final JavaRelImplementor relImplementor,
-            final RexToCalcTranslator translator)
+            CalcRel calc,
+            JavaRelImplementor relImplementor,
+            RexToCalcTranslator translator,
+            boolean promoteIteratorConvention)
         {
+            // The last RelType in the array ends up at the top of the plan.
+            // So, if we've been asked to promote iterator convention, we
+            // try to make sure that the CalcRel that's implementable by
+            // iterator convention ends up on top.
             super(
                 calc,
-                new RelType[] {
-                    new CalcRelSplitter.RelType("REL_TYPE_JAVA") {
-                    protected boolean canImplement(RexFieldAccess field)
-                    {
-                        return true;
-                    }
-
-                    protected boolean canImplement(RexDynamicParam param)
-                    {
-                        return true;
-                    }
-
-                    protected boolean canImplement(RexLiteral literal)
-                    {
-                        return true;
-                    }
-
-                    protected boolean canImplement(RexCall call)
-                    {
-                        return relImplementor.canTranslate(calc, call, false);
-                    }
-                }
-                ,
-                new CalcRelSplitter.RelType("REL_TYPE_FENNEL") {
-                    protected boolean canImplement(RexFieldAccess field)
-                    {
-                            // Field access rex nodes are Java-only
-                        return false;
-                    }
-
-                    protected boolean canImplement(RexDynamicParam param)
-                    {
-                            // Dynamic param rex nodes are Java-only
-                        return false;
-                    }
-
-                    protected boolean canImplement(RexLiteral literal)
-                    {
-                        return true;
-                    }
-
-                    protected boolean canImplement(RexCall call)
-                    {
-                        return translator.canTranslate(call, false);
-                    }
-                }
-                });
+                (promoteIteratorConvention
+                    ? new RelType[] {
+                        new FennelRelType(translator),
+                        new JavaRelType(calc, relImplementor)
+                      }
+                    : new RelType[] {
+                        new JavaRelType(calc, relImplementor),
+                        new FennelRelType(translator)
+                      })
+                );
         }
 
         protected boolean canImplement(CalcRel rel)
