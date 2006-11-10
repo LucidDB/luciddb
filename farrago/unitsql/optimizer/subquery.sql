@@ -409,6 +409,18 @@ explain plan for
 select sum((select emps.empno from depts where depts.deptno = emps.deptno))
 from emps;
 
+explain plan without implementation for 
+select empno
+from emps
+where empno = (select min(emps.empno) from depts 
+               where depts.deptno = emps.deptno);
+
+explain plan for 
+select empno
+from emps
+where empno = (select min(emps.empno) from depts
+               where depts.deptno = emps.deptno);
+
 -- 3.6 HAVING clause scalar subquery.
 --
 --     Note: SQL2003 seems to contradict itself wrt to aggregates in HAVING clause.

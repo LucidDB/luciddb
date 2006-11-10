@@ -1265,6 +1265,53 @@ Error: At line 2, column 28: Cannot apply '$SCALAR_QUERY' to arguments of type '
 |               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                      |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan without implementation for 
+. . . . . . . . > select empno
+. . . . . . . . > from emps
+. . . . . . . . > where empno = (select min(emps.empno) from depts 
+. . . . . . . . >                where depts.deptno = emps.deptno);
++----------------------------------------------------------------------------------------------------+
+|                                              column0                                               |
++----------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0])                                                                             |
+|   FilterRel(condition=[=($0, $10)])                                                                |
+|     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2, var1=offset0]])  |
+|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                               |
+|       ProjectRel(EXPR$0=[$0])                                                                      |
+|         AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                               |
+|           ProjectRel($f0=[$cor1.EMPNO])                                                            |
+|             FilterRel(condition=[=($0, $cor0.DEPTNO)])                                             |
+|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                      |
++----------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select empno
+. . . . . . . . > from emps
+. . . . . . . . > where empno = (select min(emps.empno) from depts
+. . . . . . . . >                where depts.deptno = emps.deptno);
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                              column0                                                                              |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..4=[{inputs}], expr#5=[=($t0, $t2)], EMPNO=[$t0], $condition=[$t5])                                                                            |
+|   FennelToIteratorConverter                                                                                                                                       |
+|     LhxJoinRel(leftKeys=[[1, 0]], rightKeys=[[1, 2]], joinType=[LEFT])                                                                                            |
+|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                               |
+|       FennelReshapeRel(projection=[[2, 0, 1]], outputRowType=[RecordType(INTEGER EXPR$0, INTEGER NOT NULL $f0, INTEGER NOT NULL $f00) NOT NULL])                  |
+|         LhxAggRel(groupCount=[2], agg#0=[MIN(2)])                                                                                                                 |
+|           FennelReshapeRel(projection=[[0, 1, 1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL $f00, INTEGER NOT NULL $f0) NOT NULL])        |
+|             FennelCartesianProductRel(leftouterjoin=[false])                                                                                                      |
+|               FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])                                                       |
+|                 LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                     |
+|                   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])  |
+|                   LhxAggRel(groupCount=[1])                                                                                                                       |
+|                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                           |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])                                  |
+|               FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                 |
+|                 LhxAggRel(groupCount=[1])                                                                                                                         |
+|                   FennelRenameRel(fieldNames=[[$f0]])                                                                                                             |
+|                     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                    |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 3.6 HAVING clause scalar subquery.
 0: jdbc:farrago:> --
 0: jdbc:farrago:> --     Note: SQL2003 seems to contradict itself wrt to aggregates in HAVING clause.

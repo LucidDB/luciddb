@@ -1674,13 +1674,26 @@ public class SqlToRelConverter
                 preExprs[0] = rexBuilder.makeLiteral(true);
             }
             
+            RelNode inputRel = bb.root;
+            Set<String> correlatedVariablesBefore =
+                RelOptUtil.getVariablesUsed(inputRel);
+
+
             bb.setRoot(
                 CalcRel.createProject(
-                    bb.root,
+                    inputRel,
                     preExprs,
                     null),
                 false);
             bb.mapRootRelToFieldProjection.put(bb.root, groupExprProjection);
+
+            Set<String> correlatedVariables = RelOptUtil.getVariablesUsed(bb.root);
+            correlatedVariables.removeAll(correlatedVariablesBefore);
+            
+            // Associate the corralated varaibles with the new project rel.
+            for (String correl : correlatedVariables) {
+                mapCorrelToRefRel.put(correl, bb.root);
+            }
             
             // add the aggregator
             final AggregateRel.Call [] aggCalls = aggConverter.getAggCalls();
