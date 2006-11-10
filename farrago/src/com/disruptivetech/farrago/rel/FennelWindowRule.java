@@ -236,6 +236,21 @@ public abstract class FennelWindowRule
             return;
         }
 
+        // The input calculations will be implemented using a Fennel
+        // calculator. If they contain Java-specific operations, quit now. The
+        // splitter rule will carve out the Java parts.
+        if (inCalc != null &&
+            !FarragoAutoCalcRule.instance.canImplementInFennel(inCalc)) {
+            return;
+        }
+
+        // Likewise, the output calculations need to be implementable in a
+        // Fennel calculator.
+        if (outCalc != null &&
+            !FarragoAutoCalcRule.instance.canImplementInFennel(outCalc)) {
+            return;
+        }
+
         // Build the input program.
         final RexProgram inProgram;
         if (inCalc == null) {

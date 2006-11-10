@@ -219,6 +219,18 @@ public class FarragoAutoCalcRule
         }
     }
 
+    /**
+     * Returns whether an expression can be implemented in Fennel convention.
+     */
+    public boolean canImplementInFennel(CalcRel calc)
+    {
+        final RexToCalcTranslator translator =
+            new RexToCalcTranslator(
+                calc.getCluster().getRexBuilder(),
+                calc);
+        return new FennelRelType(translator).canImplement(calc.getProgram());
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     private static class FennelRelType extends CalcRelSplitter.RelType
@@ -234,13 +246,13 @@ public class FarragoAutoCalcRule
 
         protected boolean canImplement(RexFieldAccess field)
         {
-                // Field access rex nodes are Java-only
+            // Field access rex nodes are Java-only
             return false;
         }
 
         protected boolean canImplement(RexDynamicParam param)
         {
-                // Dynamic param rex nodes are Java-only
+            // Dynamic param rex nodes are Java-only
             return false;
         }
 
