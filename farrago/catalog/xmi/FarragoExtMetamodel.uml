@@ -6554,8 +6554,6 @@
                       isActive = 'false'/>
                     <UML:DataType xmi.id = 'Ilsmmsmm110b640m100aa8b9ab3mm7f5d' name = 'boolean'
                       isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
-                    <UML:Class xmi.id = 'Iea8847m10104480055mm7ff3' name = 'Boolean' isSpecification = 'false'
-                      isRoot = 'false' isLeaf = 'false' isAbstract = 'false' isActive = 'false'/>
                     <UML:Class xmi.id = 'I1787a6m101c0885e00mm7fb6' name = 'Integer' isSpecification = 'false'
                       isRoot = 'false' isLeaf = 'false' isAbstract = 'false' isActive = 'false'/>
                     <UML:DataType xmi.id = 'I1a32902m1020ddacdafmm7ff2' name = 'double[]' isSpecification = 'false'
