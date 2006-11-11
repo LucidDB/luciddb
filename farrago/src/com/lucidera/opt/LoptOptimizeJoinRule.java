@@ -1041,8 +1041,19 @@ public class LoptOptimizeJoinRule
                     left,
                     right,
                     filtersToAdd,
-                    true);
+                    false);
             if (!filterCond.isAlwaysTrue()) {
+                // adjust the filter to reflect the outer join output
+                int [] adjustments = new int[multiJoin.getNumTotalFields()];
+                if (needsAdjustment(multiJoin, adjustments, left, right)) {
+                    filterCond =
+                        filterCond.accept(
+                            new RelOptUtil.RexInputConverter(
+                                rexBuilder,
+                                multiJoin.getMultiJoinFields(),
+                                joinTree.getRowType().getFields(),
+                                adjustments));
+                }
                 joinTree = CalcRel.createFilter(joinTree, filterCond);
             }
         }
