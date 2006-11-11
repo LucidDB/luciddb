@@ -1016,14 +1016,15 @@ public class SqlToRelConverter
         }
         
         if (value instanceof NlsString &&
-            type.getSqlTypeName() == SqlTypeName.Char) {
+            type.getSqlTypeName() == SqlTypeName.Char)
+        {
             // pad fixed character type
+            NlsString unpadded = (NlsString) value;
             return rexBuilder.makeCharLiteral(
                 new NlsString(
-                    Util.rpad(((NlsString)value).getValue(),
-                        type.getPrecision()),
-                    ((NlsString)value).getCharsetName(),
-                    ((NlsString)value).getCollation()));
+                    Util.rpad(unpadded.getValue(), type.getPrecision()),
+                    unpadded.getCharsetName(),
+                    unpadded.getCollation()));
         }
         return literal;
     }

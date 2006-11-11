@@ -61,6 +61,14 @@ public interface SargExpr
     public SargIntervalSequence evaluate();
 
     /**
+     * Resolves the complement of this expression into a fixed {@link
+     * SargIntervalSequence}.
+     *
+     * @return immutable ordered sequence of disjoint intervals
+     */
+    public SargIntervalSequence evaluateComplemented();
+
+    /**
      * @return the factory which produced this expression
      */
     public SargFactory getFactory();

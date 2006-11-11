@@ -93,8 +93,8 @@ public abstract class ValuesRelBase
                 RelDataType fieldType = fields[i++].getType();
 
                 // TODO jvs 19-Feb-2006: strengthen this a bit.  For example,
-                // overflow, rounding, and truncation must already have been
-                // dealt with.
+                // overflow, rounding, and padding/truncation must already have
+                // been dealt with.
                 if (!RexLiteral.isNullLiteral(literal)) {
                     assert (SqlTypeUtil.canAssignFrom(
                                 fieldType,

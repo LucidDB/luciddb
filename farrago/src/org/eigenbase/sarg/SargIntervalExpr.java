@@ -215,6 +215,85 @@ public class SargIntervalExpr
             dynamicParams.add((RexDynamicParam) upperBound.getCoordinate());
         }
     }
+    
+    // implement SargExpr
+    public SargIntervalSequence evaluateComplemented()
+    {
+        SargIntervalSequence originalSeq = evaluate();
+        SargIntervalSequence seq = new SargIntervalSequence();
+
+        // Complement of empty set is unconstrained set.
+        if (originalSeq.getList().isEmpty()) {
+            seq.addInterval(new SargInterval(
+                    factory,
+                    getDataType()));
+            return seq;
+        }
+
+        assert (originalSeq.getList().size() == 1);
+        SargInterval originalInterval = originalSeq.getList().get(0);
+
+        // Complement of universal set is empty set.
+        if (originalInterval.isUnconstrained()) {
+            return seq;
+        }
+
+        // Use null as a lower bound rather than infinity (see
+        // http://issues.eigenbase.org/browse/LDB-60).
+        // REVIEW jvs 17-Apr-2006:  This assumes NULL_MATCHES_NOTHING
+        // semantics.  We've lost the original null semantics
+        // flag by now.  Is there ever a case where other null
+        // semantics are required here?
+
+        SargInterval interval = new SargInterval(
+                factory,
+                getDataType());
+        interval.setLower(
+            factory.newNullLiteral(),
+            SargStrictness.OPEN);
+
+        if (originalInterval.getUpperBound().isFinite()
+            && originalInterval.getLowerBound().isFinite()) {
+            // Complement of a fully bounded range is the union of two
+            // disjoint half-bounded ranges.
+            interval.setUpper(
+                originalInterval.getLowerBound().getCoordinate(),
+                originalInterval.getLowerBound().getStrictnessComplement());
+            if (!originalInterval.getLowerBound().isNull()) {
+                seq.addInterval(interval);
+            } else {
+                // Don't bother adding an empty interval.
+            }
+
+            interval = new SargInterval(
+                    factory,
+                    getDataType());
+            interval.setLower(
+                originalInterval.getUpperBound().getCoordinate(),
+                originalInterval.getUpperBound().getStrictnessComplement());
+            seq.addInterval(interval);
+        } else if (originalInterval.getLowerBound().isFinite()) {
+            // Complement of a half-bounded range is the opposite
+            // half-bounded range (with open for closed and vice versa)
+            interval.setUpper(
+                originalInterval.getLowerBound().getCoordinate(),
+                originalInterval.getLowerBound().getStrictnessComplement());
+            if (!originalInterval.getLowerBound().isNull()) {
+                seq.addInterval(interval);
+            } else {
+                // Don't bother adding an empty interval.
+            }
+        } else {
+            // Mirror image of previous case.
+            assert (originalInterval.getUpperBound().isFinite());
+            interval.setLower(
+                originalInterval.getUpperBound().getCoordinate(),
+                originalInterval.getUpperBound().getStrictnessComplement());
+            seq.addInterval(interval);
+        }
+
+        return seq;
+    }
 }
 
 // End SargIntervalExpr.java
