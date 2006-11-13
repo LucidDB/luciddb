@@ -434,15 +434,22 @@ public class FarragoJdbcEngineConnection
         throw new UnsupportedOperationException();
     }
 
+    // implement Connection
     public SQLWarning getWarnings()
         throws SQLException
     {
-        return null;
+        validateSession();
+        
+        return session.getWarningQueue().getWarnings();
     }
 
+    // implement Connection
     public void clearWarnings()
         throws SQLException
     {
+        validateSession();
+
+        session.getWarningQueue().clearWarnings();
     }
 
     public Statement createStatement(

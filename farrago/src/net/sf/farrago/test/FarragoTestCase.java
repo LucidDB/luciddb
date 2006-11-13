@@ -515,7 +515,7 @@ public abstract class FarragoTestCase
                 driverName, "-n",
                 FarragoCatalogInit.SA_USER_NAME,
                 "--force=true", "--silent=true",
-                "--showWarnings=false", "--maxWidth=1024"
+                "--maxWidth=1024"
             };
         PrintStream savedOut = System.out;
         PrintStream savedErr = System.err;

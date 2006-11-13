@@ -321,6 +321,13 @@ public interface FarragoSession
      * @return exclusion filter in effect for planners created by this session
      */
     public Pattern getOptRuleDescExclusionFilter();
+
+    /**
+     * Gets the warning queue for this session.
+     *
+     * @return warning queue
+     */
+    public FarragoWarningQueue getWarningQueue();
 }
 
 // End FarragoSession.java

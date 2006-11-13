@@ -810,6 +810,14 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 | 101         | SelectBuggy  | 2            | select * from buggy order by 1  |
 +-------------+--------------+--------------+---------------------------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure we receive a warning for DML
+0: jdbc:farrago:> create table surrey(
+. . . . . . . . >     author varchar(30),
+. . . . . . . . >     title varchar(45) not null,
+. . . . . . . . >     cost decimal(10,2));
+0: jdbc:farrago:> insert into surrey select * from buggy;
+Warning: Statement execution encountered recoverable exceptions; errors: 2; warnings: 0 (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- we can limit the number of errors
 0: jdbc:farrago:> alter session set "errorMax" = 1;
 0: jdbc:farrago:> select * from buggy order by 1;

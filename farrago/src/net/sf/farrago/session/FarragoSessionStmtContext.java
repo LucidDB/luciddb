@@ -184,6 +184,13 @@ public interface FarragoSessionStmtContext
      */
     public void unprepare();
 
+    /**
+     * Gets the warning queue for this statement.
+     *
+     * @return warning queue
+     */
+    public FarragoWarningQueue getWarningQueue();
+    
     public void setQueryTimeout(int milliseconds);
 
     public int getQueryTimeout();

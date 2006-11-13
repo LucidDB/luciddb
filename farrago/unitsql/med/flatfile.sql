@@ -522,6 +522,13 @@ options (
 select process_id, action_id, error_count, "SQL"
 from log_server.bcp."Summary";
 
+-- make sure we receive a warning for DML
+create table surrey(
+    author varchar(30),
+    title varchar(45) not null,
+    cost decimal(10,2));
+insert into surrey select * from buggy;
+
 -- we can limit the number of errors
 alter session set "errorMax" = 1;
 select * from buggy order by 1;

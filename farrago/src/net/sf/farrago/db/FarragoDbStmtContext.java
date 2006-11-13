@@ -57,6 +57,7 @@ public class FarragoDbStmtContext
     private FarragoSessionExecutableStmt executableStmt;
     private FarragoCompoundAllocation allocations;
     private FarragoSessionRuntimeContext runningContext;
+    private final FarragoWarningQueue warningQueue;
 
     /**
      * query timeout in seconds, default to 0.
@@ -78,6 +79,7 @@ public class FarragoDbStmtContext
         super(session, paramDefFactory, ddlLockManager);
 
         updateCount = -1;
+        warningQueue = new FarragoWarningQueue();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -99,6 +101,7 @@ public class FarragoDbStmtContext
         String sql,
         boolean isExecDirect)
     {
+        warningQueue.clearWarnings();
         unprepare();
         allocations = new FarragoCompoundAllocation();
         this.sql = sql;
@@ -131,6 +134,7 @@ public class FarragoDbStmtContext
         boolean logical,
         FarragoSessionPreparingStmt prep)
     {
+        warningQueue.clearWarnings();
         unprepare();
         allocations = new FarragoCompoundAllocation();
         this.sql = ""; // not available
@@ -177,6 +181,7 @@ public class FarragoDbStmtContext
     public void execute()
     {
         assert (isPrepared());
+        warningQueue.clearWarnings();
         closeResultSet();
         traceExecute();
         boolean isDml = executableStmt.isDml();
@@ -193,6 +198,8 @@ public class FarragoDbStmtContext
                 session.newRuntimeContextParams();
             if (!isDml) {
                 params.txnCodeCache = null;
+            } else {
+                params.warningQueue = warningQueue;
             }
             params.isDml = isDml;
             params.resultSetTypeMap = executableStmt.getResultSetTypeMap();
@@ -326,6 +333,12 @@ public class FarragoDbStmtContext
         executableStmt = null;
 
         super.unprepare();
+    }
+
+    // implement FarragoSessionStmtContext
+    public FarragoWarningQueue getWarningQueue()
+    {
+        return warningQueue;
     }
 }
 
