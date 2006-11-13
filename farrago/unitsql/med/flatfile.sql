@@ -514,8 +514,9 @@ options (
     directory 'testlog',
     file_extension 'log');
 
-select le_exception, le_target_column 
-from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
+-- log files now exclude schema name and include timestamp
+-- select le_exception, le_target_column 
+-- from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
 
 -- we can also view the error log summaries
 select process_id, action_id, error_count, "SQL"

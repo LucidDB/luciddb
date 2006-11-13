@@ -263,10 +263,27 @@ public class DateTimeUtil
      * Checks if the date/time format is valid
      *
      * @param pattern {@link SimpleDateFormat} pattern
+     * 
+     * @throws IllegalArgumentException if the given pattern is invalid
      */
     public static void checkDateFormat(String pattern)
     {
         new SimpleDateFormat(pattern);
+    }
+
+
+    /**
+     * Creates a new date formatter with Farrago specific options.
+     * Farrago parsing is strict and does not allow values such as 
+     * day 0, month 13, etc.
+     * 
+     * @param pattern {@link SimpleDateFormat} pattern
+     */
+    public static SimpleDateFormat newDateFormat(String format)
+    {
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        sdf.setLenient(false);
+        return sdf;
     }
 }
 

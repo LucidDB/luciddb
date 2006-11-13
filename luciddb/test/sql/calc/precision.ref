@@ -98,17 +98,17 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 | 0       |
 +---------+
 0: jdbc:luciddb:> SELECT x / 10 FROM FOO order by 1;
-+---------+
-| EXPR$0  |
-+---------+
-| 0       |
-+---------+
++-----------+
+|  EXPR$0   |
++-----------+
+| 0.000000  |
++-----------+
 0: jdbc:luciddb:> SELECT X / 100 FROM FOO order by 1;
-+---------+
-| EXPR$0  |
-+---------+
-| 0       |
-+---------+
++-----------+
+|  EXPR$0   |
++-----------+
+| 0.000000  |
++-----------+
 0: jdbc:luciddb:> DROP TABLE FOO;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 

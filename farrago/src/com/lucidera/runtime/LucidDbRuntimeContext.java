@@ -751,14 +751,10 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                         ex2 = 
                             FarragoResource.instance().JavaCalcConditionError
                             .ex(row, messages);
-                    } else if (! tag.startsWith(LoptIterCalcRule.TABLE_ACCESS_PREFIX)) { 
+                    } else { 
                         ex2 = 
                             FarragoResource.instance().JavaCalcError.ex(
                                 field, row, messages);
-                    } else {
-                        ex2 = 
-                            FarragoResource.instance().JavaCalcDetailedError
-                            .ex(field, tag, row, messages);
                     }
                     if (quota.errorMax > 0) {
                         throw FarragoResource.instance().ErrorLimitExceeded.ex(

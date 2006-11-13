@@ -24,6 +24,8 @@ package net.sf.farrago.syslib;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.resource.*;
 
+import org.eigenbase.util14.*;
+
 import java.sql.*;
 import java.text.*;
 
@@ -171,13 +173,12 @@ public abstract class FarragoConvertDatetimeUDR
             SimpleDateFormat sdf =
                 (SimpleDateFormat) FarragoUdrRuntime.getContext();
             if (sdf == null) {
-                sdf = new SimpleDateFormat(format);
+                sdf = DateTimeUtil.newDateFormat(format);
                 FarragoUdrRuntime.setContext(sdf);
             }
             return sdf;
         }
     }
-
 
     //~ Inner classes  ---------------------------------------------------
     private static class DatetimeFormatHelper
@@ -194,13 +195,13 @@ public abstract class FarragoConvertDatetimeUDR
         protected void setFormat(int type, String format) {
             switch (type) {
             case FarragoConvertDatetimeUDR.DIRECT_DATE:
-                datefmt = new SimpleDateFormat(format);
+                datefmt = DateTimeUtil.newDateFormat(format);
                 break;
             case FarragoConvertDatetimeUDR.DIRECT_TIME:
-                timefmt = new SimpleDateFormat(format);
+                timefmt = DateTimeUtil.newDateFormat(format);
                 break;
             case FarragoConvertDatetimeUDR.DIRECT_TIMESTAMP:
-                timestampfmt = new SimpleDateFormat(format);
+                timestampfmt = DateTimeUtil.newDateFormat(format);
                 break;
             default:
                 throw FarragoResource.instance(

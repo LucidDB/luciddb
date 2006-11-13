@@ -731,8 +731,45 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Source t
 | 0       |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- decimal multiplication, luciddb semantics
+0: jdbc:farrago:> -- char to date conversions
+0: jdbc:farrago:> -- these fail, as expected
+0: jdbc:farrago:> values cast('1997-01-00' as date);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22007 (state=,code=0)
+0: jdbc:farrago:> values cast('1997-02-29' as date);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22007 (state=,code=0)
+0: jdbc:farrago:> values cast('1997-00-01' as date);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22007 (state=,code=0)
+0: jdbc:farrago:> values cast('1997-13-01' as date);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22007 (state=,code=0)
+0: jdbc:farrago:> -- this works
+0: jdbc:farrago:> values cast('9999-01-01' as date);
++-------------+
+|   EXPR$0    |
++-------------+
+| 9999-01-01  |
++-------------+
+0: jdbc:farrago:> -- FIXME: these work on Java calc, not Fennel calc (LER-2866)
+0: jdbc:farrago:> -- values cast('997-01-01' as date);
+0: jdbc:farrago:> -- values cast('97-01-01' as date);
+0: jdbc:farrago:> -- FIXME: this fails on both calcs (LER-2866)
+0: jdbc:farrago:> -- values cast('10000-01-01' as date);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- NOTE: the rest of this file runs as luciddb
 0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- decimal multiplication, luciddb semantics
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- fewer than 19 digits, keep fractional digits
 0: jdbc:farrago:> values 1.000000 * 1.000000;
@@ -766,12 +803,62 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Source t
 +--------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- decimal division, luciddb semantics
-0: jdbc:farrago:> values ((1.0/1000000.0) + 123456789012);
-+----------------------+
-|        EXPR$0        |
-+----------------------+
-| 123456789012.000001  |
-+----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- luciddb preserves the desired scale, but caps it at 6 to preserve the 
+0: jdbc:farrago:> -- integral part and avoid subsequent overflows
+0: jdbc:farrago:> values (
+. . . . . . . . >   cast(158229.4028 as decimal(19,4)) 
+. . . . . . . . >   / cast(5523083.9328 as decimal(19,4)));
++-----------+
+|  EXPR$0   |
++-----------+
+| 0.028649  |
++-----------+
+0: jdbc:farrago:> values (
+. . . . . . . . >   cast (123456789012 as decimal(19,4))
+. . . . . . . . >   / cast (1000000000 as decimal(19,0)));
++-------------+
+|   EXPR$0    |
++-------------+
+| 123.456789  |
++-------------+
+0: jdbc:farrago:> values (cast((1.0/1000000.0) + 123456789012 as decimal(18,3)));
++-------------------+
+|      EXPR$0       |
++-------------------+
+| 123456789012.000  |
++-------------------+
+0: jdbc:farrago:> values (
+. . . . . . . . >   cast(158229.4028 as decimal(19,8)) 
+. . . . . . . . >   / cast(5523083.9328 as decimal(19,8)));
++-----------+
+|  EXPR$0   |
++-----------+
+| 0.028649  |
++-----------+
+0: jdbc:farrago:> values (
+. . . . . . . . >   cast(1234567 as decimal(19,0)) 
+. . . . . . . . >   / cast(0.000001 as decimal(19,8)));
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| 1234567000000.000000  |
++-----------------------+
+0: jdbc:farrago:> -- we lose very small values
+0: jdbc:farrago:> values 1.0/10000000.0;
++-----------+
+|  EXPR$0   |
++-----------+
+| 0.000000  |
++-----------+
+0: jdbc:farrago:> -- detect overflow errors
+0: jdbc:farrago:> values (
+. . . . . . . . >   cast(12345678 as decimal(19,0)) 
+. . . . . . . . >   / cast(0.000001 as decimal(19,8)));
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=7 Code=22003 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- end selectSimple.sql
 0: jdbc:farrago:> 

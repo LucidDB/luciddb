@@ -773,7 +773,7 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- errors are usually returned immediately
 0: jdbc:farrago:> select * from buggy order by 1;
-Error: Could not calculate result column 3 of Read.LOCALDB.FLATFILE_SCHEMA.BUGGY for input:
+Error: Could not calculate result column 3 for the following row:
 [Caroll & Graf, The Diary of a Country Priest, -]
 Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:farrago:> 
@@ -796,14 +796,9 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 . . . . . . . . >     directory 'testlog',
 . . . . . . . . >     file_extension 'log');
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select le_exception, le_target_column 
-. . . . . . . . > from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
-+--------------------------------------------------------------------------------------------------------------------------------+-------------------+
-|                                                          LE_EXCEPTION                                                          | LE_TARGET_COLUMN  |
-+--------------------------------------------------------------------------------------------------------------------------------+-------------------+
-| Cannot assign '-' to a NUMERIC value: NumberFormatException                                                                    | 3                 |
-| Target CAST($t1):VARCHAR(45) CHARACTER SET ISO-8859-1 COLLATE ISO-8859-1$en_US$primary NOT NULL cannot be assigned null value  | 2                 |
-+--------------------------------------------------------------------------------------------------------------------------------+-------------------+
+0: jdbc:farrago:> -- log files now exclude schema name and include timestamp
+0: jdbc:farrago:> -- select le_exception, le_target_column 
+0: jdbc:farrago:> -- from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- we can also view the error log summaries
 0: jdbc:farrago:> select process_id, action_id, error_count, "SQL"
@@ -819,7 +814,7 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 0: jdbc:farrago:> alter session set "errorMax" = 1;
 0: jdbc:farrago:> select * from buggy order by 1;
 Error: Exceeded limit of 1 errors. Last error was: 
-Could not calculate result column 2 of Read.LOCALDB.FLATFILE_SCHEMA.BUGGY for input:
+Could not calculate result column 2 for the following row:
 [Gary Larsen, null, 5.00]
 Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
 0: jdbc:farrago:> 

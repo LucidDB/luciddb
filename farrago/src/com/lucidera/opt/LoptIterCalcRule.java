@@ -203,7 +203,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
      * elements of the qualified name, joined by dots. The tag is prefixed 
      * with an action name, and is optionally suffixed with a unique 
      * identifier. The tag has the overall format:
-     * "<code>[action].catalog.schema.table[.uniqueSuffix]</code>".
+     * "<code>action.table[.uniqueSuffix]</code>".
      * The unique suffix is appended when the table's relation is provided. 
      * The suffix has a combination of the relation's runtime id and the 
      * current timestamp.
@@ -217,9 +217,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
     {
         assert (qualifiedName.length == 3);
         StringBuffer sb = new StringBuffer(action);
-        for (int i = 0; i < qualifiedName.length; i++) {
-            sb.append(".").append(qualifiedName[i]);
-        }
+        sb.append(".").append(qualifiedName[2]);
         if (rel != null) {
             sb.append("." + rel.getId());
             sb.append("_" + getTimestampString());
@@ -286,7 +284,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
             TableAccessRelBase tableRel = (TableAccessRelBase) call.rels[2];
             String tag = getTableTag(
                 TABLE_ACCESS_PREFIX,
-                tableRel.getTable().getQualifiedName(), null);
+                tableRel.getTable().getQualifiedName(), tableRel);
             transformToTag(call, calc, tag);
         }
     }

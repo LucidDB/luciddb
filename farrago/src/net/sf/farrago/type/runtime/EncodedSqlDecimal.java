@@ -66,9 +66,6 @@ public abstract class EncodedSqlDecimal
     public static final String VALUE_FIELD_NAME = "value";
     public static final String NARROW_CAST_METHOD_NAME = "narrowCast";
 
-    private static final BigInteger maxValue = 
-        NumberUtil.getMaxUnscaled(SqlTypeName.MAX_NUMERIC_PRECISION);
-
     //~ Instance fields --------------------------------------------------------
 
     private boolean isNull;
@@ -235,9 +232,8 @@ public abstract class EncodedSqlDecimal
         
         // round it to the correct scale; if it's too large, then 
         // replace it with null
-        BigDecimal rounded = 
-            bd.setScale(getScale(), BigDecimal.ROUND_HALF_UP);
-        if (rounded.unscaledValue().compareTo(maxValue) == 1) {
+        BigDecimal rounded = NumberUtil.rescaleBigDecimal(bd, getScale());
+        if (! NumberUtil.isValidDecimal(rounded)) {
             setNull(true);
             return;
         }
@@ -287,10 +283,8 @@ public abstract class EncodedSqlDecimal
                     getScale());
 
             // Check Overflow
-            BigInteger usv = bd.unscaledValue();
-            long usvl = usv.longValue();
-            if (usv.equals(BigInteger.valueOf(usvl))) {
-                parent.reinterpret(usvl, true);
+            if (NumberUtil.isValidDecimal(bd)) {
+                parent.reinterpret(bd.unscaledValue().longValue(), true);
             } else {
                 throw FarragoResource.instance().Overflow.ex();
             }

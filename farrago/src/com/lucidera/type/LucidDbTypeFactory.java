@@ -141,12 +141,13 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
                         SqlTypeName.MAX_NUMERIC_PRECISION);
 
                 int scale = Math.max(6, s1 + p2 + 1);
-                scale =
-                    Math.min(scale,
-                        SqlTypeName.MAX_NUMERIC_PRECISION - dout);
 
-                // cap the quotient scale
+                // LucidDb preserves the scale, but caps it, in order to 
+                // preserve the integral part of the result.
                 scale = Math.min(scale, DECIMAL_QUOTIENT_SCALE_CAP);
+                dout = 
+                    Math.min(dout, 
+                        SqlTypeName.MAX_NUMERIC_PRECISION - scale);
 
                 int precision = dout + scale;
                 assert (precision <= SqlTypeName.MAX_NUMERIC_PRECISION);

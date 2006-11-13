@@ -106,6 +106,18 @@ public class NumberUtil
         }
     }
 
+    /**
+     * @return whether a BigDecimal is a valid Farrago decimal.
+     *   If a BigDecimal's unscaled value overflows a long, then 
+     *   it is not a valid Farrago decimal.
+     */
+    public static boolean isValidDecimal(BigDecimal bd)
+    {
+        BigInteger usv = bd.unscaledValue();
+        long usvl = usv.longValue();
+        return usv.equals(BigInteger.valueOf(usvl));
+    }
+
     public static NumberFormat getApproxFormatter(boolean isFloat)
     {
         return (isFloat) ? floatFormatter : doubleFormatter;
