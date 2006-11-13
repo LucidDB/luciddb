@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> set schema 'foodmart';
+0: jdbc:luciddb:> set schema 'foodmart_test';
 0: jdbc:luciddb:> select count(distinct "product_class"."product_family") from "product_class" as "product_class";
 +---------+
 | EXPR$0  |

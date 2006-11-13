@@ -1,4 +1,4 @@
-set schema 'foodmart';
+set schema 'foodmart_test';
 select "product_class"."product_family" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and UPPER("product_class"."product_family") = '*SM_CTX_SEL' group by "product_class"."product_family" order by "product_class"."product_family" ;
 select "customer"."education" from "customer" as "customer" where UPPER("customer"."education") = '*SM_CTX_SEL' group by "customer"."education" order by "customer"."education" ;
 select "customer"."education" from "customer" as "customer" where UPPER("customer"."education") = '*SUBTOTAL_MEMBER_SEL~SUM' group by "customer"."education" order by "customer"."education" ;
