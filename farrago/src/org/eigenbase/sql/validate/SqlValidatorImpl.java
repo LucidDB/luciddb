@@ -1500,7 +1500,8 @@ public class SqlValidatorImpl
             scopes.put(call, overScope);
             final SqlNode operand = call.operands[0];
             final SqlNode newOperand =
-                registerFrom(parentScope, overScope, operand, alias, false);
+                registerFrom(
+                    parentScope, overScope, operand, alias, forceNullable);
             if (newOperand != operand) {
                 call.setOperand(0, newOperand);
             }
@@ -1508,7 +1509,8 @@ public class SqlValidatorImpl
             for (String tableName : overScope.childrenNames) {
                 final SqlValidatorNamespace childSpace =
                     overScope.getChild(tableName);
-                registerNamespace(usingScope, tableName, childSpace, false);
+                registerNamespace(
+                    usingScope, tableName, childSpace, forceNullable);
             }
 
             return newNode;

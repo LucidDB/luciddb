@@ -2363,6 +2363,52 @@ public class SqlValidatorTest
             "Column 'GENDER' not found in any table");
     }
 
+
+    public void testJoinRowType()
+    {
+        checkResultType(
+            "select * from emp left join dept on emp.deptno = dept.deptno",
+            "RecordType(INTEGER NOT NULL EMPNO," +
+                " VARCHAR(20) NOT NULL ENAME," +
+                " VARCHAR(10) NOT NULL JOB," +
+                " INTEGER NOT NULL MGR," +
+                " TIMESTAMP(0) NOT NULL HIREDATE," +
+                " INTEGER NOT NULL SAL," +
+                " INTEGER NOT NULL COMM," +
+                " INTEGER NOT NULL DEPTNO," +
+                " BOOLEAN NOT NULL SLACKER," +
+                " INTEGER DEPTNO0," +
+                " VARCHAR(10) NAME) NOT NULL");
+
+        checkResultType(
+            "select * from emp right join dept on emp.deptno = dept.deptno",
+            "RecordType(INTEGER EMPNO," +
+                " VARCHAR(20) ENAME," +
+                " VARCHAR(10) JOB," +
+                " INTEGER MGR," +
+                " TIMESTAMP(0) HIREDATE," +
+                " INTEGER SAL," +
+                " INTEGER COMM," +
+                " INTEGER DEPTNO," +
+                " BOOLEAN SLACKER," +
+                " INTEGER NOT NULL DEPTNO0," +
+                " VARCHAR(10) NOT NULL NAME) NOT NULL");
+
+        checkResultType(
+            "select * from emp full join dept on emp.deptno = dept.deptno",
+            "RecordType(INTEGER EMPNO," +
+                " VARCHAR(20) ENAME," +
+                " VARCHAR(10) JOB," +
+                " INTEGER MGR," +
+                " TIMESTAMP(0) HIREDATE," +
+                " INTEGER SAL," +
+                " INTEGER COMM," +
+                " INTEGER DEPTNO," +
+                " BOOLEAN SLACKER," +
+                " INTEGER DEPTNO0," +
+                " VARCHAR(10) NAME) NOT NULL");
+    }
+
     // todo: Cannot handle '(a join b)' yet -- we see the '(' and expect to
     // see 'select'.
     public void _testJoinUsing()

@@ -739,7 +739,8 @@ public abstract class RelOptUtil
      * @param rightKeys The ordinals of the fields from the right input which
      * are equi-join keys
      *
-     * @return What's left
+     * @return remaining join filters that are not equijoins; may return
+     *   a {@link RexLiteral} true, but never null
      */
     public static RexNode splitJoinCondition(
         RelNode left,
@@ -763,7 +764,7 @@ public abstract class RelOptUtil
         // Convert the remainders into a list that are AND'ed together.
         switch (residualList.size()) {
         case 0:
-            return null;
+            return left.getCluster().getRexBuilder().makeLiteral(true);
         case 1:
             return residualList.get(0);
         default:
@@ -1690,8 +1691,9 @@ public abstract class RelOptUtil
      * @param right Right input to the join
      * @param condition Join condition
      *
-     * @return Array holding the output. equiNonEqui[0] is the equi-join
-     * condition (or TRUE if empty); nonEqui[0] is rest of the condition.
+     * @return Array holding the output; neither element is null.
+     *   Element 0 is the equi-join condition (or TRUE if empty);
+     *   Element 1 is rest of the condition (or TRUE if empty).
      */
     public static RexNode [] splitJoinCondition(
         RelNode left,
@@ -1708,6 +1710,7 @@ public abstract class RelOptUtil
                 condition,
                 leftKeys,
                 rightKeys);
+        assert nonEquiCondition != null;
         RexNode equiCondition = rexBuilder.makeLiteral(true);
         assert leftKeys.size() == rightKeys.size();
         final int keyCount = leftKeys.size();
