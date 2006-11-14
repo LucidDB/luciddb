@@ -107,6 +107,12 @@ public abstract class DdlAlterStmt
         }
     }
 
+    /**
+     * Execute the alter statement
+     * 
+     * @param ddlValidator the session validator
+     * @param session a reentrant session
+     */
     protected abstract void execute(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session);

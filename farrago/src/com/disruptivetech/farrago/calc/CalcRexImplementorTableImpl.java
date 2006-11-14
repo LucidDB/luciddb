@@ -694,6 +694,21 @@ public class CalcRexImplementorTableImpl
             if (RexUtil.requiresDecimalExpansion(call, true)) {
                 return false;
             }
+            if (call.isA(RexKind.Cast)) {
+                // Can't deal with conversion between BINARY and VARBINARY;
+                // leave that for the Java calc.
+                RelDataType resultType = call.getType();
+                RelDataType inputType = call.getOperands()[0].getType();
+                if ((resultType.getFamily() == SqlTypeFamily.Binary)
+                    && (inputType.getFamily() == SqlTypeFamily.Binary))
+                {
+                    if (resultType.getSqlTypeName()
+                        != inputType.getSqlTypeName())
+                    {
+                        return false;
+                    }
+                }
+            }
             return true;
         }
     }

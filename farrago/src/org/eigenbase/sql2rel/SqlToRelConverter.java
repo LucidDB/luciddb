@@ -258,6 +258,46 @@ public class SqlToRelConverter
         }        
     }
     
+    public RelNode flattenTypes(
+        RelNode rootRel, 
+        boolean restructure)
+    {
+        
+        RelStructuredTypeFlattener typeFlattener =
+            new RelStructuredTypeFlattener(rexBuilder);
+        RelNode newRootRel = typeFlattener.rewrite(rootRel, restructure);
+        
+        // There are three maps constructed during convertQuery which need to
+        // to be maintained for use in decorrelation.
+        // 1. mapRefRelToCorVar: 
+        //    - map a rel node to the coorrelated variables it references
+        // 2. mapCorVarToCorRel:
+        //    - map a correlated variable to the correlatorRel providing it
+        // 3. mapFieldAccessToCorVar:
+        //    - map a rex field access to the cor var it represents.
+        //    because typeFlattener does not clone or modify a correlated field access
+        //    this map does not need to be updated.
+        //
+        typeFlattener.updateRelInMap(mapRefRelToCorVar);
+        typeFlattener.updateRelInMap(mapCorVarToCorRel); 
+        
+        return newRootRel;
+    }
+    
+    public RelNode decorrelate(SqlNode query, RelNode rootRel)
+    {
+        RelNode result = rootRel;
+
+        // If subquery is correlated and decorrelation is enabled, perform
+        // decorrelation.
+        if (enableDecorrelation() &&
+            hasCorrelation()) {
+            result = decorrelateQuery(result);
+            checkConvertedType(query, result);
+        }
+        return result;
+    }
+    
     /**
      * Converts an unvalidated query's parse tree into a relational expression.
      *
@@ -289,23 +329,7 @@ public class SqlToRelConverter
                     false,
                     SqlExplainLevel.EXPPLAN_ATTRIBUTES));            
         }
-        
-        // If subquery is correlated and decorrelation is enabled, perform
-        // decorrelation.
-        if (enableDecorrelation() &&
-            !mapCorVarToCorRel.isEmpty()) {
-            result = decorrelateQuery(result);
-            checkConvertedType(query, result);
-            if (dumpPlan) {
-                sqlToRelTracer.fine(
-                    RelOptUtil.dumpPlan(
-                        "Plan after decorrelating RelNode",
-                        result,
-                        false,
-                        SqlExplainLevel.EXPPLAN_ATTRIBUTES));            
-            }
-        }
-        
+                
         return result;
     }
 
@@ -981,14 +1005,28 @@ public class SqlToRelConverter
         RelDataTypeField field =
             (RelDataTypeField) rowType.getFieldList().get(iField);
         RelDataType type = field.getType();
-        if (!SqlTypeUtil.isExactNumeric(type)) {
-            return literal;
+        Comparable value = literal.getValue();
+        
+        if (SqlTypeUtil.isExactNumeric(type)) {
+            BigDecimal roundedValue = 
+                ((BigDecimal)value).setScale(type.getScale());
+            return rexBuilder.makeExactLiteral(
+                    roundedValue,
+                    type);
         }
-        BigDecimal value = (BigDecimal) literal.getValue();
-        BigDecimal roundedValue = value.setScale(type.getScale());
-        return rexBuilder.makeExactLiteral(
-                roundedValue,
-                type);
+        
+        if (value instanceof NlsString &&
+            type.getSqlTypeName() == SqlTypeName.Char)
+        {
+            // pad fixed character type
+            NlsString unpadded = (NlsString) value;
+            return rexBuilder.makeCharLiteral(
+                new NlsString(
+                    Util.rpad(unpadded.getValue(), type.getPrecision()),
+                    unpadded.getCharsetName(),
+                    unpadded.getCollation()));
+        }
+        return literal;
     }
 
     private boolean isRowConstructor(SqlNode node)
@@ -1637,13 +1675,26 @@ public class SqlToRelConverter
                 preExprs[0] = rexBuilder.makeLiteral(true);
             }
             
+            RelNode inputRel = bb.root;
+            Set<String> correlatedVariablesBefore =
+                RelOptUtil.getVariablesUsed(inputRel);
+
+
             bb.setRoot(
                 CalcRel.createProject(
-                    bb.root,
+                    inputRel,
                     preExprs,
                     null),
                 false);
             bb.mapRootRelToFieldProjection.put(bb.root, groupExprProjection);
+
+            Set<String> correlatedVariables = RelOptUtil.getVariablesUsed(bb.root);
+            correlatedVariables.removeAll(correlatedVariablesBefore);
+            
+            // Associate the corralated varaibles with the new project rel.
+            for (String correl : correlatedVariables) {
+                mapCorrelToRefRel.put(correl, bb.root);
+            }
             
             // add the aggregator
             final AggregateRel.Call [] aggCalls = aggConverter.getAggCalls();
@@ -1799,13 +1850,32 @@ public class SqlToRelConverter
         // e.g. if outer joins are not supported.
         return decorrelationEnabled;
     }
+
+    public boolean hasCorrelation()
+    {
+        return !mapCorVarToCorRel.isEmpty();
+    }
     
     protected RelNode decorrelateQuery(RelNode rootRel)
     {
         RelDecorrelator decorrelator =
             new RelDecorrelator(rexBuilder, mapRefRelToCorVar,
                 mapCorVarToCorRel, mapFieldAccessToCorVar);
-        RelNode newRootRel = decorrelator.decorrelate(rootRel);
+        boolean dumpPlan = sqlToRelTracer.isLoggable(Level.FINE);
+        
+        RelNode newRootRel =
+            decorrelator.removeCorrelation(rootRel);
+        
+        if (dumpPlan && newRootRel != rootRel) {
+            sqlToRelTracer.fine(
+                RelOptUtil.dumpPlan(
+                    "Plan after removing CorrelatorRel",
+                    newRootRel,
+                    false,
+                    SqlExplainLevel.EXPPLAN_ATTRIBUTES));            
+        }
+        
+        newRootRel = decorrelator.decorrelate(newRootRel);
         return newRootRel;
     }
         
@@ -3255,7 +3325,7 @@ public class SqlToRelConverter
         // implement SqlVisitor
         public Void visit(SqlDataTypeSpec type)
         {
-            throw null;
+            return null;
         }
 
         // implement SqlVisitor
@@ -3273,49 +3343,49 @@ public class SqlToRelConverter
         public Void visit(SqlCall call)
         {
             if (call.getOperator().isAggregator()) {
-            assert bb.agg == this;
-            int [] args = new int[call.operands.length];
-            try {
-                // switch out of agg mode
-                bb.agg = null;
-                for (int i = 0; i < call.operands.length; i++) {
-                    SqlNode operand = call.operands[i];
-                    RexNode convertedExpr = null;
+                assert bb.agg == this;
+                int [] args = new int[call.operands.length];
+                try {
+                    // switch out of agg mode
+                    bb.agg = null;
+                    for (int i = 0; i < call.operands.length; i++) {
+                        SqlNode operand = call.operands[i];
+                        RexNode convertedExpr = null;
 
-                    // special case for COUNT(*):  delete the *
-                    if (operand instanceof SqlIdentifier) {
-                        SqlIdentifier id = (SqlIdentifier) operand;
-                        if (id.isStar()) {
-                            assert (call.operands.length == 1);
-                            args = new int[0];
-                            break;
+                        // special case for COUNT(*):  delete the *
+                        if (operand instanceof SqlIdentifier) {
+                            SqlIdentifier id = (SqlIdentifier) operand;
+                            if (id.isStar()) {
+                                assert (call.operands.length == 1);
+                                args = new int[0];
+                                break;
+                            }
                         }
+                        if (convertedExpr == null) {
+                            convertedExpr = bb.convertExpression(operand);
+                            assert convertedExpr != null;
+                        }
+                        args[i] = lookupOrCreateGroupExpr(convertedExpr);
                     }
-                    if (convertedExpr == null) {
-                        convertedExpr = bb.convertExpression(operand);
-                        assert convertedExpr != null;
-                    }
-                    args[i] = lookupOrCreateGroupExpr(convertedExpr);
+                } finally {
+                    // switch back into agg mode
+                    bb.agg = this;
                 }
-            } finally {
-                // switch back into agg mode
-                bb.agg = this;
-            }
             
-            final Aggregation aggregation = (Aggregation) call.getOperator();
-            RelDataType type = validator.deriveType(bb.scope, call);
-            boolean distinct = false;
-            SqlLiteral quantifier = call.getFunctionQuantifier();
-            if ((null != quantifier)
-                && (quantifier.getValue() == SqlSelectKeyword.Distinct)) {
-                distinct = true;
-            }
-            final AggregateRel.Call aggCall =
-                new AggregateRel.Call(aggregation, distinct, args, type);
-            int index = aggCalls.size() + groupExprs.size();
-            aggCalls.add(aggCall);
-            final RexNode rex = rexBuilder.makeInputRef(type, index);
-            aggMapping.put(call, rex);
+                final Aggregation aggregation = (Aggregation) call.getOperator();
+                RelDataType type = validator.deriveType(bb.scope, call);
+                boolean distinct = false;
+                SqlLiteral quantifier = call.getFunctionQuantifier();
+                if ((null != quantifier)
+                    && (quantifier.getValue() == SqlSelectKeyword.Distinct)) {
+                    distinct = true;
+                }
+                final AggregateRel.Call aggCall =
+                    new AggregateRel.Call(aggregation, distinct, args, type);
+                int index = aggCalls.size() + groupExprs.size();
+                aggCalls.add(aggCall);
+                final RexNode rex = rexBuilder.makeInputRef(type, index);
+                aggMapping.put(call, rex);
             } else if (call instanceof SqlSelect) {
                 // rchen 2006-10-17:
                 // for now do not detect aggregates in subqueries.                   

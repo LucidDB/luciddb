@@ -171,7 +171,7 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 +--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
-0: jdbc:farrago:> -- Server
+0: jdbc:farrago:> -- Foreign Server
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create foreign data wrapper foo_wrapper
 . . . . . . . . >  library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
@@ -215,7 +215,7 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 +-----+
 0: jdbc:farrago:>                                                                                 
 0: jdbc:farrago:> --
-0: jdbc:farrago:> -- Wrapper
+0: jdbc:farrago:> -- Foreign Wrapper
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create or replace foreign data wrapper foo_wrapper
 . . . . . . . . >   library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
@@ -237,7 +237,26 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 | 0   |
 | 0   |
 +-----+
-0: jdbc:farrago:>                                                                                 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- Local Server
+0: jdbc:farrago:> --
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server extra_ftrs_data_server
+. . . . . . . . > local data wrapper sys_ftrs;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table extra_foo (bar integer primary key)
+. . . . . . . . > server extra_ftrs_data_server;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create or replace server extra_ftrs_data_server
+. . . . . . . . > local data wrapper sys_ftrs;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from extra_foo;
++------+
+| BAR  |
++------+
++------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- Bugs!
 0: jdbc:farrago:> --

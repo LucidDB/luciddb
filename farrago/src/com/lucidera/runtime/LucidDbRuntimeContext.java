@@ -118,8 +118,17 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
     public void closeAllocation()
     {
         // Print a summary message if there were any errors or warnings
-        if (quota.errorCount > 0 || quota.warningCount > 0) 
-        {
+        if (quota.errorCount > 0 || quota.warningCount > 0) {
+            if (quota.errorCount <= quota.errorMax) {
+                // Also post a warning (since we did not hit the limit,
+                // which would have caused an excn to be thrown already,
+                // making the warning superfluous and confusing).
+                getWarningQueue().postWarning(
+                    FarragoResource.instance().
+                    RecoverableErrorWarning.ex(
+                        quota.errorCount,
+                        quota.warningCount));
+            }
             String summaryFilename = getSummaryFilename();
             SummaryLogger summary = null;
             try {
@@ -751,14 +760,10 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                         ex2 = 
                             FarragoResource.instance().JavaCalcConditionError
                             .ex(row, messages);
-                    } else if (! tag.startsWith(LoptIterCalcRule.TABLE_ACCESS_PREFIX)) { 
+                    } else { 
                         ex2 = 
                             FarragoResource.instance().JavaCalcError.ex(
                                 field, row, messages);
-                    } else {
-                        ex2 = 
-                            FarragoResource.instance().JavaCalcDetailedError
-                            .ex(field, tag, row, messages);
                     }
                     if (quota.errorMax > 0) {
                         throw FarragoResource.instance().ErrorLimitExceeded.ex(

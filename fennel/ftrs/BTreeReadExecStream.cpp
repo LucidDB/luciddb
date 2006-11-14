@@ -59,9 +59,6 @@ void BTreeReadExecStream::getResourceRequirements(
 
 void BTreeReadExecStream::closeImpl()
 {
-    if (pReader) {
-        pReader->endSearch();
-    }
     BTreeExecStream::closeImpl();
 }
 

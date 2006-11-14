@@ -27,7 +27,6 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -38,8 +37,18 @@ import org.eigenbase.rex.*;
  * LcsIndexSemiJoinRule implements the rule for converting a semijoin expression
  * into the actual operations used to execute the semijoin. Specfically,
  *
- * <p>SemiJoinRel(LcsRowScanRel, D) -> LcsRowScanRel( LcsIndexMergeRel(
- * LcsIndexSearchRel( LcsFennelSortRel (ProjectRel(D)))))
+ * <pre>
+ * SemiJoinRel(LcsRowScanRel, D) -> 
+ *     LcsRowScanRel(
+ *         LcsIndexMergeRel(
+ *             LcsIndexSearchRel(
+ *                 LcsFennelSortRel(
+ *                     AggregateRel(
+ *                         ProjectRel(D))))))
+ * </pre>
+ * 
+ * <p>Note that this rule assumes that no projections have been pushed into
+ * the LcsRowScanRels.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -47,9 +56,7 @@ import org.eigenbase.rex.*;
 public class LcsIndexSemiJoinRule
     extends RelOptRule
 {
-    //  ~ Constructors ----------------------------------------------------------
-
-    //~ Constructors -----------------------------------------------------------
+    // ~ Constructors ----------------------------------------------------------
 
     public LcsIndexSemiJoinRule(RelOptRuleOperand rule, String id)
     {
@@ -102,10 +109,9 @@ public class LcsIndexSemiJoinRule
         SemiJoinRel semiJoin = (SemiJoinRel) call.rels[0];
         LcsRowScanRel origRowScan = (LcsRowScanRel) call.rels[1];
 
-        // if the rowscan has an intersect or merge child, then let those
-        // rules handle those cases
-        if ((call.rels.length == 2) && (origRowScan.getInputs().length == 1)
-            && !origRowScan.hasExtraFilter) {
+        // if the rowscan is already being used with an index, then let one
+        // of the other rules handle those cases
+        if ((call.rels.length == 2) && !origRowScan.isFullScan()) {
             return;
         }
         RelNode rightRel = semiJoin.getRight();
@@ -201,7 +207,7 @@ public class LcsIndexSemiJoinRule
             castExps = projExps;
         }
 
-        // filter out null search keys, since they never match and use
+        // filter out null search keys, since they never match, and use
         // that filter result as the input into the projection/cast
         RelNode nullFilterRel =
             RelOptUtil.createNullFilter(rightRel, rightOrdinals);

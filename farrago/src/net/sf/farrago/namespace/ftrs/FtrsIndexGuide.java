@@ -359,7 +359,7 @@ class FtrsIndexGuide
             final FarragoPreparingStmt stmt =
                 FennelRelUtil.getPreparingStmt(rel);
             indexWriter.setRootPageId(
-                stmt.getIndexMap().getIndexRoot(index));
+                stmt.getIndexMap().getIndexRoot(index, true));
         } else {
             indexWriter.setRootPageId(-1);
         }

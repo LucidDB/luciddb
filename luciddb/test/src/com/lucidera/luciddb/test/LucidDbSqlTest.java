@@ -157,7 +157,7 @@ public class LucidDbSqlTest extends FarragoTestCase
         {
             String name = schema.getName();
             return name.equals("APPLIB")
-                || name.equals("FOODMART_DATA")
+                || name.equals("FOODMART")
                 || super.isBlessedSchema(schema);
         }
 
@@ -178,8 +178,7 @@ public class LucidDbSqlTest extends FarragoTestCase
         protected boolean isBlessedAuthId(FemAuthId authId)
         {
             String name = authId.getName();
-            return name.equals("FOODMART_USER")
-                || super.isBlessedAuthId(authId);
+            return super.isBlessedAuthId(authId);
         }
     }
 

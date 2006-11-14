@@ -69,7 +69,7 @@ public class LucidDbTestHarness extends TestCase
      *
      * @return connection to LucidDB
      */
-    static Connection startupEngine(
+    public static Connection startupEngine(
         String urlPrefix, String username, String passwd)
         throws Exception
     {

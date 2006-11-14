@@ -30,7 +30,12 @@
 | 4       |
 +---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --select floor(to_number(min(PRICE))), floor(to_number(max(PRICE))) from SALES;
+0: jdbc:luciddb:> select floor((min(PRICE))), floor((max(PRICE))) from SALES;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 0       | 9       |
++---------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- with group by
 0: jdbc:luciddb:> 
@@ -57,28 +62,27 @@
 +---------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(PRICE)
-. . . . . . . . > , PRODID
 . . . . . . . . > from SALES group by PRODID order by PRODID;
-+---------+---------+
-| EXPR$0  | PRODID  |
-+---------+---------+
-| 76      | 10000   |
-| 67      | 10001   |
-| 77      | 10002   |
-| 51      | 10003   |
-| 57      | 10004   |
-| 67      | 10005   |
-| 58      | 10006   |
-| 72      | 10007   |
-| 62      | 10008   |
-| 61      | 10009   |
-| 68      | 10010   |
-| 36      | 10011   |
-| 47      | 10012   |
-| 68      | 10013   |
-| 77      | 10014   |
-| 56      | 10015   |
-+---------+---------+
++---------+
+| EXPR$0  |
++---------+
+| 76      |
+| 67      |
+| 77      |
+| 51      |
+| 57      |
+| 67      |
+| 58      |
+| 72      |
+| 62      |
+| 61      |
+| 68      |
+| 36      |
+| 47      |
+| 68      |
+| 77      |
+| 56      |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select floor(avg(PRICE)), PRODID, floor(avg(PRICE)) from SALES group by PRODID order by PRODID;
 +---------+---------+---------+
@@ -102,43 +106,61 @@
 | 4       | 10015   | 4       |
 +---------+---------+---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --select PRODID, to_number(min(PRICE)), to_number(max(PRICE)) from SALES group by PRODID order by PRODID;
+0: jdbc:luciddb:> select PRODID, min(PRICE), max(PRICE) from SALES group by PRODID order by PRODID;
++---------+---------+---------+
+| PRODID  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| 10000   | 0.11    | 9.98    |
+| 10001   | 0.06    | 9.96    |
+| 10002   | 0.19    | 9.84    |
+| 10003   | 0.06    | 9.28    |
+| 10004   | 0.03    | 9.95    |
+| 10005   | 0.29    | 9.88    |
+| 10006   | 0.23    | 9.59    |
+| 10007   | 0.31    | 9.95    |
+| 10008   | 0.03    | 9.99    |
+| 10009   | 0.16    | 9.86    |
+| 10010   | 0.38    | 9.91    |
+| 10011   | 0.40    | 9.51    |
+| 10012   | 0.38    | 9.23    |
+| 10013   | 0.00    | 9.94    |
+| 10014   | 0.06    | 9.86    |
+| 10015   | 0.09    | 9.92    |
++---------+---------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- having
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- TODO: FRG-115
+0: jdbc:luciddb:> -- FRG-115
 0: jdbc:luciddb:> select sum(PRICE)
-. . . . . . . . > , PRODID
 . . . . . . . . > from SALES group by PRODID having PRODID < 10010 order by PRODID;
-+---------+---------+
-| EXPR$0  | PRODID  |
-+---------+---------+
-| 379.32  | 10000   |
-| 348.61  | 10001   |
-| 416.65  | 10002   |
-| 225.22  | 10003   |
-| 296.48  | 10004   |
-| 287.55  | 10005   |
-| 301.03  | 10006   |
-| 342.51  | 10007   |
-| 329.23  | 10008   |
-| 307.79  | 10009   |
-+---------+---------+
++---------+
+| EXPR$0  |
++---------+
+| 379.32  |
+| 348.61  |
+| 416.65  |
+| 225.22  |
+| 296.48  |
+| 287.55  |
+| 301.03  |
+| 342.51  |
+| 329.23  |
+| 307.79  |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(PRICE)
-. . . . . . . . > , PRODID
 . . . . . . . . > from SALES group by PRODID having PRODID > 10010 and PRODID/2<5007 order by PRODID;
-+---------+---------+
-| EXPR$0  | PRODID  |
-+---------+---------+
-| 36      | 10011   |
-| 47      | 10012   |
-| 68      | 10013   |
-+---------+---------+
++---------+
+| EXPR$0  |
++---------+
+| 36      |
+| 47      |
+| 68      |
++---------+
+0: jdbc:luciddb:> -- END FRG-115
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- TODO: FRG-165
+0: jdbc:luciddb:> -- FRG-165
 0: jdbc:luciddb:> select floor(avg(PRICE))
-. . . . . . . . > , PRODID
 . . . . . . . . > from SALES group by PRODID having PRODID in (10005, 10007, 10009) order by PRODID;
 +---------+
 | EXPR$0  |
@@ -148,130 +170,165 @@
 | 5       |
 +---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --select to_number(min(PRICE)), to_number(max(PRICE)), PRODID from SALES group by PRODID having PRODID between 10005 and 10010 order by PRODID;
+0: jdbc:luciddb:> select min(PRICE), max(PRICE), PRODID from SALES group by PRODID having PRODID between 10005 and 10010 order by PRODID;
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | PRODID  |
++---------+---------+---------+
+| 0.29    | 9.88    | 10005   |
+| 0.23    | 9.59    | 10006   |
+| 0.31    | 9.95    | 10007   |
+| 0.03    | 9.99    | 10008   |
+| 0.16    | 9.86    | 10009   |
+| 0.38    | 9.91    | 10010   |
++---------+---------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- where clauses restricting the rows aggregated
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select sum(PRICE)
-. . . . . . . . > , PRODID 
 . . . . . . . . > from SALES  where PRODID in (10005, 10010) group by PRODID order by PRODID;
-+---------+---------+
-| EXPR$0  | PRODID  |
-+---------+---------+
-| 287.55  | 10005   |
-| 394.59  | 10010   |
-+---------+---------+
++---------+
+| EXPR$0  |
++---------+
+| 287.55  |
+| 394.59  |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(PRICE)
-. . . . . . . . > , PRODID
 . . . . . . . . > from SALES where PRICE+0 < 5.00 group by PRODID order by PRODID;
-+---------+---------+
-| EXPR$0  | PRODID  |
-+---------+---------+
-| 41      | 10000   |
-| 29      | 10001   |
-| 33      | 10002   |
-| 27      | 10003   |
-| 30      | 10004   |
-| 40      | 10005   |
-| 26      | 10006   |
-| 34      | 10007   |
-| 28      | 10008   |
-| 31      | 10009   |
-| 24      | 10010   |
-| 17      | 10011   |
-| 26      | 10012   |
-| 40      | 10013   |
-| 37      | 10014   |
-| 30      | 10015   |
-+---------+---------+
++---------+
+| EXPR$0  |
++---------+
+| 41      |
+| 29      |
+| 33      |
+| 27      |
+| 30      |
+| 40      |
+| 26      |
+| 34      |
+| 28      |
+| 31      |
+| 24      |
+| 17      |
+| 26      |
+| 40      |
+| 37      |
+| 30      |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select floor(avg(PRICE))
-. . . . . . . . > , PRODID
 . . . . . . . . > from SALES where EMPNO < 100 or EMPNO > 107 group by PRODID order by PRODID;
-+---------+---------+
-| EXPR$0  | PRODID  |
-+---------+---------+
-| 4       | 10000   |
-| 5       | 10001   |
-| 6       | 10002   |
-| 4       | 10003   |
-| 4       | 10004   |
-| 3       | 10005   |
-| 5       | 10006   |
-| 5       | 10007   |
-| 5       | 10008   |
-| 6       | 10009   |
-| 5       | 10010   |
-| 4       | 10011   |
-| 4       | 10012   |
-| 4       | 10013   |
-| 4       | 10014   |
-| 4       | 10015   |
-+---------+---------+
++---------+
+| EXPR$0  |
++---------+
+| 4       |
+| 5       |
+| 6       |
+| 4       |
+| 4       |
+| 3       |
+| 5       |
+| 5       |
+| 5       |
+| 6       |
+| 5       |
+| 4       |
+| 4       |
+| 4       |
+| 4       |
+| 4       |
++---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --select to_number(min(PRICE)), to_number(max(PRICE)) from SALES where EMPNO*2 between 204 and 212 group by PRODID order by PRODID;
+0: jdbc:luciddb:> select min(PRICE), max(PRICE) from SALES where EMPNO*2 between 204 and 212 group by PRODID order by PRODID;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 0.11    | 9.78    |
+| 0.06    | 9.60    |
+| 0.19    | 9.84    |
+| 0.07    | 8.08    |
+| 0.75    | 9.95    |
+| 0.29    | 9.88    |
+| 0.23    | 9.58    |
+| 0.45    | 9.48    |
+| 0.03    | 9.82    |
+| 0.16    | 9.47    |
+| 0.38    | 9.76    |
+| 0.84    | 8.70    |
+| 1.48    | 8.78    |
+| 0.03    | 9.94    |
+| 0.06    | 9.86    |
+| 0.09    | 9.92    |
++---------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- having and where clauses
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- TODO: FRG-115
+0: jdbc:luciddb:> -- FRG-115
 0: jdbc:luciddb:> select sum(PRICE)
-. . . . . . . . > , PRODID
 . . . . . . . . > from SALES
 . . . . . . . . > where custid>50
 . . . . . . . . > group by PRODID having PRODID < 10010
 . . . . . . . . > order by PRODID;
-+---------+---------+
-| EXPR$0  | PRODID  |
-+---------+---------+
-| 165.64  | 10000   |
-| 185.29  | 10001   |
-| 220.96  | 10002   |
-| 101.15  | 10003   |
-| 157.65  | 10004   |
-| 128.83  | 10005   |
-| 157.71  | 10006   |
-| 128.35  | 10007   |
-| 169.41  | 10008   |
-| 138.16  | 10009   |
-+---------+---------+
++---------+
+| EXPR$0  |
++---------+
+| 165.64  |
+| 185.29  |
+| 220.96  |
+| 101.15  |
+| 157.65  |
+| 128.83  |
+| 157.71  |
+| 128.35  |
+| 169.41  |
+| 138.16  |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(PRICE)
-. . . . . . . . > , PRODID
 . . . . . . . . > from SALES
 . . . . . . . . > where custid>50
 . . . . . . . . > group by PRODID having PRODID > 10010 and PRODID/2<5007
 . . . . . . . . > order by PRODID;
-+---------+---------+
-| EXPR$0  | PRODID  |
-+---------+---------+
-| 12      | 10011   |
-| 29      | 10012   |
-| 33      | 10013   |
-+---------+---------+
++---------+
+| EXPR$0  |
++---------+
+| 12      |
+| 29      |
+| 33      |
++---------+
+0: jdbc:luciddb:> -- END FRG-115
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- TODO: FRG-165
+0: jdbc:luciddb:> -- FRG-165
 0: jdbc:luciddb:> select floor(avg(PRICE))
-. . . . . . . . > , PRODID
 . . . . . . . . > from SALES
 . . . . . . . . > where custid>50
 . . . . . . . . > group by PRODID
 . . . . . . . . > having PRODID in (10005, 10007, 10009)
 . . . . . . . . > order by PRODID;
-+---------+---------+
-| EXPR$0  | PRODID  |
-+---------+---------+
-| 4       | 10005   |
-| 4       | 10007   |
-| 4       | 10009   |
-+---------+---------+
++---------+
+| EXPR$0  |
++---------+
+| 4       |
+| 4       |
+| 4       |
++---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- select to_number(min(PRICE)), to_number(max(PRICE)), PRODID from SALES
-0: jdbc:luciddb:> -- where custid>50
-0: jdbc:luciddb:> -- group by PRODID
-0: jdbc:luciddb:> -- having PRODID between 10005 and 10010
-0: jdbc:luciddb:> -- order by PRODID;
+0: jdbc:luciddb:> select min(PRICE), max(PRICE), PRODID from SALES
+. . . . . . . . > where custid>50
+. . . . . . . . > group by PRODID
+. . . . . . . . > having PRODID between 10005 and 10010
+. . . . . . . . > order by PRODID;
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | PRODID  |
++---------+---------+---------+
+| 0.29    | 9.88    | 10005   |
+| 0.37    | 9.58    | 10006   |
+| 0.61    | 9.40    | 10007   |
+| 0.03    | 9.82    | 10008   |
+| 0.16    | 9.34    | 10009   |
+| 0.38    | 9.79    | 10010   |
++---------+---------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- multiple group by's
 0: jdbc:luciddb:> 

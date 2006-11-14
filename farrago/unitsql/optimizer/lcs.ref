@@ -24,13 +24,13 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify creation of system-defined clustered index
 0: jdbc:farrago:> !indexes LCSEMPS
-+------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |               INDEX_NAME               | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                        | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCS$LCSEMPS         | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |             INDEX_NAME             | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                    | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS         | 3     |                   |              | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> -- verify that explain plan works
@@ -106,15 +106,15 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify creation of system-defined clustered indices
 0: jdbc:farrago:> !indexes LCSEMPS
-+------------+--------------+-------------+-------------+------------------+---------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |           INDEX_NAME            | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+---------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                 | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCS$LCSEMPS  | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL            | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL            | 1     | 2                 | NAME         | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL            | 1     | 3                 | EMPID        | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+---------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+-----------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |         INDEX_NAME          | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+-----------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                             | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS  | 3     |                   |              | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL        | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL        | 1     | 2                 | NAME         | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL        | 1     | 3                 | EMPID        | A             | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+-----------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that explain plan works
 0: jdbc:farrago:> !set outputformat csv
@@ -124,7 +124,7 @@
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
 '    FennelReshapeRel(projection=[[0, 1, 2]], outputRowType=[RecordType(INTEGER EMPNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER EMPID) NOT NULL])'
 '      FennelRenameRel(fieldNames=[[EMPNO, NAME, EMPID]])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=[10], expr#2=[_ISO-8859-1'Selma'], expr#3=[10000], EXPR$0=[$t1], EXPR$1=[$t2], EXPR$2=[$t3])'
+'        FennelCalcRel(expr#0=[{inputs}], expr#1=[10], expr#2=['Selma'], expr#3=[10000], EXPR$0=[$t1], EXPR$1=[$t2], EXPR$2=[$t3])'
 '          FennelValuesRel(tuples=[[{ 0 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for 
@@ -133,7 +133,7 @@
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
 '    FennelReshapeRel(projection=[[0, 1, 2]], outputRowType=[RecordType(INTEGER EMPNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER EMPID) NOT NULL])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 5]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that insert values works
@@ -239,13 +239,13 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify creation of system-defined clustered index
 0: jdbc:farrago:> !indexes LCSEMPS
-+------------+--------------+-------------+-------------+------------------+---------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |              INDEX_NAME               | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+---------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                       | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCS$LCSEMPS        | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$CITY  | 1     | 1                 | CITY         | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+---------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+-----------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |            INDEX_NAME             | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+-----------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                   | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS        | 3     |                   |              | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$CITY  | 1     | 1                 | CITY         | A             | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+-----------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that explain plan works
 0: jdbc:farrago:> !set outputformat csv
@@ -262,7 +262,7 @@
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
 '    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
 '      FennelRenameRel(fieldNames=[[CITY]])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1''], EXPR$0=[$t1])'
+'        FennelCalcRel(expr#0=[{inputs}], expr#1=[''], EXPR$0=[$t1])'
 '          FennelValuesRel(tuples=[[{ 0 }]])'
 0: jdbc:farrago:> explain plan for insert into lcsemps values('Pescadero');
 'column0'
@@ -270,7 +270,7 @@
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
 '    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
 '      FennelRenameRel(fieldNames=[[CITY]])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'Pescadero'], EXPR$0=[$t1])'
+'        FennelCalcRel(expr#0=[{inputs}], expr#1=['Pescadero'], EXPR$0=[$t1])'
 '          FennelValuesRel(tuples=[[{ 0 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Plans with NULL in the populating stream
@@ -280,7 +280,7 @@
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
 '    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > insert into lcsemps select city from sales.emps where empno = 100;
@@ -288,7 +288,7 @@
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
 '    FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[100]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Locate a NULL value from the source table.
@@ -463,14 +463,14 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify creation of system-defined clustered indices
 0: jdbc:farrago:> !indexes LCSEMPS
-+------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |               INDEX_NAME               | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                        | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCS$LCSEMPS         | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$LCSEMPS$NAME   | 1     | 1                 | NAME         | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+----------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |             INDEX_NAME             | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                    | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS         | 3     |                   |              | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$NAME   | 1     | 1                 | NAME         | A             | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that explain plan works
 0: jdbc:farrago:> !set outputformat csv
@@ -480,7 +480,7 @@
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, LCSEMPS]])'
 '    FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER EMPNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
 '      FennelRenameRel(fieldNames=[[EMPNO, NAME]])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=[10], expr#2=[_ISO-8859-1'Selma'], EXPR$0=[$t1], EXPR$1=[$t2])'
+'        FennelCalcRel(expr#0=[{inputs}], expr#1=[10], expr#2=['Selma'], EXPR$0=[$t1], EXPR$1=[$t2])'
 '          FennelValuesRel(tuples=[[{ 0 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for 
@@ -541,7 +541,7 @@
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, MULTICLUSTER]])'
 '    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7]], outputRowType=[RecordType(INTEGER C0, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C1, INTEGER C2, INTEGER C3, INTEGER C4, INTEGER C5, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C6, INTEGER C7) NOT NULL])'
 '      FennelRenameRel(fieldNames=[[C0, C1, C2, C3, C4, C5, C6, C7]])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[_ISO-8859-1'am'], expr#3=[100], expr#4=[50], expr#5=[-10], expr#6=[1000], expr#7=[null], expr#8=[CAST($t7):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#9=[0], EXPR$0=[$t1], EXPR$1=[$t2], EXPR$2=[$t3], EXPR$3=[$t4], EXPR$4=[$t5], EXPR$5=[$t6], EXPR$6=[$t8], EXPR$7=[$t9])'
+'        FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=['am'], expr#3=[100], expr#4=[50], expr#5=[-10], expr#6=[1000], expr#7=[null], expr#8=[CAST($t7):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#9=[0], EXPR$0=[$t1], EXPR$1=[$t2], EXPR$2=[$t3], EXPR$3=[$t4], EXPR$4=[$t5], EXPR$5=[$t6], EXPR$6=[$t8], EXPR$7=[$t9])'
 '          FennelValuesRel(tuples=[[{ 0 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -609,7 +609,7 @@
 '    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7]], outputRowType=[RecordType(INTEGER C0, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C1, INTEGER C2, INTEGER C3, INTEGER C4, INTEGER C5, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C6, INTEGER C7) NOT NULL])'
 '      FennelRenameRel(fieldNames=[[C0, C1, C2, C3, C4, C5, C6, C7]])'
 '        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[10], expr#6=[100], expr#7=[1000], proj#0..1=[{exprs}], EXPR$2=[$t4], EXPR$3=[$t5], EXPR$4=[$t6], EXPR$5=[$t7], CITY=[$t3], DEPTNO=[$t2])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2, 4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from multicluster order by c0, c1;
@@ -809,10 +809,10 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[2, 4, 8, 0]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]], residual columns=[[0, 2, 4, 8]])'
-'    FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 0, _ISO-8859-1']', 0 }]])'
-'    FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 2, _ISO-8859-1']', 2 }]])'
-'    FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 4, _ISO-8859-1']', 4 }]])'
-'    FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 8, _ISO-8859-1']', 8 }]])'
+'    FennelValuesRel(tuples=[[{ '[', 0, ']', 0 }]])'
+'    FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
+'    FennelValuesRel(tuples=[[{ '[', 4, ']', 4 }]])'
+'    FennelValuesRel(tuples=[[{ '[', 8, ']', 8 }]])'
 0: jdbc:farrago:> explain plan for select c7, c0, c5, c1 from tencols
 . . . . . . . . >     where c1 + c5 = 6;
 'column0'
@@ -830,7 +830,7 @@
 'IterCalcRel(expr#0..1=[{inputs}], expr#2=[+($t0, $t1)], EXPR$0=[$t2])'
 '  FennelToIteratorConverter'
 '    LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0, 1]], clustered indexes=[[I_C0, I_C1_C2]], residual columns=[[0]])'
-'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 0, _ISO-8859-1']', 0 }]])'
+'      FennelValuesRel(tuples=[[{ '[', 0, ']', 0 }]])'
 0: jdbc:farrago:> -- column referenced in filter is processed by the index scan so it should
 0: jdbc:farrago:> -- not be projected
 0: jdbc:farrago:> explain plan for select c0 from tencols where c9 = 9;
@@ -838,7 +838,7 @@
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0]], clustered indexes=[[I_C0]])'
 '    LcsIndexSearchRel(table=[[LOCALDB, LCS, TENCOLS]], index=[I_C9], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 9, _ISO-8859-1']', 9 }]])'
+'      FennelValuesRel(tuples=[[{ '[', 9, ']', 9 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
@@ -899,15 +899,15 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that three indexes are created (not four)
 0: jdbc:farrago:> !indexes RECTANGLES
-+------------+--------------+-------------+-------------+------------------+------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |                INDEX_NAME                | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | LCS          | RECTANGLES  | false       |                  |                                          | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | LCS          | RECTANGLES  | false       | LOCALDB          | SYS$DELETION_INDEX$LCS$RECTANGLES        | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$RECTANGLES$ID    | 1     | 1                 | ID           | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$RECTANGLES$NAME  | 1     | 1                 | NAME         | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCS$RECTANGLES$R     | 1     | 1                 | R            | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+--------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |              INDEX_NAME              | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+--------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | LCS          | RECTANGLES  | false       |                  |                                      | 0     | 0                 |              |               | 0            | 0      |                   |
+| LOCALDB    | LCS          | RECTANGLES  | false       | LOCALDB          | SYS$DELETION_INDEX$RECTANGLES        | 3     |                   |              | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$RECTANGLES$ID    | 1     | 1                 | ID           | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$RECTANGLES$NAME  | 1     | 1                 | NAME         | A             | 0            | 0      |                   |
+| LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$RECTANGLES$R     | 1     | 1                 | R            | A             | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+--------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into rectangles values('Default', new rectangle(), 1);
 0: jdbc:farrago:> 
@@ -945,37 +945,36 @@
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, RECTANGLES]])'
 '    FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, BOOLEAN R, DOUBLE R, DOUBLE R, INTEGER NOT NULL ID) NOT NULL])'
 '      FennelRenameRel(fieldNames=[[NAME, R, R, R, ID]])'
-'        FennelRenameRel(fieldNames=[[EXPR$0, EXPR$1, EXPR$1, EXPR$1, EXPR$2]])'
-'          FennelCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'Default'], expr#2=[false], expr#3=[2.0], expr#4=[Reinterpret($t3)], expr#5=[CAST($t4):DOUBLE NOT NULL], expr#6=[1E1], expr#7=[/($t5, $t6)], expr#8=[CAST($t7):DOUBLE], expr#9=[4.0], expr#10=[Reinterpret($t9)], expr#11=[CAST($t10):DOUBLE NOT NULL], expr#12=[/($t11, $t6)], expr#13=[CAST($t12):DOUBLE], expr#14=[1], EXPR$0=[$t1], EXPR$1=[$t2], EXPR$1$$0=[$t8], EXPR$1$$1=[$t13], EXPR$2=[$t14])'
-'            FennelValuesRel(tuples=[[{ 0 }]])'
+'        FennelCalcRel(expr#0=[{inputs}], expr#1=['Default'], expr#2=[false], expr#3=[2.0], expr#4=[Reinterpret($t3)], expr#5=[CAST($t4):DOUBLE NOT NULL], expr#6=[1E1], expr#7=[/($t5, $t6)], expr#8=[CAST($t7):DOUBLE], expr#9=[4.0], expr#10=[Reinterpret($t9)], expr#11=[CAST($t10):DOUBLE NOT NULL], expr#12=[/($t11, $t6)], expr#13=[CAST($t12):DOUBLE], expr#14=[1], EXPR$0=[$t1], EXPR$1=[$t2], EXPR$1=[$t8], EXPR$1=[$t13], EXPR$2=[$t14])'
+'          FennelValuesRel(tuples=[[{ 0 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from rectangles t;
 'column0'
 'IterCalcRel(expr#0..4=[{inputs}], expr#5=[IS NULL($t1)], expr#6=[null], expr#7=[CAST($t6):ObjectSqlType(LOCALDB.LCS.RECTANGLE)], expr#8=[NEW($t2, $t3):ObjectSqlType(LOCALDB.LCS.RECTANGLE)], expr#9=[CASE($t5, $t7, $t8)], NAME=[$t0], R=[$t9], ID=[$t4])'
 '  FennelToIteratorConverter'
-'    LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCS$RECTANGLES$ID, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$NAME, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$R]])'
+'    LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RECTANGLES$ID, SYS$CLUSTERED_INDEX$RECTANGLES$NAME, SYS$CLUSTERED_INDEX$RECTANGLES$R]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select id from rectangles t;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[ID]])'
-'    LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[[4]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCS$RECTANGLES$ID]])'
+'    LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[[4]], clustered indexes=[[SYS$CLUSTERED_INDEX$RECTANGLES$ID]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select t.r.width from rectangles t;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[WIDTH]])'
-'    LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCS$RECTANGLES$R]])'
+'    LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$RECTANGLES$R]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select t.r.height, name from rectangles t;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[HEIGHT, NAME]])'
-'    LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[[3, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCS$RECTANGLES$NAME, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$R]])'
+'    LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[[3, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$RECTANGLES$NAME, SYS$CLUSTERED_INDEX$RECTANGLES$R]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 

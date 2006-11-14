@@ -121,7 +121,8 @@ public class FarragoStmtValidator
         // clone session variables so that any context changes we make during
         // validation are transient
         sessionVariables = session.getSessionVariables().cloneVariables();
-        typeFactory = new FarragoTypeFactoryImpl(repos);
+        typeFactory = (FarragoTypeFactory) 
+            session.getPersonality().newTypeFactory(repos);
         dataWrapperCache =
             new FarragoDataWrapperCache(
                 this,

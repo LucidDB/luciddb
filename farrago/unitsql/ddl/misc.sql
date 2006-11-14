@@ -27,10 +27,10 @@ create index xxx on t2(i);
 
 -- likewise for constraint name uniqueness
 
-create table t1(i int not null constraint lucy primary key);
+create table t3(i int not null constraint lucy primary key);
 
 -- should fail
-create table t2(i int not null constraint lucy primary key);
+create table t4(i int not null constraint lucy primary key);
 
 -- FTRS-specific table validation rules
 

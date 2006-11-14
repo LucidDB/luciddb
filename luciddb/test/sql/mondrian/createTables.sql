@@ -8,7 +8,7 @@
 -- note: for product table, SKU has been changed from BIGINT to FLOAT to
 --  match mssql, on account table, the "NOT NULL" statements were removed
 -- since in source, some nulls exist (and are allowed in the mssql schema)
-set schema 'foodmart';
+set schema 'foodmart_test';
 DROP TABLE "sales_fact_1997";
 CREATE TABLE "sales_fact_1997"(
     "product_id" INTEGER NOT NULL,

@@ -44,6 +44,37 @@ import org.eigenbase.rex.*;
 public class PullUpProjectsAboveJoinRule
     extends RelOptRule
 {
+    // ~ Static fields/initializers --------------------------------------------
+    
+    public static final PullUpProjectsAboveJoinRule instanceTwoProjectChildren =
+        new PullUpProjectsAboveJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(ProjectRel.class, null),
+                    new RelOptRuleOperand(ProjectRel.class, null)
+                }),
+            "with two ProjectRel children");
+    
+    public static final PullUpProjectsAboveJoinRule instanceLeftProjectChild =
+        new PullUpProjectsAboveJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(ProjectRel.class, null)
+                }),
+            "with ProjectRel on left");
+    
+    public static final PullUpProjectsAboveJoinRule instanceRightProjectChild =
+        new PullUpProjectsAboveJoinRule(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(RelNode.class, null),
+                    new RelOptRuleOperand(ProjectRel.class, null)
+                }),
+            "with ProjectRel on right");
+    
     //~ Constructors -----------------------------------------------------------
 
     public PullUpProjectsAboveJoinRule(RelOptRuleOperand rule, String id)
@@ -67,20 +98,18 @@ public class PullUpProjectsAboveJoinRule
         RelNode leftJoinChild;
         RelNode rightJoinChild;
         // see if at least one input's projection doesn't generate nulls
-        if (call.rels[1] instanceof ProjectRel &&
-            !joinType.generatesNullsOnLeft())
-        {
+        if (hasLeftChild(call) && !joinType.generatesNullsOnLeft()) {
             leftProj = (ProjectRel) call.rels[1];
             leftProjExprs = leftProj.getProjectExps();
-            leftJoinChild = leftProj.getChild();
+            leftJoinChild = getProjectChild(call, leftProj, true);
         } else {
             leftProj = null;
             leftJoinChild = call.rels[1];
         }
-        if (call.rels.length == 3 && !joinType.generatesNullsOnRight()) {
-            rightProj = (ProjectRel) call.rels[2];
+        if (hasRightChild(call) && !joinType.generatesNullsOnRight()) {
+            rightProj = (ProjectRel) getRightChild(call);
             rightProjExprs = rightProj.getProjectExps();
-            rightJoinChild = rightProj.getChild();
+            rightJoinChild = getProjectChild(call, rightProj, false);
         } else {
             rightProj = null;
             rightJoinChild = joinRel.getRight();
@@ -240,6 +269,52 @@ public class PullUpProjectsAboveJoinRule
                 fieldNames);
                
         call.transformTo(newProjRel); 
+    }
+        
+    /**
+     * @param call RelOptRuleCall
+     * 
+     * @return true if the rule was invoked with a left project child
+     */
+    protected boolean hasLeftChild(RelOptRuleCall call)
+    {
+        return (call.rels[1] instanceof ProjectRel);
+    }
+    
+    /**
+     * @param call RelOptRuleCall
+     * 
+     * @return true if the rule was invoked with 2 children
+     */
+    protected boolean hasRightChild(RelOptRuleCall call)
+    {
+        return call.rels.length == 3;
+    }
+    
+    /**
+     * @param call RelOptRuleCall
+     * 
+     * @return ProjectRel corresponding to the right child
+     */
+    protected ProjectRel getRightChild(RelOptRuleCall call)
+    {
+        return (ProjectRel) call.rels[2];
+    }
+    
+    /**
+     * Returns the child of the project that will be used as input into the
+     * new JoinRel once the projects are pulled above the JoinRel.
+     * 
+     * @param call RelOptRuleCall
+     * @param project project RelNode
+     * @param leftChild true if the project corresponds to the left projection
+     */
+    protected RelNode getProjectChild(
+        RelOptRuleCall call,
+        ProjectRel project,
+        boolean leftChild)
+    {
+        return project.getChild();
     }
     
     /**

@@ -773,7 +773,7 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- errors are usually returned immediately
 0: jdbc:farrago:> select * from buggy order by 1;
-Error: Could not calculate result column 3 of Read.LOCALDB.FLATFILE_SCHEMA.BUGGY for input:
+Error: Could not calculate result column 3 for the following row:
 [Caroll & Graf, The Diary of a Country Priest, -]
 Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:farrago:> 
@@ -796,14 +796,9 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 . . . . . . . . >     directory 'testlog',
 . . . . . . . . >     file_extension 'log');
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select le_exception, le_target_column 
-. . . . . . . . > from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
-+--------------------------------------------------------------------------------------------------------------------------------+-------------------+
-|                                                          LE_EXCEPTION                                                          | LE_TARGET_COLUMN  |
-+--------------------------------------------------------------------------------------------------------------------------------+-------------------+
-| Cannot assign '-' to a NUMERIC value: NumberFormatException                                                                    | 3                 |
-| Target CAST($t1):VARCHAR(45) CHARACTER SET ISO-8859-1 COLLATE ISO-8859-1$en_US$primary NOT NULL cannot be assigned null value  | 2                 |
-+--------------------------------------------------------------------------------------------------------------------------------+-------------------+
+0: jdbc:farrago:> -- log files now exclude schema name and include timestamp
+0: jdbc:farrago:> -- select le_exception, le_target_column 
+0: jdbc:farrago:> -- from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- we can also view the error log summaries
 0: jdbc:farrago:> select process_id, action_id, error_count, "SQL"
@@ -815,11 +810,19 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 | 101         | SelectBuggy  | 2            | select * from buggy order by 1  |
 +-------------+--------------+--------------+---------------------------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure we receive a warning for DML
+0: jdbc:farrago:> create table surrey(
+. . . . . . . . >     author varchar(30),
+. . . . . . . . >     title varchar(45) not null,
+. . . . . . . . >     cost decimal(10,2));
+0: jdbc:farrago:> insert into surrey select * from buggy;
+Warning: Statement execution encountered recoverable exceptions; errors: 2; warnings: 0 (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- we can limit the number of errors
 0: jdbc:farrago:> alter session set "errorMax" = 1;
 0: jdbc:farrago:> select * from buggy order by 1;
 Error: Exceeded limit of 1 errors. Last error was: 
-Could not calculate result column 2 of Read.LOCALDB.FLATFILE_SCHEMA.BUGGY for input:
+Could not calculate result column 2 for the following row:
 [Gary Larsen, null, 5.00]
 Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
 0: jdbc:farrago:> 
@@ -832,5 +835,26 @@ Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8
 . . . . . . . . >     with_header 'no',
 . . . . . . . . >     mapped 'yes');
 Error: Mapping source columns in data files to target columns specified by control files requires column names to be provided by data file headers. (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test decimals from long values and overflows
+0: jdbc:farrago:> alter session set "errorMax" = 25;
+0: jdbc:farrago:> select * from flatfile_server.bcp."decimal";
++-----+-----------------------+------------------------+-------------------+--------------------+----------------+
+| F1  |          F2           |           F3           |        F4         |         F5         |       F6       |
++-----+-----------------------+------------------------+-------------------+--------------------+----------------+
+| 0   | 15                    | 25.00                  | 35                | 45.00              | typical data   |
+| 1   | 9223372036854775807   | 0.00                   | 0                 | 0.00               | max dec(19.0)  |
+| 3   | -9223372036854775808  | 0.00                   | 0                 | 0.00               | min dec(19.0)  |
+| 5   | 0                     | 92233720368547758.00   | 0                 | 0.00               | max dec(19.2)  |
+| 7   | 0                     | -92233720368547758.00  | 0                 | 0.00               | min dec(19.2)  |
+| 9   | 0                     | 92233720368547758.07   | 0                 | 0.00               | max dec(19.2)  |
+| 11  | 0                     | -92233720368547758.08  | 0                 | 0.00               | min dec(19.2)  |
+| 13  | 0                     | 0.00                   | 999999999999999   | 0.00               | max dec(15.0)  |
+| 15  | 0                     | 0.00                   | -999999999999999  | 0.00               | min dec(15.0)  |
+| 17  | 0                     | 0.00                   | 0                 | 9999999999999.00   | max dec(15.2)  |
+| 19  | 0                     | 0.00                   | 0                 | -9999999999999.00  | min dec(15.2)  |
+| 21  | 0                     | 0.00                   | 0                 | 9999999999999.99   | max dec(15.2)  |
+| 23  | 0                     | 0.00                   | 0                 | -9999999999999.99  | min dec(15.2)  |
++-----+-----------------------+------------------------+-------------------+--------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

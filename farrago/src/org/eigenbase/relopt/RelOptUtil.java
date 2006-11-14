@@ -870,7 +870,7 @@ public abstract class RelOptUtil
      * @param right right input to join
      * @param condition join condition
      * @param leftKeys The ordinals of the fields from the left input which
-     * equi-join keys
+     * are equi-join keys
      * @param rightKeys The ordinals of the fields from the right input which
      * are equi-join keys
      *
@@ -923,7 +923,7 @@ public abstract class RelOptUtil
      * @return What's left
      */
     public static RexNode splitJoinCondition(
-        RelNode joinRel,
+        JoinRel joinRel,
         List<RexNode> leftJoinKeys,
         List<RexNode> rightJoinKeys)
     {
@@ -931,7 +931,7 @@ public abstract class RelOptUtil
 
         splitJoinCondition(
             joinRel,
-            ((JoinRel) joinRel).getCondition(),
+            joinRel.getCondition(),
             leftJoinKeys,
             rightJoinKeys,
             nonEquiList);
@@ -950,17 +950,45 @@ public abstract class RelOptUtil
         }
     }
 
+    public static RexNode splitCorrelatedFilterCondition(
+        FilterRel filterRel,
+        List<RexInputRef> joinKeys,
+        List<RexFieldAccess> correlatedJoinKeys)
+    {
+        List<RexNode> nonEquiList = new ArrayList<RexNode>();
+
+        splitCorrelatedFilterCondition(
+            filterRel,
+            filterRel.getCondition(),
+            joinKeys,
+            correlatedJoinKeys,
+            nonEquiList);
+
+        // Convert the remainders into a list that are AND'ed together.
+        switch (nonEquiList.size()) {
+        case 0:
+            return null;
+        case 1:
+            return nonEquiList.get(0);
+        default:
+            return
+                filterRel.getCluster().getRexBuilder().makeCall(
+                    SqlStdOperatorTable.andOperator,
+                    nonEquiList);
+        }
+    }
+    
     private static void splitJoinCondition(
-        RelNode joinRel,
+        JoinRel joinRel,
         RexNode condition,
         List<RexNode> leftJoinKeys,
         List<RexNode> rightJoinKeys,
         List<RexNode> nonEquiList)
     {
         int leftFieldCount =
-            ((JoinRel) joinRel).getLeft().getRowType().getFieldCount();
+            joinRel.getLeft().getRowType().getFieldCount();
         int rightFieldCount =
-            ((JoinRel) joinRel).getRight().getRowType().getFieldCount();
+            joinRel.getRight().getRowType().getFieldCount();
         int totalFieldCount = leftFieldCount + rightFieldCount;
 
         RelDataTypeField [] rightFields =
@@ -1088,6 +1116,52 @@ public abstract class RelOptUtil
                 leftJoinKeys.add(leftKey);
                 rightJoinKeys.add(rightKey);
                 return;
+            }
+        }
+
+        // The operator is not of RexCall type
+        // So we fail. Fall through.
+        // Add this condition to the list of non-equi-join conditions.
+        nonEquiList.add(condition);
+    }
+
+    private static void splitCorrelatedFilterCondition(
+        FilterRel filterRel,
+        RexNode condition,
+        List<RexInputRef> joinKeys,
+        List<RexFieldAccess> correlatedJoinKeys,
+        List<RexNode> nonEquiList)
+    {
+        if (condition instanceof RexCall) {
+            RexCall call = (RexCall) condition;
+            if (call.getOperator() == SqlStdOperatorTable.andOperator) {
+                for (RexNode operand : call.getOperands()) {
+                    splitCorrelatedFilterCondition(
+                        filterRel,
+                        operand,
+                        joinKeys,
+                        correlatedJoinKeys,
+                        nonEquiList);
+                }
+                return;
+            }
+
+            if (call.getOperator() == SqlStdOperatorTable.equalsOperator) {
+                final RexNode [] operands = call.getOperands();
+                RexNode op0 = operands[0];
+                RexNode op1 = operands[1];
+
+                if ((op0 instanceof RexFieldAccess) && 
+                    (op1 instanceof RexInputRef)) {
+                    joinKeys.add((RexInputRef)op1);
+                    correlatedJoinKeys.add((RexFieldAccess)op0);
+                    return;
+                }  else if ((op0 instanceof RexInputRef) && 
+                            (op1 instanceof RexFieldAccess)) {
+                    joinKeys.add((RexInputRef)op0);
+                    correlatedJoinKeys.add((RexFieldAccess)op1);
+                    return;
+                }
             }
         }
 
@@ -2052,6 +2126,73 @@ public abstract class RelOptUtil
                 mergedProgram.getCondition());
     }
     
+    /**
+     * Creates a new {@link MultiJoinRel} to reflect projection references
+     * from a {@link ProjectRel} that is on top of the {@link MultiJoinRel}.
+     * 
+     * @param multiJoin the original MultiJoinRel
+     * @param project the ProjectRel on top of the MultiJoinRel
+     * 
+     * @return the new MultiJoinRel
+     */
+    public static MultiJoinRel projectMultiJoin(
+        MultiJoinRel multiJoin,
+        ProjectRel project)
+    {
+        // locate all input references in the projection expressions
+        BitSet inputRefs = new BitSet(multiJoin.getRowType().getFieldCount());
+        new RelOptUtil.InputFinder(inputRefs).apply(
+            project.getProjectExps(),
+            null);
+
+        // first, make a copy of the bitmaps, creating a new one if needed
+        RelNode [] multiJoinInputs = multiJoin.getInputs();
+        int nInputs = multiJoinInputs.length;
+        BitSet [] origProjFields = multiJoin.getProjFields();
+        BitSet [] newProjFields = new BitSet[nInputs];      
+        for (int i = 0; i < nInputs; i++) {
+            if (origProjFields[i] == null) {
+                newProjFields[i] =
+                    new BitSet(multiJoinInputs[i].getRowType().getFieldCount());
+            } else {
+                newProjFields[i] =
+                    newProjFields[i] = (BitSet) origProjFields[i].clone();
+            }
+        }
+        
+        // OR the bitmap for each input into the MultiJoinRel with the bits
+        // found in the expressions
+        int currInput = -1;
+        int startField = 0;
+        int nFields = 0;
+        for (int bit = inputRefs.nextSetBit(0); bit >= 0;
+             bit = inputRefs.nextSetBit(bit + 1))
+        {
+            while (bit >= startField + nFields) {
+                startField += nFields;
+                currInput++;
+                assert(currInput < nInputs);
+                nFields =
+                    multiJoinInputs[currInput].getRowType().
+                        getFieldCount();
+            }
+            newProjFields[currInput].set(bit - startField);
+        }
+
+        // create a new MultiJoinRel containing the new field bitmaps
+        // for each input
+        return new MultiJoinRel(
+            multiJoin.getCluster(),
+            multiJoin.getInputs(),
+            multiJoin.getJoinFilter(),
+            multiJoin.getRowType(),
+            multiJoin.isFullOuterJoin(),
+            multiJoin.getOuterJoinConditions(),
+            multiJoin.getJoinTypes(),
+            newProjFields,
+            multiJoin.getJoinFieldRefCountsMap());
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     private static class VariableSetVisitor

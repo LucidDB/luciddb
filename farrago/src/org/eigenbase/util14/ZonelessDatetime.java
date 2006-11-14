@@ -200,7 +200,7 @@ public abstract class ZonelessDatetime implements BasicDatetime
         if (tempFormatter != null && lastFormat.equals(format)) {
             return tempFormatter;
         }
-        tempFormatter = new SimpleDateFormat(format);
+        tempFormatter = DateTimeUtil.newDateFormat(format);
         tempFormatter.setTimeZone(DateTimeUtil.gmtZone);
         lastFormat = format;
         return tempFormatter;

@@ -86,6 +86,12 @@ abstract class FarragoExecutableStmtImpl
     }
 
     // implement FarragoSessionExecutableStmt
+    public String getReferencedObjectModTime(String mofid)
+    {
+        return null;
+    }
+
+    // implement FarragoSessionExecutableStmt
     public TableAccessMap getTableAccessMap()
     {
         return tableAccessMap;

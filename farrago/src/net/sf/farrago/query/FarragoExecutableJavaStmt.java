@@ -79,7 +79,7 @@ class FarragoExecutableJavaStmt
         Method method,
         String xmiFennelPlan,
         boolean isDml,
-        Set<String> referencedObjectIds,
+        Map<String, String> referencedObjectTimestampMap,
         TableAccessMap tableAccessMap,
         Map<String, RelDataType> resultSetTypeMap,
         Map<String, RelDataType> iterCalcTypeMap,
@@ -91,7 +91,7 @@ class FarragoExecutableJavaStmt
             xmiFennelPlan,
             null,
             isDml,
-            referencedObjectIds,
+            referencedObjectTimestampMap,
             tableAccessMap);
 
         this.packageDir = packageDir;
@@ -163,7 +163,7 @@ class FarragoExecutableJavaStmt
         // for the JIT code and then add an additional .25 factor for other
         // class overhead (e.g. constants and reflection info), type descriptor,
         // and "this" object and fields such as packageDir/referencedObjectIds.        
-        long nBytes = totalByteCodeSize;
+        long nBytes = (long) ((double) totalByteCodeSize * 1.75);
 
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine("Java bytecode size = " + totalByteCodeSize + " bytes");
@@ -172,10 +172,13 @@ class FarragoExecutableJavaStmt
                 tracer.fine("XMI Fennel plan size = "+ xmiSize + " bytes");
             }
         }
-        
-        // Note that Fennel memory is accounted for elsewhere so it's not
-        // factored in here
-        return (long) ((double) nBytes * 1.75);
+
+        // call the superclass to account for the Fennel XMI plan
+        if (xmiFennelPlan != null) {
+            nBytes += super.getMemoryUsage();
+        }
+
+        return nBytes;
     }
 
     // implement FarragoSessionExecutableStmt

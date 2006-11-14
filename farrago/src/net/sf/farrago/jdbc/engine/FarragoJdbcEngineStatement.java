@@ -318,13 +318,6 @@ public class FarragoJdbcEngineStatement
     }
 
     // implement Statement
-    public SQLWarning getWarnings()
-        throws SQLException
-    {
-        return null;
-    }
-
-    // implement Statement
     public void addBatch(String sql)
         throws SQLException
     {
@@ -342,12 +335,6 @@ public class FarragoJdbcEngineStatement
 
     // implement Statement
     public void clearBatch()
-        throws SQLException
-    {
-    }
-
-    // implement Statement
-    public void clearWarnings()
         throws SQLException
     {
     }
@@ -441,6 +428,26 @@ public class FarragoJdbcEngineStatement
             return 0;
         }
         return info.getId();
+    }
+    
+    // implement Statement
+    public SQLWarning getWarnings()
+        throws SQLException
+    {
+        if (stmtContext == null) {
+            return null;
+        }
+        return stmtContext.getWarningQueue().getWarnings();
+    }
+
+    // implement Statement
+    public void clearWarnings()
+        throws SQLException
+    {
+        if (stmtContext == null) {
+            return;
+        }
+        stmtContext.getWarningQueue().clearWarnings();
     }
 }
 

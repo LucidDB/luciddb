@@ -1,0 +1,188 @@
+--
+-- tests for oracle specific datatypes
+--
+
+create schema orcltypes;
+set schema 'orcltypes';
+
+-- create server using default oracle wrapper
+create server orcltypes_serv
+foreign data wrapper ORACLE
+options(
+  url '@URL@',
+  user_name '@USERNAME@',
+  password '@PASSWORD@',
+  driver_class '@DRIVER_CLASS@'
+);
+
+-- Original data in ORCL_DATATYPES:
+-- "-679999.011","There should be able to have
+-- returns like this right?","1980-03-29 02:39:00.0","1999-2-11.11.15. 22. 0","same
+-- r","-123456789098765.43212345","-123456789098","123456789.09876","-2.2E8","3.9E10"
+-- "123456.0987","This is a ""varchar2"" type 'col'","2010-12-19 19:39:39.0","2012-10-9.21.50. 1. 0","char's","123456789098765.43212345","123456789098","12345678909876","1.98000005E10","2.1E-9"
+
+-- Original data in ORCL_TYPES:
+-- "A short string","A short string","let's put a normal string in this long string field","123456789.34",".01234",".00000000000000112341234","3300","123456789123456700000",".00000000000000112341234","4.567567E42","1996-08-09 12:12:12.0","00FF004DEE67"
+-- "Boris is silly","Boris is selling donuts","Hello Sir, can I interest you in a ballpark hotdog smothered in mustard and relish? If not how about a chili dog?","1",".01","1","400","1234567891234567","4500000000000","-1300000000000","1998-01-01 12:12:12.0","FFFFFFFFFFFF"
+ 
+
+-- sample directly from server. Note that we get junk for MAXNUMBERCOL
+-- TODO: tests for error logging, check the log files
+select * from orcltypes_serv.@SCHEMA@.ORCL_DATATYPES order by DATECOL, FIXEDPOINTNUMBERCOL;
+
+-- Note that we get junk for NUMBER5COL
+select * from orcltypes_serv.@SCHEMA@.ORCL_TYPES order by VARCHAR2COL;
+
+--
+-- import foreign schema for datatypes table
+--
+import foreign schema "@SCHEMA@"
+limit to ("ORCL_DATATYPES", "ORCL_TYPES")
+from server orcltypes_serv
+into orcltypes;
+
+select * from orcl_datatypes order by datecol,fixedpointnumbercol;
+select * from orcl_types order by varchar2col;
+
+--
+-- create foreign tables with implicit column types
+--
+create foreign table ft_odatatypes
+server orcltypes_serv
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ 'ORCL_DATATYPES'
+);
+
+create foreign table ft_otypes
+server orcltypes_serv
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ 'ORCL_TYPES'
+);
+
+select * from ft_odatatypes order by datecol,fixedpointnumbercol;
+select * from ft_otypes order by varchar2col;
+
+--
+-- create foreign tables with explicit types
+--
+create foreign table fte_odatatypes (
+  dec10_4 decimal(10,4),
+  vchar4000 varchar(4000),
+  dt_to_ts timestamp,
+  ts_to_ts timestamp,
+  char9 char(9),
+  dec19_6 decimal(19,6),
+  dec12_0 decimal(12,0),
+  num_to_dbl double,
+  binflt_to_dbl double,
+  bindbl_to_dbl double
+)
+server orcltypes_serv
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ 'ORCL_DATATYPES'
+);
+
+create foreign table fte_otypes (
+  vchar1000 varchar(1000),
+  char254 char(254),
+  long_to_vchar varchar(1024),
+  dec15_2 decimal(15,2),
+  dec19_5 decimal(19,5),
+  num_to_dbl double,
+  dec19_2 decimal(19,2),
+  dec19_0 decimal(19,0),
+  flt_to_dbl double,
+  fltp_to_dbl double,
+  dt_to_ts timestamp,
+  raw_to_varbin varbinary(50)
+)
+server orcltypes_serv
+options (
+SCHEMA_NAME '@SCHEMA@',
+@TABLE_NAME@ 'ORCL_TYPES'
+);
+
+select * from fte_odatatypes order by dt_to_ts, dec10_4;
+select * from fte_otypes order by vchar1000;
+
+--
+-- create local tables and load data
+--
+create table local_odatatypes (
+  dec10_4 decimal(10,4),
+  vchar4000 varchar(4000),
+  dt_to_ts timestamp,
+  ts_to_ts timestamp,
+  char9 char(9),
+  dec19_6 decimal(19,6),
+  dec12_0 decimal(12,0),
+  num_to_dbl double,
+  binflt_to_dbl double,
+  bindbl_to_dbl double
+);
+
+create table local_otypes (
+  vchar1000 varchar(1000),
+  char254 char(254),
+  long_to_vchar varchar(1024),
+  dec15_2 decimal(15,2),
+  dec19_5 decimal(19,5),
+  num_to_dbl double,
+  dec19_2 decimal(19,2),
+  dec19_0 decimal(19,0),
+  flt_to_dbl double,
+  fltp_to_dbl double,
+  dt_to_ts timestamp,
+  raw_to_varbin varbinary(50)
+);
+
+-- insert directly from server
+insert into local_odatatypes 
+select * from orcltypes_serv.@SCHEMA@.ORCL_DATATYPES;
+select * from local_odatatypes order by dt_to_ts, dec10_4;
+
+insert into local_otypes 
+select * from orcltypes_serv.@SCHEMA@.ORCL_TYPES;
+select * from local_otypes order by vchar1000;
+
+truncate table local_odatatypes;
+truncate table local_otypes;
+
+-- insert from tables imported via import foreign schema
+insert into local_odatatypes select * from orcl_datatypes;
+select * from local_odatatypes order by dt_to_ts, dec10_4;
+
+insert into local_otypes select * from orcl_types;
+select * from local_otypes order by vchar1000;
+
+truncate table local_odatatypes;
+truncate table local_otypes;
+
+-- insert from tables imported via import implicit foreign tables
+insert into local_odatatypes select * from ft_odatatypes;
+select * from local_odatatypes order by dt_to_ts, dec10_4;
+
+insert into local_otypes select * from ft_otypes;
+select * from local_otypes order by vchar1000;
+
+truncate table local_odatatypes;
+truncate table local_otypes;
+
+-- insert from tables imported via import explicit foreign tables
+insert into local_odatatypes select * from fte_odatatypes;
+select * from local_odatatypes order by dt_to_ts, dec10_4;
+
+insert into local_otypes select * from fte_otypes;
+select * from local_otypes order by vchar1000;
+
+--
+-- check all the column metadata
+--
+select table_name, column_name, ordinal_position, datatype, "PRECISION",
+  dec_digits, is_nullable, remarks
+from sys_root.dba_columns 
+where schema_name='ORCLTYPES'
+order by table_name, ordinal_position;

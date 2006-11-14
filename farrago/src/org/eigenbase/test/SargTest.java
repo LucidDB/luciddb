@@ -617,67 +617,67 @@ public class SargTest
             0,
             2,
             5,
-            "[null, _ISO-8859-1'CAPRICORN']");
+            "[null, 'CAPRICORN']");
 
         checkUnion(
             2,
             5,
             0,
-            "[null, _ISO-8859-1'CAPRICORN']");
+            "[null, 'CAPRICORN']");
 
         checkUnion(
             5,
             6,
             7,
-            "UNION( [null] [_ISO-8859-1'GEMINI', _ISO-8859-1'SCORPIO'] )");
+            "UNION( [null] ['GEMINI', 'SCORPIO'] )");
 
         checkUnion(
             8,
             4,
             5,
-            "UNION( [null] [_ISO-8859-1'ARIES', +infinity) )");
+            "UNION( [null] ['ARIES', +infinity) )");
 
         checkUnion(
             9,
             4,
             5,
-            "UNION( [null] [_ISO-8859-1'ARIES', +infinity) )");
+            "UNION( [null] ['ARIES', +infinity) )");
 
         checkUnion(
             7,
             8,
             9,
-            "[_ISO-8859-1'ARIES', _ISO-8859-1'SCORPIO']");
+            "['ARIES', 'SCORPIO']");
 
         checkUnion(
             6,
             7,
             10,
-            "[_ISO-8859-1'GEMINI', _ISO-8859-1'SCORPIO']");
+            "['GEMINI', 'SCORPIO']");
 
         checkUnion(
             5,
             6,
             0,
-            "UNION( [null] [_ISO-8859-1'AQUARIUS'] [_ISO-8859-1'GEMINI', _ISO-8859-1'PISCES'] )");
+            "UNION( [null] ['AQUARIUS'] ['GEMINI', 'PISCES'] )");
 
         checkUnion(
             10,
             9,
             5,
-            "UNION( [null] [_ISO-8859-1'ARIES', _ISO-8859-1'GEMINI') )");
+            "UNION( [null] ['ARIES', 'GEMINI') )");
 
         checkUnion(
             9,
             8,
             7,
-            "[_ISO-8859-1'ARIES', _ISO-8859-1'SCORPIO']");
+            "['ARIES', 'SCORPIO']");
 
         checkUnion(
             3,
             9,
             1,
-            "UNION( [_ISO-8859-1'ARIES', _ISO-8859-1'GEMINI') (_ISO-8859-1'GEMINI', +infinity) )");
+            "UNION( ['ARIES', 'GEMINI') ('GEMINI', +infinity) )");
     }
 
     public void testIntersection()
@@ -739,31 +739,31 @@ public class SargTest
             2,
             3,
             0,
-            "(_ISO-8859-1'CANCER', _ISO-8859-1'CAPRICORN']");
+            "('CANCER', 'CAPRICORN']");
 
         checkIntersection(
             0,
             3,
             2,
-            "(_ISO-8859-1'CANCER', _ISO-8859-1'CAPRICORN']");
+            "('CANCER', 'CAPRICORN']");
 
         checkIntersection(
             6,
             7,
             0,
-            "[_ISO-8859-1'GEMINI', _ISO-8859-1'PISCES']");
+            "['GEMINI', 'PISCES']");
 
         checkIntersection(
             6,
             7,
             8,
-            "[_ISO-8859-1'GEMINI']");
+            "['GEMINI']");
 
         checkIntersection(
             8,
             7,
             6,
-            "[_ISO-8859-1'GEMINI']");
+            "['GEMINI']");
 
         checkIntersection(
             9,

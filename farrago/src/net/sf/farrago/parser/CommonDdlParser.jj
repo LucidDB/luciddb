@@ -1101,13 +1101,16 @@ CwmModelElement TableConstraint(CwmTable table) :
     [ <CONSTRAINT> constraintName = Identifier() ]
     constraint = TableUniqueConstraint(table)
     {
+        // NOTE jvs 6-Nov-2006:  We store contraints as owned
+        // by tables because CWM doesn't give us a good way
+        // to associate them directly.
+        table.getOwnedElement().add(constraint);
         if (constraintName != null) {
             constraint.setName(constraintName);
         } else {
             FarragoCatalogUtil.generateConstraintName(
                 getRepos(), constraint);
         }
-        table.getOwnedElement().add(constraint);
         return constraint;
     }
 }
@@ -1171,6 +1174,8 @@ void ColumnConstraint(CwmNamedColumnSet table,CwmColumn column) :
     (
         <NOT> <NULL>
         {
+            // TODO jvs 7-Nov-2006:  Model explicit named constraint
+            // object for NOT NULL constraints.
             column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
         }
         | constraint = UniqueConstraint()
@@ -1427,10 +1432,17 @@ DdlStmt AlterTableStmt() :
 }
 {
     table = TableIdentifier()
-    <ALTER> <COLUMN> ddlStmt = AlterColumnStmt(table)
-    {
-        return ddlStmt;
-    }
+    (
+        <ALTER> <COLUMN> ddlStmt = AlterColumnStmt(table)
+        {
+            return ddlStmt;
+        }
+        |
+        <REBUILD>
+        {
+            return new DdlRebuildTableStmt(table);
+        }
+    )
 }
 
 DdlStmt AlterColumnStmt(CwmTable table) :
@@ -2821,6 +2833,7 @@ TOKEN :
     | < INDEX: "INDEX" >
     | < JAR: "JAR" >
     | < PERCENT: "PERCENT" >
+    | < REBUILD: "REBUILD" >
     | < RENAME: "RENAME" >
     | < REPLACE: "REPLACE" >
     | < SAMPLE: "SAMPLE" >
@@ -2855,6 +2868,7 @@ String DdlNonReservedKeyWord() :
         | <INDEX>
         | <JAR>
         | <PERCENT>
+        | <REBUILD>
         | <RENAME>
         | <REPLACE>
         | <SAMPLE>

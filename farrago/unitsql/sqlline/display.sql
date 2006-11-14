@@ -11,6 +11,15 @@ drop table cylon;
 
 drop table cylon;
 
+--  default:  show warnings
+!closeall
+!connect jdbc:farrago:;clientProcessId=bogus sa tiger
+
+-- suppress warnings
+!set showwarnings false
+!closeall
+!connect jdbc:farrago:;clientProcessId=bogus sa tiger
+
 -- display numbers with rounding to limited scale
 !set numberformat #.###
 

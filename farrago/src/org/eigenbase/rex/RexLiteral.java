@@ -287,7 +287,11 @@ public class RexLiteral
                     nlsString.getValue(),
                     true);
             } else {
-                pw.print(nlsString.toString());
+                boolean includeCharset =
+                    (nlsString.getCharsetName() != null)
+                    && !nlsString.getCharsetName().equals(
+                        SaffronProperties.instance().defaultCharset.get());
+                pw.print(nlsString.asSql(includeCharset, false));
             }
             break;
         case SqlTypeName.Boolean_ordinal:
@@ -304,10 +308,12 @@ public class RexLiteral
             break;
         case SqlTypeName.Binary_ordinal:
             assert value instanceof ByteBuffer;
+            pw.print("X'");
             pw.print(
                 ConversionUtil.toStringFromByteArray(
                     ((ByteBuffer) value).array(),
                     16));
+            pw.print("'");
             break;
         case SqlTypeName.Null_ordinal:
             assert value == null;
@@ -320,10 +326,13 @@ public class RexLiteral
             pw.print(")");
             break;
         case SqlTypeName.Date_ordinal:
+            printDatetime(pw, new ZonelessDate(), value);
+            break;
         case SqlTypeName.Time_ordinal:
+            printDatetime(pw, new ZonelessTime(), value);
+            break;
         case SqlTypeName.Timestamp_ordinal:
-            assert value instanceof Calendar;
-            pw.print(value.toString());
+            printDatetime(pw, new ZonelessTimestamp(), value);
             break;
         case SqlTypeName.IntervalDayTime_ordinal:
         case SqlTypeName.IntervalYearMonth_ordinal:
@@ -341,6 +350,15 @@ public class RexLiteral
                 "valueMatchesType(value, typeName)");
             throw Util.needToImplement(typeName);
         }
+    }
+
+    private static void printDatetime(
+        PrintWriter pw, ZonelessDatetime datetime, Comparable value)
+    {
+        assert (value instanceof Calendar);
+        datetime.setZonelessTime(
+            ((Calendar) value).getTimeInMillis());
+        pw.print(datetime);
     }
 
     /**

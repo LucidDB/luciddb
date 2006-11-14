@@ -588,7 +588,7 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[99], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that constant reduction is NOT used for deterministic functions
 0: jdbc:farrago:> -- with non-constant input
@@ -596,7 +596,7 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#2=[ATOI($t1)], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 

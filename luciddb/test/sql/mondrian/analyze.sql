@@ -1,5 +1,5 @@
 -- analyze tables
-set schema 'foodmart';
+set schema 'foodmart_test';
 
 analyze table "sales_fact_1997" compute statistics for all columns;
 analyze table "sales_fact_1998" compute statistics for all columns;

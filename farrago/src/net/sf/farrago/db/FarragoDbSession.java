@@ -112,7 +112,16 @@ public class FarragoDbSession
      * Repos accessed by this session
      */
     private FarragoRepos repos;
+
+    /**
+     * URL used to connect this session.
+     */
     private String url;
+
+    /**
+     * Warnings accumulated on this session.
+     */
+    FarragoWarningQueue warningQueue;
 
     /**
      * Was this session produced by cloning?
@@ -137,7 +146,7 @@ public class FarragoDbSession
     /**
      * Map of temporary indexes created by this session.
      */
-    private FarragoDbSessionIndexMap sessionIndexMap;
+    private FarragoSessionIndexMap sessionIndexMap;
 
     /**
      * The connection source for this session.
@@ -173,6 +182,7 @@ public class FarragoDbSession
     {
         this.sessionFactory = sessionFactory;
         this.url = url;
+        warningQueue = new FarragoWarningQueue();
 
         database = FarragoDbSingleton.pinReference(sessionFactory);
         FarragoDbSingleton.addSession(database, this);
@@ -212,11 +222,12 @@ public class FarragoDbSession
         if ((processStr != null) && (processStr.length() > 0)) {
             try {
                 sessionVariables.processId = Long.parseLong(processStr);
-            } catch (NumberFormatException e) {
-                tracer.warning(
-                    "processId=\"" + processStr + "\" error: "
-                    + e.getMessage());
-                Util.swallow(e, tracer);
+            } catch (NumberFormatException ex) {
+                // NOTE jvs 12-Nov-2006:  It's OK to discard ex here
+                // because it provides only useless information.
+                getWarningQueue().postWarning(
+                    FarragoResource.instance().
+                    SessionClientProcessIdNotNumeric.ex(processStr));
             }
         }
 
@@ -339,6 +350,12 @@ public class FarragoDbSession
     }
 
     // implement FarragoSession
+    public FarragoWarningQueue getWarningQueue()
+    {
+        return warningQueue;
+    }
+    
+    // implement FarragoSession
     public FarragoSessionStmtContext newStmtContext(
         FarragoSessionStmtParamDefFactory paramDefFactory)
     {
@@ -396,12 +413,14 @@ public class FarragoDbSession
         FarragoSessionVariables inheritedVariables)
     {
         // TODO:  keep track of clones and make sure they aren't left hanging
-        // around by the time stmt finishes executing
+        // around by the time stmt finishes executing; also,
+        // maybe auto-propagate unretrieved warnings from clones?
         try {
             FarragoDbSession clone = (FarragoDbSession) super.clone();
             clone.isClone = true;
             clone.allocations = new LinkedList();
             clone.savepointList = new ArrayList();
+            clone.warningQueue = new FarragoWarningQueue();
             if (isTxnInProgress()) {
                 // Calling statement has already started a transaction:
                 // make sure clone doesn't interfere by autocommitting.
@@ -623,9 +642,14 @@ public class FarragoDbSession
         return database;
     }
 
-    public FarragoDbSessionIndexMap getSessionIndexMap()
+    public FarragoSessionIndexMap getSessionIndexMap()
     {
         return sessionIndexMap;
+    }
+
+    public void setSessionIndexMap(FarragoSessionIndexMap sessionIndexMap)
+    {
+        this.sessionIndexMap = sessionIndexMap;
     }
 
     Map getTxnCodeCache()

@@ -119,16 +119,34 @@ public class SargSetExpr
     // implement SargExpr
     public SargIntervalSequence evaluate()
     {
+        if (setOp == SargSetOperator.COMPLEMENT) {
+            assert (children.size() == 1);
+            SargExpr child = children.get(0);
+            return child.evaluateComplemented();
+        }
+        
+        List<SargIntervalSequence> list = evaluateChildren(this);
+
         switch (setOp) {
         case UNION:
-            return evaluateUnion();
+            return evaluateUnion(list);
         case INTERSECTION:
-            return evaluateIntersection();
-        case COMPLEMENT:
-            return evaluateComplement();
+            return evaluateIntersection(list);
         default:
             throw Util.newInternal(setOp.toString());
         }
+    }
+
+    private List<SargIntervalSequence> evaluateChildren(SargSetExpr setExpr)
+    {
+        List<SargIntervalSequence> list = new ArrayList<SargIntervalSequence>();
+        
+        for (SargExpr child : setExpr.children) {
+            SargIntervalSequence newSeq = child.evaluate();
+            list.add(newSeq);
+        }
+
+        return list;
     }
 
     // implement SargExpr
@@ -139,15 +157,17 @@ public class SargSetExpr
         }
     }
 
-    private SargIntervalSequence evaluateUnion()
+    private SargIntervalSequence evaluateUnion(
+        List<SargIntervalSequence> list)
     {
         SargIntervalSequence seq = new SargIntervalSequence();
 
-        // Evaluate all children and toss the results into one big sorted set.
+        // Toss all entries from each sequence in the list into one big sorted
+        // set.
         SortedSet<SargInterval> intervals =
             new TreeSet<SargInterval>(new IntervalComparator());
-        for (SargExpr child : children) {
-            intervals.addAll(child.evaluate().getList());
+        for (SargIntervalSequence childSeq : list) {
+            intervals.addAll(childSeq.getList());
         }
 
         // Now, overlapping ranges are consecutive in the set.  Merge them by
@@ -218,11 +238,12 @@ public class SargSetExpr
         return seq;
     }
 
-    private SargIntervalSequence evaluateIntersection()
+    private SargIntervalSequence evaluateIntersection(
+        List<SargIntervalSequence> list)
     {
         SargIntervalSequence seq = null;
 
-        if (children.isEmpty()) {
+        if (list.isEmpty()) {
             // Counterintuitive but true: intersection of no sets is the
             // universal set (kinda like 2^0=1).  One way to prove this to
             // yourself is to apply DeMorgan's law.  The union of no sets is
@@ -238,14 +259,13 @@ public class SargSetExpr
         }
 
         // The way we evaluate the intersection is to start with the first
-        // child as a baseline, and then keep deleting stuff from it by
-        // intersecting the other children in turn.  Whatever makes it through
+        // entry as a baseline, and then keep deleting stuff from it by
+        // intersecting the other entrie in turn.  Whatever makes it through
         // this filtering remains as the final result.
-        for (SargExpr child : children) {
-            SargIntervalSequence newSeq = child.evaluate();
+        for (SargIntervalSequence newSeq : list) {
             if (seq == null) {
                 // first child
-                seq = child.evaluate();
+                seq = newSeq;
                 continue;
             }
             intersectSequences(seq, newSeq);
@@ -341,9 +361,9 @@ public class SargSetExpr
                 // targetIter.previous() is pointing at the newTarget.
                 target = targetIter.previous();
                 
-                // now targetIter.next() is also pointing at the newTarget
+                // Now targetIter.next() is also pointing at the newTarget;
                 // need to do this redundant step to get targetIter in sync 
-                // with target
+                // with target.
                 target = targetIter.next();
 
                 // Advance source.
@@ -383,125 +403,36 @@ public class SargSetExpr
         }
     }
 
-    private SargIntervalSequence evaluateComplement()
+    // implement SargExpr
+    public SargIntervalSequence evaluateComplemented()
     {
-        assert (children.size() == 1);
-        SargExpr child = children.get(0);
-        if (child instanceof SargIntervalExpr) {
-            return evaluateIntervalComplement((SargIntervalExpr) child);
+        if (setOp == SargSetOperator.COMPLEMENT) {
+            // Double negation is a nop
+            return children.get(0).evaluate();
         }
-
-        SargSetExpr setChild = (SargSetExpr) child;
-
-        // Complement is its own inverse
-        if (setChild.setOp == SargSetOperator.COMPLEMENT) {
-            return setChild.children.get(0).evaluate();
-        }
-
+        
         // Use DeMorgan's Law:  complement of union is intersection of
         // complements, and vice versa
-        SargSetOperator dualOp =
-            (setChild.setOp == SargSetOperator.UNION)
-            ? SargSetOperator.INTERSECTION
-            : SargSetOperator.UNION;
-        SargSetExpr dual = new SargSetExpr(factory, dataType, dualOp);
-        for (SargExpr grandChild : setChild.children) {
-            SargSetExpr comp =
-                new SargSetExpr(
-                    factory,
-                    dataType,
-                    SargSetOperator.COMPLEMENT);
-            comp.addChild(grandChild);
-            dual.addChild(comp);
+        List<SargIntervalSequence> list = new ArrayList<SargIntervalSequence>();
+        for (SargExpr child : children) {
+            SargIntervalSequence newSeq = child.evaluateComplemented();
+            list.add(newSeq);
         }
-
-        return dual.evaluate();
+        switch (setOp) {
+        case INTERSECTION:
+            return evaluateUnion(list);
+        case UNION:
+            return evaluateIntersection(list);
+        default:
+            throw Util.newInternal(setOp.toString());
+        }
     }
-
-    private SargIntervalSequence evaluateIntervalComplement(
-        SargIntervalExpr intervalExpr)
-    {
-        SargIntervalSequence originalSeq = intervalExpr.evaluate();
-        SargIntervalSequence seq = new SargIntervalSequence();
-
-        // Complement of empty set is unconstrained set.
-        if (originalSeq.getList().isEmpty()) {
-            seq.addInterval(new SargInterval(
-                    factory,
-                    getDataType()));
-            return seq;
-        }
-
-        assert (originalSeq.getList().size() == 1);
-        SargInterval originalInterval = originalSeq.getList().get(0);
-
-        // Complement of universal set is empty set.
-        if (originalInterval.isUnconstrained()) {
-            return seq;
-        }
-
-        // Use null as a lower bound rather than infinity (see
-        // http://issues.eigenbase.org/browse/LDB-60).
-        // REVIEW jvs 17-Apr-2006:  This assumes NULL_MATCHES_NOTHING
-        // semantics.  We've lost the original null semantics
-        // flag by now.  Is there ever a case where other null
-        // semantics are required here?
-
-        SargInterval interval = new SargInterval(
-                factory,
-                getDataType());
-        interval.setLower(
-            factory.newNullLiteral(),
-            SargStrictness.OPEN);
-
-        if (originalInterval.getUpperBound().isFinite()
-            && originalInterval.getLowerBound().isFinite()) {
-            // Complement of a fully bounded range is the union of two
-            // disjoint half-bounded ranges.
-            interval.setUpper(
-                originalInterval.getLowerBound().getCoordinate(),
-                originalInterval.getLowerBound().getStrictnessComplement());
-            if (!originalInterval.getLowerBound().isNull()) {
-                seq.addInterval(interval);
-            } else {
-                // Don't bother adding an empty interval.
-            }
-
-            interval = new SargInterval(
-                    factory,
-                    getDataType());
-            interval.setLower(
-                originalInterval.getUpperBound().getCoordinate(),
-                originalInterval.getUpperBound().getStrictnessComplement());
-            seq.addInterval(interval);
-        } else if (originalInterval.getLowerBound().isFinite()) {
-            // Complement of a half-bounded range is the opposite
-            // half-bounded range (with open for closed and vice versa)
-            interval.setUpper(
-                originalInterval.getLowerBound().getCoordinate(),
-                originalInterval.getLowerBound().getStrictnessComplement());
-            if (!originalInterval.getLowerBound().isNull()) {
-                seq.addInterval(interval);
-            } else {
-                // Don't bother adding an empty interval.
-            }
-        } else {
-            // Mirror image of previous case.
-            assert (originalInterval.getUpperBound().isFinite());
-            interval.setLower(
-                originalInterval.getUpperBound().getCoordinate(),
-                originalInterval.getUpperBound().getStrictnessComplement());
-            seq.addInterval(interval);
-        }
-
-        return seq;
-    }
-
+    
     //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * Comparator used in evaluateUnion. Intervals collate based on {lowerBound,
-     * upperBound}.
+     * Comparator used in evaluateUnionOp. Intervals collate based on
+     * {lowerBound, upperBound}.
      */
     private static class IntervalComparator
         implements Comparator<SargInterval>

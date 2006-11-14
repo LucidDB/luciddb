@@ -57,7 +57,7 @@ create table dummy_region (
     R_COMMENT    VARCHAR(152));
 
 call sys_boot.mgmt.stat_set_page_count(
-    'LOCALDB','TPCD','SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY',1);
+    'LOCALDB','TPCD','SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DUMMY_REGION',1);
 
 select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 

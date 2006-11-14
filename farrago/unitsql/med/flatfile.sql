@@ -514,12 +514,20 @@ options (
     directory 'testlog',
     file_extension 'log');
 
-select le_exception, le_target_column 
-from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
+-- log files now exclude schema name and include timestamp
+-- select le_exception, le_target_column 
+-- from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
 
 -- we can also view the error log summaries
 select process_id, action_id, error_count, "SQL"
 from log_server.bcp."Summary";
+
+-- make sure we receive a warning for DML
+create table surrey(
+    author varchar(30),
+    title varchar(45) not null,
+    cost decimal(10,2));
+insert into surrey select * from buggy;
 
 -- we can limit the number of errors
 alter session set "errorMax" = 1;
@@ -533,3 +541,7 @@ options (
     file_extension 'log',
     with_header 'no',
     mapped 'yes');
+
+-- test decimals from long values and overflows
+alter session set "errorMax" = 25;
+select * from flatfile_server.bcp."decimal";

@@ -117,6 +117,12 @@ public class FarragoSessionRuntimeParams
      * assumes there will be a one to one mapping from statement to context.
      */
     public long stmtId;
+
+    /**
+     * Queue on which warnings should be posted, or null if runtime
+     * context should create a private queue.
+     */
+    public FarragoWarningQueue warningQueue;
 }
 
 // End FarragoSessionRuntimeParams.java

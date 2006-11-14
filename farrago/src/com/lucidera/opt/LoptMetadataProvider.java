@@ -67,7 +67,9 @@ public class LoptMetadataProvider
 
     private FarragoRepos repos;
 
-    private LcsColumnMetadata columnMd;
+    private final LcsColumnMetadata columnMd;
+    
+    private final SimpleColumnOrigins columnOrigins;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -75,6 +77,7 @@ public class LoptMetadataProvider
     {
         this.repos = repos;
         columnMd = new LcsColumnMetadata();
+        columnOrigins = new SimpleColumnOrigins();
 
         mapParameterTypes(
             "getCostWithFilters",
@@ -92,6 +95,10 @@ public class LoptMetadataProvider
         mapParameterTypes(
             "getPopulationSize",
             Collections.singletonList((Class) BitSet.class));
+        
+        mapParameterTypes(
+            "getSimpleColumnOrigins",
+            Collections.singletonList((Class) Integer.TYPE));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -749,6 +756,57 @@ public class LoptMetadataProvider
     public Set<BitSet> getUniqueKeys(LcsRowScanRel rel)
     {
         return columnMd.getUniqueKeys(rel, repos);
+    }
+
+    public Set<RelColumnOrigin> getSimpleColumnOrigins(
+        JoinRelBase rel,
+        int iOutputColumn)
+    {
+        return columnOrigins.getColumnOrigins(rel, iOutputColumn);
+    }
+    
+    public Set<RelColumnOrigin> getSimpleColumnOrigins(
+        ProjectRelBase rel,
+        int iOutputColumn)
+    {
+        return columnOrigins.getColumnOrigins(rel, iOutputColumn);
+    }
+
+    public Set<RelColumnOrigin> getSimpleColumnOrigins(
+        FilterRelBase rel,
+        int iOutputColumn)
+    {
+        return LoptMetadataQuery.getSimpleColumnOrigins(
+            rel.getChild(),
+            iOutputColumn);
+    }
+    
+    // Catch-all rule when none of the others apply.
+    public Set<RelColumnOrigin> getSimpleColumnOrigins(
+        RelNode rel,
+        int iOutputColumn)
+    {
+        // if this RelNode contains inputs and it wasn't already handled by
+        // another method, or it's a non-leaf node, then it's not simple
+        if (rel.getInputs().length > 0 || rel.getTable() == null) {
+            return null;
+        }
+        return columnOrigins.getColumnOrigins(rel, iOutputColumn);
+    }
+    
+    /**
+     * An extension of {@link RelMdColumnOrigins} that invokes
+     * {@link LoptMetadataQuery#getSimpleColumnOrigins} instead of
+     * {@link RelMetadataQuery#getColumnOrigins}.
+     */
+    private class SimpleColumnOrigins extends RelMdColumnOrigins
+    {
+        protected Set<RelColumnOrigin> invokeGetColumnOrigins(
+            RelNode rel,
+            int iOutputColumn)
+        {
+            return LoptMetadataQuery.getSimpleColumnOrigins(rel, iOutputColumn);
+        }
     }
 }
 

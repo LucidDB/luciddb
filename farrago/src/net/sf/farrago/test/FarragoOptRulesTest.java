@@ -336,8 +336,8 @@ public class FarragoOptRulesTest
             programBuilder.createProgram(),
             "select e.name from sales.emps e, sales.depts d "
             + "where e.deptno = d.deptno and e.name = 'foo'");
-    }
-
+    }    
+   
     public void testConvertMultiJoinRule()
         throws Exception
     {
@@ -478,6 +478,21 @@ public class FarragoOptRulesTest
             "    inner join " +
             "    (select * from I inner join J on i = j) " +
             "    on a = i and h = j");
+    }
+    
+    public void testPushSemiJoinPastProject()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new PushSemiJoinPastProjectRule());
+        check(
+            programBuilder.createProgram(),
+            "select e.* from "
+            + "(select name, trim(city), age * 2, deptno from sales.emps) e, "
+            + "sales.depts d "
+            + "where e.deptno = d.deptno");
     }
 }
 

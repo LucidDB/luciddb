@@ -37,6 +37,7 @@ import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.resource.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.sql.type.*;
@@ -91,6 +92,8 @@ public class FarragoCatalogInit
 
     private final Set objs;
 
+    private final String timestamp;
+
     //~ Constructors -----------------------------------------------------------
 
     private FarragoCatalogInit(FarragoRepos repos)
@@ -103,6 +106,8 @@ public class FarragoCatalogInit
         repos.getMdrRepos().addListener(
             this,
             AttributeEvent.EVENTMASK_ATTRIBUTE);
+
+        timestamp = FarragoCatalogUtil.createTimestamp();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -176,6 +181,19 @@ public class FarragoCatalogInit
                         SYSTEM_USER_NAME,
                         modelElement);
                 JmiObjUtil.setMandatoryPrimitiveDefaults(grant);
+            }
+            if (obj instanceof FemAnnotatedElement) {
+                FemAnnotatedElement annotatedElement =
+                    (FemAnnotatedElement) obj;
+                if (annotatedElement.getDescription() == null) {
+                    annotatedElement.setDescription(
+                        FarragoResource.instance().
+                        CatalogBootstrapObjDescription.str());
+                }
+                FarragoCatalogUtil.updateAnnotatedElement(
+                    annotatedElement,
+                    timestamp,
+                    true);
             }
             JmiObjUtil.setMandatoryPrimitiveDefaults((RefObject) obj);
         }

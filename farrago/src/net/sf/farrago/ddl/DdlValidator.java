@@ -184,6 +184,8 @@ public class DdlValidator
      */
     private Set<CwmModelElement> revalidateQueue;
 
+    private String timestamp;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -704,14 +706,10 @@ public class DdlValidator
 
         // Update attributes maintained for annotated elements.
         FemAnnotatedElement annotatedElement = (FemAnnotatedElement) element;
-
-        // Update element modification time.
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        annotatedElement.setModificationTimestamp(ts.toString());
-        if (isNew) {
-            annotatedElement.setCreationTimestamp(ts.toString());
-            annotatedElement.setLineageId(UUID.randomUUID().toString());
-        }
+        FarragoCatalogUtil.updateAnnotatedElement(
+            annotatedElement,
+            obtainTimestamp(),
+            isNew);
     }
 
     // implement MDRPreChangeListener
@@ -1487,6 +1485,16 @@ public class DdlValidator
             }
         }
         return null;
+    }
+
+    private String obtainTimestamp()
+    {
+        // NOTE jvs 5-Nov-2006:  Use a single consistent timestamp for
+        // all objects involved in the same DDL transaction (FRG-126).
+        if (timestamp == null) {
+            timestamp = FarragoCatalogUtil.createTimestamp();
+        }
+        return timestamp;
     }
 
     public void validateViewColumnList(Collection collection)

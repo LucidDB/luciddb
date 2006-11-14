@@ -6,20 +6,20 @@
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- a bunch of equi-joins
-0: jdbc:luciddb:> -- Workarounds added for LER-92 & LER-93, and filters added so semijoins happen
+0: jdbc:luciddb:> -- filters added so semijoins happen 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- LER-92 & LER-93 throughout
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- two way
 0: jdbc:luciddb:> select EMP.LNAME 
-. . . . . . . . > , EMP.EMPNO
 . . . . . . . . > from EMP, DEPT
 . . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO 
 . . . . . . . . >   and DEPT.DEPTNO > 100
 . . . . . . . . > order by EMP.EMPNO;
-+--------+--------+
-| LNAME  | EMPNO  |
-+--------+--------+
-+--------+--------+
-0: jdbc:luciddb:> --order by EMPNO;
++--------+
+| LNAME  |
++--------+
++--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select DEPT.DNAME 
 . . . . . . . . > from EMP, DEPT
@@ -30,7 +30,6 @@
 | DNAME  |
 +--------+
 +--------+
-0: jdbc:luciddb:> --order by DNAME;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- three way
 0: jdbc:luciddb:> SELECT EMP.LNAME
@@ -53,7 +52,6 @@
 | Webber    |
 | Williams  |
 +-----------+
-0: jdbc:luciddb:> --order by LNAME;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> SELECT DEPT.DNAME
 . . . . . . . . > from EMP, DEPT, LOCATION
@@ -75,7 +73,6 @@
 | Support      |
 | Support      |
 +--------------+
-0: jdbc:luciddb:> --order by DNAME;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> SELECT LOCATION.CITY
 . . . . . . . . > , LOCATION.STREET
@@ -98,46 +95,41 @@
 | Menlo Park     | 770 Coleman               |
 | Menlo Park     | 770 Coleman               |
 +----------------+---------------------------+
-0: jdbc:luciddb:> --order by STREET;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- semi joins of a self join
 0: jdbc:luciddb:> select M.LNAME 
-. . . . . . . . > , M.EMPNO
 . . . . . . . . > from EMP M, EMP R
 . . . . . . . . > where M.EMPNO = R.MANAGER
 . . . . . . . . >  and R.SEX='M'
 . . . . . . . . > order by M.EMPNO;
-+----------+--------+
-|  LNAME   | EMPNO  |
-+----------+--------+
-| Bush     | 100    |
-| Bush     | 100    |
-| Bush     | 100    |
-| Andrews  | 102    |
-| Andrews  | 102    |
-| Andrews  | 102    |
-| Webber   | 103    |
-+----------+--------+
-0: jdbc:luciddb:> --order by EMPNO;
++----------+
+|  LNAME   |
++----------+
+| Bush     |
+| Bush     |
+| Bush     |
+| Andrews  |
+| Andrews  |
+| Andrews  |
+| Webber   |
++----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select R.LNAME 
-. . . . . . . . > , R.EMPNO
 . . . . . . . . > from EMP M, EMP R
 . . . . . . . . > where M.EMPNO = R.MANAGER 
 . . . . . . . . > and R.SEX='M'
 . . . . . . . . > order by R.EMPNO;
-+-----------+--------+
-|   LNAME   | EMPNO  |
-+-----------+--------+
-| Brown     | 101    |
-| Webber    | 103    |
-| Fratz     | 104    |
-| Guy       | 105    |
-| Roy       | 106    |
-| Williams  | 107    |
-| Nife      | 109    |
-+-----------+--------+
-0: jdbc:luciddb:> --order by EMPNO;
++-----------+
+|   LNAME   |
++-----------+
+| Brown     |
+| Webber    |
+| Fratz     |
+| Guy       |
+| Roy       |
+| Williams  |
+| Nife      |
++-----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- double reference of a table
 0: jdbc:luciddb:> select EMP.LNAME, DEPT.DNAME
@@ -203,12 +195,12 @@
 | Williams  | Sales        |
 | Williams  | Support      |
 +-----------+--------------+
-0: jdbc:luciddb:> --order by LNAME, DNAME;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select EL.CITY, DL.CITY
 . . . . . . . . > from LOCATION EL, LOCATION DL, EMP, DEPT
 . . . . . . . . > where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID
-. . . . . . . . > order by 1, 2;
+. . . . . . . . > --order by 1, 2;
+. . . . . . . . > order by EL.CITY, DL.CITY;
 +----------------+----------------+
 |      CITY      |      CITY      |
 +----------------+----------------+
@@ -268,7 +260,6 @@
 | San Mateo      | San Mateo      |
 | San Mateo      | San Mateo      |
 +----------------+----------------+
-0: jdbc:luciddb:> --order by CITY, CITY;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- many to many self join semi join variations
 0: jdbc:luciddb:> select F.FNAME
@@ -403,7 +394,6 @@
 | Wendy     |
 | Wendy     |
 +-----------+
-0: jdbc:luciddb:> --order by FNAME;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select M.FNAME, M.LNAME
 . . . . . . . . > FROM CUSTOMERS M, CUSTOMERS F
@@ -537,7 +527,6 @@
 | Victor    | Peterson      |
 | Walter    | Frank         |
 +-----------+---------------+
-0: jdbc:luciddb:> --order by FNAME, LNAME;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- a few ranges
 0: jdbc:luciddb:> -- a big ol' join
@@ -2586,1185 +2575,1184 @@
 +--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select PRODUCTS.NAME, CUSTOMERS.FNAME, CUSTOMERS.LNAME, PRODUCTS.PRICE
-. . . . . . . . > , CUSTOMERS.CUSTID
 . . . . . . . . > from SALES, PRODUCTS, CUSTOMERS
 . . . . . . . . > where SALES.PRICE - PRODUCTS.PRICE < 0.5
 . . . . . . . . > and PRODUCTS.PRICE - SALES.PRICE < 0.25
 . . . . . . . . > and SALES.CUSTID = CUSTOMERS.CUSTID
 . . . . . . . . > order by PRODUCTS.NAME, CUSTOMERS.CUSTID;
-+---------------+-----------+---------------+--------+---------+
-|     NAME      |   FNAME   |     LNAME     | PRICE  | CUSTID  |
-+---------------+-----------+---------------+--------+---------+
-| Chicken       | Eric      | Locicero      | 7.81   | 0       |
-| Chicken       | Victor    | Peterson      | 7.81   | 4       |
-| Chicken       | Victor    | Peterson      | 7.81   | 4       |
-| Chicken       | Veronica  | Bush          | 7.81   | 5       |
-| Chicken       | Veronica  | Bush          | 7.81   | 5       |
-| Chicken       | Veronica  | Bush          | 7.81   | 5       |
-| Chicken       | Fritz     | Grant         | 7.81   | 6       |
-| Chicken       | Missy     | Bush          | 7.81   | 7       |
-| Chicken       | Ted       | Howard        | 7.81   | 8       |
-| Chicken       | Bianca    | Grant         | 7.81   | 11      |
-| Chicken       | Bianca    | Grant         | 7.81   | 11      |
-| Chicken       | Maggie    | Everett       | 7.81   | 13      |
-| Chicken       | Oliver    | Grant         | 7.81   | 16      |
-| Chicken       | Theodore  | OLeary        | 7.81   | 18      |
-| Chicken       | Eric      | Locicero      | 7.81   | 22      |
-| Chicken       | Ophelia   | Everett       | 7.81   | 23      |
-| Chicken       | Ophelia   | Everett       | 7.81   | 23      |
-| Chicken       | David     | Peterson      | 7.81   | 24      |
-| Chicken       | Florence  | Carlucchi     | 7.81   | 25      |
-| Chicken       | Florence  | Carlucchi     | 7.81   | 25      |
-| Chicken       | Mary      | Noose         | 7.81   | 27      |
-| Chicken       | Pauline   | Everett       | 7.81   | 29      |
-| Chicken       | Mary      | Van Morrison  | 7.81   | 31      |
-| Chicken       | Mary      | Van Morrison  | 7.81   | 31      |
-| Chicken       | Anita     | Carlucchi     | 7.81   | 35      |
-| Chicken       | Jake      | Bush          | 7.81   | 36      |
-| Chicken       | Terri     | Noose         | 7.81   | 37      |
-| Chicken       | Terri     | Noose         | 7.81   | 37      |
-| Chicken       | Andy      | Jones         | 7.81   | 38      |
-| Chicken       | Batilda   | Van Morrison  | 7.81   | 39      |
-| Chicken       | Kevin     | Frank         | 7.81   | 40      |
-| Chicken       | Pauline   | Smith         | 7.81   | 41      |
-| Chicken       | Margaret  | Van Morrison  | 7.81   | 45      |
-| Chicken       | Bill      | Mantela       | 7.81   | 50      |
-| Chicken       | Victor    | Peterson      | 7.81   | 52      |
-| Chicken       | Margaret  | Everett       | 7.81   | 63      |
-| Chicken       | Margaret  | Everett       | 7.81   | 63      |
-| Chicken       | Harry     | Andrews       | 7.81   | 64      |
-| Chicken       | Harry     | Andrews       | 7.81   | 64      |
-| Chicken       | Denise    | Peterson      | 7.81   | 67      |
-| Chicken       | Holly     | Dole          | 7.81   | 71      |
-| Chicken       | Patty     | Randolph      | 7.81   | 73      |
-| Chicken       | Andy      | OLeary        | 7.81   | 74      |
-| Chicken       | Lisa      | Van Morrison  | 7.81   | 77      |
-| Chicken       | Lisa      | Van Morrison  | 7.81   | 77      |
-| Chicken       | Alice     | Kemp          | 7.81   | 81      |
-| Chicken       | David     | Howard        | 7.81   | 84      |
-| Chicken       | Patty     | Howard        | 7.81   | 85      |
-| Chicken       | Patty     | Howard        | 7.81   | 85      |
-| Chicken       | Ted       | Grant         | 7.81   | 86      |
-| Chicken       | Maggie    | Kemp          | 7.81   | 87      |
-| Chicken       | Anita     | Randolph      | 7.81   | 89      |
-| Chicken       | Anita     | Randolph      | 7.81   | 89      |
-| Chicken       | Paul      | Van Morrison  | 7.81   | 90      |
-| Chicken       | Paul      | Van Morrison  | 7.81   | 90      |
-| Chicken       | Ophelia   | OLeary        | 7.81   | 91      |
-| Chicken       | Terri     | Randolph      | 7.81   | 93      |
-| Chicken       | Hugh      | Kemp          | 7.81   | 94      |
-| Chicken       | Margaret  | Bush          | 7.81   | 95      |
-| Chicken       | Margaret  | Bush          | 7.81   | 95      |
-| Chicken       | Bruce     | Grant         | 7.81   | 96      |
-| Chicken       | Bruce     | Grant         | 7.81   | 96      |
-| Chicken       | Samantha  | Frank         | 7.81   | 97      |
-| Chicken       | Victor    | Frank         | 7.81   | 98      |
-| Chicken       | Veronica  | Dole          | 7.81   | 99      |
-| Cookies       | Gary      | Everett       | 1.61   | 2       |
-| Cookies       | Fritz     | Grant         | 1.61   | 6       |
-| Cookies       | Missy     | Bush          | 1.61   | 7       |
-| Cookies       | Ted       | Howard        | 1.61   | 8       |
-| Cookies       | Wendy     | Kemp          | 1.61   | 9       |
-| Cookies       | Earl      | Dole          | 1.61   | 10      |
-| Cookies       | Bianca    | Grant         | 1.61   | 11      |
-| Cookies       | Dave      | Stevens       | 1.61   | 12      |
-| Cookies       | Dave      | Stevens       | 1.61   | 12      |
-| Cookies       | Barry     | Jones         | 1.61   | 14      |
-| Cookies       | Oliver    | Grant         | 1.61   | 16      |
-| Cookies       | Jeniffer  | Mantela       | 1.61   | 17      |
-| Cookies       | Jeniffer  | Mantela       | 1.61   | 17      |
-| Cookies       | Theodore  | OLeary        | 1.61   | 18      |
-| Cookies       | Eric      | Locicero      | 1.61   | 22      |
-| Cookies       | Eric      | Locicero      | 1.61   | 22      |
-| Cookies       | Florence  | Carlucchi     | 1.61   | 25      |
-| Cookies       | Florence  | Carlucchi     | 1.61   | 25      |
-| Cookies       | Mary      | Noose         | 1.61   | 27      |
-| Cookies       | Mary      | Noose         | 1.61   | 27      |
-| Cookies       | Pauline   | Everett       | 1.61   | 29      |
-| Cookies       | Pauline   | Everett       | 1.61   | 29      |
-| Cookies       | Mary      | Van Morrison  | 1.61   | 31      |
-| Cookies       | Patty     | Van Morrison  | 1.61   | 33      |
-| Cookies       | Bill      | Kemp          | 1.61   | 34      |
-| Cookies       | Anita     | Carlucchi     | 1.61   | 35      |
-| Cookies       | Andy      | Jones         | 1.61   | 38      |
-| Cookies       | Kevin     | Frank         | 1.61   | 40      |
-| Cookies       | Pauline   | Smith         | 1.61   | 41      |
-| Cookies       | Pauline   | Smith         | 1.61   | 41      |
-| Cookies       | Erica     | Grant         | 1.61   | 43      |
-| Cookies       | Erica     | Grant         | 1.61   | 43      |
-| Cookies       | Hope      | Stevens       | 1.61   | 47      |
-| Cookies       | Daniel    | Bush          | 1.61   | 48      |
-+---------------+-----------+---------------+--------+---------+
-|     NAME      |   FNAME   |     LNAME     | PRICE  | CUSTID  |
-+---------------+-----------+---------------+--------+---------+
-| Cookies       | Bill      | Mantela       | 1.61   | 50      |
-| Cookies       | Victor    | Peterson      | 1.61   | 52      |
-| Cookies       | Max       | Frank         | 1.61   | 56      |
-| Cookies       | Max       | Frank         | 1.61   | 56      |
-| Cookies       | Max       | Frank         | 1.61   | 56      |
-| Cookies       | Max       | Frank         | 1.61   | 56      |
-| Cookies       | Jeniffer  | Bush          | 1.61   | 59      |
-| Cookies       | Jeniffer  | Bush          | 1.61   | 59      |
-| Cookies       | Jeniffer  | Bush          | 1.61   | 59      |
-| Cookies       | Ceasar    | Mantela       | 1.61   | 60      |
-| Cookies       | Margaret  | Everett       | 1.61   | 63      |
-| Cookies       | Margaret  | Everett       | 1.61   | 63      |
-| Cookies       | Harry     | Andrews       | 1.61   | 64      |
-| Cookies       | Harry     | Andrews       | 1.61   | 64      |
-| Cookies       | Anthony   | Smith         | 1.61   | 66      |
-| Cookies       | Denise    | Peterson      | 1.61   | 67      |
-| Cookies       | Anthony   | Frank         | 1.61   | 68      |
-| Cookies       | Anthony   | Frank         | 1.61   | 68      |
-| Cookies       | Anthony   | Frank         | 1.61   | 68      |
-| Cookies       | Anthony   | Frank         | 1.61   | 68      |
-| Cookies       | Hope      | Smith         | 1.61   | 69      |
-| Cookies       | Fred      | Noose         | 1.61   | 72      |
-| Cookies       | Lisa      | Van Morrison  | 1.61   | 77      |
-| Cookies       | Ian       | Bush          | 1.61   | 80      |
-| Cookies       | David     | Howard        | 1.61   | 84      |
-| Cookies       | Patty     | Howard        | 1.61   | 85      |
-| Cookies       | Patty     | Howard        | 1.61   | 85      |
-| Cookies       | Maggie    | Kemp          | 1.61   | 87      |
-| Cookies       | Maggie    | Kemp          | 1.61   | 87      |
-| Cookies       | Paul      | Van Morrison  | 1.61   | 90      |
-| Cookies       | Paul      | Van Morrison  | 1.61   | 90      |
-| Cookies       | Margaret  | Bush          | 1.61   | 95      |
-| Cookies       | Margaret  | Bush          | 1.61   | 95      |
-| Cookies       | Bruce     | Grant         | 1.61   | 96      |
-| Cookies       | Victor    | Frank         | 1.61   | 98      |
-| Cookies       | Victor    | Frank         | 1.61   | 98      |
-| Eggs          | Terri     | Grant         | 6.47   | 1       |
-| Eggs          | Terri     | Grant         | 6.47   | 1       |
-| Eggs          | Victor    | Peterson      | 6.47   | 4       |
-| Eggs          | Veronica  | Bush          | 6.47   | 5       |
-| Eggs          | Veronica  | Bush          | 6.47   | 5       |
-| Eggs          | Missy     | Bush          | 6.47   | 7       |
-| Eggs          | Ted       | Howard        | 6.47   | 8       |
-| Eggs          | Maggie    | Everett       | 6.47   | 13      |
-| Eggs          | Barry     | Jones         | 6.47   | 14      |
-| Eggs          | Theodore  | OLeary        | 6.47   | 18      |
-| Eggs          | Theodore  | OLeary        | 6.47   | 18      |
-| Eggs          | Patty     | Carlucchi     | 6.47   | 19      |
-| Eggs          | Anita     | Carlucchi     | 6.47   | 21      |
-| Eggs          | Eric      | Locicero      | 6.47   | 22      |
-| Eggs          | Ophelia   | Everett       | 6.47   | 23      |
-| Eggs          | Ophelia   | Everett       | 6.47   | 23      |
-| Eggs          | Ophelia   | Everett       | 6.47   | 23      |
-| Eggs          | David     | Peterson      | 6.47   | 24      |
-| Eggs          | David     | Peterson      | 6.47   | 24      |
-| Eggs          | Andy      | Peterson      | 6.47   | 26      |
-| Eggs          | Andy      | Peterson      | 6.47   | 26      |
-| Eggs          | Andy      | Peterson      | 6.47   | 26      |
-| Eggs          | Mary      | Noose         | 6.47   | 27      |
-| Eggs          | Ulysses   | Peterson      | 6.47   | 28      |
-| Eggs          | Larry     | Randolph      | 6.47   | 32      |
-| Eggs          | Larry     | Randolph      | 6.47   | 32      |
-| Eggs          | Bill      | Kemp          | 6.47   | 34      |
-| Eggs          | Andy      | Jones         | 6.47   | 38      |
-| Eggs          | Batilda   | Van Morrison  | 6.47   | 39      |
-| Eggs          | Kevin     | Frank         | 6.47   | 40      |
-| Eggs          | Kevin     | Frank         | 6.47   | 40      |
-| Eggs          | Pauline   | Smith         | 6.47   | 41      |
-| Eggs          | Pauline   | Smith         | 6.47   | 41      |
-| Eggs          | Erica     | Grant         | 6.47   | 43      |
-| Eggs          | Margaret  | Van Morrison  | 6.47   | 45      |
-| Eggs          | Hope      | Stevens       | 6.47   | 47      |
-| Eggs          | Daniel    | Bush          | 6.47   | 48      |
-| Eggs          | Maggie    | OLeary        | 6.47   | 49      |
-| Eggs          | Maggie    | OLeary        | 6.47   | 49      |
-| Eggs          | Victor    | Peterson      | 6.47   | 52      |
-| Eggs          | Victor    | Peterson      | 6.47   | 52      |
-| Eggs          | Victor    | Peterson      | 6.47   | 52      |
-| Eggs          | Veronica  | Smith         | 6.47   | 53      |
-| Eggs          | Max       | Peterson      | 6.47   | 54      |
-| Eggs          | Max       | Frank         | 6.47   | 56      |
-| Eggs          | Max       | Frank         | 6.47   | 56      |
-| Eggs          | Monty     | Grant         | 6.47   | 58      |
-| Eggs          | Monty     | Grant         | 6.47   | 58      |
-| Eggs          | Anita     | Locicero      | 6.47   | 61      |
-| Eggs          | Anthony   | Smith         | 6.47   | 66      |
-| Eggs          | Denise    | Peterson      | 6.47   | 67      |
-| Eggs          | Denise    | Peterson      | 6.47   | 67      |
-| Eggs          | Hope      | Smith         | 6.47   | 69      |
-| Eggs          | Peter     | Howard        | 6.47   | 70      |
-| Eggs          | Fred      | Noose         | 6.47   | 72      |
-| Eggs          | Fred      | Noose         | 6.47   | 72      |
-| Eggs          | Fred      | Noose         | 6.47   | 72      |
-| Eggs          | Andy      | OLeary        | 6.47   | 74      |
-| Eggs          | Jeniffer  | Kemp          | 6.47   | 75      |
-| Eggs          | Jeniffer  | Kemp          | 6.47   | 75      |
-| Eggs          | Lisa      | Van Morrison  | 6.47   | 77      |
-| Eggs          | Lisa      | Van Morrison  | 6.47   | 77      |
-| Eggs          | Barry     | Stevens       | 6.47   | 78      |
-| Eggs          | Carla     | Stevens       | 6.47   | 79      |
-+---------------+-----------+---------------+--------+---------+
-|     NAME      |   FNAME   |     LNAME     | PRICE  | CUSTID  |
-+---------------+-----------+---------------+--------+---------+
-| Eggs          | Ceasar    | Locicero      | 6.47   | 82      |
-| Eggs          | Pauline   | Bush          | 6.47   | 83      |
-| Eggs          | Ted       | Grant         | 6.47   | 86      |
-| Eggs          | Ted       | Grant         | 6.47   | 86      |
-| Eggs          | Ted       | Grant         | 6.47   | 86      |
-| Eggs          | Maggie    | Kemp          | 6.47   | 87      |
-| Eggs          | Anthony   | Stevens       | 6.47   | 88      |
-| Eggs          | Anthony   | Stevens       | 6.47   | 88      |
-| Eggs          | Anita     | Randolph      | 6.47   | 89      |
-| Eggs          | Anita     | Randolph      | 6.47   | 89      |
-| Eggs          | Paul      | Van Morrison  | 6.47   | 90      |
-| Eggs          | Rex       | Mantela       | 6.47   | 92      |
-| Eggs          | Terri     | Randolph      | 6.47   | 93      |
-| Eggs          | Terri     | Randolph      | 6.47   | 93      |
-| Eggs          | Terri     | Randolph      | 6.47   | 93      |
-| Eggs          | Hugh      | Kemp          | 6.47   | 94      |
-| Eggs          | Hugh      | Kemp          | 6.47   | 94      |
-| Eggs          | Bruce     | Grant         | 6.47   | 96      |
-| Heater        | Victor    | Peterson      | 3.02   | 4       |
-| Heater        | Veronica  | Bush          | 3.02   | 5       |
-| Heater        | Veronica  | Bush          | 3.02   | 5       |
-| Heater        | Fritz     | Grant         | 3.02   | 6       |
-| Heater        | Missy     | Bush          | 3.02   | 7       |
-| Heater        | Wendy     | Kemp          | 3.02   | 9       |
-| Heater        | Bianca    | Grant         | 3.02   | 11      |
-| Heater        | Dave      | Stevens       | 3.02   | 12      |
-| Heater        | Maggie    | Everett       | 3.02   | 13      |
-| Heater        | Barry     | Jones         | 3.02   | 14      |
-| Heater        | Patty     | Noose         | 3.02   | 15      |
-| Heater        | Patty     | Noose         | 3.02   | 15      |
-| Heater        | Theodore  | OLeary        | 3.02   | 18      |
-| Heater        | Theodore  | OLeary        | 3.02   | 18      |
-| Heater        | Theodore  | OLeary        | 3.02   | 18      |
-| Heater        | Theodore  | OLeary        | 3.02   | 18      |
-| Heater        | Patty     | Carlucchi     | 3.02   | 19      |
-| Heater        | David     | Peterson      | 3.02   | 24      |
-| Heater        | Andy      | Peterson      | 3.02   | 26      |
-| Heater        | Mary      | Noose         | 3.02   | 27      |
-| Heater        | Ulysses   | Peterson      | 3.02   | 28      |
-| Heater        | Ulysses   | Peterson      | 3.02   | 28      |
-| Heater        | Gerry     | Bush          | 3.02   | 30      |
-| Heater        | Larry     | Randolph      | 3.02   | 32      |
-| Heater        | Patty     | Van Morrison  | 3.02   | 33      |
-| Heater        | Bill      | Kemp          | 3.02   | 34      |
-| Heater        | Jake      | Bush          | 3.02   | 36      |
-| Heater        | Andy      | Jones         | 3.02   | 38      |
-| Heater        | Andy      | Jones         | 3.02   | 38      |
-| Heater        | Kevin     | Frank         | 3.02   | 40      |
-| Heater        | Hugh      | Andrews       | 3.02   | 46      |
-| Heater        | Daniel    | Bush          | 3.02   | 48      |
-| Heater        | Bill      | Mantela       | 3.02   | 50      |
-| Heater        | Bill      | Mantela       | 3.02   | 50      |
-| Heater        | Betty     | Andrews       | 3.02   | 51      |
-| Heater        | Hope      | Bush          | 3.02   | 55      |
-| Heater        | Hope      | Bush          | 3.02   | 55      |
-| Heater        | Max       | Frank         | 3.02   | 56      |
-| Heater        | Kathy     | Stevens       | 3.02   | 65      |
-| Heater        | Denise    | Peterson      | 3.02   | 67      |
-| Heater        | Holly     | Dole          | 3.02   | 71      |
-| Heater        | Patty     | Randolph      | 3.02   | 73      |
-| Heater        | Jeniffer  | Kemp          | 3.02   | 75      |
-| Heater        | Jeniffer  | Kemp          | 3.02   | 75      |
-| Heater        | Randy     | Smith         | 3.02   | 76      |
-| Heater        | Lisa      | Van Morrison  | 3.02   | 77      |
-| Heater        | Lisa      | Van Morrison  | 3.02   | 77      |
-| Heater        | Carla     | Stevens       | 3.02   | 79      |
-| Heater        | Alice     | Kemp          | 3.02   | 81      |
-| Heater        | Ceasar    | Locicero      | 3.02   | 82      |
-| Heater        | Ceasar    | Locicero      | 3.02   | 82      |
-| Heater        | Pauline   | Bush          | 3.02   | 83      |
-| Heater        | Pauline   | Bush          | 3.02   | 83      |
-| Heater        | Patty     | Howard        | 3.02   | 85      |
-| Heater        | Patty     | Howard        | 3.02   | 85      |
-| Heater        | Patty     | Howard        | 3.02   | 85      |
-| Heater        | Anthony   | Stevens       | 3.02   | 88      |
-| Heater        | Anita     | Randolph      | 3.02   | 89      |
-| Heater        | Ophelia   | OLeary        | 3.02   | 91      |
-| Heater        | Terri     | Randolph      | 3.02   | 93      |
-| Heater        | Samantha  | Frank         | 3.02   | 97      |
-| Heater        | Veronica  | Dole          | 3.02   | 99      |
-| Iron          | Eric      | Locicero      | 6.27   | 0       |
-| Iron          | Terri     | Grant         | 6.27   | 1       |
-| Iron          | Veronica  | Bush          | 6.27   | 5       |
-| Iron          | Veronica  | Bush          | 6.27   | 5       |
-| Iron          | Missy     | Bush          | 6.27   | 7       |
-| Iron          | Ted       | Howard        | 6.27   | 8       |
-| Iron          | Dave      | Stevens       | 6.27   | 12      |
-| Iron          | Maggie    | Everett       | 6.27   | 13      |
-| Iron          | Maggie    | Everett       | 6.27   | 13      |
-| Iron          | Barry     | Jones         | 6.27   | 14      |
-| Iron          | Theodore  | OLeary        | 6.27   | 18      |
-| Iron          | Patty     | Carlucchi     | 6.27   | 19      |
-| Iron          | Anita     | Carlucchi     | 6.27   | 21      |
-| Iron          | Eric      | Locicero      | 6.27   | 22      |
-| Iron          | Ophelia   | Everett       | 6.27   | 23      |
-| Iron          | David     | Peterson      | 6.27   | 24      |
-| Iron          | David     | Peterson      | 6.27   | 24      |
-| Iron          | Florence  | Carlucchi     | 6.27   | 25      |
-| Iron          | Andy      | Peterson      | 6.27   | 26      |
-| Iron          | Andy      | Peterson      | 6.27   | 26      |
-+---------------+-----------+---------------+--------+---------+
-|     NAME      |   FNAME   |     LNAME     | PRICE  | CUSTID  |
-+---------------+-----------+---------------+--------+---------+
-| Iron          | Andy      | Peterson      | 6.27   | 26      |
-| Iron          | Andy      | Peterson      | 6.27   | 26      |
-| Iron          | Andy      | Peterson      | 6.27   | 26      |
-| Iron          | Ulysses   | Peterson      | 6.27   | 28      |
-| Iron          | Larry     | Randolph      | 6.27   | 32      |
-| Iron          | Bill      | Kemp          | 6.27   | 34      |
-| Iron          | Andy      | Jones         | 6.27   | 38      |
-| Iron          | Batilda   | Van Morrison  | 6.27   | 39      |
-| Iron          | Kevin     | Frank         | 6.27   | 40      |
-| Iron          | Kevin     | Frank         | 6.27   | 40      |
-| Iron          | Pauline   | Smith         | 6.27   | 41      |
-| Iron          | Pauline   | Smith         | 6.27   | 41      |
-| Iron          | Erica     | Grant         | 6.27   | 43      |
-| Iron          | Walter    | Frank         | 6.27   | 44      |
-| Iron          | Daniel    | Bush          | 6.27   | 48      |
-| Iron          | Maggie    | OLeary        | 6.27   | 49      |
-| Iron          | Victor    | Peterson      | 6.27   | 52      |
-| Iron          | Victor    | Peterson      | 6.27   | 52      |
-| Iron          | Max       | Frank         | 6.27   | 56      |
-| Iron          | Max       | Frank         | 6.27   | 56      |
-| Iron          | Terri     | Kemp          | 6.27   | 57      |
-| Iron          | Monty     | Grant         | 6.27   | 58      |
-| Iron          | Anita     | Locicero      | 6.27   | 61      |
-| Iron          | Anthony   | Smith         | 6.27   | 66      |
-| Iron          | Denise    | Peterson      | 6.27   | 67      |
-| Iron          | Denise    | Peterson      | 6.27   | 67      |
-| Iron          | Anthony   | Frank         | 6.27   | 68      |
-| Iron          | Hope      | Smith         | 6.27   | 69      |
-| Iron          | Peter     | Howard        | 6.27   | 70      |
-| Iron          | Fred      | Noose         | 6.27   | 72      |
-| Iron          | Andy      | OLeary        | 6.27   | 74      |
-| Iron          | Jeniffer  | Kemp          | 6.27   | 75      |
-| Iron          | Jeniffer  | Kemp          | 6.27   | 75      |
-| Iron          | Lisa      | Van Morrison  | 6.27   | 77      |
-| Iron          | Barry     | Stevens       | 6.27   | 78      |
-| Iron          | Ceasar    | Locicero      | 6.27   | 82      |
-| Iron          | Pauline   | Bush          | 6.27   | 83      |
-| Iron          | David     | Howard        | 6.27   | 84      |
-| Iron          | Ted       | Grant         | 6.27   | 86      |
-| Iron          | Ted       | Grant         | 6.27   | 86      |
-| Iron          | Ted       | Grant         | 6.27   | 86      |
-| Iron          | Maggie    | Kemp          | 6.27   | 87      |
-| Iron          | Anthony   | Stevens       | 6.27   | 88      |
-| Iron          | Anita     | Randolph      | 6.27   | 89      |
-| Iron          | Anita     | Randolph      | 6.27   | 89      |
-| Iron          | Paul      | Van Morrison  | 6.27   | 90      |
-| Iron          | Rex       | Mantela       | 6.27   | 92      |
-| Iron          | Rex       | Mantela       | 6.27   | 92      |
-| Iron          | Terri     | Randolph      | 6.27   | 93      |
-| Iron          | Terri     | Randolph      | 6.27   | 93      |
-| Iron          | Terri     | Randolph      | 6.27   | 93      |
-| Iron          | Hugh      | Kemp          | 6.27   | 94      |
-| Iron          | Veronica  | Dole          | 6.27   | 99      |
-| Juice         | Gary      | Everett       | 4.62   | 2       |
-| Juice         | Missy     | Bush          | 4.62   | 7       |
-| Juice         | Ted       | Howard        | 4.62   | 8       |
-| Juice         | Wendy     | Kemp          | 4.62   | 9       |
-| Juice         | Earl      | Dole          | 4.62   | 10      |
-| Juice         | Dave      | Stevens       | 4.62   | 12      |
-| Juice         | Barry     | Jones         | 4.62   | 14      |
-| Juice         | Patty     | Noose         | 4.62   | 15      |
-| Juice         | Oliver    | Grant         | 4.62   | 16      |
-| Juice         | Theodore  | OLeary        | 4.62   | 18      |
-| Juice         | Theodore  | OLeary        | 4.62   | 18      |
-| Juice         | Patty     | Carlucchi     | 4.62   | 19      |
-| Juice         | Patty     | Carlucchi     | 4.62   | 19      |
-| Juice         | Eric      | Locicero      | 4.62   | 22      |
-| Juice         | David     | Peterson      | 4.62   | 24      |
-| Juice         | Ulysses   | Peterson      | 4.62   | 28      |
-| Juice         | Gerry     | Bush          | 4.62   | 30      |
-| Juice         | Mary      | Van Morrison  | 4.62   | 31      |
-| Juice         | Mary      | Van Morrison  | 4.62   | 31      |
-| Juice         | Jake      | Bush          | 4.62   | 36      |
-| Juice         | Jake      | Bush          | 4.62   | 36      |
-| Juice         | Terri     | Noose         | 4.62   | 37      |
-| Juice         | Andy      | Jones         | 4.62   | 38      |
-| Juice         | Batilda   | Van Morrison  | 4.62   | 39      |
-| Juice         | Pauline   | Smith         | 4.62   | 41      |
-| Juice         | Pauline   | Smith         | 4.62   | 41      |
-| Juice         | Erica     | Grant         | 4.62   | 43      |
-| Juice         | Erica     | Grant         | 4.62   | 43      |
-| Juice         | Margaret  | Van Morrison  | 4.62   | 45      |
-| Juice         | Hugh      | Andrews       | 4.62   | 46      |
-| Juice         | Maggie    | OLeary        | 4.62   | 49      |
-| Juice         | Victor    | Peterson      | 4.62   | 52      |
-| Juice         | Veronica  | Smith         | 4.62   | 53      |
-| Juice         | Max       | Peterson      | 4.62   | 54      |
-| Juice         | Max       | Peterson      | 4.62   | 54      |
-| Juice         | Max       | Peterson      | 4.62   | 54      |
-| Juice         | Hope      | Bush          | 4.62   | 55      |
-| Juice         | Terri     | Kemp          | 4.62   | 57      |
-| Juice         | Monty     | Grant         | 4.62   | 58      |
-| Juice         | Monty     | Grant         | 4.62   | 58      |
-| Juice         | Jeniffer  | Bush          | 4.62   | 59      |
-| Juice         | Jeniffer  | Bush          | 4.62   | 59      |
-| Juice         | Ceasar    | Mantela       | 4.62   | 60      |
-| Juice         | Ceasar    | Mantela       | 4.62   | 60      |
-| Juice         | Anita     | Locicero      | 4.62   | 61      |
-| Juice         | Anita     | Locicero      | 4.62   | 61      |
-| Juice         | Harry     | Andrews       | 4.62   | 64      |
-+---------------+-----------+---------------+--------+---------+
-|     NAME      |   FNAME   |     LNAME     | PRICE  | CUSTID  |
-+---------------+-----------+---------------+--------+---------+
-| Juice         | Harry     | Andrews       | 4.62   | 64      |
-| Juice         | Kathy     | Stevens       | 4.62   | 65      |
-| Juice         | Kathy     | Stevens       | 4.62   | 65      |
-| Juice         | Anthony   | Smith         | 4.62   | 66      |
-| Juice         | Anthony   | Frank         | 4.62   | 68      |
-| Juice         | Barry     | Stevens       | 4.62   | 78      |
-| Juice         | Ian       | Bush          | 4.62   | 80      |
-| Juice         | Ian       | Bush          | 4.62   | 80      |
-| Juice         | Alice     | Kemp          | 4.62   | 81      |
-| Juice         | David     | Howard        | 4.62   | 84      |
-| Juice         | Patty     | Howard        | 4.62   | 85      |
-| Juice         | Anthony   | Stevens       | 4.62   | 88      |
-| Juice         | Rex       | Mantela       | 4.62   | 92      |
-| Juice         | Rex       | Mantela       | 4.62   | 92      |
-| Juice         | Hugh      | Kemp          | 4.62   | 94      |
-| Juice         | Veronica  | Dole          | 4.62   | 99      |
-| Microwave     | Victor    | Peterson      | 2.92   | 4       |
-| Microwave     | Veronica  | Bush          | 2.92   | 5       |
-| Microwave     | Veronica  | Bush          | 2.92   | 5       |
-| Microwave     | Fritz     | Grant         | 2.92   | 6       |
-| Microwave     | Fritz     | Grant         | 2.92   | 6       |
-| Microwave     | Missy     | Bush          | 2.92   | 7       |
-| Microwave     | Wendy     | Kemp          | 2.92   | 9       |
-| Microwave     | Wendy     | Kemp          | 2.92   | 9       |
-| Microwave     | Bianca    | Grant         | 2.92   | 11      |
-| Microwave     | Dave      | Stevens       | 2.92   | 12      |
-| Microwave     | Maggie    | Everett       | 2.92   | 13      |
-| Microwave     | Barry     | Jones         | 2.92   | 14      |
-| Microwave     | Patty     | Noose         | 2.92   | 15      |
-| Microwave     | Patty     | Noose         | 2.92   | 15      |
-| Microwave     | Theodore  | OLeary        | 2.92   | 18      |
-| Microwave     | Theodore  | OLeary        | 2.92   | 18      |
-| Microwave     | Theodore  | OLeary        | 2.92   | 18      |
-| Microwave     | Patty     | Carlucchi     | 2.92   | 19      |
-| Microwave     | David     | Peterson      | 2.92   | 24      |
-| Microwave     | Andy      | Peterson      | 2.92   | 26      |
-| Microwave     | Mary      | Noose         | 2.92   | 27      |
-| Microwave     | Ulysses   | Peterson      | 2.92   | 28      |
-| Microwave     | Ulysses   | Peterson      | 2.92   | 28      |
-| Microwave     | Gerry     | Bush          | 2.92   | 30      |
-| Microwave     | Larry     | Randolph      | 2.92   | 32      |
-| Microwave     | Bill      | Kemp          | 2.92   | 34      |
-| Microwave     | Anita     | Carlucchi     | 2.92   | 35      |
-| Microwave     | Anita     | Carlucchi     | 2.92   | 35      |
-| Microwave     | Andy      | Jones         | 2.92   | 38      |
-| Microwave     | Andy      | Jones         | 2.92   | 38      |
-| Microwave     | Kevin     | Frank         | 2.92   | 40      |
-| Microwave     | Eric      | Randolph      | 2.92   | 42      |
-| Microwave     | Hugh      | Andrews       | 2.92   | 46      |
-| Microwave     | Daniel    | Bush          | 2.92   | 48      |
-| Microwave     | Bill      | Mantela       | 2.92   | 50      |
-| Microwave     | Bill      | Mantela       | 2.92   | 50      |
-| Microwave     | Betty     | Andrews       | 2.92   | 51      |
-| Microwave     | Hope      | Bush          | 2.92   | 55      |
-| Microwave     | Hope      | Bush          | 2.92   | 55      |
-| Microwave     | Max       | Frank         | 2.92   | 56      |
-| Microwave     | Kathy     | Stevens       | 2.92   | 65      |
-| Microwave     | Denise    | Peterson      | 2.92   | 67      |
-| Microwave     | Holly     | Dole          | 2.92   | 71      |
-| Microwave     | Patty     | Randolph      | 2.92   | 73      |
-| Microwave     | Jeniffer  | Kemp          | 2.92   | 75      |
-| Microwave     | Jeniffer  | Kemp          | 2.92   | 75      |
-| Microwave     | Lisa      | Van Morrison  | 2.92   | 77      |
-| Microwave     | Lisa      | Van Morrison  | 2.92   | 77      |
-| Microwave     | Carla     | Stevens       | 2.92   | 79      |
-| Microwave     | Ian       | Bush          | 2.92   | 80      |
-| Microwave     | Alice     | Kemp          | 2.92   | 81      |
-| Microwave     | Alice     | Kemp          | 2.92   | 81      |
-| Microwave     | Pauline   | Bush          | 2.92   | 83      |
-| Microwave     | Pauline   | Bush          | 2.92   | 83      |
-| Microwave     | Patty     | Howard        | 2.92   | 85      |
-| Microwave     | Patty     | Howard        | 2.92   | 85      |
-| Microwave     | Patty     | Howard        | 2.92   | 85      |
-| Microwave     | Maggie    | Kemp          | 2.92   | 87      |
-| Microwave     | Anthony   | Stevens       | 2.92   | 88      |
-| Microwave     | Anita     | Randolph      | 2.92   | 89      |
-| Microwave     | Ophelia   | OLeary        | 2.92   | 91      |
-| Microwave     | Ophelia   | OLeary        | 2.92   | 91      |
-| Microwave     | Terri     | Randolph      | 2.92   | 93      |
-| Microwave     | Samantha  | Frank         | 2.92   | 97      |
-| Microwave     | Samantha  | Frank         | 2.92   | 97      |
-| Microwave     | Veronica  | Dole          | 2.92   | 99      |
-| Milk          | Terri     | Grant         | 5.18   | 1       |
-| Milk          | Terri     | Grant         | 5.18   | 1       |
-| Milk          | Gary      | Everett       | 5.18   | 2       |
-| Milk          | Terri     | Andrews       | 5.18   | 3       |
-| Milk          | Victor    | Peterson      | 5.18   | 4       |
-| Milk          | Victor    | Peterson      | 5.18   | 4       |
-| Milk          | Veronica  | Bush          | 5.18   | 5       |
-| Milk          | Missy     | Bush          | 5.18   | 7       |
-| Milk          | Missy     | Bush          | 5.18   | 7       |
-| Milk          | Ted       | Howard        | 5.18   | 8       |
-| Milk          | Wendy     | Kemp          | 5.18   | 9       |
-| Milk          | Bianca    | Grant         | 5.18   | 11      |
-| Milk          | Dave      | Stevens       | 5.18   | 12      |
-| Milk          | Maggie    | Everett       | 5.18   | 13      |
-| Milk          | Patty     | Noose         | 5.18   | 15      |
-| Milk          | Oliver    | Grant         | 5.18   | 16      |
-| Milk          | Oliver    | Grant         | 5.18   | 16      |
-| Milk          | Theodore  | OLeary        | 5.18   | 18      |
-+---------------+-----------+---------------+--------+---------+
-|     NAME      |   FNAME   |     LNAME     | PRICE  | CUSTID  |
-+---------------+-----------+---------------+--------+---------+
-| Milk          | Patty     | Carlucchi     | 5.18   | 19      |
-| Milk          | David     | Peterson      | 5.18   | 24      |
-| Milk          | Andy      | Peterson      | 5.18   | 26      |
-| Milk          | Ulysses   | Peterson      | 5.18   | 28      |
-| Milk          | Mary      | Van Morrison  | 5.18   | 31      |
-| Milk          | Mary      | Van Morrison  | 5.18   | 31      |
-| Milk          | Larry     | Randolph      | 5.18   | 32      |
-| Milk          | Bill      | Kemp          | 5.18   | 34      |
-| Milk          | Bill      | Kemp          | 5.18   | 34      |
-| Milk          | Jake      | Bush          | 5.18   | 36      |
-| Milk          | Terri     | Noose         | 5.18   | 37      |
-| Milk          | Andy      | Jones         | 5.18   | 38      |
-| Milk          | Batilda   | Van Morrison  | 5.18   | 39      |
-| Milk          | Batilda   | Van Morrison  | 5.18   | 39      |
-| Milk          | Kevin     | Frank         | 5.18   | 40      |
-| Milk          | Kevin     | Frank         | 5.18   | 40      |
-| Milk          | Pauline   | Smith         | 5.18   | 41      |
-| Milk          | Eric      | Randolph      | 5.18   | 42      |
-| Milk          | Eric      | Randolph      | 5.18   | 42      |
-| Milk          | Erica     | Grant         | 5.18   | 43      |
-| Milk          | Erica     | Grant         | 5.18   | 43      |
-| Milk          | Walter    | Frank         | 5.18   | 44      |
-| Milk          | Hugh      | Andrews       | 5.18   | 46      |
-| Milk          | Hugh      | Andrews       | 5.18   | 46      |
-| Milk          | Maggie    | OLeary        | 5.18   | 49      |
-| Milk          | Victor    | Peterson      | 5.18   | 52      |
-| Milk          | Max       | Peterson      | 5.18   | 54      |
-| Milk          | Max       | Peterson      | 5.18   | 54      |
-| Milk          | Max       | Peterson      | 5.18   | 54      |
-| Milk          | Hope      | Bush          | 5.18   | 55      |
-| Milk          | Terri     | Kemp          | 5.18   | 57      |
-| Milk          | Terri     | Kemp          | 5.18   | 57      |
-| Milk          | Terri     | Kemp          | 5.18   | 57      |
-| Milk          | Monty     | Grant         | 5.18   | 58      |
-| Milk          | Monty     | Grant         | 5.18   | 58      |
-| Milk          | Jeniffer  | Bush          | 5.18   | 59      |
-| Milk          | Ceasar    | Mantela       | 5.18   | 60      |
-| Milk          | Ceasar    | Mantela       | 5.18   | 60      |
-| Milk          | Anita     | Locicero      | 5.18   | 61      |
-| Milk          | Anita     | Locicero      | 5.18   | 61      |
-| Milk          | Kathy     | Stevens       | 5.18   | 65      |
-| Milk          | Anthony   | Smith         | 5.18   | 66      |
-| Milk          | Anthony   | Smith         | 5.18   | 66      |
-| Milk          | Peter     | Howard        | 5.18   | 70      |
-| Milk          | Peter     | Howard        | 5.18   | 70      |
-| Milk          | Peter     | Howard        | 5.18   | 70      |
-| Milk          | Holly     | Dole          | 5.18   | 71      |
-| Milk          | Patty     | Randolph      | 5.18   | 73      |
-| Milk          | Jeniffer  | Kemp          | 5.18   | 75      |
-| Milk          | Barry     | Stevens       | 5.18   | 78      |
-| Milk          | Ian       | Bush          | 5.18   | 80      |
-| Milk          | Ian       | Bush          | 5.18   | 80      |
-| Milk          | Alice     | Kemp          | 5.18   | 81      |
-| Milk          | Pauline   | Bush          | 5.18   | 83      |
-| Milk          | David     | Howard        | 5.18   | 84      |
-| Milk          | Ted       | Grant         | 5.18   | 86      |
-| Milk          | Ted       | Grant         | 5.18   | 86      |
-| Milk          | Anthony   | Stevens       | 5.18   | 88      |
-| Milk          | Anthony   | Stevens       | 5.18   | 88      |
-| Milk          | Anita     | Randolph      | 5.18   | 89      |
-| Milk          | Rex       | Mantela       | 5.18   | 92      |
-| Milk          | Terri     | Randolph      | 5.18   | 93      |
-| Milk          | Margaret  | Bush          | 5.18   | 95      |
-| Milk          | Samantha  | Frank         | 5.18   | 97      |
-| Plunger       | Eric      | Locicero      | 7.41   | 0       |
-| Plunger       | Eric      | Locicero      | 7.41   | 0       |
-| Plunger       | Terri     | Grant         | 7.41   | 1       |
-| Plunger       | Gary      | Everett       | 7.41   | 2       |
-| Plunger       | Victor    | Peterson      | 7.41   | 4       |
-| Plunger       | Veronica  | Bush          | 7.41   | 5       |
-| Plunger       | Ted       | Howard        | 7.41   | 8       |
-| Plunger       | Bianca    | Grant         | 7.41   | 11      |
-| Plunger       | Dave      | Stevens       | 7.41   | 12      |
-| Plunger       | Maggie    | Everett       | 7.41   | 13      |
-| Plunger       | Oliver    | Grant         | 7.41   | 16      |
-| Plunger       | Oliver    | Grant         | 7.41   | 16      |
-| Plunger       | Jeniffer  | Mantela       | 7.41   | 17      |
-| Plunger       | Jeniffer  | Mantela       | 7.41   | 17      |
-| Plunger       | Jeniffer  | Mantela       | 7.41   | 17      |
-| Plunger       | Theodore  | OLeary        | 7.41   | 18      |
-| Plunger       | Frank     | Noose         | 7.41   | 20      |
-| Plunger       | Anita     | Carlucchi     | 7.41   | 21      |
-| Plunger       | Eric      | Locicero      | 7.41   | 22      |
-| Plunger       | David     | Peterson      | 7.41   | 24      |
-| Plunger       | David     | Peterson      | 7.41   | 24      |
-| Plunger       | Florence  | Carlucchi     | 7.41   | 25      |
-| Plunger       | Ulysses   | Peterson      | 7.41   | 28      |
-| Plunger       | Pauline   | Everett       | 7.41   | 29      |
-| Plunger       | Gerry     | Bush          | 7.41   | 30      |
-| Plunger       | Mary      | Van Morrison  | 7.41   | 31      |
-| Plunger       | Mary      | Van Morrison  | 7.41   | 31      |
-| Plunger       | Bill      | Kemp          | 7.41   | 34      |
-| Plunger       | Anita     | Carlucchi     | 7.41   | 35      |
-| Plunger       | Terri     | Noose         | 7.41   | 37      |
-| Plunger       | Terri     | Noose         | 7.41   | 37      |
-| Plunger       | Terri     | Noose         | 7.41   | 37      |
-| Plunger       | Andy      | Jones         | 7.41   | 38      |
-| Plunger       | Batilda   | Van Morrison  | 7.41   | 39      |
-| Plunger       | Kevin     | Frank         | 7.41   | 40      |
-| Plunger       | Pauline   | Smith         | 7.41   | 41      |
-+---------------+-----------+---------------+--------+---------+
-|     NAME      |   FNAME   |     LNAME     | PRICE  | CUSTID  |
-+---------------+-----------+---------------+--------+---------+
-| Plunger       | Walter    | Frank         | 7.41   | 44      |
-| Plunger       | Margaret  | Van Morrison  | 7.41   | 45      |
-| Plunger       | Daniel    | Bush          | 7.41   | 48      |
-| Plunger       | Daniel    | Bush          | 7.41   | 48      |
-| Plunger       | Victor    | Peterson      | 7.41   | 52      |
-| Plunger       | Veronica  | Smith         | 7.41   | 53      |
-| Plunger       | Hope      | Bush          | 7.41   | 55      |
-| Plunger       | Terri     | Kemp          | 7.41   | 57      |
-| Plunger       | Terri     | Kemp          | 7.41   | 57      |
-| Plunger       | Ceasar    | Mantela       | 7.41   | 60      |
-| Plunger       | Anita     | Locicero      | 7.41   | 61      |
-| Plunger       | Anita     | Locicero      | 7.41   | 61      |
-| Plunger       | Margaret  | Everett       | 7.41   | 63      |
-| Plunger       | Harry     | Andrews       | 7.41   | 64      |
-| Plunger       | Anthony   | Frank         | 7.41   | 68      |
-| Plunger       | Hope      | Smith         | 7.41   | 69      |
-| Plunger       | Patty     | Randolph      | 7.41   | 73      |
-| Plunger       | Lisa      | Van Morrison  | 7.41   | 77      |
-| Plunger       | Lisa      | Van Morrison  | 7.41   | 77      |
-| Plunger       | Barry     | Stevens       | 7.41   | 78      |
-| Plunger       | Ian       | Bush          | 7.41   | 80      |
-| Plunger       | Alice     | Kemp          | 7.41   | 81      |
-| Plunger       | Pauline   | Bush          | 7.41   | 83      |
-| Plunger       | Pauline   | Bush          | 7.41   | 83      |
-| Plunger       | Pauline   | Bush          | 7.41   | 83      |
-| Plunger       | Ted       | Grant         | 7.41   | 86      |
-| Plunger       | Ted       | Grant         | 7.41   | 86      |
-| Plunger       | Ted       | Grant         | 7.41   | 86      |
-| Plunger       | Maggie    | Kemp          | 7.41   | 87      |
-| Plunger       | Anthony   | Stevens       | 7.41   | 88      |
-| Plunger       | Anita     | Randolph      | 7.41   | 89      |
-| Plunger       | Paul      | Van Morrison  | 7.41   | 90      |
-| Plunger       | Paul      | Van Morrison  | 7.41   | 90      |
-| Plunger       | Terri     | Randolph      | 7.41   | 93      |
-| Plunger       | Terri     | Randolph      | 7.41   | 93      |
-| Plunger       | Hugh      | Kemp          | 7.41   | 94      |
-| Plunger       | Bruce     | Grant         | 7.41   | 96      |
-| Plunger       | Samantha  | Frank         | 7.41   | 97      |
-| Plunger       | Victor    | Frank         | 7.41   | 98      |
-| Plunger       | Veronica  | Dole          | 7.41   | 99      |
-| Refrigerator  | Terri     | Grant         | 4.91   | 1       |
-| Refrigerator  | Gary      | Everett       | 4.91   | 2       |
-| Refrigerator  | Victor    | Peterson      | 4.91   | 4       |
-| Refrigerator  | Victor    | Peterson      | 4.91   | 4       |
-| Refrigerator  | Missy     | Bush          | 4.91   | 7       |
-| Refrigerator  | Ted       | Howard        | 4.91   | 8       |
-| Refrigerator  | Dave      | Stevens       | 4.91   | 12      |
-| Refrigerator  | Maggie    | Everett       | 4.91   | 13      |
-| Refrigerator  | Barry     | Jones         | 4.91   | 14      |
-| Refrigerator  | Patty     | Noose         | 4.91   | 15      |
-| Refrigerator  | Oliver    | Grant         | 4.91   | 16      |
-| Refrigerator  | Oliver    | Grant         | 4.91   | 16      |
-| Refrigerator  | Theodore  | OLeary        | 4.91   | 18      |
-| Refrigerator  | Theodore  | OLeary        | 4.91   | 18      |
-| Refrigerator  | Patty     | Carlucchi     | 4.91   | 19      |
-| Refrigerator  | Eric      | Locicero      | 4.91   | 22      |
-| Refrigerator  | David     | Peterson      | 4.91   | 24      |
-| Refrigerator  | Andy      | Peterson      | 4.91   | 26      |
-| Refrigerator  | Ulysses   | Peterson      | 4.91   | 28      |
-| Refrigerator  | Mary      | Van Morrison  | 4.91   | 31      |
-| Refrigerator  | Larry     | Randolph      | 4.91   | 32      |
-| Refrigerator  | Bill      | Kemp          | 4.91   | 34      |
-| Refrigerator  | Jake      | Bush          | 4.91   | 36      |
-| Refrigerator  | Jake      | Bush          | 4.91   | 36      |
-| Refrigerator  | Terri     | Noose         | 4.91   | 37      |
-| Refrigerator  | Andy      | Jones         | 4.91   | 38      |
-| Refrigerator  | Andy      | Jones         | 4.91   | 38      |
-| Refrigerator  | Batilda   | Van Morrison  | 4.91   | 39      |
-| Refrigerator  | Batilda   | Van Morrison  | 4.91   | 39      |
-| Refrigerator  | Kevin     | Frank         | 4.91   | 40      |
-| Refrigerator  | Eric      | Randolph      | 4.91   | 42      |
-| Refrigerator  | Erica     | Grant         | 4.91   | 43      |
-| Refrigerator  | Erica     | Grant         | 4.91   | 43      |
-| Refrigerator  | Margaret  | Van Morrison  | 4.91   | 45      |
-| Refrigerator  | Hugh      | Andrews       | 4.91   | 46      |
-| Refrigerator  | Hugh      | Andrews       | 4.91   | 46      |
-| Refrigerator  | Maggie    | OLeary        | 4.91   | 49      |
-| Refrigerator  | Veronica  | Smith         | 4.91   | 53      |
-| Refrigerator  | Max       | Peterson      | 4.91   | 54      |
-| Refrigerator  | Hope      | Bush          | 4.91   | 55      |
-| Refrigerator  | Hope      | Bush          | 4.91   | 55      |
-| Refrigerator  | Monty     | Grant         | 4.91   | 58      |
-| Refrigerator  | Monty     | Grant         | 4.91   | 58      |
-| Refrigerator  | Monty     | Grant         | 4.91   | 58      |
-| Refrigerator  | Jeniffer  | Bush          | 4.91   | 59      |
-| Refrigerator  | Ceasar    | Mantela       | 4.91   | 60      |
-| Refrigerator  | Ceasar    | Mantela       | 4.91   | 60      |
-| Refrigerator  | Anita     | Locicero      | 4.91   | 61      |
-| Refrigerator  | Anita     | Locicero      | 4.91   | 61      |
-| Refrigerator  | Kathy     | Stevens       | 4.91   | 65      |
-| Refrigerator  | Kathy     | Stevens       | 4.91   | 65      |
-| Refrigerator  | Anthony   | Smith         | 4.91   | 66      |
-| Refrigerator  | Anthony   | Smith         | 4.91   | 66      |
-| Refrigerator  | Peter     | Howard        | 4.91   | 70      |
-| Refrigerator  | Holly     | Dole          | 4.91   | 71      |
-| Refrigerator  | Patty     | Randolph      | 4.91   | 73      |
-| Refrigerator  | Barry     | Stevens       | 4.91   | 78      |
-| Refrigerator  | Ian       | Bush          | 4.91   | 80      |
-| Refrigerator  | Alice     | Kemp          | 4.91   | 81      |
-| Refrigerator  | David     | Howard        | 4.91   | 84      |
-+---------------+-----------+---------------+--------+---------+
-|     NAME      |   FNAME   |     LNAME     | PRICE  | CUSTID  |
-+---------------+-----------+---------------+--------+---------+
-| Refrigerator  | Ted       | Grant         | 4.91   | 86      |
-| Refrigerator  | Ted       | Grant         | 4.91   | 86      |
-| Refrigerator  | Anthony   | Stevens       | 4.91   | 88      |
-| Refrigerator  | Anthony   | Stevens       | 4.91   | 88      |
-| Refrigerator  | Anita     | Randolph      | 4.91   | 89      |
-| Refrigerator  | Rex       | Mantela       | 4.91   | 92      |
-| Refrigerator  | Rex       | Mantela       | 4.91   | 92      |
-| Refrigerator  | Terri     | Randolph      | 4.91   | 93      |
-| Refrigerator  | Samantha  | Frank         | 4.91   | 97      |
-| Refrigerator  | Veronica  | Dole          | 4.91   | 99      |
-| Shampoo       | Gary      | Everett       | 4.69   | 2       |
-| Shampoo       | Victor    | Peterson      | 4.69   | 4       |
-| Shampoo       | Missy     | Bush          | 4.69   | 7       |
-| Shampoo       | Ted       | Howard        | 4.69   | 8       |
-| Shampoo       | Wendy     | Kemp          | 4.69   | 9       |
-| Shampoo       | Earl      | Dole          | 4.69   | 10      |
-| Shampoo       | Dave      | Stevens       | 4.69   | 12      |
-| Shampoo       | Dave      | Stevens       | 4.69   | 12      |
-| Shampoo       | Barry     | Jones         | 4.69   | 14      |
-| Shampoo       | Patty     | Noose         | 4.69   | 15      |
-| Shampoo       | Oliver    | Grant         | 4.69   | 16      |
-| Shampoo       | Theodore  | OLeary        | 4.69   | 18      |
-| Shampoo       | Theodore  | OLeary        | 4.69   | 18      |
-| Shampoo       | Patty     | Carlucchi     | 4.69   | 19      |
-| Shampoo       | Patty     | Carlucchi     | 4.69   | 19      |
-| Shampoo       | Eric      | Locicero      | 4.69   | 22      |
-| Shampoo       | David     | Peterson      | 4.69   | 24      |
-| Shampoo       | Ulysses   | Peterson      | 4.69   | 28      |
-| Shampoo       | Gerry     | Bush          | 4.69   | 30      |
-| Shampoo       | Mary      | Van Morrison  | 4.69   | 31      |
-| Shampoo       | Jake      | Bush          | 4.69   | 36      |
-| Shampoo       | Jake      | Bush          | 4.69   | 36      |
-| Shampoo       | Terri     | Noose         | 4.69   | 37      |
-| Shampoo       | Andy      | Jones         | 4.69   | 38      |
-| Shampoo       | Batilda   | Van Morrison  | 4.69   | 39      |
-| Shampoo       | Kevin     | Frank         | 4.69   | 40      |
-| Shampoo       | Pauline   | Smith         | 4.69   | 41      |
-| Shampoo       | Erica     | Grant         | 4.69   | 43      |
-| Shampoo       | Erica     | Grant         | 4.69   | 43      |
-| Shampoo       | Margaret  | Van Morrison  | 4.69   | 45      |
-| Shampoo       | Hugh      | Andrews       | 4.69   | 46      |
-| Shampoo       | Hugh      | Andrews       | 4.69   | 46      |
-| Shampoo       | Maggie    | OLeary        | 4.69   | 49      |
-| Shampoo       | Victor    | Peterson      | 4.69   | 52      |
-| Shampoo       | Veronica  | Smith         | 4.69   | 53      |
-| Shampoo       | Max       | Peterson      | 4.69   | 54      |
-| Shampoo       | Hope      | Bush          | 4.69   | 55      |
-| Shampoo       | Hope      | Bush          | 4.69   | 55      |
-| Shampoo       | Monty     | Grant         | 4.69   | 58      |
-| Shampoo       | Monty     | Grant         | 4.69   | 58      |
-| Shampoo       | Jeniffer  | Bush          | 4.69   | 59      |
-| Shampoo       | Ceasar    | Mantela       | 4.69   | 60      |
-| Shampoo       | Ceasar    | Mantela       | 4.69   | 60      |
-| Shampoo       | Anita     | Locicero      | 4.69   | 61      |
-| Shampoo       | Anita     | Locicero      | 4.69   | 61      |
-| Shampoo       | Harry     | Andrews       | 4.69   | 64      |
-| Shampoo       | Harry     | Andrews       | 4.69   | 64      |
-| Shampoo       | Kathy     | Stevens       | 4.69   | 65      |
-| Shampoo       | Kathy     | Stevens       | 4.69   | 65      |
-| Shampoo       | Anthony   | Smith         | 4.69   | 66      |
-| Shampoo       | Barry     | Stevens       | 4.69   | 78      |
-| Shampoo       | Ian       | Bush          | 4.69   | 80      |
-| Shampoo       | Ian       | Bush          | 4.69   | 80      |
-| Shampoo       | Alice     | Kemp          | 4.69   | 81      |
-| Shampoo       | David     | Howard        | 4.69   | 84      |
-| Shampoo       | Patty     | Howard        | 4.69   | 85      |
-| Shampoo       | Ted       | Grant         | 4.69   | 86      |
-| Shampoo       | Anthony   | Stevens       | 4.69   | 88      |
-| Shampoo       | Anthony   | Stevens       | 4.69   | 88      |
-| Shampoo       | Rex       | Mantela       | 4.69   | 92      |
-| Shampoo       | Rex       | Mantela       | 4.69   | 92      |
-| Shampoo       | Hugh      | Kemp          | 4.69   | 94      |
-| Shampoo       | Veronica  | Dole          | 4.69   | 99      |
-| Soap          | Eric      | Locicero      | 0.34   | 0       |
-| Soap          | Terri     | Grant         | 0.34   | 1       |
-| Soap          | Gary      | Everett       | 0.34   | 2       |
-| Soap          | Terri     | Andrews       | 0.34   | 3       |
-| Soap          | Victor    | Peterson      | 0.34   | 4       |
-| Soap          | Fritz     | Grant         | 0.34   | 6       |
-| Soap          | Missy     | Bush          | 0.34   | 7       |
-| Soap          | Earl      | Dole          | 0.34   | 10      |
-| Soap          | Maggie    | Everett       | 0.34   | 13      |
-| Soap          | Maggie    | Everett       | 0.34   | 13      |
-| Soap          | Maggie    | Everett       | 0.34   | 13      |
-| Soap          | Barry     | Jones         | 0.34   | 14      |
-| Soap          | Barry     | Jones         | 0.34   | 14      |
-| Soap          | Patty     | Carlucchi     | 0.34   | 19      |
-| Soap          | Anita     | Carlucchi     | 0.34   | 21      |
-| Soap          | Anita     | Carlucchi     | 0.34   | 21      |
-| Soap          | Ophelia   | Everett       | 0.34   | 23      |
-| Soap          | David     | Peterson      | 0.34   | 24      |
-| Soap          | Andy      | Peterson      | 0.34   | 26      |
-| Soap          | Ulysses   | Peterson      | 0.34   | 28      |
-| Soap          | Pauline   | Everett       | 0.34   | 29      |
-| Soap          | Gerry     | Bush          | 0.34   | 30      |
-| Soap          | Gerry     | Bush          | 0.34   | 30      |
-| Soap          | Patty     | Van Morrison  | 0.34   | 33      |
-| Soap          | Patty     | Van Morrison  | 0.34   | 33      |
-| Soap          | Bill      | Kemp          | 0.34   | 34      |
-| Soap          | Andy      | Jones         | 0.34   | 38      |
-+---------------+-----------+---------------+--------+---------+
-|     NAME      |   FNAME   |     LNAME     | PRICE  | CUSTID  |
-+---------------+-----------+---------------+--------+---------+
-| Soap          | Batilda   | Van Morrison  | 0.34   | 39      |
-| Soap          | Kevin     | Frank         | 0.34   | 40      |
-| Soap          | Pauline   | Smith         | 0.34   | 41      |
-| Soap          | Pauline   | Smith         | 0.34   | 41      |
-| Soap          | Erica     | Grant         | 0.34   | 43      |
-| Soap          | Walter    | Frank         | 0.34   | 44      |
-| Soap          | Walter    | Frank         | 0.34   | 44      |
-| Soap          | Walter    | Frank         | 0.34   | 44      |
-| Soap          | Hope      | Stevens       | 0.34   | 47      |
-| Soap          | Maggie    | OLeary        | 0.34   | 49      |
-| Soap          | Bill      | Mantela       | 0.34   | 50      |
-| Soap          | Bill      | Mantela       | 0.34   | 50      |
-| Soap          | Bill      | Mantela       | 0.34   | 50      |
-| Soap          | Betty     | Andrews       | 0.34   | 51      |
-| Soap          | Victor    | Peterson      | 0.34   | 52      |
-| Soap          | Hope      | Bush          | 0.34   | 55      |
-| Soap          | Hope      | Bush          | 0.34   | 55      |
-| Soap          | Hope      | Bush          | 0.34   | 55      |
-| Soap          | Max       | Frank         | 0.34   | 56      |
-| Soap          | Max       | Frank         | 0.34   | 56      |
-| Soap          | Max       | Frank         | 0.34   | 56      |
-| Soap          | Max       | Frank         | 0.34   | 56      |
-| Soap          | Monty     | Grant         | 0.34   | 58      |
-| Soap          | Kevin     | Carlucchi     | 0.34   | 62      |
-| Soap          | Kevin     | Carlucchi     | 0.34   | 62      |
-| Soap          | Margaret  | Everett       | 0.34   | 63      |
-| Soap          | Kathy     | Stevens       | 0.34   | 65      |
-| Soap          | Anthony   | Smith         | 0.34   | 66      |
-| Soap          | Denise    | Peterson      | 0.34   | 67      |
-| Soap          | Denise    | Peterson      | 0.34   | 67      |
-| Soap          | Hope      | Smith         | 0.34   | 69      |
-| Soap          | Peter     | Howard        | 0.34   | 70      |
-| Soap          | Fred      | Noose         | 0.34   | 72      |
-| Soap          | Patty     | Randolph      | 0.34   | 73      |
-| Soap          | Randy     | Smith         | 0.34   | 76      |
-| Soap          | Randy     | Smith         | 0.34   | 76      |
-| Soap          | Lisa      | Van Morrison  | 0.34   | 77      |
-| Soap          | Alice     | Kemp          | 0.34   | 81      |
-| Soap          | Ceasar    | Locicero      | 0.34   | 82      |
-| Soap          | Patty     | Howard        | 0.34   | 85      |
-| Soap          | Patty     | Howard        | 0.34   | 85      |
-| Soap          | Ted       | Grant         | 0.34   | 86      |
-| Soap          | Maggie    | Kemp          | 0.34   | 87      |
-| Soap          | Maggie    | Kemp          | 0.34   | 87      |
-| Soap          | Maggie    | Kemp          | 0.34   | 87      |
-| Soap          | Maggie    | Kemp          | 0.34   | 87      |
-| Soap          | Anthony   | Stevens       | 0.34   | 88      |
-| Soap          | Anthony   | Stevens       | 0.34   | 88      |
-| Soap          | Paul      | Van Morrison  | 0.34   | 90      |
-| Soap          | Ophelia   | OLeary        | 0.34   | 91      |
-| Soap          | Ophelia   | OLeary        | 0.34   | 91      |
-| Soap          | Ophelia   | OLeary        | 0.34   | 91      |
-| Soap          | Rex       | Mantela       | 0.34   | 92      |
-| Soap          | Rex       | Mantela       | 0.34   | 92      |
-| Soap          | Terri     | Randolph      | 0.34   | 93      |
-| Soap          | Hugh      | Kemp          | 0.34   | 94      |
-| Soap          | Victor    | Frank         | 0.34   | 98      |
-| Soda          | Eric      | Locicero      | 6.21   | 0       |
-| Soda          | Terri     | Grant         | 6.21   | 1       |
-| Soda          | Veronica  | Bush          | 6.21   | 5       |
-| Soda          | Veronica  | Bush          | 6.21   | 5       |
-| Soda          | Missy     | Bush          | 6.21   | 7       |
-| Soda          | Ted       | Howard        | 6.21   | 8       |
-| Soda          | Dave      | Stevens       | 6.21   | 12      |
-| Soda          | Maggie    | Everett       | 6.21   | 13      |
-| Soda          | Maggie    | Everett       | 6.21   | 13      |
-| Soda          | Barry     | Jones         | 6.21   | 14      |
-| Soda          | Anita     | Carlucchi     | 6.21   | 21      |
-| Soda          | Eric      | Locicero      | 6.21   | 22      |
-| Soda          | Ophelia   | Everett       | 6.21   | 23      |
-| Soda          | David     | Peterson      | 6.21   | 24      |
-| Soda          | David     | Peterson      | 6.21   | 24      |
-| Soda          | Florence  | Carlucchi     | 6.21   | 25      |
-| Soda          | Andy      | Peterson      | 6.21   | 26      |
-| Soda          | Andy      | Peterson      | 6.21   | 26      |
-| Soda          | Andy      | Peterson      | 6.21   | 26      |
-| Soda          | Andy      | Peterson      | 6.21   | 26      |
-| Soda          | Andy      | Peterson      | 6.21   | 26      |
-| Soda          | Ulysses   | Peterson      | 6.21   | 28      |
-| Soda          | Larry     | Randolph      | 6.21   | 32      |
-| Soda          | Larry     | Randolph      | 6.21   | 32      |
-| Soda          | Bill      | Kemp          | 6.21   | 34      |
-| Soda          | Jake      | Bush          | 6.21   | 36      |
-| Soda          | Andy      | Jones         | 6.21   | 38      |
-| Soda          | Batilda   | Van Morrison  | 6.21   | 39      |
-| Soda          | Kevin     | Frank         | 6.21   | 40      |
-| Soda          | Kevin     | Frank         | 6.21   | 40      |
-| Soda          | Pauline   | Smith         | 6.21   | 41      |
-| Soda          | Pauline   | Smith         | 6.21   | 41      |
-| Soda          | Erica     | Grant         | 6.21   | 43      |
-| Soda          | Walter    | Frank         | 6.21   | 44      |
-| Soda          | Daniel    | Bush          | 6.21   | 48      |
-| Soda          | Maggie    | OLeary        | 6.21   | 49      |
-| Soda          | Maggie    | OLeary        | 6.21   | 49      |
-| Soda          | Victor    | Peterson      | 6.21   | 52      |
-| Soda          | Victor    | Peterson      | 6.21   | 52      |
-| Soda          | Max       | Frank         | 6.21   | 56      |
-| Soda          | Max       | Frank         | 6.21   | 56      |
-| Soda          | Terri     | Kemp          | 6.21   | 57      |
-| Soda          | Monty     | Grant         | 6.21   | 58      |
-+---------------+-----------+---------------+--------+---------+
-|     NAME      |   FNAME   |     LNAME     | PRICE  | CUSTID  |
-+---------------+-----------+---------------+--------+---------+
-| Soda          | Anita     | Locicero      | 6.21   | 61      |
-| Soda          | Margaret  | Everett       | 6.21   | 63      |
-| Soda          | Anthony   | Smith         | 6.21   | 66      |
-| Soda          | Denise    | Peterson      | 6.21   | 67      |
-| Soda          | Denise    | Peterson      | 6.21   | 67      |
-| Soda          | Anthony   | Frank         | 6.21   | 68      |
-| Soda          | Hope      | Smith         | 6.21   | 69      |
-| Soda          | Peter     | Howard        | 6.21   | 70      |
-| Soda          | Andy      | OLeary        | 6.21   | 74      |
-| Soda          | Jeniffer  | Kemp          | 6.21   | 75      |
-| Soda          | Jeniffer  | Kemp          | 6.21   | 75      |
-| Soda          | Lisa      | Van Morrison  | 6.21   | 77      |
-| Soda          | Barry     | Stevens       | 6.21   | 78      |
-| Soda          | Ceasar    | Locicero      | 6.21   | 82      |
-| Soda          | Pauline   | Bush          | 6.21   | 83      |
-| Soda          | David     | Howard        | 6.21   | 84      |
-| Soda          | Ted       | Grant         | 6.21   | 86      |
-| Soda          | Maggie    | Kemp          | 6.21   | 87      |
-| Soda          | Anthony   | Stevens       | 6.21   | 88      |
-| Soda          | Anita     | Randolph      | 6.21   | 89      |
-| Soda          | Anita     | Randolph      | 6.21   | 89      |
-| Soda          | Rex       | Mantela       | 6.21   | 92      |
-| Soda          | Rex       | Mantela       | 6.21   | 92      |
-| Soda          | Rex       | Mantela       | 6.21   | 92      |
-| Soda          | Terri     | Randolph      | 6.21   | 93      |
-| Soda          | Terri     | Randolph      | 6.21   | 93      |
-| Soda          | Hugh      | Kemp          | 6.21   | 94      |
-| Soda          | Veronica  | Dole          | 6.21   | 99      |
-| Soup          | Terri     | Grant         | 5.05   | 1       |
-| Soup          | Terri     | Grant         | 5.05   | 1       |
-| Soup          | Gary      | Everett       | 5.05   | 2       |
-| Soup          | Terri     | Andrews       | 5.05   | 3       |
-| Soup          | Victor    | Peterson      | 5.05   | 4       |
-| Soup          | Victor    | Peterson      | 5.05   | 4       |
-| Soup          | Veronica  | Bush          | 5.05   | 5       |
-| Soup          | Missy     | Bush          | 5.05   | 7       |
-| Soup          | Ted       | Howard        | 5.05   | 8       |
-| Soup          | Wendy     | Kemp          | 5.05   | 9       |
-| Soup          | Dave      | Stevens       | 5.05   | 12      |
-| Soup          | Maggie    | Everett       | 5.05   | 13      |
-| Soup          | Barry     | Jones         | 5.05   | 14      |
-| Soup          | Patty     | Noose         | 5.05   | 15      |
-| Soup          | Oliver    | Grant         | 5.05   | 16      |
-| Soup          | Oliver    | Grant         | 5.05   | 16      |
-| Soup          | Theodore  | OLeary        | 5.05   | 18      |
-| Soup          | Theodore  | OLeary        | 5.05   | 18      |
-| Soup          | Patty     | Carlucchi     | 5.05   | 19      |
-| Soup          | Eric      | Locicero      | 5.05   | 22      |
-| Soup          | David     | Peterson      | 5.05   | 24      |
-| Soup          | Andy      | Peterson      | 5.05   | 26      |
-| Soup          | Ulysses   | Peterson      | 5.05   | 28      |
-| Soup          | Mary      | Van Morrison  | 5.05   | 31      |
-| Soup          | Larry     | Randolph      | 5.05   | 32      |
-| Soup          | Bill      | Kemp          | 5.05   | 34      |
-| Soup          | Bill      | Kemp          | 5.05   | 34      |
-| Soup          | Jake      | Bush          | 5.05   | 36      |
-| Soup          | Jake      | Bush          | 5.05   | 36      |
-| Soup          | Terri     | Noose         | 5.05   | 37      |
-| Soup          | Andy      | Jones         | 5.05   | 38      |
-| Soup          | Batilda   | Van Morrison  | 5.05   | 39      |
-| Soup          | Batilda   | Van Morrison  | 5.05   | 39      |
-| Soup          | Kevin     | Frank         | 5.05   | 40      |
-| Soup          | Eric      | Randolph      | 5.05   | 42      |
-| Soup          | Eric      | Randolph      | 5.05   | 42      |
-| Soup          | Erica     | Grant         | 5.05   | 43      |
-| Soup          | Erica     | Grant         | 5.05   | 43      |
-| Soup          | Margaret  | Van Morrison  | 5.05   | 45      |
-| Soup          | Hugh      | Andrews       | 5.05   | 46      |
-| Soup          | Hugh      | Andrews       | 5.05   | 46      |
-| Soup          | Hugh      | Andrews       | 5.05   | 46      |
-| Soup          | Maggie    | OLeary        | 5.05   | 49      |
-| Soup          | Maggie    | OLeary        | 5.05   | 49      |
-| Soup          | Veronica  | Smith         | 5.05   | 53      |
-| Soup          | Max       | Peterson      | 5.05   | 54      |
-| Soup          | Hope      | Bush          | 5.05   | 55      |
-| Soup          | Terri     | Kemp          | 5.05   | 57      |
-| Soup          | Monty     | Grant         | 5.05   | 58      |
-| Soup          | Monty     | Grant         | 5.05   | 58      |
-| Soup          | Jeniffer  | Bush          | 5.05   | 59      |
-| Soup          | Ceasar    | Mantela       | 5.05   | 60      |
-| Soup          | Ceasar    | Mantela       | 5.05   | 60      |
-| Soup          | Anita     | Locicero      | 5.05   | 61      |
-| Soup          | Anita     | Locicero      | 5.05   | 61      |
-| Soup          | Kathy     | Stevens       | 5.05   | 65      |
-| Soup          | Kathy     | Stevens       | 5.05   | 65      |
-| Soup          | Anthony   | Smith         | 5.05   | 66      |
-| Soup          | Peter     | Howard        | 5.05   | 70      |
-| Soup          | Peter     | Howard        | 5.05   | 70      |
-| Soup          | Peter     | Howard        | 5.05   | 70      |
-| Soup          | Holly     | Dole          | 5.05   | 71      |
-| Soup          | Patty     | Randolph      | 5.05   | 73      |
-| Soup          | Jeniffer  | Kemp          | 5.05   | 75      |
-| Soup          | Ian       | Bush          | 5.05   | 80      |
-| Soup          | Alice     | Kemp          | 5.05   | 81      |
-| Soup          | David     | Howard        | 5.05   | 84      |
-| Soup          | David     | Howard        | 5.05   | 84      |
-| Soup          | Ted       | Grant         | 5.05   | 86      |
-| Soup          | Ted       | Grant         | 5.05   | 86      |
-| Soup          | Anthony   | Stevens       | 5.05   | 88      |
-| Soup          | Anthony   | Stevens       | 5.05   | 88      |
-+---------------+-----------+---------------+--------+---------+
-|     NAME      |   FNAME   |     LNAME     | PRICE  | CUSTID  |
-+---------------+-----------+---------------+--------+---------+
-| Soup          | Anita     | Randolph      | 5.05   | 89      |
-| Soup          | Rex       | Mantela       | 5.05   | 92      |
-| Soup          | Rex       | Mantela       | 5.05   | 92      |
-| Soup          | Terri     | Randolph      | 5.05   | 93      |
-| Soup          | Margaret  | Bush          | 5.05   | 95      |
-| Soup          | Samantha  | Frank         | 5.05   | 97      |
-| Telephone     | Victor    | Peterson      | 2.95   | 4       |
-| Telephone     | Veronica  | Bush          | 2.95   | 5       |
-| Telephone     | Veronica  | Bush          | 2.95   | 5       |
-| Telephone     | Fritz     | Grant         | 2.95   | 6       |
-| Telephone     | Fritz     | Grant         | 2.95   | 6       |
-| Telephone     | Missy     | Bush          | 2.95   | 7       |
-| Telephone     | Wendy     | Kemp          | 2.95   | 9       |
-| Telephone     | Bianca    | Grant         | 2.95   | 11      |
-| Telephone     | Dave      | Stevens       | 2.95   | 12      |
-| Telephone     | Maggie    | Everett       | 2.95   | 13      |
-| Telephone     | Barry     | Jones         | 2.95   | 14      |
-| Telephone     | Patty     | Noose         | 2.95   | 15      |
-| Telephone     | Patty     | Noose         | 2.95   | 15      |
-| Telephone     | Theodore  | OLeary        | 2.95   | 18      |
-| Telephone     | Theodore  | OLeary        | 2.95   | 18      |
-| Telephone     | Theodore  | OLeary        | 2.95   | 18      |
-| Telephone     | Patty     | Carlucchi     | 2.95   | 19      |
-| Telephone     | David     | Peterson      | 2.95   | 24      |
-| Telephone     | Andy      | Peterson      | 2.95   | 26      |
-| Telephone     | Mary      | Noose         | 2.95   | 27      |
-| Telephone     | Ulysses   | Peterson      | 2.95   | 28      |
-| Telephone     | Ulysses   | Peterson      | 2.95   | 28      |
-| Telephone     | Gerry     | Bush          | 2.95   | 30      |
-| Telephone     | Larry     | Randolph      | 2.95   | 32      |
-| Telephone     | Bill      | Kemp          | 2.95   | 34      |
-| Telephone     | Anita     | Carlucchi     | 2.95   | 35      |
-| Telephone     | Jake      | Bush          | 2.95   | 36      |
-| Telephone     | Andy      | Jones         | 2.95   | 38      |
-| Telephone     | Andy      | Jones         | 2.95   | 38      |
-| Telephone     | Kevin     | Frank         | 2.95   | 40      |
-| Telephone     | Hugh      | Andrews       | 2.95   | 46      |
-| Telephone     | Daniel    | Bush          | 2.95   | 48      |
-| Telephone     | Bill      | Mantela       | 2.95   | 50      |
-| Telephone     | Bill      | Mantela       | 2.95   | 50      |
-| Telephone     | Betty     | Andrews       | 2.95   | 51      |
-| Telephone     | Hope      | Bush          | 2.95   | 55      |
-| Telephone     | Hope      | Bush          | 2.95   | 55      |
-| Telephone     | Max       | Frank         | 2.95   | 56      |
-| Telephone     | Kathy     | Stevens       | 2.95   | 65      |
-| Telephone     | Denise    | Peterson      | 2.95   | 67      |
-| Telephone     | Holly     | Dole          | 2.95   | 71      |
-| Telephone     | Patty     | Randolph      | 2.95   | 73      |
-| Telephone     | Jeniffer  | Kemp          | 2.95   | 75      |
-| Telephone     | Jeniffer  | Kemp          | 2.95   | 75      |
-| Telephone     | Lisa      | Van Morrison  | 2.95   | 77      |
-| Telephone     | Lisa      | Van Morrison  | 2.95   | 77      |
-| Telephone     | Carla     | Stevens       | 2.95   | 79      |
-| Telephone     | Ian       | Bush          | 2.95   | 80      |
-| Telephone     | Alice     | Kemp          | 2.95   | 81      |
-| Telephone     | Pauline   | Bush          | 2.95   | 83      |
-| Telephone     | Pauline   | Bush          | 2.95   | 83      |
-| Telephone     | Patty     | Howard        | 2.95   | 85      |
-| Telephone     | Patty     | Howard        | 2.95   | 85      |
-| Telephone     | Patty     | Howard        | 2.95   | 85      |
-| Telephone     | Maggie    | Kemp          | 2.95   | 87      |
-| Telephone     | Anthony   | Stevens       | 2.95   | 88      |
-| Telephone     | Anita     | Randolph      | 2.95   | 89      |
-| Telephone     | Ophelia   | OLeary        | 2.95   | 91      |
-| Telephone     | Terri     | Randolph      | 2.95   | 93      |
-| Telephone     | Samantha  | Frank         | 2.95   | 97      |
-| Telephone     | Samantha  | Frank         | 2.95   | 97      |
-| Telephone     | Veronica  | Dole          | 2.95   | 99      |
-| Towel         | Eric      | Locicero      | 8.78   | 0       |
-| Towel         | Terri     | Andrews       | 8.78   | 3       |
-| Towel         | Victor    | Peterson      | 8.78   | 4       |
-| Towel         | Victor    | Peterson      | 8.78   | 4       |
-| Towel         | Veronica  | Bush          | 8.78   | 5       |
-| Towel         | Fritz     | Grant         | 8.78   | 6       |
-| Towel         | Ted       | Howard        | 8.78   | 8       |
-| Towel         | Earl      | Dole          | 8.78   | 10      |
-| Towel         | Earl      | Dole          | 8.78   | 10      |
-| Towel         | Earl      | Dole          | 8.78   | 10      |
-| Towel         | Bianca    | Grant         | 8.78   | 11      |
-| Towel         | Bianca    | Grant         | 8.78   | 11      |
-| Towel         | Barry     | Jones         | 8.78   | 14      |
-| Towel         | Barry     | Jones         | 8.78   | 14      |
-| Towel         | Patty     | Noose         | 8.78   | 15      |
-| Towel         | Patty     | Carlucchi     | 8.78   | 19      |
-| Towel         | Anita     | Carlucchi     | 8.78   | 21      |
-| Towel         | Anita     | Carlucchi     | 8.78   | 21      |
-| Towel         | Eric      | Locicero      | 8.78   | 22      |
-| Towel         | Florence  | Carlucchi     | 8.78   | 25      |
-| Towel         | Andy      | Peterson      | 8.78   | 26      |
-| Towel         | Ulysses   | Peterson      | 8.78   | 28      |
-| Towel         | Pauline   | Everett       | 8.78   | 29      |
-| Towel         | Mary      | Van Morrison  | 8.78   | 31      |
-| Towel         | Larry     | Randolph      | 8.78   | 32      |
-| Towel         | Terri     | Noose         | 8.78   | 37      |
-| Towel         | Pauline   | Smith         | 8.78   | 41      |
-| Towel         | Erica     | Grant         | 8.78   | 43      |
-| Towel         | Walter    | Frank         | 8.78   | 44      |
-| Towel         | Margaret  | Van Morrison  | 8.78   | 45      |
-| Towel         | Hope      | Stevens       | 8.78   | 47      |
-| Towel         | Hope      | Stevens       | 8.78   | 47      |
-+---------------+-----------+---------------+--------+---------+
-|     NAME      |   FNAME   |     LNAME     | PRICE  | CUSTID  |
-+---------------+-----------+---------------+--------+---------+
-| Towel         | Hope      | Stevens       | 8.78   | 47      |
-| Towel         | Daniel    | Bush          | 8.78   | 48      |
-| Towel         | Daniel    | Bush          | 8.78   | 48      |
-| Towel         | Maggie    | OLeary        | 8.78   | 49      |
-| Towel         | Maggie    | OLeary        | 8.78   | 49      |
-| Towel         | Betty     | Andrews       | 8.78   | 51      |
-| Towel         | Betty     | Andrews       | 8.78   | 51      |
-| Towel         | Victor    | Peterson      | 8.78   | 52      |
-| Towel         | Victor    | Peterson      | 8.78   | 52      |
-| Towel         | Max       | Peterson      | 8.78   | 54      |
-| Towel         | Hope      | Bush          | 8.78   | 55      |
-| Towel         | Margaret  | Everett       | 8.78   | 63      |
-| Towel         | Anthony   | Frank         | 8.78   | 68      |
-| Towel         | Hope      | Smith         | 8.78   | 69      |
-| Towel         | Hope      | Smith         | 8.78   | 69      |
-| Towel         | Peter     | Howard        | 8.78   | 70      |
-| Towel         | Peter     | Howard        | 8.78   | 70      |
-| Towel         | Holly     | Dole          | 8.78   | 71      |
-| Towel         | Patty     | Randolph      | 8.78   | 73      |
-| Towel         | Patty     | Randolph      | 8.78   | 73      |
-| Towel         | Andy      | OLeary        | 8.78   | 74      |
-| Towel         | Jeniffer  | Kemp          | 8.78   | 75      |
-| Towel         | Lisa      | Van Morrison  | 8.78   | 77      |
-| Towel         | Lisa      | Van Morrison  | 8.78   | 77      |
-| Towel         | Ceasar    | Locicero      | 8.78   | 82      |
-| Towel         | David     | Howard        | 8.78   | 84      |
-| Towel         | Patty     | Howard        | 8.78   | 85      |
-| Towel         | Maggie    | Kemp          | 8.78   | 87      |
-| Towel         | Maggie    | Kemp          | 8.78   | 87      |
-| Towel         | Anthony   | Stevens       | 8.78   | 88      |
-| Towel         | Anita     | Randolph      | 8.78   | 89      |
-| Towel         | Paul      | Van Morrison  | 8.78   | 90      |
-| Towel         | Paul      | Van Morrison  | 8.78   | 90      |
-| Towel         | Ophelia   | OLeary        | 8.78   | 91      |
-| Towel         | Rex       | Mantela       | 8.78   | 92      |
-| Towel         | Terri     | Randolph      | 8.78   | 93      |
-| Towel         | Samantha  | Frank         | 8.78   | 97      |
-| Towel         | Victor    | Frank         | 8.78   | 98      |
-+---------------+-----------+---------------+--------+---------+
++---------------+-----------+---------------+--------+
+|     NAME      |   FNAME   |     LNAME     | PRICE  |
++---------------+-----------+---------------+--------+
+| Chicken       | Eric      | Locicero      | 7.81   |
+| Chicken       | Victor    | Peterson      | 7.81   |
+| Chicken       | Victor    | Peterson      | 7.81   |
+| Chicken       | Veronica  | Bush          | 7.81   |
+| Chicken       | Veronica  | Bush          | 7.81   |
+| Chicken       | Veronica  | Bush          | 7.81   |
+| Chicken       | Fritz     | Grant         | 7.81   |
+| Chicken       | Missy     | Bush          | 7.81   |
+| Chicken       | Ted       | Howard        | 7.81   |
+| Chicken       | Bianca    | Grant         | 7.81   |
+| Chicken       | Bianca    | Grant         | 7.81   |
+| Chicken       | Maggie    | Everett       | 7.81   |
+| Chicken       | Oliver    | Grant         | 7.81   |
+| Chicken       | Theodore  | OLeary        | 7.81   |
+| Chicken       | Eric      | Locicero      | 7.81   |
+| Chicken       | Ophelia   | Everett       | 7.81   |
+| Chicken       | Ophelia   | Everett       | 7.81   |
+| Chicken       | David     | Peterson      | 7.81   |
+| Chicken       | Florence  | Carlucchi     | 7.81   |
+| Chicken       | Florence  | Carlucchi     | 7.81   |
+| Chicken       | Mary      | Noose         | 7.81   |
+| Chicken       | Pauline   | Everett       | 7.81   |
+| Chicken       | Mary      | Van Morrison  | 7.81   |
+| Chicken       | Mary      | Van Morrison  | 7.81   |
+| Chicken       | Anita     | Carlucchi     | 7.81   |
+| Chicken       | Jake      | Bush          | 7.81   |
+| Chicken       | Terri     | Noose         | 7.81   |
+| Chicken       | Terri     | Noose         | 7.81   |
+| Chicken       | Andy      | Jones         | 7.81   |
+| Chicken       | Batilda   | Van Morrison  | 7.81   |
+| Chicken       | Kevin     | Frank         | 7.81   |
+| Chicken       | Pauline   | Smith         | 7.81   |
+| Chicken       | Margaret  | Van Morrison  | 7.81   |
+| Chicken       | Bill      | Mantela       | 7.81   |
+| Chicken       | Victor    | Peterson      | 7.81   |
+| Chicken       | Margaret  | Everett       | 7.81   |
+| Chicken       | Margaret  | Everett       | 7.81   |
+| Chicken       | Harry     | Andrews       | 7.81   |
+| Chicken       | Harry     | Andrews       | 7.81   |
+| Chicken       | Denise    | Peterson      | 7.81   |
+| Chicken       | Holly     | Dole          | 7.81   |
+| Chicken       | Patty     | Randolph      | 7.81   |
+| Chicken       | Andy      | OLeary        | 7.81   |
+| Chicken       | Lisa      | Van Morrison  | 7.81   |
+| Chicken       | Lisa      | Van Morrison  | 7.81   |
+| Chicken       | Alice     | Kemp          | 7.81   |
+| Chicken       | David     | Howard        | 7.81   |
+| Chicken       | Patty     | Howard        | 7.81   |
+| Chicken       | Patty     | Howard        | 7.81   |
+| Chicken       | Ted       | Grant         | 7.81   |
+| Chicken       | Maggie    | Kemp          | 7.81   |
+| Chicken       | Anita     | Randolph      | 7.81   |
+| Chicken       | Anita     | Randolph      | 7.81   |
+| Chicken       | Paul      | Van Morrison  | 7.81   |
+| Chicken       | Paul      | Van Morrison  | 7.81   |
+| Chicken       | Ophelia   | OLeary        | 7.81   |
+| Chicken       | Terri     | Randolph      | 7.81   |
+| Chicken       | Hugh      | Kemp          | 7.81   |
+| Chicken       | Margaret  | Bush          | 7.81   |
+| Chicken       | Margaret  | Bush          | 7.81   |
+| Chicken       | Bruce     | Grant         | 7.81   |
+| Chicken       | Bruce     | Grant         | 7.81   |
+| Chicken       | Samantha  | Frank         | 7.81   |
+| Chicken       | Victor    | Frank         | 7.81   |
+| Chicken       | Veronica  | Dole          | 7.81   |
+| Cookies       | Gary      | Everett       | 1.61   |
+| Cookies       | Fritz     | Grant         | 1.61   |
+| Cookies       | Missy     | Bush          | 1.61   |
+| Cookies       | Ted       | Howard        | 1.61   |
+| Cookies       | Wendy     | Kemp          | 1.61   |
+| Cookies       | Earl      | Dole          | 1.61   |
+| Cookies       | Bianca    | Grant         | 1.61   |
+| Cookies       | Dave      | Stevens       | 1.61   |
+| Cookies       | Dave      | Stevens       | 1.61   |
+| Cookies       | Barry     | Jones         | 1.61   |
+| Cookies       | Oliver    | Grant         | 1.61   |
+| Cookies       | Jeniffer  | Mantela       | 1.61   |
+| Cookies       | Jeniffer  | Mantela       | 1.61   |
+| Cookies       | Theodore  | OLeary        | 1.61   |
+| Cookies       | Eric      | Locicero      | 1.61   |
+| Cookies       | Eric      | Locicero      | 1.61   |
+| Cookies       | Florence  | Carlucchi     | 1.61   |
+| Cookies       | Florence  | Carlucchi     | 1.61   |
+| Cookies       | Mary      | Noose         | 1.61   |
+| Cookies       | Mary      | Noose         | 1.61   |
+| Cookies       | Pauline   | Everett       | 1.61   |
+| Cookies       | Pauline   | Everett       | 1.61   |
+| Cookies       | Mary      | Van Morrison  | 1.61   |
+| Cookies       | Patty     | Van Morrison  | 1.61   |
+| Cookies       | Bill      | Kemp          | 1.61   |
+| Cookies       | Anita     | Carlucchi     | 1.61   |
+| Cookies       | Andy      | Jones         | 1.61   |
+| Cookies       | Kevin     | Frank         | 1.61   |
+| Cookies       | Pauline   | Smith         | 1.61   |
+| Cookies       | Pauline   | Smith         | 1.61   |
+| Cookies       | Erica     | Grant         | 1.61   |
+| Cookies       | Erica     | Grant         | 1.61   |
+| Cookies       | Hope      | Stevens       | 1.61   |
+| Cookies       | Daniel    | Bush          | 1.61   |
++---------------+-----------+---------------+--------+
+|     NAME      |   FNAME   |     LNAME     | PRICE  |
++---------------+-----------+---------------+--------+
+| Cookies       | Bill      | Mantela       | 1.61   |
+| Cookies       | Victor    | Peterson      | 1.61   |
+| Cookies       | Max       | Frank         | 1.61   |
+| Cookies       | Max       | Frank         | 1.61   |
+| Cookies       | Max       | Frank         | 1.61   |
+| Cookies       | Max       | Frank         | 1.61   |
+| Cookies       | Jeniffer  | Bush          | 1.61   |
+| Cookies       | Jeniffer  | Bush          | 1.61   |
+| Cookies       | Jeniffer  | Bush          | 1.61   |
+| Cookies       | Ceasar    | Mantela       | 1.61   |
+| Cookies       | Margaret  | Everett       | 1.61   |
+| Cookies       | Margaret  | Everett       | 1.61   |
+| Cookies       | Harry     | Andrews       | 1.61   |
+| Cookies       | Harry     | Andrews       | 1.61   |
+| Cookies       | Anthony   | Smith         | 1.61   |
+| Cookies       | Denise    | Peterson      | 1.61   |
+| Cookies       | Anthony   | Frank         | 1.61   |
+| Cookies       | Anthony   | Frank         | 1.61   |
+| Cookies       | Anthony   | Frank         | 1.61   |
+| Cookies       | Anthony   | Frank         | 1.61   |
+| Cookies       | Hope      | Smith         | 1.61   |
+| Cookies       | Fred      | Noose         | 1.61   |
+| Cookies       | Lisa      | Van Morrison  | 1.61   |
+| Cookies       | Ian       | Bush          | 1.61   |
+| Cookies       | David     | Howard        | 1.61   |
+| Cookies       | Patty     | Howard        | 1.61   |
+| Cookies       | Patty     | Howard        | 1.61   |
+| Cookies       | Maggie    | Kemp          | 1.61   |
+| Cookies       | Maggie    | Kemp          | 1.61   |
+| Cookies       | Paul      | Van Morrison  | 1.61   |
+| Cookies       | Paul      | Van Morrison  | 1.61   |
+| Cookies       | Margaret  | Bush          | 1.61   |
+| Cookies       | Margaret  | Bush          | 1.61   |
+| Cookies       | Bruce     | Grant         | 1.61   |
+| Cookies       | Victor    | Frank         | 1.61   |
+| Cookies       | Victor    | Frank         | 1.61   |
+| Eggs          | Terri     | Grant         | 6.47   |
+| Eggs          | Terri     | Grant         | 6.47   |
+| Eggs          | Victor    | Peterson      | 6.47   |
+| Eggs          | Veronica  | Bush          | 6.47   |
+| Eggs          | Veronica  | Bush          | 6.47   |
+| Eggs          | Missy     | Bush          | 6.47   |
+| Eggs          | Ted       | Howard        | 6.47   |
+| Eggs          | Maggie    | Everett       | 6.47   |
+| Eggs          | Barry     | Jones         | 6.47   |
+| Eggs          | Theodore  | OLeary        | 6.47   |
+| Eggs          | Theodore  | OLeary        | 6.47   |
+| Eggs          | Patty     | Carlucchi     | 6.47   |
+| Eggs          | Anita     | Carlucchi     | 6.47   |
+| Eggs          | Eric      | Locicero      | 6.47   |
+| Eggs          | Ophelia   | Everett       | 6.47   |
+| Eggs          | Ophelia   | Everett       | 6.47   |
+| Eggs          | Ophelia   | Everett       | 6.47   |
+| Eggs          | David     | Peterson      | 6.47   |
+| Eggs          | David     | Peterson      | 6.47   |
+| Eggs          | Andy      | Peterson      | 6.47   |
+| Eggs          | Andy      | Peterson      | 6.47   |
+| Eggs          | Andy      | Peterson      | 6.47   |
+| Eggs          | Mary      | Noose         | 6.47   |
+| Eggs          | Ulysses   | Peterson      | 6.47   |
+| Eggs          | Larry     | Randolph      | 6.47   |
+| Eggs          | Larry     | Randolph      | 6.47   |
+| Eggs          | Bill      | Kemp          | 6.47   |
+| Eggs          | Andy      | Jones         | 6.47   |
+| Eggs          | Batilda   | Van Morrison  | 6.47   |
+| Eggs          | Kevin     | Frank         | 6.47   |
+| Eggs          | Kevin     | Frank         | 6.47   |
+| Eggs          | Pauline   | Smith         | 6.47   |
+| Eggs          | Pauline   | Smith         | 6.47   |
+| Eggs          | Erica     | Grant         | 6.47   |
+| Eggs          | Margaret  | Van Morrison  | 6.47   |
+| Eggs          | Hope      | Stevens       | 6.47   |
+| Eggs          | Daniel    | Bush          | 6.47   |
+| Eggs          | Maggie    | OLeary        | 6.47   |
+| Eggs          | Maggie    | OLeary        | 6.47   |
+| Eggs          | Victor    | Peterson      | 6.47   |
+| Eggs          | Victor    | Peterson      | 6.47   |
+| Eggs          | Victor    | Peterson      | 6.47   |
+| Eggs          | Veronica  | Smith         | 6.47   |
+| Eggs          | Max       | Peterson      | 6.47   |
+| Eggs          | Max       | Frank         | 6.47   |
+| Eggs          | Max       | Frank         | 6.47   |
+| Eggs          | Monty     | Grant         | 6.47   |
+| Eggs          | Monty     | Grant         | 6.47   |
+| Eggs          | Anita     | Locicero      | 6.47   |
+| Eggs          | Anthony   | Smith         | 6.47   |
+| Eggs          | Denise    | Peterson      | 6.47   |
+| Eggs          | Denise    | Peterson      | 6.47   |
+| Eggs          | Hope      | Smith         | 6.47   |
+| Eggs          | Peter     | Howard        | 6.47   |
+| Eggs          | Fred      | Noose         | 6.47   |
+| Eggs          | Fred      | Noose         | 6.47   |
+| Eggs          | Fred      | Noose         | 6.47   |
+| Eggs          | Andy      | OLeary        | 6.47   |
+| Eggs          | Jeniffer  | Kemp          | 6.47   |
+| Eggs          | Jeniffer  | Kemp          | 6.47   |
+| Eggs          | Lisa      | Van Morrison  | 6.47   |
+| Eggs          | Lisa      | Van Morrison  | 6.47   |
+| Eggs          | Barry     | Stevens       | 6.47   |
+| Eggs          | Carla     | Stevens       | 6.47   |
++---------------+-----------+---------------+--------+
+|     NAME      |   FNAME   |     LNAME     | PRICE  |
++---------------+-----------+---------------+--------+
+| Eggs          | Ceasar    | Locicero      | 6.47   |
+| Eggs          | Pauline   | Bush          | 6.47   |
+| Eggs          | Ted       | Grant         | 6.47   |
+| Eggs          | Ted       | Grant         | 6.47   |
+| Eggs          | Ted       | Grant         | 6.47   |
+| Eggs          | Maggie    | Kemp          | 6.47   |
+| Eggs          | Anthony   | Stevens       | 6.47   |
+| Eggs          | Anthony   | Stevens       | 6.47   |
+| Eggs          | Anita     | Randolph      | 6.47   |
+| Eggs          | Anita     | Randolph      | 6.47   |
+| Eggs          | Paul      | Van Morrison  | 6.47   |
+| Eggs          | Rex       | Mantela       | 6.47   |
+| Eggs          | Terri     | Randolph      | 6.47   |
+| Eggs          | Terri     | Randolph      | 6.47   |
+| Eggs          | Terri     | Randolph      | 6.47   |
+| Eggs          | Hugh      | Kemp          | 6.47   |
+| Eggs          | Hugh      | Kemp          | 6.47   |
+| Eggs          | Bruce     | Grant         | 6.47   |
+| Heater        | Victor    | Peterson      | 3.02   |
+| Heater        | Veronica  | Bush          | 3.02   |
+| Heater        | Veronica  | Bush          | 3.02   |
+| Heater        | Fritz     | Grant         | 3.02   |
+| Heater        | Missy     | Bush          | 3.02   |
+| Heater        | Wendy     | Kemp          | 3.02   |
+| Heater        | Bianca    | Grant         | 3.02   |
+| Heater        | Dave      | Stevens       | 3.02   |
+| Heater        | Maggie    | Everett       | 3.02   |
+| Heater        | Barry     | Jones         | 3.02   |
+| Heater        | Patty     | Noose         | 3.02   |
+| Heater        | Patty     | Noose         | 3.02   |
+| Heater        | Theodore  | OLeary        | 3.02   |
+| Heater        | Theodore  | OLeary        | 3.02   |
+| Heater        | Theodore  | OLeary        | 3.02   |
+| Heater        | Theodore  | OLeary        | 3.02   |
+| Heater        | Patty     | Carlucchi     | 3.02   |
+| Heater        | David     | Peterson      | 3.02   |
+| Heater        | Andy      | Peterson      | 3.02   |
+| Heater        | Mary      | Noose         | 3.02   |
+| Heater        | Ulysses   | Peterson      | 3.02   |
+| Heater        | Ulysses   | Peterson      | 3.02   |
+| Heater        | Gerry     | Bush          | 3.02   |
+| Heater        | Larry     | Randolph      | 3.02   |
+| Heater        | Patty     | Van Morrison  | 3.02   |
+| Heater        | Bill      | Kemp          | 3.02   |
+| Heater        | Jake      | Bush          | 3.02   |
+| Heater        | Andy      | Jones         | 3.02   |
+| Heater        | Andy      | Jones         | 3.02   |
+| Heater        | Kevin     | Frank         | 3.02   |
+| Heater        | Hugh      | Andrews       | 3.02   |
+| Heater        | Daniel    | Bush          | 3.02   |
+| Heater        | Bill      | Mantela       | 3.02   |
+| Heater        | Bill      | Mantela       | 3.02   |
+| Heater        | Betty     | Andrews       | 3.02   |
+| Heater        | Hope      | Bush          | 3.02   |
+| Heater        | Hope      | Bush          | 3.02   |
+| Heater        | Max       | Frank         | 3.02   |
+| Heater        | Kathy     | Stevens       | 3.02   |
+| Heater        | Denise    | Peterson      | 3.02   |
+| Heater        | Holly     | Dole          | 3.02   |
+| Heater        | Patty     | Randolph      | 3.02   |
+| Heater        | Jeniffer  | Kemp          | 3.02   |
+| Heater        | Jeniffer  | Kemp          | 3.02   |
+| Heater        | Randy     | Smith         | 3.02   |
+| Heater        | Lisa      | Van Morrison  | 3.02   |
+| Heater        | Lisa      | Van Morrison  | 3.02   |
+| Heater        | Carla     | Stevens       | 3.02   |
+| Heater        | Alice     | Kemp          | 3.02   |
+| Heater        | Ceasar    | Locicero      | 3.02   |
+| Heater        | Ceasar    | Locicero      | 3.02   |
+| Heater        | Pauline   | Bush          | 3.02   |
+| Heater        | Pauline   | Bush          | 3.02   |
+| Heater        | Patty     | Howard        | 3.02   |
+| Heater        | Patty     | Howard        | 3.02   |
+| Heater        | Patty     | Howard        | 3.02   |
+| Heater        | Anthony   | Stevens       | 3.02   |
+| Heater        | Anita     | Randolph      | 3.02   |
+| Heater        | Ophelia   | OLeary        | 3.02   |
+| Heater        | Terri     | Randolph      | 3.02   |
+| Heater        | Samantha  | Frank         | 3.02   |
+| Heater        | Veronica  | Dole          | 3.02   |
+| Iron          | Eric      | Locicero      | 6.27   |
+| Iron          | Terri     | Grant         | 6.27   |
+| Iron          | Veronica  | Bush          | 6.27   |
+| Iron          | Veronica  | Bush          | 6.27   |
+| Iron          | Missy     | Bush          | 6.27   |
+| Iron          | Ted       | Howard        | 6.27   |
+| Iron          | Dave      | Stevens       | 6.27   |
+| Iron          | Maggie    | Everett       | 6.27   |
+| Iron          | Maggie    | Everett       | 6.27   |
+| Iron          | Barry     | Jones         | 6.27   |
+| Iron          | Theodore  | OLeary        | 6.27   |
+| Iron          | Patty     | Carlucchi     | 6.27   |
+| Iron          | Anita     | Carlucchi     | 6.27   |
+| Iron          | Eric      | Locicero      | 6.27   |
+| Iron          | Ophelia   | Everett       | 6.27   |
+| Iron          | David     | Peterson      | 6.27   |
+| Iron          | David     | Peterson      | 6.27   |
+| Iron          | Florence  | Carlucchi     | 6.27   |
+| Iron          | Andy      | Peterson      | 6.27   |
+| Iron          | Andy      | Peterson      | 6.27   |
++---------------+-----------+---------------+--------+
+|     NAME      |   FNAME   |     LNAME     | PRICE  |
++---------------+-----------+---------------+--------+
+| Iron          | Andy      | Peterson      | 6.27   |
+| Iron          | Andy      | Peterson      | 6.27   |
+| Iron          | Andy      | Peterson      | 6.27   |
+| Iron          | Ulysses   | Peterson      | 6.27   |
+| Iron          | Larry     | Randolph      | 6.27   |
+| Iron          | Bill      | Kemp          | 6.27   |
+| Iron          | Andy      | Jones         | 6.27   |
+| Iron          | Batilda   | Van Morrison  | 6.27   |
+| Iron          | Kevin     | Frank         | 6.27   |
+| Iron          | Kevin     | Frank         | 6.27   |
+| Iron          | Pauline   | Smith         | 6.27   |
+| Iron          | Pauline   | Smith         | 6.27   |
+| Iron          | Erica     | Grant         | 6.27   |
+| Iron          | Walter    | Frank         | 6.27   |
+| Iron          | Daniel    | Bush          | 6.27   |
+| Iron          | Maggie    | OLeary        | 6.27   |
+| Iron          | Victor    | Peterson      | 6.27   |
+| Iron          | Victor    | Peterson      | 6.27   |
+| Iron          | Max       | Frank         | 6.27   |
+| Iron          | Max       | Frank         | 6.27   |
+| Iron          | Terri     | Kemp          | 6.27   |
+| Iron          | Monty     | Grant         | 6.27   |
+| Iron          | Anita     | Locicero      | 6.27   |
+| Iron          | Anthony   | Smith         | 6.27   |
+| Iron          | Denise    | Peterson      | 6.27   |
+| Iron          | Denise    | Peterson      | 6.27   |
+| Iron          | Anthony   | Frank         | 6.27   |
+| Iron          | Hope      | Smith         | 6.27   |
+| Iron          | Peter     | Howard        | 6.27   |
+| Iron          | Fred      | Noose         | 6.27   |
+| Iron          | Andy      | OLeary        | 6.27   |
+| Iron          | Jeniffer  | Kemp          | 6.27   |
+| Iron          | Jeniffer  | Kemp          | 6.27   |
+| Iron          | Lisa      | Van Morrison  | 6.27   |
+| Iron          | Barry     | Stevens       | 6.27   |
+| Iron          | Ceasar    | Locicero      | 6.27   |
+| Iron          | Pauline   | Bush          | 6.27   |
+| Iron          | David     | Howard        | 6.27   |
+| Iron          | Ted       | Grant         | 6.27   |
+| Iron          | Ted       | Grant         | 6.27   |
+| Iron          | Ted       | Grant         | 6.27   |
+| Iron          | Maggie    | Kemp          | 6.27   |
+| Iron          | Anthony   | Stevens       | 6.27   |
+| Iron          | Anita     | Randolph      | 6.27   |
+| Iron          | Anita     | Randolph      | 6.27   |
+| Iron          | Paul      | Van Morrison  | 6.27   |
+| Iron          | Rex       | Mantela       | 6.27   |
+| Iron          | Rex       | Mantela       | 6.27   |
+| Iron          | Terri     | Randolph      | 6.27   |
+| Iron          | Terri     | Randolph      | 6.27   |
+| Iron          | Terri     | Randolph      | 6.27   |
+| Iron          | Hugh      | Kemp          | 6.27   |
+| Iron          | Veronica  | Dole          | 6.27   |
+| Juice         | Gary      | Everett       | 4.62   |
+| Juice         | Missy     | Bush          | 4.62   |
+| Juice         | Ted       | Howard        | 4.62   |
+| Juice         | Wendy     | Kemp          | 4.62   |
+| Juice         | Earl      | Dole          | 4.62   |
+| Juice         | Dave      | Stevens       | 4.62   |
+| Juice         | Barry     | Jones         | 4.62   |
+| Juice         | Patty     | Noose         | 4.62   |
+| Juice         | Oliver    | Grant         | 4.62   |
+| Juice         | Theodore  | OLeary        | 4.62   |
+| Juice         | Theodore  | OLeary        | 4.62   |
+| Juice         | Patty     | Carlucchi     | 4.62   |
+| Juice         | Patty     | Carlucchi     | 4.62   |
+| Juice         | Eric      | Locicero      | 4.62   |
+| Juice         | David     | Peterson      | 4.62   |
+| Juice         | Ulysses   | Peterson      | 4.62   |
+| Juice         | Gerry     | Bush          | 4.62   |
+| Juice         | Mary      | Van Morrison  | 4.62   |
+| Juice         | Mary      | Van Morrison  | 4.62   |
+| Juice         | Jake      | Bush          | 4.62   |
+| Juice         | Jake      | Bush          | 4.62   |
+| Juice         | Terri     | Noose         | 4.62   |
+| Juice         | Andy      | Jones         | 4.62   |
+| Juice         | Batilda   | Van Morrison  | 4.62   |
+| Juice         | Pauline   | Smith         | 4.62   |
+| Juice         | Pauline   | Smith         | 4.62   |
+| Juice         | Erica     | Grant         | 4.62   |
+| Juice         | Erica     | Grant         | 4.62   |
+| Juice         | Margaret  | Van Morrison  | 4.62   |
+| Juice         | Hugh      | Andrews       | 4.62   |
+| Juice         | Maggie    | OLeary        | 4.62   |
+| Juice         | Victor    | Peterson      | 4.62   |
+| Juice         | Veronica  | Smith         | 4.62   |
+| Juice         | Max       | Peterson      | 4.62   |
+| Juice         | Max       | Peterson      | 4.62   |
+| Juice         | Max       | Peterson      | 4.62   |
+| Juice         | Hope      | Bush          | 4.62   |
+| Juice         | Terri     | Kemp          | 4.62   |
+| Juice         | Monty     | Grant         | 4.62   |
+| Juice         | Monty     | Grant         | 4.62   |
+| Juice         | Jeniffer  | Bush          | 4.62   |
+| Juice         | Jeniffer  | Bush          | 4.62   |
+| Juice         | Ceasar    | Mantela       | 4.62   |
+| Juice         | Ceasar    | Mantela       | 4.62   |
+| Juice         | Anita     | Locicero      | 4.62   |
+| Juice         | Anita     | Locicero      | 4.62   |
+| Juice         | Harry     | Andrews       | 4.62   |
++---------------+-----------+---------------+--------+
+|     NAME      |   FNAME   |     LNAME     | PRICE  |
++---------------+-----------+---------------+--------+
+| Juice         | Harry     | Andrews       | 4.62   |
+| Juice         | Kathy     | Stevens       | 4.62   |
+| Juice         | Kathy     | Stevens       | 4.62   |
+| Juice         | Anthony   | Smith         | 4.62   |
+| Juice         | Anthony   | Frank         | 4.62   |
+| Juice         | Barry     | Stevens       | 4.62   |
+| Juice         | Ian       | Bush          | 4.62   |
+| Juice         | Ian       | Bush          | 4.62   |
+| Juice         | Alice     | Kemp          | 4.62   |
+| Juice         | David     | Howard        | 4.62   |
+| Juice         | Patty     | Howard        | 4.62   |
+| Juice         | Anthony   | Stevens       | 4.62   |
+| Juice         | Rex       | Mantela       | 4.62   |
+| Juice         | Rex       | Mantela       | 4.62   |
+| Juice         | Hugh      | Kemp          | 4.62   |
+| Juice         | Veronica  | Dole          | 4.62   |
+| Microwave     | Victor    | Peterson      | 2.92   |
+| Microwave     | Veronica  | Bush          | 2.92   |
+| Microwave     | Veronica  | Bush          | 2.92   |
+| Microwave     | Fritz     | Grant         | 2.92   |
+| Microwave     | Fritz     | Grant         | 2.92   |
+| Microwave     | Missy     | Bush          | 2.92   |
+| Microwave     | Wendy     | Kemp          | 2.92   |
+| Microwave     | Wendy     | Kemp          | 2.92   |
+| Microwave     | Bianca    | Grant         | 2.92   |
+| Microwave     | Dave      | Stevens       | 2.92   |
+| Microwave     | Maggie    | Everett       | 2.92   |
+| Microwave     | Barry     | Jones         | 2.92   |
+| Microwave     | Patty     | Noose         | 2.92   |
+| Microwave     | Patty     | Noose         | 2.92   |
+| Microwave     | Theodore  | OLeary        | 2.92   |
+| Microwave     | Theodore  | OLeary        | 2.92   |
+| Microwave     | Theodore  | OLeary        | 2.92   |
+| Microwave     | Patty     | Carlucchi     | 2.92   |
+| Microwave     | David     | Peterson      | 2.92   |
+| Microwave     | Andy      | Peterson      | 2.92   |
+| Microwave     | Mary      | Noose         | 2.92   |
+| Microwave     | Ulysses   | Peterson      | 2.92   |
+| Microwave     | Ulysses   | Peterson      | 2.92   |
+| Microwave     | Gerry     | Bush          | 2.92   |
+| Microwave     | Larry     | Randolph      | 2.92   |
+| Microwave     | Bill      | Kemp          | 2.92   |
+| Microwave     | Anita     | Carlucchi     | 2.92   |
+| Microwave     | Anita     | Carlucchi     | 2.92   |
+| Microwave     | Andy      | Jones         | 2.92   |
+| Microwave     | Andy      | Jones         | 2.92   |
+| Microwave     | Kevin     | Frank         | 2.92   |
+| Microwave     | Eric      | Randolph      | 2.92   |
+| Microwave     | Hugh      | Andrews       | 2.92   |
+| Microwave     | Daniel    | Bush          | 2.92   |
+| Microwave     | Bill      | Mantela       | 2.92   |
+| Microwave     | Bill      | Mantela       | 2.92   |
+| Microwave     | Betty     | Andrews       | 2.92   |
+| Microwave     | Hope      | Bush          | 2.92   |
+| Microwave     | Hope      | Bush          | 2.92   |
+| Microwave     | Max       | Frank         | 2.92   |
+| Microwave     | Kathy     | Stevens       | 2.92   |
+| Microwave     | Denise    | Peterson      | 2.92   |
+| Microwave     | Holly     | Dole          | 2.92   |
+| Microwave     | Patty     | Randolph      | 2.92   |
+| Microwave     | Jeniffer  | Kemp          | 2.92   |
+| Microwave     | Jeniffer  | Kemp          | 2.92   |
+| Microwave     | Lisa      | Van Morrison  | 2.92   |
+| Microwave     | Lisa      | Van Morrison  | 2.92   |
+| Microwave     | Carla     | Stevens       | 2.92   |
+| Microwave     | Ian       | Bush          | 2.92   |
+| Microwave     | Alice     | Kemp          | 2.92   |
+| Microwave     | Alice     | Kemp          | 2.92   |
+| Microwave     | Pauline   | Bush          | 2.92   |
+| Microwave     | Pauline   | Bush          | 2.92   |
+| Microwave     | Patty     | Howard        | 2.92   |
+| Microwave     | Patty     | Howard        | 2.92   |
+| Microwave     | Patty     | Howard        | 2.92   |
+| Microwave     | Maggie    | Kemp          | 2.92   |
+| Microwave     | Anthony   | Stevens       | 2.92   |
+| Microwave     | Anita     | Randolph      | 2.92   |
+| Microwave     | Ophelia   | OLeary        | 2.92   |
+| Microwave     | Ophelia   | OLeary        | 2.92   |
+| Microwave     | Terri     | Randolph      | 2.92   |
+| Microwave     | Samantha  | Frank         | 2.92   |
+| Microwave     | Samantha  | Frank         | 2.92   |
+| Microwave     | Veronica  | Dole          | 2.92   |
+| Milk          | Terri     | Grant         | 5.18   |
+| Milk          | Terri     | Grant         | 5.18   |
+| Milk          | Gary      | Everett       | 5.18   |
+| Milk          | Terri     | Andrews       | 5.18   |
+| Milk          | Victor    | Peterson      | 5.18   |
+| Milk          | Victor    | Peterson      | 5.18   |
+| Milk          | Veronica  | Bush          | 5.18   |
+| Milk          | Missy     | Bush          | 5.18   |
+| Milk          | Missy     | Bush          | 5.18   |
+| Milk          | Ted       | Howard        | 5.18   |
+| Milk          | Wendy     | Kemp          | 5.18   |
+| Milk          | Bianca    | Grant         | 5.18   |
+| Milk          | Dave      | Stevens       | 5.18   |
+| Milk          | Maggie    | Everett       | 5.18   |
+| Milk          | Patty     | Noose         | 5.18   |
+| Milk          | Oliver    | Grant         | 5.18   |
+| Milk          | Oliver    | Grant         | 5.18   |
+| Milk          | Theodore  | OLeary        | 5.18   |
++---------------+-----------+---------------+--------+
+|     NAME      |   FNAME   |     LNAME     | PRICE  |
++---------------+-----------+---------------+--------+
+| Milk          | Patty     | Carlucchi     | 5.18   |
+| Milk          | David     | Peterson      | 5.18   |
+| Milk          | Andy      | Peterson      | 5.18   |
+| Milk          | Ulysses   | Peterson      | 5.18   |
+| Milk          | Mary      | Van Morrison  | 5.18   |
+| Milk          | Mary      | Van Morrison  | 5.18   |
+| Milk          | Larry     | Randolph      | 5.18   |
+| Milk          | Bill      | Kemp          | 5.18   |
+| Milk          | Bill      | Kemp          | 5.18   |
+| Milk          | Jake      | Bush          | 5.18   |
+| Milk          | Terri     | Noose         | 5.18   |
+| Milk          | Andy      | Jones         | 5.18   |
+| Milk          | Batilda   | Van Morrison  | 5.18   |
+| Milk          | Batilda   | Van Morrison  | 5.18   |
+| Milk          | Kevin     | Frank         | 5.18   |
+| Milk          | Kevin     | Frank         | 5.18   |
+| Milk          | Pauline   | Smith         | 5.18   |
+| Milk          | Eric      | Randolph      | 5.18   |
+| Milk          | Eric      | Randolph      | 5.18   |
+| Milk          | Erica     | Grant         | 5.18   |
+| Milk          | Erica     | Grant         | 5.18   |
+| Milk          | Walter    | Frank         | 5.18   |
+| Milk          | Hugh      | Andrews       | 5.18   |
+| Milk          | Hugh      | Andrews       | 5.18   |
+| Milk          | Maggie    | OLeary        | 5.18   |
+| Milk          | Victor    | Peterson      | 5.18   |
+| Milk          | Max       | Peterson      | 5.18   |
+| Milk          | Max       | Peterson      | 5.18   |
+| Milk          | Max       | Peterson      | 5.18   |
+| Milk          | Hope      | Bush          | 5.18   |
+| Milk          | Terri     | Kemp          | 5.18   |
+| Milk          | Terri     | Kemp          | 5.18   |
+| Milk          | Terri     | Kemp          | 5.18   |
+| Milk          | Monty     | Grant         | 5.18   |
+| Milk          | Monty     | Grant         | 5.18   |
+| Milk          | Jeniffer  | Bush          | 5.18   |
+| Milk          | Ceasar    | Mantela       | 5.18   |
+| Milk          | Ceasar    | Mantela       | 5.18   |
+| Milk          | Anita     | Locicero      | 5.18   |
+| Milk          | Anita     | Locicero      | 5.18   |
+| Milk          | Kathy     | Stevens       | 5.18   |
+| Milk          | Anthony   | Smith         | 5.18   |
+| Milk          | Anthony   | Smith         | 5.18   |
+| Milk          | Peter     | Howard        | 5.18   |
+| Milk          | Peter     | Howard        | 5.18   |
+| Milk          | Peter     | Howard        | 5.18   |
+| Milk          | Holly     | Dole          | 5.18   |
+| Milk          | Patty     | Randolph      | 5.18   |
+| Milk          | Jeniffer  | Kemp          | 5.18   |
+| Milk          | Barry     | Stevens       | 5.18   |
+| Milk          | Ian       | Bush          | 5.18   |
+| Milk          | Ian       | Bush          | 5.18   |
+| Milk          | Alice     | Kemp          | 5.18   |
+| Milk          | Pauline   | Bush          | 5.18   |
+| Milk          | David     | Howard        | 5.18   |
+| Milk          | Ted       | Grant         | 5.18   |
+| Milk          | Ted       | Grant         | 5.18   |
+| Milk          | Anthony   | Stevens       | 5.18   |
+| Milk          | Anthony   | Stevens       | 5.18   |
+| Milk          | Anita     | Randolph      | 5.18   |
+| Milk          | Rex       | Mantela       | 5.18   |
+| Milk          | Terri     | Randolph      | 5.18   |
+| Milk          | Margaret  | Bush          | 5.18   |
+| Milk          | Samantha  | Frank         | 5.18   |
+| Plunger       | Eric      | Locicero      | 7.41   |
+| Plunger       | Eric      | Locicero      | 7.41   |
+| Plunger       | Terri     | Grant         | 7.41   |
+| Plunger       | Gary      | Everett       | 7.41   |
+| Plunger       | Victor    | Peterson      | 7.41   |
+| Plunger       | Veronica  | Bush          | 7.41   |
+| Plunger       | Ted       | Howard        | 7.41   |
+| Plunger       | Bianca    | Grant         | 7.41   |
+| Plunger       | Dave      | Stevens       | 7.41   |
+| Plunger       | Maggie    | Everett       | 7.41   |
+| Plunger       | Oliver    | Grant         | 7.41   |
+| Plunger       | Oliver    | Grant         | 7.41   |
+| Plunger       | Jeniffer  | Mantela       | 7.41   |
+| Plunger       | Jeniffer  | Mantela       | 7.41   |
+| Plunger       | Jeniffer  | Mantela       | 7.41   |
+| Plunger       | Theodore  | OLeary        | 7.41   |
+| Plunger       | Frank     | Noose         | 7.41   |
+| Plunger       | Anita     | Carlucchi     | 7.41   |
+| Plunger       | Eric      | Locicero      | 7.41   |
+| Plunger       | David     | Peterson      | 7.41   |
+| Plunger       | David     | Peterson      | 7.41   |
+| Plunger       | Florence  | Carlucchi     | 7.41   |
+| Plunger       | Ulysses   | Peterson      | 7.41   |
+| Plunger       | Pauline   | Everett       | 7.41   |
+| Plunger       | Gerry     | Bush          | 7.41   |
+| Plunger       | Mary      | Van Morrison  | 7.41   |
+| Plunger       | Mary      | Van Morrison  | 7.41   |
+| Plunger       | Bill      | Kemp          | 7.41   |
+| Plunger       | Anita     | Carlucchi     | 7.41   |
+| Plunger       | Terri     | Noose         | 7.41   |
+| Plunger       | Terri     | Noose         | 7.41   |
+| Plunger       | Terri     | Noose         | 7.41   |
+| Plunger       | Andy      | Jones         | 7.41   |
+| Plunger       | Batilda   | Van Morrison  | 7.41   |
+| Plunger       | Kevin     | Frank         | 7.41   |
+| Plunger       | Pauline   | Smith         | 7.41   |
++---------------+-----------+---------------+--------+
+|     NAME      |   FNAME   |     LNAME     | PRICE  |
++---------------+-----------+---------------+--------+
+| Plunger       | Walter    | Frank         | 7.41   |
+| Plunger       | Margaret  | Van Morrison  | 7.41   |
+| Plunger       | Daniel    | Bush          | 7.41   |
+| Plunger       | Daniel    | Bush          | 7.41   |
+| Plunger       | Victor    | Peterson      | 7.41   |
+| Plunger       | Veronica  | Smith         | 7.41   |
+| Plunger       | Hope      | Bush          | 7.41   |
+| Plunger       | Terri     | Kemp          | 7.41   |
+| Plunger       | Terri     | Kemp          | 7.41   |
+| Plunger       | Ceasar    | Mantela       | 7.41   |
+| Plunger       | Anita     | Locicero      | 7.41   |
+| Plunger       | Anita     | Locicero      | 7.41   |
+| Plunger       | Margaret  | Everett       | 7.41   |
+| Plunger       | Harry     | Andrews       | 7.41   |
+| Plunger       | Anthony   | Frank         | 7.41   |
+| Plunger       | Hope      | Smith         | 7.41   |
+| Plunger       | Patty     | Randolph      | 7.41   |
+| Plunger       | Lisa      | Van Morrison  | 7.41   |
+| Plunger       | Lisa      | Van Morrison  | 7.41   |
+| Plunger       | Barry     | Stevens       | 7.41   |
+| Plunger       | Ian       | Bush          | 7.41   |
+| Plunger       | Alice     | Kemp          | 7.41   |
+| Plunger       | Pauline   | Bush          | 7.41   |
+| Plunger       | Pauline   | Bush          | 7.41   |
+| Plunger       | Pauline   | Bush          | 7.41   |
+| Plunger       | Ted       | Grant         | 7.41   |
+| Plunger       | Ted       | Grant         | 7.41   |
+| Plunger       | Ted       | Grant         | 7.41   |
+| Plunger       | Maggie    | Kemp          | 7.41   |
+| Plunger       | Anthony   | Stevens       | 7.41   |
+| Plunger       | Anita     | Randolph      | 7.41   |
+| Plunger       | Paul      | Van Morrison  | 7.41   |
+| Plunger       | Paul      | Van Morrison  | 7.41   |
+| Plunger       | Terri     | Randolph      | 7.41   |
+| Plunger       | Terri     | Randolph      | 7.41   |
+| Plunger       | Hugh      | Kemp          | 7.41   |
+| Plunger       | Bruce     | Grant         | 7.41   |
+| Plunger       | Samantha  | Frank         | 7.41   |
+| Plunger       | Victor    | Frank         | 7.41   |
+| Plunger       | Veronica  | Dole          | 7.41   |
+| Refrigerator  | Terri     | Grant         | 4.91   |
+| Refrigerator  | Gary      | Everett       | 4.91   |
+| Refrigerator  | Victor    | Peterson      | 4.91   |
+| Refrigerator  | Victor    | Peterson      | 4.91   |
+| Refrigerator  | Missy     | Bush          | 4.91   |
+| Refrigerator  | Ted       | Howard        | 4.91   |
+| Refrigerator  | Dave      | Stevens       | 4.91   |
+| Refrigerator  | Maggie    | Everett       | 4.91   |
+| Refrigerator  | Barry     | Jones         | 4.91   |
+| Refrigerator  | Patty     | Noose         | 4.91   |
+| Refrigerator  | Oliver    | Grant         | 4.91   |
+| Refrigerator  | Oliver    | Grant         | 4.91   |
+| Refrigerator  | Theodore  | OLeary        | 4.91   |
+| Refrigerator  | Theodore  | OLeary        | 4.91   |
+| Refrigerator  | Patty     | Carlucchi     | 4.91   |
+| Refrigerator  | Eric      | Locicero      | 4.91   |
+| Refrigerator  | David     | Peterson      | 4.91   |
+| Refrigerator  | Andy      | Peterson      | 4.91   |
+| Refrigerator  | Ulysses   | Peterson      | 4.91   |
+| Refrigerator  | Mary      | Van Morrison  | 4.91   |
+| Refrigerator  | Larry     | Randolph      | 4.91   |
+| Refrigerator  | Bill      | Kemp          | 4.91   |
+| Refrigerator  | Jake      | Bush          | 4.91   |
+| Refrigerator  | Jake      | Bush          | 4.91   |
+| Refrigerator  | Terri     | Noose         | 4.91   |
+| Refrigerator  | Andy      | Jones         | 4.91   |
+| Refrigerator  | Andy      | Jones         | 4.91   |
+| Refrigerator  | Batilda   | Van Morrison  | 4.91   |
+| Refrigerator  | Batilda   | Van Morrison  | 4.91   |
+| Refrigerator  | Kevin     | Frank         | 4.91   |
+| Refrigerator  | Eric      | Randolph      | 4.91   |
+| Refrigerator  | Erica     | Grant         | 4.91   |
+| Refrigerator  | Erica     | Grant         | 4.91   |
+| Refrigerator  | Margaret  | Van Morrison  | 4.91   |
+| Refrigerator  | Hugh      | Andrews       | 4.91   |
+| Refrigerator  | Hugh      | Andrews       | 4.91   |
+| Refrigerator  | Maggie    | OLeary        | 4.91   |
+| Refrigerator  | Veronica  | Smith         | 4.91   |
+| Refrigerator  | Max       | Peterson      | 4.91   |
+| Refrigerator  | Hope      | Bush          | 4.91   |
+| Refrigerator  | Hope      | Bush          | 4.91   |
+| Refrigerator  | Monty     | Grant         | 4.91   |
+| Refrigerator  | Monty     | Grant         | 4.91   |
+| Refrigerator  | Monty     | Grant         | 4.91   |
+| Refrigerator  | Jeniffer  | Bush          | 4.91   |
+| Refrigerator  | Ceasar    | Mantela       | 4.91   |
+| Refrigerator  | Ceasar    | Mantela       | 4.91   |
+| Refrigerator  | Anita     | Locicero      | 4.91   |
+| Refrigerator  | Anita     | Locicero      | 4.91   |
+| Refrigerator  | Kathy     | Stevens       | 4.91   |
+| Refrigerator  | Kathy     | Stevens       | 4.91   |
+| Refrigerator  | Anthony   | Smith         | 4.91   |
+| Refrigerator  | Anthony   | Smith         | 4.91   |
+| Refrigerator  | Peter     | Howard        | 4.91   |
+| Refrigerator  | Holly     | Dole          | 4.91   |
+| Refrigerator  | Patty     | Randolph      | 4.91   |
+| Refrigerator  | Barry     | Stevens       | 4.91   |
+| Refrigerator  | Ian       | Bush          | 4.91   |
+| Refrigerator  | Alice     | Kemp          | 4.91   |
+| Refrigerator  | David     | Howard        | 4.91   |
++---------------+-----------+---------------+--------+
+|     NAME      |   FNAME   |     LNAME     | PRICE  |
++---------------+-----------+---------------+--------+
+| Refrigerator  | Ted       | Grant         | 4.91   |
+| Refrigerator  | Ted       | Grant         | 4.91   |
+| Refrigerator  | Anthony   | Stevens       | 4.91   |
+| Refrigerator  | Anthony   | Stevens       | 4.91   |
+| Refrigerator  | Anita     | Randolph      | 4.91   |
+| Refrigerator  | Rex       | Mantela       | 4.91   |
+| Refrigerator  | Rex       | Mantela       | 4.91   |
+| Refrigerator  | Terri     | Randolph      | 4.91   |
+| Refrigerator  | Samantha  | Frank         | 4.91   |
+| Refrigerator  | Veronica  | Dole          | 4.91   |
+| Shampoo       | Gary      | Everett       | 4.69   |
+| Shampoo       | Victor    | Peterson      | 4.69   |
+| Shampoo       | Missy     | Bush          | 4.69   |
+| Shampoo       | Ted       | Howard        | 4.69   |
+| Shampoo       | Wendy     | Kemp          | 4.69   |
+| Shampoo       | Earl      | Dole          | 4.69   |
+| Shampoo       | Dave      | Stevens       | 4.69   |
+| Shampoo       | Dave      | Stevens       | 4.69   |
+| Shampoo       | Barry     | Jones         | 4.69   |
+| Shampoo       | Patty     | Noose         | 4.69   |
+| Shampoo       | Oliver    | Grant         | 4.69   |
+| Shampoo       | Theodore  | OLeary        | 4.69   |
+| Shampoo       | Theodore  | OLeary        | 4.69   |
+| Shampoo       | Patty     | Carlucchi     | 4.69   |
+| Shampoo       | Patty     | Carlucchi     | 4.69   |
+| Shampoo       | Eric      | Locicero      | 4.69   |
+| Shampoo       | David     | Peterson      | 4.69   |
+| Shampoo       | Ulysses   | Peterson      | 4.69   |
+| Shampoo       | Gerry     | Bush          | 4.69   |
+| Shampoo       | Mary      | Van Morrison  | 4.69   |
+| Shampoo       | Jake      | Bush          | 4.69   |
+| Shampoo       | Jake      | Bush          | 4.69   |
+| Shampoo       | Terri     | Noose         | 4.69   |
+| Shampoo       | Andy      | Jones         | 4.69   |
+| Shampoo       | Batilda   | Van Morrison  | 4.69   |
+| Shampoo       | Kevin     | Frank         | 4.69   |
+| Shampoo       | Pauline   | Smith         | 4.69   |
+| Shampoo       | Erica     | Grant         | 4.69   |
+| Shampoo       | Erica     | Grant         | 4.69   |
+| Shampoo       | Margaret  | Van Morrison  | 4.69   |
+| Shampoo       | Hugh      | Andrews       | 4.69   |
+| Shampoo       | Hugh      | Andrews       | 4.69   |
+| Shampoo       | Maggie    | OLeary        | 4.69   |
+| Shampoo       | Victor    | Peterson      | 4.69   |
+| Shampoo       | Veronica  | Smith         | 4.69   |
+| Shampoo       | Max       | Peterson      | 4.69   |
+| Shampoo       | Hope      | Bush          | 4.69   |
+| Shampoo       | Hope      | Bush          | 4.69   |
+| Shampoo       | Monty     | Grant         | 4.69   |
+| Shampoo       | Monty     | Grant         | 4.69   |
+| Shampoo       | Jeniffer  | Bush          | 4.69   |
+| Shampoo       | Ceasar    | Mantela       | 4.69   |
+| Shampoo       | Ceasar    | Mantela       | 4.69   |
+| Shampoo       | Anita     | Locicero      | 4.69   |
+| Shampoo       | Anita     | Locicero      | 4.69   |
+| Shampoo       | Harry     | Andrews       | 4.69   |
+| Shampoo       | Harry     | Andrews       | 4.69   |
+| Shampoo       | Kathy     | Stevens       | 4.69   |
+| Shampoo       | Kathy     | Stevens       | 4.69   |
+| Shampoo       | Anthony   | Smith         | 4.69   |
+| Shampoo       | Barry     | Stevens       | 4.69   |
+| Shampoo       | Ian       | Bush          | 4.69   |
+| Shampoo       | Ian       | Bush          | 4.69   |
+| Shampoo       | Alice     | Kemp          | 4.69   |
+| Shampoo       | David     | Howard        | 4.69   |
+| Shampoo       | Patty     | Howard        | 4.69   |
+| Shampoo       | Ted       | Grant         | 4.69   |
+| Shampoo       | Anthony   | Stevens       | 4.69   |
+| Shampoo       | Anthony   | Stevens       | 4.69   |
+| Shampoo       | Rex       | Mantela       | 4.69   |
+| Shampoo       | Rex       | Mantela       | 4.69   |
+| Shampoo       | Hugh      | Kemp          | 4.69   |
+| Shampoo       | Veronica  | Dole          | 4.69   |
+| Soap          | Eric      | Locicero      | 0.34   |
+| Soap          | Terri     | Grant         | 0.34   |
+| Soap          | Gary      | Everett       | 0.34   |
+| Soap          | Terri     | Andrews       | 0.34   |
+| Soap          | Victor    | Peterson      | 0.34   |
+| Soap          | Fritz     | Grant         | 0.34   |
+| Soap          | Missy     | Bush          | 0.34   |
+| Soap          | Earl      | Dole          | 0.34   |
+| Soap          | Maggie    | Everett       | 0.34   |
+| Soap          | Maggie    | Everett       | 0.34   |
+| Soap          | Maggie    | Everett       | 0.34   |
+| Soap          | Barry     | Jones         | 0.34   |
+| Soap          | Barry     | Jones         | 0.34   |
+| Soap          | Patty     | Carlucchi     | 0.34   |
+| Soap          | Anita     | Carlucchi     | 0.34   |
+| Soap          | Anita     | Carlucchi     | 0.34   |
+| Soap          | Ophelia   | Everett       | 0.34   |
+| Soap          | David     | Peterson      | 0.34   |
+| Soap          | Andy      | Peterson      | 0.34   |
+| Soap          | Ulysses   | Peterson      | 0.34   |
+| Soap          | Pauline   | Everett       | 0.34   |
+| Soap          | Gerry     | Bush          | 0.34   |
+| Soap          | Gerry     | Bush          | 0.34   |
+| Soap          | Patty     | Van Morrison  | 0.34   |
+| Soap          | Patty     | Van Morrison  | 0.34   |
+| Soap          | Bill      | Kemp          | 0.34   |
+| Soap          | Andy      | Jones         | 0.34   |
++---------------+-----------+---------------+--------+
+|     NAME      |   FNAME   |     LNAME     | PRICE  |
++---------------+-----------+---------------+--------+
+| Soap          | Batilda   | Van Morrison  | 0.34   |
+| Soap          | Kevin     | Frank         | 0.34   |
+| Soap          | Pauline   | Smith         | 0.34   |
+| Soap          | Pauline   | Smith         | 0.34   |
+| Soap          | Erica     | Grant         | 0.34   |
+| Soap          | Walter    | Frank         | 0.34   |
+| Soap          | Walter    | Frank         | 0.34   |
+| Soap          | Walter    | Frank         | 0.34   |
+| Soap          | Hope      | Stevens       | 0.34   |
+| Soap          | Maggie    | OLeary        | 0.34   |
+| Soap          | Bill      | Mantela       | 0.34   |
+| Soap          | Bill      | Mantela       | 0.34   |
+| Soap          | Bill      | Mantela       | 0.34   |
+| Soap          | Betty     | Andrews       | 0.34   |
+| Soap          | Victor    | Peterson      | 0.34   |
+| Soap          | Hope      | Bush          | 0.34   |
+| Soap          | Hope      | Bush          | 0.34   |
+| Soap          | Hope      | Bush          | 0.34   |
+| Soap          | Max       | Frank         | 0.34   |
+| Soap          | Max       | Frank         | 0.34   |
+| Soap          | Max       | Frank         | 0.34   |
+| Soap          | Max       | Frank         | 0.34   |
+| Soap          | Monty     | Grant         | 0.34   |
+| Soap          | Kevin     | Carlucchi     | 0.34   |
+| Soap          | Kevin     | Carlucchi     | 0.34   |
+| Soap          | Margaret  | Everett       | 0.34   |
+| Soap          | Kathy     | Stevens       | 0.34   |
+| Soap          | Anthony   | Smith         | 0.34   |
+| Soap          | Denise    | Peterson      | 0.34   |
+| Soap          | Denise    | Peterson      | 0.34   |
+| Soap          | Hope      | Smith         | 0.34   |
+| Soap          | Peter     | Howard        | 0.34   |
+| Soap          | Fred      | Noose         | 0.34   |
+| Soap          | Patty     | Randolph      | 0.34   |
+| Soap          | Randy     | Smith         | 0.34   |
+| Soap          | Randy     | Smith         | 0.34   |
+| Soap          | Lisa      | Van Morrison  | 0.34   |
+| Soap          | Alice     | Kemp          | 0.34   |
+| Soap          | Ceasar    | Locicero      | 0.34   |
+| Soap          | Patty     | Howard        | 0.34   |
+| Soap          | Patty     | Howard        | 0.34   |
+| Soap          | Ted       | Grant         | 0.34   |
+| Soap          | Maggie    | Kemp          | 0.34   |
+| Soap          | Maggie    | Kemp          | 0.34   |
+| Soap          | Maggie    | Kemp          | 0.34   |
+| Soap          | Maggie    | Kemp          | 0.34   |
+| Soap          | Anthony   | Stevens       | 0.34   |
+| Soap          | Anthony   | Stevens       | 0.34   |
+| Soap          | Paul      | Van Morrison  | 0.34   |
+| Soap          | Ophelia   | OLeary        | 0.34   |
+| Soap          | Ophelia   | OLeary        | 0.34   |
+| Soap          | Ophelia   | OLeary        | 0.34   |
+| Soap          | Rex       | Mantela       | 0.34   |
+| Soap          | Rex       | Mantela       | 0.34   |
+| Soap          | Terri     | Randolph      | 0.34   |
+| Soap          | Hugh      | Kemp          | 0.34   |
+| Soap          | Victor    | Frank         | 0.34   |
+| Soda          | Eric      | Locicero      | 6.21   |
+| Soda          | Terri     | Grant         | 6.21   |
+| Soda          | Veronica  | Bush          | 6.21   |
+| Soda          | Veronica  | Bush          | 6.21   |
+| Soda          | Missy     | Bush          | 6.21   |
+| Soda          | Ted       | Howard        | 6.21   |
+| Soda          | Dave      | Stevens       | 6.21   |
+| Soda          | Maggie    | Everett       | 6.21   |
+| Soda          | Maggie    | Everett       | 6.21   |
+| Soda          | Barry     | Jones         | 6.21   |
+| Soda          | Anita     | Carlucchi     | 6.21   |
+| Soda          | Eric      | Locicero      | 6.21   |
+| Soda          | Ophelia   | Everett       | 6.21   |
+| Soda          | David     | Peterson      | 6.21   |
+| Soda          | David     | Peterson      | 6.21   |
+| Soda          | Florence  | Carlucchi     | 6.21   |
+| Soda          | Andy      | Peterson      | 6.21   |
+| Soda          | Andy      | Peterson      | 6.21   |
+| Soda          | Andy      | Peterson      | 6.21   |
+| Soda          | Andy      | Peterson      | 6.21   |
+| Soda          | Andy      | Peterson      | 6.21   |
+| Soda          | Ulysses   | Peterson      | 6.21   |
+| Soda          | Larry     | Randolph      | 6.21   |
+| Soda          | Larry     | Randolph      | 6.21   |
+| Soda          | Bill      | Kemp          | 6.21   |
+| Soda          | Jake      | Bush          | 6.21   |
+| Soda          | Andy      | Jones         | 6.21   |
+| Soda          | Batilda   | Van Morrison  | 6.21   |
+| Soda          | Kevin     | Frank         | 6.21   |
+| Soda          | Kevin     | Frank         | 6.21   |
+| Soda          | Pauline   | Smith         | 6.21   |
+| Soda          | Pauline   | Smith         | 6.21   |
+| Soda          | Erica     | Grant         | 6.21   |
+| Soda          | Walter    | Frank         | 6.21   |
+| Soda          | Daniel    | Bush          | 6.21   |
+| Soda          | Maggie    | OLeary        | 6.21   |
+| Soda          | Maggie    | OLeary        | 6.21   |
+| Soda          | Victor    | Peterson      | 6.21   |
+| Soda          | Victor    | Peterson      | 6.21   |
+| Soda          | Max       | Frank         | 6.21   |
+| Soda          | Max       | Frank         | 6.21   |
+| Soda          | Terri     | Kemp          | 6.21   |
+| Soda          | Monty     | Grant         | 6.21   |
++---------------+-----------+---------------+--------+
+|     NAME      |   FNAME   |     LNAME     | PRICE  |
++---------------+-----------+---------------+--------+
+| Soda          | Anita     | Locicero      | 6.21   |
+| Soda          | Margaret  | Everett       | 6.21   |
+| Soda          | Anthony   | Smith         | 6.21   |
+| Soda          | Denise    | Peterson      | 6.21   |
+| Soda          | Denise    | Peterson      | 6.21   |
+| Soda          | Anthony   | Frank         | 6.21   |
+| Soda          | Hope      | Smith         | 6.21   |
+| Soda          | Peter     | Howard        | 6.21   |
+| Soda          | Andy      | OLeary        | 6.21   |
+| Soda          | Jeniffer  | Kemp          | 6.21   |
+| Soda          | Jeniffer  | Kemp          | 6.21   |
+| Soda          | Lisa      | Van Morrison  | 6.21   |
+| Soda          | Barry     | Stevens       | 6.21   |
+| Soda          | Ceasar    | Locicero      | 6.21   |
+| Soda          | Pauline   | Bush          | 6.21   |
+| Soda          | David     | Howard        | 6.21   |
+| Soda          | Ted       | Grant         | 6.21   |
+| Soda          | Maggie    | Kemp          | 6.21   |
+| Soda          | Anthony   | Stevens       | 6.21   |
+| Soda          | Anita     | Randolph      | 6.21   |
+| Soda          | Anita     | Randolph      | 6.21   |
+| Soda          | Rex       | Mantela       | 6.21   |
+| Soda          | Rex       | Mantela       | 6.21   |
+| Soda          | Rex       | Mantela       | 6.21   |
+| Soda          | Terri     | Randolph      | 6.21   |
+| Soda          | Terri     | Randolph      | 6.21   |
+| Soda          | Hugh      | Kemp          | 6.21   |
+| Soda          | Veronica  | Dole          | 6.21   |
+| Soup          | Terri     | Grant         | 5.05   |
+| Soup          | Terri     | Grant         | 5.05   |
+| Soup          | Gary      | Everett       | 5.05   |
+| Soup          | Terri     | Andrews       | 5.05   |
+| Soup          | Victor    | Peterson      | 5.05   |
+| Soup          | Victor    | Peterson      | 5.05   |
+| Soup          | Veronica  | Bush          | 5.05   |
+| Soup          | Missy     | Bush          | 5.05   |
+| Soup          | Ted       | Howard        | 5.05   |
+| Soup          | Wendy     | Kemp          | 5.05   |
+| Soup          | Dave      | Stevens       | 5.05   |
+| Soup          | Maggie    | Everett       | 5.05   |
+| Soup          | Barry     | Jones         | 5.05   |
+| Soup          | Patty     | Noose         | 5.05   |
+| Soup          | Oliver    | Grant         | 5.05   |
+| Soup          | Oliver    | Grant         | 5.05   |
+| Soup          | Theodore  | OLeary        | 5.05   |
+| Soup          | Theodore  | OLeary        | 5.05   |
+| Soup          | Patty     | Carlucchi     | 5.05   |
+| Soup          | Eric      | Locicero      | 5.05   |
+| Soup          | David     | Peterson      | 5.05   |
+| Soup          | Andy      | Peterson      | 5.05   |
+| Soup          | Ulysses   | Peterson      | 5.05   |
+| Soup          | Mary      | Van Morrison  | 5.05   |
+| Soup          | Larry     | Randolph      | 5.05   |
+| Soup          | Bill      | Kemp          | 5.05   |
+| Soup          | Bill      | Kemp          | 5.05   |
+| Soup          | Jake      | Bush          | 5.05   |
+| Soup          | Jake      | Bush          | 5.05   |
+| Soup          | Terri     | Noose         | 5.05   |
+| Soup          | Andy      | Jones         | 5.05   |
+| Soup          | Batilda   | Van Morrison  | 5.05   |
+| Soup          | Batilda   | Van Morrison  | 5.05   |
+| Soup          | Kevin     | Frank         | 5.05   |
+| Soup          | Eric      | Randolph      | 5.05   |
+| Soup          | Eric      | Randolph      | 5.05   |
+| Soup          | Erica     | Grant         | 5.05   |
+| Soup          | Erica     | Grant         | 5.05   |
+| Soup          | Margaret  | Van Morrison  | 5.05   |
+| Soup          | Hugh      | Andrews       | 5.05   |
+| Soup          | Hugh      | Andrews       | 5.05   |
+| Soup          | Hugh      | Andrews       | 5.05   |
+| Soup          | Maggie    | OLeary        | 5.05   |
+| Soup          | Maggie    | OLeary        | 5.05   |
+| Soup          | Veronica  | Smith         | 5.05   |
+| Soup          | Max       | Peterson      | 5.05   |
+| Soup          | Hope      | Bush          | 5.05   |
+| Soup          | Terri     | Kemp          | 5.05   |
+| Soup          | Monty     | Grant         | 5.05   |
+| Soup          | Monty     | Grant         | 5.05   |
+| Soup          | Jeniffer  | Bush          | 5.05   |
+| Soup          | Ceasar    | Mantela       | 5.05   |
+| Soup          | Ceasar    | Mantela       | 5.05   |
+| Soup          | Anita     | Locicero      | 5.05   |
+| Soup          | Anita     | Locicero      | 5.05   |
+| Soup          | Kathy     | Stevens       | 5.05   |
+| Soup          | Kathy     | Stevens       | 5.05   |
+| Soup          | Anthony   | Smith         | 5.05   |
+| Soup          | Peter     | Howard        | 5.05   |
+| Soup          | Peter     | Howard        | 5.05   |
+| Soup          | Peter     | Howard        | 5.05   |
+| Soup          | Holly     | Dole          | 5.05   |
+| Soup          | Patty     | Randolph      | 5.05   |
+| Soup          | Jeniffer  | Kemp          | 5.05   |
+| Soup          | Ian       | Bush          | 5.05   |
+| Soup          | Alice     | Kemp          | 5.05   |
+| Soup          | David     | Howard        | 5.05   |
+| Soup          | David     | Howard        | 5.05   |
+| Soup          | Ted       | Grant         | 5.05   |
+| Soup          | Ted       | Grant         | 5.05   |
+| Soup          | Anthony   | Stevens       | 5.05   |
+| Soup          | Anthony   | Stevens       | 5.05   |
++---------------+-----------+---------------+--------+
+|     NAME      |   FNAME   |     LNAME     | PRICE  |
++---------------+-----------+---------------+--------+
+| Soup          | Anita     | Randolph      | 5.05   |
+| Soup          | Rex       | Mantela       | 5.05   |
+| Soup          | Rex       | Mantela       | 5.05   |
+| Soup          | Terri     | Randolph      | 5.05   |
+| Soup          | Margaret  | Bush          | 5.05   |
+| Soup          | Samantha  | Frank         | 5.05   |
+| Telephone     | Victor    | Peterson      | 2.95   |
+| Telephone     | Veronica  | Bush          | 2.95   |
+| Telephone     | Veronica  | Bush          | 2.95   |
+| Telephone     | Fritz     | Grant         | 2.95   |
+| Telephone     | Fritz     | Grant         | 2.95   |
+| Telephone     | Missy     | Bush          | 2.95   |
+| Telephone     | Wendy     | Kemp          | 2.95   |
+| Telephone     | Bianca    | Grant         | 2.95   |
+| Telephone     | Dave      | Stevens       | 2.95   |
+| Telephone     | Maggie    | Everett       | 2.95   |
+| Telephone     | Barry     | Jones         | 2.95   |
+| Telephone     | Patty     | Noose         | 2.95   |
+| Telephone     | Patty     | Noose         | 2.95   |
+| Telephone     | Theodore  | OLeary        | 2.95   |
+| Telephone     | Theodore  | OLeary        | 2.95   |
+| Telephone     | Theodore  | OLeary        | 2.95   |
+| Telephone     | Patty     | Carlucchi     | 2.95   |
+| Telephone     | David     | Peterson      | 2.95   |
+| Telephone     | Andy      | Peterson      | 2.95   |
+| Telephone     | Mary      | Noose         | 2.95   |
+| Telephone     | Ulysses   | Peterson      | 2.95   |
+| Telephone     | Ulysses   | Peterson      | 2.95   |
+| Telephone     | Gerry     | Bush          | 2.95   |
+| Telephone     | Larry     | Randolph      | 2.95   |
+| Telephone     | Bill      | Kemp          | 2.95   |
+| Telephone     | Anita     | Carlucchi     | 2.95   |
+| Telephone     | Jake      | Bush          | 2.95   |
+| Telephone     | Andy      | Jones         | 2.95   |
+| Telephone     | Andy      | Jones         | 2.95   |
+| Telephone     | Kevin     | Frank         | 2.95   |
+| Telephone     | Hugh      | Andrews       | 2.95   |
+| Telephone     | Daniel    | Bush          | 2.95   |
+| Telephone     | Bill      | Mantela       | 2.95   |
+| Telephone     | Bill      | Mantela       | 2.95   |
+| Telephone     | Betty     | Andrews       | 2.95   |
+| Telephone     | Hope      | Bush          | 2.95   |
+| Telephone     | Hope      | Bush          | 2.95   |
+| Telephone     | Max       | Frank         | 2.95   |
+| Telephone     | Kathy     | Stevens       | 2.95   |
+| Telephone     | Denise    | Peterson      | 2.95   |
+| Telephone     | Holly     | Dole          | 2.95   |
+| Telephone     | Patty     | Randolph      | 2.95   |
+| Telephone     | Jeniffer  | Kemp          | 2.95   |
+| Telephone     | Jeniffer  | Kemp          | 2.95   |
+| Telephone     | Lisa      | Van Morrison  | 2.95   |
+| Telephone     | Lisa      | Van Morrison  | 2.95   |
+| Telephone     | Carla     | Stevens       | 2.95   |
+| Telephone     | Ian       | Bush          | 2.95   |
+| Telephone     | Alice     | Kemp          | 2.95   |
+| Telephone     | Pauline   | Bush          | 2.95   |
+| Telephone     | Pauline   | Bush          | 2.95   |
+| Telephone     | Patty     | Howard        | 2.95   |
+| Telephone     | Patty     | Howard        | 2.95   |
+| Telephone     | Patty     | Howard        | 2.95   |
+| Telephone     | Maggie    | Kemp          | 2.95   |
+| Telephone     | Anthony   | Stevens       | 2.95   |
+| Telephone     | Anita     | Randolph      | 2.95   |
+| Telephone     | Ophelia   | OLeary        | 2.95   |
+| Telephone     | Terri     | Randolph      | 2.95   |
+| Telephone     | Samantha  | Frank         | 2.95   |
+| Telephone     | Samantha  | Frank         | 2.95   |
+| Telephone     | Veronica  | Dole          | 2.95   |
+| Towel         | Eric      | Locicero      | 8.78   |
+| Towel         | Terri     | Andrews       | 8.78   |
+| Towel         | Victor    | Peterson      | 8.78   |
+| Towel         | Victor    | Peterson      | 8.78   |
+| Towel         | Veronica  | Bush          | 8.78   |
+| Towel         | Fritz     | Grant         | 8.78   |
+| Towel         | Ted       | Howard        | 8.78   |
+| Towel         | Earl      | Dole          | 8.78   |
+| Towel         | Earl      | Dole          | 8.78   |
+| Towel         | Earl      | Dole          | 8.78   |
+| Towel         | Bianca    | Grant         | 8.78   |
+| Towel         | Bianca    | Grant         | 8.78   |
+| Towel         | Barry     | Jones         | 8.78   |
+| Towel         | Barry     | Jones         | 8.78   |
+| Towel         | Patty     | Noose         | 8.78   |
+| Towel         | Patty     | Carlucchi     | 8.78   |
+| Towel         | Anita     | Carlucchi     | 8.78   |
+| Towel         | Anita     | Carlucchi     | 8.78   |
+| Towel         | Eric      | Locicero      | 8.78   |
+| Towel         | Florence  | Carlucchi     | 8.78   |
+| Towel         | Andy      | Peterson      | 8.78   |
+| Towel         | Ulysses   | Peterson      | 8.78   |
+| Towel         | Pauline   | Everett       | 8.78   |
+| Towel         | Mary      | Van Morrison  | 8.78   |
+| Towel         | Larry     | Randolph      | 8.78   |
+| Towel         | Terri     | Noose         | 8.78   |
+| Towel         | Pauline   | Smith         | 8.78   |
+| Towel         | Erica     | Grant         | 8.78   |
+| Towel         | Walter    | Frank         | 8.78   |
+| Towel         | Margaret  | Van Morrison  | 8.78   |
+| Towel         | Hope      | Stevens       | 8.78   |
+| Towel         | Hope      | Stevens       | 8.78   |
++---------------+-----------+---------------+--------+
+|     NAME      |   FNAME   |     LNAME     | PRICE  |
++---------------+-----------+---------------+--------+
+| Towel         | Hope      | Stevens       | 8.78   |
+| Towel         | Daniel    | Bush          | 8.78   |
+| Towel         | Daniel    | Bush          | 8.78   |
+| Towel         | Maggie    | OLeary        | 8.78   |
+| Towel         | Maggie    | OLeary        | 8.78   |
+| Towel         | Betty     | Andrews       | 8.78   |
+| Towel         | Betty     | Andrews       | 8.78   |
+| Towel         | Victor    | Peterson      | 8.78   |
+| Towel         | Victor    | Peterson      | 8.78   |
+| Towel         | Max       | Peterson      | 8.78   |
+| Towel         | Hope      | Bush          | 8.78   |
+| Towel         | Margaret  | Everett       | 8.78   |
+| Towel         | Anthony   | Frank         | 8.78   |
+| Towel         | Hope      | Smith         | 8.78   |
+| Towel         | Hope      | Smith         | 8.78   |
+| Towel         | Peter     | Howard        | 8.78   |
+| Towel         | Peter     | Howard        | 8.78   |
+| Towel         | Holly     | Dole          | 8.78   |
+| Towel         | Patty     | Randolph      | 8.78   |
+| Towel         | Patty     | Randolph      | 8.78   |
+| Towel         | Andy      | OLeary        | 8.78   |
+| Towel         | Jeniffer  | Kemp          | 8.78   |
+| Towel         | Lisa      | Van Morrison  | 8.78   |
+| Towel         | Lisa      | Van Morrison  | 8.78   |
+| Towel         | Ceasar    | Locicero      | 8.78   |
+| Towel         | David     | Howard        | 8.78   |
+| Towel         | Patty     | Howard        | 8.78   |
+| Towel         | Maggie    | Kemp          | 8.78   |
+| Towel         | Maggie    | Kemp          | 8.78   |
+| Towel         | Anthony   | Stevens       | 8.78   |
+| Towel         | Anita     | Randolph      | 8.78   |
+| Towel         | Paul      | Van Morrison  | 8.78   |
+| Towel         | Paul      | Van Morrison  | 8.78   |
+| Towel         | Ophelia   | OLeary        | 8.78   |
+| Towel         | Rex       | Mantela       | 8.78   |
+| Towel         | Terri     | Randolph      | 8.78   |
+| Towel         | Samantha  | Frank         | 8.78   |
+| Towel         | Victor    | Frank         | 8.78   |
++---------------+-----------+---------------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

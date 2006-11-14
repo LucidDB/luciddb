@@ -46,22 +46,38 @@ public class LoptJoinTree
 
     //~ Constructors -----------------------------------------------------------
 
-    // creates a jointree consisting of a single node
+    /**
+     * Creates a jointree consisting of a single node
+     * 
+     * @param joinTree RelNode corresponding to the single node
+     * @param factorId factor id of the node
+     */
     public LoptJoinTree(RelNode joinTree, int factorId)
     {
         this.joinTree = joinTree;
         factorTree = new BinaryTree(factorId);
     }
 
-    // associates the factor ids with a jointree
+    /**
+     * Associates the factor ids with a jointree
+     * 
+     * @param joinTree RelNodes corresponding to the join tree
+     * @param factorTree tree of the factor ids
+     */
     public LoptJoinTree(RelNode joinTree, BinaryTree factorTree)
     {
         this.joinTree = joinTree;
         this.factorTree = factorTree;
     }
 
-    // associates the factor ids with a jointree given the factors
-    // corresponding to the left and right subtrees of the join
+    /**
+     * Associates the factor ids with a jointree given the factors corresponding
+     * to the left and right subtrees of the join
+     * 
+     * @param joinTree RelNodes corresponding to the join tree
+     * @param leftFactorTree tree of the factor ids for left subtree
+     * @param rightFactorTree tree of the factor ids for the right subtree
+     */
     public LoptJoinTree(
         RelNode joinTree,
         BinaryTree leftFactorTree,
@@ -106,7 +122,9 @@ public class LoptJoinTree
 
     //~ Inner Classes ----------------------------------------------------------
 
-    // Simple binary tree class that stores an id in the leaf nodes
+    /**
+     * Simple binary tree class that stores an id in the leaf nodes
+     */
     private class BinaryTree
     {
         private int id;

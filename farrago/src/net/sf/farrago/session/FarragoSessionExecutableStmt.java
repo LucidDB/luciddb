@@ -90,6 +90,12 @@ public interface FarragoSessionExecutableStmt
     public Set<String> getReferencedObjectIds();
 
     /**
+     * @return the modification time of an object accessed by this statement,
+     *   or null if the modification time is not available
+     */
+    public String getReferencedObjectModTime(String mofid);
+
+    /**
      * @return map of access modes for all tables referenced
      */
     public TableAccessMap getTableAccessMap();

@@ -138,6 +138,11 @@ public interface FarragoSessionRuntimeContext
      * @return FarragoRepos for use by extension projects
      */
     public FarragoRepos getRepos();
+
+    /**
+     * @return queue of warnings posted to this runtime context
+     */
+    public FarragoWarningQueue getWarningQueue();
 }
 
 // End FarragoSessionRuntimeContext.java

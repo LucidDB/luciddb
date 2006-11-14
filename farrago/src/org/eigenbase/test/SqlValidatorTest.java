@@ -2424,7 +2424,13 @@ public class SqlValidatorTest
      */
     public void testLarge()
     {
-        final int x = 1000;
+        int x = 1000;
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            // NOTE jvs 1-Nov-2006:  Default thread stack size
+            // on Windows is too small, so avoid stack overflow
+            x /= 3;
+        }
+
         // E.g. large = "deptno * 1 + deptno * 2 + deptno * 3".
         String large = list(" + ", "deptno * ", x);
         check("select " + large + "from emp");

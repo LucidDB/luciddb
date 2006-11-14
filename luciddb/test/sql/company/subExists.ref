@@ -1,0 +1,364 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Sub query tests: Exists
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Uncorrelated
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where EXISTS (select deptno from dept where dname='Marketing')
+. . . . . . . . > order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Andrews   |
+| Brown     |
+| Bush      |
+| Fratz     |
+| Guy       |
+| Jones     |
+| Nife      |
+| Reynolds  |
+| Roy       |
+| Webber    |
+| Williams  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where EXISTS (select deptno from dept where dname='Bogus')
+. . . . . . . . > order by 1;
++--------+
+| LNAME  |
++--------+
++--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where NOT EXISTS (select deptno from dept where dname='Marketing')
+. . . . . . . . > order by 1;
++--------+
+| LNAME  |
++--------+
++--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where NOT EXISTS (select deptno from dept where dname='Bogus')
+. . . . . . . . > order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Andrews   |
+| Brown     |
+| Bush      |
+| Fratz     |
+| Guy       |
+| Jones     |
+| Nife      |
+| Reynolds  |
+| Roy       |
+| Webber    |
+| Williams  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Correlated
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where EXISTS (select deptno from dept where dname='Marketing'
+. . . . . . . . >   and dept.deptno=emp.deptno)
+. . . . . . . . > order by 1;
++---------+
+|  LNAME  |
++---------+
+| Webber  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where NOT EXISTS (select deptno from dept where dname='Marketing'
+. . . . . . . . >   and dept.deptno=emp.deptno)
+. . . . . . . . > order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Andrews   |
+| Brown     |
+| Bush      |
+| Fratz     |
+| Guy       |
+| Jones     |
+| Nife      |
+| Reynolds  |
+| Roy       |
+| Williams  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where EXISTS (select deptno from dept where dname in ('Marketing','Development')
+. . . . . . . . >   and dept.deptno=emp.deptno)
+. . . . . . . . > order by 1;
++----------+
+|  LNAME   |
++----------+
+| Andrews  |
+| Bush     |
+| Guy      |
+| Jones    |
+| Webber   |
++----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where NOT EXISTS (select deptno from dept where dname in ('Marketing','Development')
+. . . . . . . . >   and dept.deptno=emp.deptno)
+. . . . . . . . > order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Brown     |
+| Fratz     |
+| Nife      |
+| Reynolds  |
+| Roy       |
+| Williams  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- non equality conditions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where EXISTS (select deptno from dept where dname='Marketing'
+. . . . . . . . >   and dept.deptno>emp.deptno)
+. . . . . . . . > order by 1;
++--------+
+| LNAME  |
++--------+
+| Fratz  |
++--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where NOT EXISTS (select deptno from dept where dname='Marketing'
+. . . . . . . . >   and dept.deptno>=emp.deptno)
+. . . . . . . . > order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Andrews   |
+| Brown     |
+| Bush      |
+| Guy       |
+| Jones     |
+| Nife      |
+| Reynolds  |
+| Roy       |
+| Williams  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where EXISTS (select deptno from dept where dname='Marketing'
+. . . . . . . . >   and dept.deptno<emp.deptno)
+. . . . . . . . > order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Andrews   |
+| Brown     |
+| Bush      |
+| Guy       |
+| Jones     |
+| Nife      |
+| Reynolds  |
+| Roy       |
+| Williams  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where NOT EXISTS (select deptno from dept where dname='Marketing'
+. . . . . . . . >   and dept.deptno<=emp.deptno)
+. . . . . . . . > order by 1;
++--------+
+| LNAME  |
++--------+
+| Fratz  |
++--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where EXISTS (select locid from dept where dname='Marketing'
+. . . . . . . . >   and dept.deptno+10 < emp.deptno - 10)
+. . . . . . . . > order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Brown     |
+| Reynolds  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LNAME from emp
+. . . . . . . . > where NOT EXISTS (select deptno from dept where dname='Marketing'
+. . . . . . . . >   and dept.deptno+10>=emp.deptno-10)
+. . . . . . . . > order by 1;
++-----------+
+|   LNAME   |
++-----------+
+| Brown     |
+| Reynolds  |
++-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multi variable correlation
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from EMP O
+. . . . . . . . > where EXISTS
+. . . . . . . . >   (select * from EMP I
+. . . . . . . . >   where I.EMPNO=O.EMPNO+1
+. . . . . . . . >   and I.SEX=O.SEX)
+. . . . . . . . > order by 1;
++--------+--------+---------+------+---------+----------+--------+--------+-------------+-----------+
+| EMPNO  | FNAME  |  LNAME  | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |   HOBBY   |
++--------+--------+---------+------+---------+----------+--------+--------+-------------+-----------+
+| 100    | Bill   | Bush    | M    | 30      |          | HQ     | 50000  |             | Piano     |
+| 103    | Frank  | Webber  | M    | 20      | 102      | MP     | 50000  |             | Piano     |
+| 104    | Fritz  | Fratz   | M    | 10      | 100      | HQ     | 50000  |             | Rugby     |
+| 105    | Rich   | Guy     | M    | 30      | 102      | HQ     | 50000  |             | Gambling  |
+| 106    | Rob    | Roy     | M    | 40      | 102      | SF     | 50000  | 7           | Karate    |
++--------+--------+---------+------+---------+----------+--------+--------+-------------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from EMP O
+. . . . . . . . > where EXISTS
+. . . . . . . . >   (select * from EMP I
+. . . . . . . . >   where I.EMPNO>O.EMPNO
+. . . . . . . . >   and I.SEX=O.SEX)
+. . . . . . . . > order by 1;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |                |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from EMP O
+. . . . . . . . > where EXISTS
+. . . . . . . . >   (select * from EMP I
+. . . . . . . . >   where I.EMPNO>O.EMPNO
+. . . . . . . . >   and I.SEX<O.SEX)
+. . . . . . . . > order by 1;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from EMP O
+. . . . . . . . > where EXISTS
+. . . . . . . . >   (select * from EMP I
+. . . . . . . . >   where I.EMPNO>O.EMPNO
+. . . . . . . . >   and I.SEX<>O.SEX)
+. . . . . . . . > order by 1;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |                |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from EMP O
+. . . . . . . . > where NOT EXISTS
+. . . . . . . . >   (select * from EMP I
+. . . . . . . . >   where I.EMPNO>O.EMPNO
+. . . . . . . . >   and I.SEX<O.SEX)
+. . . . . . . . > order by 1;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+--------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  | HOBBY  |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+--------+
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby  |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |        |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |        |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from EMP O
+. . . . . . . . > where NOT EXISTS
+. . . . . . . . >   (select * from EMP I
+. . . . . . . . >   where I.EMPNO>O.EMPNO
+. . . . . . . . >   and I.SEX<>O.SEX)
+. . . . . . . . > order by 1;
++--------+--------+--------+------+---------+----------+--------+--------+-------------+--------+
+| EMPNO  | FNAME  | LNAME  | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  | HOBBY  |
++--------+--------+--------+------+---------+----------+--------+--------+-------------+--------+
+| 110    | Jill   | Jones  | F    | 30      | 101      | MP     | 50000  |             |        |
++--------+--------+--------+------+---------+----------+--------+--------+-------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multi variable correlation with aggregate on top
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*),sum(SAL) from EMP O
+. . . . . . . . > where EXISTS
+. . . . . . . . >   (select * from EMP I
+. . . . . . . . >   where I.EMPNO=O.EMPNO+1
+. . . . . . . . >   and I.SEX=O.SEX);
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 5       | 250000  |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*),sum(SAL) from EMP O
+. . . . . . . . > where EXISTS
+. . . . . . . . >   (select * from EMP I
+. . . . . . . . >   where I.EMPNO=O.EMPNO+1
+. . . . . . . . >   and I.SEX=O.SEX) group by deptno order by 1;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 1       | 50000   |
+| 1       | 50000   |
+| 1       | 50000   |
+| 2       | 100000  |
++---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Not Exists with an EquJoin under the Exists part
+0: jdbc:luciddb:> select deptno from emp
+. . . . . . . . > where not exists (
+. . . . . . . . >   select 1 from dept d1, dept d2
+. . . . . . . . >   where d1.deptno = d2.deptno and d1.deptno = emp.deptno);
++---------+
+| DEPTNO  |
++---------+
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Exists with an OR condition on outer Query Table ( Bugid 3086 )
+0: jdbc:luciddb:> select deptno from emp
+. . . . . . . . > where exists (
+. . . . . . . . >   select * from dept ) or emp.deptno > 10
+. . . . . . . . > order by 1;
++---------+
+| DEPTNO  |
++---------+
+| 10      |
+| 20      |
+| 30      |
+| 30      |
+| 30      |
+| 30      |
+| 40      |
+| 40      |
+| 40      |
+| 50      |
+| 50      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

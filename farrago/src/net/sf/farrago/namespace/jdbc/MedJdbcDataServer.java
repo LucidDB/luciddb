@@ -70,6 +70,7 @@ class MedJdbcDataServer
     public static final String PROP_EXT_OPTIONS = "EXTENDED_OPTIONS";
     public static final String PROP_TYPE_SUBSTITUTION = "TYPE_SUBSTITUTION";
     public static final String PROP_TYPE_MAPPING = "TYPE_MAPPING";
+    public static final String PROP_LOGIN_TIMEOUT = "LOGIN_TIMEOUT";
 
     // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
@@ -85,6 +86,7 @@ class MedJdbcDataServer
     String catalogName;
     String schemaName;
     String [] tableTypes;
+    String loginTimeout;
     boolean supportsMetaData;
     DatabaseMetaData databaseMetaData;
 
@@ -110,6 +112,7 @@ class MedJdbcDataServer
         String password = props.getProperty(PROP_PASSWORD);
         schemaName = props.getProperty(PROP_SCHEMA_NAME);
         catalogName = props.getProperty(PROP_CATALOG_NAME);
+        loginTimeout = props.getProperty(PROP_LOGIN_TIMEOUT);
 
         if (getBooleanProperty(props, PROP_EXT_OPTIONS, false)) {
             connectProps = (Properties) props.clone();
@@ -121,6 +124,14 @@ class MedJdbcDataServer
             tableTypes = null;
         } else {
             tableTypes = tableTypeString.split(",");
+        }
+
+        if (loginTimeout != null) {
+            try {
+                DriverManager.setLoginTimeout(Integer.parseInt(loginTimeout));
+            } catch (NumberFormatException ne) {
+                // ignore the timeout
+            }
         }
 
         if (connectProps != null) {
@@ -168,6 +179,7 @@ class MedJdbcDataServer
         props.remove(PROP_TYPE_SUBSTITUTION);
         props.remove(PROP_TYPE_MAPPING);
         props.remove(PROP_TABLE_TYPES);
+        props.remove(PROP_LOGIN_TIMEOUT);
     }
 
     // implement FarragoMedDataServer

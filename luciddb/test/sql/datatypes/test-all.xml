@@ -2,7 +2,7 @@
   <target name="datatypes-all">
     <test-suite name="datatypes-all">
 
-      <test-suite-call testfile="test-csvjdbc.xml">
+      <test-suite-call testfile="test.xml">
         <test-suite-modifier value="csvjdbc"/>
         <property name="foreign.db" value="csvjdbc"/>
       </test-suite-call>

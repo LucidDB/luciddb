@@ -26,11 +26,13 @@ import java.util.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 import org.eigenbase.resource.EigenbaseResource;
+
+import net.sf.farrago.catalog.*;
 
 
 /**
@@ -192,6 +194,16 @@ public interface FarragoSessionPersonality
      */
     public FarragoSessionRuntimeContext newRuntimeContext(
         FarragoSessionRuntimeParams params);
+
+    /**
+     * Creates a new type factory.
+     * 
+     * @param repos a repository containing Farrago metadata
+     * 
+     * @return a new type factory
+     */
+    public RelDataTypeFactory newTypeFactory(
+        FarragoRepos repos);
 
     // TODO jvs 6-Apr-2005:  get rid of this once Aspen stops using it
     public void validate(

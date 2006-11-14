@@ -356,7 +356,23 @@ void BTreeBuilder::truncate(
     }
     BTreePageLock pageLock;
     pageLock.accessSegment(treeDescriptor.segmentAccessor);
+
     pageLock.lockExclusive(getRootPageId());
+
+    // Try a read-only access to see if we can skip dirtying a page.
+    BTreeNode const &rootReadOnly = pageLock.getNodeForRead();
+    if (!rootReadOnly.height) {
+        if (rootless) {
+            pageLock.deallocateLockedPage();
+            treeDescriptor.rootPageId = NULL_PAGE_ID;
+            return;
+        }
+        if (!rootReadOnly.nEntries) {
+            // root is already empty
+            return;
+        }
+    }
+    
     BTreeNode &root = pageLock.getNodeForWrite();
     if (root.height) {
         truncateChildren(root);

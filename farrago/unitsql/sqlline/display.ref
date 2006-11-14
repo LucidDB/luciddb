@@ -14,6 +14,16 @@ Error: Parser Error: No default schema specified; execute SET SCHEMA or use full
 0: jdbc:farrago:> drop table cylon;
 Error: org.eigenbase.sql.parser.SqlParseException: No default schema specified; execute SET SCHEMA or use fully qualified names (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> --  default:  show warnings
+0: jdbc:farrago:> !closeall
+sqlline> !connect jdbc:farrago:;clientProcessId=bogus sa tiger
+Warning: clientProcessId 'bogus' could not be parsed as an integer (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- suppress warnings
+0: jdbc:farrago:> !set showwarnings false
+0: jdbc:farrago:> !closeall
+sqlline> !connect jdbc:farrago:;clientProcessId=bogus sa tiger
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- display numbers with rounding to limited scale
 0: jdbc:farrago:> !set numberformat #.###
 0: jdbc:farrago:> 

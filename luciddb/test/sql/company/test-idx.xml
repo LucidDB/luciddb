@@ -25,6 +25,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/download.sql"/>
       </test>
 
+      <test name="rebuild" requiresSuccess="download">
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/rebuild.sql"/>
+      </test>
+
       <test name="joinEq" requiresSuccess="download">
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinEq.sql"/>
       </test>
@@ -47,11 +51,7 @@
       </test>
 
       <test name="agg" requiresSuccess="download">
-        <!-- TODO: FRG-115, FRG-165 -->
-        <!-- FRG-52, LDB-121 -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
+        <!-- FRG-115, FRG-165, FRG-52, LDB-121 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/agg.sql"/>
       </test>
 
@@ -64,12 +64,8 @@
       </test>
 
       <test name="agg_cust" requiresSuccess="download">
-        <!-- TODO: FRG-165 -->
-        <!-- FNL-42, LDB-121 -->
+        <!-- FRG-165, FNL-42, LDB-121 -->
         <!-- to_number not supported yet, commented out -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/agg_cust.sql"/>
       </test>
 
@@ -83,8 +79,10 @@
       </test>
 
       <test name="aggDistinct" requiresSuccess="download">
+        <!-- FRG-229 -->
+        <!-- subquery in ORDER BY not supported yet -->
         <test-metadata>
-          <notImplemented>true</notImplemented>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggDistinct.sql"/>
       </test>
@@ -107,11 +105,10 @@
       </test>
 
       <test name="scalarSubquery" requiresSuccess="download">
-        <!-- TODO: FRG-144 -->
-        <!-- Subqueries not completely supported -->
-        <!-- ONEROW and lower not supported yet -->
+        <!-- FRG-144 -->
+        <!-- some subqueries not implemented yet -->
         <test-metadata>
-          <notImplemented>true</notImplemented>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/scalarSubquery.sql"/>
       </test>
@@ -125,21 +122,16 @@
       </test>
 
       <test name="subExists" requiresSuccess="download">
-        <test-metadata>
-          <notImplemented>true</notImplemented>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/subExists.sql"/>
       </test>
 
       <test name="subIn" requiresSuccess="download">
-        <!-- subqueries not completely supported yet -->
-        <test-metadata>
-          <notImplemented>true</notImplemented>
-        </test-metadata>
+        <!-- ALL not implemented -->
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/subIn.sql"/>
       </test>
 
       <test name="subMisc" requiresSuccess="download">
+        <!-- ANY and ALL not implemented -->
         <test-metadata>
           <notImplemented>true</notImplemented>
         </test-metadata>
@@ -147,10 +139,6 @@
       </test>
 
       <test name="subMult" requiresSuccess="download">
-        <!-- subqueries not completely supported yet -->
-        <test-metadata>
-          <notImplemented>true</notImplemented>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/subMult.sql"/>
       </test>
 
@@ -161,10 +149,7 @@
       </test>
 
       <test name="aggJoinFilt" requiresSuccess="download">
-        <!-- subqueries and in not supported -->
-        <test-metadata>
-          <notImplemented>true</notImplemented>
-        </test-metadata>
+        <!-- some subqueries not implemented -->
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinFilt.sql"/>
       </test>
 

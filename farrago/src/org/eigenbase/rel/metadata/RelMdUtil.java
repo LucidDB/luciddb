@@ -192,6 +192,27 @@ public class RelMdUtil
         return false;
     }
 
+    public static Boolean areColumnsUnique(RelNode rel, List<RexInputRef> columnRefs)
+    {
+        BitSet colMask = new BitSet();
+        
+        for (int i = 0; i < columnRefs.size(); i++) {
+            colMask.set(columnRefs.get(i).getIndex());
+        }
+        
+        Set<BitSet> uniqueColSets = RelMetadataQuery.getUniqueKeys(rel);
+        if (uniqueColSets == null) {
+            return null;
+        }
+        
+        for (BitSet colSet : uniqueColSets) {
+            if (RelOptUtil.contains(colMask, colSet)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Separates a bitmask representing a join into masks representing the left
      * and right inputs into the join

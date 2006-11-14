@@ -28,10 +28,12 @@ import com.disruptivetech.farrago.rel.*;
 import com.lucidera.lcs.*;
 import com.lucidera.opt.*;
 import com.lucidera.runtime.*;
+import com.lucidera.type.*;
 
 import java.io.*;
 import java.util.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.config.*;
@@ -45,6 +47,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.hep.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
@@ -175,18 +178,7 @@ public class LucidDbSessionPersonality
         planner.addRule(new PushSemiJoinPastFilterRule());
         planner.addRule(new PushSemiJoinPastJoinRule());
         planner.addRule(new ConvertMultiJoinRule());
-        planner.addRule(
-            new LoptOptimizeJoinRule(
-                new RelOptRuleOperand(
-                    ProjectRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(MultiJoinRel.class, null)
-                    }),
-                "with project"));
-        planner.addRule(
-            new LoptOptimizeJoinRule(
-                new RelOptRuleOperand(MultiJoinRel.class, null),
-                "without project"));
+        planner.addRule(new LoptOptimizeJoinRule());
         planner.addRule(new CoerceInputsRule(LcsTableMergeRel.class, false));
 
         planner.removeRule(SwapJoinRule.instance);
@@ -226,48 +218,45 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(new LcsTableDeleteRule());
         builder.addRuleInstance(new LcsTableMergeRule());
         
-        // Remove trivial projects first to avoid having to fire the pull
-        // projection rules below
-        builder.addRuleInstance(new RemoveTrivialProjectRule());
+        // Convert ProjectRels underneath an insert into RenameRels before
+        // applying any merge projection rules.  Otherwise, we end up losing
+        // column information used in error reporting during inserts.
+        if (fennelEnabled) {
+            builder.addRuleInstance(new FennelInsertRenameRule());
+        }
         
         // Execute rules that are needed to do proper join optimization:
-        // 1) push filters past joins
-        // 2) pull up projects above joins
-        // This ensures that ConvertMultiJoinRule can properly flatten
-        // join inputs into as few MultiJoinRels as possible
-        builder.addGroupBegin();
-        
+        // 1) Pull up projects above joins to maximize the number of join
+        //    factors.
+        // 2) Push the projects back down so row scans are projected and also so
+        //    we can determine which fields are projected above each join.
+        // 3) Push down filters so they're closest to the RelNode they apply
+        //    to.
+        // 4) Convert the join inputs into MultiJoinRels and also pull projects
+        //    back up, but only the ones above joins so we preserve projects
+        //    on top of row scans but maximize the number of join factors.
+        // 5) Optimize join ordering.
+   
+        // Pull up projects
+        builder.addGroupBegin();      
         builder.addRuleInstance(new RemoveTrivialProjectRule());
-
-        // pull up projections above joins
         builder.addRuleInstance(
-            new PullUpProjectsAboveJoinRule(
-                new RelOptRuleOperand(
-                    JoinRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(ProjectRel.class, null),
-                        new RelOptRuleOperand(ProjectRel.class, null)
-                    }),
-                "with two ProjectRel children"));
+            PullUpProjectsAboveJoinRule.instanceTwoProjectChildren);
         builder.addRuleInstance(
-            new PullUpProjectsAboveJoinRule(
-                new RelOptRuleOperand(
-                    JoinRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(ProjectRel.class, null)
-                    }),
-                "with ProjectRel on left"));
+            PullUpProjectsAboveJoinRule.instanceLeftProjectChild);
         builder.addRuleInstance(
-            new PullUpProjectsAboveJoinRule(
-                new RelOptRuleOperand(
-                    JoinRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(RelNode.class, null),
-                        new RelOptRuleOperand(ProjectRel.class, null)
-                    }),
-                "with ProjectRel on right"));
+            PullUpProjectsAboveJoinRule.instanceRightProjectChild);
+        // push filter past project to move the project up in the tree
+        builder.addRuleInstance(new PushFilterPastProjectRule());
+        // merge any projects we pull up
+        builder.addRuleInstance(new MergeProjectRule(true));
+        builder.addGroupEnd();
         
-        // Push filters down.
+        // Push the projects back down
+        applyPushDownProjectRules(builder);
+        
+        // Push filters down
+        builder.addGroupBegin();
         builder.addRuleInstance(new PushFilterPastSetOpRule());
         builder.addRuleInstance(new PushFilterPastProjectRule());
         builder.addRuleInstance(
@@ -281,39 +270,46 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(
             new PushFilterPastJoinRule(
                 new RelOptRuleOperand(JoinRel.class, null),
-                "without filter above join"));
-        
+                "without filter above join"));      
         // merge filters
         builder.addRuleInstance(new MergeFilterRule());
-        builder.addGroupEnd();
+        builder.addGroupEnd();     
 
         // Convert 2-way joins to n-way joins.  Do the conversion bottom-up
         // so once a join is converted to a MultiJoinRel, you're ensured that
-        // all of its children have been converted to MultiJoinRels
-        builder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
-        builder.addRuleInstance(new ConvertMultiJoinRule());
-
+        // all of its children have been converted to MultiJoinRels.  At the
+        // same time, pull up projects that are on top of MultiJoinRels so the
+        // projects are above their parent joins.  Since we're pulling up
+        // projects, we need to also merge any projects we generate as a
+        // result of the pullup.
+        //
+        // These two rules are applied within a subprogram so they can be
+        // applied one after the other in lockstep fashion.
+        HepProgramBuilder subprogramBuilder = new HepProgramBuilder();
+        subprogramBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
+        subprogramBuilder.addMatchLimit(1);       
+        subprogramBuilder.addRuleInstance(new ConvertMultiJoinRule());
+        subprogramBuilder.addRuleInstance(
+            PullUpProjectsOnTopOfMultiJoinRule.instanceTwoProjectChildren);
+        subprogramBuilder.addRuleInstance(
+            PullUpProjectsOnTopOfMultiJoinRule.instanceLeftProjectChild);
+        subprogramBuilder.addRuleInstance(
+            PullUpProjectsOnTopOfMultiJoinRule.instanceRightProjectChild);
+        subprogramBuilder.addRuleInstance(new MergeProjectRule(true));
+        builder.addSubprogram(subprogramBuilder.createProgram());
+        
+        // Push projection information in the remaining projections that sit
+        // on top of MultiJoinRels into the MultiJoinRels.  These aren't
+        // handled by PullUpProjectsOnTopOfMultiJoinRule because these
+        // projects are not beneath joins.
+        builder.addRuleInstance(new PushProjectIntoMultiJoinRule());
+        
         // Optimize join order; this will spit back out all 2-way joins and
-        // semijoins.  Note that the match order is still bottom-up, so we
+        // semijoins.  Note that the match order is bottom-up, so we
         // can optimize lower-level joins before their ancestors.  That allows
         // ancestors to have better cost info to work with (well, eventually).
-        // First try to apply the rule matching against a projection, so we
-        // can preserve the original projection.  Then, try matching without
-        // the projection to handle the cases where the projection has been
-        // trivially removed.  We want to try and preserve the original
-        // projection so we can push projections past joins.
-        builder.addRuleInstance(
-            new LoptOptimizeJoinRule(
-                new RelOptRuleOperand(
-                    ProjectRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(MultiJoinRel.class, null)
-                    }),
-                "with project"));
-        builder.addRuleInstance(
-            new LoptOptimizeJoinRule(
-                new RelOptRuleOperand(MultiJoinRel.class, null),
-                "without project"));
+        builder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
+        builder.addRuleInstance(new LoptOptimizeJoinRule()); 
         builder.addMatchOrder(HepMatchOrder.ARBITRARY);
 
         // Convert filters to bitmap index searches and boolean operators.  We
@@ -324,46 +320,27 @@ public class LucidDbSessionPersonality
         // but once we start taking more kinds of join factors, it won't be.)
         builder.addGroupBegin();
         builder.addRuleInstance(new PushSemiJoinPastFilterRule());
+        builder.addRuleInstance(new PushSemiJoinPastProjectRule());
         builder.addRuleInstance(new PushSemiJoinPastJoinRule());
         builder.addGroupEnd();
 
         // Convert semijoins to physical index access.
         builder.addRuleClass(LcsIndexSemiJoinRule.class);
 
-        // Remove any semijoins that couldn't be converted
+        // TODO zfong 10/27/06 - This rule is currently a no-op because we
+        // won't generate a semijoin if it can't be converted to physical
+        // RelNodes.  But it's currently left in place in case of bugs.
+        // In the future, change it to a rule that converts the leftover
+        // SemiJoinRel to a pattern that can be processed by LhxSemiJoinRule so
+        // we instead use hash semijoins to process the semijoin rather than
+        // removing the semijoin, which could result in an incorrect query
+        // result.
         builder.addRuleInstance(new RemoveSemiJoinRule());
     
-        builder.addGroupBegin();
-        builder.addRuleInstance(new RemoveTrivialProjectRule());
-        builder.addRuleInstance(
-            new PushProjectPastSetOpRule(
-                LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
-        // Apply PushProjectPastJoinRule while there are no physical joinrels
-        // since the rule only matches on JoinRel.
-        builder.addRuleInstance(
-            new PushProjectPastJoinRule(
-                LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
-        // Push project past filter so that we can reduce the number
-        // of clustered indexes accessed by row scan.  There are two rule
-        // patterns because the second is needed to handle the case where
-        // the projection has been trivially removed but we still need to
-        // pull special columns referenced in filters into a new projection
-        builder.addRuleInstance(
-            new PushProjectPastFilterRule(
-                new RelOptRuleOperand(
-                    ProjectRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(FilterRel.class, null)
-                    }),
-                LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
-                "with project"));
-        builder.addRuleInstance(
-            new PushProjectPastFilterRule(
-                new RelOptRuleOperand(FilterRel.class, null),
-                LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
-                "without project"));
-        builder.addRuleInstance(new MergeProjectRule());
-        builder.addGroupEnd();
+        // Now that we've finished join ordering optimization, have converted
+        // filters where possible, and have converted semijoins, push projects
+        // back down.
+        applyPushDownProjectRules(builder);
 
         // Apply physical projection to row scans, eliminating access
         // to clustered indexes we don't need.
@@ -515,6 +492,43 @@ public class LucidDbSessionPersonality
 
         return builder.createProgram();
     }
+    
+    /**
+     * Applies rules that push filters past various RelNodes.
+     * 
+     * @param builder HEP program builder
+     */
+    private void applyPushDownProjectRules(HepProgramBuilder builder)
+    {
+        builder.addGroupBegin();
+        builder.addRuleInstance(new RemoveTrivialProjectRule());
+        builder.addRuleInstance(
+            new PushProjectPastSetOpRule(
+                LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
+        builder.addRuleInstance(
+            new PushProjectPastJoinRule(
+                LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
+        // Rules to push projects past filters.  There are two rule
+        // patterns because the second is needed to handle the case where
+        // the projection has been trivially removed but we still need to
+        // pull special columns referenced in filters into a new projection.
+        builder.addRuleInstance(
+            new PushProjectPastFilterRule(
+                new RelOptRuleOperand(
+                    ProjectRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(FilterRel.class, null)
+                    }),
+                LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
+                "with project"));
+        builder.addRuleInstance(
+            new PushProjectPastFilterRule(
+                new RelOptRuleOperand(FilterRel.class, null),
+                LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
+                "without project"));
+        builder.addRuleInstance(new MergeProjectRule(true));
+        builder.addGroupEnd();
+    }
 
     //~ Inner Classes ----------------------------------------------------------
 
@@ -614,6 +628,13 @@ public class LucidDbSessionPersonality
             new LucidDbPreparingStmt(stmtValidator);
         initPreparingStmt(stmt);
         return stmt;
+    }
+
+    // implement FarragoSessionPersonality
+    public RelDataTypeFactory newTypeFactory(
+        FarragoRepos repos)
+    {
+        return new LucidDbTypeFactory(repos);
     }
 }
 

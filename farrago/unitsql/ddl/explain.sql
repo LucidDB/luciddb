@@ -39,6 +39,12 @@ select 1 from depts;
 explain plan with type as xml for
 select 1 from depts;
 
+-- Verify rendering of literals in plans
+explain plan for
+values (1, -1.25, 1.0e50, true, 'bonjour', _ISO-8859-1'bonjour', 
+_US-ASCII'bonjour', date '2006-11-08', time '15:05:05', 
+timestamp '2006-11-08 15:05:05', X'CAFEBABE');
+
 -- Apply a tweak to the session personality and verify that
 -- the costing changes accordingly.
 

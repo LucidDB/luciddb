@@ -55,7 +55,7 @@ class FarragoExecutableFennelStmt
     
     protected final RelDataType rowType;
     protected final String xmiFennelPlan;
-    protected final Set<String> referencedObjectIds;
+    private final Map<String, String> referencedObjectTimestampMap;
     private final String streamName;
 
     //~ Constructors -----------------------------------------------------------
@@ -66,14 +66,14 @@ class FarragoExecutableFennelStmt
         String xmiFennelPlan,
         String streamName,
         boolean isDml,
-        Set<String> referencedObjectIds,
+        Map<String, String> referencedObjectTimestampMap,
         TableAccessMap tableAccessMap)
     {
         super(dynamicParamRowType, isDml, tableAccessMap);
 
         this.xmiFennelPlan = xmiFennelPlan;
         this.streamName = streamName;
-        this.referencedObjectIds = referencedObjectIds;
+        this.referencedObjectTimestampMap = referencedObjectTimestampMap;
 
         rowType = preparedRowType;
     }
@@ -89,7 +89,13 @@ class FarragoExecutableFennelStmt
     // implement FarragoSessionExecutableStmt
     public Set<String> getReferencedObjectIds()
     {
-        return referencedObjectIds;
+        return referencedObjectTimestampMap.keySet();
+    }
+
+    // implement FarragoSessionExecutableStmt
+    public String getReferencedObjectModTime(String mofid)
+    {
+        return referencedObjectTimestampMap.get(mofid);
     }
 
     // implement FarragoSessionExecutableStmt

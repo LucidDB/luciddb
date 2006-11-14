@@ -99,11 +99,17 @@ protected:
     SegmentAccessor scratchAccessor;
     BTreeOwnerRootMap *pRootMap;
     SharedBTreeAccessBase pBTreeAccessBase;
+    SharedBTreeReader pBTreeReader;
     
     SharedBTreeReader newReader();
     SharedBTreeWriter newWriter();
     static void copyParamsToDescriptor(
         BTreeDescriptor &,BTreeExecStreamParams const &);
+
+    /**
+     * Forgets the current reader or writer's search, releasing any page locks
+     */
+    virtual void endSearch();
 public:
     // implement ExecStream
     virtual void prepare(BTreeExecStreamParams const &params);

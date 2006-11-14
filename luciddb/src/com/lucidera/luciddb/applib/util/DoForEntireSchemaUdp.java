@@ -43,8 +43,9 @@ public abstract class DoForEntireSchemaUdp {
      * "VIEWS" or "TABLES_AND_VIEWS"
      */
 
-    public static void execute(String sql, String schemaName, String objTypeStr) throws SQLException {
-        
+    public static void execute(String sql, String schemaName, String objTypeStr) 
+        throws SQLException, ApplibException
+    {
         PreparedStatement ps;
         Statement stmt;
         ResultSet rs;
@@ -57,20 +58,15 @@ public abstract class DoForEntireSchemaUdp {
         conn = DriverManager.getConnection("jdbc:default:connection");
         stmt = conn.createStatement();
 
-        // TODO jvs 11-Oct-2006: Get rid of this (borrowed from
-        // FarragoManagementUDR.flushCodeCache) once code cache is brought
-        // under control.  For now, this prevents OOM's from statements like
-        // ANALYZE TABLE which use a lot of reentrant SQL.
-        rs = stmt.executeQuery(
-            "select \"codeCacheMaxBytes\" from "
-            + "sys_fem.\"Config\".\"FarragoConfig\"");
-        rs.next();
-        long savedSetting = rs.getLong(1);
-        rs.close();
-        stmt.executeUpdate(
-            "alter system set \"codeCacheMaxBytes\" = min");
-        
-        
+        // make sure schema exists, print error otherwise (LER-2608)
+        ps = conn.prepareStatement("select SCHEMA_NAME from SYS_ROOT.DBA_TABLES "
+            + "where SCHEMA_NAME = ?");
+        ps.setString(1, schemaName);
+        rs = ps.executeQuery();
+        if (!rs.next()) {
+            throw ApplibResourceObject.get().NoSuchSchema.ex(schemaName);
+        }
+
         // retrieve list of wanted type of objects in schema
         if (objTypeStr.equals("TABLES")) {
             ps = conn.prepareStatement("select SCHEMA_NAME, TABLE_NAME " 
@@ -92,38 +88,28 @@ public abstract class DoForEntireSchemaUdp {
         // split the sql statement around token %TABLE_NAME%
         String parts[] = sql.split("%TABLE_NAME%");
 
-        try {
-        
-            // execute sql statement for all tables and views
-            while (rs.next()) {
-                sw = new StringWriter();
-                stackw = new StackWriter(sw, StackWriter.INDENT_SPACE4);
-                pw = new PrintWriter(stackw);
-                pw.print(parts[0]);
-                StackWriter.printSqlIdentifier(pw, rs.getString(1));
-                pw.print(".");
-                StackWriter.printSqlIdentifier(pw, rs.getString(2));
-                // don't choke on ArrayIndexOOB if %TABLE_NAME% was at the end
-                if (java.lang.reflect.Array.getLength(parts) > 1) {
-                    pw.print(parts[1]);
-                }
-                pw.close();
-
-                // NOTE jvs 11-Oct-2006: I changed this to use executeUpdate so
-                // that if it actually was a query, the user will get an error.
-                // Oscar's old comment was "if anyone is interested in the
-                // result set, we'll have to do a getResultSet.. thing
-                // here. Right now I'm leaving it quiet."
-            
-                stmt.executeUpdate(sw.toString());
+        // execute sql statement for all tables and views
+        while (rs.next()) {
+            sw = new StringWriter();
+            stackw = new StackWriter(sw, StackWriter.INDENT_SPACE4);
+            pw = new PrintWriter(stackw);
+            pw.print(parts[0]);
+            StackWriter.printSqlIdentifier(pw, rs.getString(1));
+            pw.print(".");
+            StackWriter.printSqlIdentifier(pw, rs.getString(2));
+            // don't choke on ArrayIndexOOB if %TABLE_NAME% was at the end
+            if (java.lang.reflect.Array.getLength(parts) > 1) {
+                pw.print(parts[1]);
             }
+            pw.close();
+
+            // NOTE jvs 11-Oct-2006: I changed this to use executeUpdate so
+            // that if it actually was a query, the user will get an error.
+            // Oscar's old comment was "if anyone is interested in the
+            // result set, we'll have to do a getResultSet.. thing
+            // here. Right now I'm leaving it quiet."
             
-        } finally {
-            // TODO jvs 11-Oct-2006:  This should go away together with
-            // the TODO above.
-            stmt.executeUpdate(
-                "alter system set \"codeCacheMaxBytes\" = "
-                + ((savedSetting == -1) ? "max" : Long.toString(savedSetting)));
+            stmt.executeUpdate(sw.toString());
         }
     }
 }

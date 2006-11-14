@@ -56,8 +56,8 @@
 '      IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t2, $t3)], proj#0..3=[{exprs}], $condition=[$t4])'
 '        FennelToIteratorConverter'
 '          FennelCartesianProductRel(leftouterjoin=[false])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOA]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps, lhxdepts
 . . . . . . . . > where lhxemps.deptno = lhxdepts.deptnoA
@@ -155,8 +155,8 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOB]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps, lhxdepts
 . . . . . . . . > where lhxemps.deptno = lhxdepts.deptnoA
@@ -186,7 +186,7 @@
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 '        FennelValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select ename from lhxemps
@@ -209,11 +209,11 @@
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO, INTEGER DEPTNOA, INTEGER DEPTNOB) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[2]], rightKeys=[[2]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[+($t0, $t2)], proj#0..1=[{exprs}], +($0, 1)=[$t3])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOB]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- multiple conditions between the same pair of tables
 0: jdbc:farrago:> explain plan for 
@@ -225,8 +225,8 @@
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[2, 3, 4, 0, 1]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO, INTEGER DEPTNOA, INTEGER DEPTNOB) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[2, 2]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOB]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOB]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps, lhxdepts
 . . . . . . . . > where lhxemps.deptno = lhxdepts.deptnoA and lhxemps.deptno = lhxdepts.deptnoB
@@ -255,9 +255,9 @@
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[3]], rightKeys=[[0]], joinType=[INNER])'
 '      LhxJoinRel(leftKeys=[[2]], rightKeys=[[1]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOB]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXDEPTS2$DEPTNOC, SYS$CLUSTERED_INDEX$LHX$LHXDEPTS2$DEPTNOD]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOB]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS2$DEPTNOC, SYS$CLUSTERED_INDEX$LHXDEPTS2$DEPTNOD]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps, lhxdepts, lhxdepts2
 . . . . . . . . > where lhxemps.deptno = lhxdepts.deptnoB and lhxdepts.deptnoA = lhxdepts2.deptnoC
@@ -297,11 +297,11 @@
 '      LhxJoinRel(leftKeys=[[2]], rightKeys=[[1]], joinType=[INNER])'
 '        LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])'
 '          LhxJoinRel(leftKeys=[[2]], rightKeys=[[1]], joinType=[INNER])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOB]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXDEPTS2$DEPTNOC, SYS$CLUSTERED_INDEX$LHX$LHXDEPTS2$DEPTNOD]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXDEPTS3$DEPTNOE, SYS$CLUSTERED_INDEX$LHX$LHXDEPTS3$DEPTNOF]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXDEPTS4$DEPTNOG, SYS$CLUSTERED_INDEX$LHX$LHXDEPTS4$DEPTNOH]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOB]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS2$DEPTNOC, SYS$CLUSTERED_INDEX$LHXDEPTS2$DEPTNOD]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS3$DEPTNOE, SYS$CLUSTERED_INDEX$LHXDEPTS3$DEPTNOF]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS4$DEPTNOG, SYS$CLUSTERED_INDEX$LHXDEPTS4$DEPTNOH]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps, lhxdepts, lhxdepts2, lhxdepts3, lhxdepts4
 . . . . . . . . > where lhxemps.deptno = lhxdepts.deptnoB and lhxemps.deptno = lhxdepts2.deptnoC
@@ -401,9 +401,9 @@
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0, 1, 2, 3]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEA) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEA, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS2$ENAMEA]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS2$ENAMEA]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps, lhxemps2
 . . . . . . . . > where lhxemps.ename = lhxemps2.enameA
@@ -429,9 +429,9 @@
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0, 1, 2, 3]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEA) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[1, 1]], rightKeys=[[1, 2]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 '        FennelReshapeRel(projection=[[0, 0, 0]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEA, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary", VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS2$ENAMEA]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS2$ENAMEA]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps, lhxemps2
 . . . . . . . . > where lhxemps.ename = cast(lhxemps2.enameA as varchar(40))
@@ -458,9 +458,9 @@
 '    FennelReshapeRel(projection=[[0, 1, 2, 4]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEA) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[3, 1]], rightKeys=[[0, 1]], joinType=[INNER])'
 '        FennelReshapeRel(projection=[[0, 1, 2, 1]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($1):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEA, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS2$ENAMEA]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS2$ENAMEA]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps, lhxemps2
 . . . . . . . . > where cast(lhxemps.ename as varchar(20)) = lhxemps2.enameA
@@ -487,8 +487,8 @@
 '    FennelReshapeRel(projection=[[0, 2, 3, 4]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEA, INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEA, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS2$ENAMEA]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS2$ENAMEA]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps2, lhxemps
 . . . . . . . . > where lhxemps2.enameA = lhxemps.ename
@@ -520,9 +520,9 @@
 '    FennelReshapeRel(projection=[[0, 2, 3, 4]], outputRowType=[RecordType(VARCHAR(60) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ENAMEA, INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[1]], rightKeys=[[3]], joinType=[INNER])'
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(VARCHAR(60) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ENAMEA, VARCHAR(60) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(60) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS2$ENAMEA]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS2$ENAMEA]])'
 '        FennelReshapeRel(projection=[[0, 1, 2, 1]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO, VARCHAR(60) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($1):VARCHAR(60) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps2, lhxemps
 . . . . . . . . > where lhxemps2.enameA = lhxemps.ename
@@ -562,9 +562,9 @@
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0, 1, 2, 3]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEB) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEB, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS3$ENAMEB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps, lhxemps3
 . . . . . . . . > where lhxemps.ename = lhxemps3.enameB
@@ -601,9 +601,9 @@
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(VARCHAR(60) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEA, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEB) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS2$ENAMEA]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS2$ENAMEA]])'
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEB, VARCHAR(60) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(60) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS3$ENAMEB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps2, lhxemps3
 . . . . . . . . > where lhxemps2.enameA = lhxemps3.enameB
@@ -639,8 +639,8 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS3$ENAMEB]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS4$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3, lhxemps4
 . . . . . . . . > where lhxemps3.enameB = lhxemps4.enameC
@@ -664,8 +664,8 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS3$ENAMEB]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS4$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 left outer join lhxemps4
 . . . . . . . . > on lhxemps3.enameB = lhxemps4.enameC
@@ -689,9 +689,9 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]], residual columns=[[0]])'
-'        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', null, _ISO-8859-1']', null }, { _ISO-8859-1'(', _ISO-8859-1'A                   ', _ISO-8859-1'+', null }]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS3$ENAMEB]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS4$ENAMEC]], residual columns=[[0]])'
+'        FennelValuesRel(tuples=[[{ '[', null, ']', null }, { '(', 'A                   ', '+', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 right outer join
 . . . . . . . . >     (select * from lhxemps4 where enameC > 'A' or enameC is null) as lhxemps4
@@ -713,8 +713,8 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[FULL])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS3$ENAMEB]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS4$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 full outer join lhxemps4
 . . . . . . . . > on lhxemps3.enameB = lhxemps4.enameC
@@ -737,9 +737,9 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS3$ENAMEB]])'
 '      FennelRenameRel(fieldNames=[[ENAMEB]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS4$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 intersect select * from lhxemps4
 . . . . . . . . > order by 1;
@@ -758,8 +758,8 @@
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])'
 '      FennelRenameRel(fieldNames=[[ENAMEB]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS4$ENAMEC]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS3$ENAMEB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 except select * from lhxemps4
 . . . . . . . . > order by 1;
@@ -778,9 +778,9 @@
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEB, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEC) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS3$ENAMEB]])'
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEC, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS4$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 inner join lhxemps4
 . . . . . . . . > on lhxemps3.enameB = cast(lhxemps4.enameC as char(20))
@@ -803,11 +803,11 @@
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[UPPER($t0)], proj#0..1=[{exprs}])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS3$ENAMEB]])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#2=[UPPER($t1)], ENAMEC=[$t0], UPPER(CAST($0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary")=[$t2])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS4$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 inner join lhxemps4
 . . . . . . . . > on upper(lhxemps3.enameB) = upper(cast(lhxemps4.enameC as char(20)))
@@ -830,11 +830,11 @@
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#2=[UPPER($t1)], ENAMEB=[$t0], UPPER(CAST($0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary")=[$t2])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS3$ENAMEB]])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#2=[UPPER($t1)], ENAMEC=[$t0], UPPER(CAST($0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary")=[$t2])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS4$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 inner join lhxemps4
 . . . . . . . . > on upper(cast(lhxemps3.enameB as char(20))) = upper(cast(lhxemps4.enameC as char(20)))
@@ -857,9 +857,9 @@
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#2=[UPPER($t1)], ENAMEB=[$t0], UPPER(CAST($0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary")=[$t2])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS3$ENAMEB]])'
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAMEC, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS4$ENAMEC]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 inner join lhxemps4
 . . . . . . . . > on upper(cast(lhxemps3.enameB as char(20))) = cast(lhxemps4.enameC as char(20))
@@ -889,8 +889,8 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[FULL])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS5$EMPNOA]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS6$EMPNOB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps5 full outer join lhxemps6
 . . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB
@@ -912,11 +912,11 @@
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER EMPNOA, INTEGER EMPNOB) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS6$EMPNOB]])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[<>($t0, $t1)], EMPNOA=[$t0], $condition=[$t2])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS5$EMPNOA]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- filter not pushed down
 0: jdbc:farrago:> -- outer join on filter can not be evaluated as post filter
@@ -933,11 +933,11 @@
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[<>($t0, $t1)], EMPNOA=[$t0], <>($0, 2)=[$t2])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS5$EMPNOA]])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS6$EMPNOB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps5 left outer join lhxemps6
 . . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
@@ -969,9 +969,9 @@
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[<>($t0, $t1)], EMPNOA=[$t0], $condition=[$t2])'
 '          FennelToIteratorConverter'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]], residual columns=[[0]])'
-'        FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 0, _ISO-8859-1'+', null }]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS5$EMPNOA]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS6$EMPNOB]], residual columns=[[0]])'
+'        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- filter not pushed down
 0: jdbc:farrago:> -- outer join on filter can not be evaluated as post filter
@@ -988,11 +988,11 @@
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[<>($t0, $t1)], EMPNOA=[$t0], <>($0, 2)=[$t2])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS5$EMPNOA]])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS6$EMPNOB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps5 full outer join lhxemps6
 . . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
@@ -1018,11 +1018,11 @@
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[>($t0, $t0)], proj#0..1=[{exprs}])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS5$EMPNOA]])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS6$EMPNOB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps5 full outer join lhxemps6
 . . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
@@ -1047,11 +1047,11 @@
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[*($t0, $t0)], expr#2=[10], expr#3=[>($t1, $t2)], EMPNOA=[$t0], >(*($0, $0), 10)=[$t3])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS5$EMPNOA]])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS6$EMPNOB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps5 full outer join lhxemps6
 . . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
@@ -1076,8 +1076,8 @@
 '      IterCalcRel(expr#0..1=[{inputs}], expr#2=[>($t0, $t1)], proj#0..1=[{exprs}], $condition=[$t2])'
 '        FennelToIteratorConverter'
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS5$EMPNOA]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS6$EMPNOB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- outer join on filter can not be evaluated as post filter
 0: jdbc:farrago:> -- this should report an error
@@ -1142,7 +1142,7 @@
 '    FennelRenameRel(fieldNames=[[ENAME]])'
 '      LhxAggRel(groupCount=[1])'
 '        FennelRenameRel(fieldNames=[[$f0]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select ename from lhxemps group by ename order by 1;
 'ENAME'
@@ -1160,7 +1160,7 @@
 '    FennelRenameRel(fieldNames=[[DEPTNO]])'
 '      LhxAggRel(groupCount=[1])'
 '        FennelRenameRel(fieldNames=[[$f0]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select deptno from lhxemps group by deptno order by 1;
 'DEPTNO'
@@ -1174,7 +1174,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LhxAggRel(groupCount=[1])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select distinct deptno from lhxemps order by 1;
 'DEPTNO'
@@ -1189,7 +1189,7 @@
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
 '      FennelRenameRel(fieldNames=[[$f0]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select count(deptno) from lhxemps;
 'EXPR$0'
@@ -1203,7 +1203,7 @@
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
 '      LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
 '        FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select count(empno) from lhxemps group by deptno order by 1;
 'EXPR$0'
@@ -1220,7 +1220,7 @@
 '      LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
 '        LhxAggRel(groupCount=[2])'
 '          FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select count(distinct empno) from lhxemps group by deptno order by 1;
 'EXPR$0'
@@ -1237,7 +1237,7 @@
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
 '          FennelToIteratorConverter'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select count(*) from lhxemps;
 'EXPR$0'
@@ -1251,7 +1251,7 @@
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
 '      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
 '        FennelRenameRel(fieldNames=[[$f0]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select count(*) from lhxemps group by deptno order by 1;
 'EXPR$0'
@@ -1271,7 +1271,7 @@
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
 '          FennelToIteratorConverter'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select count(*) from lhxemps;
 'EXPR$0'
@@ -1285,7 +1285,7 @@
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
 '      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
 '        FennelRenameRel(fieldNames=[[$f0]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select count(*) from lhxemps group by deptno order by 1;
 'EXPR$0'
@@ -1306,7 +1306,7 @@
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0) NOT NULL])'
 '      LhxAggRel(groupCount=[1], agg#0=[MAX(1)])'
 '        FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 0: jdbc:farrago:> select max(ename) from lhxemps group by deptno order by 1;
 'EXPR$0'
 'abcdef'
@@ -1324,7 +1324,7 @@
 '  FennelRenameRel(fieldNames=[[EMPNO, EXPR$1, EXPR$2]])'
 '    LhxAggRel(groupCount=[1], agg#0=[MIN(1)], agg#1=[MAX(1)])'
 '      FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select empno, min(ename), max(ename) from lhxemps group by empno;
 Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ' ] (state=,code=0)
@@ -1345,26 +1345,26 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 '  FennelRenameRel(fieldNames=[[ENAME1]])'
 '    LhxAggRel(groupCount=[1])'
 '      FennelRenameRel(fieldNames=[[$f0]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 0: jdbc:farrago:> explain plan for select distinct ename1 from emps1;
 'column0'
 'FennelToIteratorConverter'
 '  LhxAggRel(groupCount=[1])'
-'    LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 0: jdbc:farrago:> explain plan for select count(*) from emps1 group by ename1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
 '    LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
 '      FennelRenameRel(fieldNames=[[$f0]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 0: jdbc:farrago:> explain plan for select count(ename1) from emps1 group by ename1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
 '    LhxAggRel(groupCount=[1], agg#0=[COUNT(0)])'
 '      FennelRenameRel(fieldNames=[[$f0]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 0: jdbc:farrago:> explain plan for select count(distinct ename1) from emps1;
 'column0'
 'FennelToIteratorConverter'
@@ -1372,7 +1372,7 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 '    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
 '      LhxAggRel(groupCount=[1])'
 '        FennelRenameRel(fieldNames=[[$f0]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select ename1 from emps1 group by ename1;
 'ENAME1'
@@ -1413,8 +1413,8 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME1) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select ename1 from emps1
 . . . . . . . . > where ename1 in (select ename2 from emps2)
@@ -1434,8 +1434,8 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 '      IterCalcRel(expr#0=[{inputs}], expr#1=[UPPER($t0)], EXPR$0=[$t1])'
 '        FennelToIteratorConverter'
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select upper(ename1) from emps1
 . . . . . . . . > where ename1 in (select ename2 from emps2)
@@ -1453,11 +1453,11 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME1) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[UPPER($t0)], EXPR$0=[$t1])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select ename1 from emps1
@@ -1471,11 +1471,11 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[UPPER($t0)], proj#0..1=[{exprs}])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS1$ENAME1]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[UPPER($t0)], EXPR$0=[$t1])'
 '            FennelToIteratorConverter'
-'              LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$EMPS2$ENAME2]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ------------------------------------------------------
 0: jdbc:farrago:> -- LDB-144
@@ -1496,9 +1496,9 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 '    FennelReshapeRel(projection=[[2, 0, 1]], outputRowType=[RecordType(INTEGER A, INTEGER NOT NULL B, INTEGER NOT NULL C) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 0]], joinType=[LEFT])'
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, B]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$B$B]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, C]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$C$C]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$A$A]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, B]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, C]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from A right outer join (select * from B inner join C on b = c) on a = b and a = c order by a;
 'A','B','C'

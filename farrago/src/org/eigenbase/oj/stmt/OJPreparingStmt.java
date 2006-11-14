@@ -61,6 +61,7 @@ public abstract class OJPreparingStmt
 
     //~ Static fields/initializers ---------------------------------------------
 
+    
     public static final String connectionVariable = "connection";
     private static final Logger tracer = EigenbaseTrace.getStatementTracer();
 
@@ -269,6 +270,8 @@ public abstract class OJPreparingStmt
 
         RelDataType resultType = validator.getValidatedNodeType(sqlQuery);
 
+        // Display logical plans before view expansion, pluggin in physical storage 
+        // and decorrelation
         if (sqlExplain != null) {
             SqlExplain.Depth explainDepth = sqlExplain.getDepth();
             boolean explainAsXml = sqlExplain.isXml();
@@ -288,6 +291,23 @@ public abstract class OJPreparingStmt
                         rootRel,
                         explainAsXml,
                         detailLevel);
+            default:
+            }
+        }
+        
+        // Structured type flattening, view expansion, and plugging in physical
+        // storage.
+        rootRel = flattenTypes(rootRel, true);
+        
+        // Subquery decorrelation.
+        rootRel = decorrelate(sqlQuery, rootRel);
+
+        // Display physical plan after decorrelation.
+        if (sqlExplain != null) {
+            SqlExplain.Depth explainDepth = sqlExplain.getDepth();
+            boolean explainAsXml = sqlExplain.isXml();
+            SqlExplainLevel detailLevel = sqlExplain.getDetailLevel();
+            switch (explainDepth) {
             case Physical:
             default:
                 rootRel = optimize(
@@ -302,7 +322,7 @@ public abstract class OJPreparingStmt
             }
         }
 
-        rootRel = optimize(resultType, rootRel);
+        rootRel = optimize(resultType, rootRel);    
         containsJava = treeContainsJava(rootRel);
         
         if (timingTracer != null) {
@@ -317,7 +337,7 @@ public abstract class OJPreparingStmt
                 decl,
                 arguments);
     }
-
+    
     /**
      * Optimizes a query plan.
      *
@@ -476,6 +496,7 @@ public abstract class OJPreparingStmt
         Argument [] args)
     {
         if (needOpt) {
+            rootRel = flattenTypes(rootRel, true);
             rootRel = optimize(
                     rootRel.getRowType(),
                     rootRel);
@@ -514,6 +535,14 @@ public abstract class OJPreparingStmt
 
     protected abstract boolean shouldSetConnectionInfo();
 
+    protected abstract RelNode flattenTypes(
+        RelNode rootRel, 
+        boolean restructure);        
+
+    protected abstract RelNode decorrelate(
+        SqlNode query,
+        RelNode rootRel);
+    
     private JavaCompiler createCompiler()
     {
         String compilerClassName = getCompilerClassName();

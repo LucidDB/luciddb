@@ -78,6 +78,7 @@ public class FarragoRuntimeContext
     protected final FarragoObjectCache codeCache;
     private final Map txnCodeCache;
     private final FennelTxnContext fennelTxnContext;
+    private final FarragoWarningQueue warningQueue;
 
     /**
      * Maps stream id ({@link Integer}) to the corresponding java object ({@link
@@ -126,6 +127,11 @@ public class FarragoRuntimeContext
         this.resultSetTypeMap = params.resultSetTypeMap;
         this.stmtId = params.stmtId;
 
+        if (params.warningQueue == null) {
+            params.warningQueue = new FarragoWarningQueue();
+        }
+        this.warningQueue = params.warningQueue;
+
         dataWrapperCache =
             new FarragoDataWrapperCache(
                 this,
@@ -140,6 +146,12 @@ public class FarragoRuntimeContext
 
     //~ Methods ----------------------------------------------------------------
 
+    // implement FarragoSessionRuntimeContext
+    public FarragoWarningQueue getWarningQueue()
+    {
+        return warningQueue;
+    }
+    
     /**
      * Returns the stream graph.
      */

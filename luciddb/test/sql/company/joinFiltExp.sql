@@ -17,9 +17,12 @@ where emp.deptno=dept.deptno and dept.dname<'Development'
 order by 1;
 
 -- multiple dimension filter conditions
-explain plan excluding attributes for select emp.lname, emp.fname, dname from emp,dept
-where emp.deptno=dept.deptno and dept.dname='Accounting' and dept.locid in ('HQ','SF')
+explain plan excluding attributes for
+select emp.lname, emp.fname, dname from emp,dept
+where emp.deptno=dept.deptno and dept.dname='Accounting' 
+  and dept.locid in ('HQ','SF')
 order by 1,2;
+
 explain plan excluding attributes for select emp.lname, emp.fname, dname
 from emp, dept
 where emp.deptno=dept.deptno and dept.dname='Accounting'
@@ -37,9 +40,9 @@ where emp.deptno=dept.deptno and dept.deptno<20
 order by 1;
 
 -- multiple dimension tables, filters on both
-explain plan excluding attributes for select customers.lname, products.name, sales.price
---from sales, products, customers
-from sales, customers, products
+explain plan excluding attributes for 
+select customers.lname, products.name, sales.price
+from sales, products, customers
 where customers.custid=sales.custid
 and sales.prodid = products.prodid
 and customers.lname < 'C'
@@ -47,9 +50,9 @@ and products.name >= 'Soap'
 order by 1,2,3;
 
 -- multiple dimension tables but filter on only one
-explain plan excluding attributes for select customers.lname, products.name, sales.price
---from sales, products, customers
-from sales, customers, products
+explain plan excluding attributes for
+select customers.lname, products.name, sales.price
+from sales, products, customers
 where customers.custid=sales.custid
 and sales.prodid = products.prodid
 and customers.lname = 'Andrews'
@@ -57,9 +60,9 @@ order by 1,2,3;
 
 
 -- multiple dimension tables, multiple filters
-explain plan excluding attributes for select customers.lname, products.name, sales.price
---from sales, products, customers
-from sales, customers, products
+explain plan excluding attributes for
+select customers.lname, products.name, sales.price
+from sales, products, customers
 where customers.custid=sales.custid
 and sales.prodid = products.prodid
 and customers.lname < 'C'
@@ -67,16 +70,15 @@ and customers.fname > 'S'
 order by 1,2,3;
 
 -- LER-787
-explain plan excluding attributes for select customers.lname, products.name, sales.price
---from sales, products, customers
-from sales, customers, products
+explain plan excluding attributes for
+select customers.lname, products.name, sales.price
+from sales, products, customers
 where customers.custid=sales.custid
 and sales.prodid = products.prodid
 and customers.lname < 'C'
 and customers.fname > 'S'
 and sales.prodid < 10009
 and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
--- and (products.name='Soap' or products.name='Juice' or products.name='Soup' or products.name='Microwave' or products.name='Soda')
 and products.price < 5.00
 order by 1,2,3;
 
@@ -84,15 +86,13 @@ order by 1,2,3;
 -- dimension tables not referenced in select list, should drop
 -- out of join
 explain plan excluding attributes for select sum(sales.price)
---from sales, products, customers
-from sales, customers, products
+from sales, products, customers
 where customers.custid=sales.custid
 and sales.prodid = products.prodid
 and customers.lname < 'C'
 and customers.fname > 'S'
 and sales.prodid < 10009
 and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
--- and (products.name='Soap' or products.name='Juice' or products.name='Soup' or products.name='Microwave' or products.name='Soda')
 and products.price < 5.00;
 
 explain plan excluding attributes for select sum(sales.price)

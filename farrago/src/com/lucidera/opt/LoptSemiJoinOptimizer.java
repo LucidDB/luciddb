@@ -24,8 +24,6 @@ import com.lucidera.lcs.*;
 
 import java.util.*;
 
-import net.sf.farrago.fem.med.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
@@ -102,7 +100,7 @@ public class LoptSemiJoinOptimizer
     public void makePossibleSemiJoins(LoptMultiJoin multiJoin)
     {
         possibleSemiJoins = new HashMap<Integer, Map<Integer, SemiJoinRel>>();
-
+       
         // semijoins can't be used with any type of outer join, including full
         if (multiJoin.getMultiJoinRel().isFullOuterJoin()) {
             return;
@@ -114,22 +112,6 @@ public class LoptSemiJoinOptimizer
                 new HashMap<Integer, List<RexNode>>();
             Map<Integer, SemiJoinRel> semiJoinMap =
                 new HashMap<Integer, SemiJoinRel>();
-
-            // skip over factors corresponding to non-simple factors
-            LcsTable lcsTable =
-                isSingleLcsTable(
-                    multiJoin.getJoinFactor(factIdx),
-                    multiJoin.getNumFieldsInJoinFactor(factIdx));
-            if (lcsTable == null) {
-                continue;
-            }
-
-            // make sure the table has indexes
-            LcsIndexGuide indexGuide = lcsTable.getIndexGuide();
-            List<FemLocalIndex> indexes = indexGuide.getUnclusteredIndexes();
-            if (indexes.isEmpty()) {
-                continue;
-            }
 
             // loop over all filters and find equality filters that reference
             // this factor and one other factor
@@ -166,7 +148,6 @@ public class LoptSemiJoinOptimizer
                     SemiJoinRel semiJoin =
                         findSemiJoinIndex(
                             multiJoin,
-                            indexGuide,
                             joinFilters,
                             factIdx,
                             dimIdx);
@@ -181,40 +162,7 @@ public class LoptSemiJoinOptimizer
             }
         }
     }
-
-    /**
-     * Determines if a RelNode corresponds to a single LcsTable
-     *
-     * @param rel RelNode being examined
-     * @param nFields number of fields in the RelNode
-     */
-    private LcsTable isSingleLcsTable(RelNode rel, int nFields)
-    {
-        // verify that all columns in the RelNode originate from a single
-        // source that is the same LcsTable
-        RelOptTable theTable = null;
-        for (int i = 0; i < nFields; i++) {
-            Set<RelColumnOrigin> colOrigin =
-                RelMetadataQuery.getColumnOrigins(rel, i);
-            if (colOrigin.size() != 1) {
-                return null;
-            }
-            RelColumnOrigin [] coList =
-                (RelColumnOrigin []) colOrigin.toArray(new RelColumnOrigin[1]);
-            RelOptTable table = coList[0].getOriginTable();
-            if (theTable == null) {
-                if (!(table instanceof LcsTable)) {
-                    return null;
-                } else {
-                    theTable = table;
-                }
-            } else if (table != theTable) {
-                return null;
-            }
-        }
-        return (LcsTable) theTable;
-    }
-
+    
     /**
      * Determines if a join filter can be used with a semijoin against a
      * specified fact table. A suitable filter is of the form "factable.col1 =
@@ -268,10 +216,10 @@ public class LoptSemiJoinOptimizer
 
     /**
      * Given a list of possible filters on a fact table, determine if there is
-     * an index that can be used.
+     * an index that can be used, provided all the fact table keys originate
+     * from the same underlying table.
      *
      * @param multiJoin join factors being optimized
-     * @param indexGuide index guide associated with fact table
      * @param joinFilters filters to be used on the fact table
      * @param factIdx index in join factors corresponding to the fact table
      * @param dimIdx index in join factors corresponding to the dimension table
@@ -281,7 +229,6 @@ public class LoptSemiJoinOptimizer
      */
     private SemiJoinRel findSemiJoinIndex(
         LoptMultiJoin multiJoin,
-        LcsIndexGuide indexGuide,
         List<RexNode> joinFilters,
         int factIdx,
         int dimIdx)
@@ -315,32 +262,48 @@ public class LoptSemiJoinOptimizer
             leftKeys,
             rightKeys);
         assert (leftKeys.size() > 0);
+        
+        // make sure all the fact table keys originate from the same table
+        // and are simple column references
+        List<Integer> actualLeftKeys = new ArrayList<Integer>();
+        LcsTable factTable =
+            validateKeys(
+                factRel,
+                leftKeys,
+                rightKeys,
+                actualLeftKeys);
+        if (factTable == null) {
+            return null;
+        }
 
         // find the best index
         List<Integer> keyOrder = new ArrayList<Integer>();
-        indexGuide.findSemiJoinIndex(leftKeys, keyOrder);
+        LcsIndexGuide indexGuide = factTable.getIndexGuide();
+        indexGuide.findSemiJoinIndex(actualLeftKeys, keyOrder);
         if (keyOrder.size() == 0) {
             return null;
         }
 
         // if necessary, truncate the keys to reflect the ones that match
         // the index and remove the corresponding, unnecessary filters from
-        // the condition
-        List<Integer> actualLeftKeys;
-        List<Integer> actualRightKeys;
-        if (leftKeys.size() == keyOrder.size()) {
-            actualLeftKeys = leftKeys;
-            actualRightKeys = rightKeys;
+        // the condition; note that we don't save the actual keys here because
+        // later when the semijoin is pushed past other RelNodes, the keys will
+        // be converted
+        List<Integer> truncatedLeftKeys;
+        List<Integer> truncatedRightKeys;
+        if (actualLeftKeys.size() == keyOrder.size()) {
+            truncatedLeftKeys = leftKeys;
+            truncatedRightKeys = rightKeys;
         } else {
-            actualLeftKeys = new ArrayList<Integer>();
-            actualRightKeys = new ArrayList<Integer>();
+            truncatedLeftKeys = new ArrayList<Integer>();
+            truncatedRightKeys = new ArrayList<Integer>();
             for (int key : keyOrder) {
-                actualLeftKeys.add(leftKeys.get(key));
-                actualRightKeys.add(rightKeys.get(key));
+                truncatedLeftKeys.add(leftKeys.get(key));
+                truncatedRightKeys.add(rightKeys.get(key));
             }
             semiJoinCondition =
                 removeExtraFilters(
-                    actualLeftKeys,
+                    truncatedLeftKeys,
                     multiJoin.getNumFieldsInJoinFactor(factIdx),
                     semiJoinCondition);
         }
@@ -350,8 +313,8 @@ public class LoptSemiJoinOptimizer
                 factRel,
                 dimRel,
                 semiJoinCondition,
-                actualLeftKeys,
-                actualRightKeys);
+                truncatedLeftKeys,
+                truncatedRightKeys);
         return semiJoin;
     }
 
@@ -413,7 +376,84 @@ public class LoptSemiJoinOptimizer
 
         return semiJoinCondition;
     }
-
+    
+    /**
+     * Validates the candidate semijoin keys corresponding to the fact table.
+     * Ensure the keys all originate from the same underlying table, and they
+     * all correspond to simple column references.  If unsuitable keys are
+     * found, they're removed from the key list and a new list corresponding 
+     * to the remaining valid keys is returned.
+     * 
+     * @param factRel fact table RelNode
+     * @param leftKeys fact table semijoin keys
+     * @param rightKeys dimension table semijoin keys
+     * @param actualLeftKeys the remaining valid fact table semijoin keys
+     * 
+     * @return the underlying fact table if the semijoin keys are valid;
+     * otherwise null
+     */
+    private LcsTable validateKeys(
+        RelNode factRel,
+        List<Integer> leftKeys,
+        List<Integer> rightKeys,
+        List<Integer> actualLeftKeys)
+    {
+        int keyIdx = 0;
+        RelOptTable theTable = null;
+        ListIterator<Integer> keyIter = leftKeys.listIterator();
+        while (keyIter.hasNext()) {
+            boolean removeKey = false;
+            Set<RelColumnOrigin> colOrigin =
+                LoptMetadataQuery.getSimpleColumnOrigins(
+                    factRel,
+                    keyIter.next());
+            if (colOrigin == null || colOrigin.size() != 1) {
+                // references > 1 column
+                removeKey = true;
+            } else {
+                RelColumnOrigin [] coList =
+                    (RelColumnOrigin []) colOrigin.toArray(
+                        new RelColumnOrigin[1]);
+                if (coList[0].isDerived()) {
+                    // not a simple column reference
+                    removeKey = true;
+                } else {
+                    RelOptTable table = coList[0].getOriginTable();
+                    if (theTable == null) {
+                        if (!(table instanceof LcsTable)) {
+                            // not a column store table
+                            removeKey = true;
+                        } else {
+                            theTable = table;
+                        }
+                    } else if (table != theTable) {
+                        // doesn't match the table of the first key found;
+                        // note that we arbitrarily use the table of the
+                        // first valid key as the underlying fact table
+                        // even though there could be multiple choices
+                        removeKey = true;
+                    }
+                    if (!removeKey) {
+                        actualLeftKeys.add(coList[0].getOriginColumnOrdinal());
+                        keyIdx++;
+                    }
+                }              
+            }
+            if (removeKey) {
+                keyIter.remove();
+                rightKeys.remove(keyIdx);
+            }
+        }
+        
+        // if all keys have been removed, then we don't have any valid semijoin
+        // keys
+        if (actualLeftKeys.isEmpty()) {
+            return null;
+        } else {
+            return (LcsTable) theTable;
+        }
+    }
+    
     /**
      * Removes from an expression any sub-expressions that reference key values
      * that aren't contained in a key list passed in. The keys represent join
@@ -555,7 +595,11 @@ public class LoptSemiJoinOptimizer
                         semiJoin.getLeftKeys(),
                         semiJoin.getRightKeys());
                 chosenSemiJoins[factIdx] = chosenSemiJoin;
-
+                
+                // determine if the dimension table doesn't need to be joined
+                // as a result of this semijoin
+                removeJoin(multiJoin, chosenSemiJoin, factIdx, bestDimIdx);
+                
                 removePossibleSemiJoin(
                     possibleDimensions,
                     factIdx,
@@ -638,6 +682,87 @@ public class LoptSemiJoinOptimizer
         return savings / dimRows;
     }
 
+    /**
+     * Determines whether a join of the dimension table in a semijoin can be
+     * removed.  It can be if the dimension keys are unique and the only fields 
+     * referenced from the dimension table are its semijoin keys.  The
+     * semijoin keys can be mapped to the corresponding keys from the fact
+     * table (because of the equality condition associated with the semijoin
+     * keys).  Therefore, that's why the dimension table can be removed even
+     * though those fields are referenced elsewhere in the query tree.
+     * 
+     * @param multiJoin join factors being optimized
+     * @param semiJoin semijoin under consideration
+     * @param factIdx id of the fact table in the semijoin
+     * @param dimIdx id of the dimension table in the semijoin
+     */
+    private void removeJoin(
+        LoptMultiJoin multiJoin,
+        SemiJoinRel semiJoin,
+        int factIdx,
+        int dimIdx)
+    {
+        // if the dimension can be removed because of another semijoin, then
+        // no need to proceed any further
+        if (multiJoin.getJoinRemovalFactor(dimIdx) != null) {
+            return;
+        }
+        
+        // check if the semijoin keys corresponding to the dimension table
+        // are unique
+        BitSet dimKeys = new BitSet();
+        for (Integer key : semiJoin.getRightKeys()) {
+            dimKeys.set(key);
+        }
+        RelNode dimRel = multiJoin.getJoinFactor(dimIdx);
+        if (!RelMdUtil.areColumnsUnique(dimRel, dimKeys)) {
+            return;
+        }
+        
+        // check that the only fields referenced from the dimension table
+        // in either its projection or join conditions are the dimension
+        // keys
+        BitSet dimProjRefs = multiJoin.getProjFields(dimIdx);
+        if (!RelOptUtil.contains(dimKeys, dimProjRefs)) {
+            return;
+        }
+        int [] dimJoinRefCounts = multiJoin.getJoinFieldRefCounts(dimIdx);
+        for (int i = 0; i < dimJoinRefCounts.length; i++) {
+            if (dimJoinRefCounts[i] > 0) {
+                if (!dimKeys.get(i)) {
+                    return;
+                }
+            }
+        }
+        
+        // criteria met; keep track of the fact table and the semijoin that
+        // allow the join of this dimension table to be removed
+        multiJoin.setJoinRemovalFactor(dimIdx, factIdx);
+        multiJoin.setJoinRemovalSemiJoin(dimIdx, semiJoin);
+        
+        // if the dimension table doesn't reference anything in its projection
+        // and the only fields referenced in its joins are the dimension keys
+        // of this semijoin, then we can decrement the join reference counts
+        // corresponding to the fact table's semijoin keys, since the
+        // dimension table doesn't need to use those keys
+        if (dimProjRefs.cardinality() != 0) {
+            return;
+        }
+        for (int i = 0; i < dimJoinRefCounts.length; i++) {
+            if (dimJoinRefCounts[i] > 1) {
+                return;
+            } else if (dimJoinRefCounts[i] == 1) {
+                if (!dimKeys.get(i)) {
+                    return;
+                }
+            }
+        }
+        int [] factJoinRefCounts = multiJoin.getJoinFieldRefCounts(factIdx);
+        for (Integer key : semiJoin.getLeftKeys()) {
+            factJoinRefCounts[key]--;
+        }    
+    }
+    
     /**
      * Removes a dimension table from a fact table's list of possible semijoins
      *

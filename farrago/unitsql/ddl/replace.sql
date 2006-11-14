@@ -94,7 +94,7 @@ create or replace view v2 as select * from sales.emps;
 select * from v2;
 
 --
--- Server
+-- Foreign Server
 --
 create foreign data wrapper foo_wrapper
  library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
@@ -119,7 +119,7 @@ select "description" from sys_fem.med."DataServer" where "name" = 'FOO_SERVER';
 select * from foo_table;
                                                                                 
 --
--- Wrapper
+-- Foreign Wrapper
 --
 create or replace foreign data wrapper foo_wrapper
   library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
@@ -129,7 +129,22 @@ create or replace foreign data wrapper foo_wrapper
 select "description" from sys_fem.med."DataWrapper" where "name" = 'FOO_WRAPPER';
                                                                                 
 select * from foo_table;
-                                                                                
+
+--
+-- Local Server
+--
+
+create server extra_ftrs_data_server
+local data wrapper sys_ftrs;
+
+create table extra_foo (bar integer primary key)
+server extra_ftrs_data_server;
+
+create or replace server extra_ftrs_data_server
+local data wrapper sys_ftrs;
+
+select * from extra_foo;
+
 --
 -- Bugs!
 --

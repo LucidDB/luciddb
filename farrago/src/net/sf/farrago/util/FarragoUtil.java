@@ -95,15 +95,27 @@ public abstract class FarragoUtil
         }
     }
 
+    
+    public static String exceptionToString(final Throwable ex)
+    {
+        return exceptionToString(ex, "; ");
+    }
+    
     /**
      * Converts any Throwable and its causes to a String.
      *
      * @param ex Throwable to be converted
-     *
+     * @param sep String the stack line separator
      * @return ex as a String
      */
-    public static String exceptionToString(final Throwable ex)
+
+    public static String exceptionToString(final Throwable ex, String sep)
     {
+        if(sep == null)
+        {
+            sep = "; ";
+        }
+
         String result = null;
         if (ex != null) {
             Throwable t = ex;
@@ -114,13 +126,14 @@ public abstract class FarragoUtil
                 sb.append(t.getLocalizedMessage());
                 t = t.getCause();
                 if (t != null) {
-                    sb.append("; ");
+                    sb.append(sep);
                 }
             }
             result = sb.toString();
         }
         return result;
     }
+
 }
 
 // End FarragoUtil.java

@@ -250,6 +250,29 @@ public class FarragoSessionVariables
     }
 
     /**
+     * Sets the value of a variable, expressed as an boolean
+     * @see #set(String, String)
+     */
+    public void setBoolean(String name, Boolean value)
+    {
+        String stringValue = (value == null) ? null : value.toString();
+        valueMap.put(name, stringValue);
+    }
+
+    /**
+     * Gets the value of a variable, casted to an Integer
+     * 
+     * @see #get(String)
+     * @param name the name of a session variable
+     * @throws IllegalArgumentException if the variable is not in the map
+     */
+    public Boolean getBoolean(String name) 
+    {
+        String stringValue = get(name);
+        return (stringValue == null) ? null : Boolean.valueOf(stringValue);
+    }
+
+    /**
      * Sets the default value for a variable. Does nothing if the variable 
      * has already been initialized.
      * 

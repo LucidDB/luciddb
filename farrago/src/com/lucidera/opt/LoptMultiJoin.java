@@ -48,9 +48,16 @@ public class LoptMultiJoin
     MultiJoinRel multiJoin;
 
     /**
-     * Join filters associated with the MultiJoinRel, decomposed into a list
+     * Join filters associated with the MultiJoinRel, decomposed into a list.
+     * Excludes left/right outer join filters.
      */
     private List<RexNode> joinFilters;
+
+    /**
+     * All join filters associated with the MultiJoinRel, decomposed into a
+     * list.  Includes left/right outer join filters.
+     */
+    private List<RexNode> allJoinFilters;
 
     /**
      * Number of factors into the MultiJoinRel
@@ -80,6 +87,23 @@ public class LoptMultiJoin
      * generating factor is dependent upon
      */
     private BitSet [] outerJoinFactors;
+    
+    /**
+     * Bitmap corresponding to the fields projected from each join factor,
+     * after row scan processing has completed.  This excludes fields referenced
+     * in join conditions, unless the field appears in the final projection
+     * list.
+     */
+    private BitSet [] projFields;
+    
+    /**
+     * Map containing reference counts of the fields referenced in join
+     * conditions for each join factor.  If a field is only required for a
+     * semijoin, then it is removed from the reference count.  (Hence the
+     * need for reference counts instead of simply a bitmap.)  The map is
+     * indexed by the factor number.
+     */
+    private Map<Integer, int []> joinFieldRefCountsMap;
     
     /**
      * For each join filter, associates a bitmap indicating all factors
@@ -118,6 +142,20 @@ public class LoptMultiJoin
      * Type factory
      */
     RelDataTypeFactory factory;
+    
+    /**
+     * Indicates for each factor whether its join can be removed because it is
+     * the dimension table in a semijoin.  If it can be, the entry indicates
+     * the factor id of the fact table (corresponding to the dimension table)
+     * in the semijoin that allows the factor to be removed.  If the factor
+     * cannot be removed, the entry corresponding to the factor is null.
+     */
+    Integer [] joinRemovalFactors;
+    
+    /**
+     * The semijoins that allow the join of a dimension table to be removed
+     */
+    SemiJoinRel [] joinRemovalSemiJoins;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -126,11 +164,21 @@ public class LoptMultiJoin
         this.multiJoin = multiJoin;
         joinFactors = multiJoin.getInputs();
         nJoinFactors = joinFactors.length;
+        projFields = multiJoin.getProjFields();
+        joinFieldRefCountsMap = multiJoin.getCopyJoinFieldRefCountsMap();
  
         joinFilters = new ArrayList<RexNode>();
         RelOptUtil.decomposeConjunction(
             multiJoin.getJoinFilter(),
             joinFilters);
+        
+        allJoinFilters = new ArrayList<RexNode>(joinFilters);
+        RexNode [] outerJoinFilters = multiJoin.getOuterJoinConditions();
+        for (int i = 0; i < nJoinFactors; i++) {
+            List<RexNode> ojFilters = new ArrayList<RexNode>();
+            RelOptUtil.decomposeConjunction(outerJoinFilters[i], ojFilters);
+            allJoinFilters.addAll(ojFilters);
+        }
 
         int start = 0;
         nTotalFields = multiJoin.getRowType().getFields().length;
@@ -149,6 +197,9 @@ public class LoptMultiJoin
         setJoinFilterRefs();
         
         factory = multiJoin.getCluster().getTypeFactory();
+        
+        joinRemovalFactors = new Integer[nJoinFactors];
+        joinRemovalSemiJoins = new SemiJoinRel[nJoinFactors];
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -276,7 +327,7 @@ public class LoptMultiJoin
     
     /**
      * @param factIdx factor for which information will be returned
-     * 
+     *
      * @return bitmap containing the factors that a null generating factor
      * is dependent upon, if the factor is null generating in a left or right
      * outer join; otherwise null is returned
@@ -285,7 +336,85 @@ public class LoptMultiJoin
     {
         return outerJoinFactors[factIdx];
     }
+    
+    /**
+     * @param factIdx factor for which information will be returned
+     *
+     * @return outer join conditions associated with the specified null
+     * generating factor
+     */
+    public RexNode getOuterJoinCond(int factIdx)
+    {
+        return multiJoin.getOuterJoinConditions()[factIdx];
+    }
+    
+    /**
+     * @param factIdx factor for which information will be returned
+     * 
+     * @return bitmap containing the fields that are projected from a factor
+     */
+    public BitSet getProjFields(int factIdx)
+    {
+        return projFields[factIdx];
+    }
 
+    /**
+     * @param factIdx factor for which information will be returned
+     * 
+     * @return the join field reference counts for a factor
+     */
+    public int [] getJoinFieldRefCounts(int factIdx)
+    {
+        return joinFieldRefCountsMap.get(factIdx);
+    }
+    
+    /**
+     * @param dimIdx the dimension factor for which information will be returned
+     * 
+     * @return the factor id of the fact table corresponding to a dimension
+     * table in a semijoin, in the case where the join with the dimension table
+     * can be removed
+     */
+    public Integer getJoinRemovalFactor(int dimIdx)
+    {
+        return joinRemovalFactors[dimIdx];
+    }
+    
+    /**
+     * @param dimIdx the dimension factor for which information will be returned
+     * 
+     * @return the semijoin that allows the join of a dimension table to be
+     * removed
+     */
+    public SemiJoinRel getJoinRemovalSemiJoin(int dimIdx)
+    {
+        return joinRemovalSemiJoins[dimIdx];
+    }
+    
+    /**
+     * Indicates that a dimension factor's join can be removed because of a
+     * semijoin with a fact table.
+     * 
+     * @param dimIdx id of the dimension factor
+     * @param factIdx id of the fact factor
+     */
+    public void setJoinRemovalFactor(int dimIdx, int factIdx)
+    {
+        joinRemovalFactors[dimIdx] = factIdx;
+    }
+    
+    /**
+     * Indicates the semijoin that allows the join of a dimension table to
+     * be removed
+     * 
+     * @param dimIdx id of the dimension factor
+     * @param semiJoin the semijoin
+     */
+    public void setJoinRemovalSemiJoin(int dimIdx, SemiJoinRel semiJoin)
+    {
+        joinRemovalSemiJoins[dimIdx] = semiJoin;
+    }
+    
     /**
      * Extracts outer join information from the join factors, including the
      * type of outer join and the factors that a null-generating factor
@@ -341,7 +470,7 @@ public class LoptMultiJoin
     {
         fieldsRefByJoinFilter = new HashMap<RexNode, BitSet>();
         factorsRefByJoinFilter = new HashMap<RexNode, BitSet>();
-        ListIterator<RexNode> filterIter = joinFilters.listIterator();
+        ListIterator<RexNode> filterIter = allJoinFilters.listIterator();
         while (filterIter.hasNext()) {
             RexNode joinFilter = filterIter.next();
 
@@ -408,7 +537,7 @@ public class LoptMultiJoin
             factorsRefByFactor[i] = new BitSet(nJoinFactors);
         }
 
-        for (RexNode joinFilter : joinFilters) {
+        for (RexNode joinFilter : allJoinFilters) {
             BitSet factorRefs = factorsRefByJoinFilter.get(joinFilter);
 
             // don't give weights to non-comparison expressions

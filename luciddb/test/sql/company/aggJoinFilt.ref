@@ -1,0 +1,179 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- aggJoinFilt.sql - join Filter tests relating to aggregates
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --alter session set optimizerjoinfilterthreshold=2;
+0: jdbc:luciddb:>  
+0: jdbc:luciddb:> -- original, as per bug 22419
+0: jdbc:luciddb:> select *
+. . . . . . . . > from (
+. . . . . . . . >     select emp.deptno, emp.sex, sum(emp.sal) sum_sal from emp
+. . . . . . . . >     group by emp.deptno, emp.sex) emp,
+. . . . . . . . >   dept
+. . . . . . . . > where dept.deptno = emp.deptno
+. . . . . . . . > and dept.dname = 'Development'
+. . . . . . . . > order by sex;
++---------+------+----------+----------+--------------+--------+
+| DEPTNO  | SEX  | SUM_SAL  | DEPTNO0  |    DNAME     | LOCID  |
++---------+------+----------+----------+--------------+--------+
+| 30      | F    | 100000   | 30       | Development  | HQ     |
+| 30      | M    | 100000   | 30       | Development  | HQ     |
++---------+------+----------+----------+--------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- as above, after pulling up aggregation
+0: jdbc:luciddb:> select emp.deptno, emp.sex, sum(emp.sal)
+. . . . . . . . > from (
+. . . . . . . . >         select emp.deptno, emp.sex, emp.sal from emp) emp,
+. . . . . . . . >   dept
+. . . . . . . . > where dept.deptno = emp.deptno
+. . . . . . . . > and dept.dname = 'Development'
+. . . . . . . . > group by emp.deptno, emp.sex
+. . . . . . . . > order by sex;
++---------+------+---------+
+| DEPTNO  | SEX  | EXPR$2  |
++---------+------+---------+
+| 30      | F    | 100000  |
+| 30      | M    | 100000  |
++---------+------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- as above, after join filter
+0: jdbc:luciddb:> -- select emp.deptno, emp.sex, sum(emp.sal) sum_sal
+0: jdbc:luciddb:> -- from (
+0: jdbc:luciddb:> --   select emp.deptno, emp.sex, emp.sal from emp where emp.deptno in (
+0: jdbc:luciddb:> --     select deptno from dept where dname = 'Development')) emp,
+0: jdbc:luciddb:> --   dept
+0: jdbc:luciddb:> -- where dept.deptno = emp.deptno
+0: jdbc:luciddb:> -- and dept.dname = 'Development'
+0: jdbc:luciddb:> -- group by emp.deptno, emp.sex;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- -- as above, after push down
+0: jdbc:luciddb:> -- select emp.deptno, emp.sex, emp.sum_sal
+0: jdbc:luciddb:> -- from (
+0: jdbc:luciddb:> --   select emp.deptno, emp.sex, sum(emp.sal) sum_sal from emp 
+0: jdbc:luciddb:> --   where emp.deptno in (
+0: jdbc:luciddb:> --     select deptno from dept where dname = 'Development')
+0: jdbc:luciddb:> --   group by emp.deptno, emp.sex)
+0: jdbc:luciddb:> --   emp,
+0: jdbc:luciddb:> --   dept
+0: jdbc:luciddb:> -- where dept.deptno = emp.deptno
+0: jdbc:luciddb:> -- and dept.dname = 'Development';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Bug 22419, inputs to join reversed
+0: jdbc:luciddb:> select *
+. . . . . . . . > from dept
+. . . . . . . . > join (
+. . . . . . . . >    select emp.deptno, emp.sex, sum(emp.sal) sum_sal from emp
+. . . . . . . . >    group by emp.deptno, emp.sex) emp
+. . . . . . . . > on dept.deptno = emp.deptno
+. . . . . . . . > where dept.dname = 'Development'
+. . . . . . . . > order by sex;
++---------+--------------+--------+----------+------+----------+
+| DEPTNO  |    DNAME     | LOCID  | DEPTNO0  | SEX  | SUM_SAL  |
++---------+--------------+--------+----------+------+----------+
+| 30      | Development  | HQ     | 30       | F    | 100000   |
+| 30      | Development  | HQ     | 30       | M    | 100000   |
++---------+--------------+--------+----------+------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Left-outer join.
+0: jdbc:luciddb:> select *
+. . . . . . . . > from (
+. . . . . . . . >    select emp.deptno, emp.sex, sum(emp.sal) sum_sal from emp
+. . . . . . . . >    group by emp.deptno, emp.sex) emp
+. . . . . . . . > left join dept
+. . . . . . . . > on dept.deptno = emp.deptno
+. . . . . . . . > where dept.dname = 'Development'
+. . . . . . . . > order by sex;
++---------+------+----------+----------+--------------+--------+
+| DEPTNO  | SEX  | SUM_SAL  | DEPTNO0  |    DNAME     | LOCID  |
++---------+------+----------+----------+--------------+--------+
+| 30      | F    | 100000   | 30       | Development  | HQ     |
+| 30      | M    | 100000   | 30       | Development  | HQ     |
++---------+------+----------+----------+--------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Right-outer join.
+0: jdbc:luciddb:> select *
+. . . . . . . . > from (
+. . . . . . . . >    select emp.deptno, emp.sex, sum(emp.sal) sum_sal from emp
+. . . . . . . . >    group by emp.deptno, emp.sex) emp
+. . . . . . . . > right join dept
+. . . . . . . . > on dept.deptno = emp.deptno
+. . . . . . . . > where dept.dname = 'Development'
+. . . . . . . . > order by 2;
++---------+------+----------+----------+--------------+--------+
+| DEPTNO  | SEX  | SUM_SAL  | DEPTNO0  |    DNAME     | LOCID  |
++---------+------+----------+----------+--------------+--------+
+| 30      | F    | 100000   | 30       | Development  | HQ     |
+| 30      | M    | 100000   | 30       | Development  | HQ     |
++---------+------+----------+----------+--------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Full-outer join.
+0: jdbc:luciddb:> select *
+. . . . . . . . > from (
+. . . . . . . . >    select emp.deptno, emp.sex, sum(emp.sal) sum_sal from emp
+. . . . . . . . >    group by emp.deptno, emp.sex) emp
+. . . . . . . . > full join dept
+. . . . . . . . > on dept.deptno = emp.deptno
+. . . . . . . . > where dept.dname = 'Development'
+. . . . . . . . > order by 2;
++---------+------+----------+----------+--------------+--------+
+| DEPTNO  | SEX  | SUM_SAL  | DEPTNO0  |    DNAME     | LOCID  |
++---------+------+----------+----------+--------------+--------+
+| 30      | F    | 100000   | 30       | Development  | HQ     |
+| 30      | M    | 100000   | 30       | Development  | HQ     |
++---------+------+----------+----------+--------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Pull-up aggregation should work through a projection (sum(emp.sal)
+0: jdbc:luciddb:> -- + 1).
+0: jdbc:luciddb:> select *
+. . . . . . . . > from (
+. . . . . . . . >    select emp.deptno, emp.sex, sum(emp.sal) + 1 sum_sal from emp
+. . . . . . . . >    group by emp.deptno, emp.sex) emp
+. . . . . . . . > join dept
+. . . . . . . . > on dept.deptno = emp.deptno
+. . . . . . . . > where dept.dname = 'Development'
+. . . . . . . . > order by sex;
++---------+------+----------+----------+--------------+--------+
+| DEPTNO  | SEX  | SUM_SAL  | DEPTNO0  |    DNAME     | LOCID  |
++---------+------+----------+----------+--------------+--------+
+| 30      | F    | 100001   | 30       | Development  | HQ     |
+| 30      | M    | 100001   | 30       | Development  | HQ     |
++---------+------+----------+----------+--------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Pull-up aggregation could work through a filter (having count(*) >
+0: jdbc:luciddb:> -- 1), but doesn't yet.
+0: jdbc:luciddb:> select *
+. . . . . . . . > from (
+. . . . . . . . >    select emp.deptno, emp.sex, sum(emp.sal) + 1 sum_sal from emp
+. . . . . . . . >    group by emp.deptno, emp.sex
+. . . . . . . . >    having count(*) > 1) emp
+. . . . . . . . > join dept
+. . . . . . . . > on dept.deptno = emp.deptno
+. . . . . . . . > where dept.dname = 'Development'
+. . . . . . . . > order by 2;
++---------+------+----------+----------+--------------+--------+
+| DEPTNO  | SEX  | SUM_SAL  | DEPTNO0  |    DNAME     | LOCID  |
++---------+------+----------+----------+--------------+--------+
+| 30      | F    | 100001   | 30       | Development  | HQ     |
+| 30      | M    | 100001   | 30       | Development  | HQ     |
++---------+------+----------+----------+--------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Don't try to pull-up aggregates if join is based upon summary
+0: jdbc:luciddb:> -- columns (count_emp).
+0: jdbc:luciddb:> select *
+. . . . . . . . > from (
+. . . . . . . . >    select emp.deptno, emp.sex, count(*) as count_emp, sum(emp.sal) as sum_sal
+. . . . . . . . >    from emp
+. . . . . . . . >    group by emp.deptno, emp.sex) as emp
+. . . . . . . . > join dept
+. . . . . . . . > on dept.deptno = emp.count_emp
+. . . . . . . . > where dept.dname = 'Development';
++---------+------+------------+----------+----------+--------+--------+
+| DEPTNO  | SEX  | COUNT_EMP  | SUM_SAL  | DEPTNO0  | DNAME  | LOCID  |
++---------+------+------------+----------+----------+--------+--------+
++---------+------+------------+----------+----------+--------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- end aggJoinFilt.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

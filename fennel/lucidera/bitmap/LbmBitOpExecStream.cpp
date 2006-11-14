@@ -74,10 +74,10 @@ void LbmBitOpExecStream::open(bool restart)
         segmentWriter.init(
             outputBuf.get(), outputBufSize,
             inAccessors[1]->getTupleDesc(), true);
-        bitmapBufSize = LbmEntry::getMaxBitmapSize(bitmapColSize);
 
         // allocate a temporary buffer for the bit operation; the temporary
         // buffer should not be larger than what a LbmEntry supports
+        bitmapBufSize = LbmEntry::getMaxBitmapSize(bitmapColSize);
         byteSegBuf.reset(new FixedBuffer[bitmapBufSize]); 
         pByteSegBuf = byteSegBuf.get();
 

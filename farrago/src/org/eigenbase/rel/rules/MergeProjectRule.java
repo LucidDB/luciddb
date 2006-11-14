@@ -38,8 +38,22 @@ import java.util.*;
 public class MergeProjectRule
     extends RelOptRule
 {
+    // ~ Instance fields -------------------------------------------------------
+    
+    /**
+     * if true, always merge projects
+     */
+    private boolean force;
+    
     //~ Constructors -----------------------------------------------------------
 
+    public MergeProjectRule(boolean force)
+    {
+        this();
+        this.force = force;
+        description = "MergeProjectRule: force mode";
+    }
+    
     public MergeProjectRule()
     {
         super(
@@ -48,6 +62,7 @@ public class MergeProjectRule
                 new RelOptRuleOperand[] {
                     new RelOptRuleOperand(ProjectRel.class, null)
                 }));
+        force = false;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -59,11 +74,13 @@ public class MergeProjectRule
         ProjectRel bottomProject = (ProjectRel) call.rels[1];
         RexBuilder rexBuilder = topProject.getCluster().getRexBuilder();
         
-        // if the two projects reference identical inputs, then return
-        // and either let FennelRenameRule or RemoveTrivialProjectRule
-        // replace the projects
-        if (RelOptUtil.checkProjAndChildInputs(topProject, false)) {
-            return;
+        // if we're not in force mode and the two projects reference identical
+        // inputs, then return and either let FennelRenameRule or
+        // RemoveTrivialProjectRule replace the projects
+        if (!force) {
+            if (RelOptUtil.checkProjAndChildInputs(topProject, false)) {
+                return;
+            }
         }
         
         // create a RexProgram for the bottom project
