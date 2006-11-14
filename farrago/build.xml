@@ -418,6 +418,16 @@ require version '${required.ant.version}'."/>
     <delete quiet="true" file="${FarragoTrace.log}"/>
   </target>
 
+  <!-- Creates an unconfigured catalog.  This is useful for extension
+       projects that make configuration changes and want to store their
+       catalog in an out-of-process database (e.g., postgres). -->
+  <target name="createUnconfiguredCatalog"
+          depends="makeClassesDir,configureReposStorage">
+    <antcall target="createClasspathFile"/>
+    <antcall target="compileCatalog"/>
+    <antcall target="createMdrTestData"/>
+  </target>
+
   <!-- creates catalog and populates with initial metadata -->
   <target name="createCatalog" depends="makeClassesDir,configureReposStorage">
     <antcall target="createClasspathFile"/>
