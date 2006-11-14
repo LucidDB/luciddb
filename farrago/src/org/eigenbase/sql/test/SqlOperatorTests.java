@@ -2242,6 +2242,10 @@ public abstract class SqlOperatorTests
             "Ab Cd Ef 12",
             "todo:");
         getTester().checkNull("initcap(cast(null as varchar(1)))");
+
+        // dtbug 232
+        getTester().checkInvalid("^initcap(cast(null as date))^",
+            "Cannot apply 'INITCAP' to arguments of type 'INITCAP\\(<DATE>\\)'\\. Supported form\\(s\\): 'INITCAP\\(<CHARACTER>\\)'");
     }
 
     public void testPowFunc()
