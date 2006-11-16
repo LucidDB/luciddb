@@ -809,6 +809,10 @@ Messages: {1}</text>
 <text>Values (''{0}'', ''{1}'') for property {2} do not match</text>
 </exception>
 
+<exception id="460150" name="RetryableFailure">
+<text>Retryable communication failure</text>
+</exception>
+
 <!-- NOTE:  Mock resources don't really need localization; this one is
      just here as an example of how to do i18n for wrapper properties.  -->
 
