@@ -1525,9 +1525,29 @@ public class SqlValidatorImpl
         return false;
     }
 
-    protected SelectNamespace allocSelectNamespace(SqlSelect select)
+    /**
+     * Creates a namespace for a <code>SELECT</code> node.
+     * Derived class may override this factory method.
+     *
+     * @param select Select node
+     * @return Select namespace
+     */
+    protected SelectNamespace createSelectNamespace(SqlSelect select)
     {
         return new SelectNamespace(this, select);
+    }
+
+    /**
+     * Creates a namespace for a set operation (<code>UNION</code>,
+     * <code>INTERSECT</code>, or <code>EXCEPT</code>).
+     * Derived class may override this factory method.
+     *
+     * @param call Call to set operation
+     * @return Set operation namespace
+     */
+    protected SetopNamespace createSetopNamespace(SqlCall call)
+    {
+        return new SetopNamespace(this, call);
     }
 
     /**
@@ -1536,7 +1556,7 @@ public class SqlValidatorImpl
      * @param parentScope Parent scope which this scope turns to in order to
      * resolve objects
      * @param usingScope Scope whose child list this scope should add itself to
-     * @param node
+     * @param node Query node
      * @param alias Name of this query within its parent. Must be specified if
      * usingScope != null
      *
@@ -1564,7 +1584,7 @@ public class SqlValidatorImpl
      * @param parentScope Parent scope which this scope turns to in order to
      * resolve objects
      * @param usingScope Scope whose child list this scope should add itself to
-     * @param node
+     * @param node Query node
      * @param alias Name of this query within its parent. Must be specified if
      * usingScope != null
      * @param checkUpdate if true, validate that the update feature is
@@ -1588,7 +1608,7 @@ public class SqlValidatorImpl
         switch (node.getKind().getOrdinal()) {
         case SqlKind.SelectORDINAL:
             final SqlSelect select = (SqlSelect) node;
-            final SelectNamespace selectNs = allocSelectNamespace(select);
+            final SelectNamespace selectNs = createSelectNamespace(select);
             registerNamespace(usingScope, alias, selectNs, forceNullable);
             SelectScope selectScope = new SelectScope(parentScope, select);
             scopes.put(select, selectScope);
@@ -1812,7 +1832,7 @@ public class SqlValidatorImpl
         boolean forceNullable)
     {
         SqlCall call = (SqlCall) node;
-        final SetopNamespace setopNamespace = new SetopNamespace(this, call);
+        final SetopNamespace setopNamespace = createSetopNamespace(call);
         registerNamespace(usingScope, alias, setopNamespace, forceNullable);
 
         // A setop is in the same scope as its parent.
@@ -2895,6 +2915,11 @@ public class SqlValidatorImpl
                 public void setRowType(RelDataType rowType)
                 {
                     // intentionally empty
+                }
+
+                public RelDataType getRowTypeSansSystemColumns()
+                {
+                    return getRowType();
                 }
 
                 public void validate()

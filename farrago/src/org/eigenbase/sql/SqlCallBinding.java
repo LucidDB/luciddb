@@ -47,6 +47,13 @@ public class SqlCallBinding
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a call binding.
+     *
+     * @param validator Validator
+     * @param scope Scope of call
+     * @param call Call node
+     */
     public SqlCallBinding(
         SqlValidator validator,
         SqlValidatorScope scope,
@@ -62,16 +69,25 @@ public class SqlCallBinding
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns the validator.
+     */
     public SqlValidator getValidator()
     {
         return validator;
     }
 
+    /**
+     * Returns the scope of the call.
+     */
     public SqlValidatorScope getScope()
     {
         return scope;
     }
 
+    /**
+     * Returns the call node.
+     */
     public SqlCall getCall()
     {
         return call;
@@ -119,7 +135,13 @@ public class SqlCallBinding
     // implement SqlOperatorBinding
     public RelDataType getOperandType(int ordinal)
     {
-        return validator.deriveType(scope, call.operands[ordinal]);
+        final SqlNode operand = call.operands[ordinal];
+        final RelDataType type = validator.deriveType(scope, operand);
+        final SqlValidatorNamespace namespace = validator.getNamespace(operand);
+        if (namespace != null) {
+            return namespace.getRowTypeSansSystemColumns();
+        }
+        return type;
     }
 
     public RelDataType getCursorOperand(int ordinal)

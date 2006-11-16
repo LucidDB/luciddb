@@ -34,7 +34,7 @@ import org.eigenbase.util.*;
  * @version $Id$
  * @since Mar 25, 2003
  */
-class SetopNamespace
+public class SetopNamespace
     extends AbstractNamespace
 {
 
@@ -44,7 +44,13 @@ class SetopNamespace
 
     //~ Constructors -----------------------------------------------------------
 
-    SetopNamespace(SqlValidatorImpl validator, SqlCall call)
+    /**
+     * Creates a <code>SetopNamespace</code>.
+     *
+     * @param validator Validator
+     * @param call Call to set operator
+     */
+    protected SetopNamespace(SqlValidatorImpl validator, SqlCall call)
     {
         super(validator);
         this.call = call;

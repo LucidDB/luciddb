@@ -130,6 +130,11 @@ abstract class AbstractNamespace
         return rowType;
     }
 
+    public RelDataType getRowTypeSansSystemColumns()
+    {
+        return getRowType();
+    }
+
     public void setRowType(RelDataType rowType)
     {
         this.rowType = rowType;
