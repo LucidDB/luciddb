@@ -577,7 +577,13 @@ explain plan for select t.*
     on t.b = s.s3 and s.s1 = 'this is row 1' 
     order by a;
 
--- reference to non-semijoin key column in projection list
+-- references to non-semijoin key column in projection list
+explain plan for
+    select *
+        from sales s, product p
+        where
+            s.product_id = p.id and p.size = 'S'
+        order by sid;
 explain plan for
     select sid, p.name, s.quantity
         from sales s, product p
@@ -629,6 +635,11 @@ select t.*
     from t inner join smalltable s
     on t.b = s.s3 and s.s1 = 'this is row 1' 
     order by a;
+select *
+    from sales s, product p
+    where
+        s.product_id = p.id and p.size = 'S'
+    order by sid;
 select sid, p.name, s.quantity
     from sales s, product p
     where

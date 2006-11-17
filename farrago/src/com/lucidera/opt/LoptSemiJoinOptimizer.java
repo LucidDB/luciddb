@@ -723,6 +723,11 @@ public class LoptSemiJoinOptimizer
         // in either its projection or join conditions are the dimension
         // keys
         BitSet dimProjRefs = multiJoin.getProjFields(dimIdx);
+        if (dimProjRefs == null) {
+            int nDimFields = multiJoin.getNumFieldsInJoinFactor(dimIdx);
+            dimProjRefs = new BitSet(nDimFields);
+            RelOptUtil.setRexInputBitmap(dimProjRefs, 0, nDimFields);
+        }
         if (!RelOptUtil.contains(dimKeys, dimProjRefs)) {
             return;
         }
