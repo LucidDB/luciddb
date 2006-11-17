@@ -111,7 +111,7 @@ class FlatFileParams
          * Schema name for a typical query, in which columns are casted
          * to typed data
          */
-        QUERY("BCP"),
+        QUERY(new String[] {"BCP", "", "DEFAULT"}),
         /**
          * Schema name for a query in which columns are returned as text.
          * Similar to sample, except headers are not returned, and there
@@ -124,7 +124,9 @@ class FlatFileParams
         static {
             types = new HashMap<String, SchemaType>();
             for (SchemaType type : SchemaType.values()) {
-                types.put(type.schemaName, type);
+                for (String name : type.schemaNames) {
+                    types.put(name, type);
+                }
             }
         }
 
@@ -134,10 +136,18 @@ class FlatFileParams
         }
 
         private String schemaName;
+        private String[] schemaNames;
 
         private SchemaType(String schemaName)
         {
             this.schemaName = schemaName;
+            this.schemaNames = new String[] {schemaName};
+        }
+
+        private SchemaType(String[] schemaNames)
+        {
+            this.schemaName = schemaNames[0];
+            this.schemaNames = schemaNames;
         }
 
         public String getSchemaName()

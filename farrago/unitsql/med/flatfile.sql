@@ -545,3 +545,11 @@ options (
 -- test decimals from long values and overflows
 alter session set "errorMax" = 25;
 select * from flatfile_server.bcp."decimal";
+
+-- test "DEFAULT" and "" (empty) schema name
+select count(*) from flatfile_server."DEFAULT"."example";
+
+create schema test_schema;
+import foreign schema "" from server flatfile_server into test_schema;
+select count(*) from test_schema."example";
+drop schema test_schema cascade;
