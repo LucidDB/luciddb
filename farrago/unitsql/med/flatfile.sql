@@ -546,10 +546,14 @@ options (
 alter session set "errorMax" = 25;
 select * from flatfile_server.bcp."decimal";
 
--- test "DEFAULT" and "" (empty) schema name
+-- test "DEFAULT" schema name
 select count(*) from flatfile_server."DEFAULT"."example";
 
 create schema test_schema;
-import foreign schema "" from server flatfile_server into test_schema;
+import foreign schema "DEFAULT" from server flatfile_server into test_schema;
 select count(*) from test_schema."example";
+
+-- this should fail
+select * from flatfile_server.""."example";
+
 drop schema test_schema cascade;

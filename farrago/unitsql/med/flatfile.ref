@@ -857,7 +857,7 @@ Error: Mapping source columns in data files to target columns specified by contr
 | 23  | 0                     | 0.00                   | 0                 | -9999999999999.99  | min dec(15.2)  |
 +-----+-----------------------+------------------------+-------------------+--------------------+----------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test "DEFAULT" and "" (empty) schema name
+0: jdbc:farrago:> -- test "DEFAULT" schema name
 0: jdbc:farrago:> select count(*) from flatfile_server."DEFAULT"."example";
 +---------+
 | EXPR$0  |
@@ -866,13 +866,18 @@ Error: Mapping source columns in data files to target columns specified by contr
 +---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema test_schema;
-0: jdbc:farrago:> import foreign schema "" from server flatfile_server into test_schema;
+0: jdbc:farrago:> import foreign schema "DEFAULT" from server flatfile_server into test_schema;
 0: jdbc:farrago:> select count(*) from test_schema."example";
 +---------+
 | EXPR$0  |
 +---------+
 | 6       |
 +---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should fail
+0: jdbc:farrago:> select * from flatfile_server.""."example";
+Error: From line 1, column 15 to line 1, column 42: Table 'FLATFILE_SERVER..example' not found (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> drop schema test_schema cascade;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

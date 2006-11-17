@@ -111,7 +111,7 @@ class FlatFileParams
          * Schema name for a typical query, in which columns are casted
          * to typed data
          */
-        QUERY(new String[] {"BCP", "", "DEFAULT"}),
+        QUERY(new String[] {"BCP", "DEFAULT"}),
         /**
          * Schema name for a query in which columns are returned as text.
          * Similar to sample, except headers are not returned, and there
