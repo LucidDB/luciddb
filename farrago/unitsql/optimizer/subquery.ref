@@ -3404,7 +3404,7 @@ FROM `DEPTS2` (state=,code=0)
 |       FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- could be a bug: unique column property is not detected by metadata query
+0: jdbc:farrago:> -- 10.3 Unique columns need to be not null to be considered unique keys.
 0: jdbc:farrago:> create table test1(a int primary key, b int);
 0: jdbc:farrago:> create table test2(a int primary key, b int);
 0: jdbc:farrago:> create table test3(a int primary key, b int unique);
@@ -3491,18 +3491,18 @@ FROM `DEPTS2` (state=,code=0)
 . . . . . . . . >      from test1, test3 
 . . . . . . . . >      where test3.a = test2.b and test1.a = test2.a) 
 . . . . . . . . > from test2;
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                       column0                                                                                        |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..6=[{inputs}], expr#7=[+($t1, $t3)], EXPR$0=[$t7])                                                                                                                |
-|   FennelToIteratorConverter                                                                                                                                                          |
-|     LhxJoinRel(leftKeys=[[4, 0]], rightKeys=[[1, 0]], joinType=[RIGHT])                                                                                                              |
-|       FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER B, INTEGER NOT NULL A0, INTEGER B0, INTEGER CAST($2):INTEGER) NOT NULL])  |
-|         FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                             |
-|           LcsRowScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST1$A, SYS$CLUSTERED_INDEX$TEST1$B]])                             |
-|           LcsRowScanRel(table=[[LOCALDB, SALES, TEST3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST3$A, SYS$CLUSTERED_INDEX$TEST3$B]])                             |
-|       LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A, SYS$CLUSTERED_INDEX$TEST2$B]])                                 |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                 column0                                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..6=[{inputs}], expr#7=[IS NULL($t2)], expr#8=[null], expr#9=[CAST($t8):INTEGER], expr#10=[+($t1, $t3)], expr#11=[CAST($t10):INTEGER], expr#12=[CASE($t7, $t9, $t11)], EXPR$0=[$t12])  |
+|   FennelToIteratorConverter                                                                                                                                                                              |
+|     LhxJoinRel(leftKeys=[[4, 0]], rightKeys=[[1, 0]], joinType=[RIGHT])                                                                                                                                  |
+|       FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER B, INTEGER NOT NULL A0, INTEGER B0, INTEGER CAST($2):INTEGER) NOT NULL])                      |
+|         FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                                 |
+|           LcsRowScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST1$A, SYS$CLUSTERED_INDEX$TEST1$B]])                                                 |
+|           LcsRowScanRel(table=[[LOCALDB, SALES, TEST3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST3$A, SYS$CLUSTERED_INDEX$TEST3$B]])                                                 |
+|       LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A, SYS$CLUSTERED_INDEX$TEST2$B]])                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select 
@@ -3510,23 +3510,130 @@ FROM `DEPTS2` (state=,code=0)
 . . . . . . . . >      from test1, test4 
 . . . . . . . . >      where test4.b = test2.b and test1.a = test2.a) 
 . . . . . . . . > from test2;
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                column0                                                                                |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..5=[{inputs}], expr#6=[+($t1, $t2)], EXPR$0=[$t6])                                                                                                 |
-|   FennelToIteratorConverter                                                                                                                                           |
-|     LhxJoinRel(leftKeys=[[3, 0]], rightKeys=[[1, 0]], joinType=[RIGHT])                                                                                               |
-|       FennelReshapeRel(projection=[[0, 1, 2, 2]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER B, INTEGER NOT NULL B0, INTEGER CAST($2):INTEGER) NOT NULL])  |
-|         FennelCartesianProductRel(leftouterjoin=[false])                                                                                                              |
-|           LcsRowScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST1$A, SYS$CLUSTERED_INDEX$TEST1$B]])              |
-|           LcsRowScanRel(table=[[LOCALDB, SALES, TEST4]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST4$B]])                                         |
-|       LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A, SYS$CLUSTERED_INDEX$TEST2$B]])                  |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                column0                                                                                                 |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..5=[{inputs}], expr#6=[IS NULL($t2)], expr#7=[null], expr#8=[CAST($t7):INTEGER], expr#9=[+($t1, $t2)], expr#10=[CAST($t9):INTEGER], expr#11=[CASE($t6, $t8, $t10)], EXPR$0=[$t11])  |
+|   FennelToIteratorConverter                                                                                                                                                                            |
+|     LhxJoinRel(leftKeys=[[3, 0]], rightKeys=[[1, 0]], joinType=[RIGHT])                                                                                                                                |
+|       FennelReshapeRel(projection=[[0, 1, 2, 2]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER B, INTEGER NOT NULL B0, INTEGER CAST($2):INTEGER) NOT NULL])                                   |
+|         FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                               |
+|           LcsRowScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST1$A, SYS$CLUSTERED_INDEX$TEST1$B]])                                               |
+|           LcsRowScanRel(table=[[LOCALDB, SALES, TEST4]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST4$B]])                                                                          |
+|       LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A, SYS$CLUSTERED_INDEX$TEST2$B]])                                                   |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table test1;
 0: jdbc:farrago:> drop table test2;
 0: jdbc:farrago:> drop table test3;
 0: jdbc:farrago:> drop table test4;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- 10.4 subquery selects constants
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     (select 1 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps;
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                         column0                                                                                          |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS NULL($t1)], expr#3=[null], expr#4=[CAST($t3):INTEGER], expr#5=[1], expr#6=[CAST($t5):INTEGER], expr#7=[CASE($t2, $t4, $t6)], EXPR$0=[$t7])  |
+|   FennelToIteratorConverter                                                                                                                                                              |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                         |
+|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])                                                                         |
+|       FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                     |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> SELECT 
+. . . . . . . . >     (select 1 FROM depts where deptno = emps.deptno) a
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > order by a;
++----+
+| A  |
++----+
+|    |
+| 1  |
+| 1  |
+| 1  |
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     (select cast(1 as decimal(10,2)) FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps;
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                      column0                                                                                                                                                      |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS NULL($t1)], expr#3=[null], expr#4=[CAST($t3):DECIMAL(10, 2)], expr#5=[1.00], expr#6=[Reinterpret($t5)], expr#7=[Reinterpret($t6)], expr#8=[Reinterpret($t4)], expr#9=[Reinterpret($t7)], expr#10=[CASE($t2, $t8, $t9)], expr#11=[Reinterpret($t10)], EXPR$0=[$t11])  |
+|   FennelToIteratorConverter                                                                                                                                                                                                                                                                                       |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                                                                                                                                                  |
+|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])                                                                                                                                                                                                  |
+|       FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                                                                                                                                              |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> SELECT 
+. . . . . . . . >     (select cast(1 as decimal(10,2)) FROM depts where deptno = emps.deptno) a
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > order by a;
++-------+
+|   A   |
++-------+
+|       |
+| 1.00  |
+| 1.00  |
+| 1.00  |
++-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO: inner correlations can be improved too
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT empno
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > where 
+. . . . . . . . >     deptno in (select deptno FROM depts where deptno = emps.deptno);
++---------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                         column0                                                                         |
++---------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                               |
+|   FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO) NOT NULL])                                                       |
+|     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 1]], joinType=[RIGHTSEMI])                                                                             |
+|       LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                     |
+|         FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])  |
+|         LhxAggRel(groupCount=[1])                                                                                                                       |
+|           FennelRenameRel(fieldNames=[[$f0]])                                                                                                           |
+|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])                                  |
+|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                     |
++---------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT empno
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > where 
+. . . . . . . . >     deptno in (select emps.deptno FROM depts where deptno = emps.deptno);
++---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                            column0                                                                            |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                     |
+|   FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO) NOT NULL])                                                             |
+|     LhxJoinRel(leftKeys=[[0, 1, 2]], rightKeys=[[1, 1, 1]], joinType=[RIGHTSEMI])                                                                             |
+|       FennelReshapeRel(projection=[[1, 0, 1]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER NOT NULL $f0, INTEGER NOT NULL $f00) NOT NULL])     |
+|         FennelCartesianProductRel(leftouterjoin=[false])                                                                                                      |
+|           FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])                                                       |
+|             LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                     |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])  |
+|               LhxAggRel(groupCount=[1])                                                                                                                       |
+|                 FennelRenameRel(fieldNames=[[$f0]])                                                                                                           |
+|                   FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])                                  |
+|           FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                 |
+|             LhxAggRel(groupCount=[1])                                                                                                                         |
+|               FennelRenameRel(fieldNames=[[$f0]])                                                                                                             |
+|                 FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])                                    |
+|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                           |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --------------
 0: jdbc:farrago:> -- clean up --

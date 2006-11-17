@@ -252,6 +252,11 @@ public interface SqlValidator
      * as <code>SUM(x) OVER w</code>, don't count.)
      */
     boolean isAggregate(SqlSelect select);
+    
+    /**
+     * Returns whether a select list expression is an aggregate function.
+     */
+    boolean isAggregate(SqlNode selectNode);
 
     /**
      * Converts a window specification or window name into a fully-resolved
