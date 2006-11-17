@@ -336,6 +336,8 @@ public abstract class SqlOperatorTests
 
     public void testCastChar()
     {
+        getTester().setFor(SqlStdOperatorTable.castFunc);
+
         // "CHAR" is shorthand for "CHAR(1)"
         getTester().checkString("CAST('abc' AS CHAR)", "a", "CHAR(1) NOT NULL");
         getTester().checkString("CAST('abc' AS VARCHAR)", "a", "VARCHAR(1) NOT NULL");
