@@ -334,6 +334,13 @@ public abstract class SqlOperatorTests
             expected + spaces);
     }
 
+    public void testCastChar()
+    {
+        // "CHAR" is shorthand for "CHAR(1)"
+        getTester().checkString("CAST('abc' AS CHAR)", "a", "CHAR(1) NOT NULL");
+        getTester().checkString("CAST('abc' AS VARCHAR)", "a", "VARCHAR(1) NOT NULL");
+    }
+
     public void testCastExactNumerics()
     {
         getTester().setFor(SqlStdOperatorTable.castFunc);
@@ -2196,6 +2203,11 @@ public abstract class SqlOperatorTests
 
         getTester().checkNull("position(cast(null as varchar(1)) in '0010')");
         getTester().checkNull("position('a' in cast(null as varchar(1)))");
+
+        getTester().checkScalar(
+            "position(cast('a' as char) in cast('bca' as varchar))",
+            0,
+            "INTEGER NOT NULL");
     }
 
     public void testCharLengthFunc()
