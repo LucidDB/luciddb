@@ -21,6 +21,10 @@
 */
 package net.sf.farrago.util;
 
+import net.sf.farrago.trace.*;
+
+import java.util.logging.*;
+
 import java.sql.*;
 
 /**
@@ -33,6 +37,9 @@ import java.sql.*;
 public class FarragoWarningQueue
 {
     private SQLWarning warnings;
+
+    private static final Logger tracer =
+        FarragoTrace.getFarragoJdbcEngineDriverTracer();
 
     /**
      * Retrieves warnings which have accumulated on this queue.
@@ -62,6 +69,8 @@ public class FarragoWarningQueue
     public synchronized void postWarning(SQLWarning warning)
     {
         assert(warning.getNextWarning() == null);
+
+        tracer.warning(warning.getMessage());
         
         if (warnings == null) {
             warnings = warning;
