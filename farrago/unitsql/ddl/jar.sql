@@ -112,3 +112,20 @@ language java
 no sql
 external name 
 'medjar:net.sf.farrago.namespace.jdbc.MedJdbcUDR.getDriverForUrl';
+
+
+-- verify that jar name is fully qualified in catalog
+
+create jar medjar library 'file:plugin/FarragoMedJdbc.jar' options(0);
+
+create function get_driver_for_url(url varchar(2000))
+returns varchar(2000)
+language java
+no sql
+external name 
+'medjar:net.sf.farrago.namespace.jdbc.MedJdbcUDR.getDriverForUrl';
+
+set schema 'sales';
+set path 'sales';
+
+values jartest.get_driver_for_url('jdbc:default:connection');
