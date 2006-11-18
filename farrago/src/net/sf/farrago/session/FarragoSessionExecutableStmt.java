@@ -28,6 +28,7 @@ import java.util.*;
 
 import net.sf.farrago.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
@@ -77,6 +78,12 @@ public interface FarragoSessionExecutableStmt
      * @return true if this statement is DML; false if a query
      */
     public boolean isDml();
+    
+    /**
+     * @return the table modification operation type if this is a table
+     * modification statement; otherwise null
+     */
+    public TableModificationRel.Operation getTableModOp();
 
     /**
      * @return approximate total number of bytes used by this statement's

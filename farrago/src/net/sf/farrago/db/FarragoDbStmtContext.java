@@ -24,6 +24,7 @@ package net.sf.farrago.db;
 
 import java.sql.*;
 
+import java.util.*;
 import java.util.logging.*;
 
 import net.sf.farrago.resource.*;
@@ -31,6 +32,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
@@ -52,7 +54,7 @@ public class FarragoDbStmtContext
 
     //~ Instance fields --------------------------------------------------------
 
-    private int updateCount;
+    private long updateCount;
     private ResultSet resultSet;
     private FarragoSessionExecutableStmt executableStmt;
     private FarragoCompoundAllocation allocations;
@@ -244,12 +246,27 @@ public class FarragoDbStmtContext
         }
         if (isDml) {
             success = false;
+            long mergeRowCount = 0;
             try {
                 boolean found = resultSet.next();
                 assert (found);
-                updateCount = resultSet.getInt(1);
-                boolean superfluousRowCounts = resultSet.next();
-                assert (!superfluousRowCounts);
+                updateCount = resultSet.getLong(1);
+                boolean nextRowCount = resultSet.next();
+                if (executableStmt.getTableModOp() ==
+                    TableModificationRel.Operation.MERGE)
+                {
+                    // additional rowcount does not occur when the MERGE
+                    // is an INSERT-only merge; otherwise, the second rowcount
+                    // is the total rows affected (either newly inserted or
+                    // updated) and the first rowcount is the number of rows
+                    // deleted (as a result of updates)
+                    if (nextRowCount) {
+                        mergeRowCount = updateCount;
+                        updateCount = resultSet.getLong(1);
+                        nextRowCount = resultSet.next();
+                    }
+                }
+                assert (!nextRowCount);
                 if (tracer.isLoggable(Level.FINE)) {
                     tracer.fine("Update count = " + updateCount);
                 }
@@ -270,6 +287,9 @@ public class FarragoDbStmtContext
                     clearExecutingStmtInfo();
                 }
             }
+            if (executableStmt.isDml()) {
+                updateRowCounts(updateCount, mergeRowCount);
+            }         
         }
 
         // NOTE:  for result sets, autocommit is taken care of by
@@ -286,9 +306,9 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public int getUpdateCount()
+    public long getUpdateCount()
     {
-        int count = updateCount;
+        long count = updateCount;
         updateCount = -1;
         return count;
     }
@@ -334,11 +354,72 @@ public class FarragoDbStmtContext
 
         super.unprepare();
     }
-
+    
     // implement FarragoSessionStmtContext
     public FarragoWarningQueue getWarningQueue()
     {
         return warningQueue;
+    }
+
+    /**
+     * Update catalog row counts
+     * 
+     * @param updateCount number of rows updated by the statement; in the case
+     * of a MERGE statement, this is the number of newly inserted rows as well
+     * as the number of rows updated by the MERGE
+     * @param mergeRowCount number of rows updated by the MERGE statement
+     */
+    private void updateRowCounts(long updateCount, long mergeRowCount)
+    {
+        TableModificationRel.Operation tableModOp =
+            executableStmt.getTableModOp();
+        // marked as DML, but doesn't actually modify a table; e.g., a
+        // procedure call
+        if (tableModOp == null) {
+            return;
+        }
+        List<String> targetTable = getDmlTarget();
+        // if there's no target table (e.g., for a create index), then this
+        // isn't really a DML statement
+        if (targetTable == null) {
+            return;
+        }
+        
+        long insertRowCount = 0;
+        long deleteRowCount = 0;
+        long updateRowCount = 0;
+        if (tableModOp == TableModificationRel.Operation.INSERT) {
+            insertRowCount = updateCount;
+        } else if (tableModOp == TableModificationRel.Operation.DELETE) {
+            deleteRowCount = updateCount;
+        } else if (tableModOp == TableModificationRel.Operation.MERGE) {
+            insertRowCount = updateCount;
+            deleteRowCount = mergeRowCount;
+        } else if (tableModOp == TableModificationRel.Operation.UPDATE) {
+            updateRowCount = updateCount;
+        } else {
+            assert(false);
+        }
+        
+        session.getPersonality().updateRowCounts(
+            session,
+            targetTable,
+            insertRowCount,
+            deleteRowCount,
+            updateRowCount,
+            executableStmt.getTableModOp());
+    }
+    
+    private List<String> getDmlTarget()
+    {
+        TableAccessMap tableAccessMap = executableStmt.getTableAccessMap();
+        Set<List<String>> tablesAccessed = tableAccessMap.getTablesAccessed();
+        for (List<String> table : tablesAccessed) {
+            if (tableAccessMap.isTableAccessedForWrite(table)) {
+                return table;
+            }
+        }
+        return null;
     }
 }
 

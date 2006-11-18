@@ -62,6 +62,22 @@ public class LcsIndexGuide
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final int LbmBitmapSegMaxSize = 512;
+    
+    /**
+     * Return the first input into the barrier
+     */
+    protected static final int BarrierReturnFirstInput = 0;
+    
+    /**
+     * All inputs into the barrier return the same rowcount, so any can be
+     * used as the return value
+     */
+    protected static final int BarrierReturnAnyInput = -1;
+    
+    /**
+     * Return all inputs in the barrier, one row per input
+     */
+    protected static final int BarrierReturnAllInputs = -2;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -700,9 +716,8 @@ public class LcsIndexGuide
     {
         FemBarrierStreamDef barrier = repos.newFemBarrierStreamDef();
 
-        // rowCountInput indicates which input stream contains the row count
-        // that the barrier should produce; if it is set to -1, then all
-        // inputs must produce the same row count
+        // rowCountInput indicates which input stream or streams contain the
+        // row count that the barrier should produce
         barrier.setRowCountInput(rowCountInput);
 
         barrier.setOutputDesc(

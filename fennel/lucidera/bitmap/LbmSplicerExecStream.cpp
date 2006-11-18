@@ -289,6 +289,9 @@ void LbmSplicerExecStream::spliceEntry(TupleData &bitmapEntry)
         assert(LbmEntry::isSingleton(bitmapEntry));
         LcsRid rid = *((LcsRid *) bitmapEntry[nIdxKeys].pData);
         if (pCurrentEntry->containsRid(rid)) {
+            if (computeRowCount) {
+                numRowsLoaded--;
+            }
             return;
         }
     }

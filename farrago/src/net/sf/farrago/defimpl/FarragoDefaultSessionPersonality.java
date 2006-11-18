@@ -39,6 +39,7 @@ import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fem.security.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
@@ -48,6 +49,7 @@ import net.sf.farrago.type.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rex.*;
+import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
@@ -454,6 +456,22 @@ public class FarragoDefaultSessionPersonality
         // that happens inside of FarragoPreparingStmt so that
         // this provider gets low priority.
     }
+    
+    // implement FarragoSessionPersonality
+    public void updateRowCounts(
+        FarragoSession session,
+        List<String> tableName,
+        long insertedRowCount,
+        long deletedRowCount,
+        long updateRowCount,
+        TableModificationRel.Operation tableModOp)
+    {
+    }
+    
+    // implement FarragoSessionPersonality
+    public void resetRowCounts(FemAbstractColumnSet table)
+    {
+    }
 
     /**
      * ParamDesc represents a session parameter descriptor
@@ -462,14 +480,14 @@ public class FarragoDefaultSessionPersonality
     {
         int type;
         boolean nullability;
-        Integer rangeStart, rangeEnd;
+        Long rangeStart, rangeEnd;
         
         public ParamDesc(int type, boolean nullability) {
             this.type = type;
             this.nullability = nullability;
         }
 
-        public ParamDesc(int type, boolean nullability, int start, int end) {
+        public ParamDesc(int type, boolean nullability, long start, long end) {
             this.type = type;
             this.nullability = nullability;
             rangeStart = start;
@@ -486,6 +504,7 @@ public class FarragoDefaultSessionPersonality
         private final int INT_TYPE = 2;
         private final int STRING_TYPE = 3;
         private final int DIRECTORY_TYPE = 4;
+        private final int LONG_TYPE = 5;
         
         private Map<String, ParamDesc> params;
 
@@ -509,6 +528,13 @@ public class FarragoDefaultSessionPersonality
         {
             assert (start <= end);
             params.put(name, new ParamDesc(INT_TYPE, nullability, start, end));
+        }
+        
+        public void registerLongParam(
+            String name, boolean nullability, long start, long end)
+        {
+            assert (start <= end);
+            params.put(name, new ParamDesc(LONG_TYPE, nullability, start, end));
         }
 
         public void registerStringParam(String name, boolean nullability)
@@ -550,6 +576,16 @@ public class FarragoDefaultSessionPersonality
                 if (paramDesc.rangeStart != null) {
                     Integer i = (Integer) o;
                     if (i < paramDesc.rangeStart || i > paramDesc.rangeEnd) {
+                        throw FarragoResource.instance()
+                        .ParameterValueOutOfRange.ex(value, name);
+                    }
+                }
+                break;
+            case LONG_TYPE:
+                o = Long.valueOf(value);
+                if (paramDesc.rangeStart != null) {
+                    Long l = (Long) o;
+                    if (l < paramDesc.rangeStart || l > paramDesc.rangeEnd) {
                         throw FarragoResource.instance()
                         .ParameterValueOutOfRange.ex(value, name);
                     }

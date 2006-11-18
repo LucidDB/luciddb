@@ -384,6 +384,39 @@ public class FarragoMetadataTest
         Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
         assertTrue(result.equals(expected));
     }
+    
+    private void addConcatUniqueKeys(Set<BitSet> keySet)
+    {
+        // add concat unique keys
+        // left: 0, (1, 2)
+        // right 0, (1, 2)
+        // left field length == 5
+        // concatenated unqiue keys are
+        // (0, 5), (0, 6, 7), (1, 2, 5), (1, 2, 6, 7)
+        BitSet keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 0);
+        keySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        keySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 0);
+        keySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        keySet.add(keys);      
+    }   
 
     public void testUniqueKeysJoinLeft()
         throws Exception
@@ -401,35 +434,7 @@ public class FarragoMetadataTest
         keys.set(5 + 2);
         expected.add(keys);
 
-        // add concat unique keys
-        // left: 0, (1, 2)
-        // right 0, (1, 2)
-        // left field length == 5
-        // concatenated unqiue keys are
-        // (0, 5), (0, 6, 7), (1, 2, 5), (1, 2, 6, 7)
-        keys = new BitSet();
-        keys.set(0);
-        keys.set(5 + 0);
-        expected.add(keys);
-
-        keys = new BitSet();
-        keys.set(0);
-        keys.set(5 + 1);
-        keys.set(5 + 2);
-        expected.add(keys);
-
-        keys = new BitSet();
-        keys.set(1);
-        keys.set(2);
-        keys.set(5 + 0);
-        expected.add(keys);
-
-        keys = new BitSet();
-        keys.set(1);
-        keys.set(2);
-        keys.set(5 + 1);
-        keys.set(5 + 2);
-        expected.add(keys);
+        addConcatUniqueKeys(expected);
         
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2 where t1.c0 = t2.c3",
@@ -452,36 +457,8 @@ public class FarragoMetadataTest
         keys.set(2);
         expected.add(keys);
 
-        // add concat unique keys
-        // left: 0, (1, 2)
-        // right 0, (1, 2)
-        // left field length == 5
-        // concatenated unqiue keys are
-        // (0, 5), (0, 6, 7), (1, 2, 5), (1, 2, 6, 7)
-        keys = new BitSet();
-        keys.set(0);
-        keys.set(5 + 0);
-        expected.add(keys);
-
-        keys = new BitSet();
-        keys.set(0);
-        keys.set(5 + 1);
-        keys.set(5 + 2);
-        expected.add(keys);
-
-        keys = new BitSet();
-        keys.set(1);
-        keys.set(2);
-        keys.set(5 + 0);
-        expected.add(keys);
-
-        keys = new BitSet();
-        keys.set(1);
-        keys.set(2);
-        keys.set(5 + 1);
-        keys.set(5 + 2);
-        expected.add(keys);
-
+        addConcatUniqueKeys(expected);
+        
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2 where t1.c3 = t2.c1 and t1.c4 = t2.c2",
             expected);
@@ -491,37 +468,10 @@ public class FarragoMetadataTest
         throws Exception
     {
         // no equijoins on unique keys so there should be no unique keys
+        // returned as a result of the join
         Set<BitSet> expected = new HashSet<BitSet>();
 
-        // add concat unique keys
-        // left: 0, (1, 2)
-        // right 0, (1, 2)
-        // left field length == 5
-        // concatenated unqiue keys are
-        // (0, 5), (0, 6, 7), (1, 2, 5), (1, 2, 6, 7)
-        BitSet keys = new BitSet();
-        keys.set(0);
-        keys.set(5 + 0);
-        expected.add(keys);
-
-        keys = new BitSet();
-        keys.set(0);
-        keys.set(5 + 1);
-        keys.set(5 + 2);
-        expected.add(keys);
-
-        keys = new BitSet();
-        keys.set(1);
-        keys.set(2);
-        keys.set(5 + 0);
-        expected.add(keys);
-
-        keys = new BitSet();
-        keys.set(1);
-        keys.set(2);
-        keys.set(5 + 1);
-        keys.set(5 + 2);
-        expected.add(keys);
+        addConcatUniqueKeys(expected);
         
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2 where t1.c3 = t2.c3",
@@ -529,43 +479,48 @@ public class FarragoMetadataTest
     }
 
     public void testUniqueKeysCartesianProduct()
-    throws Exception
+        throws Exception
     {
         // no equijoins on unique keys so there should be no unique keys
+        // returned as a result of the join
         Set<BitSet> expected = new HashSet<BitSet>();
 
-        // add concatenated unique keys
-        // left: 0, (1, 2)
-        // right 0, (1, 2)
-        // left field length == 5
-        // concatenated unqiue keys are
-        // (0, 5), (0, 6, 7), (1, 2, 5), (1, 2, 6, 7)
-        BitSet keys = new BitSet();
-        keys.set(0);
-        keys.set(5 + 0);
-        expected.add(keys);
-
-        keys = new BitSet();
-        keys.set(0);
-        keys.set(5 + 1);
-        keys.set(5 + 2);
-        expected.add(keys);
-
-        keys = new BitSet();
-        keys.set(1);
-        keys.set(2);
-        keys.set(5 + 0);
-        expected.add(keys);
-
-        keys = new BitSet();
-        keys.set(1);
-        keys.set(2);
-        keys.set(5 + 1);
-        keys.set(5 + 2);
-        expected.add(keys);
+        addConcatUniqueKeys(expected);  
         
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2",
+            expected);
+    }
+    
+    public void testUniqueKeysLeftOuterJoin()
+        throws Exception
+    {
+        // left side has a unique join key but the right hand side is null
+        // generating, so no unique keys should be returned as a result of
+        // the join
+
+        Set<BitSet> expected = new HashSet<BitSet>();        
+        
+        addConcatUniqueKeys(expected);
+        
+        checkUniqueKeysJoin(
+            "select * from tab t1 left outer join tab t2 on t1.c0 = t2.c3",
+            expected);
+    }
+    
+    public void testUniqueKeysRightOuterJoin()
+        throws Exception
+    {
+        // right side has a unique join key but the left hand side is null
+        // generating, so no unique keys should be returned as a result of
+        // the join
+        Set<BitSet> expected = new HashSet<BitSet>();
+
+        addConcatUniqueKeys(expected);
+        
+        checkUniqueKeysJoin(
+            "select * from tab t1 right outer join tab t2 " +
+            "on t1.c3 = t2.c1 and t1.c4 = t2.c2",
             expected);
     }
     

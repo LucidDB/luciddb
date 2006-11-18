@@ -926,11 +926,10 @@ Error: From line 5, column 57 to line 5, column 72: Aggregate expression is ille
 '      FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
 '        FennelRenameRel(fieldNames=[[$f0]])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
-'      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
-'          IteratorToFennelConverter'
-'            IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
-'              IterOneRowRel'
+'      FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
+'            IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > SELECT 
@@ -947,11 +946,10 @@ Error: From line 5, column 57 to line 5, column 72: Aggregate expression is ille
 '        LhxAggRel(groupCount=[2], agg#0=[SUM(2)])'
 '          FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 1, 0]], index=[EMPS_UX], preserveOrder=[false])'
-'      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
-'          IteratorToFennelConverter'
-'            IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
-'              IterOneRowRel'
+'      FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
+'            IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- expect error
 0: jdbc:farrago:> explain plan for

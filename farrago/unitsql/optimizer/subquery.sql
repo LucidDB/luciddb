@@ -626,7 +626,7 @@ select emps.empno, d.deptno, d2.deptno
 from emps,
 lateral (select * from depts where depts.deptno = emps.deptno) as d,
 lateral (select * from depts2 where depts2.deptno <> emps.deptno) as d2
-order by emps.empno;
+order by emps.empno, d.deptno, d2.deptno;
 
 -- 5.4 two lateral views: three correlations
 explain plan without implementation for

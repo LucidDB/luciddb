@@ -83,6 +83,11 @@ public class PreparedExplanation
     {
         return false;
     }
+    
+    public TableModificationRel.Operation getTableModOp()
+    {
+        return null;
+    }
 
     public RelNode getRel()
     {

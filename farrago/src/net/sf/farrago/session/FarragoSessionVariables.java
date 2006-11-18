@@ -248,6 +248,31 @@ public class FarragoSessionVariables
         String stringValue = get(name);
         return (stringValue == null) ? null : Integer.valueOf(stringValue);
     }
+    
+    /**
+     * Sets the value of a variable, expressed as a long
+     * @see #set(String, String)
+     */
+    public void setLong(String name, Long value)
+    {
+        String stringValue = (value == null) ? null : value.toString();
+        valueMap.put(name, stringValue);
+    }
+
+    /**
+     * Gets the value of a variable, casted to a Long
+     * 
+     * @see #get(String)
+     * @param name the name of a session variable
+     * @throws IllegalArgumentException if the variable is not in the map
+     * @throws NumberFormatException if the value cannot be casted to a Long
+     */
+    public Long getLong(String name) 
+    {
+        String stringValue = get(name);
+        return (stringValue == null) ? null : Long.valueOf(stringValue);
+    }
+
 
     /**
      * Sets the value of a variable, expressed as an boolean

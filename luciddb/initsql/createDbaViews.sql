@@ -105,6 +105,8 @@ create or replace view dba_stored_tables as
     last_modification_timestamp,
     last_analyze_row_count,
     last_analyze_timestamp,
+    current_row_count,
+    deleted_row_count,
     remarks,
     sti."mofId" as mofid,
     sti."lineageId" as lineageid

@@ -25,6 +25,7 @@ import java.util.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rex.*;
+import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
@@ -33,6 +34,8 @@ import org.eigenbase.sql.type.*;
 import org.eigenbase.resource.EigenbaseResource;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.db.*;
+import net.sf.farrago.fem.sql2003.*;
 
 
 /**
@@ -290,6 +293,39 @@ public interface FarragoSessionPersonality
      * @param chain receives personality's custom providers, if any
      */
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain);
+    
+    /**
+     * Gives this personality the opportunity to update rowcount information in
+     * the catalog tables for a specified table as a result of a particular
+     * DML operation.
+     * 
+     * @param session session that needs to update rowcounts
+     * @param tableName fully qualified table name for which rowcounts will be
+     * updated
+     * @param insertedRowCount count of the number of rows inserted by the DML
+     * statement
+     * @param deletedRowCount count of the number of rows deleted by the DML
+     * statement
+     * @param updateRowCount count of the number of rows updated by the DML
+     * statement
+     * @param tableModOp table modification operation that caused the
+     * rowcounts to be modified
+     */
+    public void updateRowCounts(
+        FarragoSession session,
+        List<String> tableName,
+        long insertedRowCount,
+        long deletedRowCount,
+        long updateRowCount,
+        TableModificationRel.Operation tableModOp);
+    
+    /**
+     * Gives this personality the opportunity to reset rowcount information in
+     * the catalog tables for a specified table
+     * 
+     * @param table column set corresponding to table
+     */
+    public void resetRowCounts(FemAbstractColumnSet table);
 }
 
 // End FarragoSessionPersonality.java

@@ -113,14 +113,12 @@
 |           LhxAggRel |
 |             FennelCalcRel |
 |               LhxJoinRel |
-|                 LcsRowScanRel |
-|                   LcsIndexMergeRel |
-|                     LcsIndexSearchRel |
-|                       FennelValuesRel |
 |                 FennelReshapeRel |
 |                   LhxJoinRel |
 |                     LcsRowScanRel |
-|                       FennelValuesRel |
+|                       LcsIndexMergeRel |
+|                         LcsIndexSearchRel |
+|                           FennelValuesRel |
 |                     FennelReshapeRel |
 |                       LhxJoinRel |
 |                         LcsRowScanRel |
@@ -150,6 +148,8 @@
 |                                         LcsIndexMergeRel |
 |                                           LcsIndexSearchRel |
 |                                             FennelValuesRel |
+|                 LcsRowScanRel |
+|                   FennelValuesRel |
 +---------+
 
 -- end of setup

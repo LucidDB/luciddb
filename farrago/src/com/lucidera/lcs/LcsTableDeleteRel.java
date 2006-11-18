@@ -181,7 +181,10 @@ public class LcsTableDeleteRel
             indexGuide.newSplicer(this, deletionIndex, 0, false);
         implementor.addDataFlowFromProducerToConsumer(input, splicer);
 
-        FemBarrierStreamDef barrier = indexGuide.newBarrier(this, 0);
+        FemBarrierStreamDef barrier =
+            indexGuide.newBarrier(
+                this,
+                LcsIndexGuide.BarrierReturnFirstInput);
         implementor.addDataFlowFromProducerToConsumer(splicer, barrier);
 
         return barrier;

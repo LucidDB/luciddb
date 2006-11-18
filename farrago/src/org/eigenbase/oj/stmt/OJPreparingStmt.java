@@ -469,8 +469,29 @@ public abstract class OJPreparingStmt
                 rootRel,
                 resultType,
                 isDml,
+                mapTableModOp(isDml, sqlKind),
                 boundMethod);
         return plan;
+    }
+    
+    private TableModificationRel.Operation mapTableModOp(
+        boolean isDml,
+        SqlKind sqlKind)
+    {
+        if (!isDml) {
+            return null;
+        }
+        if (sqlKind == SqlKind.Insert) {
+            return TableModificationRel.Operation.INSERT;
+        } else if (sqlKind == SqlKind.Delete) {
+            return TableModificationRel.Operation.DELETE;
+        } else if (sqlKind == SqlKind.Merge) {
+            return TableModificationRel.Operation.MERGE;
+        } else if (sqlKind == SqlKind.Update) {
+            return TableModificationRel.Operation.UPDATE;
+        } else {
+            return null;
+        }
     }
 
     /**

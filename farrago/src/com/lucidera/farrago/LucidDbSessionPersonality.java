@@ -37,6 +37,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.config.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
@@ -51,6 +52,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -75,6 +77,9 @@ public class LucidDbSessionPersonality
     public static final String ERROR_MAX_DEFAULT = "0";
     public static final String ERROR_LOG_MAX = "errorLogMax";
     public static final String ERROR_LOG_MAX_DEFAULT = null;
+    public static final String LAST_UPSERT_ROWS_INSERTED =
+        "lastUpsertRowsInserted";
+    public static final String LAST_UPSERT_ROWS_INSERTED_DEFAULT = null;
     
     //~ Constructors -----------------------------------------------------------
 
@@ -88,6 +93,8 @@ public class LucidDbSessionPersonality
             ERROR_MAX, true, 0, Integer.MAX_VALUE);
         paramValidator.registerIntParam(
             ERROR_LOG_MAX, true, 0, Integer.MAX_VALUE);
+        paramValidator.registerLongParam(
+            LAST_UPSERT_ROWS_INSERTED, true, 0, Long.MAX_VALUE); 
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -610,6 +617,9 @@ public class LucidDbSessionPersonality
         variables.setDefault(ETL_ACTION_ID, ETL_ACTION_ID_DEFAULT);
         variables.setDefault(ERROR_MAX, ERROR_MAX_DEFAULT);
         variables.setDefault(ERROR_LOG_MAX, ERROR_LOG_MAX_DEFAULT);
+        variables.setDefault(
+            LAST_UPSERT_ROWS_INSERTED,
+            LAST_UPSERT_ROWS_INSERTED_DEFAULT);
     }
 
     // override FarragoDefaultSessionPersonality
@@ -635,6 +645,78 @@ public class LucidDbSessionPersonality
         FarragoRepos repos)
     {
         return new LucidDbTypeFactory(repos);
+    }
+    
+    // implement FarragoSessionPersonality
+    public void updateRowCounts(
+        FarragoSession session,
+        List<String> tableName,
+        long insertedRowCount,
+        long deletedRowCount,
+        long updateRowCount,
+        TableModificationRel.Operation tableModOp)
+    {
+        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
+        FarragoRepos repos = session.getRepos();
+        boolean rollback = false;
+        try {
+            repos.beginReposTxn(true);
+            rollback = true;
+        
+            // get the current rowcounts
+            assert(tableName.size() == 3);
+            SqlIdentifier qualifiedName =
+                new SqlIdentifier(
+                    tableName.toArray(new String[tableName.size()]),
+                    new SqlParserPos(0,0));
+            FemAbstractColumnSet columnSet =
+                stmtValidator.findSchemaObject(
+                    qualifiedName,
+                    FemAbstractColumnSet.class);       
+            long currRowCount = columnSet.getRowCount();
+            long currDeletedRowCount = columnSet.getDeletedRowCount();
+               
+            // update the rowcounts based on the operation
+            if (tableModOp == TableModificationRel.Operation.INSERT) {
+                currRowCount += insertedRowCount;
+            } else if (tableModOp == TableModificationRel.Operation.DELETE) {
+                currRowCount -= deletedRowCount;
+                currDeletedRowCount += deletedRowCount;
+            } else if (tableModOp == TableModificationRel.Operation.MERGE) {
+                long newRowCount = insertedRowCount - deletedRowCount;
+                currRowCount += newRowCount;
+                currDeletedRowCount += deletedRowCount;
+                session.getSessionVariables().setLong(
+                    LAST_UPSERT_ROWS_INSERTED,
+                    newRowCount);
+            } else {
+                assert(false);
+            }
+ 
+            // update the catalog; don't let the rowcount go below zero; it
+            // may go below zero if a crash occurred in the middle of a prior
+            // update
+            if (currRowCount < 0) {
+                currRowCount = 0;
+            }
+            columnSet.setRowCount(currRowCount);
+            assert(currDeletedRowCount >= 0);
+            columnSet.setDeletedRowCount(currDeletedRowCount);
+            
+            rollback = false;
+            repos.endReposTxn(false);
+        } finally {
+            if (rollback) {
+                repos.endReposTxn(true);
+            }
+            stmtValidator.closeAllocation();
+        }
+    }
+    
+    // implement FarragoSessionPersonality
+    public void resetRowCounts(FemAbstractColumnSet table)
+    {
+        FarragoCatalogUtil.resetRowCounts(table);
     }
 }
 

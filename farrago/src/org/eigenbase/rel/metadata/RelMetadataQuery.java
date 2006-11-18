@@ -111,7 +111,8 @@ public abstract class RelMetadataQuery
                 "getRowCount",
                 null);
         assert (assertNonNegative(result));
-        return result;
+        return validateResult(result);
+        
     }
 
     /**
@@ -267,7 +268,7 @@ public abstract class RelMetadataQuery
                 "getPopulationSize",
                 new Object[] { groupKey });
         assert (assertNonNegative(result));
-        return result;
+        return validateResult(result);
     }
 
     /**
@@ -295,7 +296,7 @@ public abstract class RelMetadataQuery
                 "getDistinctRowCount",
                 new Object[] { groupKey, predicate });
         assert (assertNonNegative(result));
-        return result;
+        return validateResult(result);
     }
 
     private static boolean assertPercentage(Double result)
@@ -317,6 +318,20 @@ public abstract class RelMetadataQuery
         double d = result.doubleValue();
         assert (d >= 0.0);
         return true;
+    }
+    
+    private static Double validateResult(Double result)
+    {
+        if (result == null) {
+            return result;
+        }
+        // never let the result go below 1, as it will result in incorrect
+        // calculations if the rowcount is used as the denominator in a
+        // division expression
+        if (result < 1.0) {
+            result = 1.0;
+        }
+        return result;
     }
 }
 

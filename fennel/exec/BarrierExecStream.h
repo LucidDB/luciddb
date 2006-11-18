@@ -31,14 +31,19 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+const int ReturnAnyInput = -1;
+const int ReturnAllInputs = -2;
+
 /**
  * BarrierExecStreamParams defines parameters for BarrierExecStream.
  */
 struct BarrierExecStreamParams : public ConfluenceExecStreamParams
 {
     /**
-     * The input stream that will return the row count that BarrierExecStream
-     * produces.  If -1, all inputs return the same row count.
+     * If >= 0, the input stream that will return the row count that
+     * BarrierExecStream produces.  If -1, all inputs return the same row
+     * count.  If -2, return each input's row count as an output row, in
+     * the order of the inputs.
      */
     int rowCountInput;   
 };
@@ -87,6 +92,24 @@ class BarrierExecStream : public ConfluenceExecStream
      */
     int rowCountInput;
 
+    /**
+     * @return true if all inputs into this stream must produce the same
+     * rowcount
+     */
+    inline bool returnAnyInput();
+
+    /**
+     * @return true if only one input's rowcount is returned by this exec
+     * stream
+     */
+    inline bool returnOneInput();
+
+    /**
+     * @return true if all input's rowcounts are returned by this exec stream,
+     * one per output row
+     */
+    inline bool returnAllInputs();
+
 public:
     // implement ExecStream
     virtual void prepare(BarrierExecStreamParams const &params);    
@@ -98,6 +121,21 @@ public:
      */
     virtual void closeImpl();
 };
+
+inline bool BarrierExecStream::returnAnyInput()
+{
+    return (rowCountInput == ReturnAnyInput);
+}
+
+inline bool BarrierExecStream::returnOneInput()
+{
+    return (rowCountInput >= 0);
+}
+
+inline bool BarrierExecStream::returnAllInputs()
+{
+    return (rowCountInput == ReturnAllInputs);
+}
 
 FENNEL_END_NAMESPACE
 

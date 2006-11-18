@@ -934,6 +934,7 @@ public abstract class FarragoCatalogUtil
     {
         columnSet.setAnalyzeTime(createTimestamp());
         columnSet.setRowCount(rowCount);
+        columnSet.setLastAnalyzeRowCount(rowCount);
     }
 
     /**
@@ -1017,6 +1018,18 @@ public abstract class FarragoCatalogUtil
     public static String createTimestamp()
     {
         return new Timestamp(System.currentTimeMillis()).toString();
+    }
+    
+    /**
+     * Resets the rowcounts for a table
+     * 
+     * @param table a column set table
+     */
+    public static void resetRowCounts(FemAbstractColumnSet table)
+    {
+        long zero = 0;
+        table.setRowCount(zero);
+        table.setDeletedRowCount(zero);
     }
 }
 

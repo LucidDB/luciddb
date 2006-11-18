@@ -25,6 +25,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.session.*;
 
@@ -95,6 +96,9 @@ public class DdlRebuildTableStmt
                 baseIndexMap.createIndexStorage(wrapperCache, index, false);
             writeIndexMap.put(index, newRoot);
         }
+        
+        // Reset current row count, if applicable to the personality
+        session.getPersonality().resetRowCounts((FemAbstractColumnSet) table);
 
         // Copy data from old roots to new roots
         FarragoSessionIndexMap rebuildMap = 

@@ -58,8 +58,11 @@ void BarrierExecStream::open(bool restart)
     iInput = 0;
 
     if (!restart) {
-        outputTupleBuffer.reset(
-            new FixedBuffer[outputTupleAccessor->getMaxByteCount()]);
+        uint bufSize = outputTupleAccessor->getMaxByteCount();
+        if (returnAllInputs()) {
+            bufSize *= inAccessors.size();
+        }
+        outputTupleBuffer.reset(new FixedBuffer[bufSize]);
         outputTupleAccessor->setCurrentTupleBuf(outputTupleBuffer.get());
     }
     isDone = false;
@@ -89,17 +92,27 @@ ExecStreamResult BarrierExecStream::execute(ExecStreamQuantum const &quantum)
         case EXECBUF_OVERFLOW:
         case EXECBUF_NONEMPTY:
             inAccessors[iInput]->unmarshalTuple(inputTuple);
-            if ((rowCountInput == -1 && iInput == 0) ||
-               (rowCountInput >= 0 && iInput == rowCountInput))
+            if ((returnAnyInput() && iInput == 0) ||
+               (returnOneInput() && iInput == rowCountInput))
             {
                 // copy input to output if this is the correct input stream
                 outputTupleAccessor->marshal(
                     inputTuple, outputTupleBuffer.get());
                 outputTupleAccessor->unmarshal(outputTuple);
-            } else if (rowCountInput == -1) {
+            } else if (returnAnyInput()) {
+                // in the case where all inputs are supposed to return the
+                // same rowcount, make sure that is the case
                 permAssert((inAccessors[iInput]->getTupleDesc()).
                             compareTuples(inputTuple, outputTuple) == 0);
+            } else if (returnAllInputs()) {
+                // copy the input to the apppropriate position in the output
+                // buffer
+                outputTupleAccessor->marshal(
+                    inputTuple,
+                    outputTupleBuffer.get() + iInput *
+                        outputTupleAccessor->getMaxByteCount());
             }
+
             inAccessors[iInput]->consumeTuple();
             // fall through
         case EXECBUF_UNDERFLOW:
@@ -115,10 +128,14 @@ ExecStreamResult BarrierExecStream::execute(ExecStreamQuantum const &quantum)
         }
     }
 
-    // Write a single outputTuple and indicate OVERFLOW.
-
-    pOutAccessor->provideBufferForConsumption(outputTupleBuffer.get(), 
-        outputTupleBuffer.get() + outputTupleAccessor->getCurrentByteCount());
+    // Write out the output buffer and indicate OVERFLOW.
+    uint bufSize = outputTupleAccessor->getMaxByteCount();
+    if (returnAllInputs()) {
+        bufSize *= inAccessors.size();
+    }
+    pOutAccessor->provideBufferForConsumption(
+        outputTupleBuffer.get(), 
+        outputTupleBuffer.get() + bufSize);
 
     isDone = true;
     return EXECRC_BUF_OVERFLOW;

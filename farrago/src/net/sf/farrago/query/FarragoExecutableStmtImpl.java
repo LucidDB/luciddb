@@ -29,6 +29,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
@@ -48,6 +49,7 @@ abstract class FarragoExecutableStmtImpl
     //~ Instance fields --------------------------------------------------------
 
     private final boolean isDml;
+    private final TableModificationRel.Operation tableModOp;
     private final RelDataType dynamicParamRowType;
     private final TableAccessMap tableAccessMap;
     protected static final Logger tracer =
@@ -58,9 +60,11 @@ abstract class FarragoExecutableStmtImpl
     protected FarragoExecutableStmtImpl(
         RelDataType dynamicParamRowType,
         boolean isDml,
+        TableModificationRel.Operation tableModOp,
         TableAccessMap tableAccessMap)
     {
         this.isDml = isDml;
+        this.tableModOp = tableModOp;
         this.dynamicParamRowType = dynamicParamRowType;
         this.tableAccessMap = tableAccessMap;
     }
@@ -71,6 +75,12 @@ abstract class FarragoExecutableStmtImpl
     public boolean isDml()
     {
         return isDml;
+    }
+    
+    // implement FarragoSessionExecutableStmt
+    public TableModificationRel.Operation getTableModOp()
+    {
+        return tableModOp;
     }
 
     // implement FarragoSessionExecutableStmt

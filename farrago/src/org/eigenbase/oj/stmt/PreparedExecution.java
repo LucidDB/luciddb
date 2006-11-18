@@ -48,6 +48,7 @@ public class PreparedExecution
     private final RelNode rootRel;
     private final RelDataType rowType;
     private final boolean isDml;
+    private final TableModificationRel.Operation tableModOp;
     private final BoundMethod boundMethod;
 
     //~ Constructors -----------------------------------------------------------
@@ -57,12 +58,14 @@ public class PreparedExecution
         RelNode rootRel,
         RelDataType rowType,
         boolean isDml,
+        TableModificationRel.Operation tableModOp,
         BoundMethod boundMethod)
     {
         this.parseTree = parseTree;
         this.rootRel = rootRel;
         this.rowType = rowType;
         this.isDml = isDml;
+        this.tableModOp = tableModOp;
         this.boundMethod = boundMethod;
     }
 
@@ -76,6 +79,11 @@ public class PreparedExecution
     public boolean isDml()
     {
         return isDml;
+    }
+    
+    public TableModificationRel.Operation getTableModOp()
+    {
+        return tableModOp;
     }
 
     /**

@@ -121,18 +121,22 @@ public class FarragoCatalogInit
     public static void createSystemObjects(FarragoRepos repos)
     {
         tracer.info("Creating system-owned catalog objects");
-        boolean rollback = true;
+        boolean rollback = false;
         FarragoCatalogInit init = null;
         try {
             repos.beginReposTxn(true);
+            rollback = true;
             init = new FarragoCatalogInit(repos);
             init.initCatalog();
             rollback = false;
+            repos.endReposTxn(false);
         } finally {
             if (init != null) {
                 init.publishObjects(rollback);
             }
-            repos.endReposTxn(rollback);
+            if (rollback) {
+                repos.endReposTxn(true);
+            }
         }
         tracer.info("Creation of system-owned catalog objects committed");
     }
