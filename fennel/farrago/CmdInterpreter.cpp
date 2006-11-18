@@ -128,7 +128,9 @@ CmdInterpreter::DbHandle::~DbHandle()
     statsTimer.stop();
     
     // close database before trace
-    pDb->close();
+    if (pDb) {
+        pDb->close();
+    }
     JniUtil::decrementHandleCount(DBHANDLE_TRACE_TYPE_STR, this);
 
     JniUtil::shutdown();
