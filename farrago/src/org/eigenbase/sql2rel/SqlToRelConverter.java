@@ -3171,7 +3171,8 @@ public class SqlToRelConverter
                         orderKeys,
                         window.getLowerBound(),
                         window.getUpperBound(),
-                        physical);
+                        physical,
+                        window.isAllowPartial());
 
                 RexNode histogramCall =
                     rexBuilder.makeCall(
@@ -3197,7 +3198,8 @@ public class SqlToRelConverter
                         orderKeys,
                         window.getLowerBound(),
                         window.getUpperBound(),
-                        physical);
+                        physical,
+                        window.isAllowPartial());
             }
         }
 

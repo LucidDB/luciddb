@@ -426,6 +426,11 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Window has negative size</text>
 </exception>
 
+<exception id="120680" name="CannotUseDisallowPartialWithRange" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Cannot use DISALLOW PARTIAL with window based on RANGE</text>
+</exception>
+
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
 <!-- ====================================================================== -->

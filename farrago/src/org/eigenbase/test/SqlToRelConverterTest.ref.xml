@@ -705,7 +705,7 @@ ProjectRel(EXPR$0=[$0])
     <TestCase name="testOverMultiple">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$2=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 3 PRECEDING AND CURRENT ROW)])
+ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$2=[CASE(>=(COUNT() OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 3 PRECEDING AND CURRENT ROW), 2), SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 3 PRECEDING AND CURRENT ROW), null)])
   FilterRel(condition=[>(SUM(-($7, $5)) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 999)])
     TableAccessRel(table=[[SALES, EMP]])
 ]]>
@@ -717,7 +717,7 @@ ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PREC
 from emp
 where sum(deptno - sal) over w1 > 999
 window w1 as (partition by job order by hiredate rows 2 preceding),
-  w2 as (partition by job order by hiredate rows 3 preceding),
+  w2 as (partition by job order by hiredate rows 3 preceding disallow partial),
   w3 as (partition by job order by hiredate range interval '1' second preceding)]]>
         </Resource>
         <Resource name="plan">

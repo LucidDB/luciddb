@@ -238,7 +238,8 @@ public class RexBuilder
         RexNode [] orderKeys,
         SqlNode lowerBound,
         SqlNode upperBound,
-        boolean physical)
+        boolean physical,
+        boolean allowPartial)
     {
         assert operator != null;
         assert exprs != null;
@@ -251,7 +252,30 @@ public class RexBuilder
                 lowerBound,
                 upperBound,
                 physical);
-        return new RexOver(type, operator, exprs, window);
+        final RexOver over = new RexOver(type, operator, exprs, window);
+        RexNode result = over;
+        if (!allowPartial) {
+            Util.permAssert(physical, "DISALLOW PARTIAL over RANGE");
+            final RelDataType bigintType = getTypeFactory().createSqlType(
+                SqlTypeName.Bigint);
+            result =
+                makeCall(
+                    SqlStdOperatorTable.caseOperator,
+                    makeCall(
+                        SqlStdOperatorTable.greaterThanOrEqualOperator,
+                        new RexOver(
+                            bigintType,
+                            SqlStdOperatorTable.countOperator,
+                            RexNode.EMPTY_ARRAY,
+                            window),
+                        makeLiteral( // todo: read bound
+                            new BigDecimal(2),
+                            bigintType,
+                            SqlTypeName.Decimal)),
+                    over,
+                    constantNull);
+        }
+        return result;
     }
 
     /**

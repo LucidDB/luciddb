@@ -2114,26 +2114,66 @@ public class SqlParserTest
             "(?s).*Encountered \"order\".*");
     }
 
+    public void testWindowSpecPartial()
+    {
+        // ALLOW PARTIAL is the default, and is omitted when the statement is
+        // unparsed.
+        check("select sum(x) over (order by x allow partial) from bids",
+            TestUtil.fold(
+                "SELECT (SUM(`X`) OVER (ORDER BY `X`))\n" +
+                "FROM `BIDS`"));
+
+        check("select sum(x) over (order by x) from bids",
+            TestUtil.fold(
+                "SELECT (SUM(`X`) OVER (ORDER BY `X`))\n" +
+                "FROM `BIDS`"));
+
+        check("select sum(x) over (order by x disallow partial) from bids",
+            TestUtil.fold(
+                "SELECT (SUM(`X`) OVER (ORDER BY `X` DISALLOW PARTIAL))\n" +
+                "FROM `BIDS`"));
+
+        check("select sum(x) over (order by x) from bids",
+            TestUtil.fold(
+                "SELECT (SUM(`X`) OVER (ORDER BY `X`))\n" +
+                "FROM `BIDS`"));
+    }
+
     public void testAs()
     {
-        // todo: raise bug: AS is optional for column aliases and and
-        //   correlation names. NOT high priority!
-        final boolean bugYyyFixed = false;
-        if (bugYyyFixed) {
-            // AS is optional for column aliases
-            check("select x y from t", "xx");
-            check("select x AS y from t", "xx");
-            check("select sum(x) y from t group by z", "xxx");
+        // AS is optional for column aliases
+        check(
+            "select x y from t",
+            TestUtil.fold(
+                "SELECT `X` AS `Y`\n"
+                    + "FROM `T`"));
 
-            // Even after OVER
-            check(
-                "select count(z) over w foo from Bids window w as (order by x)",
-                "xx");
+        check(
+            "select x AS y from t",
+            TestUtil.fold(
+                "SELECT `X` AS `Y`\n"
+                    + "FROM `T`"));
+        check(
+            "select sum(x) y from t group by z",
+            TestUtil.fold(
+                "SELECT SUM(`X`) AS `Y`\n"
+                    + "FROM `T`\n"
+                    + "GROUP BY `Z`"));
 
-            // AS is optional for table correlation names
-            check("select x from t as t1", "xx");
-            check("select x from t t1", "xx");
-        }
+        // Even after OVER
+        check(
+            "select count(z) over w foo from Bids window w as (order by x)",
+            TestUtil.fold(
+                "SELECT (COUNT(`Z`) OVER `W`) AS `FOO`\n"
+                    + "FROM `BIDS`\n"
+                    + "WINDOW `W` AS (ORDER BY `X`)"));
+
+        // AS is optional for table correlation names
+        final String expected = TestUtil.fold(
+            "SELECT `X`\n"
+                + "FROM `T` AS `T1`");
+        check("select x from t as t1", expected);
+        check("select x from t t1", expected);
 
         // AS is required in WINDOW declaration
         checkFails("select sum(x) over w from bids window w ^(order by x)",

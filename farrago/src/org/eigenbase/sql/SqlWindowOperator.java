@@ -109,10 +109,10 @@ public class SqlWindowOperator
         SqlIdentifier refName,
         SqlNodeList partitionList,
         SqlNodeList orderList,
-        boolean isRows,
-        SqlParserPos rowRangePos,
+        SqlLiteral isRows,
         SqlNode lowerBound,
         SqlNode upperBound,
+        SqlLiteral allowPartial,
         SqlParserPos pos)
     {
         // If there's only one bound and it's 'FOLLOWING', make it the upper
@@ -126,8 +126,7 @@ public class SqlWindowOperator
         return
             (SqlWindow) createCall(
                 pos, declName, refName, partitionList, orderList,
-                SqlLiteral.createBoolean(isRows, rowRangePos),
-                lowerBound, upperBound);
+                isRows, lowerBound, upperBound, allowPartial);
     }
 
     public <R> void acceptCall(SqlVisitor<R> visitor,
@@ -208,6 +207,19 @@ public class SqlWindowOperator
             writer.keyword("AND");
             upperBound.unparse(writer, 0, 0);
         }
+
+        // ALLOW PARTIAL/DISALLOW PARTIAL
+        SqlNode allowPartial = operands[SqlWindow.AllowPartial_OPERAND];
+        if (allowPartial == null) {
+            ;
+        } else if (SqlLiteral.booleanValue(allowPartial)) {
+            // We could output "ALLOW PARTIAL", but this syntax is
+            // non-standard. Omitting the clause has the same effect.
+            ;
+        } else {
+            writer.keyword("DISALLOW PARTIAL");
+        }
+
         writer.endList(frame);
     }
 
@@ -334,6 +346,17 @@ public class SqlWindowOperator
             throw validator.newValidationError(
                 call,
                 EigenbaseResource.instance().OverMissingOrderBy.ex());
+        }
+
+        SqlNode allowPartialOperand = operands[SqlWindow.AllowPartial_OPERAND];
+        boolean allowPartial = (allowPartialOperand == null) ||
+            SqlLiteral.booleanValue(allowPartialOperand);
+
+        if (!isRows && !allowPartial) {
+            throw validator.newValidationError(
+                allowPartialOperand,
+                EigenbaseResource.instance().CannotUseDisallowPartialWithRange
+                    .ex());
         }
     }
 
@@ -527,10 +550,10 @@ public class SqlWindowOperator
                             new String[] { columnName },
                             SqlParserPos.ZERO)),
                     SqlParserPos.ZERO),
-                true,
-                SqlParserPos.ZERO,
+                SqlLiteral.createBoolean(true, SqlParserPos.ZERO),
                 createCurrentRow(SqlParserPos.ZERO),
                 createCurrentRow(SqlParserPos.ZERO),
+                SqlLiteral.createBoolean(true, SqlParserPos.ZERO),
                 SqlParserPos.ZERO);
     }
 
@@ -553,10 +576,10 @@ public class SqlWindowOperator
                             new String[] { columnName },
                             SqlParserPos.ZERO)),
                     SqlParserPos.ZERO),
-                false,
-                SqlParserPos.ZERO,
+                SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
                 createUnboundedPreceding(SqlParserPos.ZERO),
                 createCurrentRow(SqlParserPos.ZERO),
+                SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
                 SqlParserPos.ZERO);
     }
 

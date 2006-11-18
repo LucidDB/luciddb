@@ -85,6 +85,14 @@ public class SqlWindow
      */
     public static final int UpperBound_OPERAND = 6;
 
+    /**
+     * Ordinal of the operand which declares whether to allow partial results.
+     * It may be null.
+     */
+    public static final int AllowPartial_OPERAND = 7;
+
+    public static final int OperandCount = 8;
+
     //~ Instance fields --------------------------------------------------------
 
     private SqlCall windowCall = null;
@@ -105,14 +113,11 @@ public class SqlWindow
         SqlParserPos pos)
     {
         super(operator, operands, pos);
+        assert operands.length == OperandCount;
         final SqlIdentifier declId = (SqlIdentifier) operands[DeclName_OPERAND];
-        Util.pre((declId == null) || declId.isSimple(),
-            "operands[DeclName_OPERAND] == null || "
-            + "operands[DeclName_OPERAND].isSimple()");
-        Util.pre(operands[PartitionList_OPERAND] != null,
-            "operands[PartitionList_OPERAND] != null");
-        Util.pre(operands[OrderList_OPERAND] != null,
-            "operands[OrderList_OPERAND] != null");
+        assert declId == null || declId.isSimple() : declId;
+        assert operands[PartitionList_OPERAND] != null;
+        assert operands[OrderList_OPERAND] != null;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -321,6 +326,18 @@ public class SqlWindow
     {
         return SqlWindowOperator.getOffsetAndRange(
             getLowerBound(), getUpperBound(), isRows());
+    }
+
+    /**
+     * Returns whether partial windows are allowed. If false, a partial window
+     * (for example, a window of size 1 hour which has only 45 minutes of
+     * data in it) will appear to windowed aggregate functions to be empty.
+     */
+    public boolean isAllowPartial()
+    {
+        // Default (and standard behavior) is to allow partial windows.
+        return operands[AllowPartial_OPERAND] == null ||
+            SqlLiteral.booleanValue(operands[AllowPartial_OPERAND]);
     }
 }
 

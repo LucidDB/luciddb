@@ -1935,11 +1935,9 @@ public class SqlValidatorTest
         // the scope of another <new window name> NWN2 such that NWN1 and NWN2
         // are equivalent.
         checkWinClauseExp(
-            "window " + NL
-            + "w  as (partition by deptno order by empno rows 2 preceding), "
-            + NL
-            + "w2 as (partition by deptno order by empno rows 2 preceding)"
-            + NL,
+            "window\n"
+            + "w  as (partition by deptno order by empno rows 2 preceding),\n"
+            + "w2 as (partition by deptno order by empno rows 2 preceding)\n",
             "Duplicate window specification not allowed in the same window clause");
     }
 
@@ -1968,6 +1966,24 @@ public class SqlValidatorTest
         checkFails(
             sql,
             fail ? "Window has negative size" : null);
+    }
+
+    public void testWindowPartial()
+    {
+        check(
+            "select sum(deptno) over (\n" +
+            "order by deptno, empno rows 2 preceding disallow partial)\n" +
+            "from emp");
+
+        // cannot do partial over logical window
+        checkFails(
+            "select sum(deptno) over (\n" +
+            "  partition by deptno\n" +
+            "  order by empno\n" +
+            "  range between 2 preceding and 3 following\n" +
+            "  ^disallow partial^)\n" +
+            "from emp",
+            "Cannot use DISALLOW PARTIAL with window based on RANGE");
     }
 
     public void testOneWinFunc()

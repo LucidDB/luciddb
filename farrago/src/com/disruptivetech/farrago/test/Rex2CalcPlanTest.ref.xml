@@ -1476,4 +1476,73 @@ REF O3, L9 /* 25: */;
 RETURN /* 26: */;]]>
         </Resource>
     </TestCase>
+    <TestCase name="testWindowDisallowPartial">
+        <Resource name="expectedInit">
+            <![CDATA[
+O s8, s4, s8;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
+C bo, bo, s8, s4;
+V 1, 0, 0, 0;
+T;
+MOVE O0, C2 /* 0: COUNT() */;
+MOVE O1, C3 /* 1: SUM($t0) */;
+MOVE O2, C2 /* 2: COUNT($t0) */;
+RETURN /* 3: */;]]>
+        </Resource>
+        <Resource name="expectedAdd">
+            <![CDATA[
+O s8, s4, s8;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
+C bo, bo, s8;
+V 1, 0, 1;
+T;
+ADD O0, O0, C2 /* 0: COUNT() */;
+ADD O1, O1, I0 /* 1: SUM($t0) */;
+ADD O2, O2, C2 /* 2: COUNT($t0) */;
+RETURN /* 3: */;]]>
+        </Resource>
+        <Resource name="expectedDrop">
+            <![CDATA[
+O s8, s4, s8;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
+C bo, bo, s8;
+V 1, 0, 1;
+T;
+SUB O0, O0, C2 /* 0: COUNT() */;
+SUB O1, O1, I0 /* 1: SUM($t0) */;
+SUB O2, O2, C2 /* 2: COUNT($t0) */;
+RETURN /* 3: */;]]>
+        </Resource>
+        <Resource name="expectedOutput">
+            <![CDATA[
+O s4, s4, s4;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo, s8, s4, s8;
+L s4, bo, s8, s8, s8, s8, s4, s8, s8, s4;
+C bo, bo, s8, s4, s8;
+V 1, 0, 2,  /* <NULL> */,  /* <NULL> */;
+T;
+GE L1, I9, C2 /* 0: >=($t9, $t12) */;
+JMPF @5, L1 /* 1: */;
+JMPN @5, L1 /* 2: */;
+MOVE L0, I10 /* 3: */;
+JMP @6 /* 4: */;
+MOVE L0, C3 /* 5: CASE($t13, $t10, $t14) */;
+JMPF @11, L1 /* 6: */;
+JMPN @11, L1 /* 7: */;
+CAST L3, I11 /* 8: CAST($t11):BIGINT */;
+MOVE L2, L3 /* 9: */;
+JMP @12 /* 10: */;
+MOVE L2, C4 /* 11: CASE($t13, $t11, $t14) */;
+CAST L4, L0 /* 12: CAST($t15):BIGINT */;
+DIV L5, L4, L2 /* 13: /($t15, $t16) */;
+CAST L6, L5 /* 14: CAST($t17):INTEGER */;
+CAST L7, I10 /* 15: CAST($t10):BIGINT NOT NULL */;
+DIV L8, L7, I11 /* 16: /($t10, $t11) */;
+CAST L9, L8 /* 17: CAST($t19):INTEGER */;
+REF O0, L0 /* 18: */;
+REF O1, L6 /* 19: */;
+REF O2, L9 /* 20: */;
+RETURN /* 21: */;]]>
+        </Resource>
+    </TestCase>
 </Root>

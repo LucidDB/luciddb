@@ -1579,14 +1579,15 @@ SqlWindow WindowSpecification() :
     List list;
     SqlNodeList partitionList;
     SqlNodeList orderList;
-    boolean isRows = false;
+    SqlLiteral isRows = SqlLiteral.createBoolean(false, SqlParserPos.ZERO);
     SqlNode lowerBound = null, upperBound = null;
     SqlParserPos startPos;
     SqlParserPos endPos;
-    SqlParserPos rowRangePos = new SqlParserPos(-1,-1);
+    SqlParserPos pos;
+    SqlLiteral allowPartial = null;
 }
 {
-    <LPAREN> {startPos = getPos();}
+    <LPAREN> { startPos = getPos(); }
     (
         id = SimpleIdentifier()
         |
@@ -1605,9 +1606,9 @@ SqlWindow WindowSpecification() :
     )
     [
         (
-            <ROWS> { isRows = true;rowRangePos = getPos(); }
+            <ROWS> { isRows = SqlLiteral.createBoolean(true, getPos()); }
             |
-            <RANGE> { isRows = false; rowRangePos = getPos();}
+            <RANGE> { isRows = SqlLiteral.createBoolean(false, getPos()); }
         )
         (
             <BETWEEN> lowerBound = WindowRange()
@@ -1616,12 +1617,22 @@ SqlWindow WindowSpecification() :
             lowerBound = WindowRange()
         )
     ]
+    [
+        <ALLOW> { pos = getPos(); } <PARTIAL> {
+            allowPartial = SqlLiteral.createBoolean(true, pos.plus(getPos()));
+        }
+    |
+        <DISALLOW> { pos = getPos(); } <PARTIAL> {
+            allowPartial = SqlLiteral.createBoolean(false, pos.plus(getPos()));
+        }
+    ]
     <RPAREN>
     {
         endPos = getPos();
         return SqlStdOperatorTable.windowOperator.createCall(
             null, id, partitionList, orderList,
-            isRows, rowRangePos, lowerBound, upperBound, startPos.plus(endPos));
+            isRows, lowerBound, upperBound, allowPartial,
+            startPos.plus(endPos));
     }
 }
 
@@ -3667,6 +3678,7 @@ TOKEN :
     | < AFTER: "AFTER" >
     | < ALL: "ALL" >
     | < ALLOCATE: "ALLOCATE" >
+    | < ALLOW: "ALLOW" >
     | < ALWAYS: "ALWAYS" >
     | < ALTER: "ALTER" >
     | < AND: "AND" >
@@ -3799,6 +3811,7 @@ TOKEN :
     | < DESCRIPTOR: "DESCRIPTOR" >
     | < DETERMINISTIC: "DETERMINISTIC" >
     | < DIAGNOSTICS: "DIAGNOSTICS" >
+    | < DISALLOW: "DISALLOW" >
     | < DISCONNECT: "DISCONNECT" >
     | < DISPATCH: "DISPATCH" >
     | < DISTINCT: "DISTINCT" >
