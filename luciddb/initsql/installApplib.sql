@@ -573,6 +573,20 @@ parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalTimeDimensionUdx.execute';
 
+-- Calculate Effective To Timestamps
+create or replace function applib.derive_effective_to_timestamp(
+        c cursor, 
+        units_to_subtract integer, 
+        unit_type_to_subtract varchar(32))
+returns table(
+        id varchar(255), 
+        effective_from_timestamp timestamp, 
+        effective_to_timestamp timestamp)
+language java
+parameter style system defined java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DeriveEffectiveToTimestampUdx.execute';
+
 -- Flatten hierarchical data
 create or replace function applib.flatten_recursive_hierarchy(c cursor)
 returns table(

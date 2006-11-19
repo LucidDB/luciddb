@@ -215,6 +215,9 @@
 <text>Schema ''{0}'' could not be found</text>
 </exception>
 
+<exception id="900410" name="IllegalTimeUnitIdentifier">
+<text>The string ''{0}'' is not a legal time unit. Legal time units are: ''YEAR'', ''MONTH'', ''WEEK'', ''DAY'', ''HOUR'', ''MINUTE'', ''SECOND'', ''MILLISECOND''</text>
+</exception>
 
 <!-- ====================================================================== -->
  Messages
