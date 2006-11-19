@@ -22,7 +22,8 @@
 package com.lucidera.luciddb.applib.datetime;
 
 /**
- * TODO:  Even the humblest classes deserve comments.
+ * UDX for calculating the "effective to" timestamps out of a list where a new
+ * timestamp invalidates an old one.
  *
  * @author Oscar Gothberg
  * @version $Id$
@@ -33,6 +34,27 @@ import java.sql.*;
 import java.util.GregorianCalendar;
 
 public class DeriveEffectiveToTimestampUdx {
+    
+    /**
+     * Takes a sorted list of IDs and timestamps. 
+     * 
+     * The "effective to" timestamp is calculated where two rows have the same
+     * ID: the one with a newer timestamp invalidates that with an older, and
+     * the "effective to" timestamp for row N is equal to the "effective from"
+     * timestamp for row N+1 minus a supplied number of timeunits. Rows that
+     * are not invalidated by another row with the same ID and a newer
+     * timestamp will have their "effective to" set as NULL to indicate that
+     * they're currently valid.
+     *
+     * @param inputSet cursor for the input 2-col table.
+     * @param timeUnitsToSubtract the number of time units to subtract when
+     * calculating the "effective to" timestamps.
+     * @param typeOfTimeUnitToSubtract the type of time units to subtract when
+     * calculating the "effective to" timestamps. Legal values are
+     * "MILLISECOND", "SECOND", "MINUTE", "HOUR", "DAY", "WEEK", "MONTH",
+     * "YEAR".
+     * @param resultInserter pointer for returning the resulting 3-col table.
+     */
 
     public static void execute(
         ResultSet inputSet,
