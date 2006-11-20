@@ -373,7 +373,7 @@ void LbmLoadBitmapTest::testLoad(
             }
         }
         generatorParams.outputProj = proj;
-        generatorParams.dynParamId = DynamicParamId(i + 1);
+        generatorParams.insertRowCountParamId = DynamicParamId(i + 1);
         generatorParams.createIndex = false;
 
         boost::shared_ptr<BTreeDescriptor> pBTreeDesc =
@@ -453,7 +453,7 @@ void LbmLoadBitmapTest::testLoad(
         initBTreeBitmapDesc(
             splicerParams.tupleDesc, splicerParams.keyProj, nKeys);
         initBTreeExecStreamParam(splicerParams, pBTreeDesc);
-        splicerParams.dynParamId = DynamicParamId(i + 1);
+        splicerParams.insertRowCountParamId = DynamicParamId(i + 1);
         splicerParams.ignoreDuplicates = false;
         splicerParams.outputTupleDesc.push_back(attrDesc_int64);
         splicerParams.rootPageId = pBTreeDesc->rootPageId;

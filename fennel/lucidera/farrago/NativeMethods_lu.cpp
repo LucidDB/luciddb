@@ -214,8 +214,8 @@ class ExecStreamSubFactory_lu
         readClusterScan(streamDef, params);
         CmdInterpreter::readTupleProjection(
             params.outputProj, streamDef.getOutputProj());
-        params.dynParamId =
-            readDynamicParamId(streamDef.getRowCountParamId());
+        params.insertRowCountParamId =
+            readDynamicParamId(streamDef.getInsertRowCountParamId());
         params.createIndex = streamDef.isCreateIndex();
 
         pEmbryo->init(new LbmGeneratorExecStream(), params);
@@ -227,8 +227,8 @@ class ExecStreamSubFactory_lu
         LbmSplicerExecStreamParams params;
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
         pExecStreamFactory->readBTreeStreamParams(params, streamDef);
-        params.dynParamId =
-            readDynamicParamId(streamDef.getRowCountParamId());
+        params.insertRowCountParamId =
+            readDynamicParamId(streamDef.getInsertRowCountParamId());
         params.ignoreDuplicates = streamDef.isIgnoreDuplicates();
         pEmbryo->init(new LbmSplicerExecStream(), params);
     }

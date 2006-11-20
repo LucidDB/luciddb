@@ -36,8 +36,8 @@ void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
     BTreeExecStream::prepare(params);
     LcsRowScanBaseExecStream::prepare(params);
 
-    dynParamId = params.dynParamId;
-    assert(opaqueToInt(dynParamId) > 0);
+    insertRowCountParamId = params.insertRowCountParamId;
+    assert(opaqueToInt(insertRowCountParamId) > 0);
 
     createIndex = params.createIndex;
 
@@ -85,7 +85,7 @@ void LbmGeneratorExecStream::open(bool restart)
     batchRead = false;
     if (!restart) {
         pDynamicParamManager->createParam(
-            dynParamId, inAccessors[0]->getTupleDesc()[0]);
+            insertRowCountParamId, inAccessors[0]->getTupleDesc()[0]);
         dynParamsCreated = true;
     }
 }
@@ -154,7 +154,7 @@ ExecStreamResult LbmGeneratorExecStream::execute(
 
         // set number of rows to load in a dynamic parameter that
         // splicer will later read
-        pDynamicParamManager->writeParam(dynParamId, inputTuple[0]);
+        pDynamicParamManager->writeParam(insertRowCountParamId, inputTuple[0]);
         inAccessors[0]->consumeTuple();
 
         // special case where there are no rows -- don't bother reading
@@ -324,7 +324,7 @@ void LbmGeneratorExecStream::closeImpl()
     BTreeExecStream::closeImpl();
     LcsRowScanBaseExecStream::closeImpl();
     if (dynParamsCreated) {
-        pDynamicParamManager->deleteParam(dynParamId);
+        pDynamicParamManager->deleteParam(insertRowCountParamId);
     }
     keyCodes.clear();
     bitmapTable.clear();
@@ -629,6 +629,6 @@ bool LbmGeneratorExecStream::flushEntry(uint keycode)
     return true;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/bitmap/LbmGeneratorExecStream.cpp#15 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End LbmGeneratorExecStream.cpp

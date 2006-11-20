@@ -829,7 +829,7 @@ public class LcsIndexGuide
         FennelRel rel,
         FemLocalIndex index,
         boolean createIndex,
-        int dynParamId)
+        int insertRowCountParamId)
     {
         FemLbmGeneratorStreamDef generator =
             repos.newFemLbmGeneratorStreamDef();
@@ -863,7 +863,7 @@ public class LcsIndexGuide
         //
         // Setup dynamic param id
         //
-        generator.setRowCountParamId(dynParamId);
+        generator.setInsertRowCountParamId(insertRowCountParamId);
 
         //
         // Setup Btree accessor parameters
@@ -911,7 +911,7 @@ public class LcsIndexGuide
     protected FemLbmSplicerStreamDef newSplicer(
         FennelRel rel,
         FemLocalIndex index,
-        int dynParamId,
+        int insertRowCountParamId,
         boolean ignoreDuplicates)
     {
         FemLbmSplicerStreamDef splicer = repos.newFemLbmSplicerStreamDef();
@@ -923,7 +923,7 @@ public class LcsIndexGuide
         //
         defineIndexStream(splicer, rel, index, false, true);
 
-        splicer.setRowCountParamId(dynParamId);
+        splicer.setInsertRowCountParamId(insertRowCountParamId);
         splicer.setIgnoreDuplicates(ignoreDuplicates);
 
         return splicer;

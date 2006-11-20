@@ -61,7 +61,7 @@ struct LbmGeneratorExecStreamParams :
      * Parameter id of dynamic parameter used to pass along number of rows
      * loaded
      */
-    DynamicParamId dynParamId;
+    DynamicParamId insertRowCountParamId;
     
     /**
      * True if bitmap index is being loaded as part of a create index
@@ -87,7 +87,7 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
     /**
      * Dynamic parameter id used to pass along number of rows loaded
      */
-    DynamicParamId dynParamId;
+    DynamicParamId insertRowCountParamId;
 
     /**
      * True if dynamic parameters have been created

@@ -285,10 +285,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getOutputFlow();
-static jmethodID meth_getOutputFlow;
 SharedProxyExecStreamDataFlow getInputFlow();
 static jmethodID meth_getInputFlow;
+SharedProxyExecStreamDataFlow getOutputFlow();
+static jmethodID meth_getOutputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -777,8 +777,10 @@ class ProxyLbmGeneratorStreamDef
 : virtual public JniProxy, virtual public ProxyLcsRowScanStreamDef, virtual public ProxyIndexAccessorDef
 {
 public:
-int32_t getRowCountParamId();
-static jmethodID meth_getRowCountParamId;
+int32_t getInsertRowCountParamId();
+static jmethodID meth_getInsertRowCountParamId;
+int32_t getDeleteRowCountParamId();
+static jmethodID meth_getDeleteRowCountParamId;
 bool isCreateIndex();
 static jmethodID meth_isCreateIndex;
 };
@@ -827,10 +829,12 @@ class ProxyLbmSplicerStreamDef
 : virtual public JniProxy, virtual public ProxyIndexStreamDef
 {
 public:
-int32_t getRowCountParamId();
-static jmethodID meth_getRowCountParamId;
+int32_t getInsertRowCountParamId();
+static jmethodID meth_getInsertRowCountParamId;
 bool isIgnoreDuplicates();
 static jmethodID meth_isIgnoreDuplicates;
+int32_t getDeleteRowCountParamId();
+static jmethodID meth_getDeleteRowCountParamId;
 };
 
 class ProxyLbmUnionStreamDef
@@ -907,6 +911,8 @@ class ProxyMergeStreamDef
 public:
 bool isSequential();
 static jmethodID meth_isSequential;
+bool isPrePullInputs();
+static jmethodID meth_isPrePullInputs;
 };
 
 class ProxyMockTupleStreamDef
