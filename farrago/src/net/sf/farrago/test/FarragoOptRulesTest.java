@@ -359,6 +359,8 @@ public class FarragoOptRulesTest
             new FarragoReduceExpressionsRule(ProjectRel.class));
         programBuilder.addRuleInstance(
             new FarragoReduceExpressionsRule(FilterRel.class));
+        programBuilder.addRuleInstance(
+            new FarragoReduceExpressionsRule(JoinRel.class));
 
         // NOTE jvs 27-May-2006: among other things, this verifies
         // intentionally different treatment for identical coalesce expression
@@ -366,10 +368,11 @@ public class FarragoOptRulesTest
 
         check(
             programBuilder.createProgram(),
-            "select 1+2, deptno+(3+4), (5+6)+deptno, cast(null as integer),"
+            "select 1+2, d.deptno+(3+4), (5+6)+d.deptno, cast(null as integer),"
             + " coalesce(2,null)"
-            + " from sales.depts"
-            + " where deptno=(7+8) and deptno=coalesce(2,null)");
+            + " from sales.depts d inner join sales.emps e"
+            + " on d.deptno = e.deptno + (5-5)"
+            + " where d.deptno=(7+8) and d.deptno=coalesce(2,null)");
     }
 
     public void testRemoveSemiJoin()
