@@ -39,6 +39,15 @@ values cast(null as date);
 values cast(null as time);
 values cast(null as timestamp);
 
+-- nullability testing (FRG-237)
+create table initial_null(i int primary key, d date);
+insert into initial_null values
+  (1, null), (2, DATE'1987-2-5'), (3,DATE'1998-12-3');
+select * from initial_null;
+select extract(day from ((current_date - d)day)) from initial_null;
+
+values cast( cast(null as time) as timestamp);
+
 -- now test with Fennel calc, which supports casts
 alter system set "calcVirtualMachine"  = 'CALCVM_FENNEL';
 

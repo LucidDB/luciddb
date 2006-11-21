@@ -111,6 +111,34 @@
 |         |
 +---------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- nullability testing (FRG-237)
+0: jdbc:farrago:> create table initial_null(i int primary key, d date);
+0: jdbc:farrago:> insert into initial_null values
+. . . . . . . . >   (1, null), (2, DATE'1987-2-5'), (3,DATE'1998-12-3');
+0: jdbc:farrago:> select * from initial_null;
++----+-------------+
+| I  |      D      |
++----+-------------+
+| 1  |             |
+| 2  | 1987-02-05  |
+| 3  | 1998-12-03  |
++----+-------------+
+0: jdbc:farrago:> select extract(day from ((current_date - d)day)) from initial_null;
++---------+
+| EXPR$0  |
++---------+
+|         |
+| 7229    |
+| 2910    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values cast( cast(null as time) as timestamp);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- now test with Fennel calc, which supports casts
 0: jdbc:farrago:> alter system set "calcVirtualMachine"  = 'CALCVM_FENNEL';
 0: jdbc:farrago:> 
