@@ -219,6 +219,10 @@
 <text>The string ''{0}'' is not a legal time unit. Legal time units are: ''YEAR'', ''MONTH'', ''WEEK'', ''DAY'', ''HOUR'', ''MINUTE'', ''SECOND'', ''MILLISECOND''</text>
 </exception>
 
+<exception id="900411" name="IdOrEffectiveFromTimestampsNotOrdered">
+<text>To derive EFFECTIVE_TO_TIMESTAMP, both input columns must be ordered in ascending order.</text>
+</exception>
+
 <!-- ====================================================================== -->
  Messages
 <!-- ====================================================================== -->

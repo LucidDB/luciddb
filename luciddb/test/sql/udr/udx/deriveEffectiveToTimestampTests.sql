@@ -83,4 +83,21 @@ select * from table(
     )
 );
 
+-- try with either input column out of order. should give nice errors.
+select * from table(
+    applib.derive_effective_to_timestamp(
+        cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY id),
+        365,
+        'SECOND'
+    )
+);
+
+select * from table(
+    applib.derive_effective_to_timestamp(
+        cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY effective_from_timestamp),
+        365,
+        'SECOND'
+    )
+);
+
 drop schema DERIVEEFFECTIVE cascade;

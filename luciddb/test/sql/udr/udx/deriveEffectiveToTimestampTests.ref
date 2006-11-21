@@ -136,6 +136,25 @@ Error: Input table must have two columns, not '3' (state=,code=0)
 . . . . . . . . > );
 Error: The string 'BLAH' is not a legal time unit. Legal time units are: 'YEAR', 'MONTH', 'WEEK', 'DAY', 'HOUR', 'MINUTE', 'SECOND', 'MILLISECOND' (state=,code=0)
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try with either input column out of order. should give nice errors.
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     applib.derive_effective_to_timestamp(
+. . . . . . . . >         cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY id),
+. . . . . . . . >         365,
+. . . . . . . . >         'SECOND'
+. . . . . . . . >     )
+. . . . . . . . > );
+Error: To derive EFFECTIVE_TO_TIMESTAMP, both input columns must be ordered in ascending order. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >     applib.derive_effective_to_timestamp(
+. . . . . . . . >         cursor(SELECT id, effective_from_timestamp FROM T1 ORDER BY effective_from_timestamp),
+. . . . . . . . >         365,
+. . . . . . . . >         'SECOND'
+. . . . . . . . >     )
+. . . . . . . . > );
+Error: To derive EFFECTIVE_TO_TIMESTAMP, both input columns must be ordered in ascending order. (state=,code=0)
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop schema DERIVEEFFECTIVE cascade;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

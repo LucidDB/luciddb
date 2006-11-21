@@ -84,6 +84,14 @@ public class DeriveEffectiveToTimestampUdx {
         while (inputSet.next()) {
             nextIdStr = inputSet.getString(1);
             nextTimestamp = inputSet.getTimestamp(2);
+
+            // if input isn't ordered, fail and let the user know
+            if (currIdStr.compareTo(nextIdStr) > 0
+                || (currIdStr.equals(nextIdStr) 
+                    && currTimestamp.getTime() > nextTimestamp.getTime())) {
+                throw ApplibResourceObject.get().
+                    IdOrEffectiveFromTimestampsNotOrdered.ex();
+            }
             
             // pass through id and "effective from" timestamp
             resultInserter.setString(1, currIdStr);
