@@ -76,6 +76,13 @@ public class SqlValidatorFeatureTest
             EigenbaseResource.instance().SQLFeature_E051_01);
     }
 
+    public void testOrderByDesc()
+    {
+        checkFeature(
+            "select name from dept order by ^name desc^",
+            EigenbaseResource.instance().SQLConformance_OrderByDesc);
+    }
+
     // NOTE jvs 6-Mar-2006:  carets don't come out properly placed
     // for INTERSECT/EXCEPT, so don't bother
 

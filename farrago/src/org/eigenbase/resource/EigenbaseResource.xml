@@ -542,6 +542,11 @@ TBD: naming convention for extension features
     <text>Execution of a new autocommit statement while a cursor is still open on same connection is not supported</text>
 </exception>
 
+<exception name="SQLConformance_OrderByDesc">
+    <property name="FeatureDefinition">Eigenbase-defined</property>
+    <text>Descending sort (ORDER BY DESC) not supported</text>
+</exception>
+
 <!-- ====================================================================== -->
 
 <!-- End of last error section ============================================ -->

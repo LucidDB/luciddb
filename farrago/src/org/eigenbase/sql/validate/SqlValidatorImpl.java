@@ -2228,7 +2228,11 @@ public class SqlValidatorImpl
     {
         if (SqlUtil.isCallTo(
                 orderItem,
-                SqlStdOperatorTable.descendingOperator)) {
+                SqlStdOperatorTable.descendingOperator))
+        {
+            validateFeature(
+                EigenbaseResource.instance().SQLConformance_OrderByDesc,
+                orderItem.getParserPosition());
             validateOrderItem(
                 select,
                 ((SqlCall) orderItem).operands[0]);

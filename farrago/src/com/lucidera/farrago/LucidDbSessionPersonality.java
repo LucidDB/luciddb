@@ -118,18 +118,26 @@ public class LucidDbSessionPersonality
         // TODO jvs 20-Nov-2005: better infrastructure once there
         // are enough feature overrides to justify it
 
+        EigenbaseResource featureResource = EigenbaseResource.instance();
+
         // LucidDB doesn't yet support transactions.
-        if (feature == EigenbaseResource.instance().SQLFeature_E151) {
+        if (feature == featureResource.SQLFeature_E151) {
             return false;
         }
 
-        // LucidDB doesn't support UPDATE, only MERGE
-        if (feature == EigenbaseResource.instance().SQLFeature_E101_03) {
+        // LucidDB doesn't support UPDATE
+        if (feature == featureResource.SQLFeature_E101_03) {
             return false;
         }
 
-        if (feature == EigenbaseResource.instance().SQLFeature_F312) {
+        // but LucidDB does support MERGE (unlike vanilla Farrago)
+        if (feature == featureResource.SQLFeature_F312) {
             return true;
+        }
+
+        // LucidDB doesn't support ORDER BY DESC...yet
+        if (feature == featureResource.SQLConformance_OrderByDesc){
+            return false;
         }
         
         return super.supportsFeature(feature);
