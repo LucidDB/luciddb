@@ -43,8 +43,9 @@ values cast(null as timestamp);
 create table initial_null(i int primary key, d date);
 insert into initial_null values
   (1, null), (2, DATE'1987-2-5'), (3,DATE'1998-12-3');
-select * from initial_null;
-select extract(day from ((current_date - d)day)) from initial_null;
+select * from initial_null order by i;
+select extract(day from ((DATE'2006-11-21' - d)day)) 
+  from initial_null order by i;
 
 values cast( cast(null as time) as timestamp);
 
