@@ -25,6 +25,7 @@ package net.sf.farrago.query;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
 /**
@@ -99,12 +100,13 @@ public class FennelCartesianJoinRule
 
         // see if it makes sense to buffer the existing RHS; if not, try
         // the LHS, swapping the join operands if it does make sense to buffer
-        // the LHS; but only if we haven't already swapped the inputs
+        // the LHS; but only if the join isn't a left outer join (since we
+        // can't do cartesian right outer joins)
         FennelBufferRel bufRel =
             bufferRight(leftRel, rightRel, joinRel.getTraits());
         if (bufRel != null) {
             rightRel = bufRel;
-        } else if (!swapped) {
+        } else if (joinType != JoinRelType.LEFT) {
             bufRel = bufferRight(rightRel, leftRel, joinRel.getTraits());
             if (bufRel != null) {
                 swapped = true;
@@ -131,13 +133,25 @@ public class FennelCartesianJoinRule
             return;
         }      
         
+        RelDataType joinRowType;
+        if (swapped) {
+            joinRowType =
+                JoinRel.deriveJoinRowType(                    
+                    fennelLeft.getRowType(),
+                    fennelRight.getRowType(),
+                    joinType,
+                    joinRel.getCluster().getTypeFactory(),
+                    null);
+        } else {
+            joinRowType = joinRel.getRowType();
+        }
         FennelCartesianProductRel productRel =
             new FennelCartesianProductRel(
                 joinRel.getCluster(),
                 fennelLeft,
                 fennelRight,
                 joinType,
-                RelOptUtil.getFieldNameList(joinRel.getRowType()));
+                RelOptUtil.getFieldNameList(joinRowType));
         
         RelNode newRel;
         if (swapped) {
