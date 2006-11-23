@@ -108,6 +108,20 @@ public class VolcanoPlanner
         new IdentityHashMap<RelNode, RelSubset>();
 
     /**
+     * The importance of relational expressions.
+     *
+     * <p>The map contains only RelNodes whose importance has
+     * been overridden using
+     * {@link RelOptPlanner#setImportance(RelNode, double)}. Other RelNodes
+     * are presumed to have 'normal' importance.
+     *
+     * <p>If a RelNode has 0 importance, all {@link RelOptRuleCall}s using it
+     * are ignored, and future RelOptRuleCalls are not queued up.
+     */
+    final Map<RelNode, Double> relImportances =
+        new HashMap<RelNode, Double>();
+
+    /**
      * List of all schemas which have been registered.
      */
     private final Set<RelOptSchema> registeredSchemas =
@@ -898,12 +912,23 @@ public class VolcanoPlanner
         }
     }
 
+    public void setImportance(RelNode rel, double importance)
+    {
+        if (importance == 0d) {
+            relImportances.put(rel, importance);
+        }
+    }
+
+    /**
+     * Dumps the internal state of this VolcanoPlanner to a writer.
+     *
+     * @param pw Print writer
+     */
     void dump(PrintWriter pw)
     {
         pw.println("Root: " + root.getDescription());
         pw.println("Sets:");
-        RelSet [] sets =
-            (RelSet []) allSets.toArray(new RelSet[allSets.size()]);
+        RelSet [] sets = allSets.toArray(new RelSet[allSets.size()]);
         Arrays.sort(
             sets,
             new Comparator<RelSet>() {
@@ -961,6 +986,15 @@ public class VolcanoPlanner
         pw.println();
     }
 
+    /**
+     * Re-computes the digest of a {@link RelNode}.
+     *
+     * <p>Since a relational expression's digest contains the identifiers of
+     * its children, this method needs to be called when the child has been
+     * renamed, for example if the child's set merges with another.
+     *
+     * @param rel Relational expression
+     */
     void rename(RelNode rel)
     {
         final String oldDigest = rel.getDigest();
@@ -1014,6 +1048,13 @@ public class VolcanoPlanner
         }
     }
 
+    /**
+     * Registers a {@link RelNode}, which has already been registered, in a
+     * new {@link RelSet}.
+     *
+     * @param set Set
+     * @param rel Relational expression
+     */
     void reregister(
         RelSet set,
         RelNode rel)
@@ -1036,6 +1077,14 @@ public class VolcanoPlanner
         mapRel2Subset.put(rel, subset2);
     }
 
+    /**
+     * If a subset has one or more equivalent subsets (owing to a set having
+     * merged with another), returns the subset which is the leader of the
+     * equivalence class.
+     *
+     * @param subset Subset
+     * @return Leader of subset's equivalence class
+     */
     private RelSubset canonize(final RelSubset subset)
     {
         if (subset.set.equivalentSet == null) {

@@ -234,10 +234,20 @@ class RelSet
             }
         }
 
+        // Has another set merged with this?
+        assert equivalentSet == null;
+
         // Update all rels which have a child in the other set, to reflect the
         // fact that the child has been renamed.
         for (RelNode parentRel : otherSet.getParentRels()) {
             planner.rename(parentRel);
+        }
+
+        // Renaming may have caused this set to merge with another. If so,
+        // this set is now obsolete. There's no need to update the children
+        // of this set - indeed, it could be dangerous.
+        if (equivalentSet != null) {
+            return;
         }
 
         // Make sure the cost changes as a result of merging are propagated.
@@ -250,6 +260,8 @@ class RelSet
                 }
             }
         }
+
+        assert equivalentSet == null;
 
         // Each of the relations in the old set now has new parents, so
         // potentially new rules can fire. Check for rule matches, just as if

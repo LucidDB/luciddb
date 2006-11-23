@@ -142,15 +142,40 @@ public class VolcanoRuleCall
                 return;
             }
 
-            if (volcanoPlanner.getSubset(rels[0]) == null) {
-                if (tracer.isLoggable(Level.FINE)) {
-                    tracer.fine(
-                        "Rule [" + getRule() + "] not fired because operand"
-                        + " has no subset");
+            for (int i = 0; i < rels.length; i++) {
+                RelNode rel = rels[i];
+                RelSubset subset = volcanoPlanner.getSubset(rel);
+
+                if (subset == null) {
+                    if (tracer.isLoggable(Level.FINE)) {
+                        tracer.fine(
+                            "Rule [" + getRule() + "] not fired because"
+                            + " operand has no subset");
+                    }
+                    return;
                 }
-                return;
+
+                if (subset.set.equivalentSet != null) {
+                    if (tracer.isLoggable(Level.FINE)) {
+                        tracer.fine(
+                            "Rule [" + getRule() + "] not fired because"
+                            + " operand belongs to obsolete set");
+                    }
+                    return;
+                }
+
+                final Double importance =
+                    volcanoPlanner.relImportances.get(rel);
+                if (importance != null && importance == 0d) {
+                    if (tracer.isLoggable(Level.FINE)) {
+                        tracer.fine(
+                            "Rule [" + getRule() + "] not fired because"
+                            + " operand has importance=0");
+                    }
+                    return;
+                }
             }
-            
+
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine(
                     "Apply rule [" + getRule() + "] to ["

@@ -125,6 +125,10 @@ class RuleQueue
 
     /**
      * Returns whether there is a rule match in the queue.
+     *
+     * <p>Note that the VolcanoPlanner may still decide to reject rule matches
+     * which have become invalid, say if one of their operands belongs to an
+     * obsolete set or has importance=0.
      */
     public boolean hasNextMatch(VolcanoPlannerPhase phase)
     {
@@ -262,7 +266,7 @@ class RuleQueue
     void addMatch(VolcanoRuleMatch match)
     {
         final String matchName = match.toString();
-        for(PhaseMatchList matchList: matchListMap.values()) {
+        for (PhaseMatchList matchList : matchListMap.values()) {
             if (!matchList.names.add(matchName)) {
                 // Identical match has already been added.
                 continue;
@@ -275,8 +279,6 @@ class RuleQueue
                 if (!phaseRuleSet.contains(ruleClassName)) {
                     continue;
                 }
-                
-                tracer.finest("foo");
             }
 
             if (tracer.isLoggable(Level.FINEST)) {
@@ -401,7 +403,12 @@ class RuleQueue
         }
         
         VolcanoRuleMatch match = matchList.remove(0);
-        
+
+        // A rule match's digest is composed of the operand RelNodes' digests,
+        // which may have changed if sets have merged since the rule match was
+        // enqueued.
+        match.recomputeDigest();
+
         phaseMatchList.matchMap.removeMulti(
             planner.getSubset(match.rels[0]),
             match);
@@ -519,14 +526,16 @@ class RuleQueue
     private static class PhaseMatchList
     {
         final VolcanoPlannerPhase phase;
-        List<VolcanoRuleMatch> list;
-        Set<String> names;
-        MultiMap<RelSubset, VolcanoRuleMatch> matchMap;
-        
+        final List<VolcanoRuleMatch> list;
+        final Set<String> names;
+        final MultiMap<RelSubset, VolcanoRuleMatch> matchMap;
+
         PhaseMatchList(VolcanoPlannerPhase phase)
         {
             this.phase = phase;
-            this.list = new ArrayList<VolcanoRuleMatch>();
+            // Use a double-linked list because an array-list does not
+            // implement remove(0) efficiently.
+            this.list = new LinkedList<VolcanoRuleMatch>();
             this.names = new HashSet<String>();
             this.matchMap = new MultiMap<RelSubset, VolcanoRuleMatch>();
         }
