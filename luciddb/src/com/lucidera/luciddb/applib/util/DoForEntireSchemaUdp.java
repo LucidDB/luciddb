@@ -98,7 +98,7 @@ public abstract class DoForEntireSchemaUdp {
             pw.print(".");
             StackWriter.printSqlIdentifier(pw, rs.getString(2));
             // don't choke on ArrayIndexOOB if %TABLE_NAME% was at the end
-            if (java.lang.reflect.Array.getLength(parts) > 1) {
+            if (parts.length > 1) {
                 pw.print(parts[1]);
             }
             pw.close();
