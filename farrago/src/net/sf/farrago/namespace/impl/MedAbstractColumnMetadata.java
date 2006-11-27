@@ -218,8 +218,8 @@ public abstract class MedAbstractColumnMetadata
         // if the columns form a unique key or are part of a unique key,
         // then just return the rowcount times the selectivity of the
         // predicate
-        Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
-        if ((uniq != null) && uniq) {
+        boolean uniq = RelMdUtil.areColumnsDefinitelyUnique(rel, groupKey);
+        if (uniq) {
             return
                 NumberUtil.multiply(
                     RelMetadataQuery.getRowCount(rel),

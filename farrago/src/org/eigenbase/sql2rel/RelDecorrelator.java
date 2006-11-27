@@ -275,9 +275,9 @@ public class RelDecorrelator
         // check that the columns referenced in these comparisons form an unique
         // key of the filterInputRel
         if (joinKeys.isEmpty() ||
-            !RelMdUtil.areColumnsUnique(filterInputRel, joinKeys)) {
+            !RelMdUtil.areColumnsDefinitelyUnique(filterInputRel, joinKeys)) {
         	
-            if (!RelMdUtil.areColumnsUnique(filterInputRel, joinKeys)) {
+            if (!RelMdUtil.areColumnsDefinitelyUnique(filterInputRel, joinKeys)) {
                 sqlToRelTracer.fine(
                 		joinKeys.toString() + 
                 		"are not unique keys for " +

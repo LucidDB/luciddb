@@ -151,8 +151,8 @@ public class RelMdPopulationSize
         // REVIEW zfong 4/11/06 - Broadbase code returns the product of each
         // unique key, which would result in the population being larger
         // than the total rows in the relnode
-        Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
-        if ((uniq != null) && (uniq == true)) {
+        boolean uniq = RelMdUtil.areColumnsDefinitelyUnique(rel, groupKey);
+        if (uniq) {
             return RelMetadataQuery.getRowCount(rel);
         }
 

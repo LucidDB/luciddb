@@ -169,11 +169,11 @@ public class RelMdUtil
 
     /**
      * Returns true if the columns represented in a bit mask form a unique
-     * column set
+     * column set.
      *
      * @param rel the relnode that the column mask correponds to
-     * @param colMask bit mask containing columns that will be determined if
-     * they are unique
+     * @param colMask bit mask containing columns that will be tested
+     * for uniqueness
      *
      * @return true if bit mask represents a unique column set, or null if no
      * information on unique keys
@@ -192,7 +192,29 @@ public class RelMdUtil
         return false;
     }
 
-    public static Boolean areColumnsUnique(RelNode rel, List<RexInputRef> columnRefs)
+    /**
+     * Returns true if the columns represented in a bit mask are definitely
+     * known to form a unique column set.
+     *
+     * @param rel the relnode that the column mask correponds to
+     * @param colMask bit mask containing columns that will be tested
+     * for uniqueness
+     *
+     * @return true if bit mask represents a unique column set; false
+     * if not (or if no metadata is available)
+     */
+    public static boolean areColumnsDefinitelyUnique(
+        RelNode rel, BitSet colMask)
+    {
+        Boolean b = areColumnsUnique(rel, colMask);
+        if (b == null) {
+            return false;
+        }
+        return b;
+    }
+
+    public static Boolean areColumnsUnique(
+        RelNode rel, List<RexInputRef> columnRefs)
     {
         BitSet colMask = new BitSet();
         
@@ -211,6 +233,16 @@ public class RelMdUtil
             }
         }
         return false;
+    }
+
+    public static boolean areColumnsDefinitelyUnique(
+        RelNode rel, List<RexInputRef> columnRefs)
+    {
+        Boolean b = areColumnsUnique(rel, columnRefs);
+        if (b == null) {
+            return false;
+        }
+        return b;
     }
 
     /**

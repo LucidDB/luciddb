@@ -268,8 +268,8 @@ public class RelMdDistinctRowCount
         // REVIEW zfong 4/19/06 - Broadbase code does not take into
         // consideration selectivity of predicates passed in.  Also, they
         // assume the rows are unique even if the table is not
-        Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
-        if ((uniq != null) && uniq) {
+        boolean uniq = RelMdUtil.areColumnsDefinitelyUnique(rel, groupKey);
+        if (uniq) {
             return
                 NumberUtil.multiply(
                     RelMetadataQuery.getRowCount(rel),
