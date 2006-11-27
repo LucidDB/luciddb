@@ -145,10 +145,6 @@ ${farrago.test.jvmargs}
   <!-- overridable alias for farrago.catalog.dir -->
   <property name="project.catalog.dir" location="${farrago.catalog.dir}"/>
 
-  <!-- overridable alias for FarragoTrace.properties -->
-  <property name="project.trace.propfile" 
-    location="${FarragoTrace.properties}"/>
-
   <!-- Alias for project.catalog.dir to match runtime properties convention -->
   <property name="FARRAGO_CATALOG_DIR" location="${project.catalog.dir}"/>
 
@@ -264,6 +260,11 @@ ${farrago.test.jvmargs}
   <!-- File defining Farrago tracing -->
   <property name="FarragoTrace.properties"
     location="${farrago.trace.dir}/FarragoTrace.properties"/>
+
+  <!-- overridable alias for FarragoTrace.properties (must come after the
+       property it uses) -->
+  <property name="project.trace.propfile" 
+    location="${FarragoTrace.properties}"/>
 
   <!-- File for Farrago trace log -->
   <property name="FarragoTrace.log"
