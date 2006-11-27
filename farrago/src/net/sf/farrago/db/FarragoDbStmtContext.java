@@ -190,6 +190,10 @@ public class FarragoDbStmtContext
         boolean success = false;
 
         if (session.isAutoCommit()) {
+            // REVIEW jvs 26-Nov-2006:  What about CALL?  Maybe
+            // we can start it as read-only (regardless of
+            // whether the statements inside are DML, since they
+            // will do their own autocommits).
             startAutocommitTxn(!isDml);
         }
 
@@ -198,9 +202,14 @@ public class FarragoDbStmtContext
             checkDynamicParamsSet();
             FarragoSessionRuntimeParams params =
                 session.newRuntimeContextParams();
-            if (!isDml) {
+            if (executableStmt.getTableModOp() == null) {
+                // only use txnCodeCache for real DML, not CALL
                 params.txnCodeCache = null;
-            } else {
+            }
+            if (isDml) {
+                // if we're going to be executing the entire
+                // statement here, then warnings get returned via
+                // this Statement (not ResultSet)
                 params.warningQueue = warningQueue;
             }
             params.isDml = isDml;
@@ -287,6 +296,8 @@ public class FarragoDbStmtContext
                     clearExecutingStmtInfo();
                 }
             }
+            // REVIEW jvs 26-Nov-2006:  Do we need this test?  We're
+            // already inside of an isDml block.
             if (executableStmt.isDml()) {
                 updateRowCounts(updateCount, mergeRowCount);
             }         

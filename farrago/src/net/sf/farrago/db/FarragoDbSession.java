@@ -691,6 +691,9 @@ public class FarragoDbSession
         savepointList.clear();
         Iterator iter = txnCodeCache.values().iterator();
         while (iter.hasNext()) {
+            // REVIEW jvs 26-Nov-2006:  for pinned ExecStreamGraphs
+            // (and maybe other statement-related resources) can
+            // we verify that they are no longer in use?
             FarragoAllocation alloc = (FarragoAllocation) iter.next();
             alloc.closeAllocation();
         }
