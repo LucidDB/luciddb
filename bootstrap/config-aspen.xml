@@ -54,6 +54,7 @@
 			<artifactspublisher dir="&open_integration.build.home;/aspen/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="unitsql"/>
 			<artifactspublisher dir="&open_integration.build.home;/aspen/trace" dest="artifacts/aspen&configSuffix;" subdirectory="trace"/>
 			<artifactspublisher dir="&open_integration.build.home;/aspen/testcases" dest="artifacts/aspen&configSuffix;" subdirectory="testcases"/>
+                        <artifactspublisher file="&open_integration.build.home;/aspen/classes/FarragoRelease.properties" dest="artifacts/aspen&configSuffix;"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/aspen&configSuffix; &rsync_dest;"/>
