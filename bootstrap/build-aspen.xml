@@ -159,6 +159,7 @@ saffron.opt.allowInfiniteCostConverters=true
 			<arg value="${build.home}/farrago"/>
                         <arg value="--with-tests"/>
                         <arg value="--skip-build-notes"/>
+                        <arg value="--release"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
 		</exec>
