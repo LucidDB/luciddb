@@ -458,6 +458,36 @@ public class VolcanoPlanner
         return this;
     }
 
+    /**
+     * Finds the most efficient expression to implement the query given
+     * via {@link #setRoot(RelNode)}.
+     * 
+     * <p>The algorithm executes repeatedly in a series of phases.  In each
+     * phase the exact rules that may be fired varies.  The mapping of phases
+     * to rule sets is maintained in the {@link #ruleQueue}.
+     * 
+     * <p>In each phase, the planner sets the initial importance of the 
+     * existing RelSubSets ({@link #setInitialImportance()}).  The planner
+     * then iterates over the rule matches presented by the rule queue until:
+     * <ol>
+     *   <li>The rule queue becomes empty.</li>
+     *   <li>For ambitious planners: No improvements to the plan have been made
+     *       recently (specifically within a number of iterations that is 10% 
+     *       of the number of iterations necessary to first reach an 
+     *       implementable plan or 25 iterations whichever is larger).</li>
+     *   <li>For non-ambitious planners: When an implementable plan is 
+     *   found.</li>
+     * </ol>
+     * 
+     * <p>Furthermore, after every 10 iterations without an implementable plan,
+     * RelSubSets that contain only logical RelNodes are given an importance 
+     * boost via {@link #injectImportanceBoost()}.  Once an implementable plan
+     * is found, the artificially raised importances are cleared 
+     * ({@link #clearImportanceBoost()}).
+     * 
+     *  @return the most efficient RelNode tree found for implementing the
+     *          given query
+     */
     public RelNode findBestExp()
     {
         int cumulativeTicks = 0;
@@ -584,7 +614,7 @@ public class VolcanoPlanner
     
     /**
      * Finds RelSubsets in the plan that contain only rels of 
-     * {@link CallingConvention#NONE} and boosts their importance.
+     * {@link CallingConvention#NONE} and boosts their importance by 25%.
      */
     private void injectImportanceBoost()
     {

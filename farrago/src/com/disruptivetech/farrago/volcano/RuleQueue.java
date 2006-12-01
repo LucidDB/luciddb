@@ -50,11 +50,27 @@ class RuleQueue
     final Map<RelSubset, Double> subsetImportances =
         new HashMap<RelSubset, Double>();
 
+    /**
+     * The set of RelSubsets whose importance is currently in an artificially
+     * raised state.  Typically this only includes RelSubsets which have
+     * only logical RelNodes.
+     */
     final Set<RelSubset> boostedSubsets = new HashSet<RelSubset>();
     
+    /**
+     * Map of {@link VolcanoPlannerPhase} to a list of rule-matches. 
+     * Initially, there is an empty {@link PhaseMatchList} for each planner 
+     * phase. As the planner invokes {@link #addMatch(VolcanoRuleMatch)} the 
+     * rule-match is added to the appropriate PhaseMatchList(s).  As the
+     * planner completes phases, the matching entry is removed from this
+     * list to avoid unused work.
+     */
     final Map<VolcanoPlannerPhase, PhaseMatchList> matchListMap =
         new HashMap<VolcanoPlannerPhase, PhaseMatchList>();
     
+    /**
+     * Sorts rule-matches into decreasing order of importance.
+     */
     private final Comparator<VolcanoRuleMatch> ruleMatchImportanceComparator =
         new RuleMatchImportanceComparator();
 
@@ -69,6 +85,10 @@ class RuleQueue
     private static final Set<String> allRules = 
         Collections.singleton("<ALL RULES>");
     
+    /*
+     * Maps a {@link VolcanoPlannerPhase} to a set of rule names.  Named rules
+     * may be invoked in their corresponding phase.
+     */
     private final 
         Map<VolcanoPlannerPhase, Set<String>> phaseRuleMapping;
     
@@ -103,6 +123,10 @@ class RuleQueue
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Removes the {@link PhaseMatchList rule-match list} for the given
+     * planner phase.
+     */
     public void phaseCompleted(VolcanoPlannerPhase phase)
     {
         matchListMap.remove(phase);
@@ -124,17 +148,29 @@ class RuleQueue
     }
 
     /**
-     * Returns whether there is a rule match in the queue.
+     * Returns whether there is a rule match in the queue for the given
+     * phase.
      *
      * <p>Note that the VolcanoPlanner may still decide to reject rule matches
      * which have become invalid, say if one of their operands belongs to an
      * obsolete set or has importance=0.
+     * 
+     * @exception NullPointerException if this method is called with a phase
+     *                previously marked as completed via
+     *                {@link #phaseCompleted(VolcanoPlannerPhase)}.
      */
     public boolean hasNextMatch(VolcanoPlannerPhase phase)
     {
         return !matchListMap.get(phase).list.isEmpty();
     }
 
+    /**
+     * Recomputes the importance of the given RelSubset.
+     * 
+     * @param subset RelSubset whose importance is to be recomputed
+     * @param force if true, forces an importance update even if the subset
+     *              has not been registered
+     */
     public void recompute(RelSubset subset, boolean force)
     {
         Double previousImportance = subsetImportances.get(subset);
@@ -155,11 +191,31 @@ class RuleQueue
         updateImportance(subset, importance);
     }
     
+    /**
+     * Equivalent to 
+     * {@link #recompute(RelSubset, boolean) recompute(subset, false)}.
+     */
     public void recompute(RelSubset subset)
     {
         recompute(subset, false);
     }
     
+    /**
+     * Artificially boost the importnace of the given RelSubsets by the
+     * given factor.
+     * 
+     * <p>Iterates over the currently boosted RelSubsets and removes their
+     * importance boost, forcing a recalculation of the RelSubsets' 
+     * importances (see {@link #recompute(RelSubset)}).
+     * 
+     * <p>Once RelSubsets have been restored to their normal importance, the
+     * given RelSubsets have their importances boosted.  A RelSubset's
+     * boosted importance is always less than 1.0 (and never equal to 1.0). 
+     * 
+     * @param subsets RelSubsets to boost importance (priority)
+     * @param factor the amount to boost their importances (e.g., 1.25 
+     *               increases importance by 25%)
+     */
     public void boostImportance(Collection<RelSubset> subsets, double factor)
     {
         ArrayList<RelSubset> boostRemovals = new ArrayList<RelSubset>();
@@ -261,7 +317,9 @@ class RuleQueue
     }
 
     /**
-     * Adds a rule match.
+     * Adds a rule match.  The rule-matches are automatically added to all
+     * existing {@link PhaseMatchList per-phase rule-match lists} which allow
+     * the rule referenced by the match.
      */
     void addMatch(VolcanoRuleMatch match)
     {
@@ -523,11 +581,37 @@ class RuleQueue
         }
     }
     
+    /**
+     * PhaseMatchList represents a set of {@link VolcanoRuleMatch rule-matches}
+     * for a particular 
+     * {@link VolcanoPlannerPhase phase of the planner's execution}.
+     */
     private static class PhaseMatchList
     {
+        /** The VolcanoPlannerPhase that this PhaseMatchList is used in. */
         final VolcanoPlannerPhase phase;
+        
+        /**
+         * Current list of VolcanoRuleMatches for this phase.  New rule-matches
+         * are appended to the end of this list.  When removing a rule-match,
+         * the list is sorted and the highest importance rule-match removed.
+         * It is important for performance that this list remain mostly sorted.  
+         */
         final List<VolcanoRuleMatch> list;
+        
+        /** 
+         * A set of rule-match names contained in {@link #list}. Allows fast
+         * detection of duplicate rule-matches.
+         */
         final Set<String> names;
+        
+        /**
+         * Multi-map of RelSubset to VolcanoRuleMatches.  Used to 
+         * {@link VolcanoRuleMatch#clearCachedImportance() clear} the 
+         * rule-match's cached importance related RelSubset importances are 
+         * modified (e.g., due to invocation of 
+         * {@link RuleQueue#boostImportance(Collection, double)}).
+         */
         final MultiMap<RelSubset, VolcanoRuleMatch> matchMap;
 
         PhaseMatchList(VolcanoPlannerPhase phase)
