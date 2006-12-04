@@ -534,6 +534,11 @@ TBD: naming convention for extension features
     <text>MERGE not supported</text>
 </exception>
 
+<exception name="SQLFeature_S271">
+    <property name="FeatureDefinition">SQL:2003 Part 2 Annex F</property>
+    <text>Basic multiset not supported</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Extensions -->
 <!-- ====================================================================== -->

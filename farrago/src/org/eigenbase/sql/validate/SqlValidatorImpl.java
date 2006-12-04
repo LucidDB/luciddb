@@ -1803,6 +1803,9 @@ public class SqlValidatorImpl
             break;
 
         case SqlKind.MultisetQueryConstructorORDINAL:
+            validateFeature(
+                EigenbaseResource.instance().SQLFeature_S271,
+                node.getParserPosition());
             call = (SqlCall) node;
             CollectScope cs = new CollectScope(parentScope, usingScope, call);
             final CollectNamespace ttableConstructorNs =
@@ -1855,6 +1858,17 @@ public class SqlValidatorImpl
             || (expr instanceof SqlDataTypeSpec);
     }
 
+    private void validateNodeFeature(SqlNode node)
+    {
+        switch (node.getKind().getOrdinal()) {
+            case SqlKind.MultisetValueConstructorORDINAL:
+                validateFeature(
+                    EigenbaseResource.instance().SQLFeature_S271,
+                    node.getParserPosition());
+                break;
+        }
+    }
+
     private void registerSubqueries(
         SqlValidatorScope parentScope,
         SqlNode node,
@@ -1867,6 +1881,7 @@ public class SqlValidatorImpl
         } else if (node.isA(SqlKind.MultisetQueryConstructor)) {
             registerQuery(parentScope, null, node, null, false);
         } else if (node instanceof SqlCall) {
+            validateNodeFeature(node);
             SqlCall call = (SqlCall) node;
             final SqlNode [] operands = call.getOperands();
             for (int i = 0; i < operands.length; i++) {
