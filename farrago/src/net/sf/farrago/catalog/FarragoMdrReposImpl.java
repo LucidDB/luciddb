@@ -86,12 +86,6 @@ public class FarragoMdrReposImpl
 
     protected FarragoMemFactory memFactory;
 
-    /* OLD MEMFACTORY: */
-    private String memStorageId;
-    private static final boolean USE_OLD_MEMFACTORY = false;
-    /* end OLD MEMFACTORY */
-
-    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -143,53 +137,20 @@ public class FarragoMdrReposImpl
 
         mdrRepository = modelLoader.getMdrRepos();
 
-        if (USE_OLD_MEMFACTORY) {
-            // Create special in-memory storage for transient objects
-            try {
-                NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
-                Map props = new HashMap();
-                memStorageId =
-                    nbRepos.mountStorage(
-                        FarragoTransientStorageFactory.class.getName(),
-                        props);
-                beginReposTxn(true);
-                boolean rollback = true;
-                try {
-                    RefPackage memExtent =
-                        nbRepos.createExtent(
-                            "TransientCatalog",
-                            getFarragoPackage().refMetaObject(),
-                            null,
-                            memStorageId);
-                    transientFarragoPackage = (FarragoPackage) memExtent;
-                    rollback = false;
-                } finally {
-                    endReposTxn(rollback);
-                }
-                FarragoTransientStorage.ignoreCommit = true;
-                fennelPackage = transientFarragoPackage.getFem().getFennel();
-            } catch (Throwable ex) {
-                throw FarragoResource.instance().CatalogInitTransientFailed.ex(ex);
-            }
-    
-            // Load configuration
-            currentConfigMofId = getDefaultConfig().refMofId();
-            initGraph();
-        } else {
-            // Load configuration
-            currentConfigMofId = getDefaultConfig().refMofId();
-            initGraph();
-    
-            // Create special in-memory storage for transient objects
-            try {
-                memFactory = new FarragoMemFactory(getModelGraph());
-    
-                transientFarragoPackage = memFactory.getFarragoPackage();
-                fennelPackage = transientFarragoPackage.getFem().getFennel();
-            } catch (Throwable ex) {
-                throw FarragoResource.instance().CatalogInitTransientFailed.ex(ex);
-            }
+        // Load configuration
+        currentConfigMofId = getDefaultConfig().refMofId();
+        initGraph();
+
+        // Create special in-memory storage for transient objects
+        try {
+            memFactory = new FarragoMemFactory(getModelGraph());
+
+            transientFarragoPackage = memFactory.getFarragoPackage();
+            fennelPackage = transientFarragoPackage.getFem().getFennel();
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().CatalogInitTransientFailed.ex(ex);
         }
+
         tracer.info("Catalog successfully loaded");
     }
 
@@ -230,22 +191,11 @@ public class FarragoMdrReposImpl
             return;
         }
         tracer.fine("Closing catalog");
-        if (USE_OLD_MEMFACTORY) {
-            if (memStorageId != null) {
-                mdrRepository.beginTrans(true);
-                FarragoTransientStorage.ignoreCommit = false;
-                if (transientFarragoPackage != null) {
-                    transientFarragoPackage.refDelete();
-                }
-                mdrRepository.endTrans();
-                memStorageId = null;
-            }
-        } else {
-            if (transientFarragoPackage != null) {
-                transientFarragoPackage.refDelete();
-            }
-            memFactory = null;
+        if (transientFarragoPackage != null) {
+            transientFarragoPackage.refDelete();
         }
+        memFactory = null;
+
         modelLoader.close();
         modelLoader = null;
         tracer.info("Catalog successfully closed");
@@ -255,18 +205,12 @@ public class FarragoMdrReposImpl
     public void beginTransientTxn()
     {
         tracer.fine("Begin transient repository transaction");
-        if (USE_OLD_MEMFACTORY) {
-            mdrRepository.beginTrans(true);
-        }
     }
 
     // implement FarragoTransientTxnContext
     public void endTransientTxn()
     {
         tracer.fine("End transient repository transaction");
-        if (USE_OLD_MEMFACTORY) {
-            mdrRepository.endTrans(false);
-        }
     }
 
     // implement FarragoRepos
