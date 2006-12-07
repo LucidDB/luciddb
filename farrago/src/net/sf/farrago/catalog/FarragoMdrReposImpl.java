@@ -24,10 +24,11 @@ package net.sf.farrago.catalog;
 
 import java.io.*;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.*;
 
-import javax.jmi.reflect.*;
+import javax.jmi.reflect.RefPackage;
 
 import net.sf.farrago.*;
 import net.sf.farrago.fem.config.*;
@@ -36,8 +37,10 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.JmiModelGraph;
+import org.eigenbase.jmi.mem.JmiModeledMemFactory;
 import org.netbeans.api.mdr.*;
-import org.netbeans.mdr.*;
+import org.netbeans.mdr.NBMDRepositoryImpl;
 
 
 /**
@@ -81,8 +84,14 @@ public class FarragoMdrReposImpl
      */
     private final String currentConfigMofId;
 
-    private String memStorageId;
+    protected FarragoMemFactory memFactory;
 
+    /* OLD MEMFACTORY: */
+    private String memStorageId;
+    private static final boolean USE_OLD_MEMFACTORY = false;
+    /* end OLD MEMFACTORY */
+
+    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -134,37 +143,53 @@ public class FarragoMdrReposImpl
 
         mdrRepository = modelLoader.getMdrRepos();
 
-        // Create special in-memory storage for transient objects
-        try {
-            NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
-            Map props = new HashMap();
-            memStorageId =
-                nbRepos.mountStorage(
-                    FarragoTransientStorageFactory.class.getName(),
-                    props);
-            beginReposTxn(true);
-            boolean rollback = true;
+        if (USE_OLD_MEMFACTORY) {
+            // Create special in-memory storage for transient objects
             try {
-                RefPackage memExtent =
-                    nbRepos.createExtent(
-                        "TransientCatalog",
-                        getFarragoPackage().refMetaObject(),
-                        null,
-                        memStorageId);
-                transientFarragoPackage = (FarragoPackage) memExtent;
-                rollback = false;
-            } finally {
-                endReposTxn(rollback);
+                NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
+                Map props = new HashMap();
+                memStorageId =
+                    nbRepos.mountStorage(
+                        FarragoTransientStorageFactory.class.getName(),
+                        props);
+                beginReposTxn(true);
+                boolean rollback = true;
+                try {
+                    RefPackage memExtent =
+                        nbRepos.createExtent(
+                            "TransientCatalog",
+                            getFarragoPackage().refMetaObject(),
+                            null,
+                            memStorageId);
+                    transientFarragoPackage = (FarragoPackage) memExtent;
+                    rollback = false;
+                } finally {
+                    endReposTxn(rollback);
+                }
+                FarragoTransientStorage.ignoreCommit = true;
+                fennelPackage = transientFarragoPackage.getFem().getFennel();
+            } catch (Throwable ex) {
+                throw FarragoResource.instance().CatalogInitTransientFailed.ex(ex);
             }
-            FarragoTransientStorage.ignoreCommit = true;
-            fennelPackage = transientFarragoPackage.getFem().getFennel();
-        } catch (Throwable ex) {
-            throw FarragoResource.instance().CatalogInitTransientFailed.ex(ex);
+    
+            // Load configuration
+            currentConfigMofId = getDefaultConfig().refMofId();
+            initGraph();
+        } else {
+            // Load configuration
+            currentConfigMofId = getDefaultConfig().refMofId();
+            initGraph();
+    
+            // Create special in-memory storage for transient objects
+            try {
+                memFactory = new FarragoMemFactory(getModelGraph());
+    
+                transientFarragoPackage = memFactory.getFarragoPackage();
+                fennelPackage = transientFarragoPackage.getFem().getFennel();
+            } catch (Throwable ex) {
+                throw FarragoResource.instance().CatalogInitTransientFailed.ex(ex);
+            }
         }
-
-        // Load configuration
-        currentConfigMofId = getDefaultConfig().refMofId();
-        initGraph();
         tracer.info("Catalog successfully loaded");
     }
 
@@ -205,14 +230,21 @@ public class FarragoMdrReposImpl
             return;
         }
         tracer.fine("Closing catalog");
-        if (memStorageId != null) {
-            mdrRepository.beginTrans(true);
-            FarragoTransientStorage.ignoreCommit = false;
+        if (USE_OLD_MEMFACTORY) {
+            if (memStorageId != null) {
+                mdrRepository.beginTrans(true);
+                FarragoTransientStorage.ignoreCommit = false;
+                if (transientFarragoPackage != null) {
+                    transientFarragoPackage.refDelete();
+                }
+                mdrRepository.endTrans();
+                memStorageId = null;
+            }
+        } else {
             if (transientFarragoPackage != null) {
                 transientFarragoPackage.refDelete();
             }
-            mdrRepository.endTrans();
-            memStorageId = null;
+            memFactory = null;
         }
         modelLoader.close();
         modelLoader = null;
@@ -223,14 +255,18 @@ public class FarragoMdrReposImpl
     public void beginTransientTxn()
     {
         tracer.fine("Begin transient repository transaction");
-        mdrRepository.beginTrans(true);
+        if (USE_OLD_MEMFACTORY) {
+            mdrRepository.beginTrans(true);
+        }
     }
 
     // implement FarragoTransientTxnContext
     public void endTransientTxn()
     {
         tracer.fine("End transient repository transaction");
-        mdrRepository.endTrans(false);
+        if (USE_OLD_MEMFACTORY) {
+            mdrRepository.endTrans(false);
+        }
     }
 
     // implement FarragoRepos
@@ -260,6 +296,43 @@ public class FarragoMdrReposImpl
     {
         return modelLoader;
     }
+    
+    //~ Inner classes ---------------------------------------------------------
+    
+    protected class FarragoMemFactory extends FarragoMetadataFactoryImpl
+    {
+        private final FactoryImpl factoryImpl;
+    
+        public FarragoMemFactory(JmiModelGraph modelGraph)
+        {
+            factoryImpl = new FactoryImpl(modelGraph);
+            this.setRootPackage((FarragoPackage) factoryImpl.getRootPackage());
+        }
+    
+        public FactoryImpl getImpl()
+        {
+            return factoryImpl;
+        }
+        
+        public RefPackage newRefPackage(Class ifacePackage)
+        {
+            return factoryImpl.newRefPackage(ifacePackage);
+        }
+    }
+
+    private class FactoryImpl extends JmiModeledMemFactory
+    {
+        FactoryImpl(JmiModelGraph modelGraph)
+        {
+            super(modelGraph);
+        }
+    
+        protected RefPackageImpl newRootPackage()
+        {
+            return new RefPackageImpl(FarragoPackage.class);
+        }
+    }
+    
 }
 
 // End FarragoReposImpl.java

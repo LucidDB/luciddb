@@ -42,6 +42,10 @@ ParamName JniUtilParams::paramJniHandleTraceFile = "jniHandleTraceFile";
 
 JavaVM *JniUtil::pVm = NULL;
 jmethodID JniUtil::methGetClassName = 0;
+jmethodID JniUtil::methGetInterfaces = 0;
+jmethodID JniUtil::methGetModifiers = 0;
+jclass JniUtil::classModifier = 0;
+jmethodID JniUtil::methIsPublic = 0;
 jmethodID JniUtil::methHasNext = 0;
 jmethodID JniUtil::methNext = 0;
 jmethodID JniUtil::methIterator = 0;
@@ -200,6 +204,15 @@ jint JniUtil::init(JavaVM *pVmInit)
         "net/sf/farrago/runtime/FarragoRuntimeContext");
     methGetClassName = pEnv->GetMethodID(
         classClass,"getName","()Ljava/lang/String;");
+    methGetInterfaces = pEnv->GetMethodID(
+        classClass,"getInterfaces","()[Ljava/lang/Class;");
+    methGetModifiers = pEnv->GetMethodID(
+        classClass,"getModifiers","()I");
+
+    jclass tempClassModifier = pEnv->FindClass("java/lang/reflect/Modifier");
+    classModifier = (jclass)pEnv->NewGlobalRef(tempClassModifier);
+    methIsPublic = pEnv->GetStaticMethodID(classModifier, "isPublic", "(I)Z");
+
     methIterator = pEnv->GetMethodID(
         classCollection,"iterator","()Ljava/util/Iterator;");
     methHasNext = pEnv->GetMethodID(
@@ -265,6 +278,36 @@ std::string JniUtil::getClassName(jclass jClass)
         pEnv->CallObjectMethod(jClass,methGetClassName));
     assert(jString);
     return toStdString(pEnv,jString);
+}
+
+std::string JniUtil::getFirstPublicInterfaceName(jclass jClass)
+{
+    JniEnvAutoRef pEnv;
+    
+    jobjectArray interfaces = 
+        reinterpret_cast<jobjectArray>(
+            pEnv->CallObjectMethod(jClass, methGetInterfaces));
+    assert(interfaces);
+
+    for(jsize i = 0, len = pEnv->GetArrayLength(interfaces); i < len; i++) {
+        jclass interface = 
+            reinterpret_cast<jclass>(
+                pEnv->GetObjectArrayElement(interfaces, i));
+        assert(interface);
+
+        jint modifiers = 
+            pEnv->CallIntMethod(interface, methGetModifiers);
+
+        jboolean isPublic =
+            pEnv->CallStaticBooleanMethod(
+                classModifier, methIsPublic, modifiers);
+
+        if (isPublic) {
+            return getClassName(interface);
+        }
+    }
+
+    return std::string("(none)");
 }
 
 std::string JniUtil::toStdString(JniEnvRef pEnv,jstring jString)
