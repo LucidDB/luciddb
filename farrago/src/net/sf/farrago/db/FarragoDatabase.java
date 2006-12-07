@@ -227,7 +227,7 @@ public class FarragoDatabase
             // Start up timer.  This comes last so that the first thing we do
             // in close is to cancel it, avoiding races with other shutdown
             // activity.
-            Timer timer = new Timer();
+            Timer timer = new Timer("Farrago Watchdog Timer");
             new FarragoTimerAllocation(this, timer);
             timer.schedule(
                 new WatchdogTask(),
