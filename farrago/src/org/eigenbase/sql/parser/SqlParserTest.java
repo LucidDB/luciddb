@@ -2073,6 +2073,15 @@ public class SqlParserTest
         checkExpFails("sum(sal) over (w w1 partition by deptno)", "(?s).*");
     }
 
+    public void testWindowInSubquery()
+    {
+        check("select * from ( select sum(x) over w, sum(y) over w from s window w as (range interval '1' minute preceding))", 
+            TestUtil.fold("SELECT *\n" + 
+            "FROM (SELECT (SUM(`X`) OVER `W`), (SUM(`Y`) OVER `W`)\n" +
+            "FROM `S`\n" +
+            "WINDOW `W` AS (RANGE INTERVAL '1' MINUTE PRECEDING))"));
+    }
+    
     public void testWindowSpec()
     {
         // Correct syntax

@@ -1941,6 +1941,25 @@ public class SqlValidatorTest
             "Duplicate window specification not allowed in the same window clause");
     }
 
+    public void testWindowClauseWithSubquery()
+    {
+        check(
+            "select * from \n" +
+            "( select sum(empno) over w, sum(deptno) over w from emp \n" +
+            "window w as (order by hiredate range interval '1' minute preceding))");
+        
+        check(
+            "select * from \n" +
+            "( select sum(empno) over w, sum(deptno) over w, hiredate from emp) \n" +
+            "window w as (order by hiredate range interval '1' minute preceding)");
+
+        checkFails(
+            "select * from \n" +
+            "( select sum(empno) over w, sum(deptno) over w from emp) \n" +
+            "window w as (order by ^hiredate^ range interval '1' minute preceding)",
+            "Column 'HIREDATE' not found in any table");
+    }
+    
     public void testWindowNegative()
     {
         checkNegWindow("rows between 2 preceding and 4 preceding", true);

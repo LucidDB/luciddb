@@ -1610,7 +1610,7 @@ public class SqlValidatorImpl
             final SqlSelect select = (SqlSelect) node;
             final SelectNamespace selectNs = createSelectNamespace(select);
             registerNamespace(usingScope, alias, selectNs, forceNullable);
-            SelectScope selectScope = new SelectScope(parentScope, select);
+            SelectScope selectScope = new SelectScope(parentScope, usingScope, select);
             scopes.put(select, selectScope);
 
             // Start by registering the WHERE clause
