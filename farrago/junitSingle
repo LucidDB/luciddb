@@ -2,7 +2,7 @@
 # $Id$
 # Farrago is an extensible data management system.
 # Copyright (C) 2005-2005 The Eigenbase Project
-# Copyright (C) 2005-2005 Disruptive Tech
+# Copyright (C) 2005-2006 Disruptive Tech
 # Copyright (C) 2005-2005 LucidEra, Inc.
 # Portions Copyright (C) 2003-2005 John V. Sichi
 #
@@ -35,7 +35,7 @@ if [ "$1" == "-repeat" -o "$1" == "--repeat" ]; then
 fi
 
 if [ ! "$1" ]; then 
-    echo "Error: specify a .sql filename or a test class name"; 
+    echo "Error: specify a .sql or .java filename or a test class name";
     exit; 
 fi
 test=$1
@@ -50,7 +50,25 @@ if [ ! "$EIGEN_TEST_DEFAULT_PACKAGE" ]; then
     EIGEN_TEST_DEFAULT_PACKAGE=net.sf.farrago.test
 fi
 
-if [ -e "$test" ]; then
+if [ -e "$test" -a ${test:0-5} == ".java" ]; then
+    # Interpret the argument as the name of a java source file.
+    # Convert it to the name of a java class.
+    # For example, "src/com/acme/foo/Bar.java" becomes "com.acme.foo.Bar".
+    junit_class=$(awk '
+/^package / {
+  p = substr($2,0,length($2)-1);
+}
+/ class / {
+  for (i = 1; i <= NF; i++) {
+    if ($i == "class") {
+      c = $(i+1);
+      print p "." c;
+      exit;
+    }
+  }
+}' "$test")
+    command="ant -Djunit.class=$junit_class -Dfileset.unitsql='' $target"
+elif [ -e "$test" ]; then
     # Interpret the argument as the name of an .sql script to run
 
     # Assume unitsql tests
@@ -107,4 +125,4 @@ else
     exit 1;
 fi
 
-
+# End junitSingle
