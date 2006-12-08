@@ -2313,6 +2313,27 @@ public class SqlValidatorTest
             "Column count mismatch in UNION");
     }
 
+    public void testUnionCountMismatcWithValueshFails()
+    {
+        checkFails(
+            "select * from ( values (1))" + NL
+            + "union" + NL
+            + "select ^*^ from ( values (1,2))",
+            "Column count mismatch in UNION");
+
+        checkFails(
+            "select * from ( values (1))" + NL
+            + "union" + NL
+            + "select ^*^ from emp",
+            "Column count mismatch in UNION");
+
+        checkFails(
+            "select * from emp" + NL
+            + "union" + NL
+            + "select ^*^ from ( values (1))",
+            "Column count mismatch in UNION");
+  }
+
     public void testUnionTypeMismatchFails()
     {
         checkFails("select 1, ^2^ from emp union select deptno, name from dept",
