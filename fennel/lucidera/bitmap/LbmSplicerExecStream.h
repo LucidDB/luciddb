@@ -36,7 +36,7 @@ FENNEL_BEGIN_NAMESPACE
 struct LbmSplicerExecStreamParams :
     public BTreeExecStreamParams, public ConduitExecStreamParams
 {
-    DynamicParamId dynParamId;
+    DynamicParamId insertRowCountParamId;
 
     bool ignoreDuplicates;
 };
@@ -46,7 +46,7 @@ class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
     /**
      * Parameter id of dynamic parameter containing final row count
      */
-    DynamicParamId dynParamId;
+    DynamicParamId insertRowCountParamId;
     
     /**
      * If true, ignore inputs containing rid values that are duplicates.  Only

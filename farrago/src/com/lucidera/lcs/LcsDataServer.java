@@ -159,7 +159,8 @@ class LcsDataServer
     // implement FarragoMedLocalDataServer
     public void validateTableDefinition(
         FemLocalTable table,
-        FemLocalIndex generatedPrimaryKeyIndex)
+        FemLocalIndex generatedPrimaryKeyIndex,
+        boolean creation)
         throws SQLException
     {
         // Verify that no column has a collection for its type, because
@@ -214,6 +215,11 @@ class LcsDataServer
                 false,
                 true,
                 true);
+        }
+        
+        // initialize rowcounts
+        if (creation) {
+            FarragoCatalogUtil.resetRowCounts((FemAbstractColumnSet) table);
         }
     }
 
@@ -354,6 +360,23 @@ class LcsDataServer
         FemLocalIndex index)
     {
         return index.isClustered();
+    }
+    
+    // implement MedAbstractFennelDataServer
+    public void dropIndex(
+        FemLocalIndex index,
+        long rootPageId,
+        boolean truncate)
+    {
+        FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
+        // if the truncate is being called for an alter table rebuild on
+        // the deletion index, don't reset the rowcounts because this 
+        // will wipe out the rowcounts that were just updated for the newly
+        // rebuilt table
+        if (truncate && !FarragoCatalogUtil.isDeletionIndex(index)) {
+            FarragoCatalogUtil.resetRowCounts((FemAbstractColumnSet) table);
+        }
+        super.dropIndex(index, rootPageId, truncate);
     }
 }
 

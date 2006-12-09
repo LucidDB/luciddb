@@ -569,6 +569,7 @@ public class FarragoPreparingStmt
                         preparedExecution.getMethod(),
                         xmiFennelPlan,
                         preparedResult.isDml(),
+                        preparedResult.getTableModOp(),
                         getReferencedObjectTimestampMap(),
                         tableAccessMap,
                         resultSetTypeMap,
@@ -582,6 +583,7 @@ public class FarragoPreparingStmt
                         xmiFennelPlan,
                         streamName,
                         preparedResult.isDml(),
+                        preparedResult.getTableModOp(),
                         getReferencedObjectTimestampMap(),
                         tableAccessMap);
             }

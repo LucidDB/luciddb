@@ -33,6 +33,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
@@ -66,10 +67,11 @@ class FarragoExecutableFennelStmt
         String xmiFennelPlan,
         String streamName,
         boolean isDml,
+        TableModificationRel.Operation tableModOp,
         Map<String, String> referencedObjectTimestampMap,
         TableAccessMap tableAccessMap)
     {
-        super(dynamicParamRowType, isDml, tableAccessMap);
+        super(dynamicParamRowType, isDml, tableModOp, tableAccessMap);
 
         this.xmiFennelPlan = xmiFennelPlan;
         this.streamName = streamName;

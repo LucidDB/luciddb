@@ -71,6 +71,11 @@ public class LhxSemiJoinRule
         RelNode leftRel = call.rels[2];
         RelNode rightRel = call.rels[3];
 
+        if (joinRel.getJoinType() != JoinRelType.INNER) {
+            // This rule only applies to inner joins.
+            return;
+        }
+        
         if (!(leftRel instanceof AggregateRel) &&
             !(rightRel instanceof AggregateRel)) {
             return;

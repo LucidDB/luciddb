@@ -250,8 +250,10 @@ public class DdlRelationalHandler
         FarragoMedLocalDataServer medLocalDataServer =
             (FarragoMedLocalDataServer) medDataServer;
         try {
-            medLocalDataServer.validateTableDefinition(table,
-                generatedPrimaryKeyIndex);
+            medLocalDataServer.validateTableDefinition(
+                table,
+                generatedPrimaryKeyIndex,
+                creation);
         } catch (SQLException ex) {
             throw res.ValidatorDataServerTableInvalid.ex(
                 repos.getLocalizedObjectName(table),

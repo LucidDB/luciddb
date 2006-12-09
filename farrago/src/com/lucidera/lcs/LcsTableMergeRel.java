@@ -291,9 +291,15 @@ public class LcsTableMergeRel
 
         FemBarrierStreamDef barrier;
         if (insertOnly) {
-            barrier = indexGuide.newBarrier(this, 0);
+            barrier =
+                indexGuide.newBarrier(
+                    this,
+                    LcsIndexGuide.BarrierReturnFirstInput);
         } else {
-            barrier = indexGuide.newBarrier(this, 1);
+            barrier =
+                indexGuide.newBarrier(
+                    this,
+                    LcsIndexGuide.BarrierReturnAllInputs);
             implementor.addDataFlowFromProducerToConsumer(deleter, barrier);
         }
         implementor.addDataFlowFromProducerToConsumer(appendSubStream, barrier);

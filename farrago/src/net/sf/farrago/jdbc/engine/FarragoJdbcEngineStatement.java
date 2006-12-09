@@ -95,7 +95,7 @@ public class FarragoJdbcEngineStatement
     public int getUpdateCount()
         throws SQLException
     {
-        return stmtContext.getUpdateCount();
+        return (int) stmtContext.getUpdateCount();
     }
 
     // implement Statement
@@ -141,7 +141,7 @@ public class FarragoJdbcEngineStatement
                 }
                 stmtContext.execute();
                 assert (stmtContext.getResultSet() == null);
-                int count = stmtContext.getUpdateCount();
+                int count = (int) stmtContext.getUpdateCount();
                 if (count == -1) {
                     count = 0;
                 }

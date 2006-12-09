@@ -578,8 +578,13 @@ public abstract class SqlDateTimeWithoutTZ
             if (o instanceof SqlTime) {
                 assert (currentDate != null);
                 SqlTime time = (SqlTime) o;
-                value.setZonelessTime(
-                    currentDate.getTime() + time.value.getTime());
+                if (time.isNull()) {
+                    setNull(true);
+                } else {
+                    setNull(false);
+                    value.setZonelessTime(
+                        currentDate.getTime() + time.value.getTime());
+                }
             } else {
                 super.assignFrom(o);
             }

@@ -406,17 +406,15 @@ public class SqlToRelConverter
         if (validator.isAggregate(select)) {
             convertAgg(
                 bb,
-                select.getGroup(),
-                select.getHaving(),
-                select.getSelectList(),
+                select,
                 orderExprList);
         } else {
             convertSelectList(
                 bb,
-                select.getSelectList(),
-                orderExprList,
-                select);
+                select,
+                orderExprList);
         }
+        
         if (select.isDistinct()) {
             bb.setRoot(
                 RelOptUtil.createDistinctRel(bb.root),
@@ -1426,6 +1424,9 @@ public class SqlToRelConverter
                         // bb.root is an aggregate and only projects group by keys.
                         Map<Integer, Integer> exprProjection = 
                             bb.mapRootRelToFieldProjection.get(bb.root);
+                        
+                        // subquery can reference group by keys projected from the root of the
+                        // outer relation.
                         if (exprProjection.containsKey(pos)) {
                             pos = exprProjection.get(pos);
                         } else {
@@ -1553,15 +1554,27 @@ public class SqlToRelConverter
      */
     private void convertAgg(
         Blackboard bb,
-        SqlNodeList groupList,
-        SqlNode having,
-        SqlNodeList selectList,
+        SqlSelect select,
         List<SqlNode> orderExprList)
     {
         assert bb.root != null : "precondition: child != null";
         final AggConverter aggConverter = new AggConverter(bb);
+        SqlNodeList groupList = select.getGroup();
+        SqlNodeList selectList = select.getSelectList();
+        SqlNode having = select.getHaving();
         
-        replaceSubqueries(bb, selectList);
+    	SqlNodeList aggList =
+    		new SqlNodeList(SqlParserPos.ZERO);
+    	
+    	for (SqlNode selectNode : selectList) {
+    	    if (validator.isAggregate(selectNode)) {
+    	        aggList.add(selectNode);
+    	    }
+    	}
+        
+        // first replace the subqueries inside the aggregates
+        // because they will provide input rows to the aggregates.
+        replaceSubqueries(bb, aggList);
 
         // If group-by clause is missing, pretend that it has zero elements.
         if (groupList == null) {
@@ -1570,11 +1583,12 @@ public class SqlToRelConverter
 
         // register the group exprs
         
-        // rchen 2006-10-18: build a map to remember the projections from the
+        // build a map to remember the projections from the
         // top scope to the output of the current root.
+        //
         // Currently farrago allows expressions, not just column references in group
         // by list. This is not SQL 2003 compliant.
-        
+
         Map<Integer, Integer> groupExprProjection =
             new HashMap<Integer, Integer>();
         
@@ -1585,7 +1599,7 @@ public class SqlToRelConverter
             aggConverter.addGroupExpr(expandedGroupExpr);
             
             if (expandedGroupExpr instanceof SqlIdentifier) {
-                // SQL 2003 does not allows expressions of column references
+                // SQL 2003 does not allow expressions of column references
                 SqlIdentifier expr = (SqlIdentifier) expandedGroupExpr;
                 // column references should be fully qualified.
                 assert (expr.names.length == 2);
@@ -1622,37 +1636,29 @@ public class SqlToRelConverter
             }
         }
 
+        RexNode havingExpr = null;
+
         final int selectCount = selectList.size();
         final int orderCount = orderExprList.size();
         RexNode [] selectExprs = new RexNode[selectCount + orderCount];
         String [] selectNames = new String[selectCount + orderCount];
-        RexNode havingExpr = null;
+        
         try {
             Util.permAssert(bb.agg == null, "already in agg mode");
             bb.agg = aggConverter;
 
-            selectList.accept(aggConverter);
-            
             // convert the select and having expressions, so that the
             // agg converter knows which aggregations are required
-            for (int i = 0; i < selectCount; i++) {
-                SqlNode expr = selectList.get(i);
-                selectExprs[i] = bb.convertExpression(expr);
-                selectNames[i] = validator.deriveAlias(expr, i);
-            }
 
+            selectList.accept(aggConverter);
             for (int i = 0; i < orderCount; i++) {
                 SqlNode expr = orderExprList.get(i);
                 expr.accept(aggConverter);
-                selectExprs[selectCount + i] = bb.convertExpression(expr);
-                selectNames[selectCount + i] =
-                    validator.deriveAlias(expr, selectCount + i);
             }
-
             if (having != null) {
                 having.accept(aggConverter);
             }
-
+            
             // compute inputs to the aggregator
             RexNode [] preExprs = aggConverter.getPreExprs();
             
@@ -1668,7 +1674,7 @@ public class SqlToRelConverter
             Set<String> correlatedVariablesBefore =
                 RelOptUtil.getVariablesUsed(inputRel);
 
-
+            // Project the expressions required by agg and having.
             bb.setRoot(
                 CalcRel.createProject(
                     inputRel,
@@ -1686,7 +1692,7 @@ public class SqlToRelConverter
                 mapCorrelToRefRel.put(correl, bb.root);
             }
             
-            // add the aggregator
+            // Add the aggregator
             final AggregateRel.Call [] aggCalls = aggConverter.getAggCalls();
             bb.setRoot(
                 new AggregateRel(
@@ -1698,12 +1704,33 @@ public class SqlToRelConverter
             
             bb.mapRootRelToFieldProjection.put(bb.root, groupExprProjection);
 
-            // should replace subqueries in having here and modify having to use 
+            // Replace subqueries in having here and modify having to use 
             // the replaced expressions
             if (having != null) {
                 replaceSubqueries(bb, having);
                 havingExpr = bb.convertExpression(having);
             }
+                
+            // Now convert the other subqueries in the select list.
+            // This needs to be done separately from the subquery inside
+            // any aggregate in the select list, and after the aggregate rel
+            // is allocated.
+            replaceSubqueries(bb, selectList);
+
+            // Now subqueries in the entire select list have been converted.
+            // Convert the select expressions to get the final list to be projected.
+            for (int i = 0; i < selectCount; i++) {
+                SqlNode expr = selectList.get(i);
+                selectExprs[i] = bb.convertExpression(expr);
+                selectNames[i] = validator.deriveAlias(expr, i);
+            }
+
+            for (int i = 0; i < orderCount; i++) {
+                SqlNode expr = orderExprList.get(i);
+                selectExprs[selectCount + i] = bb.convertExpression(expr);
+                selectNames[selectCount + i] =
+                    validator.deriveAlias(expr, selectCount + i);
+            }            
         } finally {
             bb.agg = null;
         }
@@ -1724,7 +1751,7 @@ public class SqlToRelConverter
                 selectExprs,
                 selectNames,
                 true),
-            false);
+            false);        
     }
 
     public RexDynamicParam convertDynamicParam(
@@ -2475,12 +2502,14 @@ public class SqlToRelConverter
 
     private void convertSelectList(
         Blackboard bb,
-        SqlNodeList selectList,
-        List<SqlNode> orderList,
-        SqlSelect select)
+        SqlSelect select,
+        List<SqlNode> orderList)
     {
+        SqlNodeList selectList = select.getSelectList();
         selectList = validator.expandStar(selectList, select, false);
+        
         replaceSubqueries(bb, selectList);
+        
         List<String> fieldNames = new ArrayList<String>();
         List<RexNode> exprs = new ArrayList<RexNode>();
         Collection<String> aliases = new TreeSet<String>();
@@ -2745,6 +2774,12 @@ public class SqlToRelConverter
          * Workspace for building aggregates.
          */
         AggConverter agg;
+        
+        /**
+         * Project the groupby expressions out of the root of this sub-select.
+         * Subqueries can reference group by expressions projected from the "right"
+         * to the subquery.
+         */
         private final Map<RelNode, Map<Integer, Integer>> 
             mapRootRelToFieldProjection = 
                 new HashMap<RelNode, Map<Integer, Integer>> ();

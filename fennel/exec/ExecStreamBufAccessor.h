@@ -226,6 +226,18 @@ public:
     inline uint getConsumptionAvailable() const;
 
     /**
+     * Computes the largest number of contiguous bytes available to be consumed
+     * from this buffer, given the constraints that (a) the number of bytes
+     * must not be greater than cbLimit, and (b) partial tuples are not
+     * allowed.
+     *
+     * @param cbLimit upper bound on returned value
+     *
+     * @return number of bytes available for consumption with given limit
+     */
+    uint getConsumptionAvailableBounded(uint cbLimit);
+
+    /**
      * Computes the number of tuples available to be consumed from this buffer.
      * 
      * @return the number of tuples available for consumption

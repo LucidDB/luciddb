@@ -462,6 +462,7 @@ public abstract class NullablePrimitive
                 if (datetime.isNull()) {
                     setNull(true);
                 } else {
+                    setNull(false);
                     setLong(datetime.value.getTime());
                 }
             } else if (o instanceof EncodedSqlInterval) {
@@ -469,6 +470,7 @@ public abstract class NullablePrimitive
                 if (interval.isNull()) {
                     setNull(true);
                 } else {
+                    setNull(false);
                     setLong(interval.value);
                 }
             } else {

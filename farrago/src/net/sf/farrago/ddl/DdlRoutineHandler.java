@@ -46,6 +46,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.pretty.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
@@ -323,6 +324,22 @@ public class DdlRoutineHandler
             throw validator.newPositionalError(routine, ex);
         }
         if (sqlRoutine.getJar() != null) {
+            // Fully expand reference to jar in string
+            SqlIdentifier jarId =
+                FarragoCatalogUtil.getQualifiedName(sqlRoutine.getJar());
+            SqlPrettyWriter pw = new SqlPrettyWriter(
+                new SqlDialect(
+                    validator.getStmtValidator().
+                    getSession().getDatabaseMetaData()));
+            String fqjn = pw.format(jarId);
+            // replace 'jar_name:method_spec' with
+            // 'fully.qualified.jar_name:method_spec'
+            String expandedExternalName = routine.getExternalName();
+            expandedExternalName =
+                fqjn
+                + expandedExternalName.substring(
+                    expandedExternalName.indexOf(':'));
+            routine.setExternalName(expandedExternalName);
             validator.createDependency(
                 routine,
                 Collections.singleton(sqlRoutine.getJar()));

@@ -243,7 +243,12 @@ void Database::closeImpl()
     if (isRecoveryRequired()) {
         closeDevices();
     } else {
-        checkpointImpl();
+        // NOTE jvs 14-Nov-2006:  In case we're auto-closing after
+        // a failed startup, skip checkpoint if we don't have
+        // everything we need for it.
+        if (pTxnLog && pDataSegment) {
+            checkpointImpl();
+        }
         closeDevices();
         deleteLogs();
     }

@@ -291,8 +291,6 @@ from emps
 group by name
 having min(emps.name) in (select name from depts);
 
--- should print out better error message
--- "emps.deptno is not grouped"
 explain plan without implementation for
 select count(*)
 from emps
@@ -369,5 +367,172 @@ having exists (select * from depts where depts.deptno = max(emps.deptno));
 -- LER 2746 cast(agg() as datatype) triggers an error
 explain plan for
 select cast(sum(empno) as decimal(10, 2)) from emps;
+
+------------------------------------------------------------------
+-- Aggregate queries, with scalar subqueries in the select list --
+------------------------------------------------------------------
+explain plan for
+SELECT 
+    sum(empno), 1
+FROM 
+    emps
+group by deptno, name;
+
+
+explain plan for
+SELECT 
+    sum(empno), deptno + 1
+FROM 
+    emps
+group by deptno;
+
+
+explain plan for
+SELECT 
+    sum(empno),
+    (select 1 FROM (values(0)))
+FROM 
+    emps;
+
+explain plan for
+SELECT 
+    sum(empno),
+    (select 1 FROM (values(0)))
+FROM 
+    emps
+group by deptno, name;
+
+-- expect error
+explain plan for
+SELECT 
+    sum(empno),
+    (select 1 FROM depts where deptno = emps.deptno)
+FROM 
+    emps;
+
+explain plan for
+SELECT 
+    sum(empno),
+    (select 1 FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno;
+
+SELECT 
+    sum(empno) a,
+    (select 1 FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno
+order by a;
+
+explain plan for
+SELECT 
+    sum(empno),
+    (select 1+2 FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno;
+
+SELECT 
+    sum(empno) a,
+    (select 1+2 FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno
+order by a;
+
+explain plan for
+SELECT 
+    sum(empno),
+    (select 1 FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno
+having
+    deptno = (select max(deptno) from depts where deptno = emps.deptno);
+
+SELECT 
+    sum(empno) a,
+    (select 1 FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno
+having
+    deptno = (select max(deptno) from depts where deptno = emps.deptno)
+order by a;
+
+-- expect error
+explain plan for
+SELECT 
+    sum(empno),
+    (select 1 FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno
+having
+    deptno = (select max(deptno) from depts where name = emps.name);
+
+-- subquery select complex expressions
+-- this should work
+explain plan for
+SELECT 
+    (select name FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno;
+
+SELECT 
+    (select name FROM depts where deptno = emps.deptno) a
+FROM 
+    emps
+group by deptno
+order by a;
+
+explain plan for
+SELECT 
+    sum(empno),
+    (select deptno + 1 FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno;
+
+SELECT 
+    sum(empno) a,
+    (select deptno + 1 FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno
+order by a;
+
+explain plan for
+SELECT 
+    sum(empno),
+    (select emps.deptno + 1 FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno;
+
+SELECT 
+    sum(empno) a,
+    (select emps.deptno + 1 FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno
+order by a;
+
+explain plan for
+SELECT 
+    (select cast((deptno+1) as decimal(10,2)) FROM depts where deptno = emps.deptno)
+FROM 
+    emps
+group by deptno;
+
+SELECT 
+    (select cast((deptno+1) as decimal(10,2)) FROM depts where deptno = emps.deptno) a
+FROM 
+    emps
+group by deptno
+order by a;
 
 -- End agg.sql

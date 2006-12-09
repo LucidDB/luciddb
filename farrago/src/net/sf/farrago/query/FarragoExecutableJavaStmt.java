@@ -35,6 +35,7 @@ import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
@@ -79,6 +80,7 @@ class FarragoExecutableJavaStmt
         Method method,
         String xmiFennelPlan,
         boolean isDml,
+        TableModificationRel.Operation tableModOp,
         Map<String, String> referencedObjectTimestampMap,
         TableAccessMap tableAccessMap,
         Map<String, RelDataType> resultSetTypeMap,
@@ -91,6 +93,7 @@ class FarragoExecutableJavaStmt
             xmiFennelPlan,
             null,
             isDml,
+            tableModOp,
             referencedObjectTimestampMap,
             tableAccessMap);
 

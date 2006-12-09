@@ -37,7 +37,6 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -146,6 +145,16 @@ public class FarragoReduceExpressionsRule
                     oldRel.getRowType(),
                     ProjectRel.Flags.Boxed,
                     RelCollation.emptyList);
+        } else if (rel instanceof JoinRel) {
+            JoinRel oldRel = (JoinRel) rel;
+            newRel =
+                new JoinRel(
+                    oldRel.getCluster(),
+                    oldRel.getLeft(),
+                    oldRel.getRight(),
+                    exps[0],
+                    oldRel.getJoinType(),
+                    oldRel.getVariablesStopped());
         } else {
             throw Util.needToImplement(rel);
         }

@@ -66,14 +66,24 @@ class MedMockLocalDataServer
     {
         // ignore
     }
-
+    
     // implement FarragoMedLocalDataServer
     public void validateTableDefinition(
         FemLocalTable table,
         FemLocalIndex generatedPrimaryKeyIndex)
         throws SQLException
     {
-        // no special validation rules
+        // by default, no special validation rules
+    }
+
+    // implement FarragoMedLocalDataServer
+    public void validateTableDefinition(
+        FemLocalTable table,
+        FemLocalIndex generatedPrimaryKeyIndex,
+        boolean creation)
+        throws SQLException
+    {
+        validateTableDefinition(table, generatedPrimaryKeyIndex);
     }
 
     // implement FarragoMedLocalDataServer

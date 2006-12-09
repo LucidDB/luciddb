@@ -48,23 +48,8 @@ ExecStreamResult CopyExecStream::execute(ExecStreamQuantum const &quantum)
     if (cbAvailableOut < cbAvailableIn) {
         // oops, impedance mismatch:  have to figure out how many
         // complete tuples we can safely copy without overflow
-        TupleAccessor &tupleAccessor =
-            pInAccessor->getConsumptionTupleAccessor();
-    
-        PConstBuffer pTuple = pSrc;
-        PConstBuffer pTupleSafe = pTuple;
-        PConstBuffer pEnd = pSrc + cbAvailableOut;
-        for (;;) {
-            uint cbTuple = tupleAccessor.getBufferByteCount(pTuple);
-            pTuple += cbTuple;
-            if (pTuple > pEnd) {
-                // this tuple would put us over the limit
-                break;
-            }
-            // this tuple will fit
-            pTupleSafe = pTuple;
-        }
-        cbAvailableIn = pTupleSafe - pSrc;
+        cbAvailableIn =
+            pInAccessor->getConsumptionAvailableBounded(cbAvailableOut);
         assert(cbAvailableIn);
     } else {
         rc = EXECRC_BUF_UNDERFLOW;
@@ -83,6 +68,34 @@ ExecStreamResult CopyExecStream::execute(ExecStreamQuantum const &quantum)
     }
     
     return EXECRC_BUF_OVERFLOW;
+}
+
+// TODO jvs 20-Nov-2006:  move this to ExecStreamBufAccessor.cpp
+// once it exists
+uint ExecStreamBufAccessor::getConsumptionAvailableBounded(uint cbLimit)
+{
+    uint cbAvailable = getConsumptionAvailable();
+    if (cbAvailable <= cbLimit) {
+        return cbAvailable;
+    }
+
+    TupleAccessor const &tupleAccessor = getConsumptionTupleAccessor();
+    PConstBuffer pSrc = getConsumptionStart();
+    
+    PConstBuffer pTuple = pSrc;
+    PConstBuffer pTupleSafe = pTuple;
+    PConstBuffer pEnd = pSrc + cbLimit;
+    for (;;) {
+        uint cbTuple = tupleAccessor.getBufferByteCount(pTuple);
+        pTuple += cbTuple;
+        if (pTuple > pEnd) {
+            // this tuple would put us over the limit
+            break;
+        }
+        // this tuple will fit
+        pTupleSafe = pTuple;
+    }
+    return pTupleSafe - pSrc;
 }
 
 FENNEL_END_CPPFILE("$Id$");

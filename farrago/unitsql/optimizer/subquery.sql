@@ -626,7 +626,7 @@ select emps.empno, d.deptno, d2.deptno
 from emps,
 lateral (select * from depts where depts.deptno = emps.deptno) as d,
 lateral (select * from depts2 where depts2.deptno <> emps.deptno) as d2
-order by emps.empno;
+order by emps.empno, d.deptno, d2.deptno;
 
 -- 5.4 two lateral views: three correlations
 explain plan without implementation for
@@ -987,7 +987,7 @@ explain plan for
 select (select depts.deptno from emps where deptno = depts.deptno) 
 from depts;
 
--- could be a bug: unique column property is not detected by metadata query
+-- 10.3 Unique columns need to be not null to be considered unique keys.
 create table test1(a int primary key, b int);
 create table test2(a int primary key, b int);
 create table test3(a int primary key, b int unique);
@@ -1027,6 +1027,46 @@ drop table test1;
 drop table test2;
 drop table test3;
 drop table test4;
+
+-- 10.4 subquery selects constants
+explain plan for
+SELECT 
+    (select 1 FROM depts where deptno = emps.deptno)
+FROM 
+    emps;
+
+SELECT 
+    (select 1 FROM depts where deptno = emps.deptno) a
+FROM 
+    emps
+order by a;
+
+explain plan for
+SELECT 
+    (select cast(1 as decimal(10,2)) FROM depts where deptno = emps.deptno)
+FROM 
+    emps;
+
+SELECT 
+    (select cast(1 as decimal(10,2)) FROM depts where deptno = emps.deptno) a
+FROM 
+    emps
+order by a;
+
+-- TODO: inner correlations can be improved too
+explain plan for
+SELECT empno
+FROM 
+    emps
+where 
+    deptno in (select deptno FROM depts where deptno = emps.deptno);
+
+explain plan for
+SELECT empno
+FROM 
+    emps
+where 
+    deptno in (select emps.deptno FROM depts where deptno = emps.deptno);
 
 --------------
 -- clean up --

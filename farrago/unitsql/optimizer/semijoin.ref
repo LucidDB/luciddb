@@ -534,16 +534,13 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[7, 1, 2, 3, 5, 6]], outputRowType=[RecordType(INTEGER SID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME0, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY) NOT NULL])'
-'      LhxJoinRel(leftKeys=[[4]], rightKeys=[[3]], joinType=[INNER])'
+'    FennelReshapeRel(projection=[[6, 1, 2, 3, 8, 5]], outputRowType=[RecordType(INTEGER SID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME0, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[4]], rightKeys=[[2]], joinType=[INNER])'
 '        FennelReshapeRel(projection=[[0, 1, 2, 3, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER CAST($0):INTEGER) NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]], residual columns=[[3]])'
 '            FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
-'        FennelReshapeRel(projection=[[1, 3, 4, 5]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, INTEGER SID, INTEGER PRODUCT_ID) NOT NULL])'
-'          LhxJoinRel(leftKeys=[[2]], rightKeys=[[3]], joinType=[INNER])'
-'            FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
-'              LcsRowScanRel(table=[[LOCALDB, SJ, SALESPERSON]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SALESPERSON$NAME]], residual columns=[[2]])'
-'                FennelValuesRel(tuples=[[{ '[', 30, '+', null }]])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 5]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, INTEGER SID, INTEGER PRODUCT_ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
+'          LhxJoinRel(leftKeys=[[3]], rightKeys=[[2]], joinType=[INNER])'
 '            FennelReshapeRel(projection=[[1, 3, 4, 5]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, INTEGER SID, INTEGER PRODUCT_ID, INTEGER SALESPERSON) NOT NULL])'
 '              LhxJoinRel(leftKeys=[[2]], rightKeys=[[3]], joinType=[INNER])'
 '                FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COMPANY, INTEGER CAST($0):INTEGER) NOT NULL])'
@@ -576,6 +573,9 @@
 '                                LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '                                  LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '                                    FennelValuesRel(tuples=[[{ '[', 'N                   ', '+', null }]])'
+'            FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
+'              LcsRowScanRel(table=[[LOCALDB, SJ, SALESPERSON]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SALESPERSON$NAME]], residual columns=[[2]])'
+'                FennelValuesRel(tuples=[[{ '[', 30, '+', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- push semijoin past filter and join
 0: jdbc:farrago:> explain plan for
@@ -1436,7 +1436,29 @@
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[0]])'
 '            FennelValuesRel(tuples=[[{ '[', 'this is row 1', ']', 'this is row 1' }]])'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- reference to non-semijoin key column in projection list
+0: jdbc:farrago:> -- references to non-semijoin key column in projection list
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select *
+. . . . . . . . >         from sales s, product p
+. . . . . . . . >         where
+. . . . . . . . >             s.product_id = p.id and p.size = 'S'
+. . . . . . . . >         order by sid;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8]], outputRowType=[RecordType(INTEGER SID, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY, INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[1]], rightKeys=[[4]], joinType=[INNER])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'          LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'            LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                LhxAggRel(groupCount=[1])'
+'                  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                    LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]], residual columns=[[3]])'
+'                      FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 3, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]], residual columns=[[3]])'
+'            FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select sid, p.name, s.quantity
 . . . . . . . . >         from sales s, product p
@@ -1601,6 +1623,19 @@
 | 2  | abcdef                | ghijkl    | this is row 2  |
 | 3  | abcdef                | ghijkl    | this is row 3  |
 +----+-----------------------+-----------+----------------+
+0: jdbc:farrago:> select *
+. . . . . . . . >     from sales s, product p
+. . . . . . . . >     where
+. . . . . . . . >         s.product_id = p.id and p.size = 'S'
+. . . . . . . . >     order by sid;
++------+-------------+--------------+-----------+-----------+-----+-----------------------+-------------+-------+
+| SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY  | ID  |         NAME          |    COLOR    | SIZE  |
++------+-------------+--------------+-----------+-----------+-----+-----------------------+-------------+-------+
+| 1    | 1           | 1            | 1         | 10        | 1   | radio                 | black       | S     |
+| 2    | 1           | 1            | 2         | 20        | 1   | radio                 | black       | S     |
+| 3    | 1           | 2            | 1         | 30        | 1   | radio                 | black       | S     |
+| 4    | 1           | 2            | 2         | 40        | 1   | radio                 | black       | S     |
++------+-------------+--------------+-----------+-----------+-----+-----------------------+-------------+-------+
 0: jdbc:farrago:> select sid, p.name, s.quantity
 . . . . . . . . >     from sales s, product p
 . . . . . . . . >     where

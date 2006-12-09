@@ -24,9 +24,6 @@ package net.sf.farrago.query;
 
 import java.sql.*;
 
-import java.util.*;
-
-import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
@@ -61,6 +58,7 @@ class FarragoExecutableExplainStmt
         super(
             dynamicParamRowType,
             false,
+            null,
             new TableAccessMap());
 
         this.explanation = explanation;

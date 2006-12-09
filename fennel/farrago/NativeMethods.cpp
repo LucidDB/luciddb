@@ -116,9 +116,11 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch(
             return 0;
         }
         assert(bufAccessor.isConsumptionPossible());
-        uint cbActual = bufAccessor.getConsumptionAvailable();
+        uint cbLimit = uint(pEnv->GetArrayLength(byteArray));
+        uint cbActual = bufAccessor.getConsumptionAvailableBounded(cbLimit);
+        assert(cbActual);
         PConstBuffer pBuffer = bufAccessor.getConsumptionStart();
-        assert(uint(pEnv->GetArrayLength(byteArray)) >= cbActual);
+        assert(cbLimit >= cbActual);
         pEnv->SetByteArrayRegion(
             byteArray,0,cbActual,(jbyte *)(pBuffer));
         bufAccessor.consumeData(pBuffer + cbActual);
@@ -153,9 +155,11 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamTransformFetch(
             return -1;
         }
 
-        uint cbActual = bufAccessor->getConsumptionAvailable();
+        uint cbLimit = uint(pEnv->GetArrayLength(byteArray));
+        uint cbActual = bufAccessor->getConsumptionAvailableBounded(cbLimit);
+        assert(cbActual);
         PConstBuffer pBuffer = bufAccessor->getConsumptionStart();
-        assert(uint(pEnv->GetArrayLength(byteArray)) >= cbActual);
+        assert(cbLimit >= cbActual);
         pEnv->SetByteArrayRegion(
             byteArray,0,cbActual,(jbyte *)(pBuffer));
         bufAccessor->consumeData(pBuffer + cbActual);

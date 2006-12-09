@@ -990,8 +990,171 @@
 0: jdbc:farrago:> drop table rectangles;
 0: jdbc:farrago:> drop type rectangle;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> ----------------------------------
+0: jdbc:farrago:> -- Part 5. Rowcounts on lcs tables
+0: jdbc:farrago:> ----------------------------------
+0: jdbc:farrago:> create server test_data
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory 'unitsql/optimizer/data',
+. . . . . . . . >     file_extension 'csv',
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     log_directory 'testlog');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table matrix3x3(
+. . . . . . . . >     a tinyint,
+. . . . . . . . >     b integer,
+. . . . . . . . >     c bigint)
+. . . . . . . . > server test_data
+. . . . . . . . > options (filename 'matrix3x3');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table rowcount(a tinyint, b int, c bigint);
+0: jdbc:farrago:> create index irc1 on rowcount(a);
+0: jdbc:farrago:> insert into rowcount select * from matrix3x3;
+0: jdbc:farrago:> select * from rowcount order by 1;
++-----+-----+-----+
+|  A  |  B  |  C  |
++-----+-----+-----+
+| 11  | 12  | 13  |
+| 21  | 22  | 23  |
+| 31  | 32  | 33  |
++-----+-----+-----+
+0: jdbc:farrago:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >     from sys_boot.mgmt.dba_stored_tables_internal1 
+. . . . . . . . >     order by 1;
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| DEPTS       |                    |                    |
+| EMPS        |                    |                    |
+| MATRIX3X3   |                    |                    |
+| ROWCOUNT    | 3                  | 0                  |
+| TEMPS       |                    |                    |
++-------------+--------------------+--------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure create index doesn't wipe out the rowcount
+0: jdbc:farrago:> create index irc2 on rowcount(b);
+0: jdbc:farrago:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >     from sys_boot.mgmt.dba_stored_tables_internal1 
+. . . . . . . . >     order by 1;
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| DEPTS       |                    |                    |
+| EMPS        |                    |                    |
+| MATRIX3X3   |                    |                    |
+| ROWCOUNT    | 3                  | 0                  |
+| TEMPS       |                    |                    |
++-------------+--------------------+--------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into rowcount values(-1, -2, -3);
+0: jdbc:farrago:> select * from rowcount order by 1;
++-----+-----+-----+
+|  A  |  B  |  C  |
++-----+-----+-----+
+| -1  | -2  | -3  |
+| 11  | 12  | 13  |
+| 21  | 22  | 23  |
+| 31  | 32  | 33  |
++-----+-----+-----+
+0: jdbc:farrago:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >     from sys_boot.mgmt.dba_stored_tables_internal1 
+. . . . . . . . >     order by 1;
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| DEPTS       |                    |                    |
+| EMPS        |                    |                    |
+| MATRIX3X3   |                    |                    |
+| ROWCOUNT    | 4                  | 0                  |
+| TEMPS       |                    |                    |
++-------------+--------------------+--------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> delete from rowcount where a = 11;
+0: jdbc:farrago:> select * from rowcount order by 1;
++-----+-----+-----+
+|  A  |  B  |  C  |
++-----+-----+-----+
+| -1  | -2  | -3  |
+| 21  | 22  | 23  |
+| 31  | 32  | 33  |
++-----+-----+-----+
+0: jdbc:farrago:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >     from sys_boot.mgmt.dba_stored_tables_internal1 
+. . . . . . . . >     order by 1;
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| DEPTS       |                    |                    |
+| EMPS        |                    |                    |
+| MATRIX3X3   |                    |                    |
+| ROWCOUNT    | 3                  | 1                  |
+| TEMPS       |                    |                    |
++-------------+--------------------+--------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure rebuild maintains the same rowcount but resets the deletion count
+0: jdbc:farrago:> alter table rowcount rebuild;
+0: jdbc:farrago:> select * from rowcount order by 1;
++-----+-----+-----+
+|  A  |  B  |  C  |
++-----+-----+-----+
+| -1  | -2  | -3  |
+| 21  | 22  | 23  |
+| 31  | 32  | 33  |
++-----+-----+-----+
+0: jdbc:farrago:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >     from sys_boot.mgmt.dba_stored_tables_internal1 
+. . . . . . . . >     order by 1;
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| DEPTS       |                    |                    |
+| EMPS        |                    |                    |
+| MATRIX3X3   |                    |                    |
+| ROWCOUNT    | 3                  | 0                  |
+| TEMPS       |                    |                    |
++-------------+--------------------+--------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure drop index doesn't wipe out rowcounts
+0: jdbc:farrago:> drop index irc1;
+0: jdbc:farrago:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >     from sys_boot.mgmt.dba_stored_tables_internal1 
+. . . . . . . . >     order by 1;
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| DEPTS       |                    |                    |
+| EMPS        |                    |                    |
+| MATRIX3X3   |                    |                    |
+| ROWCOUNT    | 3                  | 0                  |
+| TEMPS       |                    |                    |
++-------------+--------------------+--------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure truncate resets the rowcounts
+0: jdbc:farrago:> truncate table rowcount;
+0: jdbc:farrago:> select * from rowcount order by 1;
++----+----+----+
+| A  | B  | C  |
++----+----+----+
++----+----+----+
+0: jdbc:farrago:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >     from sys_boot.mgmt.dba_stored_tables_internal1 
+. . . . . . . . >     order by 1;
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| DEPTS       |                    |                    |
+| EMPS        |                    |                    |
+| MATRIX3X3   |                    |                    |
+| ROWCOUNT    | 0                  | 0                  |
+| TEMPS       |                    |                    |
++-------------+--------------------+--------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table rowcount;
+0: jdbc:farrago:> drop server test_data cascade;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -------------------------------------
-0: jdbc:farrago:> -- Part 5. Misc tests for bugfixes
+0: jdbc:farrago:> -- Part 6. Misc tests for bugfixes
 0: jdbc:farrago:> -------------------------------------
 0: jdbc:farrago:> -- Tests LER-312 -- should not create empty cluster pages when no data
 0: jdbc:farrago:> -- is inserted into table

@@ -23,12 +23,9 @@ package net.sf.farrago.catalog;
 
 import java.util.*;
 
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.core.CwmFeature;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
-import org.eigenbase.rel.*;
 import org.eigenbase.sarg.*;
 import org.eigenbase.stat.*;
 
@@ -71,6 +68,9 @@ public class FarragoTableStatistics
     public Double getRowCount()
     {
         Long rowCount = table.getRowCount();
+        if (rowCount == null) {
+            rowCount = table.getLastAnalyzeRowCount();
+        }
         return (rowCount == null) ? null : Double.valueOf(rowCount);
     }
 

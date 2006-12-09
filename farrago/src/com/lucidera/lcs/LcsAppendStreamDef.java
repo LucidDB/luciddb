@@ -97,7 +97,10 @@ public class LcsAppendStreamDef
         //
         // 3. Setup the BarrierStreamDef.
         //
-        FemBarrierStreamDef barrier = indexGuide.newBarrier(appendRel, -1);
+        FemBarrierStreamDef barrier =
+            indexGuide.newBarrier(
+                appendRel,
+                LcsIndexGuide.BarrierReturnAnyInput);
 
         //
         // 4. Link the StreamDefs together.  Note that the input may be

@@ -38,8 +38,8 @@ void LbmSplicerExecStream::prepare(LbmSplicerExecStreamParams const &params)
     inputTuple.compute(bitmapTupleDesc);
     nIdxKeys = treeDescriptor.keyProjection.size() - 1;
 
-    dynParamId = params.dynParamId;
-    computeRowCount = (opaqueToInt(dynParamId) == 0);
+    insertRowCountParamId = params.insertRowCountParamId;
+    computeRowCount = (opaqueToInt(insertRowCountParamId) == 0);
     ignoreDuplicates = params.ignoreDuplicates;
 
     uint minEntrySize;
@@ -122,7 +122,8 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
         }
         if (!computeRowCount) {
             numRowsLoaded = *reinterpret_cast<RecordNum const *>(
-                pDynamicParamManager->getParam(dynParamId).getDatum().pData);
+                pDynamicParamManager->getParam(
+                    insertRowCountParamId).getDatum().pData);
         }
         outputTupleAccessor->marshal(outputTuple, outputTupleBuffer.get());
         pOutAccessor->provideBufferForConsumption(
@@ -289,6 +290,9 @@ void LbmSplicerExecStream::spliceEntry(TupleData &bitmapEntry)
         assert(LbmEntry::isSingleton(bitmapEntry));
         LcsRid rid = *((LcsRid *) bitmapEntry[nIdxKeys].pData);
         if (pCurrentEntry->containsRid(rid)) {
+            if (computeRowCount) {
+                numRowsLoaded--;
+            }
             return;
         }
     }

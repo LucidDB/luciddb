@@ -687,8 +687,6 @@ Error: From line 4, column 51 to line 4, column 54: Table 'EMPS' not found (stat
 '          FennelRenameRel(fieldNames=[[$f0]])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should print out better error message
-0: jdbc:farrago:> -- "emps.deptno is not grouped"
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select count(*)
 . . . . . . . . > from emps
@@ -883,6 +881,308 @@ Error: From line 5, column 57 to line 5, column 72: Aggregate expression is ille
 '    FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
 '      FennelRenameRel(fieldNames=[[$f0]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ------------------------------------------------------------------
+0: jdbc:farrago:> -- Aggregate queries, with scalar subqueries in the select list --
+0: jdbc:farrago:> ------------------------------------------------------------------
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     sum(empno), 1
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno, name;
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[1], EXPR$0=[$t2], EXPR$1=[$t3])'
+'  FennelToIteratorConverter'
+'    LhxAggRel(groupCount=[2], agg#0=[SUM(2)])'
+'      FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 1, 0]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     sum(empno), deptno + 1
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno;
+'column0'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[+($t0, $t2)], EXPR$0=[$t1], EXPR$1=[$t3])'
+'  FennelToIteratorConverter'
+'    LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
+'      FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     sum(empno),
+. . . . . . . . >     (select 1 FROM (values(0)))
+. . . . . . . . > FROM 
+. . . . . . . . >     emps;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0, EXPR$1]])'
+'    FennelCartesianProductRel(leftouterjoin=[true])'
+'      FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
+'        FennelRenameRel(fieldNames=[[$f0]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+'      FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
+'            IterOneRowRel'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     sum(empno),
+. . . . . . . . >     (select 1 FROM (values(0)))
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno, name;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0, EXPR$1]])'
+'    FennelCartesianProductRel(leftouterjoin=[true])'
+'      FennelReshapeRel(projection=[[2]], outputRowType=[RecordType(INTEGER $f2) NOT NULL])'
+'        LhxAggRel(groupCount=[2], agg#0=[SUM(2)])'
+'          FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 1, 0]], index=[EMPS_UX], preserveOrder=[false])'
+'      FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
+'            IterOneRowRel'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- expect error
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     sum(empno),
+. . . . . . . . >     (select 1 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps;
+Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not a group expr (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     sum(empno),
+. . . . . . . . >     (select 1 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno;
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t0)], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[1], expr#7=[CAST($t6):INTEGER], expr#8=[CASE($t3, $t5, $t7)], EXPR$0=[$t2], EXPR$1=[$t8])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
+'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> SELECT 
+. . . . . . . . >     sum(empno) a,
+. . . . . . . . >     (select 1 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno
+. . . . . . . . > order by a;
+'A','EXPR$1'
+'100','1'
+'110',''
+'230','1'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     sum(empno),
+. . . . . . . . >     (select 1+2 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno;
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t0)], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[3], expr#7=[CAST($t6):INTEGER], expr#8=[CASE($t3, $t5, $t7)], EXPR$0=[$t2], EXPR$1=[$t8])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
+'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> SELECT 
+. . . . . . . . >     sum(empno) a,
+. . . . . . . . >     (select 1+2 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno
+. . . . . . . . > order by a;
+'A','EXPR$1'
+'100','3'
+'110',''
+'230','3'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     sum(empno),
+. . . . . . . . >     (select 1 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno
+. . . . . . . . > having
+. . . . . . . . >     deptno = (select max(deptno) from depts where deptno = emps.deptno);
+'column0'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=[IS NULL($t0)], expr#5=[null], expr#6=[CAST($t5):INTEGER], expr#7=[1], expr#8=[CAST($t7):INTEGER], expr#9=[CASE($t4, $t6, $t8)], EXPR$0=[$t2], EXPR$1=[$t9])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[RIGHT])'
+'      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t2)], $f1=[$t1], EXPR$0=[$t2], $condition=[$t4])'
+'          FennelToIteratorConverter'
+'            LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[LEFT])'
+'              LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
+'                FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+'              FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER EXPR$0, INTEGER NOT NULL $f0) NOT NULL])'
+'                LhxAggRel(groupCount=[1], agg#0=[MAX(1)])'
+'                  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL $f0) NOT NULL])'
+'                    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'                      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'                      LhxAggRel(groupCount=[1])'
+'                        FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])'
+'                          LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
+'                            FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'                              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> SELECT 
+. . . . . . . . >     sum(empno) a,
+. . . . . . . . >     (select 1 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno
+. . . . . . . . > having
+. . . . . . . . >     deptno = (select max(deptno) from depts where deptno = emps.deptno)
+. . . . . . . . > order by a;
+'A','EXPR$1'
+'100','1'
+'230','1'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- expect error
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     sum(empno),
+. . . . . . . . >     (select 1 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno
+. . . . . . . . > having
+. . . . . . . . >     deptno = (select max(deptno) from depts where name = emps.name);
+Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.NAME' is not a group expr (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- subquery select complex expressions
+0: jdbc:farrago:> -- this should work
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     (select name FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1])'
+'        FennelRenameRel(fieldNames=[[$f0]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> SELECT 
+. . . . . . . . >     (select name FROM depts where deptno = emps.deptno) a
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno
+. . . . . . . . > order by a;
+'A'
+''
+'Marketing'
+'Sales'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     sum(empno),
+. . . . . . . . >     (select deptno + 1 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno;
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t0)], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[1], expr#7=[+($t0, $t6)], expr#8=[CAST($t7):INTEGER], expr#9=[CASE($t3, $t5, $t8)], EXPR$0=[$t2], EXPR$1=[$t9])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
+'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> SELECT 
+. . . . . . . . >     sum(empno) a,
+. . . . . . . . >     (select deptno + 1 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno
+. . . . . . . . > order by a;
+'A','EXPR$1'
+'100','11'
+'110',''
+'230','21'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     sum(empno),
+. . . . . . . . >     (select emps.deptno + 1 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno;
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t0)], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[1], expr#7=[+($t1, $t6)], expr#8=[CAST($t7):INTEGER], expr#9=[CASE($t3, $t5, $t8)], EXPR$0=[$t2], EXPR$1=[$t9])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
+'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> SELECT 
+. . . . . . . . >     sum(empno) a,
+. . . . . . . . >     (select emps.deptno + 1 FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno
+. . . . . . . . > order by a;
+'A','EXPR$1'
+'100','11'
+'110',''
+'230','21'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > SELECT 
+. . . . . . . . >     (select cast((deptno+1) as decimal(10,2)) FROM depts where deptno = emps.deptno)
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno;
+'column0'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS NULL($t0)], expr#3=[null], expr#4=[CAST($t3):DECIMAL(10, 2)], expr#5=[1], expr#6=[+($t0, $t5)], expr#7=[100], expr#8=[*($t6, $t7)], expr#9=[true], expr#10=[Reinterpret($t8, $t9)], expr#11=[Reinterpret($t10)], expr#12=[Reinterpret($t11)], expr#13=[Reinterpret($t4)], expr#14=[Reinterpret($t12)], expr#15=[CASE($t2, $t13, $t14)], expr#16=[Reinterpret($t15)], EXPR$0=[$t16])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1])'
+'        FennelRenameRel(fieldNames=[[$f0]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> SELECT 
+. . . . . . . . >     (select cast((deptno+1) as decimal(10,2)) FROM depts where deptno = emps.deptno) a
+. . . . . . . . > FROM 
+. . . . . . . . >     emps
+. . . . . . . . > group by deptno
+. . . . . . . . > order by a;
+'A'
+''
+'11.00'
+'21.00'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- End agg.sql
 0: jdbc:farrago:> 

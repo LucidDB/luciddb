@@ -87,7 +87,7 @@ public class LoptMetadataTest
     // guess for any sargable predicate when stats are missing
     private static final double DEFAULT_SARGABLE_SELECTIVITY = 0.1;
 
-    private static final double DEFAULT_ROWCOUNT = 100.0;
+    private static final double DEFAULT_ROWCOUNT = 1.0;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -1021,13 +1021,22 @@ public class LoptMetadataTest
         stmt.executeUpdate(
             "create table tabwithuniquekey(a int not null constraint u unique,"
             + "b int)");
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
+        FarragoSession session = farragoConnection.getSession();
+        FarragoStatsUtil.setTableRowCount(
+            session,
+            "",
+            "",
+            "TABWITHUNIQUEKEY",
+            100);
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         groupKey.set(1);
         double expected =
             RelMdUtil.numDistinctVals(
-                DEFAULT_ROWCOUNT,
-                DEFAULT_ROWCOUNT);
+                100.0,
+                100.0);
         checkDistinctRowCount(
             "select * from tabwithuniqueKey",
             groupKey,
@@ -1050,7 +1059,7 @@ public class LoptMetadataTest
         Double result = RelMetadataQuery.getSelectivity(rootRel, null);
         assertTrue(result != null);
         assertEquals(
-            DEFAULT_SARGABLE_SELECTIVITY,
+            1.0,
             result.doubleValue());
     }
 

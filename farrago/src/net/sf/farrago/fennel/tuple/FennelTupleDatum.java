@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.fennel.tuple;
 
+import java.io.*;
+
 /**
  * A FennelTupleDatum is a component of FennelTupleData; see the fennel tuple <a
  * href="http://fennel.sourceforge.net/doxygen/html/structTupleDesign.html">
@@ -464,8 +466,23 @@ public class FennelTupleDatum
     {
         rawBytes = str.getBytes();
         setLength(rawBytes.length);
+        rawBytesSet = true;        
+    }
+    
+    public void setString(String str, String charsetName)
+    throws UnsupportedEncodingException    
+    {
+        if (charsetName != null) {
+            // Before adding multi-byte support,
+            // always use single byte charset here
+            rawBytes = str.getBytes(charsetName);
+        } else {
+            rawBytes = str.getBytes();
+        }
+        setLength(rawBytes.length);
         rawBytesSet = true;
     }
+    
 }
 ;
 

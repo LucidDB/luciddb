@@ -399,8 +399,6 @@ public class LoptMetadataProvider
         Double rowCount = RelMetadataQuery.getRowCount(rel);
         if (rowCount == null) {
             return null;
-        } else if (rowCount < 1.0) {
-            rowCount = 1.0;
         }
         return
             NumberUtil.divide(
@@ -484,13 +482,10 @@ public class LoptMetadataProvider
             RelMdUtil.guessSelectivity(
                 rexAnalyzer.getPostFilterRexNode(),
                 excludeCalc);
-
+        
         // selectivity must return at least one row
         Double rowCount = RelMetadataQuery.getRowCount(rel);
         if (rowCount != null) {
-            if (rowCount < 1.0) {
-                rowCount = 1.0;
-            }
             selectivity = Math.max(selectivity, 1.0 / rowCount);
         }
 

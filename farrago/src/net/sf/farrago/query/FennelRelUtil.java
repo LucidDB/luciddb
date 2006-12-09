@@ -984,7 +984,12 @@ public abstract class FennelRelUtil
                     datum.setLong(cal.getTimeInMillis());
                 } else if (value instanceof NlsString) {
                     NlsString nlsString = (NlsString) value;
-                    datum.setString(nlsString.getValue());
+                    try {
+                        datum.setString(nlsString.getValue(), 
+                            nlsString.getCharsetName());
+                    } catch (UnsupportedEncodingException ex) {
+                        throw Util.newInternal(ex);
+                    }
                 } else if (value instanceof Boolean) {
                     datum.setBoolean((Boolean) value);
                 } else {

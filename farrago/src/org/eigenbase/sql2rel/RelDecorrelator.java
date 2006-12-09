@@ -22,7 +22,6 @@
 package org.eigenbase.sql2rel;
 
 import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eigenbase.rel.*;
@@ -58,8 +57,7 @@ public class RelDecorrelator
     
     // The rel which is being visited
     private RelNode currentRel;
-    private boolean projectPulledAboveCorrelator;
-    private RexInputRef nullIndicator;
+    private boolean projectPulledAboveLeftCorrelator;
     
     // maps built during decorrelation
     private Map<RelNode, RelNode> mapOldToNewRel;
@@ -70,7 +68,7 @@ public class RelDecorrelator
     // another map to map old input positions to new input positions
     // this is from the view point of the parent rel of a new rel.
     private Map<RelNode, Map<Integer, Integer> > mapNewRelToMapOldToNewOutputPos;
-
+    
     private static final Logger sqlToRelTracer =
         EigenbaseTrace.getSqlToRelTracer();
     
@@ -136,7 +134,11 @@ public class RelDecorrelator
 
     protected RexNode removeCorrelationExpr(RexNode exp)
     {
-        RemoveCorrelationRexShuttle shuttle = new RemoveCorrelationRexShuttle();
+        assert (currentRel != null);
+        RelDataTypeFactory typeFactory = 
+            currentRel.getCluster().getTypeFactory();
+        RemoveCorrelationRexShuttle shuttle = 
+            new RemoveCorrelationRexShuttle(typeFactory);
         return exp.accept(shuttle);
     }
     
@@ -195,8 +197,13 @@ public class RelDecorrelator
         RelDataTypeFactory typeFactory = corRel.getCluster().getTypeFactory();
         
         if (corRel.getJoinType() != JoinRelType.LEFT) {
+            // TODO rchen 2006-11-15: inner correlations can be optimized too
+            // select * from emps 
+            // where deptno in (select deptno from depts where depts.deptno = emps.deptno +1);
             return;
         }
+        JoinRelType joinType = corRel.getJoinType();
+        
         // check for this pattern
         // The pattern matching could be simplified if rules can be applied
         // during decorrelation,
@@ -212,14 +219,35 @@ public class RelDecorrelator
         }
         AggregateRel aggRel = (AggregateRel) corRel.getRight();
         
+        // check that the agg is simply doing single_value() on the entire 
+        // input
+        if (aggRel.getGroupCount() != 0 ||
+            aggRel.getAggCalls().length != 1) {
+            return;
+        }
+        
+        AggregateRel.Call aggCall = aggRel.getAggCalls()[0];
+        if (!(aggCall.getAggregation() instanceof SqlSingleValueAggFunction)) {
+            return;
+        }
+        
+        // check the aggRel has a project input
         if (!(aggRel.getChild() instanceof ProjectRel)) {
             return;
         }
         ProjectRel projRel = (ProjectRel) aggRel.getChild();
         
+        // check this project only projects one expression(scalar)
+        if (projRel.getProjectExps().length != 1) {
+        	return;
+        }
+        RexNode projExpr = projRel.getProjectExps()[0];
+        
+        // check the projRel has a filter input
         if (!(projRel.getChild() instanceof FilterRel)) {
             return;
         }
+        
         FilterRel filterRel = (FilterRel) projRel.getChild();
         if (!mapRefRelToCorVar.containsKey((RelNode)filterRel)) {
             // this filterRel does not contain any correlated reference
@@ -247,9 +275,9 @@ public class RelDecorrelator
         // check that the columns referenced in these comparisons form an unique
         // key of the filterInputRel
         if (joinKeys.isEmpty() ||
-            !RelMdUtil.areColumnsUnique(filterInputRel, joinKeys)) {
+            !RelMdUtil.areColumnsDefinitelyUnique(filterInputRel, joinKeys)) {
         	
-            if (!RelMdUtil.areColumnsUnique(filterInputRel, joinKeys)) {
+            if (!RelMdUtil.areColumnsDefinitelyUnique(filterInputRel, joinKeys)) {
                 sqlToRelTracer.fine(
                 		joinKeys.toString() + 
                 		"are not unique keys for " +
@@ -269,28 +297,18 @@ public class RelDecorrelator
         }
         
         // Check that the correlated variables referenced in these comparisons
-        // have to come from the correlatorRel.
+        // do come from the correlatorRel.
         corVarInFilter.addAll(mapRefRelToCorVar.get(filterRel));
         
         for (CorrelatorRel.Correlation corVar : corVarInFilter) {
             if (mapCorVarToCorRel.get(corVar) != corRel) {
                 return;
             }
-        }
-        
-        JoinRelType newJoinType = corRel.getJoinType();
-        
+        }        
+                
         // if projRel has any correlated reference, make sure they are also provided
         // by the current corRel. They will be projected out of the LHS of the corRel.
         if (mapRefRelToCorVar.containsKey(projRel)) {
-            // Joins cannot produce null on the RHS for a row from the right which 
-            // does not match any row from the LHS. Change the join type to INNER
-            // here so that non matching rows from the RHS is not included in the result
-            // set. Note that this limits the type of scalar subqueries that can
-            // benefit from decorrelation without value generator.
-            
-            // newJoinType = JoinRelType.INNER;
-            
             SortedSet<CorrelatorRel.Correlation> corVarInProj =
                 mapRefRelToCorVar.get(projRel);
             for (CorrelatorRel.Correlation corVar : corVarInProj) {
@@ -300,25 +318,13 @@ public class RelDecorrelator
             }
         }
         
-        // check that the agg is simply doing single_value() on the entire 
-        // input
-        if (aggRel.getGroupCount() != 0 ||
-            aggRel.getAggCalls().length != 1) {
-            return;
-        }
-        
-        AggregateRel.Call aggCall = aggRel.getAggCalls()[0];
-        if (!(aggCall.getAggregation() instanceof SqlSingleValueAggFunction)) {
-            return;
-        }
-        
         // change the plan to this structure
         // Note that the aggregateRel is removed
         //
         // ProjectRel (replace corvar to input ref coming from the JoinRel)
-        //     JoinRel (replace corvar to input ref coming from the JoinRel)
-        //       leftInputRel
-        //       filterInputRel        
+        //   JoinRel (replace corvar to input ref coming from the JoinRel)
+        //     leftInputRel
+        //     filterInputRel        
         
         // make the new join rel
         
@@ -331,7 +337,7 @@ public class RelDecorrelator
                 leftInputRel,
                 filterInputRel,
                 joinCond,
-                newJoinType,
+                joinType,
                 Collections.EMPTY_SET);
         
         List<Integer>  leftJoinKeys = new ArrayList<Integer> ();
@@ -348,10 +354,10 @@ public class RelDecorrelator
         assert (rightJoinKeys.size() >= 1);
         
         int nullIndicatorPos = 
-            rightJoinKeys.get(0) + 
-            joinRel.getLeft().getRowType().getFieldCount();
+            joinRel.getLeft().getRowType().getFieldCount() +
+            rightJoinKeys.get(0);
         
-        nullIndicator =
+        RexInputRef nullIndicator =
             new RexInputRef(
                 nullIndicatorPos,
                 typeFactory.createTypeWithNullability(
@@ -361,8 +367,6 @@ public class RelDecorrelator
         // now create the new project
         List<String> newFieldNames = new ArrayList<String>();
         List<RexNode> newProjExprs = new ArrayList<RexNode>();
-        
-        RexNode[] origProjExprs = projRel.getProjectExps();
         
         // project everything from the LHS and then those from the original projRel
         RelDataTypeField[] leftInputFields = 
@@ -377,12 +381,58 @@ public class RelDecorrelator
         // Marked where the projected expr is coming from so that the types will
         // become nullable for the original projections which are now coming out 
         // of the nullable side of the OJ.
-        projectPulledAboveCorrelator = newJoinType.generatesNullsOnRight();
+        projectPulledAboveLeftCorrelator = joinType.generatesNullsOnRight();
 
-        for (int i = 0; i < origProjExprs.length; i ++) {
-            newProjExprs.add(removeCorrelationExpr(origProjExprs[i]));
-            newFieldNames.add((projRel.getRowType().getFields()[i]).getName());
+        RexNode newProjExpr = removeCorrelationExpr(projExpr);
+        
+        // Unless the projected expression is a simple input ref (of the RHS)
+        // need to enforce nullability by applying an additional cast operator
+        // over the transformed expression.
+        // Input refs are transformed inside removeCorrelationExpr to be nullable.
+        if (!(projExpr instanceof RexInputRef) &&
+            projectPulledAboveLeftCorrelator) {
+            RexNode [] caseOperands = new RexNode[3];
+            
+            // This also covers the case where a left correlated subquery 
+            // projects fields from outer relation.
+            // Sicne LOJ cannot produce nulls on the LHS, the projection now need to
+            // make a nullable LHS reference using a join indicator(whether any RHS ref 
+            // is null) 
+            
+            // Construct a CASE expression to handle the null
+            // indicator.
+
+            // WHEN indicator IS NULL
+            caseOperands[0] =
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.isNullOperator,
+                    new RexInputRef(
+                        nullIndicator.getIndex(),
+                        typeFactory.createTypeWithNullability(
+                            nullIndicator.getType(), true)));
+
+            // THEN CAST(NULL AS newInputTypeNullable)
+            caseOperands[1] =
+                rexBuilder.makeCast(
+                    typeFactory.createTypeWithNullability(
+                        newProjExpr.getType(), true),
+                    rexBuilder.constantNull());
+            
+            // ELSE case (newInput AS newInputTypeNullable) END
+            caseOperands[2] = 
+                rexBuilder.makeCast(
+                    typeFactory.createTypeWithNullability(
+                        newProjExpr.getType(), true),
+                    newProjExpr);
+
+            newProjExpr =
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.caseOperator,
+                    caseOperands);
         }
+        
+        newProjExprs.add(newProjExpr);
+        newFieldNames.add((projRel.getRowType().getFields()[0]).getName());
         
         RelNode newProjRel =
             CalcRel.createProject(joinRel, newProjExprs, newFieldNames);
@@ -1227,8 +1277,7 @@ public class RelDecorrelator
             super.visit(p, ordinal, parent);
 
             currentRel = p;
-            projectPulledAboveCorrelator = false;
-            nullIndicator = null;
+            projectPulledAboveLeftCorrelator = false;
             
             final String visitMethodName = "removeCorrelationRel";
             boolean found =
@@ -1355,6 +1404,13 @@ public class RelDecorrelator
     private class RemoveCorrelationRexShuttle
     extends RexShuttle
     {
+        RelDataTypeFactory typeFactory;
+        
+        public RemoveCorrelationRexShuttle(RelDataTypeFactory typeFactory)
+        {
+            this.typeFactory = typeFactory;
+        }
+        
         // override RexShuttle
         public RexNode visitFieldAccess(RexFieldAccess fieldAccess)
         {
@@ -1367,44 +1423,7 @@ public class RelDecorrelator
                 RexInputRef newInput =
                     new RexInputRef(corVar.getOffset(), fieldAccess.getType());
                 
-                if (projectPulledAboveCorrelator && nullIndicator != null) {
-                    RelDataTypeFactory typeFactory =
-                        currentRel.getCluster().getTypeFactory();
-                    
-                    // Construct a CASE expression to handle the null
-                    // indicator.
-                    RexNode [] caseOperands = new RexNode[3];
-                        
-                    // WHEN indicator IS NULL
-                    caseOperands[0] =
-                        rexBuilder.makeCall(
-                            SqlStdOperatorTable.isNullOperator,
-                            new RexInputRef(
-                                nullIndicator.getIndex(),
-                                typeFactory.createTypeWithNullability(
-                                    nullIndicator.getType(), true)));
-
-                    // THEN CAST(NULL AS newInputTypeNullable)
-                    caseOperands[1] =
-                        rexBuilder.makeCast(
-                            typeFactory.createTypeWithNullability(
-                                newInput.getType(), true),
-                            rexBuilder.constantNull());
-                    
-                    // ELSE case (newInput AS newInputTypeNullable) END
-                    caseOperands[2] = 
-                        rexBuilder.makeCast(
-                            typeFactory.createTypeWithNullability(
-                                newInput.getType(), true),
-                            newInput);
-
-                    return
-                        rexBuilder.makeCall(
-                            SqlStdOperatorTable.caseOperator,
-                            caseOperands);
-                } else {
-                    return newInput;
-                }
+                return newInput;
             }
             return fieldAccess;
         }
@@ -1421,9 +1440,8 @@ public class RelDecorrelator
                 int leftInputFieldCount = 
                     ((CorrelatorRel)currentRel).getLeft().getRowType().getFieldCount();
                 RelDataType newType = inputRef.getType();
-                if (projectPulledAboveCorrelator) {
-                    RelDataTypeFactory typeFactory =
-                        currentRel.getCluster().getTypeFactory();
+                
+                if (projectPulledAboveLeftCorrelator) {
                     newType = 
                         typeFactory.createTypeWithNullability(newType, true);
                 }
@@ -1435,7 +1453,7 @@ public class RelDecorrelator
                 return newInputRef;
             }
             return inputRef;
-        }
+        }        
     }    
 }
 

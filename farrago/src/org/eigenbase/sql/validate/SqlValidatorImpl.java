@@ -1857,6 +1857,11 @@ public class SqlValidatorImpl
             || (aggFinder.findAgg(select.getSelectList()) != null);
     }
 
+    public boolean isAggregate(SqlNode selectNode)
+    {
+    	return (aggFinder.findAgg(selectNode) != null);
+    }
+    
     public boolean isConstant(SqlNode expr)
     {
         return
@@ -2265,7 +2270,11 @@ public class SqlValidatorImpl
     {
         if (SqlUtil.isCallTo(
                 orderItem,
-                SqlStdOperatorTable.descendingOperator)) {
+                SqlStdOperatorTable.descendingOperator))
+        {
+            validateFeature(
+                EigenbaseResource.instance().SQLConformance_OrderByDesc,
+                orderItem.getParserPosition());
             validateOrderItem(
                 select,
                 ((SqlCall) orderItem).operands[0]);

@@ -659,8 +659,8 @@ public class LoptSemiJoinOptimizer
                 factCost.getRows());
 
         // additional savings if the dimension columns are unique
-        Boolean uniq = RelMdUtil.areColumnsUnique(dimRel, dimCols);
-        if ((uniq != null) && uniq) {
+        boolean uniq = RelMdUtil.areColumnsDefinitelyUnique(dimRel, dimCols);
+        if (uniq) {
             savings *= 2.0;
         }
 
@@ -668,7 +668,7 @@ public class LoptSemiJoinOptimizer
         // including the distinct sort on top of the scan; if the dimension
         // columns are already unique, no need to add on the dup removal cost
         Double dimSortCost = RelMetadataQuery.getRowCount(dimRel);
-        Double dupRemCost = ((uniq != null) && uniq) ? 0 : dimSortCost;
+        Double dupRemCost = uniq ? 0 : dimSortCost;
         RelOptCost dimCost = RelMetadataQuery.getCumulativeCost(dimRel);
         if ((dimSortCost == null) || (dupRemCost == null)
             || (dimCost == null)) {
@@ -715,7 +715,7 @@ public class LoptSemiJoinOptimizer
             dimKeys.set(key);
         }
         RelNode dimRel = multiJoin.getJoinFactor(dimIdx);
-        if (!RelMdUtil.areColumnsUnique(dimRel, dimKeys)) {
+        if (!RelMdUtil.areColumnsDefinitelyUnique(dimRel, dimKeys)) {
             return;
         }
         
@@ -723,6 +723,11 @@ public class LoptSemiJoinOptimizer
         // in either its projection or join conditions are the dimension
         // keys
         BitSet dimProjRefs = multiJoin.getProjFields(dimIdx);
+        if (dimProjRefs == null) {
+            int nDimFields = multiJoin.getNumFieldsInJoinFactor(dimIdx);
+            dimProjRefs = new BitSet(nDimFields);
+            RelOptUtil.setRexInputBitmap(dimProjRefs, 0, nDimFields);
+        }
         if (!RelOptUtil.contains(dimKeys, dimProjRefs)) {
             return;
         }

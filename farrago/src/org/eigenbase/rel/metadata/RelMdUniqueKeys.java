@@ -57,12 +57,12 @@ public class RelMdUniqueKeys
 
     public Set<BitSet> getUniqueKeys(JoinRelBase rel)
     {
-        // TODO - need to account for outer joins
-
         RelNode left = rel.getLeft();
         RelNode right = rel.getRight();
 
-        // first add the concatenated unique keys from the left and the right
+        // first add the different combinations of concatenated unique keys
+        // from the left and the right, adjusting the right hand side keys to
+        // reflect the addition of the left hand side
         Set<BitSet> retSet = new HashSet<BitSet>();
         Set<BitSet> leftSet = RelMetadataQuery.getUniqueKeys(left);
         Set<BitSet> rightSet = null;
@@ -114,15 +114,19 @@ public class RelMdUniqueKeys
         Boolean leftUnique = RelMdUtil.areColumnsUnique(left, leftJoinCols);
         Boolean rightUnique = RelMdUtil.areColumnsUnique(right, rightJoinCols);
 
-        // add bits from left and/or right depending on which sides are
-        // unique
-        if ((rightUnique != null) && rightUnique && leftSet != null) {
+        // if the right hand side is unique on its equijoin columns, then we can 
+        // add the unique keys from left if the left hand side is not null
+        // generating
+        if ((rightUnique != null) && rightUnique && (leftSet != null) &&
+            !(rel.getJoinType().generatesNullsOnLeft()))
+        {
             retSet.addAll(leftSet);            
         }
 
-        // bits on the right need to be adjusted to reflect addition of left
-        // input
-        if ((leftUnique != null) && leftUnique && rightSet != null) {
+        // same as above except left and right are reversed
+        if ((leftUnique != null) && leftUnique && (rightSet != null) &&
+            !(rel.getJoinType().generatesNullsOnRight()))
+        {
             retSet.addAll(rightSet);
         }
 

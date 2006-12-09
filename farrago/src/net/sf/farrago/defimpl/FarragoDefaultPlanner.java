@@ -131,9 +131,9 @@ public class FarragoDefaultPlanner
 
         planner.addRule(new ReduceDecimalsRule());
 
-        // REVIEW jvs 26-May-2006:  reduce expressions for JoinRel also?
         planner.addRule(new FarragoReduceExpressionsRule(FilterRel.class));
         planner.addRule(new FarragoReduceExpressionsRule(ProjectRel.class));
+        planner.addRule(new FarragoReduceExpressionsRule(JoinRel.class));
 
         planner.addRule(ReduceAggregatesRule.instance);
 

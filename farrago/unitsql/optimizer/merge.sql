@@ -27,6 +27,13 @@ insert into tempemps values(140, 'Barney', 10, 'M', 'San Mateo', 41);
 insert into tempemps values(150, 'Betty', 20, 'F', 'San Francisco', 40);
 select * from tempemps order by t_empno;
 
+-- check rowcounts before doing any merges
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+
 -- basic merge
 merge into emps e
     using tempemps t on t.t_empno = e.empno
@@ -39,6 +46,13 @@ merge into emps e
             t.t_city);
 select * from emps order by empno;
 
+-- verify rowcounts after merge -- should be 2 new rows after the merge
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
+
 -- source select is a join
 delete from emps where name in ('BARNEY', 'BETTY');
 insert into salarytable values(100, 100000);
@@ -50,6 +64,11 @@ insert into salarytable values(150, 150000);
 select * from emps order by empno;
 select * from salarytable order by empno;
 
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 merge into emps e
     using (select s.empno, s.salary, t.* from salarytable s, tempemps t
         where t.t_empno = s.empno) t
@@ -62,6 +81,11 @@ merge into emps e
         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.salary * .15,
             t.t_city);
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 
 -- no source rows; therefore, no rows should be affected
 merge into emps
@@ -73,6 +97,11 @@ merge into emps
         insert (empno, name, age, gender, salary, city)
         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 
 -- only updates, no inserts
 merge into emps
@@ -85,10 +114,20 @@ merge into emps
         insert (empno, name, age, gender, salary, city)
         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 
 -- only inserts, no updates
 delete from emps where empno >= 140;
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 merge into emps
     using (select * from tempemps where t_empno >= 140) on t_empno = empno
     when matched then
@@ -99,11 +138,21 @@ merge into emps
             values(t_empno, upper(t_name), t_empno-100, t_gender, t_city, t_age,
                 t_age * 1000);
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 
 -- more than 1 row in the source table matches the target; per SQL2003, this
 -- should return an error; currently, we do not return an error
 insert into tempemps values(130, 'JohnClone', 41, 'M', 'Vancouver', null);
 select * from tempemps order by t_empno, t_name;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 merge into emps
     using (select * from tempemps where t_empno = 130) on t_empno = empno
     when matched then
@@ -113,6 +162,11 @@ merge into emps
         insert (empno, name, age, gender, salary, city)
         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 select * from emps order by empno, name;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 
 -- LER-2614 -- issue the same merge again, except modify the update values
 -- so the update is not a no-op
@@ -125,17 +179,32 @@ merge into emps
         insert (empno, name, age, gender, salary, city)
         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 select * from emps order by empno, name;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 
 delete from tempemps where t_name = 'JohnClone';
                 
 -- no insert substatement
 insert into tempemps values(160, 'Pebbles', 60, 'F', 'Foster City', 2);
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 select * from tempemps order by t_empno;
 merge into emps
     using (select * from tempemps) on t_empno = empno
     when matched then
         update set name = t_name, city = t_city;
 select * from emps order by empno, name;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 
 -- no update substatement
 merge into emps
@@ -143,15 +212,30 @@ merge into emps
     when not matched then
         insert values (t_empno, t_name, t_deptno, t_gender, t_city, t_age, 0);
 select * from emps order by empno, name;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 
 -- simple update via a merge
 delete from emps where empno = 130;
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 merge into emps e1
     using (select * from emps) e2 on e1.empno = e2.empno
     when matched then
         update set age = e1.age + 1;
 select * from emps order by empno;
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    order by 1;
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 
 -- the updates in the following merges are no-ops
 -- verify that no updates have occurred by ensuring that the rids haven't

@@ -87,6 +87,16 @@ public abstract class MedAbstractLocalDataServer
     {
         // by default, no special validation rules
     }
+    
+    // implement FarragoMedLocalDataServer
+    public void validateTableDefinition(
+        FemLocalTable table,
+        FemLocalIndex generatedPrimaryKeyIndex,
+        boolean creation)
+        throws SQLException
+    {
+        validateTableDefinition(table, generatedPrimaryKeyIndex);
+    }
 }
 
 // End MedAbstractLocalDataServer.java
