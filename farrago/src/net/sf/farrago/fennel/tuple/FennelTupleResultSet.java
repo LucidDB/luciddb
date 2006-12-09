@@ -24,6 +24,7 @@ package net.sf.farrago.fennel.tuple;
 
 import java.math.*;
 
+import java.io.*;
 import java.nio.*;
 
 import java.sql.*;
@@ -211,10 +212,20 @@ abstract public class FennelTupleResultSet
         case Types.CHAR:
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
-            return new String(
+            // TODO jvs 8-Dec-2006:  use metadata to pick the correct
+            // charset
+            try {
+                return new String(
                     d.getBytes(),
                     0,
-                    d.getLength());
+                    d.getLength(),
+                    "ISO-8859-1");
+            } catch (UnsupportedEncodingException ex) {
+                // According to Charset javadoc, ISO-8859-1 should always
+                // be available.
+                throw new AssertionError(
+                    "ISO-8859-1 missing?");
+            }
         case Types.BINARY:
         case Types.VARBINARY:
         case Types.LONGVARBINARY:
@@ -228,7 +239,7 @@ abstract public class FennelTupleResultSet
             return ret;
         default:
             throw new UnsupportedOperationException(
-                "Operation not supported right now");
+                "Conversion not supported");
         }
     }
 
