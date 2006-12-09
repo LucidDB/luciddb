@@ -136,7 +136,7 @@ public class FennelCartesianJoinRule
         RelDataType joinRowType;
         if (swapped) {
             joinRowType =
-                JoinRel.deriveJoinRowType(                    
+                JoinRel.deriveJoinRowType(
                     leftRel.getRowType(),
                     rightRel.getRowType(),
                     joinType,
