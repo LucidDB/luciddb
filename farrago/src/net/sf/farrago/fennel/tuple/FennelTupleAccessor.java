@@ -35,6 +35,8 @@ import java.util.*;
  * in a stored tuple. The same logical tuple definition can have multiple
  * storage formats. See <a href="structTupleDesign.html#FennelTupleAccessor">the
  * design docs</a> for more details.
+ *
+ * This class is JDK 1.4 compatible.
  */
 public final class FennelTupleAccessor
 {

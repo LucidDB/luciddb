@@ -1935,14 +1935,31 @@ public class SqlValidatorTest
         // the scope of another <new window name> NWN2 such that NWN1 and NWN2
         // are equivalent.
         checkWinClauseExp(
-            "window " + NL
-            + "w  as (partition by deptno order by empno rows 2 preceding), "
-            + NL
-            + "w2 as (partition by deptno order by empno rows 2 preceding)"
-            + NL,
+            "window\n"
+            + "w  as (partition by deptno order by empno rows 2 preceding),\n"
+            + "w2 as (partition by deptno order by empno rows 2 preceding)\n",
             "Duplicate window specification not allowed in the same window clause");
     }
 
+    public void testWindowClauseWithSubquery()
+    {
+        check(
+            "select * from \n" +
+            "( select sum(empno) over w, sum(deptno) over w from emp \n" +
+            "window w as (order by hiredate range interval '1' minute preceding))");
+        
+        check(
+            "select * from \n" +
+            "( select sum(empno) over w, sum(deptno) over w, hiredate from emp) \n" +
+            "window w as (order by hiredate range interval '1' minute preceding)");
+
+        checkFails(
+            "select * from \n" +
+            "( select sum(empno) over w, sum(deptno) over w from emp) \n" +
+            "window w as (order by ^hiredate^ range interval '1' minute preceding)",
+            "Column 'HIREDATE' not found in any table");
+    }
+    
     public void testWindowNegative()
     {
         checkNegWindow("rows between 2 preceding and 4 preceding", true);
@@ -1968,6 +1985,24 @@ public class SqlValidatorTest
         checkFails(
             sql,
             fail ? "Window has negative size" : null);
+    }
+
+    public void testWindowPartial()
+    {
+        check(
+            "select sum(deptno) over (\n" +
+            "order by deptno, empno rows 2 preceding disallow partial)\n" +
+            "from emp");
+
+        // cannot do partial over logical window
+        checkFails(
+            "select sum(deptno) over (\n" +
+            "  partition by deptno\n" +
+            "  order by empno\n" +
+            "  range between 2 preceding and 3 following\n" +
+            "  ^disallow partial^)\n" +
+            "from emp",
+            "Cannot use DISALLOW PARTIAL with window based on RANGE");
     }
 
     public void testOneWinFunc()
@@ -2278,6 +2313,27 @@ public class SqlValidatorTest
             "Column count mismatch in UNION");
     }
 
+    public void testUnionCountMismatcWithValueshFails()
+    {
+        checkFails(
+            "select * from ( values (1))" + NL
+            + "union" + NL
+            + "select ^*^ from ( values (1,2))",
+            "Column count mismatch in UNION");
+
+        checkFails(
+            "select * from ( values (1))" + NL
+            + "union" + NL
+            + "select ^*^ from emp",
+            "Column count mismatch in UNION");
+
+        checkFails(
+            "select * from emp" + NL
+            + "union" + NL
+            + "select ^*^ from ( values (1))",
+            "Column count mismatch in UNION");
+  }
+
     public void testUnionTypeMismatchFails()
     {
         checkFails("select 1, ^2^ from emp union select deptno, name from dept",
@@ -2361,6 +2417,52 @@ public class SqlValidatorTest
         // todo: Improve error msg
         checkFails("select * from emp left join dept using (^gender^)",
             "Column 'GENDER' not found in any table");
+    }
+
+
+    public void testJoinRowType()
+    {
+        checkResultType(
+            "select * from emp left join dept on emp.deptno = dept.deptno",
+            "RecordType(INTEGER NOT NULL EMPNO," +
+                " VARCHAR(20) NOT NULL ENAME," +
+                " VARCHAR(10) NOT NULL JOB," +
+                " INTEGER NOT NULL MGR," +
+                " TIMESTAMP(0) NOT NULL HIREDATE," +
+                " INTEGER NOT NULL SAL," +
+                " INTEGER NOT NULL COMM," +
+                " INTEGER NOT NULL DEPTNO," +
+                " BOOLEAN NOT NULL SLACKER," +
+                " INTEGER DEPTNO0," +
+                " VARCHAR(10) NAME) NOT NULL");
+
+        checkResultType(
+            "select * from emp right join dept on emp.deptno = dept.deptno",
+            "RecordType(INTEGER EMPNO," +
+                " VARCHAR(20) ENAME," +
+                " VARCHAR(10) JOB," +
+                " INTEGER MGR," +
+                " TIMESTAMP(0) HIREDATE," +
+                " INTEGER SAL," +
+                " INTEGER COMM," +
+                " INTEGER DEPTNO," +
+                " BOOLEAN SLACKER," +
+                " INTEGER NOT NULL DEPTNO0," +
+                " VARCHAR(10) NOT NULL NAME) NOT NULL");
+
+        checkResultType(
+            "select * from emp full join dept on emp.deptno = dept.deptno",
+            "RecordType(INTEGER EMPNO," +
+                " VARCHAR(20) ENAME," +
+                " VARCHAR(10) JOB," +
+                " INTEGER MGR," +
+                " TIMESTAMP(0) HIREDATE," +
+                " INTEGER SAL," +
+                " INTEGER COMM," +
+                " INTEGER DEPTNO," +
+                " BOOLEAN SLACKER," +
+                " INTEGER DEPTNO0," +
+                " VARCHAR(10) NAME) NOT NULL");
     }
 
     // todo: Cannot handle '(a join b)' yet -- we see the '(' and expect to

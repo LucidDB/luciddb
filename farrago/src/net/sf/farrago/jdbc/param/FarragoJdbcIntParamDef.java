@@ -32,6 +32,8 @@ import org.eigenbase.util14.*;
 /**
  * FarragoJdbcEngineIntParamDef defines a integer parameter.
  *
+ * This class is JDK 1.4 compatible.
+ * 
  * @author Angel Chang
  * @version $Id$
  */

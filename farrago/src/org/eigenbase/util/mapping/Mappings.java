@@ -67,11 +67,16 @@ public abstract class Mappings
                     targetCount,
                     mappingType);
         case PartialFunction:
+        case Function:
             return
                 new PartialFunctionImpl(
                     sourceCount,
                     targetCount,
                     mappingType);
+        case InverseFunction:
+        case InversePartialFunction:
+            return new InverseMapping(
+                create(mappingType.inverse(), targetCount, sourceCount));
         default:
             throw Util.needToImplement(
                 "no known implementation for mapping type " + mappingType);
@@ -138,6 +143,8 @@ public abstract class Mappings
 
         MappingType getMappingType();
 
+        boolean isIdentity();
+
         Mapping inverse();
     }
 
@@ -155,7 +162,6 @@ public abstract class Mappings
      * <p>TODO: figure out which interfaces this should extend
      */
     public static interface TargetMapping
-        extends Mapping
     {
         int getSourceCount();
 
@@ -179,6 +185,11 @@ public abstract class Mappings
     public static abstract class AbstractMapping
         implements Mapping
     {
+        public void set(int source, int target)
+        {
+            throw new UnsupportedOperationException();
+        }
+
         public int getTargetOpt(int source)
         {
             throw new UnsupportedOperationException();
@@ -219,6 +230,21 @@ public abstract class Mappings
         public int getTargetCount()
         {
             throw new UnsupportedOperationException();
+        }
+
+        public boolean isIdentity()
+        {
+            int sourceCount = getSourceCount();
+            int targetCount = getTargetCount();
+            if (sourceCount != targetCount) {
+                return false;
+            }
+            for (int i = 0; i < sourceCount; i++) {
+                  if (getSource(i) != i) {
+                      return false;
+                  }
+            }
+            return true;
         }
     }
 
@@ -413,8 +439,8 @@ public abstract class Mappings
             MappingType mappingType)
         {
             this.mappingType = mappingType;
-            assert !mappingType.isMultipleSource() : mappingType;
-            assert !mappingType.isMultipleTarget() : mappingType;
+            assert mappingType.isSingleSource() : mappingType;
+            assert mappingType.isSingleTarget() : mappingType;
             this.sources = new int[targetCount];
             this.targets = new int[sourceCount];
             Arrays.fill(sources, -1);
@@ -451,13 +477,14 @@ public abstract class Mappings
          * @param mappingType Mapping type, must be {@link
          * MappingType.PartialSurjection} or stronger.
          */
-        public PartialMapping(List<Integer> sourceList,
+        public PartialMapping(
+            List<Integer> sourceList,
             int sourceCount,
             MappingType mappingType)
         {
             this.mappingType = mappingType;
-            assert !mappingType.isMultipleSource();
-            assert !mappingType.isMultipleTarget();
+            assert mappingType.isSingleSource();
+            assert mappingType.isSingleTarget();
             int targetCount = sourceList.size();
             this.targets = new int[sourceCount];
             this.sources = new int[targetCount];
@@ -468,7 +495,7 @@ public abstract class Mappings
                 if (source >= 0) {
                     targets[source] = i;
                 } else {
-                    assert this.mappingType.isOptionalSource();
+                    assert !this.mappingType.isMandatorySource();
                 }
             }
         }
@@ -566,6 +593,20 @@ public abstract class Mappings
             return target;
         }
 
+        public boolean isIdentity()
+        {
+            if (sources.length != targets.length) {
+                return false;
+            }
+            for (int i = 0; i < sources.length; i++) {
+                int source = sources[i];
+                if (source != i) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         private class MappingItr
             implements Iterator<IntPair>
         {
@@ -661,6 +702,11 @@ public abstract class Mappings
             return this;
         }
 
+        public boolean isIdentity()
+        {
+            return true;
+        }
+
         public void set(int source, int target)
         {
             throw new UnsupportedOperationException();
@@ -733,7 +779,8 @@ public abstract class Mappings
         private final int source;
         private final int target;
 
-        public OverridingSourceMapping(SourceMapping parent,
+        public OverridingSourceMapping(
+            SourceMapping parent,
             int source,
             int target)
         {
@@ -763,6 +810,14 @@ public abstract class Mappings
             } else {
                 return parent.getSource(target);
             }
+        }
+
+        public boolean isIdentity()
+        {
+            // FIXME: It's possible that parent was not the identity but that
+            // this overriding fixed it.
+            return source == target &&
+                parent.isIdentity();
         }
 
         public Iterator<IntPair> iterator()
@@ -809,6 +864,14 @@ public abstract class Mappings
             return parent.getMappingType();
         }
 
+        public boolean isIdentity()
+        {
+            // FIXME: Possible that parent is not identity but this overriding
+            // fixes it.
+            return source == target &&
+                ((Mapping) parent).isIdentity();
+        }
+
         public int getTarget(int source)
         {
             if (source == this.source) {
@@ -853,12 +916,22 @@ public abstract class Mappings
             this.sourceCount = sourceCount;
             this.targetCount = targetCount;
             this.mappingType = mappingType;
-            if (mappingType.isMultipleTarget()) {
+            if (!mappingType.isSingleTarget()) {
                 throw new IllegalArgumentException(
                     "Must have at most one target");
             }
             this.targets = new int[sourceCount];
             Arrays.fill(targets, -1);
+        }
+
+        public int getSourceCount()
+        {
+            return sourceCount;
+        }
+
+        public int getTargetCount()
+        {
+            return targetCount;
         }
 
         public Iterator<IntPair> iterator()
@@ -915,7 +988,7 @@ public abstract class Mappings
 
         public void set(int source, int target)
         {
-            if ((target < 0) && !mappingType.isOptionalTarget()) {
+            if ((target < 0) && mappingType.isMandatorySource()) {
                 throw new IllegalArgumentException("Target is required");
             }
             if ((target >= targetCount) && (targetCount >= 0)) {
@@ -935,6 +1008,97 @@ public abstract class Mappings
         public int getTargetOpt(int source)
         {
             return targets[source];
+        }
+    }
+
+    /**
+     * Decorator which converts any {@link Mapping} into the inverse of itself.
+     *
+     * <p>If the mapping does not have an inverse -- for example, if a given
+     * source can have more than one target -- then the corresponding method
+     * call of the underlying mapping will raise a runtime exception.
+     */
+    private static class InverseMapping
+        implements Mapping
+    {
+        private final Mapping parent;
+
+        InverseMapping(Mapping parent)
+        {
+            this.parent = parent;
+        }
+
+        public Iterator<IntPair> iterator()
+        {
+            final Iterator<IntPair> parentIter = parent.iterator();
+            return new Iterator<IntPair>()
+            {
+                public boolean hasNext()
+                {
+                    return parentIter.hasNext();
+                }
+
+                public IntPair next()
+                {
+                    IntPair parentPair = parentIter.next();
+                    return new IntPair(parentPair.target, parentPair.source);
+                }
+
+                public void remove()
+                {
+                    parentIter.remove();
+                }
+            };
+        }
+
+        public int getSourceCount()
+        {
+            return parent.getTargetCount();
+        }
+
+        public int getTargetCount()
+        {
+            return parent.getSourceCount();
+        }
+
+        public MappingType getMappingType()
+        {
+            return parent.getMappingType().inverse();
+        }
+
+        public boolean isIdentity()
+        {
+            return parent.isIdentity();
+        }
+
+        public int getTargetOpt(int source)
+        {
+            return parent.getSourceOpt(source);
+        }
+
+        public int getTarget(int source)
+        {
+            return parent.getSource(source);
+        }
+
+        public int getSource(int target)
+        {
+            return parent.getTarget(target);
+        }
+
+        public int getSourceOpt(int target)
+        {
+            return parent.getTargetOpt(target);
+        }
+
+        public Mapping inverse()
+        {
+            return parent;
+        }
+
+        public void set(int source, int target)
+        {
+            parent.set(target, source);
         }
     }
 }

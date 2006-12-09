@@ -233,6 +233,12 @@ require version '${required.ant.version}'."/>
   <property name="createUserRepository.classpath"
     refid="createUserRepository.classpath"/>
 
+  <!-- Fennel Defaults, can override in customBuild.properties -->
+  <property name="fennel.checkpointInterval" value="300"/>
+  <property name="fennel.cachePageSize" value="4096"/>
+  <property name="fennel.cachePagesMax" value="1000"/>
+  <property name="fennel.cachePagesInit" value="1000"/>
+  <property name="fennel.groupCommitInterval" value="30"/>
 
   <!-- Targets -->
 
@@ -416,6 +422,16 @@ require version '${required.ant.version}'."/>
     <delete quiet="true" file="${FarragoTrace.log}"/>
   </target>
 
+  <!-- Creates an unconfigured catalog.  This is useful for extension
+       projects that make configuration changes and want to store their
+       catalog in an out-of-process database (e.g., postgres). -->
+  <target name="createUnconfiguredCatalog"
+          depends="makeClassesDir,configureReposStorage">
+    <antcall target="createClasspathFile"/>
+    <antcall target="compileCatalog"/>
+    <antcall target="createMdrTestData"/>
+  </target>
+
   <!-- creates catalog and populates with initial metadata -->
   <target name="createCatalog" depends="makeClassesDir,configureReposStorage">
     <antcall target="createClasspathFile"/>
@@ -527,11 +543,11 @@ require version '${required.ant.version}'."/>
     <antcall target="copyFennelResources"/>
 
     <replace file="${FarragoConf.xmi}">
-      <replacefilter token="@checkpointInterval@" value="300"/>
-      <replacefilter token="@cachePageSize@" value="4096"/>
-      <replacefilter token="@cachePagesMax@" value="1000"/>
-      <replacefilter token="@cachePagesInit@" value="1000"/>
-      <replacefilter token="@groupCommitInterval@" value="30"/>
+      <replacefilter token="@checkpointInterval@" value="${fennel.checkpointInterval}"/>
+      <replacefilter token="@cachePageSize@" value="${fennel.cachePageSize}"/>
+      <replacefilter token="@cachePagesMax@" value="${fennel.cachePagesMax}"/>
+      <replacefilter token="@cachePagesInit@" value="${fennel.cachePagesInit}"/>
+      <replacefilter token="@groupCommitInterval@" value="${fennel.groupCommitInterval}"/>
       <replacefilter token="@fennel.disabled@" value="${fennel.disabled}"/>
       <replacefilter token="@resourceDir@" value="$${FARRAGO_HOME}/catalog/fennel"/>
       <replacefilter token="@jniHandleTraceFile@" value="${trace.fennel.handles}"/>

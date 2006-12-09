@@ -36,6 +36,8 @@ import java.nio.*;
  * processed, but polymorphic access code in cases where only a small subset of
  * the attributes are being processed. In theory, this hybrid should yield the
  * highest efficiency, but it needs to be benchmarked and tuned.
+ *
+ * This class is JDK 1.4 compatible.
  */
 public abstract class FennelAttributeAccessor
 {

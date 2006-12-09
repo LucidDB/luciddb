@@ -42,6 +42,8 @@ import org.eigenbase.util14.*;
  * creation while remapping tuple data to java objects in order to provide
  * higher performance.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author angel
  * @version $Id$
  * @since Jan 8, 2006
@@ -176,18 +178,30 @@ abstract public class FennelTupleResultSet
         int columnType = metaData.getColumnType(columnIndex);      
         switch (columnType) {
         case Types.TINYINT: // NOTE: the JDBC spec maps this to an Integer
-            return Byte.valueOf(d.getByte());
+            // For JDK 1.4 compatibility
+            return new Byte(d.getByte());
+            //return Byte.valueOf(d.getByte());
         case Types.SMALLINT: // NOTE: the JDBC spec maps this to an Integer
-            return Short.valueOf(d.getShort());
+            // For JDK 1.4 compatibility
+            return new Short(d.getShort());
+            //return Short.valueOf(d.getShort());
         case Types.INTEGER:
-            return Integer.valueOf(d.getInt());
+            // For JDK 1.4 compatibility
+            return new Integer(d.getInt());
+            //return Integer.valueOf(d.getInt());
         case Types.BIGINT:
-            return Long.valueOf(d.getLong());
+            // For JDK 1.4 compatibility
+            return new Long(d.getLong());
+            //return Long.valueOf(d.getLong());
         case Types.REAL:
-            return Float.valueOf(d.getFloat());
+            // For JDK 1.4 compatibility
+            return new Float(d.getFloat());
+            //return Float.valueOf(d.getFloat());
         case Types.FLOAT:
         case Types.DOUBLE:
-            return Double.valueOf(d.getDouble());
+            // For JDK 1.4 compatibility
+            return new Double(d.getDouble());
+            //return Double.valueOf(d.getDouble());
         case Types.DECIMAL:
         case Types.NUMERIC:
             BigDecimal bd = BigDecimal.valueOf(d.getLong());

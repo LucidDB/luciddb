@@ -294,10 +294,12 @@ public class FarragoDdlGenerator
         sb.append(NL);
 
         //REVIEW: where do we find "deterministic"?
-        sb.append(" EXTERNAL NAME ");
-        sb.append(literal(routine.getExternalName()));
-        sb.append(NL);
-
+        if (routine.getExternalName() != null) {
+            sb.append(" EXTERNAL NAME ");
+            sb.append(literal(routine.getExternalName()));
+            sb.append(NL);
+        }
+        
         stmt.addStmt(sb.toString());
     }
 

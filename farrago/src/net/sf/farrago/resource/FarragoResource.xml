@@ -18,7 +18,7 @@
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
@@ -743,7 +743,7 @@ Messages: {1}</text>
 </exception>
 
 <exception id="450160" name="ErrorLimitExceeded">
-<text>Exceeded limit of {0,number,#} errors. Last error was: 
+<text>Exceeded limit of {0,number,#} errors. Last error was:
 {1}</text>
 </exception>
 
@@ -1001,7 +1001,7 @@ Messages: {1}</text>
 </exception>
 
 <exception id="470110" name="SessionOptimizerFailed">
-<text>Optimizer failed to find a valid physical implementation for relational expression {0}; see trace for partially optimized plan</text>
+<text>Optimizer failed to find a valid physical implementation for relational expression {0}; see trace for partially optimized plan. Details: reason is [{1}]; while preparing statement [{2}].</text>
 </exception>
 
 <exception id="470120" name="SessionNotFound">
@@ -1063,6 +1063,26 @@ Messages: {1}</text>
 
 <exception id="490000" name="PluginInvalidIntProp">
 <text>Invalid value ''{0}'' for integer property {1}</text>
+</exception>
+
+<exception id="490001" name="PluginInvalidLongProp">
+<text>Invalid value ''{0}'' for long property {1}</text>
+</exception>
+
+<exception id="490002" name="PluginInvalidShortProp">
+<text>Invalid value ''{0}'' for short property {1}</text>
+</exception>
+
+<exception id="490003" name="PluginInvalidFloatProp">
+<text>Invalid value ''{0}'' for float property {1}</text>
+</exception>
+
+<exception id="490004" name="PluginInvalidDoubleProp">
+<text>Invalid value ''{0}'' for double property {1}</text>
+</exception>
+
+<exception id="490005" name="PluginInvalidByteProp">
+<text>Invalid value ''{0}'' for byte property {1}</text>
 </exception>
 
 <exception id="490010" name="PluginJarLoadFailed">

@@ -40,6 +40,7 @@ import java.util.*;
 public interface Mapping
     extends Mappings.FunctionMapping,
         Mappings.SourceMapping,
+        Mappings.TargetMapping,
         Iterable<IntPair>
 {
 
@@ -66,6 +67,11 @@ public interface Mapping
     int getTargetCount();
 
     MappingType getMappingType();
+
+    /**
+     * Returns whether this mapping is the identity.
+     */
+    boolean isIdentity();
 }
 
 // End Mapping.java

@@ -104,20 +104,30 @@ public class SelectScope
      * sorted. Null if has not been computed yet.
      */
     private SqlNodeList orderList;
+    
+    /**
+     *  Scope to use to resolve windows
+     */
+    private final SqlValidatorScope windowParent;
+     
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a scope corresponding to a SELECT clause.
      *
-     * @param parent Parent scope, or null
+     * @param parent Parent scope, must not be null
+     * @param winParent Scope for window parent, may be null
      * @param select
      */
-    SelectScope(SqlValidatorScope parent,
+    SelectScope(
+        SqlValidatorScope parent,
+        SqlValidatorScope winParent,
         SqlSelect select)
     {
         super(parent);
         this.select = select;
+        this.windowParent = winParent;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -127,13 +137,13 @@ public class SelectScope
         return null;
     }
 
-    public SqlNode getNode()
+    public SqlSelect getNode()
     {
         return select;
     }
 
     public SqlWindow lookupWindow(String name)
-    {
+    {  
         final SqlNodeList windowList = select.getWindowList();
         for (int i = 0; i < windowList.size(); i++) {
             SqlWindow window = (SqlWindow) windowList.get(i);
@@ -143,7 +153,15 @@ public class SelectScope
                 return window;
             }
         }
-        return super.lookupWindow(name);
+        
+        // if not in the select scope, then check window scope
+        if (windowParent != null) {
+            return windowParent.lookupWindow(name);
+        } 
+        else {
+            return null;
+        }
+            
     }
 
     public boolean isMonotonic(SqlNode expr)

@@ -52,7 +52,9 @@ public abstract class TestUtil
 
     private static final String lineBreak = "\" + NL +" + NL + "\"";
 
-    private static final String commaLineBreak = "\"," + NL + "\"";
+    private static final String lineBreak2 = "\\\\n\"" + NL + " + \"";
+
+    private static final String lineBreak3 = "\\n\"" + NL + " + \"";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -74,7 +76,7 @@ public abstract class TestUtil
         if ((expected != null) && expected.equals(actual)) {
             return;
         }
-        String s = quoteForJavaUsingFold(actual);
+        String s = toJavaString(actual);
 
         String message =
             "Expected:" + NL + expected + NL
@@ -117,25 +119,31 @@ public abstract class TestUtil
      * <pre>string with "quotes" split
      * across lines</pre>
      * </code> becomes <code>
-     * <pre>fold(new String[] {
-     *  "string with \"quotes\" split",
-     *  "across lines"})</pre>
+     * <pre>TestUtil.fold(
+     *  "string with \"quotes\" split\n",
+     *  + "across lines")</pre>
      * </code>
      */
-    public static String quoteForJavaUsingFold(String s)
-    {
-        s = Util.replace(s, "\\", "\\\\");
+    public static String toJavaString(String s) {
+
+        // Convert [string with "quotes" split
+        // across lines]
+        // into [fold(
+        // "string with \"quotes\" split\n"
+        // + "across lines")]
+        //
         s = Util.replace(s, "\"", "\\\"");
-        final Matcher lineBreakMatcher = LineBreakPattern.matcher(s);
-        final boolean lineBreaks = lineBreakMatcher.find();
-        s = lineBreakMatcher.replaceAll(commaLineBreak);
+        s = LineBreakPattern.matcher(s).replaceAll(lineBreak2);
         s = TabPattern.matcher(s).replaceAll("\\\\t");
         s = "\"" + s + "\"";
-        if (lineBreaks) {
-            return "TestUtil.fold(new String[] {" + NL + s + "})";
-        } else {
-            return s;
+        String spurious = NL + " \\+ \"\"";
+        if (s.endsWith(spurious)) {
+            s = s.substring(0, s.length() - spurious.length());
         }
+        if (s.indexOf(lineBreak3) >= 0) {
+            s = "TestUtil.fold(" + NL + s + ")";
+        }
+        return s;
     }
 
     /**

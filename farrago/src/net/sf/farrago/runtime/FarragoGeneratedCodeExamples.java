@@ -69,7 +69,7 @@ public class FarragoGeneratedCodeExamples
         transform.init(connection, farragoTransformStreamName, inputBindings);
 
         // then to perform work it repeatedly calls:
-        transform.execute(outputBuffer);
+        transform.execute(outputBuffer, 1000);
     }
 
     //~ Inner Classes ----------------------------------------------------------

@@ -36,7 +36,7 @@ import org.eigenbase.sql.*;
  * @see ParameterNamespace
  * @since Mar 25, 2003
  */
-class ParameterScope
+public class ParameterScope
     extends EmptyScope
 {
 
@@ -50,7 +50,7 @@ class ParameterScope
 
     //~ Constructors -----------------------------------------------------------
 
-    ParameterScope(
+    public ParameterScope(
         SqlValidatorImpl validator,
         Map<String, RelDataType> nameToTypeMap)
     {

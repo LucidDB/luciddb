@@ -57,10 +57,14 @@ public interface FarragoTransform
     /**
      * Does a quantum of work. Called by Fennel's JavaTransformExecStream.
      *
+     * @param outputBuffer output ByteBuffer into which tuples are marshaled
+     * @param quantum the maximum number of tuples that should be processed
+     *                before returning (in practice this is limited to
+     *                2^32)
      * @return bytes marshalled into outputBuffer; 0 means end of stream, less
-     * than 0 indicates an input underflow
+     *         than 0 indicates an input underflow
      */
-    int execute(ByteBuffer outputBuffer);
+    int execute(ByteBuffer outputBuffer, long quantum);
 
     /**
      * Restarts this transform's underlying TupleIter(s).

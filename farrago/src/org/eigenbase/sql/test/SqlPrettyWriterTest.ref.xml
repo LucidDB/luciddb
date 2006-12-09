@@ -142,7 +142,9 @@ ORDER BY `GG`]]>
     </TestCase>
     <TestCase name="testLiteralChain">
         <Resource name="formatted">
-            <![CDATA['x' 'y' 'z']]>
+            <![CDATA['x'
+'y'
+'z']]>
         </Resource>
     </TestCase>
     <TestCase name="testOverlaps">

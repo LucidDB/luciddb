@@ -29,6 +29,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.runtime.FarragoUdrRuntime;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -181,8 +182,8 @@ public abstract class MedAbstractColumnSet
      * not specified); this can be a qualified name, possibly with quoted
      * identifiers, e.g. x.y.z or x."y".z
      * @param serverMofId if not null, the invoked UDX can access the data
-     * server with the given MOFID at runtime via {@link
-     * FarragoUdrRuntime.getDataServerRuntimeSupport}
+     * server with the given MOFID at runtime via
+     * {@link FarragoUdrRuntime#getDataServerRuntimeSupport}
      * @param args arguments to UDX invocation
      *
      * @return generated relational expression producing the UDX results

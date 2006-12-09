@@ -26,7 +26,6 @@ import openjava.mop.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
@@ -50,10 +49,9 @@ public class RelOptCluster
     private final Environment env;
     private final RelDataTypeFactory typeFactory;
     private final RelOptQuery query;
-    private RelOptPlanner planner;
+    private final RelOptPlanner planner;
     private RexNode originalExpression;
     private final RexBuilder rexBuilder;
-    private RexToSqlTranslator rexToSqlTranslator;
     private RelMetadataProvider metadataProvider;
 
     //~ Constructors -----------------------------------------------------------
@@ -82,9 +80,7 @@ public class RelOptCluster
 
         // set up a default rel metadata provider,
         // giving the planner first crack at everything
-        DefaultRelMetadataProvider defaultMetadataProvider =
-            new DefaultRelMetadataProvider();
-        metadataProvider = defaultMetadataProvider;
+        metadataProvider = new DefaultRelMetadataProvider();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -97,11 +93,6 @@ public class RelOptCluster
     public RelOptQuery getQuery()
     {
         return query;
-    }
-
-    public RexToSqlTranslator getRexToSqlTranslator()
-    {
-        return rexToSqlTranslator;
     }
 
     public RexNode getOriginalExpression()

@@ -178,11 +178,14 @@ public class FarragoDefaultSessionPersonality
         FarragoSessionStmtContext stmtContext,
         FarragoSessionStmtValidator stmtValidator)
     {
-        // NOTE: We don't use stmtContext here, and we don't pass it on to the
+        // NOTE: We don't use stmtContext here (except to obtain the SQL text),
+        // and we don't pass it on to the
         // preparing statement, because that doesn't need to be aware of its
         // context. However, custom personalities may have a use for it, which
         // is why it is provided in the interface.
-        FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);
+        String sql = stmtContext == null ? "?" : stmtContext.getSql();
+        FarragoPreparingStmt stmt =
+            new FarragoPreparingStmt(stmtValidator, sql);
         initPreparingStmt(stmt);
         return stmt;
     }
@@ -570,7 +573,7 @@ public class FarragoDefaultSessionPersonality
                 o = dir.getPath();
                 break;
             default:
-                Util.permAssert(false, "invalid param type");
+                throw Util.newInternal("invalid param type");
             }
             return o.toString();
         }

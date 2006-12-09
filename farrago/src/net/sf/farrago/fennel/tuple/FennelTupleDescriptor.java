@@ -32,6 +32,8 @@ import java.util.*;
  * in conjunction with FennelTupleAccessor objects to marshall and unmarshall
  * data into FennelTupleData objects from external formats.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author Mike Bennett
  * @version $Id$
  */

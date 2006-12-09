@@ -334,6 +334,15 @@ public abstract class SqlOperatorTests
             expected + spaces);
     }
 
+    public void testCastChar()
+    {
+        getTester().setFor(SqlStdOperatorTable.castFunc);
+
+        // "CHAR" is shorthand for "CHAR(1)"
+        getTester().checkString("CAST('abc' AS CHAR)", "a", "CHAR(1) NOT NULL");
+        getTester().checkString("CAST('abc' AS VARCHAR)", "a", "VARCHAR(1) NOT NULL");
+    }
+
     public void testCastExactNumerics()
     {
         getTester().setFor(SqlStdOperatorTable.castFunc);
@@ -2211,6 +2220,11 @@ public abstract class SqlOperatorTests
 
         getTester().checkNull("position(cast(null as varchar(1)) in '0010')");
         getTester().checkNull("position('a' in cast(null as varchar(1)))");
+
+        getTester().checkScalar(
+            "position(cast('a' as char) in cast('bca' as varchar))",
+            0,
+            "INTEGER NOT NULL");
     }
 
     public void testCharLengthFunc()
@@ -2257,6 +2271,10 @@ public abstract class SqlOperatorTests
             "Ab Cd Ef 12",
             "todo:");
         getTester().checkNull("initcap(cast(null as varchar(1)))");
+
+        // dtbug 232
+        getTester().checkInvalid("^initcap(cast(null as date))^",
+            "Cannot apply 'INITCAP' to arguments of type 'INITCAP\\(<DATE>\\)'\\. Supported form\\(s\\): 'INITCAP\\(<CHARACTER>\\)'");
     }
 
     public void testPowFunc()

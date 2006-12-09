@@ -45,6 +45,8 @@ import org.eigenbase.util.*;
  *
  * <p>TODO: Actually enfore these constraints.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author Angel Chang
  * @version $Id$
  */
@@ -110,14 +112,18 @@ public class FarragoJdbcParamDef
     protected void checkRange(long value, long min, long max)
     {
         if ((value < min) || (value > max)) {
-            throw newValueOutOfRange(Long.valueOf(value));
+            // For JDK 1.4 compatibility
+            throw newValueOutOfRange(new Long(value));
+            //throw newValueOutOfRange(Long.valueOf(value));
         }
     }
 
     protected void checkRange(double value, double min, double max)
     {
         if ((value < min) || (value > max)) {
-            throw newValueOutOfRange(Double.valueOf(value));
+            // For JDK 1.4 compatibility
+            throw newValueOutOfRange(new Double(value));
+            //throw newValueOutOfRange(Double.valueOf(value));
         }
     }
 

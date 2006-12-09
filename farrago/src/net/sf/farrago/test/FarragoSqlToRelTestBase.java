@@ -21,10 +21,6 @@
 */
 package net.sf.farrago.test;
 
-import java.io.*;
-
-import junit.framework.*;
-
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.engine.*;
@@ -32,16 +28,10 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
-import openjava.ptree.*;
-
-import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.hep.*;
-import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql2rel.*;
 
 
 /**
@@ -110,7 +100,8 @@ public abstract class FarragoSqlToRelTestBase
                     session.getSessionIndexMap(),
                     session.getDatabase().getDdlLockManager());
             allocations.addAllocation(stmtValidator);
-            FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);
+            FarragoPreparingStmt stmt =
+                new FarragoPreparingStmt(stmtValidator, explainQuery);
             stmt.enablePartialImplementation();
 
             initPlanner(stmt);

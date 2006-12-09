@@ -78,12 +78,12 @@ public:
     void init(JniEnvRef pEnv,jobject jObject);
 
     /**
-     * @return name of the Java class instantiated by this proxy
+     * @return name of the Java interface implemented by this proxy
      */
-    std::string getClassName()
+    std::string getInterfaceName()
     {
         jclass jClass = pEnv->GetObjectClass(jObject);
-        return JniUtil::getClassName(jClass);
+        return JniUtil::getFirstPublicInterfaceName(jClass);
     }
 };
 
@@ -183,11 +183,8 @@ public:
      */
     void addMethod(jclass jClass,SharedVisitorMethod pMethod)
     {
-        // TODO:  make this less MDR-dependent.  ProxyGen passes in a
-        // JMI interface, but at runtime we're going to see the name of the
-        // real implementation class, so use the class name in the map.
         assert(pMethod);
-        methodMap[JniUtil::getClassName(jClass)+"$Impl"] = pMethod;
+        methodMap[JniUtil::getClassName(jClass)] = pMethod;
     }
 
 
@@ -205,11 +202,12 @@ public:
         // NOTE:  it's OK to use operator [] here since it's an error to call
         // with the wrong proxy type, so in the non-error case we should always
         // find something
-        std::string className = proxy.getClassName();
+        std::string className = proxy.getInterfaceName();
         SharedVisitorMethod pMethod = methodMap[className];
         if (!pMethod) {
-            throw std::string("error: unknown method for proxy class '") +
-                className + "'";
+            throw std::logic_error(
+                std::string("error: unknown method for proxy class '") +
+                className + "'");
         }
         pMethod->execute(visitor,proxy);
     }

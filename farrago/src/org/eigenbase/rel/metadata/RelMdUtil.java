@@ -289,9 +289,10 @@ public class RelMdUtil
     }
 
     /**
-     * Return default estimates for selectivities, in the absence of stats
+     * Returns default estimates for selectivities, in the absence of stats.
      *
-     * @param predicate predicate for which selectivity will be computed
+     * @param predicate predicate for which selectivity will be computed;
+     *   null means true, so gives selectity of 1.0
      *
      * @return estimated selectivity
      */
@@ -301,9 +302,10 @@ public class RelMdUtil
     }
 
     /**
-     * Return default estimates for selectivities, in the absence of stats
+     * Returns default estimates for selectivities, in the absence of stats.
      *
-     * @param predicate predicate for which selectivity will be computed
+     * @param predicate predicate for which selectivity will be computed;
+     *   null means true, so gives selectity of 1.0
      * @param artificialOnly return only the selectivity contribution from
      * artificial nodes
      *
@@ -363,7 +365,8 @@ public class RelMdUtil
      * @param rightJoinCols bitmap that will be set with the columns on the RHS
      * of the join that participate in equijoins
      *
-     * @return remaining join filters that are not equijoins
+     * @return remaining join filters that are not equijoins; may return
+     *   a {@link RexLiteral} true, but never null
      */
     public static RexNode findEquiJoinCols(
         RelNode leftChild,
@@ -382,6 +385,7 @@ public class RelMdUtil
                 predicate,
                 leftKeys,
                 rightKeys);
+        assert nonEquiJoin != null;
 
         // mark the columns referenced on each side of the equijoin filters
         for (int i = 0; i < leftKeys.size(); i++) {

@@ -68,7 +68,6 @@ public abstract class CalcRelSplitter
     private final RelOptCluster cluster;
     private final RelTraitSet traits;
     private final RelNode child;
-    private final ImplementTester [] testers;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -93,10 +92,6 @@ public abstract class CalcRelSplitter
         this.typeFactory = calc.getCluster().getTypeFactory();
         this.child = calc.getChild();
         this.relTypes = relTypes;
-        this.testers = new ImplementTester[relTypes.length];
-        for (int i = 0; i < relTypes.length; i++) {
-            testers[i] = new ImplementTester(relTypes[i]);
-        }
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -227,8 +222,6 @@ public abstract class CalcRelSplitter
      * condition
      * @param exprLevels Level ordinal for each expression (output)
      * @param levelTypeOrdinals The type of each level (output)
-     *
-     * @return
      */
     private int chooseLevels(
         final RexNode [] exprs,
@@ -267,7 +260,7 @@ levelLoop:
                         if (!relTypesPossibleForTopLevel[relTypeOrdinal]) {
                             continue;
                         }
-                        if (testers[relTypeOrdinal].canImplement(
+                        if (relTypes[relTypeOrdinal].canImplement(
                                 expr,
                                 condition)) {
                             // Success. We have found a reltype where we can
@@ -292,7 +285,7 @@ levelLoop:
                                 j < relTypes.length; ++j) {
                                 if (relTypesPossibleForTopLevel[j]) {
                                     relTypesPossibleForTopLevel[j] =
-                                        testers[j].canImplement(
+                                        relTypes[j].canImplement(
                                             expr,
                                             condition);
                                 }
@@ -323,8 +316,9 @@ levelLoop:
                     }
                 } else {
                     final int levelTypeOrdinal = levelTypeOrdinals[level];
-                    final ImplementTester tester = testers[levelTypeOrdinal];
-                    if (!tester.canImplement(expr, condition)) {
+                    if (!relTypes[levelTypeOrdinal].canImplement(
+                        expr, condition))
+                    {
                         // Cannot implement this expression in this reltype;
                         // continue to next level.
                         continue;
@@ -438,14 +432,22 @@ levelLoop:
         // exprs.
         final RexLocalRef [] projectRefs =
             new RexLocalRef[projectExprOrdinals.length];
+        final String[] fieldNames = new String[projectExprOrdinals.length];
         for (int i = 0; i < projectRefs.length; i++) {
             final int projectExprOrdinal = projectExprOrdinals[i];
             final int index = exprInverseOrdinals[projectExprOrdinal];
             assert index >= 0;
-            projectRefs[i] =
-                new RexLocalRef(
-                    index,
-                    allExprs[projectExprOrdinal].getType());
+            RexNode expr = allExprs[projectExprOrdinal];
+            projectRefs[i] = new RexLocalRef(index, expr.getType());
+
+            // Inherit meaningful field name if possible.
+            if (expr instanceof RexInputRef) {
+                int inputIndex = ((RexInputRef) expr).getIndex();
+                fieldNames[i] =
+                    child.getRowType().getFields()[inputIndex].getName();
+            } else {
+                fieldNames[i] = "$" + i;
+            }
         }
         RexLocalRef conditionRef;
         if (conditionExprOrdinal >= 0) {
@@ -468,7 +470,7 @@ levelLoop:
 
                         public String getFieldName(int index)
                         {
-                            return "$" + index;
+                            return fieldNames[index];
                         }
 
                         public RelDataType getFieldType(int index)
@@ -557,8 +559,6 @@ levelLoop:
      *
      * @param index
      * @param map
-     *
-     * @return
      */
     private static int indexOf(int index, int [] map)
     {
@@ -568,6 +568,25 @@ levelLoop:
             }
         }
         return -1;
+    }
+
+    /**
+     * Returns whether a relational expression can be implemented
+     * solely in a given {@link RelType}.
+     *
+     * @param rel Calculation relational expression
+     * @param relTypeName Name of a {@link RelType}
+     * @return Whether relational expression can be implemented
+     */
+    protected boolean canImplement(CalcRel rel, String relTypeName)
+    {
+        for (int i = 0; i < relTypes.length; i++) {
+            RelType relType = relTypes[i];
+            if (relType.name.equals(relTypeName)) {
+                return relType.canImplement(rel.getProgram());
+            }
+        }
+        throw Util.newInternal("unknown reltype " + relTypeName);
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -615,13 +634,58 @@ levelLoop:
                     program,
                     RelCollation.emptyList);
         }
+
+        /**
+         * Returns whether this <code>RelType</code> can implement a
+         * given expression.
+         *
+         * @param expr Expression
+         * @param condition Whether expression is a condition
+         * @return Whether this <code>RelType</code> can implement a
+         *   given expression.
+         */
+        public boolean canImplement(RexNode expr, boolean condition)
+        {
+            if (condition && !supportsCondition()) {
+                return false;
+            }
+            try {
+                expr.accept(new ImplementTester(this));
+                return true;
+            } catch (CannotImplement e) {
+                Util.swallow(e, null);
+                return false;
+            }
+        }
+
+        /**
+         * Returns whether this tester's <code>RelType</code> can implement a
+         * given program.
+         *
+         * @param program Program
+         * @return Whether this tester's <code>RelType</code> can implement a
+         *   given program.
+         */
+        public boolean canImplement(RexProgram program)
+        {
+            if (program.getCondition() != null &&
+                !canImplement(program.getCondition(), true)) {
+                return false;
+            }
+            for (RexNode expr : program.getExprList()) {
+                if (!canImplement(expr, false)) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 
     /**
      * Visitor which returns whether an expression can be implemented in a given
      * type of relational expression.
      */
-    private class ImplementTester
+    private static class ImplementTester
         extends RexVisitorImpl<Void>
     {
         private final RelType relType;
@@ -662,20 +726,6 @@ levelLoop:
                 throw CannotImplement.instance;
             }
             return null;
-        }
-
-        public boolean canImplement(RexNode expr, boolean condition)
-        {
-            if (condition && !relType.supportsCondition()) {
-                return false;
-            }
-            try {
-                expr.accept(this);
-                return true;
-            } catch (CannotImplement e) {
-                Util.swallow(e, null);
-                return false;
-            }
         }
     }
 

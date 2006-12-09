@@ -28,6 +28,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlCaseOperator;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.*;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 
@@ -487,10 +488,8 @@ public class SqlToRelConverterTest
             + "  sum(deptno) over w2\n"
             + "from emp\n"
             + "where sum(deptno - sal) over w1 > 999\n"
-            + "window w1 as (partition by job order by hiredate rows 2 preceding),"
-            + NL
-            + "  w2 as (partition by job order by hiredate rows 3 preceding),"
-            + NL
+            + "window w1 as (partition by job order by hiredate rows 2 preceding),\n"
+            + "  w2 as (partition by job order by hiredate rows 3 preceding disallow partial),\n"
             + "  w3 as (partition by job order by hiredate range interval '1' second preceding)",
             "${plan}");
     }
@@ -507,8 +506,8 @@ public class SqlToRelConverterTest
 
     /**
      * Tests one of the custom conversions which is recognized by the identity
-     * of the operator (in this case, {@link
-     * SqlStdOperatorTable#characterLengthFunc}).
+     * of the operator (in this case, 
+     * {@link SqlStdOperatorTable#characterLengthFunc}).
      */
     public void testCharLength()
     {

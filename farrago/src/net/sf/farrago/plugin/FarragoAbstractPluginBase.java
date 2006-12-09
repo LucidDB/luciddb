@@ -103,7 +103,7 @@ public class FarragoAbstractPluginBase
             try {
                 return Long.parseLong(s);
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().PluginInvalidIntProp.ex(s,
+                throw FarragoResource.instance().PluginInvalidLongProp.ex(s,
                     propName);
             }
         }
@@ -133,6 +133,122 @@ public class FarragoAbstractPluginBase
                 return Integer.parseInt(s);
             } catch (NumberFormatException ex) {
                 throw FarragoResource.instance().PluginInvalidIntProp.ex(s,
+                    propName);
+            }
+        }
+    }
+
+    /**
+     * Gets the value of an short property.
+     *
+     * @param props property set
+     * @param propName name of property
+     * @param defaultValue value to return if property is not set
+     *
+     * @return property value
+     *
+     * @exception EigenbaseException if property is set with non-short value
+     */
+    public static short getShortProperty(
+        Properties props,
+        String propName,
+        short defaultValue)
+    {
+        String s = props.getProperty(propName);
+        if (s == null) {
+            return defaultValue;
+        } else {
+            try {
+                return Short.parseShort(s);
+            } catch (NumberFormatException ex) {
+                throw FarragoResource.instance().PluginInvalidShortProp.ex(s,
+                    propName);
+            }
+        }
+    }
+
+    /**
+     * Gets the value of a byte property.
+     *
+     * @param props property set
+     * @param propName name of property
+     * @param defaultValue value to return if property is not set
+     *
+     * @return property value
+     *
+     * @exception EigenbaseException if property is set with non-short value
+     */
+    public static byte getByteProperty(
+        Properties props,
+        String propName,
+        byte defaultValue)
+    {
+        String s = props.getProperty(propName);
+        if (s == null) {
+            return defaultValue;
+        } else {
+            try {
+                return Byte.parseByte(s);
+            } catch (NumberFormatException ex) {
+                throw FarragoResource.instance().PluginInvalidByteProp.ex(s,
+                    propName);
+            }
+        }
+    }
+
+    /**
+     * Gets the value of an float property.
+     *
+     * @param props property set
+     * @param propName name of property
+     * @param defaultValue value to return if property is not set
+     *
+     * @return property value
+     *
+     * @exception EigenbaseException if property is set with non-short value
+     */
+    public static float getFloatProperty(
+        Properties props,
+        String propName,
+        float defaultValue)
+    {
+        String s = props.getProperty(propName);
+        if (s == null) {
+            return defaultValue;
+        } else {
+            try {
+                return Float.parseFloat(s);
+            } catch (NumberFormatException ex) {
+                throw FarragoResource.instance().PluginInvalidFloatProp.ex(s,
+                    propName);
+            }
+        }
+    }
+
+    /**
+     * Gets the value of an double property.
+     *
+     * @param props property set
+     * @param propName name of property
+     * @param defaultValue value to return if property is not set
+     *
+     * @return property value
+     *
+     * @exception EigenbaseException if property is set with non-short value
+     */
+    public static double getDoubleProperty(
+        Properties props,
+        String propName,
+        double defaultValue)
+    {
+        String s = props.getProperty(propName);
+        if (s == null) {
+            return defaultValue;
+        } else {
+            try {
+                return Double.parseDouble(s);
+            } catch (NumberFormatException ex) {
+                throw FarragoResource.instance().PluginInvalidDoubleProp.ex(s,
                     propName);
             }
         }

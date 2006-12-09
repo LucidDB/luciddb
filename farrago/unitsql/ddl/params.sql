@@ -35,7 +35,7 @@ alter system set "cachePagesInit" = 0;
 alter system set "cachePagesInit" = -1;
 
 -- should fail -- cachePagesMax is 1000
-alter system set "cachePagesInit" = 1001;
+alter system set "cachePagesInit" = 100001;
 
 -- should fail
 alter system set "cachePagesInit" = 'abc';

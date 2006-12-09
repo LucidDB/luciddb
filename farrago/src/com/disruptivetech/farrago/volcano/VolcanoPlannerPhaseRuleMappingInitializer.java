@@ -29,11 +29,11 @@ import java.util.Set;
  * sets of rule descriptions.
  * 
  * <p><b>Note:</b> Rule descriptions are obtained via 
- * {@link RelOptRule#toString()}.  By default they are the class's simple
- * name (e.g. class name sans package), unless the class is an inner class,
- * in which case the default is the inner class's simple name.  Some rules
- * explicitly provide alternate descriptions by setting 
- * {@link RelOptRule#description}.
+ * {@link org.eigenbase.relopt.RelOptRule#toString()}.  By default they are the
+ * class's simple name (e.g. class name sans package), unless the class is an 
+ * inner class, in which case the default is the inner class's simple name.  
+ * Some rules explicitly provide alternate descriptions by setting 
+ * {@link org.eigenbase.relopt.RelOptRule#description} directly.
  * 
  * @author Stephan Zuercher
  */
@@ -51,3 +51,6 @@ public interface VolcanoPlannerPhaseRuleMappingInitializer
      */
     public void initialize(Map<VolcanoPlannerPhase, Set<String>> phaseRuleMap);
 }
+
+// End VolcanoPlannerPhaseRuleMappingInitializer.java
+

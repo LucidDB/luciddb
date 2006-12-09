@@ -37,7 +37,7 @@ import org.eigenbase.sql.*;
  * @version $Id$
  * @since Mar 25, 2003
  */
-class JoinScope
+public class JoinScope
     extends ListScope
 {
 
@@ -48,6 +48,12 @@ class JoinScope
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a <code>JoinScope</code>.
+     * @param parent Parent scope
+     * @param usingScope Scope for resolving USING clause
+     * @param join Call to JOIN operator
+     */
     JoinScope(
         SqlValidatorScope parent,
         SqlValidatorScope usingScope,
@@ -91,6 +97,14 @@ class JoinScope
         } else {
             return null;
         }
+    }
+
+    /**
+     * Returns the scope which is used for resolving USING clause.
+     */
+    public SqlValidatorScope getUsingScope()
+    {
+        return usingScope;
     }
 }
 

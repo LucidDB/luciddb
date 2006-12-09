@@ -1016,30 +1016,6 @@ public class FarragoMultisetSplitterRule
                 });
         }
     }
-
-    /**
-     * Visitor which replaces {@link RexLocalRef} objects after the expressions
-     * in a {@link RexProgram} have been reordered.
-     */
-    public static class RexPermutationShuttle
-        extends RexShuttle
-    {
-        private final Permutation permutation;
-
-        RexPermutationShuttle(Permutation permutation)
-        {
-            this.permutation = permutation;
-        }
-
-        public RexNode visitLocalRef(RexLocalRef local)
-        {
-            final int index = local.getIndex();
-            int target = permutation.getTarget(index);
-            return new RexLocalRef(
-                    target,
-                    local.getType());
-        }
-    }
 }
 
 // End FarragoMultisetSplitterRule.java
