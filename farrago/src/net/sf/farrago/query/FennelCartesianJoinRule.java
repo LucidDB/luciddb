@@ -112,7 +112,7 @@ public class FennelCartesianJoinRule
                 swapped = true;
                 leftRel = rightRel;
                 rightRel = bufRel;
-            }         
+            }
         }
 
         RelNode fennelLeft =
@@ -136,7 +136,7 @@ public class FennelCartesianJoinRule
         RelDataType joinRowType;
         if (swapped) {
             joinRowType =
-                JoinRel.deriveJoinRowType(                    
+                JoinRel.deriveJoinRowType(
                     fennelLeft.getRowType(),
                     fennelRight.getRowType(),
                     joinType,
