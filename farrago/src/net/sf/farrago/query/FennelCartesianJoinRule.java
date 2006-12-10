@@ -23,9 +23,9 @@
 package net.sf.farrago.query;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
 /**
@@ -98,24 +98,6 @@ public class FennelCartesianJoinRule
             return;
         }
 
-        leftRel =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                leftRel);
-        if (leftRel == null) {
-            return;
-        }
-
-        rightRel =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                rightRel);
-        if (rightRel == null) {
-            return;
-        }
-        
         // see if it makes sense to buffer the existing RHS; if not, try
         // the LHS, swapping the join operands if it does make sense to buffer
         // the LHS; but only if the join isn't a left outer join (since we
@@ -133,12 +115,30 @@ public class FennelCartesianJoinRule
             }
         }
 
+        RelNode fennelLeft =
+            mergeTraitsAndConvert(
+                joinRel.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
+                leftRel);
+        if (fennelLeft == null) {
+            return;
+        }
+
+        RelNode fennelRight =
+            mergeTraitsAndConvert(
+                joinRel.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
+                rightRel);
+        if (fennelRight == null) {
+            return;
+        }      
+        
         RelDataType joinRowType;
         if (swapped) {
             joinRowType =
                 JoinRel.deriveJoinRowType(
-                    leftRel.getRowType(),
-                    rightRel.getRowType(),
+                    fennelLeft.getRowType(),
+                    fennelRight.getRowType(),
                     joinType,
                     joinRel.getCluster().getTypeFactory(),
                     null);
@@ -148,8 +148,8 @@ public class FennelCartesianJoinRule
         FennelCartesianProductRel productRel =
             new FennelCartesianProductRel(
                 joinRel.getCluster(),
-                leftRel,
-                rightRel,
+                fennelLeft,
+                fennelRight,
                 joinType,
                 RelOptUtil.getFieldNameList(joinRowType));
         
@@ -200,8 +200,13 @@ public class FennelCartesianJoinRule
         RelNode right,
         RelTraitSet traits)
     {
+        RelNode fennelInput = 
+            mergeTraitsAndConvert(
+                traits,
+                FennelRel.FENNEL_EXEC_CONVENTION,
+                right);
         FennelBufferRel bufRel =
-            new FennelBufferRel(right.getCluster(), right, false, true);
+            new FennelBufferRel(right.getCluster(), fennelInput, false, true);
 
         // if we don't have a rowcount for the LHS, then just go ahead and
         // buffer
