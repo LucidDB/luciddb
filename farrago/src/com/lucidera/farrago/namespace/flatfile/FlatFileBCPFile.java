@@ -393,7 +393,9 @@ class FlatFileBCPFile
                     String currStr = bcpLine[i];
                     if (!(currStr.startsWith(QUOTE))) {
                         bcpLineTmp.add(currStr);
+                        lineCopy = lineCopy.substring(currStr.length());
                     } else {
+                        // e.g. column names with spaces
                         try {
                             int fromIdx = lineCopy.indexOf(currStr) + 1;
                             int endIdx = lineCopy.indexOf(QUOTE, fromIdx);
@@ -401,6 +403,7 @@ class FlatFileBCPFile
                                 lineCopy.substring(fromIdx, endIdx);
                             lineCopy = lineCopy.substring(endIdx);
                             bcpLineTmp.add(quotedStr);
+                            quotedStr = QUOTE + quotedStr + QUOTE;
                             String [] numOfSpaces = quotedStr.split("\\s+");
                             i = i + numOfSpaces.length - 1;
                         } catch (Exception ex) {

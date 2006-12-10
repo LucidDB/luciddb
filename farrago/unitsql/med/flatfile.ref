@@ -451,14 +451,14 @@ Error: Invalid row 5 in control file unitsql/med/flatfiles/invalidbcpcolumns.bcp
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- generating bcp file
 0: jdbc:farrago:> select * from flatfile_server.BCP."headerswithwhitespacenobcp";
-+------------+------------------+---------------------+
-| one space  | two spaces here  | one two three four  |
-+------------+------------------+---------------------+
-| 1 1        | 2 2              | 3 3                 |
-| a          |                  |                     |
-|            |                  |                     |
-| 3          | 2                | 1                   |
-+------------+------------------+---------------------+
++------------+------------------+------------------------------+
+| one space  | two spaces here  |    un-trimmed whitespaces    |
++------------+------------------+------------------------------+
+| 1 1        | 2 2              | 3 3                          |
+| a          |                  |                              |
+|            |                  |                              |
+| 3          | 2                | 1                            |
++------------+------------------+------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---------------------------------------------------------------------------
 0: jdbc:farrago:> -- Part 4. Reading metadata from bcp files                               --
