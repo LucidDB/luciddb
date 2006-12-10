@@ -1510,17 +1510,6 @@ public class SqlParserTest
         check("select * from (values(1,'two'), 3, (4, 'five'))",
             "SELECT *" + NL
             + "FROM (VALUES (ROW(1, 'two')), (ROW(3)), (ROW(4, 'five')))");
-  
-        checkFails("select 1 from ^values^ ('x')",
-            "Encountered \"values\" at line 1, column 15\\." + NL +
-            "Was expecting one of:" + NL +
-            "    \"LATERAL\" \\.\\.\\." + NL +
-            "    \"TABLE\" \\.\\.\\." + NL +
-            "    \"UNNEST\" \\.\\.\\." + NL +
-            "    \"\\(\" \\.\\.\\." + NL +
-            "    <IDENTIFIER> \\.\\.\\." + NL +
-            "    <QUOTED_IDENTIFIER> \\.\\.\\." + NL +
-            "    ");
     }
     
     public void testEmptyValues()
