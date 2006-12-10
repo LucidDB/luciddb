@@ -250,13 +250,9 @@ ${farrago.test.jvmargs}
   <property name="FarragoExtMetamodelTransformed.xmi"
     location="${farrago.xmi.dir}/FarragoExtMetamodelTransformed.xmi"/>
 
-  <!-- XMI file containing UML representation of Farrago metamodel -->
-  <property name="FarragoExtMetamodelUML.xmi"
-    location="${farrago.xmi.dir}/FarragoExtMetamodelUML.xmi"/>
-
-  <!-- Same as FarragoExtMetamodelUML, but with diagrams deleted -->
-  <property name="FarragoExtMetamodelUMLSansDiagrams.xmi"
-    location="${farrago.xmi.dir}/FarragoExtMetamodelUMLSansDiagrams.xmi"/>
+  <!-- Same as FarragoExtMetamodel.xmi, but with diagrams deleted -->
+  <property name="FarragoExtMetamodelSansDiagrams.xmi"
+    location="${farrago.xmi.dir}/FarragoExtMetamodelSansDiagrams.xmi"/>
 
   <!-- File containing ArgoUML XMI representation of -->
   <!-- Farrago metamodel -->

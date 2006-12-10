@@ -612,8 +612,7 @@ require version '${required.ant.version}'."/>
   <!-- delete the catalog and everything generated for it -->
   <target name="cleanCatalog" depends="clean,cleanCatalogData">
     <delete file="${FarragoExtMetamodel.xmi}"/>
-    <delete file="${FarragoExtMetamodelUML.xmi}"/>
-    <delete file="${FarragoExtMetamodelUMLSansDiagrams.xmi}"/>
+    <delete file="${FarragoExtMetamodelSansDiagrams.xmi}"/>
     <delete file="${FarragoExtMetamodelTransformed.xmi}"/>
     <delete file="${FarragoMetamodel.xmi}"/>
     <delete file="${FarragoMetamodelUnresolved.xmi}"/>
