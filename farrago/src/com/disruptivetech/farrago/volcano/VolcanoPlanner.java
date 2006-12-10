@@ -108,6 +108,20 @@ public class VolcanoPlanner
         new IdentityHashMap<RelNode, RelSubset>();
 
     /**
+     * The importance of relational expressions.
+     *
+     * <p>The map contains only RelNodes whose importance has
+     * been overridden using
+     * {@link RelOptPlanner#setImportance(RelNode, double)}. Other RelNodes
+     * are presumed to have 'normal' importance.
+     *
+     * <p>If a RelNode has 0 importance, all {@link RelOptRuleCall}s using it
+     * are ignored, and future RelOptRuleCalls are not queued up.
+     */
+    final Map<RelNode, Double> relImportances =
+        new HashMap<RelNode, Double>();
+
+    /**
      * List of all schemas which have been registered.
      */
     private final Set<RelOptSchema> registeredSchemas =
@@ -444,6 +458,36 @@ public class VolcanoPlanner
         return this;
     }
 
+    /**
+     * Finds the most efficient expression to implement the query given
+     * via {@link #setRoot(RelNode)}.
+     * 
+     * <p>The algorithm executes repeatedly in a series of phases.  In each
+     * phase the exact rules that may be fired varies.  The mapping of phases
+     * to rule sets is maintained in the {@link #ruleQueue}.
+     * 
+     * <p>In each phase, the planner sets the initial importance of the 
+     * existing RelSubSets ({@link #setInitialImportance()}).  The planner
+     * then iterates over the rule matches presented by the rule queue until:
+     * <ol>
+     *   <li>The rule queue becomes empty.</li>
+     *   <li>For ambitious planners: No improvements to the plan have been made
+     *       recently (specifically within a number of iterations that is 10% 
+     *       of the number of iterations necessary to first reach an 
+     *       implementable plan or 25 iterations whichever is larger).</li>
+     *   <li>For non-ambitious planners: When an implementable plan is 
+     *   found.</li>
+     * </ol>
+     * 
+     * <p>Furthermore, after every 10 iterations without an implementable plan,
+     * RelSubSets that contain only logical RelNodes are given an importance 
+     * boost via {@link #injectImportanceBoost()}.  Once an implementable plan
+     * is found, the artificially raised importances are cleared 
+     * ({@link #clearImportanceBoost()}).
+     * 
+     *  @return the most efficient RelNode tree found for implementing the
+     *          given query
+     */
     public RelNode findBestExp()
     {
         int cumulativeTicks = 0;
@@ -570,7 +614,7 @@ public class VolcanoPlanner
     
     /**
      * Finds RelSubsets in the plan that contain only rels of 
-     * {@link CallingConvention#NONE} and boosts their importance.
+     * {@link CallingConvention#NONE} and boosts their importance by 25%.
      */
     private void injectImportanceBoost()
     {
@@ -752,10 +796,6 @@ public class VolcanoPlanner
                 OJRexImplementorTableImpl.instance());
     }
 
-    /**
-     * Finds the cost of a node. Similar to {@link #optimize}, but does not
-     * create any expressions.
-     */
     public RelOptCost getCost(RelNode rel)
     {
         assert rel != null : "pre-condition: rel != null";
@@ -902,25 +942,37 @@ public class VolcanoPlanner
         }
     }
 
+    public void setImportance(RelNode rel, double importance)
+    {
+        if (importance == 0d) {
+            relImportances.put(rel, importance);
+        }
+    }
+
+    /**
+     * Dumps the internal state of this VolcanoPlanner to a writer.
+     *
+     * @param pw Print writer
+     */
     void dump(PrintWriter pw)
     {
         pw.println("Root: " + root.getDescription());
         pw.println("Sets:");
-        RelSet [] sets =
-            (RelSet []) allSets.toArray(new RelSet[allSets.size()]);
+        RelSet [] sets = allSets.toArray(new RelSet[allSets.size()]);
         Arrays.sort(
             sets,
-            new Comparator() {
+            new Comparator<RelSet>() {
                 public int compare(
-                    Object o1,
-                    Object o2)
+                    RelSet o1,
+                    RelSet o2)
                 {
-                    return ((RelSet) o1).id - ((RelSet) o2).id;
+                    return o1.id - o2.id;
                 }
             });
         for (int i = 0; i < sets.length; i++) {
             RelSet set = sets[i];
-            pw.println("Set#" + set.id);
+            pw.println("Set#" + set.id +
+                ", type: " + set.subsets.get(0).getRowType());
             int j = -1;
             for (RelSubset subset : set.subsets) {
                 ++j;
@@ -964,6 +1016,15 @@ public class VolcanoPlanner
         pw.println();
     }
 
+    /**
+     * Re-computes the digest of a {@link RelNode}.
+     *
+     * <p>Since a relational expression's digest contains the identifiers of
+     * its children, this method needs to be called when the child has been
+     * renamed, for example if the child's set merges with another.
+     *
+     * @param rel Relational expression
+     */
     void rename(RelNode rel)
     {
         final String oldDigest = rel.getDigest();
@@ -1017,6 +1078,13 @@ public class VolcanoPlanner
         }
     }
 
+    /**
+     * Registers a {@link RelNode}, which has already been registered, in a
+     * new {@link RelSet}.
+     *
+     * @param set Set
+     * @param rel Relational expression
+     */
     void reregister(
         RelSet set,
         RelNode rel)
@@ -1039,6 +1107,14 @@ public class VolcanoPlanner
         mapRel2Subset.put(rel, subset2);
     }
 
+    /**
+     * If a subset has one or more equivalent subsets (owing to a set having
+     * merged with another), returns the subset which is the leader of the
+     * equivalence class.
+     *
+     * @param subset Subset
+     * @return Leader of subset's equivalence class
+     */
     private RelSubset canonize(final RelSubset subset)
     {
         if (subset.set.equivalentSet == null) {

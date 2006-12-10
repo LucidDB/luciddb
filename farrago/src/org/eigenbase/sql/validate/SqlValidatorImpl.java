@@ -1506,7 +1506,8 @@ public class SqlValidatorImpl
             scopes.put(call, overScope);
             final SqlNode operand = call.operands[0];
             final SqlNode newOperand =
-                registerFrom(parentScope, overScope, operand, alias, false);
+                registerFrom(
+                    parentScope, overScope, operand, alias, forceNullable);
             if (newOperand != operand) {
                 call.setOperand(0, newOperand);
             }
@@ -1514,7 +1515,8 @@ public class SqlValidatorImpl
             for (String tableName : overScope.childrenNames) {
                 final SqlValidatorNamespace childSpace =
                     overScope.getChild(tableName);
-                registerNamespace(usingScope, tableName, childSpace, false);
+                registerNamespace(
+                    usingScope, tableName, childSpace, forceNullable);
             }
 
             return newNode;
@@ -1529,9 +1531,29 @@ public class SqlValidatorImpl
         return false;
     }
 
-    protected SelectNamespace allocSelectNamespace(SqlSelect select)
+    /**
+     * Creates a namespace for a <code>SELECT</code> node.
+     * Derived class may override this factory method.
+     *
+     * @param select Select node
+     * @return Select namespace
+     */
+    protected SelectNamespace createSelectNamespace(SqlSelect select)
     {
         return new SelectNamespace(this, select);
+    }
+
+    /**
+     * Creates a namespace for a set operation (<code>UNION</code>,
+     * <code>INTERSECT</code>, or <code>EXCEPT</code>).
+     * Derived class may override this factory method.
+     *
+     * @param call Call to set operation
+     * @return Set operation namespace
+     */
+    protected SetopNamespace createSetopNamespace(SqlCall call)
+    {
+        return new SetopNamespace(this, call);
     }
 
     /**
@@ -1540,7 +1562,7 @@ public class SqlValidatorImpl
      * @param parentScope Parent scope which this scope turns to in order to
      * resolve objects
      * @param usingScope Scope whose child list this scope should add itself to
-     * @param node
+     * @param node Query node
      * @param alias Name of this query within its parent. Must be specified if
      * usingScope != null
      *
@@ -1568,7 +1590,7 @@ public class SqlValidatorImpl
      * @param parentScope Parent scope which this scope turns to in order to
      * resolve objects
      * @param usingScope Scope whose child list this scope should add itself to
-     * @param node
+     * @param node Query node
      * @param alias Name of this query within its parent. Must be specified if
      * usingScope != null
      * @param checkUpdate if true, validate that the update feature is
@@ -1592,9 +1614,9 @@ public class SqlValidatorImpl
         switch (node.getKind().getOrdinal()) {
         case SqlKind.SelectORDINAL:
             final SqlSelect select = (SqlSelect) node;
-            final SelectNamespace selectNs = allocSelectNamespace(select);
+            final SelectNamespace selectNs = createSelectNamespace(select);
             registerNamespace(usingScope, alias, selectNs, forceNullable);
-            SelectScope selectScope = new SelectScope(parentScope, select);
+            SelectScope selectScope = new SelectScope(parentScope, usingScope, select);
             scopes.put(select, selectScope);
 
             // Start by registering the WHERE clause
@@ -1787,6 +1809,9 @@ public class SqlValidatorImpl
             break;
 
         case SqlKind.MultisetQueryConstructorORDINAL:
+            validateFeature(
+                EigenbaseResource.instance().SQLFeature_S271,
+                node.getParserPosition());
             call = (SqlCall) node;
             CollectScope cs = new CollectScope(parentScope, usingScope, call);
             final CollectNamespace ttableConstructorNs =
@@ -1816,7 +1841,7 @@ public class SqlValidatorImpl
         boolean forceNullable)
     {
         SqlCall call = (SqlCall) node;
-        final SetopNamespace setopNamespace = new SetopNamespace(this, call);
+        final SetopNamespace setopNamespace = createSetopNamespace(call);
         registerNamespace(usingScope, alias, setopNamespace, forceNullable);
 
         // A setop is in the same scope as its parent.
@@ -1844,6 +1869,17 @@ public class SqlValidatorImpl
             || (expr instanceof SqlDataTypeSpec);
     }
 
+    private void validateNodeFeature(SqlNode node)
+    {
+        switch (node.getKind().getOrdinal()) {
+            case SqlKind.MultisetValueConstructorORDINAL:
+                validateFeature(
+                    EigenbaseResource.instance().SQLFeature_S271,
+                    node.getParserPosition());
+                break;
+        }
+    }
+
     private void registerSubqueries(
         SqlValidatorScope parentScope,
         SqlNode node,
@@ -1856,6 +1892,7 @@ public class SqlValidatorImpl
         } else if (node.isA(SqlKind.MultisetQueryConstructor)) {
             registerQuery(parentScope, null, node, null, false);
         } else if (node instanceof SqlCall) {
+            validateNodeFeature(node);
             SqlCall call = (SqlCall) node;
             final SqlNode [] operands = call.getOperands();
             for (int i = 0; i < operands.length; i++) {
@@ -2152,7 +2189,7 @@ public class SqlValidatorImpl
         validateOrderList(select);
     }
 
-    private void validateWindowClause(SqlSelect select)
+    protected void validateWindowClause(SqlSelect select)
     {
         final SqlNodeList windowList = select.getWindowList();
         if ((windowList == null) || (windowList.size() == 0)) {
@@ -2200,7 +2237,12 @@ public class SqlValidatorImpl
         windowList.validate(this, windowScope);
     }
 
-    private void validateOrderList(SqlSelect select)
+    /**
+     * Validates the ORDER BY clause of a SELECT statement.
+     *
+     * @param select Select statement
+     */
+    protected void validateOrderList(SqlSelect select)
     {
         // ORDER BY is validated in a scope where aliases in the SELECT clause
         // are visible. For example, "SELECT empno AS x FROM emp ORDER BY x"
@@ -2903,6 +2945,11 @@ public class SqlValidatorImpl
                 public void setRowType(RelDataType rowType)
                 {
                     // intentionally empty
+                }
+
+                public RelDataType getRowTypeSansSystemColumns()
+                {
+                    return getRowType();
                 }
 
                 public void validate()

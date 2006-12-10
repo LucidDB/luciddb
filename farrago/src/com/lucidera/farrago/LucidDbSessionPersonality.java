@@ -642,8 +642,9 @@ public class LucidDbSessionPersonality
         FarragoSessionStmtContext stmtContext,
         FarragoSessionStmtValidator stmtValidator)
     {
+        String sql = (stmtContext == null) ? "?" : stmtContext.getSql();
         LucidDbPreparingStmt stmt =
-            new LucidDbPreparingStmt(stmtValidator);
+            new LucidDbPreparingStmt(stmtValidator, sql);
         initPreparingStmt(stmt);
         return stmt;
     }

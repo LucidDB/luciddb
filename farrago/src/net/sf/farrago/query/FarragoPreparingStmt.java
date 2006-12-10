@@ -97,6 +97,7 @@ public class FarragoPreparingStmt
 
     //~ Instance fields --------------------------------------------------------
 
+    private final String sql;
     private final FarragoSessionStmtValidator stmtValidator;
     private boolean needRestore;
     protected SqlToRelConverter sqlToRelConverter;
@@ -147,14 +148,18 @@ public class FarragoPreparingStmt
      * Creates a new FarragoPreparingStmt object.
      *
      * @param stmtValidator generic stmt validator
+     * @param sql SQL text of statement being prepared
      */
-    public FarragoPreparingStmt(FarragoSessionStmtValidator stmtValidator)
+    public FarragoPreparingStmt(
+        FarragoSessionStmtValidator stmtValidator,
+        String sql)
     {
         super(null);
 
         timingTracer = stmtValidator.getTimingTracer();
 
         this.stmtValidator = stmtValidator;
+        this.sql = sql;
         stmtValidator.addAllocation(this);
 
         loadedServerClassNameSet = new HashSet<String>();
@@ -804,22 +809,24 @@ public class FarragoPreparingStmt
         // Validate that plan satisfies all required trait conversions.  This
         // implicitly validates that a physical implementation was found for
         // every node.
-        RelNode problemRel = null;
         if (!allowPartialImplementation) {
-            problemRel = validatePlan(rootRel, desiredTraits);
-        }
-        if (problemRel != null) {
-            // Dump plan unless we already did above.
-            if (!dumpPlan) {
-                planDumpTracer.severe(
-                    RelOptUtil.dumpPlan(
-                        "Plan without full implementation",
-                        rootRel,
-                        false,
-                        SqlExplainLevel.ALL_ATTRIBUTES));
+            try {
+                validatePlan(rootRel, desiredTraits);
+            } catch (InvalidPlanException e) {
+                // Dump plan unless we already did above.
+                if (!dumpPlan) {
+                    planDumpTracer.severe(
+                        RelOptUtil.dumpPlan(
+                            "Plan without full implementation",
+                            rootRel,
+                            false,
+                            SqlExplainLevel.ALL_ATTRIBUTES));
+                }
+                throw FarragoResource.instance().SessionOptimizerFailed.ex(
+                    e.rel.toString(),
+                    e.getMessage(),
+                    getSql());
             }
-            throw FarragoResource.instance().SessionOptimizerFailed.ex(
-                problemRel.toString());
         }
 
         // REVIEW jvs 9-Mar-2006: Perhaps we should compute two
@@ -834,28 +841,25 @@ public class FarragoPreparingStmt
         return rootRel;
     }
 
-    private RelNode validatePlan(RelNode rel, RelTraitSet desiredTraits)
+    private void validatePlan(RelNode rel, RelTraitSet desiredTraits)
+        throws InvalidPlanException
     {
         if (!rel.getTraits().matches(desiredTraits)) {
-            return rel;
+            throw new InvalidPlanException(
+                "Node's traits (" + rel.getTraits() +
+                    ") do not match required traits (" + desiredTraits + ")",
+                rel);
         }
         if (rel instanceof ConverterRel) {
             ConverterRel converterRel = (ConverterRel) rel;
-            return
-                validatePlan(
-                    converterRel.getChild(),
-                    converterRel.getInputTraits());
+            validatePlan(
+                converterRel.getChild(),
+                converterRel.getInputTraits());
         } else {
             for (RelNode child : rel.getInputs()) {
-                RelNode problemChild = validatePlan(
-                        child,
-                        rel.getTraits());
-                if (problemChild != null) {
-                    return problemChild;
-                }
+                validatePlan(child, rel.getTraits());
             }
         }
-        return null;
     }
 
     public void finalizeRelMetadata(RelNode rootRel)
@@ -1066,6 +1070,12 @@ public class FarragoPreparingStmt
     public FarragoSession getSession()
     {
         return stmtValidator.getSession();
+    }
+
+    // implement FarragoSessionPreparingStmt
+    public String getSql()
+    {
+        return sql;
     }
 
     // implement RelOptConnection
@@ -1432,6 +1442,11 @@ public class FarragoPreparingStmt
         }
     }
 
+    protected File getPackageDir()
+    {
+        return packageDir;
+    }
+    
     // override OJPreparingStmt
     protected String getClassRoot()
     {
@@ -1575,6 +1590,22 @@ public class FarragoPreparingStmt
                     inputRel,
                     fieldExprs,
                     fieldNames);
+        }
+    }
+
+    /**
+     * Exception describing why a plan is invalid.
+     *
+     * <p>Not localized.
+     */
+    protected static class InvalidPlanException extends Exception
+    {
+        private final RelNode rel;
+
+        public InvalidPlanException(String message, RelNode rel)
+        {
+            super(message);
+            this.rel = rel;
         }
     }
 }

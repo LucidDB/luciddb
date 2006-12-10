@@ -104,9 +104,10 @@ public class SwapJoinRule
         final RexNode[] exps =
             RelOptUtil.createSwappedJoinExprs(newJoin, join, true);
         return CalcRel.createProject(
-                newJoin,
-                exps,
-                RelOptUtil.getFieldNames(join.getRowType()));
+            newJoin,
+            exps,
+            RelOptUtil.getFieldNames(join.getRowType()),
+            true);
     }
 
     public void onMatch(final RelOptRuleCall call)
@@ -114,33 +115,40 @@ public class SwapJoinRule
         JoinRel join = (JoinRel) call.rels[0];
 
         final RelNode swapped = swap(join);
-        if (swapped != null) {
-            final JoinRel newJoin = (JoinRel) swapped.getInput(0);
-            call.transformTo(swapped);
-
-            // We have converted join='a join b' into swapped='select
-            // a0,a1,a2,b0,b1 from b join a'. Now register that project='select
-            // b0,b1,a0,a1,a2 from (select a0,a1,a2,b0,b1 from b join a)' is the
-            // same as 'b join a'. If we didn't do this, the swap join rule
-            // would fire on the new join, ad infinitum.
-            final RexNode [] exps =
-                RelOptUtil.createSwappedJoinExprs(
-                    newJoin,
-                    join,
-                    false);
-            RelNode project = CalcRel.createProject(
-                    swapped,
-                    exps,
-                    RelOptUtil.getFieldNames(newJoin.getRowType()));
-
-            // Make sure extra traits are carried over from the original rel
-            project = RelOptRule.convert(
-                    project,
-                    swapped.getTraits());
-
-            RelNode rel = call.getPlanner().register(project, newJoin);
-            Util.discard(rel);
+        if (swapped == null) {
+            return;
         }
+        // The result is either a Project or, if the project is trivial, a
+        // raw Join.
+        final JoinRel newJoin =
+            swapped instanceof JoinRel ?
+                (JoinRel) swapped :
+                (JoinRel) swapped.getInput(0);
+
+        call.transformTo(swapped);
+
+        // We have converted join='a join b' into swapped='select
+        // a0,a1,a2,b0,b1 from b join a'. Now register that project='select
+        // b0,b1,a0,a1,a2 from (select a0,a1,a2,b0,b1 from b join a)' is the
+        // same as 'b join a'. If we didn't do this, the swap join rule
+        // would fire on the new join, ad infinitum.
+        final RexNode [] exps =
+            RelOptUtil.createSwappedJoinExprs(
+                newJoin,
+                join,
+                false);
+        RelNode project = CalcRel.createProject(
+                swapped,
+                exps,
+                RelOptUtil.getFieldNames(newJoin.getRowType()));
+
+        // Make sure extra traits are carried over from the original rel
+        project = RelOptRule.convert(
+                project,
+                swapped.getTraits());
+
+        RelNode rel = call.getPlanner().ensureRegistered(project, newJoin);
+        Util.discard(rel);
     }
 
     //~ Inner Classes ----------------------------------------------------------

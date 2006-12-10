@@ -89,19 +89,11 @@
       </test>
 
       <test name="cretdrp-read" requiresSuccess="setup">
-        <!-- LDB-118 -->
-        <test-metadata>
-          <notImplemented>true</notImplemented>
-        </test-metadata>
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-read.mtsql"/>
       </test>
 
       <test name="cretdrp-write" requiresSuccess="setup">
-        <!-- partly commented out; fixed by LDB-118 -->
-        <test-metadata>
-          <notImplemented>true</notImplemented>
-        </test-metadata>
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-write.mtsql"/>
       </test>

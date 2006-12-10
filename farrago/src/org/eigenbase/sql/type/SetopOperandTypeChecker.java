@@ -54,25 +54,26 @@ public class SetopOperandTypeChecker
         RelDataType [] argTypes =
             new RelDataType[callBinding.getOperandCount()];
         int colCount = -1;
+        final SqlValidator validator = callBinding.getValidator();
         for (int i = 0; i < argTypes.length; i++) {
-            final SqlNode operand = callBinding.getCall().operands[i];
             final RelDataType argType =
                 argTypes[i] =
-                    callBinding.getValidator().getValidatedNodeType(operand);
+                    callBinding.getOperandType(i);
             Util.permAssert(
                 argType.isStruct(),
                 "setop arg must be a struct");
-            if (i == 0) {
-                colCount = argTypes[0].getFieldList().size();
-                continue;
-            }
 
             // Each operand must have the same number of columns.
             final RelDataTypeField [] fields = argType.getFields();
+            if (i == 0) {
+                colCount = fields.length;
+                continue;
+            }
+
             if (fields.length != colCount) {
                 if (throwOnFailure) {
-                    throw callBinding.getValidator().newValidationError(
-                        operand,
+                    throw validator.newValidationError(
+                        callBinding.getCall().getOperands()[i],
                         EigenbaseResource.instance().ColumnCountMismatchInSetop
                         .ex(
                             callBinding.getOperator().getName()));
@@ -100,7 +101,7 @@ public class SetopOperandTypeChecker
                         SqlUtil.getSelectListItem(
                             callBinding.getCall().operands[0],
                             i);
-                    throw callBinding.getValidator().newValidationError(
+                    throw validator.newValidationError(
                         field,
                         EigenbaseResource.instance().ColumnTypeMismatchInSetop
                         .ex(

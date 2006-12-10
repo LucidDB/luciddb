@@ -34,7 +34,6 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.reltype.RelDataType;
 
-
 /**
  * OJPlannerFactory constructs planners initialized to handle all calling
  * conventions, rules, and relational expressions needed to preprocess Saffron
@@ -44,7 +43,8 @@ import org.eigenbase.reltype.RelDataType;
  */
 public class OJPlannerFactory
 {
-    private static ThreadLocal threadInstances = new ThreadLocal();
+    private static ThreadLocal<OJPlannerFactory> threadInstances =
+        new ThreadLocal<OJPlannerFactory>();
 
     //~ Methods ---------------------------------------------------------------
 
@@ -55,12 +55,14 @@ public class OJPlannerFactory
 
     public static OJPlannerFactory threadInstance()
     {
-        return (OJPlannerFactory) threadInstances.get();
+        return threadInstances.get();
     }
 
     public RelOptPlanner newPlanner()
     {
         VolcanoPlanner planner = new VolcanoPlanner();
+
+        planner.addRelTraitDef(CallingConventionTraitDef.instance);
 
         // Create converter rules for all of the standard calling conventions.
         add(

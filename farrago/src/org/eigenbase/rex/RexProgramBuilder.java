@@ -357,7 +357,15 @@ public class RexProgramBuilder
         }
     }
 
-    private RexLocalRef addExpr(RexNode expr)
+    /**
+     * Adds an expression to the list of common expressions, and returns a
+     * reference to the expression. <b>DOES NOT CHECK WHETHER THE EXPRESSION
+     * ALREADY EXISTS</b>.
+     *
+     * @param expr Expression
+     * @return Reference to expression
+     */
+    public RexLocalRef addExpr(RexNode expr)
     {
         RexLocalRef ref;
         final int index = exprList.size();

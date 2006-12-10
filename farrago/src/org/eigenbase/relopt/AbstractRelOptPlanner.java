@@ -62,6 +62,9 @@ public abstract class AbstractRelOptPlanner
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates an AbstractRelOptPlanner.
+     */
     protected AbstractRelOptPlanner()
     {
         mapDescToRule = new HashMap<String, RelOptRule>();
@@ -69,6 +72,11 @@ public abstract class AbstractRelOptPlanner
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Registers a rule's description.
+     *
+     * @param rule Rule
+     */
     protected void mapRuleDescription(RelOptRule rule)
     {
         // Check that there isn't a rule with the same description,
@@ -97,12 +105,23 @@ public abstract class AbstractRelOptPlanner
         }
     }
 
+    /**
+     * Removes the mapping between a rule and its description.
+     *
+     * @param rule Rule
+     */
     protected void unmapRuleDescription(RelOptRule rule)
     {
         String description = rule.toString();
         mapDescToRule.remove(description);
     }
 
+    /**
+     * Returns the rule with a given description
+     *
+     * @param description Description
+     * @return Rule with given description, or null if not found
+     */
     protected RelOptRule getRuleByDescription(String description)
     {
         return mapDescToRule.get(description);
@@ -144,6 +163,10 @@ public abstract class AbstractRelOptPlanner
     public long getRelMetadataTimestamp(RelNode rel)
     {
         return 0;
+    }
+
+    public void setImportance(RelNode rel, double importance)
+    {
     }
 
     // implement RelOptPlanner

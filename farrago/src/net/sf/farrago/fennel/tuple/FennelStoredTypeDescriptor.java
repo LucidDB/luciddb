@@ -39,6 +39,8 @@ package net.sf.farrago.fennel.tuple;
  * seems cleaner than trying to infer it within the standard
  * FennelTupleAccessor.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author Mike Bennett
  * @version $Id$
  */

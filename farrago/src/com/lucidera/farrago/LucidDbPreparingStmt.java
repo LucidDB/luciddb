@@ -35,9 +35,11 @@ import net.sf.farrago.session.*;
  */
 public class LucidDbPreparingStmt extends FarragoPreparingStmt
 {
-    public LucidDbPreparingStmt(FarragoSessionStmtValidator stmtValidator)
+    public LucidDbPreparingStmt(
+        FarragoSessionStmtValidator stmtValidator,
+        String sql)
     {
-        super(stmtValidator);
+        super(stmtValidator, sql);
     }
 
     // override FarragoPreparingStmt

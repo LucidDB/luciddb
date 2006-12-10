@@ -29,6 +29,8 @@ import java.sql.*;
  * FarragoJdbcEngineParamDefFactory create a FarragoJdbcParamDef (refactored
  * from FarragoJdbcEngineParamDefFactory)
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author Angel Chang
  * @version $Id$
  */

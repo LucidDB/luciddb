@@ -2593,20 +2593,19 @@ Error: From line 3, column 51 to line 3, column 54: Table 'EMPS' not found (stat
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan without implementation for 
 . . . . . . . . > select * from unnest(select multiset[deptno] from depts);
-+-------------------------------------------------------------------------------------------+
-|                                          column0                                          |
-+-------------------------------------------------------------------------------------------+
-| ProjectRel(EXPR$0=[$0])                                                                   |
-|   UncollectRel                                                                            |
-|     ProjectRel(EXPR$0=[$0])                                                               |
-|       ProjectRel(EXPR$0=[$SLICE($2)])                                                     |
-|         CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset0]])  |
-|           TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                 |
-|           CollectRel                                                                      |
-|             UnionRel(all=[true])                                                          |
-|               ProjectRel(EXPR$0=[$cor0.DEPTNO])                                           |
-|                 OneRowRel                                                                 |
-+-------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------+
+|                                         column0                                         |
++-----------------------------------------------------------------------------------------+
+| ProjectRel(EXPR$0=[$0])                                                                 |
+|   UncollectRel                                                                          |
+|     ProjectRel(EXPR$0=[$SLICE($2)])                                                     |
+|       CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset0]])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                 |
+|         CollectRel                                                                      |
+|           UnionRel(all=[true])                                                          |
+|             ProjectRel(EXPR$0=[$cor0.DEPTNO])                                           |
+|               OneRowRel                                                                 |
++-----------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 8.1 on clause
 0: jdbc:farrago:> -- correlation from outer qb is not decorrelated

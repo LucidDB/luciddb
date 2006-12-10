@@ -100,9 +100,64 @@ public abstract class JmiModeledMemFactory
             defineMetaObject(
                 ifaceObj,
                 vertex.getMofClass());
+
+            defineAttributes(vertex);
         }
     }
 
+    private void defineAttributes(JmiClassVertex classVertex)
+        throws ClassNotFoundException
+    {
+        MofClass mofClass = classVertex.getMofClass();
+        for (Object obj : mofClass.getContents()) {
+            if (!(obj instanceof Attribute)) {
+                continue;
+            }
+            Attribute attr = (Attribute) obj;
+            if (!(attr.getScope().equals(ScopeKindEnum.INSTANCE_LEVEL))) {
+                continue;
+            }
+            Classifier attrType = attr.getType();
+            if (!(attrType instanceof MofClass)) {
+                // primitive type:  no relationship needed
+                continue;
+            }
+            MofClass attrClass = (MofClass) attrType;
+            JmiClassVertex attrVertex =
+                modelGraph.getVertexForMofClass(attrClass);
+            if (attrVertex == null) {
+                // some class we don't know about; should probably
+                // assert here
+                continue;
+            }
+
+            // The attribute is actually a class-valued attribute;
+            // create a corresponding relationship to tie
+            // parent and child objects together.
+            Class sourceInterface =
+                JmiObjUtil.getJavaInterfaceForRefObject(
+                    classVertex.getRefClass());
+            String targetAttrName =
+                parseGetter(JmiObjUtil.getAccessorName(attr));
+            boolean targetMany = (attr.getMultiplicity().getUpper() != 1);
+            Class targetInterface =
+                JmiObjUtil.getJavaInterfaceForRefObject(
+                    attrVertex.getRefClass());
+            String sourceAttrName = "ParentOf$" + targetAttrName;
+            boolean sourceMany = false;
+            boolean isComposite = true;
+            
+            createRelationship(
+                sourceInterface,
+                targetAttrName,
+                targetMany,
+                targetInterface,
+                sourceAttrName,
+                sourceMany,
+                isComposite);
+        }
+    }
+    
     private void defineAssociations()
         throws ClassNotFoundException
     {
@@ -115,7 +170,7 @@ public abstract class JmiModeledMemFactory
             defineMetaObject(
                 ifaceAssoc,
                 edge.getMofAssoc());
-
+            
             Class sourceInterface =
                 JmiObjUtil.getJavaInterfaceForRefObject(
                     ((JmiClassVertex) edge.getSource()).getRefClass());
@@ -133,19 +188,23 @@ public abstract class JmiModeledMemFactory
             String targetAttrName = parseGetter(targetAccessorName);
             boolean targetMany =
                 (edge.getTargetEnd().getMultiplicity().getUpper() != 1);
-
+            
             Class targetInterface =
                 JmiObjUtil.getJavaInterfaceForRefObject(
                     ((JmiClassVertex) edge.getTarget()).getRefClass());
+            String sourceAttrName = null;
             String sourceAccessorName =
                 JmiObjUtil.getAccessorName(edge.getSourceEnd());
             try {
                 targetInterface.getMethod(sourceAccessorName, ec);
+
+                // Unlike the source end of the association, we'll allow
+                // no method here.
+                sourceAttrName = parseGetter(sourceAccessorName);
             } catch (NoSuchMethodException ex) {
-                // No navigation method, so don't create a relationship.
-                continue;
+                // No navigation method, so create a bogus inverse relationship
+                sourceAttrName = "ParentOf$" + targetAttrName;
             }
-            String sourceAttrName = parseGetter(sourceAccessorName);
             boolean sourceMany =
                 (edge.getSourceEnd().getMultiplicity().getUpper() != 1);
 
@@ -162,6 +221,11 @@ public abstract class JmiModeledMemFactory
                 sourceMany,
                 isComposite);
         }
+    }
+
+    protected JmiModelGraph getModelGraph()
+    {
+        return modelGraph;
     }
 }
 

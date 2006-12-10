@@ -38,10 +38,10 @@ class VolcanoRuleMatch
 
     //~ Instance fields --------------------------------------------------------
 
-    final RelSet targetSet;
-    RelSubset targetSubset;
-    private final String digest;
-    private VolcanoPlanner volcanoPlanner;
+    private final RelSet targetSet;
+    private RelSubset targetSubset;
+    private String digest;
+    private final VolcanoPlanner volcanoPlanner;
     private double cachedImportance = Double.NaN;
     
     //~ Constructors -----------------------------------------------------------
@@ -125,6 +125,15 @@ class VolcanoRuleMatch
         }
         buf.append("]");
         return buf.toString();
+    }
+
+    /**
+     * Recomputes the digest of this VolcanoRuleMatch. It is necessary when
+     * sets have merged since the match was created.
+     */
+    public void recomputeDigest()
+    {
+        digest = computeDigest();
     }
 
     private RelSubset guessSubset()

@@ -224,10 +224,10 @@ ExecStreamResult JavaTransformExecStream::execute(
         switch(pOutAccessor->getState()) {
         case EXECBUF_NONEMPTY:
         case EXECBUF_OVERFLOW:
-            FENNEL_TRACE(TRACE_FINEST, "overflow");
+            FENNEL_TRACE(TRACE_FINER, "overflow");
             return EXECRC_BUF_OVERFLOW;
         case EXECBUF_EOS:
-            FENNEL_TRACE(TRACE_FINEST, "eos");
+            FENNEL_TRACE(TRACE_FINER, "eos");
             return EXECRC_EOS;
         default:
             break;
@@ -243,14 +243,15 @@ ExecStreamResult JavaTransformExecStream::execute(
         }
     }
     
+    jlong jquantum = static_cast<jlong>(quantum.nTuplesMax);
+
     JniEnvAutoRef pEnv;
     assert(farragoTransform);
     int cb = pEnv->CallIntMethod(
         farragoTransform,
         JniUtil::methFarragoTransformExecute, 
-        outputByteBuffer);
-
-    FENNEL_TRACE(TRACE_FINER, "read " << cb << " bytes");
+        outputByteBuffer,
+        jquantum);
 
     if (cb > 0) {
         assert(pOutAccessor);
@@ -258,14 +259,13 @@ ExecStreamResult JavaTransformExecStream::execute(
             bufferLock.getPage().getWritableData(),
             bufferLock.getPage().getWritableData() + cb);
 
-        FENNEL_TRACE(TRACE_FINER, "write overflow");
+        FENNEL_TRACE(TRACE_FINER, "wrote " << cb << " bytes");
         return EXECRC_BUF_OVERFLOW;
     } else if (cb < 0) {
-        FENNEL_TRACE(TRACE_FINEST, "underflow");
+        FENNEL_TRACE(TRACE_FINER, "underflow");
         return EXECRC_BUF_UNDERFLOW;
     } else {
-        FENNEL_TRACE(TRACE_FINEST, "marking EOS");
-
+        FENNEL_TRACE(TRACE_FINER, "marking EOS");
         if (pOutAccessor) {
             pOutAccessor->markEOS();
         }

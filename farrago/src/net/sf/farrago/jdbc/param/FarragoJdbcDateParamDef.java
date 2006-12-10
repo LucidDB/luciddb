@@ -32,6 +32,8 @@ import org.eigenbase.util14.*;
 /**
  * FarragoJdbcEngineDateParamDef defines a date parameter.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author Julian Hyde
  * @version $Id$
  */

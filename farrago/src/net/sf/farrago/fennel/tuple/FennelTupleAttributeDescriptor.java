@@ -30,6 +30,8 @@ import java.io.*;
  * in a tuple. These are contained in a FennelTupleDescriptor object to describe
  * the layout of a tuple.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author Mike Bennett
  * @version $Id$
  */

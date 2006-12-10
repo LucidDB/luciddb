@@ -163,7 +163,7 @@ public class JmiModelGraph
     /**
      * @return the subgraph of only inheritance edges
      */
-    public DirectedGraph getInheritanceGraph()
+    public DirectedGraph<JmiClassVertex, JmiInheritanceEdge> getInheritanceGraph()
     {
         return unmodifiableInheritanceGraph;
     }
@@ -171,7 +171,7 @@ public class JmiModelGraph
     /**
      * @return the subgraph of only association edges
      */
-    public DirectedGraph getAssocGraph()
+    public DirectedGraph<JmiClassVertex, DirectedEdge<JmiClassVertex>> getAssocGraph()
     {
         return unmodifiableAssocGraph;
     }

@@ -38,8 +38,6 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.test.DiffRepository;
 import org.eigenbase.test.SqlToRelTestBase;
 import org.eigenbase.util.TestUtil;
-import org.eigenbase.util.Util;
-
 
 /**
  * Validates that {@link RexNode} expressions get translated to the correct
@@ -230,11 +228,13 @@ public class Rex2CalcPlanTest extends TestCase
                 (WindowedAggregateRel) calcRel2.getInput(0);
 
             // Convert calc/winagg/calc to fennelwindow.
+            final RelNode child = winAggRel.getInput(0);
             FennelWindowRel windowRel = (FennelWindowRel)
                 callRule(
-                    FennelWindowRule.CalcOnWinOnCalc,
-                    new RelNode[]{calcRel2, winAggRel, winAggRel.getInput(0)});
-            Util.discard(windowRel);
+                    child instanceof CalcRel ?
+                        FennelWindowRule.CalcOnWinOnCalc :
+                        FennelWindowRule.CalcOnWin, 
+                    new RelNode[]{calcRel2, winAggRel, child});
 
             final String[] programs = windowRel.getSoleProgram();
             DiffRepository diffRepos = getDiffRepos();
@@ -256,7 +256,8 @@ public class Rex2CalcPlanTest extends TestCase
                     TestUtil.NL + programs[1],
                     TestUtil.NL + programs[2],
                     TestUtil.NL + programs[3],
-                }, false);
+                },
+                false);
         }
 
         private RelNode callRule(
@@ -409,6 +410,19 @@ public class Rex2CalcPlanTest extends TestCase
                 " 3 + MIN(empno + 1) OVER last3\n" +
                 "FROM emp\n" +
                 "WINDOW last3 AS (ORDER BY empno ROWS 3 PRECEDING)",
+            true);
+    }
+
+    public void testWindowDisallowPartial()
+    {
+        tester.checkWinAgg(
+            "SELECT\n" +
+            " SUM(empno) OVER last3Full,\n" +
+            " AVG(empno) OVER last3Full,\n" +
+            " AVG(empno) OVER last3\n" +
+            "FROM emp\n" +
+            "WINDOW last3 AS (ORDER BY empno ROWS 3 PRECEDING),\n" +
+            " last3Full AS (ORDER BY empno ROWS 3 PRECEDING DISALLOW PARTIAL)",
             true);
     }
 

@@ -56,7 +56,8 @@ public interface SqlValidatorNamespace
     SqlValidatorTable getTable();
 
     /**
-     * Returns a list of names of output columns. If the scope's type has not
+     * Returns the row type of this namespace, which comprises a list of names
+     * and types of the output columns. If the scope's type has not
      * yet been derived, derives it. Never returns null.
      *
      * @post return != null
@@ -67,6 +68,13 @@ public interface SqlValidatorNamespace
      * Allows RowType for the namespace to be explicitly set.
      */
     void setRowType(RelDataType rowType);
+
+    /**
+     * Returns the row type of this namespace, sans any system columns.
+     *
+     * @return Row type sans system columns
+     */
+    RelDataType getRowTypeSansSystemColumns();
 
     /**
      * Validates this namespace.

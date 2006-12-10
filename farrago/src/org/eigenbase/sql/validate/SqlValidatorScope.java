@@ -154,6 +154,11 @@ public interface SqlValidatorScope
      */
     SqlValidatorScope getOperandScope(SqlCall call);
 
+    /**
+     * Performs any scope-specific validation of an expression. For example, an
+     * aggregating scope requires that expressions are valid aggregations.
+     * The expression has already been validated.
+     */
     void validateExpr(SqlNode expr);
 }
 

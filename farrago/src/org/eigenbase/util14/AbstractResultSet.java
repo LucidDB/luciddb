@@ -32,6 +32,8 @@ import java.util.TimeZone;
  * <code>AbstractResultSet</code> provides a abstract implementation for a
  * TYPE_FORWARD_ONLY, CONCUR_READ_ONLY ResultSet.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author angel
  * @version $Id$
  * @since Jan 8, 2006
@@ -1803,9 +1805,13 @@ abstract public class AbstractResultSet
         if (o instanceof BigDecimal) {
             return (BigDecimal) o;
         } else if (o instanceof Double) {
-            return BigDecimal.valueOf(((Double) o).doubleValue());
+            // For JDK 1.4 compatibility
+            return new BigDecimal(((Double) o).doubleValue());
+            // return BigDecimal.valueOf(((Double) o).doubleValue());
         } else if (o instanceof Float) {
-            return BigDecimal.valueOf(((Float) o).doubleValue());
+            // For JDK 1.4 compatibility
+            return new BigDecimal(((Float) o).doubleValue());
+            // return BigDecimal.valueOf(((Float) o).doubleValue());
         } else if (o instanceof String) {
             return new BigDecimal(((String) o).trim());
         } else {

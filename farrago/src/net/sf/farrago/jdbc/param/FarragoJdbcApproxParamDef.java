@@ -30,6 +30,8 @@ import java.sql.*;
 /**
  * FarragoJdbcEngineApproxParamDef defines a approximate numeric parameter.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author Angel Chang
  * @version $Id$
  */

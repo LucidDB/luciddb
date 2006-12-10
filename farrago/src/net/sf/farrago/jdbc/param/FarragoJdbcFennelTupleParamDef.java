@@ -37,6 +37,8 @@ import org.eigenbase.util14.*;
  * FarragoJdbcFennelTupleParamDef represents a parameter associated with a
  * FennelTupleDatum. It handles data converstions to the target type.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author Angel Chang
  * @version $Id$
  * @since March 3, 2006
@@ -65,20 +67,20 @@ public class FarragoJdbcFennelTupleParamDef
 
         switch (paramMetaData.type) {
         case Types.TINYINT:
-            min = Byte.valueOf(Byte.MIN_VALUE);
-            max = Byte.valueOf(Byte.MAX_VALUE);
+            min = NumberUtil.MIN_BYTE;
+            max = NumberUtil.MAX_BYTE;
             break;
         case Types.SMALLINT:
-            min = Short.valueOf(Short.MIN_VALUE);
-            max = Short.valueOf(Short.MAX_VALUE);
+            min = NumberUtil.MIN_SHORT;
+            max = NumberUtil.MAX_SHORT;
             break;
         case Types.INTEGER:
-            min = Integer.valueOf(Integer.MIN_VALUE);
-            max = Integer.valueOf(Integer.MAX_VALUE);
+            min = NumberUtil.MIN_INTEGER;
+            max = NumberUtil.MAX_INTEGER;
             break;
         case Types.BIGINT:
-            min = Long.valueOf(Long.MIN_VALUE);
-            max = Long.valueOf(Long.MAX_VALUE);
+            min = NumberUtil.MIN_LONG;
+            max = NumberUtil.MAX_LONG;
             break;
         case Types.NUMERIC:
         case Types.DECIMAL:
@@ -87,17 +89,17 @@ public class FarragoJdbcFennelTupleParamDef
             break;
         case Types.BIT:
         case Types.BOOLEAN:
-            min = Integer.valueOf(0);
-            max = Integer.valueOf(1);
+            min = NumberUtil.INTEGER_ZERO;
+            max = NumberUtil.INTEGER_ONE;
             break;
         case Types.REAL:
-            min = Float.valueOf(-Float.MAX_VALUE);
-            max = Float.valueOf(Float.MAX_VALUE);
+            min = NumberUtil.MIN_FLOAT;
+            max = NumberUtil.MAX_FLOAT;
             break;
         case Types.FLOAT:
         case Types.DOUBLE:
-            min = Double.valueOf(-Double.MAX_VALUE);
-            max = Double.valueOf(Double.MAX_VALUE);
+            min = NumberUtil.MIN_DOUBLE;
+            max = NumberUtil.MAX_DOUBLE;
             break;
         }
     }
@@ -140,7 +142,7 @@ public class FarragoJdbcFennelTupleParamDef
         case Types.NUMERIC:
         case Types.DECIMAL:
             datum.setLong(
-                b ? BigInteger.TEN.pow(paramMetaData.scale).longValue() : 0);
+                b ? NumberUtil.powTen(paramMetaData.scale).longValue() : 0);
             break;
         case Types.BIT:
         case Types.BOOLEAN:
@@ -270,7 +272,7 @@ public class FarragoJdbcFennelTupleParamDef
         case Types.DECIMAL:
             BigDecimal bd =
                 NumberUtil.rescaleBigDecimal(
-                    BigDecimal.valueOf(val),
+                    new BigDecimal(val),
                     paramMetaData.scale);
             checkRange(
                 bd.unscaledValue(),
@@ -370,7 +372,7 @@ public class FarragoJdbcFennelTupleParamDef
             break;
         case Types.BIT:
         case Types.BOOLEAN:
-            datum.setBoolean(!val.equals(BigDecimal.ZERO));
+            datum.setBoolean(!val.equals(BigDecimal.valueOf(0)));
             break;
         case Types.REAL:
             checkRange(
@@ -407,7 +409,9 @@ public class FarragoJdbcFennelTupleParamDef
     {
         if (datum.getCapacity() >= val.length()) {
             if (pad && (datum.getCapacity() > val.length())) {
-                StringBuilder buf = new StringBuilder(datum.getCapacity());
+                // Use StringBuffer instead of StringBuilder for JDK 1.4
+                // compatibility
+                StringBuffer buf = new StringBuffer(datum.getCapacity());
                 buf.append(val);
                 for (int i = val.length(); i < datum.getCapacity(); i++) {
                     buf.append(' ');

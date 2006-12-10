@@ -52,6 +52,11 @@ public interface RelOptPlanner
      */
     public void setRoot(RelNode rel);
 
+    /**
+     * Returns the root node of this query.
+     *
+     * @return Root node
+     */
     public RelNode getRoot();
 
     /**
@@ -241,6 +246,20 @@ public interface RelOptPlanner
      * @return timestamp of last change which might affect metadata derivation
      */
     public long getRelMetadataTimestamp(RelNode rel);
+
+    /**
+     * Sets the importance of a relational expression.
+     *
+     * <p>An important use of this method is when a {@link RelOptRule} has
+     * created a relational expression which is indisputably better than the
+     * original relational expression. The rule set the original relational
+     * expression's importance to zero, to reduce the search space. Pending
+     * rule calls are cancelled, and future rules will not fire.
+     *
+     * @param rel Relational expression
+     * @param importance Importance
+     */
+    void setImportance(RelNode rel, double importance);
 }
 
 // End RelOptPlanner.java

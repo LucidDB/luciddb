@@ -27,6 +27,8 @@ package net.sf.farrago.jdbc.param;
  * not strings are converted into strings. Strings are not padded, even for CHAR
  * columns.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author Julian Hyde
  * @version $Id$
  */

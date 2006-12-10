@@ -103,7 +103,7 @@ public abstract class EncodedSqlInterval
             String intervalStr = (String) obj;
             parse(intervalStr);
         } else {
-            Util.permAssert(false,
+            throw Util.newInternal(
                 "Cannot assign class " + obj.getClass() + " to interval");
         }
     }

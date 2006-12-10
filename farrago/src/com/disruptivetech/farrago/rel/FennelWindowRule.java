@@ -236,6 +236,21 @@ public abstract class FennelWindowRule
             return;
         }
 
+        // The input calculations will be implemented using a Fennel
+        // calculator. If they contain Java-specific operations, quit now. The
+        // splitter rule will carve out the Java parts.
+        if (inCalc != null &&
+            !FarragoAutoCalcRule.instance.canImplementInFennel(inCalc)) {
+            return;
+        }
+
+        // Likewise, the output calculations need to be implementable in a
+        // Fennel calculator.
+        if (outCalc != null &&
+            !FarragoAutoCalcRule.instance.canImplementInFennel(outCalc)) {
+            return;
+        }
+
         // Build the input program.
         final RexProgram inProgram;
         if (inCalc == null) {
@@ -256,21 +271,24 @@ public abstract class FennelWindowRule
                 inProgram,
                 cluster.getRexBuilder());
 
-        final RexProgramBuilder programBuilder =
-            RexProgramBuilder.forProgram(
-                inProgram,
+        // The purpose of the input program is to provide the expressions
+        // needed by all of the aggregate functions. Its outputs are (a) all
+        // of the input fields, followed by (b) the input expressions for the
+        // aggregate functions.
+        final RexProgramBuilder inputProgramBuilder =
+            new RexProgramBuilder(
+                aggProgram.getInputRowType(),
                 cluster.getRexBuilder());
+        int i = -1;
+        for (RexNode expr : aggProgram.getExprList()) {
+            ++i;
+            if (expr instanceof RexInputRef) {
+                inputProgramBuilder.addProject(
+                    i,
+                    aggProgram.getInputRowType().getFields()[i].getName());
 
-        // Add the input fields first to the front of the project list.
-        if (!inProgram.projectsIdentity(false)) {
-            final RelDataTypeField [] fields =
-                inProgram.getInputRowType().getFields();
-            for (int i = 0; i < fields.length; i++) {
-                RelDataTypeField field = fields[i];
-                programBuilder.addProject(
-                    i,
-                    i,
-                    field.getName());
+            } else {
+                inputProgramBuilder.addExpr(expr);
             }
         }
 
@@ -280,10 +298,12 @@ public abstract class FennelWindowRule
         for (RexNode agg : aggProgram.getExprList()) {
             if (agg instanceof RexOver) {
                 FennelWindowRel.RexWinAggCall aggCall =
-                    addWindows(windowList, (RexOver) agg, programBuilder);
+                    addWindows(windowList, (RexOver) agg, inputProgramBuilder);
                 aggMap.put(agg, aggCall);
             }
         }
+        inputProgramBuilder.eliminateUnused();
+        final RexProgram inputProgram = inputProgramBuilder.getProgram();
 
         // Now the windows are complete, compute their digests.
         for (FennelWindowRel.Window window : windowList) {
@@ -302,7 +322,7 @@ public abstract class FennelWindowRule
             new ArrayList<RelDataType>(
                 RelOptUtil.getFieldTypeList(child.getRowType()));
 
-        int i = -1;
+        i = -1;
         for (FennelWindowRel.Window window : windowList) {
             ++i;
             int j = -1;
@@ -321,12 +341,13 @@ public abstract class FennelWindowRule
             }
         }
         RelDataType intermediateRowType =
-            cluster.getTypeFactory().createStructType(intermediateTypeList,
+            cluster.getTypeFactory().createStructType(
+                intermediateTypeList,
                 intermediateNameList);
 
         // The output program is the windowed agg's program, combined with
         // the output calc (if it exists).
-        RexProgramBuilder builder =
+        RexProgramBuilder outputProgramBuilder =
             new RexProgramBuilder(
                 intermediateRowType,
                 cluster.getRexBuilder());
@@ -380,7 +401,7 @@ public abstract class FennelWindowRule
             };
         for (RexNode expr : aggProgram.getExprList()) {
             expr = expr.accept(shuttle);
-            builder.registerInput(expr);
+            outputProgramBuilder.registerInput(expr);
         }
 
         final List<String> fieldNames =
@@ -391,15 +412,15 @@ public abstract class FennelWindowRule
             int index = ref.getIndex();
             final RexNode expr = aggProgram.getExprList().get(index);
             RexNode expr2 = expr.accept(shuttle);
-            builder.addProject(
-                builder.registerInput(expr2),
+            outputProgramBuilder.addProject(
+                outputProgramBuilder.registerInput(expr2),
                 fieldNames.get(i));
         }
 
         // Create the output program.
         final RexProgram outputProgram;
         if (outCalc == null) {
-            outputProgram = builder.getProgram();
+            outputProgram = outputProgramBuilder.getProgram();
             assert RelOptUtil.eq(
                     "type1",
                     outputProgram.getOutputRowType(),
@@ -409,7 +430,7 @@ public abstract class FennelWindowRule
         } else {
             // Merge intermediate program (from winAggRel) with output program
             // (from outCalc).
-            RexProgram intermediateProgram = builder.getProgram();
+            RexProgram intermediateProgram = outputProgramBuilder.getProgram();
             outputProgram =
                 RexProgramBuilder.mergePrograms(
                     outCalc.getProgram(),
@@ -430,7 +451,6 @@ public abstract class FennelWindowRule
         }
 
         // Put all these programs together in the final relational expression.
-        final RexProgram inputProgram = programBuilder.getProgram();
         FennelWindowRel fennelCalcRel =
             new FennelWindowRel(
                 cluster,

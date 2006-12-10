@@ -73,7 +73,7 @@ public class RemoveTrivialProjectRule
         }
     }
 
-    private static boolean isIdentity(
+    static boolean isIdentity(
         RexNode [] exps,
         RelDataType rowType,
         RelDataType childRowType)

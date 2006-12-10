@@ -2367,7 +2367,7 @@ public class CalcRexImplementorTableImpl
             ArrayList<CalcReg> regList = new ArrayList<CalcReg>();
 
             CalcReg timeReg =
-                progBuilder.newStatus(CalcProgramBuilder.OpType.Int8, -1);
+                progBuilder.newLocal(CalcProgramBuilder.OpType.Int8, -1);
 
             // Call will be to store time func result in local reg with
             // optional precision operand.

@@ -33,6 +33,8 @@ import org.eigenbase.util14.*;
  * kept in sync with any changes to fennel's <code>
  * FennelStandardTypeDescriptor.h</code>.
  *
+ * This class is JDK 1.4 compatible.
+ *
  * @author Mike Bennett
  * @version $Id$
  */

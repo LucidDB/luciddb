@@ -75,10 +75,11 @@ class AddProjectToQueryRule
                 oldQuery.getDataSource());
         SqlPrettyWriter writer = new SqlPrettyWriter(query.dialect);
         SqlNodeList list = new SqlNodeList(SqlParserPos.ZERO);
+        final RexToSqlTranslator translator = new RexToSqlTranslator();
         for (int i = 0; i < project.getProjectExps().length; i++) {
             RexNode exp = project.getProjectExps()[i];
             list.add(
-                project.getCluster().getRexToSqlTranslator().translate(
+                translator.translate(
                     writer,
                     exp));
         }

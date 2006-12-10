@@ -170,6 +170,26 @@ class JniUtil
     static jmethodID methGetClassName;
 
     /**
+     * java.lang.Class.getInterfaces()
+     */
+    static jmethodID methGetInterfaces;
+
+    /**
+     * java.lang.Class.getModifiers()
+     */
+    static jmethodID methGetModifiers;
+
+    /** 
+     * class java.lang.Modifier
+     */
+    static jclass classModifier;
+
+    /**
+     * java.lang.reflect.Modifier.isPublic()
+     */
+    static jmethodID methIsPublic;
+
+    /**
      * java.util.Collection.iterator()
      */
     static jmethodID methIterator;
@@ -322,6 +342,18 @@ public:
      * @return the fully-qualified class name
      */
     static std::string getClassName(jclass jClass);
+
+    /**
+     * Calls java.lang.Class.getInterfaces() and returns result of
+     * java.lang.Class.getClassName() for the first public interface
+     * returned.
+     *
+     * @param jClass the Class of interest
+     *
+     * @return the fully-qualified class name of the Class's first public
+     *         interface
+     */
+    static std::string getFirstPublicInterfaceName(jclass jClass);
 
     /**
      * Converts a Java string to a C++ string.
