@@ -2355,6 +2355,21 @@ public class SqlValidatorTest
             "values (1, ^2^, 3), (3, 4, 5), (6, 7, 8) union " + NL
             + "select deptno, name, deptno from dept",
             "Type mismatch in column 2 of UNION");
+        
+        checkFails("select ^1^ from (values ('x')) union " + NL
+            + "select 'a' from (values ('y'))",
+            "Type mismatch in column 1 of UNION");
+
+        checkFails("select ^1^ from (values ('x')) union " + NL
+            + "(values ('a'))",
+             "Type mismatch in column 1 of UNION");
+    }
+    
+    public void testValuesTypeMismatchFails()
+    {
+        checkFails("^values (1), ('a')^", 
+            "Values passed to VALUES operator must have compatible types");
+
     }
 
     public void testNaturalCrossJoinFails()
