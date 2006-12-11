@@ -84,7 +84,7 @@ public class CalcProgramBuilder
         new InstructionDef(addInstruction, 3) {
             void add(
                 CalcProgramBuilder builder,
-                CalcReg [] regs)
+                CalcReg... regs)
             {
                 builder.assertRegisterNotConstant(regs[0]);
                 builder.assertRegisterIsPointer(regs[0]);
@@ -103,7 +103,7 @@ public class CalcProgramBuilder
         new NativeInstructionDef("DIV", 3) {
             void add(
                 CalcProgramBuilder builder,
-                CalcReg [] regs)
+                CalcReg... regs)
             {
                 builder.assertNotDivideByZero(regs[2]);
                 super.add(builder, regs);
@@ -157,7 +157,7 @@ public class CalcProgramBuilder
         new IntegralNativeInstructionDef("MOD", 3) {
             void add(
                 CalcProgramBuilder builder,
-                CalcReg [] regs)
+                CalcReg... regs)
             {
                 //check if divide by zero if op2 is a constant
                 builder.assertNotDivideByZero(regs[2]);
@@ -168,7 +168,7 @@ public class CalcProgramBuilder
         new InstructionDef(moveInstruction, 2) {
             void add(
                 CalcProgramBuilder builder,
-                CalcReg [] regs)
+                CalcReg... regs)
             {
                 builder.compilationAssert(
                     regs[0].getOpType() == regs[1].getOpType(),
@@ -186,7 +186,7 @@ public class CalcProgramBuilder
         new InstructionDef(moveInstruction, 2) {
             void add(
                 CalcProgramBuilder builder,
-                CalcReg [] regs)
+                CalcReg... regs)
             {
                 builder.assertRegisterNotConstant(regs[0]);
                 builder.assertRegisterIsPointer(regs[0]);
@@ -214,7 +214,7 @@ public class CalcProgramBuilder
         new InstructionDef("RAISE", 1) {
             void add(
                 CalcProgramBuilder builder,
-                CalcReg [] regs)
+                CalcReg... regs)
             {
                 builder.assertRegisterLiteral(regs[0]);
                 builder.assertIsVarchar(regs[0]);
@@ -525,9 +525,9 @@ public class CalcProgramBuilder
      */
     private void validate()
     {
-        Iterator<Instruction> it = instructions.iterator();
-        for (int i = 0; it.hasNext(); i++) {
-            Instruction inst = it.next();
+        int i = -1;
+        for (Instruction inst : instructions) {
+            ++i;
             String op = inst.getOpCode();
 
             //this try-catch clause will pick up any compiler excpetions
@@ -2189,8 +2189,8 @@ public class CalcProgramBuilder
     /**
      * Definition for an instruction. An instruction can only do one thing --
      * add itself to a program -- so this class is basically just a functor. The
-     * concrete derived class must provide a name, and implement the {@link
-     * #add(CalcProgramBuilder,Register[])} method.
+     * concrete derived class must provide a name, and implement the
+     * {@link #add(CalcProgramBuilder, List)} method.
      */
     static class InstructionDef
     {
@@ -2219,42 +2219,12 @@ public class CalcProgramBuilder
                     new CalcReg[registers.size()]));
         }
 
-        final void add(
-            CalcProgramBuilder builder,
-            CalcReg reg0)
-        {
-            add(
-                builder,
-                new CalcReg[] { reg0 });
-        }
-
-        final void add(
-            CalcProgramBuilder builder,
-            CalcReg reg0,
-            CalcReg reg1)
-        {
-            add(
-                builder,
-                new CalcReg[] { reg0, reg1 });
-        }
-
-        final void add(
-            CalcProgramBuilder builder,
-            CalcReg reg0,
-            CalcReg reg1,
-            CalcReg reg2)
-        {
-            add(
-                builder,
-                new CalcReg[] { reg0, reg1, reg2 });
-        }
-
         /**
          * Adds this instruction to a program.
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg [] regs)
+            CalcReg... regs)
         {
             assert regs.length == regCount : "Wrong number of params for instruction "
                 + name;
@@ -2275,7 +2245,7 @@ public class CalcProgramBuilder
 
         void add(
             CalcProgramBuilder builder,
-            CalcReg [] regs)
+            CalcReg... regs)
         {
             assert (this.regCount == regs.length);
             builder.assertRegisterNotConstant(regs[0]);
@@ -2299,7 +2269,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg [] regs)
+            CalcReg... regs)
         {
             assert (this.regCount == regs.length);
             assert (this.regCount > 1);
@@ -2332,7 +2302,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg [] regs)
+            CalcReg... regs)
         {
             assert (this.regCount == regs.length);
             assert (this.regCount > 1);
@@ -2364,7 +2334,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg [] regs)
+            CalcReg... regs)
         {
             assert (this.regCount == regs.length);
             builder.assertRegisterNotConstant(regs[0]);
@@ -2392,7 +2362,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg [] regs)
+            CalcReg... regs)
         {
             assert (this.regCount == regs.length);
             assert (this.regCount > 1);
@@ -2423,7 +2393,7 @@ public class CalcProgramBuilder
 
         void add(
             CalcProgramBuilder builder,
-            CalcReg [] regs)
+            CalcReg... regs)
         {
             assert this.regCount == regs.length : "Wrong number of params for instruction "
                 + name
@@ -2461,7 +2431,7 @@ public class CalcProgramBuilder
 
         void add(
             CalcProgramBuilder builder,
-            CalcReg [] regs)
+            CalcReg... regs)
         {
             add(builder, regs, name + regs.length);
         }
@@ -2483,7 +2453,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg [] regs)
+            CalcReg... regs)
         {
             builder.assertRegisterNotConstant(regs[0]);
             CalcReg op2 = regs[2];
