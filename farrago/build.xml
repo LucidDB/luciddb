@@ -399,6 +399,8 @@ require version '${required.ant.version}'."/>
         <include name="noheader.bcp"/>
         <include name="nulldata.bcp"/>
         <include name="withnulls.bcp"/>
+        <include name="headerswithwhitespacenobcp.bcp"/>
+        <include name="buggy.bcp"/>
       </fileset>
     </delete>
   </target>
