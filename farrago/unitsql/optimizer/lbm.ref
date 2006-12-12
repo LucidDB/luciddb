@@ -551,6 +551,27 @@
 0: jdbc:farrago:> insert into typed (a,d,e,f,g,h,i,j,k,l,m,n)
 . . . . . . . . > select * from typed_src;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -------------------------------------------------------------
+0: jdbc:farrago:> -- Part 5. Minus stream                                    --
+0: jdbc:farrago:> -------------------------------------------------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- LER-3491
+0: jdbc:farrago:> create table t(a int);
+0: jdbc:farrago:> create index it on t(a);
+0: jdbc:farrago:> insert into t values (10), (11), (12), (13), (14), (15), (16), (17);
+0: jdbc:farrago:> insert into t values(0);
+0: jdbc:farrago:> delete from t where a = 10;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select a, count(*) from t group by a having a = 10;
++----+---------+
+| A  | EXPR$1  |
++----+---------+
++----+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- cleanup
 0: jdbc:farrago:> drop server test_data cascade;
 0: jdbc:farrago:> 
