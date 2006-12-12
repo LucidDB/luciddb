@@ -59,7 +59,7 @@ void LbmMinusExecStream::open(bool restart)
     advancePending = false;
     // since the children need to read till EOS, don't set a rowLimit
     rowLimit = 0;
-    state = FIRST_MINUS;
+    inputType = UNKNOWN_INPUT;
     copyPrefixPending = false;
     prevTupleValid = false;
     minuendReader.init(inAccessors[0], bitmapSegTuples[0]);
@@ -68,6 +68,23 @@ void LbmMinusExecStream::open(bool restart)
 ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
 {
     ExecStreamResult rc;
+
+    // On the first execution, check whether any subtrahend has data
+    if (inputType == UNKNOWN_INPUT) {
+        iInput = 1;
+        rc = advanceChildren(LcsRid(0));
+        if (rc != EXECRC_YIELD) {
+            return rc;
+        }
+        int dummy;
+        rc = findMinInput(dummy);
+        if (rc == EXECRC_EOS) {
+            inputType = EMPTY_INPUT;
+        } else {
+            inputType = NONEMPTY_INPUT;
+            restartSubtrahends();
+        }
+    }
 
     if (producePending) {
         rc = producePendingOutput(0);
@@ -94,7 +111,7 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
         }
 
         // minus the children input, if they haven't all reached EOS
-        if ((state != EMPTY_INPUT) && !childrenDone) {
+        if ((inputType != EMPTY_INPUT) && !childrenDone) {
            
             if (advancePending) {
                 rc = advanceChild(advanceChildInputNo, advanceChildRid);
@@ -367,14 +384,8 @@ ExecStreamResult LbmMinusExecStream::findMinInput(int &minInput)
 
     if (minInput == -1) {
         childrenDone = true;
-        if (state == FIRST_MINUS) {
-            state = EMPTY_INPUT;
-        }
         return EXECRC_EOS;
     } else {
-        if (state == FIRST_MINUS) {
-            state = NONEMPTY_INPUT;
-        }
         return EXECRC_YIELD;
     }
 }

@@ -104,16 +104,17 @@ class LbmMinusExecStream : public LbmBitOpExecStream
      */
     int advanceChildInputNo;
 
-    enum MinusState {
-        FIRST_MINUS = 0,
+    enum MinusInputType {
+        UNKNOWN_INPUT = 0,
         EMPTY_INPUT,
         NONEMPTY_INPUT
     };
 
     /**
-     * State used to detect the special case of empty inputs
+     * Field used to detect the special case of empty inputs. When the
+     * subtrahend inputs are empty, there is no need to subtract them.
      */
-    MinusState state;
+    MinusInputType inputType;
 
     /**
      * A sequential reader used when the minuend input has keys, which may
