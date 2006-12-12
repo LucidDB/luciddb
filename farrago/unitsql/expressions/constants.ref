@@ -1,6 +1,17 @@
 0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- test constants in operands.
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test a constant reduction bug (LER-3482, rewrite from nullable to 
+0: jdbc:farrago:> -- not null used to cause trouble)
+0: jdbc:farrago:> select 'xxx' from
+. . . . . . . . > sales.emps where manager or empid > coalesce(5000,null);
++---------+
+| EXPR$0  |
++---------+
+| xxx     |
+| xxx     |
++---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- first test with Java calc
 0: jdbc:farrago:> alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
 0: jdbc:farrago:> 

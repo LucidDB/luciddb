@@ -170,6 +170,11 @@ public class FarragoRexToOJTranslator
         stmtList.add(stmt);
     }
 
+    public void addStatementsFromList(StatementList newStmtList)
+    {
+        stmtList.addAll(newStmtList);
+    }
+
     // override RexToOJTranslator
     public Expression visitLocalRef(RexLocalRef localRef)
     {
