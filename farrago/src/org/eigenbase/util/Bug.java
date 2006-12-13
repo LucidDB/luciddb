@@ -132,8 +132,6 @@ public abstract class Bug
 
     // jhyde
 
-    public static final boolean Dt213Fixed = false;
-
     public static final boolean Dt536Fixed = false;
 
     public static final boolean Dt561Fixed = false;
