@@ -135,6 +135,18 @@ public class FarragoMetadataTest
         rootRel = planner.findBestExp();
     }
 
+    private void transformQueryWithoutImplementation(
+        HepProgram program,
+        String sql)
+        throws Exception
+    {
+        this.program = program;
+
+        String explainQuery = "EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR " + sql;
+
+        checkQuery(explainQuery);
+    }
+
     private void transformQuery(
         HepProgram program,
         String sql)
@@ -355,6 +367,53 @@ public class FarragoMetadataTest
             expected);
     }
 
+    public void testUniqueKeysProj1()
+    throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+        
+        BitSet primKey = new BitSet();
+        primKey.set(1);
+        expected.add(primKey);
+        
+        // this test case tests project, sort, filter, and table
+        checkUniqueKeys(
+            "select c1, c0 from tab where c0 = 1 order by c1",
+            expected);
+    }
+
+    public void testUniqueKeysProj2()
+    throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+        
+        BitSet uniqKey = new BitSet();
+        uniqKey.set(0);
+        uniqKey.set(2);
+        expected.add(uniqKey);
+        
+        // this test case tests project, sort, filter, and table
+        checkUniqueKeys(
+            "select c2, c3, c1 from tab where c0 = 1 order by c1",
+            expected);
+    }
+
+    public void testUniqueKeysProj3()
+    throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+        
+        BitSet uniqKey = new BitSet();
+        uniqKey.set(0);
+        uniqKey.set(2);
+        expected.add(uniqKey);
+        
+        // this test case tests project, sort, filter, and table
+        checkUniqueKeys(
+            "select c2, c3 + c0, c1 from tab where c0 = 1 order by c1",
+            expected);
+    }
+    
     public void testUniqueKeysAgg()
         throws Exception
     {
@@ -370,6 +429,24 @@ public class FarragoMetadataTest
             expected);
     }
 
+    public void testUniqueKeysCorrelateRel()
+    throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+        
+        BitSet groupKey = new BitSet();
+        groupKey.set(0);
+        expected.add(groupKey);
+
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQueryWithoutImplementation(
+            programBuilder.createProgram(),
+            "select t2.c0, (select sum(t1.c0) from tab t1 where t1.c1 = t2.c2) from tab t2");
+
+        Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
+        assertTrue(result.equals(expected));        
+    }
+    
     private void checkUniqueKeysJoin(String sql, Set<BitSet> expected)
         throws Exception
     {

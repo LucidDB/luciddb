@@ -25,6 +25,7 @@ import java.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
+import org.eigenbase.rex.*;
 
 
 /**
@@ -50,9 +51,73 @@ public class RelMdUniqueKeys
         return RelMetadataQuery.getUniqueKeys(rel.getChild());
     }
 
+    public Set<BitSet> getUniqueKeys(CorrelatorRel rel)
+    {
+        return RelMetadataQuery.getUniqueKeys(rel.getLeft());
+    }
+
     public Set<BitSet> getUniqueKeys(ProjectRelBase rel)
     {
-        return RelMetadataQuery.getUniqueKeys(rel.getChild());
+        // ProjectRel maps a set of rows to a different set;
+        // Without knowledge of the mapping function(whether it
+        // preserves uniqueness), it is only safe to derive uniqueness
+        // info from the child of a project when the mapping is f(a) => a.
+        //
+        // Further more, the unique bitset coming from the child needs
+        // to be mapped to match the output of the project.
+        Map<Integer, Integer> mapInToOutPos =
+            new HashMap<Integer, Integer>();            
+        
+        RexNode[] projExprs = rel.getProjectExps();
+
+        Set<BitSet> projUniqueKeySet = new HashSet<BitSet>();
+
+        // Build an input to ouput position map.
+        for (int i = 0; i < projExprs.length; i ++) {
+            RexNode projExpr = projExprs[i];
+            if (projExpr instanceof RexInputRef) {
+                mapInToOutPos.put(((RexInputRef)projExpr).getIndex(), i);
+            } else {
+                continue;
+            }
+        }
+
+        if (mapInToOutPos.isEmpty()) {
+            // if there's no RexInputRef in the projected expressions
+            // return empty set.
+            return projUniqueKeySet;
+        }
+        
+        Set<BitSet> childUniqueKeySet = 
+            RelMetadataQuery.getUniqueKeys(rel.getChild());
+        
+        if (childUniqueKeySet != null) {
+            // Now add to the projUniqueKeySet the child keys that are fully
+            // projected.
+            Iterator itChild = childUniqueKeySet.iterator();
+            
+            while (itChild.hasNext()) {
+                BitSet colMask = (BitSet) itChild.next();
+                BitSet tmpMask = new BitSet();
+                boolean completeKeyProjected = true;
+                for (int bit = colMask.nextSetBit(0); bit >= 0;
+                    bit = colMask.nextSetBit(bit + 1)) {
+                    if (mapInToOutPos.containsKey(bit)) {
+                        tmpMask.set(mapInToOutPos.get(bit));
+                    } else {
+                        // Skip the child unique key if part of it is not 
+                        // projected.
+                        completeKeyProjected = false;
+                        break;
+                    }
+                }
+                if (completeKeyProjected) {
+                    projUniqueKeySet.add(tmpMask);
+                }
+            }            
+        }
+        
+        return projUniqueKeySet;
     }
 
     public Set<BitSet> getUniqueKeys(JoinRelBase rel)

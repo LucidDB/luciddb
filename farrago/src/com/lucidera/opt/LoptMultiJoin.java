@@ -156,6 +156,12 @@ public class LoptMultiJoin
      * The semijoins that allow the join of a dimension table to be removed
      */
     SemiJoinRel [] joinRemovalSemiJoins;
+    
+    /**
+     * Set of null-generating factors whose corresponding outer join can be
+     * removed from the query plan
+     */
+    Set<Integer> removableOuterJoinFactors;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -200,6 +206,8 @@ public class LoptMultiJoin
         
         joinRemovalFactors = new Integer[nJoinFactors];
         joinRemovalSemiJoins = new SemiJoinRel[nJoinFactors];
+        
+        removableOuterJoinFactors = new HashSet<Integer>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -685,6 +693,29 @@ public class LoptMultiJoin
                     right.getJoinTree().getRowType()
                 });
         return rowType.getFields();
+    }
+    
+    /**
+     * Adds a join factor to the set of factors that can be removed because
+     * the factor is the null generating factor in an outer join, its join
+     * keys are unique, and the factor is not projected in the query
+     * 
+     * @param factIdx join factor
+     */
+    public void addRemovableOuterJoinFactor(int factIdx)
+    {
+        removableOuterJoinFactors.add(factIdx);
+    }
+    
+    /**
+     * @param factIdx factor in question
+     * 
+     * @return true if the factor corresponds to the null generating factor in
+     * an outer join that can be removed
+     */
+    public boolean isRemovableOuterJoinFactor(int factIdx)
+    {
+        return removableOuterJoinFactors.contains(factIdx);
     }
 }
 

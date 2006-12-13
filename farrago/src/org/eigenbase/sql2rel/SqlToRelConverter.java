@@ -490,7 +490,7 @@ public class SqlToRelConverter
 
             correlatedVariables.removeAll(correlatedVariablesBefore);
             
-            // Associate the corralated varaibles with the new filter rel.
+            // Associate the correlated variables with the new filter rel.
             for (String correl : correlatedVariables) {
                 mapCorrelToRefRel.put(correl, bb.root);
             }
@@ -613,7 +613,6 @@ public class SqlToRelConverter
             //         and q.indicator <> TRUE"
             //
             converted = convertExists(
-                    bb,
                     seek,
                     true,
                     false,
@@ -641,7 +640,6 @@ public class SqlToRelConverter
             SqlSelect select = (SqlSelect) call.getOperands()[0];
             converted =
                 convertExists(
-                    bb,
                     select,
                     false,
                     true,
@@ -652,7 +650,7 @@ public class SqlToRelConverter
         case SqlKind.ScalarQueryORDINAL:
             SqlCall call = (SqlCall) node;
             SqlSelect select = (SqlSelect) call.getOperands()[0];            
-            converted = convertExists(bb, select, false, false, true);
+            converted = convertExists(select, false, false, true);
             joinType = JoinRelType.LEFT;
             SqlNodeList selectList = select.getSelectList();
             SqlNodeList groupList = select.getGroup();
@@ -680,7 +678,7 @@ public class SqlToRelConverter
             //
             // select * from unnest(select multiset[deptno] from emps);
             //
-            converted = convertExists(bb, node, false, false, true);
+            converted = convertExists(node, false, false, true);
             joinType = JoinRelType.LEFT;            
             break;
         default:
@@ -863,7 +861,6 @@ public class SqlToRelConverter
      * @pre extraExpr == null || extraName != null
      */
     private RelNode convertExists(
-        Blackboard bb,
         SqlNode seek,
         boolean isIn,
         boolean isExists,
@@ -1687,7 +1684,7 @@ public class SqlToRelConverter
             Set<String> correlatedVariables = RelOptUtil.getVariablesUsed(bb.root);
             correlatedVariables.removeAll(correlatedVariablesBefore);
             
-            // Associate the corralated varaibles with the new project rel.
+            // Associate the correlated variables with the new project rel.
             for (String correl : correlatedVariables) {
                 mapCorrelToRefRel.put(correl, bb.root);
             }
@@ -1882,9 +1879,9 @@ public class SqlToRelConverter
         boolean dumpPlan = sqlToRelTracer.isLoggable(Level.FINE);
         
         RelNode newRootRel =
-            decorrelator.removeCorrelation(rootRel);
+            decorrelator.removeCorrelationViaRule(rootRel);
         
-        if (dumpPlan && newRootRel != rootRel) {
+        if (dumpPlan) {
             sqlToRelTracer.fine(
                 RelOptUtil.dumpPlan(
                     "Plan after removing CorrelatorRel",
@@ -1892,8 +1889,11 @@ public class SqlToRelConverter
                     false,
                     SqlExplainLevel.EXPPLAN_ATTRIBUTES));            
         }
-        
-        newRootRel = decorrelator.decorrelate(newRootRel);
+
+        if (!mapCorVarToCorRel.isEmpty()) {
+            newRootRel = decorrelator.decorrelate(newRootRel);
+        }
+
         return newRootRel;
     }
         
@@ -2476,7 +2476,7 @@ public class SqlToRelConverter
                 
                 Set<String> correlatedVariables = RelOptUtil.getVariablesUsed(projRel);
                 
-                // Associate the corralated varaibles with the new project rel.
+                // Associate the correlated variables with the new project rel.
                 for (String correl : correlatedVariables) {
                     mapCorrelToRefRel.put(correl, projRel);
                 }
@@ -2547,7 +2547,7 @@ public class SqlToRelConverter
         Set<String> correlatedVariables = RelOptUtil.getVariablesUsed(bb.root);
         correlatedVariables.removeAll(correlatedVariablesBefore);
         
-        // Associate the corralated varaibles with the new project rel.
+        // Associate the correlated variables with the new project rel.
         for (String correl : correlatedVariables) {
             mapCorrelToRefRel.put(correl, bb.root);
         }

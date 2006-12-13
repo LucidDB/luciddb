@@ -996,7 +996,7 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not
 . . . . . . . . >     emps
 . . . . . . . . > group by deptno;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t0)], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[3], expr#7=[CAST($t6):INTEGER], expr#8=[CASE($t3, $t5, $t7)], EXPR$0=[$t2], EXPR$1=[$t8])'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t0)], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[1], expr#7=[CAST($t6):INTEGER], expr#8=[CASE($t3, $t5, $t7)], expr#9=[2], expr#10=[CAST($t9):INTEGER], expr#11=[CASE($t3, $t5, $t10)], expr#12=[+($t8, $t11)], expr#13=[CAST($t12):INTEGER], expr#14=[CASE($t3, $t5, $t13)], EXPR$0=[$t2], EXPR$1=[$t14])'
 '  FennelToIteratorConverter'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
@@ -1032,22 +1032,18 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not
 '      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER CAST($0):INTEGER) NOT NULL])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 '      IteratorToFennelConverter'
-'        IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t2)], $f1=[$t1], EXPR$0=[$t2], $condition=[$t4])'
+'        IterCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t2):INTEGER], expr#4=[=($t0, $t3)], $f1=[$t1], $f2=[$t3], $condition=[$t4])'
 '          FennelToIteratorConverter'
-'            LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[LEFT])'
-'              LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
-'                FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
-'              FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER EXPR$0, INTEGER NOT NULL $f0) NOT NULL])'
-'                LhxAggRel(groupCount=[1], agg#0=[MAX(1)])'
-'                  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL $f0) NOT NULL])'
-'                    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'                      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
-'                      LhxAggRel(groupCount=[1])'
-'                        FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])'
-'                          LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
-'                            FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'                              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+'            LhxAggRel(groupCount=[2], agg#0=[MAX(2)])'
+'              FennelReshapeRel(projection=[[2, 3, 0, 1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER $f1, INTEGER $f2, BOOLEAN $f3) NOT NULL])'
+'                LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
+'                  IteratorToFennelConverter'
+'                    IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
+'                      FennelToIteratorConverter'
+'                        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'                  LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
+'                    FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'                      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> SELECT 
 . . . . . . . . >     sum(empno) a,
@@ -1110,7 +1106,7 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.NAME' is not a
 . . . . . . . . >     emps
 . . . . . . . . > group by deptno;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t0)], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[1], expr#7=[+($t0, $t6)], expr#8=[CAST($t7):INTEGER], expr#9=[CASE($t3, $t5, $t8)], EXPR$0=[$t2], EXPR$1=[$t9])'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t0)], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[1], expr#7=[CAST($t6):INTEGER], expr#8=[CASE($t3, $t5, $t7)], expr#9=[+($t0, $t8)], expr#10=[CAST($t9):INTEGER], expr#11=[CASE($t3, $t5, $t10)], EXPR$0=[$t2], EXPR$1=[$t11])'
 '  FennelToIteratorConverter'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
@@ -1138,7 +1134,7 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.NAME' is not a
 . . . . . . . . >     emps
 . . . . . . . . > group by deptno;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t0)], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[1], expr#7=[+($t1, $t6)], expr#8=[CAST($t7):INTEGER], expr#9=[CASE($t3, $t5, $t8)], EXPR$0=[$t2], EXPR$1=[$t9])'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t0)], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[CAST($t1):INTEGER], expr#7=[CASE($t3, $t5, $t6)], expr#8=[1], expr#9=[CAST($t8):INTEGER], expr#10=[CASE($t3, $t5, $t9)], expr#11=[+($t7, $t10)], expr#12=[CAST($t11):INTEGER], expr#13=[CASE($t3, $t5, $t12)], EXPR$0=[$t2], EXPR$1=[$t13])'
 '  FennelToIteratorConverter'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
@@ -1165,7 +1161,7 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.NAME' is not a
 . . . . . . . . >     emps
 . . . . . . . . > group by deptno;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS NULL($t0)], expr#3=[null], expr#4=[CAST($t3):DECIMAL(10, 2)], expr#5=[1], expr#6=[+($t0, $t5)], expr#7=[100], expr#8=[*($t6, $t7)], expr#9=[true], expr#10=[Reinterpret($t8, $t9)], expr#11=[Reinterpret($t10)], expr#12=[Reinterpret($t11)], expr#13=[Reinterpret($t4)], expr#14=[Reinterpret($t12)], expr#15=[CASE($t2, $t13, $t14)], expr#16=[Reinterpret($t15)], EXPR$0=[$t16])'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS NULL($t0)], expr#3=[null], expr#4=[CAST($t3):DECIMAL(10, 2)], expr#5=[CAST($t3):INTEGER], expr#6=[1], expr#7=[CAST($t6):INTEGER], expr#8=[CASE($t2, $t5, $t7)], expr#9=[+($t0, $t8)], expr#10=[CAST($t9):INTEGER], expr#11=[CASE($t2, $t5, $t10)], expr#12=[100], expr#13=[*($t11, $t12)], expr#14=[true], expr#15=[Reinterpret($t13, $t14)], expr#16=[Reinterpret($t15)], expr#17=[Reinterpret($t16)], expr#18=[Reinterpret($t4)], expr#19=[Reinterpret($t17)], expr#20=[CASE($t2, $t18, $t19)], expr#21=[Reinterpret($t20)], EXPR$0=[$t21])'
 '  FennelToIteratorConverter'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
@@ -1183,6 +1179,64 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.NAME' is not a
 ''
 '11.00'
 '21.00'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ---------------------------------------------
+0: jdbc:farrago:> -- Implicit aggregate in scalar subqueries --
+0: jdbc:farrago:> ---------------------------------------------
+0: jdbc:farrago:> create table depts2 (deptno int);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select (select deptno from depts2) from depts;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])'
+'    FennelCartesianProductRel(leftouterjoin=[true])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'      FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
+'        LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$DEPTS2$DEPTNO]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select (select depts.deptno from depts2) from depts;
+'column0'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS NULL($t1)], expr#3=[null], expr#4=[CAST($t3):INTEGER], expr#5=[CAST($t0):INTEGER], expr#6=[CASE($t2, $t4, $t5)], EXPR$0=[$t6])'
+'  FennelToIteratorConverter'
+'    FennelCartesianProductRel(leftouterjoin=[true])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'      FennelBufferRel(inMemory=[false], multiPass=[true])'
+'        FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BOOLEAN $f1) NOT NULL])'
+'          FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)], agg#1=[SINGLE_VALUE(1)])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$DEPTS2$DEPTNO]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select (select deptno from depts2) a from depts order by a;
+'A'
+''
+''
+''
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select (select depts.deptno from depts2) a from depts order by a;
+'A'
+''
+''
+''
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into depts2 values(null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select (select deptno from depts2) a from depts order by a;
+'A'
+''
+''
+''
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select (select depts.deptno from depts2) a from depts order by a;
+'A'
+'10'
+'20'
+'30'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table depts2;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- End agg.sql
 0: jdbc:farrago:> 

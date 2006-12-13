@@ -922,69 +922,90 @@ drop view v5;
 drop view v1;
 drop view v2;
 
--- 10 --
--- Optimization to decorrelate without usign value generator.
+-- 10 Optimization to decorrelate a scalar subquery without using value generator.
 -- This can be done when the inner relation itself can be the lookup table
 -- without having to join with the outer relation first
 
 -- 10.1 outer relations are not referenced in the select list of the subquery.
 explain plan without implementation for
-select avg((select deptno from depts where deptno = emps.deptno))
+select
+    avg((select deptno from depts where deptno = emps.deptno))
 from emps;
 
 explain plan for
-select avg((select deptno from depts where deptno = emps.deptno))
+select
+    avg((select deptno from depts where deptno = emps.deptno))
 from emps;
 
-select avg((select deptno from depts where deptno = emps.deptno))
+select
+    avg((select deptno from depts where deptno = emps.deptno))
 from emps;
 
 -- check results against this query
 explain plan for
-select (select deptno from depts where deptno = emps.deptno)
+select
+    deptno,
+    (select deptno from depts where deptno = emps.deptno)
 from emps;
 
-select (select deptno from depts where deptno = emps.deptno) 
+select
+    deptno,
+    (select deptno from depts where deptno = emps.deptno) 
 from emps
-order by 1;
+order by deptno;
 
 
 -- 10.2 outer relations are referenced in the select list of the subquery.
 explain plan without implementation for
-select avg((select emps.deptno from depts where deptno = emps.deptno))
+select
+    avg((select emps.deptno from depts where deptno = emps.deptno))
 from emps;
 
 explain plan for
-select avg((select emps.deptno from depts where deptno = emps.deptno))
+select
+    avg((select emps.deptno from depts where deptno = emps.deptno))
 from emps;
 
-select avg((select emps.deptno from depts where deptno = emps.deptno))
+select
+     avg((select emps.deptno from depts where deptno = emps.deptno))
 from emps;
 
 -- check result against this query
 explain plan for
-select (select emps.deptno from depts where deptno = emps.deptno) 
+select 
+    deptno,
+    (select emps.deptno from depts where deptno = emps.deptno) 
 from emps;
 
-select (select emps.deptno from depts where deptno = emps.deptno) 
+select
+    deptno,
+     (select emps.deptno from depts where deptno = emps.deptno) 
 from emps
-order by 1;
+order by deptno;
 
 -- negative cases
 explain plan without implementation for
-select (select deptno from emps where deptno = depts.deptno) 
+select 
+    deptno,
+    (select deptno from emps where deptno = depts.deptno) 
 from depts;
 
 explain plan for
-select (select deptno from emps where deptno = depts.deptno) 
+select
+    deptno,
+     (select deptno from emps where deptno = depts.deptno) 
 from depts;
 
 explain plan without implementation for
-select (select depts.deptno from emps where deptno = depts.deptno) 
+select
+    deptno,
+     (select depts.deptno from emps where deptno = depts.deptno) 
 from depts;
 
 explain plan for
-select (select depts.deptno from emps where deptno = depts.deptno) 
+select
+    deptno,
+     (select depts.deptno from emps where deptno = depts.deptno) 
 from depts;
 
 -- 10.3 Unique columns need to be not null to be considered unique keys.
@@ -1031,29 +1052,246 @@ drop table test4;
 -- 10.4 subquery selects constants
 explain plan for
 SELECT 
+    deptno,
     (select 1 FROM depts where deptno = emps.deptno)
 FROM 
     emps;
 
 SELECT 
-    (select 1 FROM depts where deptno = emps.deptno) a
+    deptno,
+    (select 1 FROM depts where deptno = emps.deptno)
 FROM 
     emps
-order by a;
+order by deptno;
 
 explain plan for
 SELECT 
+    deptno,
     (select cast(1 as decimal(10,2)) FROM depts where deptno = emps.deptno)
 FROM 
     emps;
 
-SELECT 
-    (select cast(1 as decimal(10,2)) FROM depts where deptno = emps.deptno) a
+SELECT
+    deptno,
+    (select cast(1 as decimal(10,2)) FROM depts where deptno = emps.deptno)
 FROM 
     emps
-order by a;
+order by deptno;
 
--- TODO: inner correlations can be improved too
+-- 10.5 correlation in filter references expressions from the RHS
+explain plan for
+select deptno,
+    (select deptno from depts where deptno = emps.deptno+10)
+from emps;
+
+select deptno,
+    (select deptno from depts where deptno = emps.deptno+10)
+from emps
+order by deptno;
+
+-- 10.6 the only correlation is in the select list of the subquery
+explain plan for
+select deptno,
+    (select emps.deptno from depts where deptno = 20)
+from emps;
+
+select deptno, 
+    (select emps.deptno from depts where deptno = 20)
+from emps
+order by deptno;
+
+-- 10.7 subquery select list is an aggregate
+-- 10.7.1 the subquery is correlated
+explain plan for
+select deptno,
+    (select sum(deptno) from emps where deptno = depts.deptno)
+from depts;
+
+select deptno,
+    (select sum(deptno) from emps where deptno = depts.deptno)
+from depts
+order by deptno;
+
+explain plan for
+select deptno, 
+    (select sum(depts.deptno) from emps where deptno = depts.deptno) 
+from depts;
+
+select deptno, 
+    (select sum(depts.deptno) from emps where deptno = depts.deptno)
+from depts
+order by deptno;
+
+explain plan for
+select deptno, 
+    (select sum(depts.deptno) from emps where deptno + 10 = depts.deptno) 
+from depts;
+
+select deptno, 
+    (select sum(depts.deptno) from emps where deptno + 10 = depts.deptno)
+from depts
+order by deptno;
+
+-- negative cases
+explain plan for
+select deptno, 
+    (select sum(deptno) from emps where deptno = depts.deptno+1)
+from depts;
+
+-- NOTE: count() always returns a non-null value even in scalar subqueries
+-- however currently correlated scalar subquery produces nullable field
+-- for the count() in the outer query. This will probably be the behavior
+-- so when moving agg across subquery boundaries(for example, during decorrelate),
+-- the type might need to be patched up to return nullable for count() aggs.
+explain plan for
+select deptno, 
+    (select count(deptno) from emps where deptno = depts.deptno)
+from depts;
+
+select deptno, 
+    (select count(deptno) from emps where deptno = depts.deptno) a
+from depts
+order by deptno;
+
+-- count(*) is translated to count(true)
+explain plan for
+select deptno, 
+    (select count(*) from emps where deptno = depts.deptno)
+from depts;
+
+select deptno, 
+    (select count(*) from emps where deptno = depts.deptno) a
+from depts
+order by deptno;
+
+-- multiple aggregates
+explain plan for
+select deptno, 
+    (select count(*) from emps where deptno = depts.deptno),
+    (select sum(deptno) from emps where deptno = depts.deptno)
+from depts;
+
+select deptno, 
+    (select count(*) from emps where deptno = depts.deptno),
+    (select sum(deptno) from emps where deptno = depts.deptno)
+from depts
+order by deptno;
+
+-- 10.7. the subquery is uncorrelated
+explain plan for
+select deptno, 
+    (select sum(depts.deptno) from emps) 
+from depts;
+
+select deptno, 
+    (select sum(depts.deptno) from emps)
+from depts
+order by deptno;
+
+-- negative test
+create table depts3(deptno int, name varchar(20));
+insert into depts3 select * from depts;
+
+explain plan for
+select deptno, 
+    (select sum(depts.deptno) from emps) 
+from depts3 depts;
+
+select deptno, 
+    (select sum(depts.deptno) from emps)
+from depts3 depts
+order by deptno;
+
+-- NOTE: count() always returns a non-null value even in scalar subqueries
+-- however currently correlated scalar subquery produces nullable field
+-- for the count() in the outer query. This will probably be the behavior
+-- so when moving agg across subquery boundaries(for example, during decorrelate),
+-- the type might need to be patched up to return nullable for count() aggs.
+create table emps3 (a int);
+
+-- check null indicator works
+-- count($cor) is transformed to count(true from RHS)
+explain plan for
+select deptno, 
+    (select count(depts.deptno) from emps3)
+from depts;
+
+select deptno, 
+    (select count(depts.deptno) from emps3)
+from depts
+order by deptno;
+
+-- test removing trivial single_value aggregate works
+explain plan for
+select deptno, 
+    (select count(*) + count(depts.deptno) + count(a) from emps3)
+from depts;
+
+select deptno, 
+    (select count(*) + count(depts.deptno) + count(a) from emps3)
+from depts
+order by deptno;
+
+insert into emps3 values(null);
+
+select deptno, 
+    (select count(depts.deptno) from emps3)
+from depts
+order by deptno;
+
+select deptno, 
+    (select count(*) + count(depts.deptno) + count(a) from emps3)
+from depts
+order by deptno;
+
+-- multiple aggregates
+explain plan for
+select deptno, 
+    (select count(depts.deptno) from emps),
+    (select sum(depts.deptno) from emps)
+from depts;
+
+select deptno, 
+    (select count(depts.deptno) from emps),
+    (select sum(depts.deptno) from emps)
+from depts
+order by deptno;
+
+-- verify that nullability is preserved when not decorrelating with value generators
+create table emps4 (a int);
+create table depts4(a int primary key);
+create table depts5(a int);
+
+insert into depts4 values (1);
+insert into depts5 values (2);
+
+select a, (select max(d.a) from emps4) from depts4 d;
+select a, (select max(d.a) from emps4) from depts5 d;
+
+insert into emps4 values (null);
+
+select a, (select max(d.a) from emps4) from depts4 d;
+select a, (select max(d.a) from emps4) from depts5 d;
+
+-- The count() fix when using value generater to decorrelate
+-- now it returns 0 correctly
+truncate table emps3;
+truncate table emps4;
+insert into emps4 values (2);
+
+explain plan for
+select (select count(e2.a) from emps3 e1) from emps4 e2;
+
+-- should return 0
+select (select count(e2.a) from emps3 e1) from emps4 e2;
+
+-- The planner workaround: for the planer used in RelDecorrelator,
+-- make sure the RelNode representation remains a tree.
+explain plan for
+select (select count(e2.a) from emps3 e1) from emps3 e2;
+
+-- TODO: in predicate correlations can be improved too
+-- Inner correlation
 explain plan for
 SELECT empno
 FROM 
@@ -1068,8 +1306,28 @@ FROM
 where 
     deptno in (select emps.deptno FROM depts where deptno = emps.deptno);
 
+-- Outer correlation
+explain plan for
+SELECT empno
+FROM 
+    emps
+where 
+    deptno not in (select deptno FROM depts where deptno = emps.deptno);
+
+explain plan for
+SELECT empno
+FROM 
+    emps
+where 
+    deptno not in (select emps.deptno FROM depts where deptno = emps.deptno);
+
 --------------
 -- clean up --
 --------------
 drop table emps2;
+drop table emps3;
+drop table emps4;
 drop table depts2;
+drop table depts3;
+drop table depts4;
+drop table depts5;

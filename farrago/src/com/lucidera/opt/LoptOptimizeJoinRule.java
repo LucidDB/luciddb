@@ -81,10 +81,68 @@ public class LoptOptimizeJoinRule
         } while (true);
 
         multiJoin.setFactorWeights();
+        
+        findRemovableOuterJoins(multiJoin);
 
         findBestOrderings(multiJoin, semiJoinOpt, call);
     }
 
+    /**
+     * Locates all null generating factors whose outer join can be removed.
+     * The outer join can be removed if the join keys corresponding to the
+     * null generating factor are unique and no columns are projected from it.
+     * 
+     * @param multiJoin join factors being optimized
+     */
+    private void findRemovableOuterJoins(LoptMultiJoin multiJoin)
+    {   
+    outerLoop:
+        for (int factIdx = 0; factIdx < multiJoin.getNumJoinFactors();
+            factIdx++)
+        {
+            if (multiJoin.isNullGenerating(factIdx)) {
+                // reject the factor if it is referenced in the projection list
+                BitSet projFields = multiJoin.getProjFields(factIdx);
+                if (projFields == null ||  projFields.cardinality() > 0) {
+                    continue;
+                }
+                
+                // setup a bitmap containing the join keys corresponding to
+                // the null generating factor
+                RexNode outerJoinCond = multiJoin.getOuterJoinCond(factIdx);
+                BitSet joinFields =
+                    multiJoin.getFieldsRefByJoinFilter(outerJoinCond);
+                int numFields = multiJoin.getNumFieldsInJoinFactor(factIdx);
+                BitSet joinKeys = new BitSet(numFields);
+                int firstFieldNum = multiJoin.getJoinStart(factIdx);
+                int lastFieldNum = firstFieldNum + numFields;
+                for (int field = joinFields.nextSetBit(firstFieldNum);
+                    field >= firstFieldNum && field < lastFieldNum;
+                    field = joinFields.nextSetBit(field + 1))
+                {
+                    joinKeys.set(field - firstFieldNum);
+                }
+                
+                // make sure the only join fields referenced are the ones in 
+                // the current outer join
+                int [] joinFieldRefCounts =
+                    multiJoin.getJoinFieldRefCounts(factIdx);
+                for (int i = 0; i < joinFieldRefCounts.length; i++) {
+                    if (joinFieldRefCounts[i] > 1 || !joinKeys.get(i)) {
+                        continue outerLoop;
+                    }
+                }
+                
+                // see if the join keys are unique
+                if (RelMdUtil.areColumnsDefinitelyUnique(
+                    multiJoin.getJoinFactor(factIdx), joinKeys))
+                {
+                    multiJoin.addRemovableOuterJoinFactor(factIdx);
+                }
+            }
+        }
+    }
+    
     /**
      * Generates N optimal join orderings. Each ordering contains each factor as
      * the first factor in the ordering.
@@ -400,12 +458,26 @@ public class LoptOptimizeJoinRule
         BitSet factorsNeeded,
         List<RexNode> filtersToAdd)
     {
+        // if the factor corresponds to the null generating factor in an outer
+        // join that can be removed, then create a replacement join
+        if (multiJoin.isRemovableOuterJoinFactor(factorToAdd)) {
+            return 
+                createReplacementJoin(
+                    multiJoin,
+                    semiJoinOpt,
+                    joinTree,
+                    factorToAdd,
+                    new ArrayList<Integer>(),
+                    null,
+                    filtersToAdd);
+        }
+        
         // if the factor corresponds to a dimension table whose join we
         // can remove, create a replacement join if the corresponding fact
         // table is in the current join tree
         if (multiJoin.getJoinRemovalFactor(factorToAdd) != null) {
             return
-                createReplacementJoin(
+                createReplacementSemiJoin(
                     multiJoin,
                     semiJoinOpt,
                     joinTree,
@@ -845,7 +917,7 @@ public class LoptOptimizeJoinRule
      * @return created join tree or null if the corresponding fact table has
      * not been joined in yet
      */
-    private LoptJoinTree createReplacementJoin(
+    private LoptJoinTree createReplacementSemiJoin(
         LoptMultiJoin multiJoin,
         LoptSemiJoinOptimizer semiJoinOpt,
         LoptJoinTree factTree,
@@ -878,7 +950,7 @@ public class LoptOptimizeJoinRule
         RelDataTypeField [] dimFields =
             multiJoin.getJoinFactor(dimIdx).getRowType().getFields();
         int nDimFields = dimFields.length;
-        int [] replacementKeys = new int[nDimFields];
+        Integer [] replacementKeys = new Integer[nDimFields];
         SemiJoinRel semiJoin = multiJoin.getJoinRemovalSemiJoin(dimIdx);
         List<Integer> dimKeys = semiJoin.getRightKeys();
         List<Integer> factKeys = semiJoin.getLeftKeys();
@@ -886,75 +958,126 @@ public class LoptOptimizeJoinRule
             replacementKeys[dimKeys.get(i)] = factKeys.get(i) + adjustment;
         }
         
-        // create the projection, projecting the fields from the join tree
-        // containing the fact table and the replacementKeys computed above;
-        // for the dimension table fields that are not projected, just create
-        // a null expression as a placeholder for the column; this is done
-        // so we don't have to adjust the offsets of other expressions that
-        // reference the dimension table; the placeholder expression values
-        // should never be referenced, so that's why it's ok to create these
-        // possibly invalid expressions
-        RelNode factRel = factTree.getJoinTree();
-        RelDataTypeField [] factFields = factRel.getRowType().getFields();
-        int nFactFields = factFields.length;
-        RexNode [] projExprs = new RexNode[nFactFields + nDimFields];
-        String [] fieldNames = new String[nFactFields + nDimFields];
-        RexBuilder rexBuilder = factRel.getCluster().getRexBuilder();
+        return
+            createReplacementJoin(
+                multiJoin,
+                semiJoinOpt,
+                factTree,
+                dimIdx,
+                dimKeys,
+                replacementKeys,
+                filtersToAdd);
+    }
+    
+    /**
+     * Creates a replacement join, projecting either dummy columns or
+     * replacement keys from the factor that doesn't actually need to be
+     * joined.
+     * 
+     * @param multiJoin join factors being optimized
+     * @param semiJoinOpt optimal semijoins for each factor
+     * @param currJoinTree current join tree being added to
+     * @param factorToAdd new factor whose join can be removed
+     * @param newKeys join keys that need to be replaced
+     * @param replacementKeys the keys that replace the join keys; null if
+     * we're removing the null generating factor in an outer join
+     * @param filtersToAdd filters remaining to be added; filters added to the
+     * new join tree are removed from the list
+     * 
+     * @return created join tree with an appropriate projection for the factor
+     * that can be removed
+     */
+    private LoptJoinTree createReplacementJoin(
+        LoptMultiJoin multiJoin,
+        LoptSemiJoinOptimizer semiJoinOpt,
+        LoptJoinTree currJoinTree,
+        int factorToAdd,
+        List<Integer> newKeys,
+        Integer [] replacementKeys,
+        List<RexNode> filtersToAdd)
+    {        
+        // create a projection, projecting the fields from the join tree
+        // containing the current joinRel and the new factor; for fields
+        // corresponding to join keys, replace them with the corresponding key
+        // from the replacementKeys passed in; for other fields, just create a
+        // null expression as a placeholder for the column; this is done so we
+        // don't have to adjust the offsets of other expressions that reference
+        // the new factor; the placeholder expression values should never be
+        // referenced, so that's why it's ok to create these possibly invalid
+        // expressions
+        RelNode currJoinRel = currJoinTree.getJoinTree();
+        RelDataTypeField [] currFields = currJoinRel.getRowType().getFields();
+        int nCurrFields = currFields.length;
+        RelDataTypeField [] newFields =
+            multiJoin.getJoinFactor(factorToAdd).getRowType().getFields();
+        int nNewFields = newFields.length;
+        RexNode [] projExprs = new RexNode[nCurrFields + nNewFields];
+        String [] fieldNames = new String[nCurrFields + nNewFields];
+        RexBuilder rexBuilder = currJoinRel.getCluster().getRexBuilder();
+        RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
         
-        for (int i = 0; i < nFactFields; i++) {
-            projExprs[i] = rexBuilder.makeInputRef(factFields[i].getType(), i);
-            fieldNames[i] = factFields[i].getName();
+        for (int i = 0; i < nCurrFields; i++) {
+            projExprs[i] = rexBuilder.makeInputRef(currFields[i].getType(), i);
+            fieldNames[i] = currFields[i].getName();
         }
-        for (int i = 0; i < nDimFields; i++) {
+        for (int i = 0; i < nNewFields; i++) {
             RexNode projExpr;
-            RelDataType dimType = dimFields[i].getType();
-            if (!dimKeys.contains(i)) {
+            RelDataType newType = newFields[i].getType();
+            if (!newKeys.contains(i)) {
+                if (replacementKeys == null) {
+                    // null generating factor in an outer join; so make the
+                    // type nullable
+                    newType =
+                        typeFactory.createTypeWithNullability(
+                            typeFactory.createSqlType(newType.getSqlTypeName()),
+                            true);
+                }
                 projExpr =
-                    rexBuilder.makeCast(dimType, rexBuilder.constantNull());
+                    rexBuilder.makeCast(newType, rexBuilder.constantNull());
             } else {
-                RelDataTypeField mappedField = factFields[replacementKeys[i]];
+                RelDataTypeField mappedField = currFields[replacementKeys[i]];
                 RexNode mappedInput =
                     rexBuilder.makeInputRef(
                         mappedField.getType(),
                         replacementKeys[i]);
                 // if the types aren't the same, create a cast
-                if (mappedField.getType() == dimType) {
+                if (mappedField.getType() == newType) {
                     projExpr = mappedInput;
                 } else {
                     projExpr =
                         rexBuilder.makeCast(
-                            dimFields[i].getType(),
+                            newFields[i].getType(),
                             mappedInput);
                 }
             }
-            projExprs[i + nFactFields] = projExpr;
-            fieldNames[i + nFactFields] = dimFields[i].getName();
+            projExprs[i + nCurrFields] = projExpr;
+            fieldNames[i + nCurrFields] = newFields[i].getName();
         }
         ProjectRel projRel =
             (ProjectRel) CalcRel.createProject(
-                factRel,
+                currJoinRel,
                 projExprs,
                 fieldNames);
         
         // remove the join conditions corresponding to the join we're removing;
         // we don't actually need to use them, but we need to remove them
         // from the list since they're no longer needed
-        LoptJoinTree dimTree =
+        LoptJoinTree newTree =
             new LoptJoinTree(
-                semiJoinOpt.getChosenSemiJoin(dimIdx),
-                dimIdx);
-        addFilters(multiJoin, factTree, dimTree, filtersToAdd, false);
+                semiJoinOpt.getChosenSemiJoin(factorToAdd),
+                factorToAdd);
+        addFilters(multiJoin, currJoinTree, newTree, filtersToAdd, false);
  
-        // finally, create a join tree consisting of the fact table's join
+        // finally, create a join tree consisting of the current join's join
         // tree with the newly created projection; note that in the factor
-        // tree, we act as if we're joining in the dimension table, even
+        // tree, we act as if we're joining in the new factor, even
         // though we really aren't; this is needed so we can map the columns
-        // from the dimension table as we go up in the join tree
+        // from the new factor as we go up in the join tree
         return
             new LoptJoinTree(
                 projRel,
-                factTree.getFactorTree(),
-                dimTree.getFactorTree());
+                currJoinTree.getFactorTree(),
+                newTree.getFactorTree());
     }
     
     /**

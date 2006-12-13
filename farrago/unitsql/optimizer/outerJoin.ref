@@ -1573,4 +1573,123 @@
 | 1  | 4  |
 +----+----+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> ------------------------
+0: jdbc:farrago:> -- removable outer joins
+0: jdbc:farrago:> ------------------------
+0: jdbc:farrago:> create table BUniq(k int, b int not null unique);
+0: jdbc:farrago:> insert into BUniq values (1, 2), (2, 3), (3, 4);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select A.* from A left outer join BUniq on a = b;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select A.* from BUniq right outer join A on a = b;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select a from (select a, b from A left outer join BUniq on a = b), C
+. . . . . . . . >         where a = c;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER NOT NULL A) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> select A.* from A left outer join BUniq on a = b order by a;
++----+----+
+| K  | A  |
++----+----+
+| 1  | 1  |
+| 2  | 2  |
+| 3  | 3  |
++----+----+
+0: jdbc:farrago:> select A.* from BUniq right outer join A on a = b order by a;
++----+----+
+| K  | A  |
++----+----+
+| 1  | 1  |
+| 2  | 2  |
+| 3  | 3  |
++----+----+
+0: jdbc:farrago:> select a from (select a, b from A left outer join BUniq on a = b), C
+. . . . . . . . >     where a = c order by a;
++----+
+| A  |
++----+
+| 2  |
+| 3  |
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ----------------------------
+0: jdbc:farrago:> -- non-removable outer joins
+0: jdbc:farrago:> ----------------------------
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> -- full outer join
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select A.* from A full outer join BUniq on a = b;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER K, INTEGER A) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[FULL])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$B]])'
+0: jdbc:farrago:> -- join key not unique
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select A.* from A left outer join B on a = b;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER K, INTEGER NOT NULL A) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
+0: jdbc:farrago:> -- null generating factor projected in projection list
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select * from A left outer join BUniq on a = b;
+'column0'
+'FennelToIteratorConverter'
+'  LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[LEFT])'
+'    LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
+'    LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$B, SYS$CLUSTERED_INDEX$BUNIQ$K]])'
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select A.*, BUniq.k from A left outer join BUniq on a = b;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 2]], outputRowType=[RecordType(INTEGER K, INTEGER NOT NULL A, INTEGER K0) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[LEFT])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$B, SYS$CLUSTERED_INDEX$BUNIQ$K]])'
+0: jdbc:farrago:> -- null generating factor referenced in a join with another table
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select a from (select a, b from A left outer join BUniq on a = b), C
+. . . . . . . . >         where b = c;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER NOT NULL A) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
+'        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
+'        LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$B]])'
+'      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL C, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select a from
+. . . . . . . . >         (select a, Buniq.k from A left outer join BUniq on a = b) X, C
+. . . . . . . . >         where X.k = c;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER NOT NULL A) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER K) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[LEFT])'
+'          LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
+'          LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$B, SYS$CLUSTERED_INDEX$BUNIQ$K]])'
+'      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL C, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

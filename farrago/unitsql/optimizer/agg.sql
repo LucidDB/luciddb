@@ -535,4 +535,27 @@ FROM
 group by deptno
 order by a;
 
+---------------------------------------------
+-- Implicit aggregate in scalar subqueries --
+---------------------------------------------
+create table depts2 (deptno int);
+
+explain plan for
+select (select deptno from depts2) from depts;
+
+explain plan for
+select (select depts.deptno from depts2) from depts;
+
+select (select deptno from depts2) a from depts order by a;
+
+select (select depts.deptno from depts2) a from depts order by a;
+
+insert into depts2 values(null);
+
+select (select deptno from depts2) a from depts order by a;
+
+select (select depts.deptno from depts2) a from depts order by a;
+
+drop table depts2;
+
 -- End agg.sql
