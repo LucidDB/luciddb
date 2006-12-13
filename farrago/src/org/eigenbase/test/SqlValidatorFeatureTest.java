@@ -93,6 +93,17 @@ public class SqlValidatorFeatureTest
             EigenbaseResource.instance().SQLFeature_E071_03);
     }
 
+    public void testMultiset()
+    {
+        checkFeature(
+            "values ^multiset[1]^",
+            EigenbaseResource.instance().SQLFeature_S271);
+
+        checkFeature(
+            "values ^multiset(select * from dept)^",
+            EigenbaseResource.instance().SQLFeature_S271);
+    }
+
     private void checkFeature(String sql, ResourceDefinition feature)
     {
         // Test once with feature enabled:  should pass
