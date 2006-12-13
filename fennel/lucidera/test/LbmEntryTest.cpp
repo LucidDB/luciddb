@@ -156,6 +156,8 @@ public:
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonMaxSeg);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonRandom1);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonRandom2);
+        FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonWithSingleton1);
+        FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonWithSingleton2);
     }
 
     virtual void testCaseSetUp();
@@ -192,6 +194,8 @@ public:
     void testMergeSingletonMaxSeg();
     void testMergeSingletonRandom1();
     void testMergeSingletonRandom2();
+    void testMergeSingletonWithSingleton1();
+    void testMergeSingletonWithSingleton2();
 };
 
 void LbmEntryTest::testRandom1()
@@ -1279,6 +1283,27 @@ void LbmEntryTest::testMergeSingletonRandom1()
 void LbmEntryTest::testMergeSingletonRandom2()
 {
     testMergeSingletonRandom(100, 10000);
+}
+
+void LbmEntryTest::testMergeSingletonWithSingleton1()
+{
+    std::vector<LcsRid> ridValues;
+
+    ridValues.push_back(LcsRid(7));
+
+    ridValues.push_back(LcsRid(1));
+    testMergeSingleton(16, ridValues, 1, false);
+}
+
+void LbmEntryTest::testMergeSingletonWithSingleton2()
+{
+    std::vector<LcsRid> ridValues;
+
+    ridValues.push_back(LcsRid(50));
+
+    ridValues.push_back(LcsRid(1));
+    // not enough space so the entries should get split into 2
+    testMergeSingleton(10, ridValues, 1, true);
 }
 
 void LbmEntryTest::testCaseSetUp()
