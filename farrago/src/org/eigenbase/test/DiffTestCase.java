@@ -371,6 +371,39 @@ public abstract class DiffTestCase
     {
         this.verbose = verbose;
     }
+
+    /**
+     * Sets the diff masks that are common to .REF files
+     */
+    protected void setRefFileDiffMasks()
+    {
+        // mask out source control Id
+        addDiffMask("\\$Id.*\\$");
+
+        // NOTE hersker 2006-06-02:
+        // The following two patterns can be used to mask out the
+        // sqlline JDBC URI and continuation prompts. This is useful
+        // during transition periods when URIs are changed, or when
+        // new drivers are deployed which have their own URIs but
+        // should first pass the existing test suite before their
+        // own .ref files get checked in.
+        //
+        // It is not recommended to use these patterns on an everyday
+        // basis. Real differences in the output are difficult to spot
+        // when diff-ing .ref and .log files which have different
+        // sqlline prompts at the start of each line.
+
+        // mask out sqlline JDBC URI prompt
+        addDiffMask("0: \\bjdbc(:[^:>]+)+:>");
+
+        // mask out different-length sqlline continuation prompts
+        addDiffMask("^(\\.\\s?)+>");
+
+        // JFrost 2006-12s-5
+        // Temporary mask to be used until log files have been updated.
+        addDiffMask("^>");
+    }
+
 }
 
 // End DiffTestCase.java
