@@ -740,16 +740,23 @@ insert into BUniq values (1, 2), (2, 3), (3, 4);
 explain plan for
     select A.* from A left outer join BUniq on a = b;
 explain plan for
+    select A.* from A left outer join BUniq on b = a;
+explain plan for
     select A.* from BUniq right outer join A on a = b;
 explain plan for
     select a from (select a, b from A left outer join BUniq on a = b), C
         where a = c;
+-- two join keys
+explain plan for 
+    select A.* from A left outer join BUniq B on a = b and A.k = B.k;
 
 !set outputformat table
 select A.* from A left outer join BUniq on a = b order by a;
+select A.* from A left outer join BUniq on b = a order by a;
 select A.* from BUniq right outer join A on a = b order by a;
 select a from (select a, b from A left outer join BUniq on a = b), C
     where a = c order by a;
+select A.* from A left outer join BUniq B on a = b and A.k = B.k order by a;
 
 ----------------------------
 -- non-removable outer joins
@@ -758,9 +765,11 @@ select a from (select a, b from A left outer join BUniq on a = b), C
 -- full outer join
 explain plan for
     select A.* from A full outer join BUniq on a = b;
--- join key not unique
+-- join keys not unique
 explain plan for
     select A.* from A left outer join B on a = b;
+explain plan for
+    select A.* from A left outer join B on a = b and A.k = B.k;
 -- null generating factor projected in projection list
 explain plan for
     select * from A left outer join BUniq on a = b;
@@ -774,3 +783,16 @@ explain plan for
     select a from
         (select a, Buniq.k from A left outer join BUniq on a = b) X, C
         where X.k = c;
+-- non-equijoin filter
+explain plan for
+    select A.* from A left outer join BUniq on true;
+explain plan for
+    select A.* from A left outer join BUniq on a > 1;
+-- non-input references
+explain plan for
+    select A.* from A left outer join B on a = 1;
+explain plan for
+    select A.* from A left outer join BUniq on a + 1 = b + 1;
+-- no keys from null generating factor
+explain plan for
+    select A.* from A left outer join B on a = A.k;

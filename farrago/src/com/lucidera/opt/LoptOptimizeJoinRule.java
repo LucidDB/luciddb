@@ -107,20 +107,44 @@ public class LoptOptimizeJoinRule
                     continue;
                 }
                 
-                // setup a bitmap containing the join keys corresponding to
-                // the null generating factor
+                // setup a bitmap containing the equi-join keys corresponding to
+                // the null generating factor; both operands in the filter
+                // must be RexInputRefs and only one side corresponds to the
+                // null generating factor
                 RexNode outerJoinCond = multiJoin.getOuterJoinCond(factIdx);
-                BitSet joinFields =
-                    multiJoin.getFieldsRefByJoinFilter(outerJoinCond);
+                List<RexNode> ojFilters = new ArrayList<RexNode>();
+                RelOptUtil.decomposeConjunction(outerJoinCond, ojFilters);
                 int numFields = multiJoin.getNumFieldsInJoinFactor(factIdx);
                 BitSet joinKeys = new BitSet(numFields);
                 int firstFieldNum = multiJoin.getJoinStart(factIdx);
                 int lastFieldNum = firstFieldNum + numFields;
-                for (int field = joinFields.nextSetBit(firstFieldNum);
-                    field >= firstFieldNum && field < lastFieldNum;
-                    field = joinFields.nextSetBit(field + 1))
-                {
-                    joinKeys.set(field - firstFieldNum);
+                for (RexNode filter : ojFilters) {
+                    if (!(filter instanceof RexCall)) {
+                        continue;
+                    }
+                    RexCall filterCall = (RexCall) filter;
+                    if ((filterCall.getOperator() !=
+                            SqlStdOperatorTable.equalsOperator) ||
+                        !(filterCall.getOperands()[0] instanceof RexInputRef) ||
+                        !(filterCall.getOperands()[1] instanceof RexInputRef))
+                    {
+                        continue;
+                    }
+                    int leftRef =
+                        ((RexInputRef) filterCall.getOperands()[0]).getIndex();
+                    int rightRef =
+                        ((RexInputRef) filterCall.getOperands()[1]).getIndex();
+                    setJoinKey(
+                        joinKeys,
+                        leftRef,
+                        rightRef,
+                        firstFieldNum,
+                        lastFieldNum,
+                        true);
+                }
+                
+                if (joinKeys.cardinality() == 0) {
+                    continue outerLoop;
                 }
                 
                 // make sure the only join fields referenced are the ones in 
@@ -140,6 +164,38 @@ public class LoptOptimizeJoinRule
                     multiJoin.addRemovableOuterJoinFactor(factIdx);
                 }
             }
+        }
+    }
+    
+    /**
+     * Sets a join key if only one of the specified input references corresponds
+     * to a specified factor as determined by its field numbers
+     * 
+     * @param joinKeys join keys to be set if a key is found
+     * @param ref1 first input reference
+     * @param ref2 second input reference
+     * @param firstFieldNum first field number of the factor
+     * @param lastFieldNum last field number + 1 of the factor
+     * @param swap if true, check for the desired input reference in the second
+     * input reference parameter if the first input reference isn't the correct
+     * one
+     */
+    private void setJoinKey(
+        BitSet joinKeys,
+        int ref1,
+        int ref2,
+        int firstFieldNum,
+        int lastFieldNum,
+        boolean swap)
+    {
+        if (ref1 >= firstFieldNum && ref1 < lastFieldNum) {
+            if (!(ref2 >= firstFieldNum && ref2 < lastFieldNum)) {
+                joinKeys.set(ref1 - firstFieldNum);
+            }
+            return;
+        }
+        if (swap) {
+            setJoinKey(joinKeys, ref2, ref1, firstFieldNum, lastFieldNum, false);
         }
     }
     
