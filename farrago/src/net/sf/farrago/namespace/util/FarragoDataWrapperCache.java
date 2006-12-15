@@ -285,16 +285,7 @@ public class FarragoDataWrapperCache
                     null),
                 ex);
         }
-
-        if (baseColumnSet.getAllowedAccess() == null) {
-            // Allowed access not specified, use allowed access from
-            // loadedColumnSet
-            baseColumnSet.setAllowedAccess(
-                loadedColumnSet.getAllowedAccess().toString());
-        } else {
-            // TODO: Check allowed access are the same
-        }
-
+        
         if (rowType != null) {
             assert (rowType.equals(loadedColumnSet.getRowType()));
         }
