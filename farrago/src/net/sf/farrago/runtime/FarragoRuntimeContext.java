@@ -587,11 +587,11 @@ public class FarragoRuntimeContext
     public FennelStreamHandle getStreamHandle(String globalStreamName,
         boolean isInput)
     {
-        repos.beginReposTxn(true);
+        repos.beginTransientTxn();
         try {
             return streamGraph.findStream(repos, globalStreamName, isInput);
         } finally {
-            repos.endReposTxn(false);
+            repos.endTransientTxn();
         }
     }
 
