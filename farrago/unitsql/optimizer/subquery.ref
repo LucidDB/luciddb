@@ -4172,7 +4172,7 @@ FROM `DEPTS2` (state=,code=0)
 | 0       |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- The planner workaround: for the planer used in RelDecorrelator,
+0: jdbc:farrago:> -- The planner workaround: for the planner used in RelDecorrelator,
 0: jdbc:farrago:> -- make sure the RelNode representation remains a tree.
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select (select count(e2.a) from emps3 e1) from emps3 e2;
@@ -4301,6 +4301,41 @@ FROM `DEPTS2` (state=,code=0)
 |           FennelToIteratorConverter                                                                                                                                 |
 |             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                           |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- This used to cause a hang due to a Hep bug
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select
+. . . . . . . . >    (select min(name||' Jr.') from emps2 where deptno = depts2.deptno),
+. . . . . . . . >    (select max(name||' Jr.') from emps2 where deptno = depts2.deptno)
+. . . . . . . . > from depts2;
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                      column0                                                                                                                      |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                         |
+|   FennelReshapeRel(projection=[[1, 3]], outputRowType=[RecordType(VARCHAR(44) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0, VARCHAR(44) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$1) NOT NULL])  |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                                                                                  |
+|       FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER DEPTNO, VARCHAR(44) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" $f1) NOT NULL])                                                                   |
+|         LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                                                                              |
+|           LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$DEPTS2$DEPTNO]])                                                                                                              |
+|           LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                                                                               |
+|             IteratorToFennelConverter                                                                                                                                                                                                             |
+|               IterCalcRel(expr#0..2=[{inputs}], expr#3=[' Jr.'], expr#4=[||($t0, $t3)], $f0=[$t2], $f0=[$t4])                                                                                                                                     |
+|                 FennelToIteratorConverter                                                                                                                                                                                                         |
+|                   LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])                                                                                                                                                                   |
+|                     LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$EMPS2$NAME]])                                                                   |
+|                     LhxAggRel(groupCount=[1])                                                                                                                                                                                                     |
+|                       FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                                                                         |
+|                         LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$DEPTS2$DEPTNO]])                                                                                                |
+|       LhxAggRel(groupCount=[1], agg#0=[MAX(1)])                                                                                                                                                                                                   |
+|         IteratorToFennelConverter                                                                                                                                                                                                                 |
+|           IterCalcRel(expr#0..2=[{inputs}], expr#3=[' Jr.'], expr#4=[||($t0, $t3)], $f0=[$t2], $f0=[$t4])                                                                                                                                         |
+|             FennelToIteratorConverter                                                                                                                                                                                                             |
+|               LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])                                                                                                                                                                       |
+|                 LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$EMPS2$NAME]])                                                                       |
+|                 LhxAggRel(groupCount=[1])                                                                                                                                                                                                         |
+|                   FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                                                                             |
+|                     LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$DEPTS2$DEPTNO]])                                                                                                    |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --------------
 0: jdbc:farrago:> -- clean up --

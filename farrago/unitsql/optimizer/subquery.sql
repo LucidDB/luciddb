@@ -1285,7 +1285,7 @@ select (select count(e2.a) from emps3 e1) from emps4 e2;
 -- should return 0
 select (select count(e2.a) from emps3 e1) from emps4 e2;
 
--- The planner workaround: for the planer used in RelDecorrelator,
+-- The planner workaround: for the planner used in RelDecorrelator,
 -- make sure the RelNode representation remains a tree.
 explain plan for
 select (select count(e2.a) from emps3 e1) from emps3 e2;
@@ -1320,6 +1320,13 @@ FROM
     emps
 where 
     deptno not in (select emps.deptno FROM depts where deptno = emps.deptno);
+
+-- This used to cause a hang due to a Hep bug
+explain plan for
+select
+   (select min(name||' Jr.') from emps2 where deptno = depts2.deptno),
+   (select max(name||' Jr.') from emps2 where deptno = depts2.deptno)
+from depts2;
 
 --------------
 -- clean up --

@@ -580,6 +580,14 @@ public class HepPlanner
         for (HepRelVertex parent : allParents) {
             if (parentTraits != null) {
                 RelNode parentRel = parent.getCurrentRel();
+                if (parentRel instanceof ConverterRel) {
+                    // We don't support automatically chaining conversions.
+                    // Treating a converter as a candidate parent here
+                    // can cause the "iParentMatch" check below to
+                    // throw away a new converter needed in
+                    // the multi-parent DAG case.
+                    continue;
+                }
                 if (!parentRel.getTraits().matches(parentTraits)) {
                     // This parent does not want the converted result.
                     continue;
