@@ -464,35 +464,15 @@ public class FarragoMetadataTest
     
     private void addConcatUniqueKeys(Set<BitSet> keySet)
     {
-        // add concat unique keys
+        // concatenate the shortest unique keys from each side of the join
         // left: 0, (1, 2)
         // right 0, (1, 2)
         // left field length == 5
-        // concatenated unqiue keys are
-        // (0, 5), (0, 6, 7), (1, 2, 5), (1, 2, 6, 7)
+        // shortest concatenated key is (0, 5)
         BitSet keys = new BitSet();
         keys.set(0);
         keys.set(5 + 0);
         keySet.add(keys);
-
-        keys = new BitSet();
-        keys.set(0);
-        keys.set(5 + 1);
-        keys.set(5 + 2);
-        keySet.add(keys);
-
-        keys = new BitSet();
-        keys.set(1);
-        keys.set(2);
-        keys.set(5 + 0);
-        keySet.add(keys);
-
-        keys = new BitSet();
-        keys.set(1);
-        keys.set(2);
-        keys.set(5 + 1);
-        keys.set(5 + 2);
-        keySet.add(keys);      
     }   
 
     public void testUniqueKeysJoinLeft()

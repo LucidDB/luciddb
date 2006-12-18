@@ -71,7 +71,7 @@ public class RelMdUniqueKeys
         RexNode[] projExprs = rel.getProjectExps();
 
         Set<BitSet> projUniqueKeySet = new HashSet<BitSet>();
-
+        
         // Build an input to ouput position map.
         for (int i = 0; i < projExprs.length; i ++) {
             RexNode projExpr = projExprs[i];
@@ -125,9 +125,13 @@ public class RelMdUniqueKeys
         RelNode left = rel.getLeft();
         RelNode right = rel.getRight();
 
-        // first add the different combinations of concatenated unique keys
-        // from the left and the right, adjusting the right hand side keys to
-        // reflect the addition of the left hand side
+        // Originally, we were creating all different combinations of
+        // concatenated unique keys from the left and the right.  However, this
+        // will explode the number of different unique key set combinations as
+        // the number of tables being joined in a single query increases.
+        // Therefore as a temporary workaround, we only concatenate the shortest
+        // length keys from each side of the join, under the assumption that
+        // this will pickup the primary keys from each join factor.
         Set<BitSet> retSet = new HashSet<BitSet>();
         Set<BitSet> leftSet = RelMetadataQuery.getUniqueKeys(left);
         Set<BitSet> rightSet = null;
@@ -135,7 +139,12 @@ public class RelMdUniqueKeys
         Set<BitSet> tmpRightSet = RelMetadataQuery.getUniqueKeys(right);
         int nFieldsOnLeft = left.getRowType().getFieldCount();
 
+        // adjust the keys from the right hand side of the join to reflect
+        // shifting the keys to the right; keeping track of the key set with
+        // the fewest keys
         if (tmpRightSet != null) {
+            BitSet bestRight = null;
+            int bestLen = 0;
             rightSet = new HashSet<BitSet>();
             Iterator itRight = tmpRightSet.iterator();
             while (itRight.hasNext()) {
@@ -146,20 +155,31 @@ public class RelMdUniqueKeys
                     tmpMask.set(bit + nFieldsOnLeft);
                 }
                 rightSet.add(tmpMask);
+                if (bestRight == null || tmpMask.cardinality() < bestLen) {
+                    bestLen = tmpMask.cardinality();
+                    bestRight = tmpMask;
+                }
             }
-        
-            if (leftSet != null) {
+           
+            // find the key set from the left with the fewest keys; then
+            // concatenate the best right key set with that one
+            if (bestRight != null && leftSet != null) {
+                BitSet bestLeft = null;
                 itRight = rightSet.iterator();
-                while (itRight.hasNext()) {
-                    BitSet colMaskRight = (BitSet) itRight.next();
-                    Iterator itLeft = leftSet.iterator();
-                    while (itLeft.hasNext()) {
-                        BitSet colMaskLeft = (BitSet) itLeft.next();
-                        BitSet colMaskConcat = new BitSet();
-                        colMaskConcat.or(colMaskLeft);
-                        colMaskConcat.or(colMaskRight);                
-                        retSet.add(colMaskConcat);
-                    }
+                Iterator itLeft = leftSet.iterator();
+                while (itLeft.hasNext()) {
+                    BitSet colMaskLeft = (BitSet) itLeft.next();
+                    if (bestLeft == null || colMaskLeft.cardinality() < bestLen)
+                    {
+                        bestLen = colMaskLeft.cardinality();
+                        bestLeft = colMaskLeft;
+                    }                       
+                }
+                if (bestLeft != null) {
+                    BitSet colMaskConcat = new BitSet();
+                    colMaskConcat.or(bestLeft);
+                    colMaskConcat.or(bestRight);                
+                    retSet.add(colMaskConcat);
                 }
             }
         }
