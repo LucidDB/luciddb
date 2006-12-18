@@ -1299,6 +1299,12 @@ public class LoptMetadataTest
 
         Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
         assertTrue(result.equals(expected));
+        
+        for (BitSet key : expected) {
+            Boolean boolResult =
+                RelMetadataQuery.areColumnsUnique(rootRel, key);
+            assertTrue(boolResult.equals(true));
+        }
     }
     
     private Set<RelColumnOrigin> checkSimpleColumnOrigin(String sql)

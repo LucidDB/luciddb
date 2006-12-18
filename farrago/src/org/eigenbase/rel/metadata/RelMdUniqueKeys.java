@@ -125,13 +125,15 @@ public class RelMdUniqueKeys
         RelNode left = rel.getLeft();
         RelNode right = rel.getRight();
 
-        // Originally, we were creating all different combinations of
-        // concatenated unique keys from the left and the right.  However, this
-        // will explode the number of different unique key set combinations as
-        // the number of tables being joined in a single query increases.
-        // Therefore as a temporary workaround, we only concatenate the shortest
-        // length keys from each side of the join, under the assumption that
-        // this will pickup the primary keys from each join factor.
+        // first add the different combinations of concatenated unique keys
+        // from the left and the right, adjusting the right hand side keys to
+        // reflect the addition of the left hand side
+        //
+        // NOTE zfong 12/18/06 - If the number of tables in a join is large,
+        // the number of combinations of unique key sets will explode.  If
+        // that is undesirable, use RelMetadataQuery.areColumnsUnique() as
+        // an alternative way of getting unique key information.
+
         Set<BitSet> retSet = new HashSet<BitSet>();
         Set<BitSet> leftSet = RelMetadataQuery.getUniqueKeys(left);
         Set<BitSet> rightSet = null;
@@ -139,12 +141,7 @@ public class RelMdUniqueKeys
         Set<BitSet> tmpRightSet = RelMetadataQuery.getUniqueKeys(right);
         int nFieldsOnLeft = left.getRowType().getFieldCount();
 
-        // adjust the keys from the right hand side of the join to reflect
-        // shifting the keys to the right; keeping track of the key set with
-        // the fewest keys
         if (tmpRightSet != null) {
-            BitSet bestRight = null;
-            int bestLen = 0;
             rightSet = new HashSet<BitSet>();
             Iterator itRight = tmpRightSet.iterator();
             while (itRight.hasNext()) {
@@ -155,31 +152,20 @@ public class RelMdUniqueKeys
                     tmpMask.set(bit + nFieldsOnLeft);
                 }
                 rightSet.add(tmpMask);
-                if (bestRight == null || tmpMask.cardinality() < bestLen) {
-                    bestLen = tmpMask.cardinality();
-                    bestRight = tmpMask;
-                }
             }
-           
-            // find the key set from the left with the fewest keys; then
-            // concatenate the best right key set with that one
-            if (bestRight != null && leftSet != null) {
-                BitSet bestLeft = null;
+        
+            if (leftSet != null) {
                 itRight = rightSet.iterator();
-                Iterator itLeft = leftSet.iterator();
-                while (itLeft.hasNext()) {
-                    BitSet colMaskLeft = (BitSet) itLeft.next();
-                    if (bestLeft == null || colMaskLeft.cardinality() < bestLen)
-                    {
-                        bestLen = colMaskLeft.cardinality();
-                        bestLeft = colMaskLeft;
-                    }                       
-                }
-                if (bestLeft != null) {
-                    BitSet colMaskConcat = new BitSet();
-                    colMaskConcat.or(bestLeft);
-                    colMaskConcat.or(bestRight);                
-                    retSet.add(colMaskConcat);
+                while (itRight.hasNext()) {
+                    BitSet colMaskRight = (BitSet) itRight.next();
+                    Iterator itLeft = leftSet.iterator();
+                    while (itLeft.hasNext()) {
+                        BitSet colMaskLeft = (BitSet) itLeft.next();
+                        BitSet colMaskConcat = new BitSet();
+                        colMaskConcat.or(colMaskLeft);
+                        colMaskConcat.or(colMaskRight);                
+                        retSet.add(colMaskConcat);
+                    }
                 }
             }
         }
@@ -196,8 +182,10 @@ public class RelMdUniqueKeys
 
         // determine if either or both the LHS and RHS are unique on the
         // equijoin columns
-        Boolean leftUnique = RelMdUtil.areColumnsUnique(left, leftJoinCols);
-        Boolean rightUnique = RelMdUtil.areColumnsUnique(right, rightJoinCols);
+        Boolean leftUnique =
+            RelMetadataQuery.areColumnsUnique(left, leftJoinCols);
+        Boolean rightUnique =
+            RelMetadataQuery.areColumnsUnique(right, rightJoinCols);
 
         // if the right hand side is unique on its equijoin columns, then we can 
         // add the unique keys from left if the left hand side is not null

@@ -168,31 +168,6 @@ public class RelMdUtil
     }
 
     /**
-     * Returns true if the columns represented in a bit mask form a unique
-     * column set.
-     *
-     * @param rel the relnode that the column mask correponds to
-     * @param colMask bit mask containing columns that will be tested
-     * for uniqueness
-     *
-     * @return true if bit mask represents a unique column set, or null if no
-     * information on unique keys
-     */
-    public static Boolean areColumnsUnique(RelNode rel, BitSet colMask)
-    {
-        Set<BitSet> uniqueColSets = RelMetadataQuery.getUniqueKeys(rel);
-        if (uniqueColSets == null) {
-            return null;
-        }
-        for (BitSet colSet : uniqueColSets) {
-            if (RelOptUtil.contains(colMask, colSet)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Returns true if the columns represented in a bit mask are definitely
      * known to form a unique column set.
      *
@@ -206,7 +181,7 @@ public class RelMdUtil
     public static boolean areColumnsDefinitelyUnique(
         RelNode rel, BitSet colMask)
     {
-        Boolean b = areColumnsUnique(rel, colMask);
+        Boolean b = RelMetadataQuery.areColumnsUnique(rel, colMask);
         if (b == null) {
             return false;
         }
@@ -222,17 +197,7 @@ public class RelMdUtil
             colMask.set(columnRefs.get(i).getIndex());
         }
         
-        Set<BitSet> uniqueColSets = RelMetadataQuery.getUniqueKeys(rel);
-        if (uniqueColSets == null) {
-            return null;
-        }
-        
-        for (BitSet colSet : uniqueColSets) {
-            if (RelOptUtil.contains(colMask, colSet)) {
-                return true;
-            }
-        }
-        return false;
+        return RelMetadataQuery.areColumnsUnique(rel, colMask);
     }
 
     public static boolean areColumnsDefinitelyUnique(

@@ -335,7 +335,9 @@ public class FarragoMetadataTest
 
     private void checkUniqueKeys(
         String sql,
-        Set<BitSet> expected)
+        Set<BitSet> expected,
+        Set<BitSet> nonUniqueKeys,
+        Boolean nonUniqueExpected)
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
@@ -345,6 +347,22 @@ public class FarragoMetadataTest
 
         Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
         assertTrue(result.equals(expected));
+
+        checkColumnUniqueness(expected, true);
+        checkColumnUniqueness(nonUniqueKeys, nonUniqueExpected);
+    }
+    
+    private void checkColumnUniqueness(Set<BitSet> keySet, Boolean expected)
+    {
+        for (BitSet key : keySet) {
+            Boolean result =
+                RelMetadataQuery.areColumnsUnique(rootRel, key);
+            if (expected == null) {
+                assertTrue(result == null);
+            } else {
+                assertTrue(result.equals(expected));
+            }
+        }
     }
 
     public void testUniqueKeysTab()
@@ -360,11 +378,13 @@ public class FarragoMetadataTest
         uniqKey.set(1);
         uniqKey.set(2);
         expected.add(uniqKey);
-
+        
         // this test case tests project, sort, filter, and table
         checkUniqueKeys(
             "select * from tab where c0 = 1 order by c1",
-            expected);
+            expected,
+            new HashSet<BitSet>(),
+            null);
     }
 
     public void testUniqueKeysProj1()
@@ -376,10 +396,16 @@ public class FarragoMetadataTest
         primKey.set(1);
         expected.add(primKey);
         
+        Set<BitSet> nonUniqueKey = new HashSet<BitSet>();
+        BitSet key = new BitSet();
+        key.set(0);
+        
         // this test case tests project, sort, filter, and table
         checkUniqueKeys(
             "select c1, c0 from tab where c0 = 1 order by c1",
-            expected);
+            expected,
+            nonUniqueKey,
+            false);
     }
 
     public void testUniqueKeysProj2()
@@ -392,10 +418,16 @@ public class FarragoMetadataTest
         uniqKey.set(2);
         expected.add(uniqKey);
         
+        Set<BitSet> nonUniqueKey = new HashSet<BitSet>();
+        BitSet key = new BitSet();
+        key.set(1);
+        
         // this test case tests project, sort, filter, and table
         checkUniqueKeys(
             "select c2, c3, c1 from tab where c0 = 1 order by c1",
-            expected);
+            expected,
+            nonUniqueKey,
+            false);
     }
 
     public void testUniqueKeysProj3()
@@ -408,10 +440,17 @@ public class FarragoMetadataTest
         uniqKey.set(2);
         expected.add(uniqKey);
         
+        Set<BitSet> nonUniqueKey = new HashSet<BitSet>();
+        BitSet key = new BitSet();
+        key.set(1);
+        nonUniqueKey.add(key);
+        
         // this test case tests project, sort, filter, and table
         checkUniqueKeys(
             "select c2, c3 + c0, c1 from tab where c0 = 1 order by c1",
-            expected);
+            expected,
+            nonUniqueKey,
+            null);
     }
     
     public void testUniqueKeysAgg()
@@ -423,10 +462,17 @@ public class FarragoMetadataTest
         groupKey.set(0);
         groupKey.set(1);
         expected.add(groupKey);
+        
+        Set<BitSet> nonUniqueKey = new HashSet<BitSet>();
+        BitSet key = new BitSet();
+        key.set(2);
+        nonUniqueKey.add(key);
 
         checkUniqueKeys(
             "select c2, c4, count(*) from tab group by c2, c4",
-            expected);
+            expected,
+            nonUniqueKey,
+            false);
     }
 
     public void testUniqueKeysCorrelateRel()
@@ -444,10 +490,15 @@ public class FarragoMetadataTest
             "select t2.c0, (select sum(t1.c0) from tab t1 where t1.c1 = t2.c2) from tab t2");
 
         Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
-        assertTrue(result.equals(expected));        
+        assertTrue(result.equals(expected));
+        
+        checkColumnUniqueness(expected, true);
     }
     
-    private void checkUniqueKeysJoin(String sql, Set<BitSet> expected)
+    private void checkUniqueKeysJoin(
+        String sql,
+        Set<BitSet> expected,
+        Set<BitSet> nonUniqueKeySet)
         throws Exception
     {
         // tests that call this method will test both joins and semijoins
@@ -460,19 +511,60 @@ public class FarragoMetadataTest
 
         Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
         assertTrue(result.equals(expected));
+        
+        checkColumnUniqueness(expected, true);
+        checkColumnUniqueness(nonUniqueKeySet, false);
     }
     
-    private void addConcatUniqueKeys(Set<BitSet> keySet)
+    private void addConcatUniqueKeys(
+        Set<BitSet> keySet,
+        Set<BitSet> nonUniqueKeySet)
     {
-        // concatenate the shortest unique keys from each side of the join
+        // add concat unique keys
         // left: 0, (1, 2)
         // right 0, (1, 2)
         // left field length == 5
-        // shortest concatenated key is (0, 5)
+        // concatenated unqiue keys are
+        // (0, 5), (0, 6, 7), (1, 2, 5), (1, 2, 6, 7)
         BitSet keys = new BitSet();
         keys.set(0);
         keys.set(5 + 0);
         keySet.add(keys);
+        
+        keys = new BitSet();
+        keys.set(0);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        keySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 0);
+        keySet.add(keys);
+
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        keys.set(5 + 1);
+        keys.set(5 + 2);
+        keySet.add(keys);
+        
+        // put together a set of keys that aren't unique
+        // (1, 6), (2, 3), (8)
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(6);
+        nonUniqueKeySet.add(keys);
+        
+        keys = new BitSet();
+        keys.set(2);
+        keys.set(3);
+        nonUniqueKeySet.add(keys);
+        
+        keys = new BitSet();
+        keys.set(8);
+        nonUniqueKeySet.add(keys);
     }   
 
     public void testUniqueKeysJoinLeft()
@@ -491,11 +583,22 @@ public class FarragoMetadataTest
         keys.set(5 + 2);
         expected.add(keys);
 
-        addConcatUniqueKeys(expected);
+        Set<BitSet> nonUniqueKeySet = new HashSet<BitSet>();
+        keys = new BitSet();
+        keys.set(0);
+        nonUniqueKeySet.add(keys);
+        
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        nonUniqueKeySet.add(keys);
+        
+        addConcatUniqueKeys(expected, nonUniqueKeySet);
         
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2 where t1.c0 = t2.c3",
-            expected);
+            expected,
+            nonUniqueKeySet);
     }
 
     public void testUniqueKeysJoinRight()
@@ -514,11 +617,22 @@ public class FarragoMetadataTest
         keys.set(2);
         expected.add(keys);
 
-        addConcatUniqueKeys(expected);
+        Set<BitSet> nonUniqueKeySet = new HashSet<BitSet>();     
+        keys = new BitSet();
+        keys.set(5);
+        nonUniqueKeySet.add(keys);
+        
+        keys = new BitSet();
+        keys.set(6);
+        keys.set(7);
+        nonUniqueKeySet.add(keys);
+        
+        addConcatUniqueKeys(expected, nonUniqueKeySet);
         
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2 where t1.c3 = t2.c1 and t1.c4 = t2.c2",
-            expected);
+            expected,
+            nonUniqueKeySet);
     }
 
     public void testUniqueKeysJoinNotUnique()
@@ -528,11 +642,32 @@ public class FarragoMetadataTest
         // returned as a result of the join
         Set<BitSet> expected = new HashSet<BitSet>();
 
-        addConcatUniqueKeys(expected);
+        Set<BitSet> nonUniqueKeySet = new HashSet<BitSet>();
+        BitSet keys = new BitSet();
+        keys = new BitSet();
+        keys.set(0);
+        nonUniqueKeySet.add(keys);
+        
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        nonUniqueKeySet.add(keys);
+        
+        keys = new BitSet();
+        keys.set(5);
+        nonUniqueKeySet.add(keys);
+        
+        keys = new BitSet();
+        keys.set(6);
+        keys.set(7);
+        nonUniqueKeySet.add(keys);
+        
+        addConcatUniqueKeys(expected, nonUniqueKeySet);
         
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2 where t1.c3 = t2.c3",
-            expected);
+            expected,
+            nonUniqueKeySet);
     }
 
     public void testUniqueKeysCartesianProduct()
@@ -542,11 +677,32 @@ public class FarragoMetadataTest
         // returned as a result of the join
         Set<BitSet> expected = new HashSet<BitSet>();
 
-        addConcatUniqueKeys(expected);  
+        Set<BitSet> nonUniqueKeySet = new HashSet<BitSet>();
+        BitSet keys = new BitSet();
+        keys = new BitSet();
+        keys.set(0);
+        nonUniqueKeySet.add(keys);
+        
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        nonUniqueKeySet.add(keys);
+        
+        keys = new BitSet();
+        keys.set(5);
+        nonUniqueKeySet.add(keys);
+        
+        keys = new BitSet();
+        keys.set(6);
+        keys.set(7);
+        nonUniqueKeySet.add(keys);
+        
+        addConcatUniqueKeys(expected, nonUniqueKeySet);
         
         checkUniqueKeysJoin(
             "select * from tab t1, tab t2",
-            expected);
+            expected,
+            nonUniqueKeySet);
     }
     
     public void testUniqueKeysLeftOuterJoin()
@@ -557,12 +713,23 @@ public class FarragoMetadataTest
         // the join
 
         Set<BitSet> expected = new HashSet<BitSet>();        
+
+        Set<BitSet> nonUniqueKeySet = new HashSet<BitSet>();
+        BitSet keys = new BitSet();
+        keys.set(5);
+        nonUniqueKeySet.add(keys);
         
-        addConcatUniqueKeys(expected);
+        keys = new BitSet();
+        keys.set(6);
+        keys.set(7);
+        nonUniqueKeySet.add(keys);
+        
+        addConcatUniqueKeys(expected, nonUniqueKeySet);
         
         checkUniqueKeysJoin(
             "select * from tab t1 left outer join tab t2 on t1.c0 = t2.c3",
-            expected);
+            expected,
+            nonUniqueKeySet);
     }
     
     public void testUniqueKeysRightOuterJoin()
@@ -573,12 +740,23 @@ public class FarragoMetadataTest
         // the join
         Set<BitSet> expected = new HashSet<BitSet>();
 
-        addConcatUniqueKeys(expected);
+        Set<BitSet> nonUniqueKeySet = new HashSet<BitSet>();
+        BitSet keys = new BitSet();
+        keys.set(0);
+        nonUniqueKeySet.add(keys);
+        
+        keys = new BitSet();
+        keys.set(1);
+        keys.set(2);
+        nonUniqueKeySet.add(keys);
+        
+        addConcatUniqueKeys(expected, nonUniqueKeySet);
         
         checkUniqueKeysJoin(
             "select * from tab t1 right outer join tab t2 " +
             "on t1.c3 = t2.c1 and t1.c4 = t2.c2",
-            expected);
+            expected,
+            nonUniqueKeySet);
     }
     
     private void checkDistinctRowCount(

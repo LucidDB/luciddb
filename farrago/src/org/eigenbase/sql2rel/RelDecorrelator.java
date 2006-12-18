@@ -2068,12 +2068,15 @@ public class RelDecorrelator
                     return;
                 }
                 
-                Set<BitSet> uniqueKeys =
-                    RelMetadataQuery.getUniqueKeys(leftInputRel);
+                int nFields = leftInputRel.getRowType().getFieldCount();
+                BitSet allCols = new BitSet(nFields);
+                RelOptUtil.setRexInputBitmap(allCols, 0, nFields);
                 
                 // leftInputRel contains unique keys
-                // i.e. each row is distinct and can group by on all the left fields
-                if (uniqueKeys == null || uniqueKeys.isEmpty()) {
+                // i.e. each row is distinct and can group by on all the left
+                // fields
+                if (!RelMdUtil.areColumnsDefinitelyUnique(leftInputRel, allCols))
+                {
                     sqlToRelTracer.fine(
                         "There are no unique keys for " +
                         leftInputRel.toString());

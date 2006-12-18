@@ -3502,27 +3502,18 @@ FROM `DEPTS2` (state=,code=0)
 . . . . . . . . >      from test1, test4 
 . . . . . . . . >      where test4.b = test2.b and test1.a = test2.a) 
 . . . . . . . . > from test2;
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                   column0                                                                                    |
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                    |
-|   FennelReshapeRel(projection=[[4]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])                                                                                    |
-|     LhxJoinRel(leftKeys=[[1, 0]], rightKeys=[[0, 1]], joinType=[LEFT])                                                                                                       |
-|       LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A, SYS$CLUSTERED_INDEX$TEST2$B]])                         |
-|       LhxAggRel(groupCount=[2], agg#0=[SINGLE_VALUE(2)])                                                                                                                     |
-|         IteratorToFennelConverter                                                                                                                                            |
-|           IterCalcRel(expr#0..4=[{inputs}], expr#5=[+($t0, $t3)], $f0=[$t1], $f1=[$t2], EXPR$0=[$t5])                                                                        |
-|             FennelToIteratorConverter                                                                                                                                        |
-|               LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])                                                                                                  |
-|                 FennelReshapeRel(projection=[[1, 2, 3]], outputRowType=[RecordType(INTEGER B, INTEGER $f0, INTEGER NOT NULL $f1) NOT NULL])                                  |
-|                   LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])                                                                                              |
-|                     LcsRowScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST1$A, SYS$CLUSTERED_INDEX$TEST1$B]])           |
-|                     LhxAggRel(groupCount=[2])                                                                                                                                |
-|                       FennelRenameRel(fieldNames=[[$f0, $f1]])                                                                                                               |
-|                         LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[[1, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A, SYS$CLUSTERED_INDEX$TEST2$B]])  |
-|                 FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL B, INTEGER CAST($0):INTEGER) NOT NULL])                                     |
-|                   LcsRowScanRel(table=[[LOCALDB, SALES, TEST4]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST4$B]])                                        |
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                column0                                                                                                 |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..5=[{inputs}], expr#6=[IS NULL($t4)], expr#7=[null], expr#8=[CAST($t7):INTEGER], expr#9=[+($t3, $t4)], expr#10=[CAST($t9):INTEGER], expr#11=[CASE($t6, $t8, $t10)], EXPR$0=[$t11])  |
+|   FennelToIteratorConverter                                                                                                                                                                            |
+|     LhxJoinRel(leftKeys=[[1, 0]], rightKeys=[[3, 0]], joinType=[LEFT])                                                                                                                                 |
+|       LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A, SYS$CLUSTERED_INDEX$TEST2$B]])                                                   |
+|       FennelReshapeRel(projection=[[0, 1, 2, 2]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER B, INTEGER NOT NULL B0, INTEGER CAST($2):INTEGER) NOT NULL])                                   |
+|         FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                               |
+|           LcsRowScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST1$A, SYS$CLUSTERED_INDEX$TEST1$B]])                                               |
+|           LcsRowScanRel(table=[[LOCALDB, SALES, TEST4]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST4$B]])                                                                          |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table test1;
 0: jdbc:farrago:> drop table test2;
