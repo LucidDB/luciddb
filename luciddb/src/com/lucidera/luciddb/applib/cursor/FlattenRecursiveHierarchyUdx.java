@@ -76,6 +76,35 @@ public abstract class FlattenRecursiveHierarchyUdx
         PreparedStatement resultInserter)
         throws ApplibException
     {
+        executeImpl(inputSet, maxDepth, false, resultInserter);
+    }
+        
+    /**
+     * Same as execute, but returns rows for non-leaf vertices as well.
+     * Produces one extra column (after the first two fixed columns)
+     * containing a boolean indicating whether a given output row
+     * corresponds to a non-leaf vertex.
+     *
+     * @param inputSet input table
+     * @param maxDepth nominal maximal depth of paths
+     * @param resultInserter output table
+     * @exception ApplibException
+     */
+    public static void executeAllLevels(
+        ResultSet inputSet,
+        PreparedStatement resultInserter)
+        throws ApplibException
+    {
+        executeImpl(inputSet, 15, true, resultInserter);
+    }
+    
+    private static void executeImpl(
+        ResultSet inputSet,
+        int maxDepth,
+        boolean allLevels,
+        PreparedStatement resultInserter)
+        throws ApplibException
+    {
 
         //~ validate -----------------------------------------------------------
 
@@ -125,15 +154,17 @@ public abstract class FlattenRecursiveHierarchyUdx
         }
 
       
-        // ~ Output paths to leaves --------------------------------------------
+        // ~ Output paths to vertices-------------------------------------------
         Iterator iter = (inGraph.vertexSet()).iterator();
 
         while (iter.hasNext()) {
             String vertex = (String) iter.next();
 
-            if (inGraph.outDegreeOf(vertex) == 0) {
-                outputPathsToLeaf(
-                    vertex, maxDepth, inGraph, path, pathsFound, resultInserter);
+            boolean isLeaf = (inGraph.outDegreeOf(vertex) == 0);
+            if (allLevels || isLeaf) {
+                outputPathsToVertex(
+                    vertex, maxDepth, inGraph, path, pathsFound,
+                    allLevels, !isLeaf, resultInserter);
             }
         }
     }
@@ -179,19 +210,27 @@ public abstract class FlattenRecursiveHierarchyUdx
      * @param inGraph the input graph
      * @param path
      * @param pathsFound map of pairs <node, sets-of-path-found-from-node>
+     * @param allLevels
+     * @param nonLeaf
      * @param resultInserter output table
      * @exception ApplibException
      */
-    private static void outputPathsToLeaf(
+    private static void outputPathsToVertex(
         String node,
         int maxDepth,
         DirectedGraph<String, DefaultEdge> inGraph,
         ArrayList<String> path,
         Map pathsFound,
+        boolean allLevels,
+        boolean nonLeaf,
         PreparedStatement resultInserter)
         throws ApplibException    
-    {    
+    {
         path.clear();
+
+        if (nonLeaf) {
+            assert(allLevels);
+        }
         
         // walk up the graph to build path
         String currNode = node;
@@ -229,9 +268,11 @@ public abstract class FlattenRecursiveHierarchyUdx
                     pathList.get(i).addAll(len,path);
                     try {
                         outputOneRow(
-                            pathList.get(i), maxDepth, true, resultInserter);
+                            pathList.get(i), maxDepth, true,
+                            allLevels, nonLeaf, resultInserter);
                     } catch (SQLException e) {
-                        throw ApplibResourceObject.get().CannotWriteOutput.ex(e);
+                        throw ApplibResourceObject.get().CannotWriteOutput.ex(
+                            e);
                     }
                 }
                 return;
@@ -239,7 +280,8 @@ public abstract class FlattenRecursiveHierarchyUdx
         }  
         Collections.reverse(path);
         try {
-        outputOneRow(path, maxDepth, false, resultInserter);
+            outputOneRow(path, maxDepth, false,
+                allLevels, nonLeaf, resultInserter);
         } catch (SQLException e) {
             throw ApplibResourceObject.get().CannotWriteOutput.ex(e);
         }
@@ -251,7 +293,9 @@ public abstract class FlattenRecursiveHierarchyUdx
      * to one row of the output table
      * @param path list of vertices
      * @param maxDepth maximal number of vertices in the path
-     * @param multiple true if there is multiple paths ending at the leaf
+     * @param multiple true if there is multiple paths ending at the vertex
+     * @param allLevels true if producing rows for both leaf and non-leaf
+     * @param nonLeaf true if this row represents a non-leaf
      * @param resultInserter out put table
      * @exception SQLException
      */
@@ -259,6 +303,8 @@ public abstract class FlattenRecursiveHierarchyUdx
         List<String> path,
         int maxDepth,
         boolean multiple,
+        boolean allLevels,
+        boolean nonLeaf,
         PreparedStatement resultInserter)
         throws SQLException
     {
@@ -266,15 +312,20 @@ public abstract class FlattenRecursiveHierarchyUdx
 
         resultInserter.setInt(1, len);
         resultInserter.setBoolean(2, multiple);
+        int iBase = 3;
+        if (allLevels) {
+            resultInserter.setBoolean(iBase, nonLeaf);
+            ++iBase;
+        }
         
         int i;
         for (i=0; (i<len)&&(i<maxDepth); i++) {
-            resultInserter.setString(i+3, path.get(i));
+            resultInserter.setString(i+iBase, path.get(i));
         }
 
         String pad = path.get(i-1);
         for (; i<maxDepth; i++) {
-            resultInserter.setString(i+3, pad);
+            resultInserter.setString(i+iBase, pad);
         }
 
         resultInserter.executeUpdate();
