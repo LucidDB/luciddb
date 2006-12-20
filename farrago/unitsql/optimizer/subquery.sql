@@ -128,6 +128,52 @@ select name from emps
 where not (deptno in (select deptno from depts where emps.empno < depts.deptno*10))
 order by name;
 
+-- 1.7 test NOT push down works
+explain plan without implementation for
+select empno from emps 
+where not ((deptno, name) in (select deptno, name from depts) and deptno is not null 
+           or deptno in (select deptno + 10 from depts));
+
+explain plan for
+select empno from emps 
+where not ((deptno, name) in (select deptno, name from depts) and deptno is not null 
+           or deptno in (select deptno + 10 from depts));
+
+select empno from emps 
+where not ((deptno, name) in (select deptno, name from depts) and deptno is not null 
+           or deptno in (select deptno + 10 from depts))
+order by name;
+
+explain plan without implementation for
+select min(empno) from emps group by deptno, name
+having not ((deptno, name) in (select deptno, name from depts) and name is not null 
+           or deptno in (select deptno + 10 from depts));
+
+explain plan for
+select min(empno) from emps group by deptno, name
+having not ((deptno, name) in (select deptno, name from depts) and name is not null 
+           or deptno in (select deptno + 10 from depts));
+
+select min(empno) from emps group by deptno, name
+having not ((deptno, name) in (select deptno, name from depts) and name is not null 
+           or deptno in (select deptno + 10 from depts));
+
+-- a bug discovered when doing the NOT pushdown
+explain plan without implementation for 
+select empno from emps 
+where not (name in (select name from depts))
+      and exists(select * from depts where deptno = emps.deptno);
+
+explain plan for 
+select empno from emps 
+where not (name in (select name from depts))
+      and exists(select * from depts where deptno = emps.deptno);
+
+select empno from emps 
+where not (name in (select name from depts))
+      and exists(select * from depts where deptno = emps.deptno)
+order by empno;
+
 -- 2.1 uncorrelated exists.
 -- Need to limit to at most one row on join RHS; Broadbase inserts count(*).
 -- LucidDB uses a aggregate function(MIN(TRUE)) that generates the value TRUE

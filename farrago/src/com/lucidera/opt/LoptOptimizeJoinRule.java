@@ -1084,9 +1084,7 @@ public class LoptOptimizeJoinRule
                     // null generating factor in an outer join; so make the
                     // type nullable
                     newType =
-                        typeFactory.createTypeWithNullability(
-                            typeFactory.createSqlType(newType.getSqlTypeName()),
-                            true);
+                        typeFactory.createTypeWithNullability(newType, true);
                 }
                 projExpr =
                     rexBuilder.makeCast(newType, rexBuilder.constantNull());

@@ -10,17 +10,18 @@
 0: jdbc:farrago:> -- 1.1 uncorrelated IN
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select name from emps where deptno in (select deptno from depts) order by name;
-+------------------------------------------------------------+
-|                          column0                           |
-+------------------------------------------------------------+
-| SortRel(sort0=[$0], dir0=[Ascending])                      |
-|   ProjectRel(NAME=[$1])                                    |
-|     JoinRel(condition=[=($2, $10)], joinType=[inner])      |
-|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])       |
-|       AggregateRel(groupCount=[1])                         |
-|         ProjectRel(DEPTNO=[$0])                            |
-|           TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])  |
-+------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------+
+|                                                             column0                                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
+| SortRel(sort0=[$0], dir0=[Ascending])                                                                                            |
+|   ProjectRel(NAME=[$1])                                                                                                          |
+|     JoinRel(condition=[=($10, $11)], joinType=[inner])                                                                           |
+|       ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$2])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                           |
+|       AggregateRel(groupCount=[1])                                                                                               |
+|         ProjectRel(DEPTNO=[$0])                                                                                                  |
+|           TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                        |
++----------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where deptno in (select deptno from depts) order by name;
@@ -48,19 +49,20 @@
 . . . . . . . . > select name from emps
 . . . . . . . . > where (empno, deptno) in (select emps.empno, depts.deptno from emps, depts)
 . . . . . . . . > order by name;
-+-------------------------------------------------------------------------+
-|                                 column0                                 |
-+-------------------------------------------------------------------------+
-| SortRel(sort0=[$0], dir0=[Ascending])                                   |
-|   ProjectRel(NAME=[$1])                                                 |
-|     JoinRel(condition=[AND(=($0, $10), =($2, $11))], joinType=[inner])  |
-|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                    |
-|       AggregateRel(groupCount=[2])                                      |
-|         ProjectRel(EMPNO=[$0], DEPTNO=[$10])                            |
-|           JoinRel(condition=[true], joinType=[inner])                   |
-|             TableAccessRel(table=[[LOCALDB, SALES, EMPS]])              |
-|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])             |
-+-------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                   column0                                                                   |
++---------------------------------------------------------------------------------------------------------------------------------------------+
+| SortRel(sort0=[$0], dir0=[Ascending])                                                                                                       |
+|   ProjectRel(NAME=[$1])                                                                                                                     |
+|     JoinRel(condition=[AND(=($10, $12), =($11, $13))], joinType=[inner])                                                                    |
+|       ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$0], $f11=[$2])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                      |
+|       AggregateRel(groupCount=[2])                                                                                                          |
+|         ProjectRel(EMPNO=[$0], DEPTNO=[$10])                                                                                                |
+|           JoinRel(condition=[true], joinType=[inner])                                                                                       |
+|             TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                  |
+|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                 |
++---------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps
@@ -95,18 +97,19 @@
 . . . . . . . . > select name from emps
 . . . . . . . . > where deptno in (select deptno from depts where emps.empno < depts.deptno*10)
 . . . . . . . . > order by name;
-+---------------------------------------------------------------------------------------------+
-|                                           column0                                           |
-+---------------------------------------------------------------------------------------------+
-| SortRel(sort0=[$0], dir0=[Ascending])                                                       |
-|   ProjectRel(NAME=[$1])                                                                     |
-|     CorrelatorRel(condition=[=($2, $10)], joinType=[inner], correlations=[[var0=offset0]])  |
-|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                        |
-|       AggregateRel(groupCount=[1])                                                          |
-|         ProjectRel(DEPTNO=[$0])                                                             |
-|           FilterRel(condition=[<($cor0.EMPNO, *($0, 10))])                                  |
-|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                 |
-+---------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------+
+|                                                             column0                                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
+| SortRel(sort0=[$0], dir0=[Ascending])                                                                                            |
+|   ProjectRel(NAME=[$1])                                                                                                          |
+|     CorrelatorRel(condition=[=($10, $11)], joinType=[inner], correlations=[[var0=offset0]])                                      |
+|       ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$2])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                           |
+|       AggregateRel(groupCount=[1])                                                                                               |
+|         ProjectRel(DEPTNO=[$0])                                                                                                  |
+|           FilterRel(condition=[<($cor0.EMPNO, *($0, 10))])                                                                       |
+|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps
@@ -146,35 +149,37 @@
 . . . . . . . . > select name from emps
 . . . . . . . . > where deptno in (select deptno from depts where empno < depts.deptno*10)
 . . . . . . . . > order by name;
-+---------------------------------------------------------------------------------------------+
-|                                           column0                                           |
-+---------------------------------------------------------------------------------------------+
-| SortRel(sort0=[$0], dir0=[Ascending])                                                       |
-|   ProjectRel(NAME=[$1])                                                                     |
-|     CorrelatorRel(condition=[=($2, $10)], joinType=[inner], correlations=[[var0=offset0]])  |
-|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                        |
-|       AggregateRel(groupCount=[1])                                                          |
-|         ProjectRel(DEPTNO=[$0])                                                             |
-|           FilterRel(condition=[<($cor0.EMPNO, *($0, 10))])                                  |
-|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                 |
-+---------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------+
+|                                                             column0                                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
+| SortRel(sort0=[$0], dir0=[Ascending])                                                                                            |
+|   ProjectRel(NAME=[$1])                                                                                                          |
+|     CorrelatorRel(condition=[=($10, $11)], joinType=[inner], correlations=[[var0=offset0]])                                      |
+|       ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$2])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                           |
+|       AggregateRel(groupCount=[1])                                                                                               |
+|         ProjectRel(DEPTNO=[$0])                                                                                                  |
+|           FilterRel(condition=[<($cor0.EMPNO, *($0, 10))])                                                                       |
+|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select name from emps
 . . . . . . . . > where deptno in (select deptno from depts where empno < deptno*10)
 . . . . . . . . > order by name;
-+---------------------------------------------------------------------------------------------+
-|                                           column0                                           |
-+---------------------------------------------------------------------------------------------+
-| SortRel(sort0=[$0], dir0=[Ascending])                                                       |
-|   ProjectRel(NAME=[$1])                                                                     |
-|     CorrelatorRel(condition=[=($2, $10)], joinType=[inner], correlations=[[var0=offset0]])  |
-|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                        |
-|       AggregateRel(groupCount=[1])                                                          |
-|         ProjectRel(DEPTNO=[$0])                                                             |
-|           FilterRel(condition=[<($cor0.EMPNO, *($0, 10))])                                  |
-|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                 |
-+---------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------+
+|                                                             column0                                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
+| SortRel(sort0=[$0], dir0=[Ascending])                                                                                            |
+|   ProjectRel(NAME=[$1])                                                                                                          |
+|     CorrelatorRel(condition=[=($10, $11)], joinType=[inner], correlations=[[var0=offset0]])                                      |
+|       ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$2])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                           |
+|       AggregateRel(groupCount=[1])                                                                                               |
+|         ProjectRel(DEPTNO=[$0])                                                                                                  |
+|           FilterRel(condition=[<($cor0.EMPNO, *($0, 10))])                                                                       |
+|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 1.2 is a special case of correlated exists. Equivalent to:
 0: jdbc:farrago:> explain plan without implementation for
@@ -253,19 +258,19 @@
 0: jdbc:farrago:> -- uncorrelated NOT IN
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select name from emps where deptno not in (select deptno from depts);
-+----------------------------------------------------------------+
-|                            column0                             |
-+----------------------------------------------------------------+
-| ProjectRel(NAME=[$1])                                          |
-|   FilterRel(condition=[NOT(IS TRUE($11))])                     |
-|     FilterRel(condition=[IS NOT NULL($2)])                     |
-|       JoinRel(condition=[=($2, $10)], joinType=[left])         |
-|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])         |
-|         AggregateRel(groupCount=[1], agg#0=[MIN(1)])           |
-|           ProjectRel($f0=[$0], $f1=[true])                     |
-|             ProjectRel(DEPTNO=[$0])                            |
-|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])  |
-+----------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------+
+|                                                             column0                                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(NAME=[$1])                                                                                                            |
+|   FilterRel(condition=[AND(NOT(IS TRUE($12)), IS NOT NULL($10))])                                                                |
+|     JoinRel(condition=[=($10, $11)], joinType=[left])                                                                            |
+|       ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$2])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                           |
+|       AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                               |
+|         ProjectRel($f0=[$0], $f1=[true])                                                                                         |
+|           ProjectRel(DEPTNO=[$0])                                                                                                |
+|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where deptno not in (select deptno from depts);
@@ -296,19 +301,19 @@
 0: jdbc:farrago:> -- 1.4 uncorrelated NOT(x IN (subq)):
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select name from emps where not (deptno in (select deptno from depts));
-+----------------------------------------------------------------+
-|                            column0                             |
-+----------------------------------------------------------------+
-| ProjectRel(NAME=[$1])                                          |
-|   FilterRel(condition=[NOT(IS TRUE($11))])                     |
-|     FilterRel(condition=[IS NOT NULL($2)])                     |
-|       JoinRel(condition=[=($2, $10)], joinType=[left])         |
-|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])         |
-|         AggregateRel(groupCount=[1], agg#0=[MIN(1)])           |
-|           ProjectRel($f0=[$0], $f1=[true])                     |
-|             ProjectRel(DEPTNO=[$0])                            |
-|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])  |
-+----------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------+
+|                                                             column0                                                              |
++----------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(NAME=[$1])                                                                                                            |
+|   FilterRel(condition=[AND(NOT(IS TRUE($12)), IS NOT NULL($10))])                                                                |
+|     JoinRel(condition=[=($10, $11)], joinType=[left])                                                                            |
+|       ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$2])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                           |
+|       AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                               |
+|         ProjectRel($f0=[$0], $f1=[true])                                                                                         |
+|           ProjectRel(DEPTNO=[$0])                                                                                                |
+|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where not (deptno in (select deptno from depts));
@@ -341,21 +346,21 @@
 . . . . . . . . > select name from emps
 . . . . . . . . > where deptno not in (select deptno from depts where emps.empno < depts.deptno*10)
 . . . . . . . . > order by name;
-+------------------------------------------------------------------------------------------------+
-|                                            column0                                             |
-+------------------------------------------------------------------------------------------------+
-| SortRel(sort0=[$0], dir0=[Ascending])                                                          |
-|   ProjectRel(NAME=[$1])                                                                        |
-|     FilterRel(condition=[NOT(IS TRUE($11))])                                                   |
-|       FilterRel(condition=[IS NOT NULL($2)])                                                   |
-|         CorrelatorRel(condition=[=($2, $10)], joinType=[left], correlations=[[var0=offset0]])  |
-|           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                       |
-|           AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                         |
-|             ProjectRel($f0=[$0], $f1=[true])                                                   |
-|               ProjectRel(DEPTNO=[$0])                                                          |
-|                 FilterRel(condition=[<($cor0.EMPNO, *($0, 10))])                               |
-|                   TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                              |
-+------------------------------------------------------------------------------------------------+
++------------------------------------------------------------------------------------------------------------------------------------+
+|                                                              column0                                                               |
++------------------------------------------------------------------------------------------------------------------------------------+
+| SortRel(sort0=[$0], dir0=[Ascending])                                                                                              |
+|   ProjectRel(NAME=[$1])                                                                                                            |
+|     FilterRel(condition=[AND(NOT(IS TRUE($12)), IS NOT NULL($10))])                                                                |
+|       CorrelatorRel(condition=[=($10, $11)], joinType=[left], correlations=[[var0=offset0]])                                       |
+|         ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$2])  |
+|           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                           |
+|         AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                               |
+|           ProjectRel($f0=[$0], $f1=[true])                                                                                         |
+|             ProjectRel(DEPTNO=[$0])                                                                                                |
+|               FilterRel(condition=[<($cor0.EMPNO, *($0, 10))])                                                                     |
+|                 TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                    |
++------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps
@@ -401,21 +406,21 @@
 . . . . . . . . > select name from emps
 . . . . . . . . > where not (deptno in (select deptno from depts where emps.empno < depts.deptno*10))
 . . . . . . . . > order by name;
-+------------------------------------------------------------------------------------------------+
-|                                            column0                                             |
-+------------------------------------------------------------------------------------------------+
-| SortRel(sort0=[$0], dir0=[Ascending])                                                          |
-|   ProjectRel(NAME=[$1])                                                                        |
-|     FilterRel(condition=[NOT(IS TRUE($11))])                                                   |
-|       FilterRel(condition=[IS NOT NULL($2)])                                                   |
-|         CorrelatorRel(condition=[=($2, $10)], joinType=[left], correlations=[[var0=offset0]])  |
-|           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                       |
-|           AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                         |
-|             ProjectRel($f0=[$0], $f1=[true])                                                   |
-|               ProjectRel(DEPTNO=[$0])                                                          |
-|                 FilterRel(condition=[<($cor0.EMPNO, *($0, 10))])                               |
-|                   TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                              |
-+------------------------------------------------------------------------------------------------+
++------------------------------------------------------------------------------------------------------------------------------------+
+|                                                              column0                                                               |
++------------------------------------------------------------------------------------------------------------------------------------+
+| SortRel(sort0=[$0], dir0=[Ascending])                                                                                              |
+|   ProjectRel(NAME=[$1])                                                                                                            |
+|     FilterRel(condition=[AND(NOT(IS TRUE($12)), IS NOT NULL($10))])                                                                |
+|       CorrelatorRel(condition=[=($10, $11)], joinType=[left], correlations=[[var0=offset0]])                                       |
+|         ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$2])  |
+|           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                           |
+|         AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                               |
+|           ProjectRel($f0=[$0], $f1=[true])                                                                                         |
+|             ProjectRel(DEPTNO=[$0])                                                                                                |
+|               FilterRel(condition=[<($cor0.EMPNO, *($0, 10))])                                                                     |
+|                 TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                    |
++------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps
@@ -455,6 +460,209 @@
 | Fred  |
 | John  |
 +-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- 1.7 test NOT push down works
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select empno from emps 
+. . . . . . . . > where not ((deptno, name) in (select deptno, name from depts) and deptno is not null 
+. . . . . . . . >            or deptno in (select deptno + 10 from depts));
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                           column0                                                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0])                                                                                                                                                                       |
+|   FilterRel(condition=[AND(OR(AND(AND(NOT(IS TRUE($14)), IS NOT NULL($10)), IS NOT NULL($11)), NOT(IS NOT NULL($2))), AND(NOT(IS TRUE($17)), IS NOT NULL($15)))])                            |
+|     JoinRel(condition=[=($15, $16)], joinType=[left])                                                                                                                                        |
+|       ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$10], $f11=[$11], $f12=[$12], $f13=[$13], $f14=[$14], $f15=[$2])  |
+|         JoinRel(condition=[AND(=($10, $12), =($11, $13))], joinType=[left])                                                                                                                  |
+|           ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$2], $f11=[$1])                                               |
+|             TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                                                   |
+|           AggregateRel(groupCount=[2], agg#0=[MIN(2)])                                                                                                                                       |
+|             ProjectRel($f0=[$0], $f1=[$1], $f2=[true])                                                                                                                                       |
+|               ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                                                                                             |
+|                 TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                                              |
+|       AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                           |
+|         ProjectRel($f0=[$0], $f1=[true])                                                                                                                                                     |
+|           ProjectRel(EXPR$0=[+($0, 10)])                                                                                                                                                     |
+|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select empno from emps 
+. . . . . . . . > where not ((deptno, name) in (select deptno, name from depts) and deptno is not null 
+. . . . . . . . >            or deptno in (select deptno + 10 from depts));
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                          column0                                                                                                                                          |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..3=[{inputs}], expr#4=[IS TRUE($t3)], expr#5=[NOT($t4)], EMPNO=[$t0], $condition=[$t5])                                                                                                                                                                                |
+|   FennelToIteratorConverter                                                                                                                                                                                                                                                               |
+|     LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                                                                                                                          |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                           |
+|         IterCalcRel(expr#0..5=[{inputs}], expr#6=[IS TRUE($t5)], expr#7=[NOT($t6)], expr#8=[IS NOT NULL($t2)], expr#9=[AND($t7, $t8)], expr#10=[IS NOT NULL($t1)], expr#11=[AND($t9, $t10)], expr#12=[NOT($t8)], expr#13=[OR($t11, $t12)], EMPNO=[$t0], DEPTNO=[$t2], $condition=[$t13])  |
+|           FennelToIteratorConverter                                                                                                                                                                                                                                                       |
+|             LhxJoinRel(leftKeys=[[2, 1]], rightKeys=[[0, 1]], joinType=[LEFT])                                                                                                                                                                                                            |
+|               IteratorToFennelConverter                                                                                                                                                                                                                                                   |
+|                 IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t2)], proj#0..2=[{exprs}], $condition=[$t3])                                                                                                                                                                       |
+|                   FennelToIteratorConverter                                                                                                                                                                                                                                               |
+|                     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                                                                                                      |
+|               LhxAggRel(groupCount=[2], agg#0=[MIN(2)])                                                                                                                                                                                                                                   |
+|                 IteratorToFennelConverter                                                                                                                                                                                                                                                 |
+|                   IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], proj#0..2=[{exprs}])                                                                                                                                                                                                   |
+|                     FennelToIteratorConverter                                                                                                                                                                                                                                             |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                                                                                                        |
+|       LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                                                                                                                           |
+|         IteratorToFennelConverter                                                                                                                                                                                                                                                         |
+|           IterCalcRel(expr#0=[{inputs}], expr#1=[10], expr#2=[+($t0, $t1)], expr#3=[true], $f0=[$t2], $f1=[$t3])                                                                                                                                                                          |
+|             FennelToIteratorConverter                                                                                                                                                                                                                                                     |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                                                                                                              |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno from emps 
+. . . . . . . . > where not ((deptno, name) in (select deptno, name from depts) and deptno is not null 
+. . . . . . . . >            or deptno in (select deptno + 10 from depts))
+. . . . . . . . > order by name;
++--------+
+| EMPNO  |
++--------+
+| 100    |
++--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select min(empno) from emps group by deptno, name
+. . . . . . . . > having not ((deptno, name) in (select deptno, name from depts) and name is not null 
+. . . . . . . . >            or deptno in (select deptno + 10 from depts));
++----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                            column0                                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EXPR$0=[$2])                                                                                                                                        |
+|   FilterRel(condition=[AND(OR(AND(AND(NOT(IS TRUE($7)), IS NOT NULL($3)), IS NOT NULL($4)), NOT(IS NOT NULL($1))), AND(NOT(IS TRUE($10)), IS NOT NULL($8)))])  |
+|     JoinRel(condition=[=($8, $9)], joinType=[left])                                                                                                            |
+|       ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$0])                                                     |
+|         JoinRel(condition=[AND(=($3, $5), =($4, $6))], joinType=[left])                                                                                        |
+|           ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$0], $f4=[$1])                                                                                         |
+|             AggregateRel(groupCount=[2], agg#0=[MIN(2)])                                                                                                       |
+|               ProjectRel($f0=[$2], $f1=[$1], $f2=[$0])                                                                                                         |
+|                 TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                 |
+|           AggregateRel(groupCount=[2], agg#0=[MIN(2)])                                                                                                         |
+|             ProjectRel($f0=[$0], $f1=[$1], $f2=[true])                                                                                                         |
+|               ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                                                               |
+|                 TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                |
+|       AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                             |
+|         ProjectRel($f0=[$0], $f1=[true])                                                                                                                       |
+|           ProjectRel(EXPR$0=[+($0, 10)])                                                                                                                       |
+|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select min(empno) from emps group by deptno, name
+. . . . . . . . > having not ((deptno, name) in (select deptno, name from depts) and name is not null 
+. . . . . . . . >            or deptno in (select deptno + 10 from depts));
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                        column0                                                                                                                                        |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..3=[{inputs}], expr#4=[IS TRUE($t3)], expr#5=[NOT($t4)], EXPR$0=[$t1], $condition=[$t5])                                                                                                                                                                           |
+|   FennelToIteratorConverter                                                                                                                                                                                                                                                           |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                                                                                                                      |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                       |
+|         IterCalcRel(expr#0..5=[{inputs}], expr#6=[IS TRUE($t2)], expr#7=[NOT($t6)], expr#8=[IS NOT NULL($t3)], expr#9=[AND($t7, $t8)], expr#10=[IS NOT NULL($t4)], expr#11=[AND($t9, $t10)], expr#12=[NOT($t10)], expr#13=[OR($t11, $t12)], $f0=[$t3], $f2=[$t5], $condition=[$t13])  |
+|           FennelToIteratorConverter                                                                                                                                                                                                                                                   |
+|             LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[RIGHT])                                                                                                                                                                                                       |
+|               LhxAggRel(groupCount=[2], agg#0=[MIN(2)])                                                                                                                                                                                                                               |
+|                 IteratorToFennelConverter                                                                                                                                                                                                                                             |
+|                   IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], proj#0..2=[{exprs}])                                                                                                                                                                                               |
+|                     FennelToIteratorConverter                                                                                                                                                                                                                                         |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                                                                                                    |
+|               IteratorToFennelConverter                                                                                                                                                                                                                                               |
+|                 IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t0)], proj#0..2=[{exprs}], $condition=[$t3])                                                                                                                                                                   |
+|                   FennelToIteratorConverter                                                                                                                                                                                                                                           |
+|                     LhxAggRel(groupCount=[2], agg#0=[MIN(2)])                                                                                                                                                                                                                         |
+|                       FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])                                                                                                                                                                                                                   |
+|                         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 1, 0]], index=[EMPS_UX], preserveOrder=[false])                                                                                                                                              |
+|       LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                                                                                                                       |
+|         IteratorToFennelConverter                                                                                                                                                                                                                                                     |
+|           IterCalcRel(expr#0=[{inputs}], expr#1=[10], expr#2=[+($t0, $t1)], expr#3=[true], $f0=[$t2], $f1=[$t3])                                                                                                                                                                      |
+|             FennelToIteratorConverter                                                                                                                                                                                                                                                 |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                                                                                                          |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select min(empno) from emps group by deptno, name
+. . . . . . . . > having not ((deptno, name) in (select deptno, name from depts) and name is not null 
+. . . . . . . . >            or deptno in (select deptno + 10 from depts));
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- a bug discovered when doing the NOT pushdown
+0: jdbc:farrago:> explain plan without implementation for 
+. . . . . . . . > select empno from emps 
+. . . . . . . . > where not (name in (select name from depts))
+. . . . . . . . >       and exists(select * from depts where deptno = emps.deptno);
++------------------------------------------------------------------------------------------------------------------------------------+
+|                                                              column0                                                               |
++------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0])                                                                                                             |
+|   FilterRel(condition=[AND(AND(NOT(IS TRUE($12)), IS NOT NULL($10)), IS TRUE($13))])                                               |
+|     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])                                                |
+|       JoinRel(condition=[=($10, $11)], joinType=[left])                                                                            |
+|         ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$1])  |
+|           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                           |
+|         AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                               |
+|           ProjectRel($f0=[$0], $f1=[true])                                                                                         |
+|             ProjectRel(NAME=[$1])                                                                                                  |
+|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                      |
+|       AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                                                                 |
+|         ProjectRel($f0=[true])                                                                                                     |
+|           ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                                       |
+|             FilterRel(condition=[=($0, $cor0.DEPTNO)])                                                                             |
+|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                      |
++------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select empno from emps 
+. . . . . . . . > where not (name in (select name from depts))
+. . . . . . . . >       and exists(select * from depts where deptno = emps.deptno);
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                column0                                                                                |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                             |
+|   FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO) NOT NULL])     |
+|     LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                      |
+|       IteratorToFennelConverter                                                                                                                                       |
+|         IterCalcRel(expr#0..4=[{inputs}], expr#5=[IS TRUE($t4)], expr#6=[NOT($t5)], EMPNO=[$t0], DEPTNO=[$t2], $condition=[$t6])                                      |
+|           FennelToIteratorConverter                                                                                                                                   |
+|             LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                              |
+|               IteratorToFennelConverter                                                                                                                               |
+|                 IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t1)], proj#0..2=[{exprs}], $condition=[$t3])                                                   |
+|                   FennelToIteratorConverter                                                                                                                           |
+|                     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2]], index=[EMPS_UX], preserveOrder=[false])                                  |
+|               LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                               |
+|                 IteratorToFennelConverter                                                                                                                             |
+|                   IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])                                                                                  |
+|                     FennelToIteratorConverter                                                                                                                         |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])  |
+|       LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                       |
+|         IteratorToFennelConverter                                                                                                                                     |
+|           IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                      |
+|             FennelToIteratorConverter                                                                                                                                 |
+|               LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                           |
+|                 FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])        |
+|                 LhxAggRel(groupCount=[1])                                                                                                                             |
+|                   FennelRenameRel(fieldNames=[[$f0]])                                                                                                                 |
+|                     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])                                        |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno from emps 
+. . . . . . . . > where not (name in (select name from depts))
+. . . . . . . . >       and exists(select * from depts where deptno = emps.deptno)
+. . . . . . . . > order by empno;
++--------+
+| EMPNO  |
++--------+
+| 100    |
+| 110    |
+| 120    |
++--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 2.1 uncorrelated exists.
 0: jdbc:farrago:> -- Need to limit to at most one row on join RHS; Broadbase inserts count(*).
@@ -2136,33 +2344,34 @@ Error: From line 3, column 51 to line 3, column 54: Table 'EMPS' not found (stat
 . . . . . . . . >     union all
 . . . . . . . . >     select empno from emps
 . . . . . . . . >     where exists (select * from depts2 where depts2.deptno <> emps.empno));
-+----------------------------------------------------------------------------------------------+
-|                                           column0                                            |
-+----------------------------------------------------------------------------------------------+
-| ProjectRel(EMPNO=[$0])                                                                       |
-|   JoinRel(condition=[=($0, $10)], joinType=[inner])                                          |
-|     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                           |
-|     AggregateRel(groupCount=[1])                                                             |
-|       UnionRel(all=[true])                                                                   |
-|         ProjectRel(EMPNO=[$0])                                                               |
-|           FilterRel(condition=[IS TRUE($10)])                                                |
-|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])  |
-|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                 |
-|               AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                   |
-|                 ProjectRel($f0=[true])                                                       |
-|                   ProjectRel(DEPTNO=[$0], NAME=[$1])                                         |
-|                     FilterRel(condition=[=($0, $cor0.DEPTNO)])                               |
-|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                        |
-|         ProjectRel(EMPNO=[$0])                                                               |
-|           FilterRel(condition=[IS TRUE($10)])                                                |
-|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var1=offset0]])  |
-|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                 |
-|               AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                   |
-|                 ProjectRel($f0=[true])                                                       |
-|                   ProjectRel(DEPTNO=[$0], NAME=[$1])                                         |
-|                     FilterRel(condition=[<>($0, $cor1.EMPNO)])                               |
-|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                       |
-+----------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------+
+|                                                            column0                                                             |
++--------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0])                                                                                                         |
+|   JoinRel(condition=[=($10, $11)], joinType=[inner])                                                                           |
+|     ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$0])  |
+|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                           |
+|     AggregateRel(groupCount=[1])                                                                                               |
+|       UnionRel(all=[true])                                                                                                     |
+|         ProjectRel(EMPNO=[$0])                                                                                                 |
+|           FilterRel(condition=[IS TRUE($10)])                                                                                  |
+|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])                                    |
+|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                   |
+|               AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                                                     |
+|                 ProjectRel($f0=[true])                                                                                         |
+|                   ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                           |
+|                     FilterRel(condition=[=($0, $cor0.DEPTNO)])                                                                 |
+|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                          |
+|         ProjectRel(EMPNO=[$0])                                                                                                 |
+|           FilterRel(condition=[IS TRUE($10)])                                                                                  |
+|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var1=offset0]])                                    |
+|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                   |
+|               AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                                                     |
+|                 ProjectRel($f0=[true])                                                                                         |
+|                   ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                           |
+|                     FilterRel(condition=[<>($0, $cor1.EMPNO)])                                                                 |
+|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                                                         |
++--------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select empno from emps where empno in (
@@ -2301,33 +2510,34 @@ Error: From line 3, column 51 to line 3, column 54: Table 'EMPS' not found (stat
 . . . . . . . . >     intersect
 . . . . . . . . >     select empno from emps
 . . . . . . . . >     where exists (select * from depts2 where depts2.deptno <> emps.empno));
-+----------------------------------------------------------------------------------------------+
-|                                           column0                                            |
-+----------------------------------------------------------------------------------------------+
-| ProjectRel(EMPNO=[$0])                                                                       |
-|   JoinRel(condition=[=($0, $10)], joinType=[inner])                                          |
-|     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                           |
-|     AggregateRel(groupCount=[1])                                                             |
-|       IntersectRel(all=[false])                                                              |
-|         ProjectRel(EMPNO=[$0])                                                               |
-|           FilterRel(condition=[IS TRUE($10)])                                                |
-|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])  |
-|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                 |
-|               AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                   |
-|                 ProjectRel($f0=[true])                                                       |
-|                   ProjectRel(DEPTNO=[$0], NAME=[$1])                                         |
-|                     FilterRel(condition=[=($0, $cor0.DEPTNO)])                               |
-|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                        |
-|         ProjectRel(EMPNO=[$0])                                                               |
-|           FilterRel(condition=[IS TRUE($10)])                                                |
-|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var1=offset0]])  |
-|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                 |
-|               AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                   |
-|                 ProjectRel($f0=[true])                                                       |
-|                   ProjectRel(DEPTNO=[$0], NAME=[$1])                                         |
-|                     FilterRel(condition=[<>($0, $cor1.EMPNO)])                               |
-|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                       |
-+----------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------+
+|                                                            column0                                                             |
++--------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0])                                                                                                         |
+|   JoinRel(condition=[=($10, $11)], joinType=[inner])                                                                           |
+|     ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$0])  |
+|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                           |
+|     AggregateRel(groupCount=[1])                                                                                               |
+|       IntersectRel(all=[false])                                                                                                |
+|         ProjectRel(EMPNO=[$0])                                                                                                 |
+|           FilterRel(condition=[IS TRUE($10)])                                                                                  |
+|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])                                    |
+|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                   |
+|               AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                                                     |
+|                 ProjectRel($f0=[true])                                                                                         |
+|                   ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                           |
+|                     FilterRel(condition=[=($0, $cor0.DEPTNO)])                                                                 |
+|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                          |
+|         ProjectRel(EMPNO=[$0])                                                                                                 |
+|           FilterRel(condition=[IS TRUE($10)])                                                                                  |
+|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var1=offset0]])                                    |
+|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                   |
+|               AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                                                     |
+|                 ProjectRel($f0=[true])                                                                                         |
+|                   ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                           |
+|                     FilterRel(condition=[<>($0, $cor1.EMPNO)])                                                                 |
+|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                                                         |
++--------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select empno from emps
@@ -2467,33 +2677,34 @@ Error: From line 3, column 51 to line 3, column 54: Table 'EMPS' not found (stat
 . . . . . . . . >     except
 . . . . . . . . >     select empno from emps
 . . . . . . . . >     where exists (select * from depts2 where depts2.deptno <> emps.empno));
-+----------------------------------------------------------------------------------------------+
-|                                           column0                                            |
-+----------------------------------------------------------------------------------------------+
-| ProjectRel(EMPNO=[$0])                                                                       |
-|   JoinRel(condition=[=($0, $10)], joinType=[inner])                                          |
-|     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                           |
-|     AggregateRel(groupCount=[1])                                                             |
-|       MinusRel(all=[false])                                                                  |
-|         ProjectRel(EMPNO=[$0])                                                               |
-|           FilterRel(condition=[IS TRUE($10)])                                                |
-|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])  |
-|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                 |
-|               AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                   |
-|                 ProjectRel($f0=[true])                                                       |
-|                   ProjectRel(DEPTNO=[$0], NAME=[$1])                                         |
-|                     FilterRel(condition=[=($0, $cor0.DEPTNO)])                               |
-|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                        |
-|         ProjectRel(EMPNO=[$0])                                                               |
-|           FilterRel(condition=[IS TRUE($10)])                                                |
-|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var1=offset0]])  |
-|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                 |
-|               AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                   |
-|                 ProjectRel($f0=[true])                                                       |
-|                   ProjectRel(DEPTNO=[$0], NAME=[$1])                                         |
-|                     FilterRel(condition=[<>($0, $cor1.EMPNO)])                               |
-|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                       |
-+----------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------+
+|                                                            column0                                                             |
++--------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0])                                                                                                         |
+|   JoinRel(condition=[=($10, $11)], joinType=[inner])                                                                           |
+|     ProjectRel($f0=[$0], $f1=[$1], $f2=[$2], $f3=[$3], $f4=[$4], $f5=[$5], $f6=[$6], $f7=[$7], $f8=[$8], $f9=[$9], $f10=[$0])  |
+|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                           |
+|     AggregateRel(groupCount=[1])                                                                                               |
+|       MinusRel(all=[false])                                                                                                    |
+|         ProjectRel(EMPNO=[$0])                                                                                                 |
+|           FilterRel(condition=[IS TRUE($10)])                                                                                  |
+|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])                                    |
+|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                   |
+|               AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                                                     |
+|                 ProjectRel($f0=[true])                                                                                         |
+|                   ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                           |
+|                     FilterRel(condition=[=($0, $cor0.DEPTNO)])                                                                 |
+|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                          |
+|         ProjectRel(EMPNO=[$0])                                                                                                 |
+|           FilterRel(condition=[IS TRUE($10)])                                                                                  |
+|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var1=offset0]])                                    |
+|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                   |
+|               AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                                                     |
+|                 ProjectRel($f0=[true])                                                                                         |
+|                   ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                           |
+|                     FilterRel(condition=[<>($0, $cor1.EMPNO)])                                                                 |
+|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                                                         |
++--------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select empno from emps
