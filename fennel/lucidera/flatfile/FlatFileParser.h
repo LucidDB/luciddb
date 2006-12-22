@@ -326,6 +326,45 @@ public:
     {
         return lenient;
     }
+
+    /**
+     * Gets the expected number of columns to scan for this row. If the scan
+     * is unbounded, then MAX_COLUMNS is returned. If there is a column
+     * mapping, the size of the map is returned. Otherwise the size of this
+     * descriptor is returned.
+     */
+    uint getMaxColumns() const
+    {
+        if (!bounded) {
+            return MAX_COLUMNS;
+        } else if (isMapped()) {
+            return columnMap.size();
+        } else {
+            return size();
+        }
+    }
+
+    /**
+     * Gets the expected length of a column being scanned
+     *
+     * @param i column index, before mapping
+     */
+    uint getMaxLength(uint i) const
+    {
+        uint realIndex = 0;
+        if (!bounded) {
+            return MAX_COLUMN_LENGTH;
+        } else if (isMapped()) {
+            realIndex = getMap(i);
+        } else {
+            realIndex = i;
+        }
+        if (realIndex < 0 || realIndex >= size()) {
+            return MAX_COLUMN_LENGTH;
+        } else {
+            return (*this)[realIndex].maxLength;
+        }
+    }
 };
 
 /**
@@ -360,6 +399,8 @@ class FlatFileParser
      *
      * @param[in] size size of buffer
      *
+     * @param[in] rowDelim whether a row delimiter was read from previous row
+     *
      * @param[in, out] result result from scanning for row
      *
      * @return pointer to the next row, or end of buffer
@@ -367,6 +408,7 @@ class FlatFileParser
     const char *scanRowEnd(
         const char *buffer,
         int size,
+        bool rowDelim, 
         FlatFileRowParseResult &result);
     
     /**
