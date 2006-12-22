@@ -393,13 +393,6 @@ require version '${required.ant.version}'."/>
       <fileset dir="${farrago.parser.ddl.dir}/impl" includes="*.java,*.jj"/>
       <fileset dir="${farrago.parser.sql.dir}/impl" includes="*.java,*.jj"/>
       <fileset dir="${lurql.parser.dir}" includes="*.java"/>
-      <fileset dir="${unitsql.dir}/med/flatfiles">
-        <include name="example2.bcp"/>
-        <include name="example.ctl"/>
-        <include name="noheader.bcp"/>
-        <include name="nulldata.bcp"/>
-        <include name="withnulls.bcp"/>
-      </fileset>
     </delete>
   </target>
 
@@ -418,6 +411,15 @@ require version '${required.ant.version}'."/>
       </fileset>
       <fileset dir="${unitlurql.dir}" includes="**/*.log"/>
       <fileset dir="${regressionsql.dir}" includes="**/*.log"/>
+      <fileset dir="${unitsql.dir}/med/flatfiles">
+        <include name="example2.bcp"/>
+        <include name="example.ctl"/>
+        <include name="noheader.bcp"/>
+        <include name="nulldata.bcp"/>
+        <include name="withnulls.bcp"/>
+        <include name="headerswithwhitespacenobcp.bcp"/>
+        <include name="buggy.bcp"/>
+      </fileset>
     </delete>
     <delete quiet="true" file="${FarragoTrace.log}"/>
   </target>
@@ -628,8 +630,7 @@ require version '${required.ant.version}'."/>
   <!-- delete the catalog and everything generated for it -->
   <target name="cleanCatalog" depends="clean,cleanCatalogData">
     <delete file="${FarragoExtMetamodel.xmi}"/>
-    <delete file="${FarragoExtMetamodelUML.xmi}"/>
-    <delete file="${FarragoExtMetamodelUMLSansDiagrams.xmi}"/>
+    <delete file="${FarragoExtMetamodelSansDiagrams.xmi}"/>
     <delete file="${FarragoExtMetamodelTransformed.xmi}"/>
     <delete file="${FarragoMetamodel.xmi}"/>
     <delete file="${FarragoMetamodelUnresolved.xmi}"/>

@@ -246,7 +246,26 @@ public abstract class RelMetadataQuery
                 "getUniqueKeys",
                 null);
     }
-
+    
+    /**
+     * Determines if a specified set of columns from a specified relational
+     * expression are unique.
+     * 
+     * @param rel the relational expression
+     * @param columns column mask representing the ssubset of columns for which
+     * uniqueness will be determined
+     * 
+     * @return true or false depending on whether the columns are unique, or
+     * null if not enough information is available to make that determination
+     */
+    public static Boolean areColumnsUnique(RelNode rel, BitSet columns)
+    {
+        return (Boolean) rel.getCluster().getMetadataProvider().getRelMetadata(
+            rel,
+            "areColumnsUnique",
+            new Object[] { columns });
+    }
+    
     /**
      * Estimates the distinct row count in the original source for the given
      * groupKey, ignoring any filtering being applied by the expression.

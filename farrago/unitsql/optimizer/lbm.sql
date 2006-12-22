@@ -410,5 +410,22 @@ insert into typed values(
 insert into typed (a,d,e,f,g,h,i,j,k,l,m,n)
 select * from typed_src;
 
+
+-------------------------------------------------------------
+-- Part 5. Minus stream                                    --
+-------------------------------------------------------------
+
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+-- LER-3491
+create table t(a int);
+create index it on t(a);
+insert into t values (10), (11), (12), (13), (14), (15), (16), (17);
+insert into t values(0);
+delete from t where a = 10;
+
+select a, count(*) from t group by a having a = 10;
+
+
 -- cleanup
 drop server test_data cascade;

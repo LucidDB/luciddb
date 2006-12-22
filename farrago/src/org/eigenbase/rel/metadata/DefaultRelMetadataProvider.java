@@ -50,6 +50,8 @@ public class DefaultRelMetadataProvider
         addProvider(new RelMdRowCount());
 
         addProvider(new RelMdUniqueKeys());
+        
+        addProvider(new RelMdColumnUniqueness());
 
         addProvider(new RelMdPopulationSize());
 

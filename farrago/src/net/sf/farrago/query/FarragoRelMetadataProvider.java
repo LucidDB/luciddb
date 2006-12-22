@@ -78,6 +78,10 @@ public class FarragoRelMetadataProvider
         args.add((Class) BitSet.class);
         args.add((Class) RexNode.class);
         mapParameterTypes("getDistinctRowCount", args);
+        
+        mapParameterTypes(
+            "areColumnsUnique",
+            Collections.singletonList((Class) BitSet.class));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -145,6 +149,11 @@ public class FarragoRelMetadataProvider
     public Set<BitSet> getUniqueKeys(RelNode rel)
     {
         return columnMd.getUniqueKeys(rel, repos);
+    }
+    
+    public Boolean areColumnsUnique(RelNode rel, BitSet columns)
+    {
+        return columnMd.areColumnsUnique(rel, columns, repos);
     }
 
     public Double getPopulationSize(RelNode rel, BitSet groupKey)

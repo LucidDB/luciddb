@@ -743,14 +743,17 @@ bool LbmEntry::growEntry(LcsRid rid, uint reserveSpace)
 
 bool LbmEntry::adjustEntry(TupleData &inputTuple)
 {
-    /*
-     * The current entry and the input entry can not be singletons at the same
-     * time, as entries come sorted on (index keys, startRID).
-     */
-    assert(!(isSingleton() && isSingleton(inputTuple)));
-
     LcsRid &inputStartRID = *((LcsRid*)inputTuple[inputTuple.size() - 3].pData);
     
+    /*
+     * It is possible for both the input and the current entry to be singletons
+     * if we're doing random mergeEntry's
+     */
+    if (isSingleton() && isSingleton(inputTuple)) {
+        assert(startRID != inputStartRID);
+        return false;
+    }
+
     if (isSingleton(inputTuple)) {
         /*
          * The current entry must be either compressed bitmap or single
@@ -1004,7 +1007,16 @@ bool LbmEntry::spliceSingleton(TupleData &inputTuple)
         copyToMergeBuffer(origCurrEntry, startRID, pSegStart, pSegDescStart);
 
         setEntryTuple(inputTuple);
-        return mergeEntry(origCurrEntry);
+        bool rc = mergeEntry(origCurrEntry);
+        // if we weren't able to merge the input into the current entry,
+        // the new entry needs to be produced and the current entry becomes
+        // the input entry
+        if (rc == false) {
+            for (int i = 0; i < origCurrEntry.size(); i++) {
+                inputTuple[i] = origCurrEntry[i];
+            }
+        }
+        return rc;
 
     } else {
         // loop through each segment and determine if there already is a

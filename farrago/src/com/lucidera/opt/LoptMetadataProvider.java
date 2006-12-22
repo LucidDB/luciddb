@@ -99,6 +99,10 @@ public class LoptMetadataProvider
         mapParameterTypes(
             "getSimpleColumnOrigins",
             Collections.singletonList((Class) Integer.TYPE));
+        
+        mapParameterTypes(
+            "areColumnsUnique",
+            Collections.singletonList((Class) BitSet.class));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -690,11 +694,11 @@ public class LoptMetadataProvider
         BitSet rightJoinCols)
     {
         Boolean leftUnique =
-            RelMdUtil.areColumnsUnique(
+            RelMetadataQuery.areColumnsUnique(
                 left,
                 leftJoinCols);
         Boolean rightUnique =
-            RelMdUtil.areColumnsUnique(
+            RelMetadataQuery.areColumnsUnique(
                 right,
                 rightJoinCols);
 
@@ -751,6 +755,11 @@ public class LoptMetadataProvider
     public Set<BitSet> getUniqueKeys(LcsRowScanRel rel)
     {
         return columnMd.getUniqueKeys(rel, repos);
+    }
+    
+    public Boolean areColumnsUnique(LcsRowScanRel rel, BitSet columns)
+    {
+        return columnMd.areColumnsUnique(rel, columns, repos);
     }
 
     public Set<RelColumnOrigin> getSimpleColumnOrigins(

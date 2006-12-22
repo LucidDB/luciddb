@@ -587,7 +587,7 @@ parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DeriveEffectiveToTimestampUdx.execute';
 
--- Flatten hierarchical data
+-- Flatten hierarchical data, producing rows corresponding to leaf nodes only
 create or replace function applib.flatten_recursive_hierarchy(c cursor)
 returns table(
     vertices integer,
@@ -607,11 +607,37 @@ returns table(
     level13 varchar(65535),
     level14 varchar(65535),
     level15 varchar(65535))
-
 language java
 parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.FlattenRecursiveHierarchyUdx.execute';
+
+-- Flatten hierarchical data, producing rows for both leaf and non-leaf nodes
+create or replace function applib.flatten_recursive_hierarchy_all_levels(
+    c cursor)
+returns table(
+    vertices integer,
+    multipath boolean,
+    non_leaf boolean,
+    level1 varchar(65535),
+    level2 varchar(65535),
+    level3 varchar(65535),
+    level4 varchar(65535),
+    level5 varchar(65535),
+    level6 varchar(65535),
+    level7 varchar(65535),
+    level8 varchar(65535),
+    level9 varchar(65535),
+    level10 varchar(65535),
+    level11 varchar(65535),
+    level12 varchar(65535),
+    level13 varchar(65535),
+    level14 varchar(65535),
+    level15 varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.FlattenRecursiveHierarchyUdx.executeAllLevels';
 
 -- Generate CRC udx
 create or replace function generate_crc(c cursor)

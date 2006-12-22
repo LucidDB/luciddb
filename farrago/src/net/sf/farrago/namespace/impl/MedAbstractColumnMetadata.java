@@ -30,6 +30,7 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
 import org.eigenbase.stat.*;
@@ -142,6 +143,23 @@ public abstract class MedAbstractColumnMetadata
         RelNode rel,
         FemAbstractColumn keyCol);
 
+    public Boolean areColumnsUnique(
+        RelNode rel,
+        BitSet columns,
+        FarragoRepos repos)
+    {
+        Set<BitSet> uniqueColSets = getUniqueKeys(rel, repos);
+        if (uniqueColSets == null) {
+            return null;
+        }
+        for (BitSet colSet : uniqueColSets) {
+            if (RelOptUtil.contains(columns, colSet)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public Double getPopulationSize(RelNode rel, BitSet groupKey)
     {
         // this method only handles table level relnodes
@@ -152,10 +170,7 @@ public abstract class MedAbstractColumnMetadata
         double population = 1.0;
 
         // if columns are part of a unique key, then just return the rowcount
-        Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
-        if (uniq == null) {
-            return null;
-        } else if (uniq) {
+        if (RelMdUtil.areColumnsDefinitelyUnique(rel, groupKey)) {
             return RelMetadataQuery.getRowCount(rel);
         }
 

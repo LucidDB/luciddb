@@ -61,27 +61,6 @@ options (filename 'missing');
 select * from flatfile_missing;
 
 --
--- 1.4 Test whether an attempt is made to log errors
---     (the following column description is invalid)
---
-create server flatfile_server_locked
-foreign data wrapper sys_file_wrapper
-options (
-    directory 'unitsql/med/flatfiles/',
-    file_extension 'csv',
-    log_directory 'unitsql/med/flatfiles/');
-
-create foreign table flatfile_locked(
-    id int not null,
-    name varchar(50) not null)
-server flatfile_server_locked
-options (
-    filename 'noheader',
-    log_filename 'locked');
-
-select * from flatfile_locked;
-
---
 -- 1.5 Test bad line delimiter
 --      (note that the delimiter does not occur in the file)
 --      (note that you can also choose an empty file extension
@@ -493,11 +472,17 @@ alter session set "etlActionId" = 'SelectBuggy';
 
 set schema 'flatfile_schema';
 
+create server ff_lenient
+foreign data wrapper sys_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles/',
+    file_extension 'csv');
+
 create foreign table buggy(
     author varchar(30),
     title varchar(45) not null,
     cost decimal(10,2))
-server flatfile_server
+server ff_lenient
 options (filename 'buggy');
 
 -- errors are usually returned immediately

@@ -307,7 +307,7 @@ Messages: Cannot assign 'nineoneone' to a NUMERIC value: NumberFormatException (
 Error: Could not calculate result column 1 for the following row:
 [0]
 Messages: Invocation of user-defined external Java method substring24 failed
-java.lang.NullPointerException (state=,code=0)
+java.lang.NullPointerException: null (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values prim_int_to_hex_string(255);
 +---------+

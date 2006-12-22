@@ -107,15 +107,14 @@ void FlatFileParser::scanRow(
     bool mapped = columns.isMapped();
     bool strict = (bounded && (!lenient));
 
-    uint maxColumns;
+    uint maxColumns = columns.getMaxColumns();
+    uint resultColumns = columns.size();
     if (bounded) {
-        maxColumns = columns.size();
-        result.resize(maxColumns);
-        for (uint i = 0; i < maxColumns; i++) {
+        result.resize(resultColumns);
+        for (uint i = 0; i < resultColumns; i++) {
             result.setNull(i);
         }
     } else {
-        maxColumns = FlatFileRowDescriptor::MAX_COLUMNS;
         result.clear();
     }
 
@@ -127,11 +126,9 @@ void FlatFileParser::scanRow(
     offset = nonDelim - row;
 
     bool done = false;
-    uint maxLength = FlatFileRowDescriptor::MAX_COLUMN_LENGTH;
+    bool rowDelim = false;
     for (uint i = 0; i < maxColumns; i++) {
-        if (bounded) {
-            maxLength = columns[i].maxLength;
-        }
+        uint maxLength = columns.getMaxLength(i);
         scanColumn(
             row + offset,
             size - offset,
@@ -151,6 +148,7 @@ void FlatFileParser::scanRow(
                 }
             }
             done = true;
+            rowDelim = true;
             break;
         case FlatFileColumnParseResult::MAX_LENGTH:
         case FlatFileColumnParseResult::FIELD_DELIM:
@@ -176,12 +174,17 @@ void FlatFileParser::scanRow(
     }
     result.current = const_cast<char *>(row);
     result.next = const_cast<char *>(
-        scanRowEnd(columnResult.next, buffer+size-columnResult.next, result));
+        scanRowEnd(
+            columnResult.next,
+            buffer+size-columnResult.next,
+            rowDelim, 
+            result));
 }
 
 const char *FlatFileParser::scanRowEnd(
     const char *buffer,
     int size,
+    bool rowDelim,
     FlatFileRowParseResult &result)
 {
     const char *read = buffer;
@@ -191,20 +194,22 @@ const char *FlatFileParser::scanRowEnd(
     case FlatFileRowParseResult::ROW_TOO_LARGE:
         assert(read == end);
         return read;
-    case FlatFileRowParseResult::TOO_MANY_COLUMNS:
+    default:
+        break;
+    }
+
+    // if a row delimiter was not encountered while scanning the row,
+    // search for the next row delimiter character
+    if (!rowDelim) {
         read = scanRowDelim(read, end-read, true);
         if (read == end) {
             return read;
         }
-    case FlatFileRowParseResult::NO_STATUS:
-    case FlatFileRowParseResult::NO_COLUMN_DELIM:
-    case FlatFileRowParseResult::TOO_FEW_COLUMNS:
-        read = scanRowDelim(read, end-read, false);
-        break;
-    default:
-        permAssert(false);
     }
     result.nRowDelimsRead++;
+
+    // search for the first non- row delimiter character
+    read = scanRowDelim(read, end-read, false);
     return read;
 }
 

@@ -52,7 +52,13 @@ public abstract class FarragoTestUDR
 
     public static String substring24(String in)
     {
-        return in.substring(2, 4);
+        try {
+            return in.substring(2, 4);
+        } catch (NullPointerException ex) {
+            // NOTE jvs 21-Dec-2006:  hide the fact that jrockit-R27
+            // no longer includes the string "null"
+            throw new NullPointerException("null");
+        }
     }
 
     public static String toHexString(int i)

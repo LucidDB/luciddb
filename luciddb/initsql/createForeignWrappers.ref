@@ -6,7 +6,7 @@
 . . . . . . . . >   browse_connect_description 'Oracle Database Connection',
 . . . . . . . . >   driver_class 'oracle.jdbc.driver.OracleDriver',
 . . . . . . . . >   url 'jdbc:oracle:thin:@machineName:port:SID',
-. . . . . . . . >   type_mapping 'DATE:TIMESTAMP;DECIMAL(22,0):DOUBLE',
+. . . . . . . . >   type_mapping 'DATE:TIMESTAMP;DECIMAL(22,0):DOUBLE;BINARY:CHAR;VARBINARY:VARCHAR',
 . . . . . . . . >   login_timeout '10'
 . . . . . . . . > );
 0: jdbc:luciddb:> 

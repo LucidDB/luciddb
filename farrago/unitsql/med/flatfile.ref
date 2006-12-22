@@ -82,28 +82,6 @@
 Error: Could not read data file unitsql/med/flatfiles/missing.csv (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 1.4 Test whether an attempt is made to log errors
-0: jdbc:farrago:> --     (the following column description is invalid)
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create server flatfile_server_locked
-. . . . . . . . > foreign data wrapper sys_file_wrapper
-. . . . . . . . > options (
-. . . . . . . . >     directory 'unitsql/med/flatfiles/',
-. . . . . . . . >     file_extension 'csv',
-. . . . . . . . >     log_directory 'unitsql/med/flatfiles/');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create foreign table flatfile_locked(
-. . . . . . . . >     id int not null,
-. . . . . . . . >     name varchar(50) not null)
-. . . . . . . . > server flatfile_server_locked
-. . . . . . . . > options (
-. . . . . . . . >     filename 'noheader',
-. . . . . . . . >     log_filename 'locked');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from flatfile_locked;
-Error: Could not write log file unitsql/med/flatfiles/locked (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 1.5 Test bad line delimiter
 0: jdbc:farrago:> --      (note that the delimiter does not occur in the file)
 0: jdbc:farrago:> --      (note that you can also choose an empty file extension
@@ -451,14 +429,14 @@ Error: Invalid row 5 in control file unitsql/med/flatfiles/invalidbcpcolumns.bcp
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- generating bcp file
 0: jdbc:farrago:> select * from flatfile_server.BCP."headerswithwhitespacenobcp";
-+------------+------------------+---------------------+
-| one space  | two spaces here  | one two three four  |
-+------------+------------------+---------------------+
-| 1 1        | 2 2              | 3 3                 |
-| a          |                  |                     |
-|            |                  |                     |
-| 3          | 2                | 1                   |
-+------------+------------------+---------------------+
++------------+------------------+------------------------------+
+| one space  | two spaces here  |    un-trimmed whitespaces    |
++------------+------------------+------------------------------+
+| 1 1        | 2 2              | 3 3                          |
+| a          |                  |                              |
+|            |                  |                              |
+| 3          | 2                | 1                            |
++------------+------------------+------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---------------------------------------------------------------------------
 0: jdbc:farrago:> -- Part 4. Reading metadata from bcp files                               --
@@ -764,11 +742,17 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'flatfile_schema';
 0: jdbc:farrago:> 
+0: jdbc:farrago:> create server ff_lenient
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory 'unitsql/med/flatfiles/',
+. . . . . . . . >     file_extension 'csv');
+0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign table buggy(
 . . . . . . . . >     author varchar(30),
 . . . . . . . . >     title varchar(45) not null,
 . . . . . . . . >     cost decimal(10,2))
-. . . . . . . . > server flatfile_server
+. . . . . . . . > server ff_lenient
 . . . . . . . . > options (filename 'buggy');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- errors are usually returned immediately

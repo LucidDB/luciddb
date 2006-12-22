@@ -246,6 +246,56 @@ public class RexUtil
     }
 
     /**
+     * Returns whether a given node contains a RexCall with a specified RexNode type
+     *
+     * @param operator to look for
+     * @param node a RexNode tree
+     */
+    public static boolean containsInputRef(
+        RexNode node)
+    {
+        try {
+            RexVisitor visitor =
+                new RexVisitorImpl<Void>(true) {
+                public Void visitInputRef(RexInputRef inputRef)
+                {
+                    throw new Util.FoundOne(inputRef);
+                }
+            };
+            node.accept(visitor);
+            return false;
+        } catch (Util.FoundOne e) {
+            Util.swallow(e, null);
+            return true;
+        }
+    }
+    
+    /**
+     * Returns whether a given node contains a RexCall with a specified RexNode type
+     *
+     * @param operator to look for
+     * @param node a RexNode tree
+     */
+    public static boolean containsFieldAccess(
+        RexNode node)
+    {
+        try {
+            RexVisitor visitor =
+                new RexVisitorImpl<Void>(true) {
+                public Void visitFieldRef(RexFieldAccess fieldAccess)
+                {
+                    throw new Util.FoundOne(fieldAccess);
+                }
+            };
+            node.accept(visitor);
+            return false;
+        } catch (Util.FoundOne e) {
+            Util.swallow(e, null);
+            return true;
+        }
+    }
+
+    /**
      * Creates an array of {@link RexInputRef}, one for each field of a given
      * rowtype.
      */
@@ -942,6 +992,53 @@ public class RexUtil
         static class IllegalForwardRefException
             extends RuntimeException
         {
+        }
+    }
+    
+    /**
+     * Visitor which builds a bitmap of the inputs used by an expression.
+     */
+    public static class FieldAccessFinder
+        extends RexVisitorImpl<Void>
+    {
+        private final List<RexFieldAccess> fieldAccessList;
+        
+        public FieldAccessFinder()
+        {
+            super(true);
+            fieldAccessList = new ArrayList<RexFieldAccess> ();
+        }
+        
+        public Void visitFieldAccess(RexFieldAccess fieldAccess)
+        {
+            fieldAccessList.add(fieldAccess);
+            return null;
+        }
+        
+        public Void visitCall(RexCall call)
+        {
+            final RexNode [] operands = call.getOperands();
+            for (int i = 0; i < operands.length; i++) {
+                RexNode operand = operands[i];
+                operand.accept(this);
+            }
+            return null;
+        }
+        
+        /**
+         * Applies this visitor to an array of expressions and an optional
+         * single expression.
+         */
+        public void apply(List<RexNode> exprsList, RexNode expr)
+        {
+            RexNode [] exprs = new RexNode[exprsList.size()];
+            exprsList.toArray(exprs);
+            RexProgram.apply(this, exprs, expr);
+        }
+        
+        public List<RexFieldAccess> getFieldAccessList()
+        {
+            return fieldAccessList;
         }
     }
 }

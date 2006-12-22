@@ -121,7 +121,6 @@ public class FarragoOJRexBinaryExpressionImplementor
                     operands[i],
                     nullTest);
         }
-        assert (nullTest != null);
 
         // TODO:  generalize to stuff other than NullablePrimitive
         Expression varResultValue =
@@ -151,16 +150,26 @@ public class FarragoOJRexBinaryExpressionImplementor
             stmtList.add(overflowStmt);
         }
 
-        Statement ifStatement =
-            new IfStatement(
-                nullTest,
-                new StatementList(
-                    translator.createSetNullStatement(
-                        varResult,
-                        true)),
-                stmtList);
+        if (nullTest == null) {
+            // REVIEW jvs 11-Dec-2006:  Because of constant reduction,
+            // something that was expected to be nullable got rewritten
+            // to be definitely NOT NULL, and that's how we got here.
+            // See LER-3482 example in unitsql/expressions/constants.sql.
+            // Might be better to properly reevaluate the types in
+            // the filter Rex tree during constant reduction instead.
+            translator.addStatementsFromList(stmtList);
+        } else {
+            Statement ifStatement =
+                new IfStatement(
+                    nullTest,
+                    new StatementList(
+                        translator.createSetNullStatement(
+                            varResult,
+                            true)),
+                    stmtList);
 
-        translator.addStatement(ifStatement);
+            translator.addStatement(ifStatement);
+        }
 
         return varResult;
     }

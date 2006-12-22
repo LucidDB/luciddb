@@ -774,25 +774,30 @@ public abstract class RelOptUtil
         RelOptCluster cluster,
         RelNode rel)
     {
-        assert (rel.getRowType().getFieldCount() == 1);
-        RelDataType returnType =
-            SqlStdOperatorTable.singleValueOperator.inferReturnType(
-                cluster.getRexBuilder().getTypeFactory(),
-                new RelDataType[] {rel.getRowType().getFields()[0].getType()});
+        // assert (rel.getRowType().getFieldCount() == 1);
+        int aggCallCnt = rel.getRowType().getFieldCount();
+        AggregateRel.Call[] aggCalls = new AggregateRel.Call[aggCallCnt];
         
-        final AggregateRelBase.Call singleValueCall =
-            new AggregateRelBase.Call(
-                SqlStdOperatorTable.singleValueOperator,
-                false,
-                new int[] {0},
-                returnType);
+        for (int i = 0; i < aggCallCnt; i ++) {
+            RelDataType returnType =
+                SqlStdOperatorTable.singleValueOperator.inferReturnType(
+                cluster.getRexBuilder().getTypeFactory(),
+                new RelDataType[] {rel.getRowType().getFields()[i].getType()});
+        
+            aggCalls[i] =
+                new AggregateRelBase.Call(
+                    SqlStdOperatorTable.singleValueOperator,
+                    false,
+                    new int[] {i},
+                    returnType);
+        }
         
         return
             new AggregateRel(
                 rel.getCluster(),
                 rel,
                 0,
-                new AggregateRel.Call[] { singleValueCall });
+                aggCalls);
     }
 
     /**
@@ -924,7 +929,7 @@ public abstract class RelOptUtil
      * @return What's left
      */
     public static RexNode splitJoinCondition(
-        JoinRel joinRel,
+        JoinRelBase joinRel,
         List<RexNode> leftJoinKeys,
         List<RexNode> rightJoinKeys)
     {
@@ -954,7 +959,7 @@ public abstract class RelOptUtil
     public static RexNode splitCorrelatedFilterCondition(
         FilterRel filterRel,
         List<RexInputRef> joinKeys,
-        List<RexFieldAccess> correlatedJoinKeys)
+        List<RexNode> correlatedJoinKeys)
     {
         List<RexNode> nonEquiList = new ArrayList<RexNode>();
 
@@ -979,8 +984,38 @@ public abstract class RelOptUtil
         }
     }
     
+    public static RexNode splitCorrelatedFilterCondition(
+        FilterRel filterRel,
+        List<RexNode> joinKeys,
+        List<RexNode> correlatedJoinKeys,
+        boolean extractCorrelatedFieldAccess)
+    {
+        List<RexNode> nonEquiList = new ArrayList<RexNode>();
+
+        splitCorrelatedFilterCondition(
+            filterRel,
+            filterRel.getCondition(),
+            joinKeys,
+            correlatedJoinKeys,
+            nonEquiList,
+            extractCorrelatedFieldAccess);
+
+        // Convert the remainders into a list that are AND'ed together.
+        switch (nonEquiList.size()) {
+        case 0:
+            return null;
+        case 1:
+            return nonEquiList.get(0);
+        default:
+            return
+                filterRel.getCluster().getRexBuilder().makeCall(
+                    SqlStdOperatorTable.andOperator,
+                    nonEquiList);
+        }
+    }
+
     private static void splitJoinCondition(
-        JoinRel joinRel,
+        JoinRelBase joinRel,
         RexNode condition,
         List<RexNode> leftJoinKeys,
         List<RexNode> rightJoinKeys,
@@ -993,7 +1028,7 @@ public abstract class RelOptUtil
         int totalFieldCount = leftFieldCount + rightFieldCount;
 
         RelDataTypeField [] rightFields =
-            ((JoinRel) joinRel).getRight().getRowType().getFields();
+            joinRel.getRight().getRowType().getFields();
 
         RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
         RelDataTypeFactory typeFactory = joinRel.getCluster().getTypeFactory();
@@ -1130,7 +1165,7 @@ public abstract class RelOptUtil
         FilterRel filterRel,
         RexNode condition,
         List<RexInputRef> joinKeys,
-        List<RexFieldAccess> correlatedJoinKeys,
+        List<RexNode> correlatedJoinKeys,
         List<RexNode> nonEquiList)
     {
         if (condition instanceof RexCall) {
@@ -1152,16 +1187,78 @@ public abstract class RelOptUtil
                 RexNode op0 = operands[0];
                 RexNode op1 = operands[1];
 
-                if ((op0 instanceof RexFieldAccess) && 
+                if (!(RexUtil.containsInputRef(op0)) && 
                     (op1 instanceof RexInputRef)) {
+                    correlatedJoinKeys.add(op0);
                     joinKeys.add((RexInputRef)op1);
-                    correlatedJoinKeys.add((RexFieldAccess)op0);
                     return;
                 }  else if ((op0 instanceof RexInputRef) && 
-                            (op1 instanceof RexFieldAccess)) {
+                            !(RexUtil.containsInputRef(op1))) {
                     joinKeys.add((RexInputRef)op0);
-                    correlatedJoinKeys.add((RexFieldAccess)op1);
+                    correlatedJoinKeys.add(op1);
                     return;
+                }
+            }
+        }
+
+        // The operator is not of RexCall type
+        // So we fail. Fall through.
+        // Add this condition to the list of non-equi-join conditions.
+        nonEquiList.add(condition);
+    }
+
+    private static void splitCorrelatedFilterCondition(
+        FilterRel filterRel,
+        RexNode condition,
+        List<RexNode> joinKeys,
+        List<RexNode> correlatedJoinKeys,
+        List<RexNode> nonEquiList,
+        boolean extractCorrelatedFieldAccess)
+    {
+        if (condition instanceof RexCall) {
+            RexCall call = (RexCall) condition;
+            if (call.getOperator() == SqlStdOperatorTable.andOperator) {
+                for (RexNode operand : call.getOperands()) {
+                    splitCorrelatedFilterCondition(
+                        filterRel,
+                        operand,
+                        joinKeys,
+                        correlatedJoinKeys,
+                        nonEquiList,
+                        extractCorrelatedFieldAccess);
+                }
+                return;
+            }
+
+            if (call.getOperator() == SqlStdOperatorTable.equalsOperator) {
+                final RexNode [] operands = call.getOperands();
+                RexNode op0 = operands[0];
+                RexNode op1 = operands[1];
+
+                if (extractCorrelatedFieldAccess) {
+                    if (!RexUtil.containsFieldAccess(op0) && 
+                        op1 instanceof RexFieldAccess) {
+                        joinKeys.add(op0);
+                        correlatedJoinKeys.add(op1);
+                        return;
+                    } else if (op0 instanceof RexFieldAccess && 
+                               !RexUtil.containsFieldAccess(op1)) {
+                        correlatedJoinKeys.add(op0);
+                        joinKeys.add(op1);
+                        return;
+                    }
+                } else {
+                    if (!(RexUtil.containsInputRef(op0)) && 
+                        (op1 instanceof RexInputRef)) {
+                        correlatedJoinKeys.add(op0);
+                        joinKeys.add(op1);
+                        return;
+                    }  else if ((op0 instanceof RexInputRef) && 
+                                !(RexUtil.containsInputRef(op1))) {
+                        joinKeys.add(op0);
+                        correlatedJoinKeys.add(op1);
+                        return;
+                    }    
                 }
             }
         }

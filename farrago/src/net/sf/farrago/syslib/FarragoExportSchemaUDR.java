@@ -1215,16 +1215,18 @@ public abstract class FarragoExportSchemaUDR
             try {
                 if (withData) {
                     csvFile = new File(csvName);
-                    csvOut = new FileWriter(csvFile, false);
+                    csvOut = new OutputStreamWriter(
+                        new FileOutputStream(csvFile), "ISO-8859-1");
                     csvOut = new BufferedWriter(csvOut);
                 }
                 int numCols = tblMeta.getColumnCount();
                 if (withBcp) {
                     // write BCP header
                     bcpFile = new File(bcpName);
-                    bcpOut = new FileWriter(bcpFile, false);
+                    bcpOut = new OutputStreamWriter(
+                        new FileOutputStream(bcpFile), "ISO-8859-1");
                     bcpOut = new BufferedWriter(bcpOut);
-
+ 
                     // version using BroadBase
                     bcpOut.write("6.0" + NEWLINE);
                     bcpOut.write(numCols + NEWLINE);

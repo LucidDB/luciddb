@@ -27,6 +27,10 @@ insert into tree1 values
 select * 
 from table(applib.flatten_recursive_hierarchy(cursor(select * from tree1)));
 
+select * 
+from table(applib.flatten_recursive_hierarchy_all_levels(cursor(
+    select * from tree1)));
+
 
 -- graph with multiple paths -----------------------------------------
 
@@ -47,6 +51,10 @@ insert into mgraph values
 
 select * 
 from table(applib.flatten_recursive_hierarchy(cursor(select * from mgraph)));
+
+select * 
+from table(applib.flatten_recursive_hierarchy_all_levels(cursor(
+    select * from mgraph)));
 
 truncate table mgraph;
 
