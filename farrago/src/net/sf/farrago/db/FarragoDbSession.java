@@ -876,18 +876,16 @@ public class FarragoDbSession
             FarragoReposTxnContext reposTxnContext =
                 new FarragoReposTxnContext(repos);
 
-            // TODO jvs 21-June-2004: It would be preferable to start with a
-            // read lock and only upgrade to write once we know we're dealing
-            // with DDL.  However, at the moment that doesn't work because a
-            // write txn is required for creating transient objects.  And MDR
-            // doesn't support upgrade.  Use JmiMemFactory to solve this
-            // by creating transient objects in a separate repository.
-            reposTxnContext.beginWriteTxn();
-
             boolean [] pRollback = new boolean[1];
             pRollback[0] = true;
             FarragoSessionStmtValidator stmtValidator = newStmtValidator();
             stmtValidator.setTimingTracer(timingTracer);
+            
+            // Pass the repos txn context to the statement validator so
+            // the parser can access it and start the appropriate type of
+            // repository transaction (for DDL vs not DDL)
+            stmtValidator.setReposTxnContext(reposTxnContext);
+            
             FarragoSessionExecutableStmt stmt = null;
             try {
                 stmt =
@@ -913,7 +911,9 @@ public class FarragoDbSession
                 if (stmtValidator != null) {
                     stmtValidator.closeAllocation();
                 }
-                if (pRollback[0]) {
+                
+                // MDR doesn't allow rollback on read-only txns
+                if (pRollback[0] && !reposTxnContext.isReadTxnInProgress()) {
                     tracer.fine("rolling back DDL");
                     reposTxnContext.rollback();
                 } else {

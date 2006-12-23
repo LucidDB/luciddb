@@ -82,6 +82,7 @@ public class FarragoStmtValidator
 
     private SqlParserPos parserPos;
     private EigenbaseTimingTracer timingTracer;
+    private FarragoReposTxnContext reposTxnContext;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -782,6 +783,17 @@ public class FarragoStmtValidator
     public EigenbaseTimingTracer getTimingTracer()
     {
         return timingTracer;
+    }
+    
+    // implement FarragoSessionStmtValidator
+    public void setReposTxnContext(FarragoReposTxnContext reposTxnContext)
+    {
+        this.reposTxnContext = reposTxnContext;
+    }
+    
+    public FarragoReposTxnContext getReposTxnContext()
+    {
+        return reposTxnContext;
     }
 
     // implement FarragoSessionStmtValidator

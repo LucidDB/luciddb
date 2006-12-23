@@ -341,6 +341,19 @@ public interface FarragoSessionStmtValidator
      */
     public void validateDataType(SqlDataTypeSpec dataType)
         throws SqlValidatorException;
+    
+    /**
+     * Sets the repository transaction context associated with this statement.
+     * 
+     * @param reposTxnContext repos txn context to use
+     */
+    public void setReposTxnContext(FarragoReposTxnContext reposTxnContext);
+    
+    /**
+     * @return the repository transaction context associated with this 
+     *         statement.
+     */
+    public FarragoReposTxnContext getReposTxnContext();
 }
 
 // End FarragoSessionStmtValidator.java

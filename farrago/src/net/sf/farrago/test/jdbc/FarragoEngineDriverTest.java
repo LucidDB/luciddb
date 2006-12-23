@@ -28,6 +28,7 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.jdbc.FarragoAbstractJdbcDriver;
 import net.sf.farrago.test.*;
 
 
@@ -58,9 +59,10 @@ public class FarragoEngineDriverTest
     public void testURIs()
         throws Exception
     {
-        FarragoUnregisteredJdbcEngineDriver driver =
+        FarragoAbstractJdbcDriver driver =
             FarragoTestCase.newJdbcEngineDriver();
 
+        assert(driver instanceof FarragoUnregisteredJdbcEngineDriver);
         String uri = null;
         assertFalse(
             "driver accepts " + uri,
@@ -160,8 +162,10 @@ public class FarragoEngineDriverTest
         tracer.info("loaded: " + uri);
 
         // test the driver's use of the connect string parser
-        FarragoUnregisteredJdbcEngineDriver driver =
+        FarragoAbstractJdbcDriver driver =
             FarragoTestCase.newJdbcEngineDriver();
+
+        assert(driver instanceof FarragoUnregisteredJdbcEngineDriver);
         Properties parsedProps = new Properties();
         String strippedUri = driver.parseConnectionParams(uri, parsedProps);
 
@@ -239,8 +243,10 @@ public class FarragoEngineDriverTest
         final String sessQuery =
             "SELECT * FROM sys_boot.mgmt.sessions_view "
             + " WHERE session_name = '" + sessionName + "'";
-        FarragoUnregisteredJdbcEngineDriver driver =
+        FarragoAbstractJdbcDriver driver =
             FarragoTestCase.newJdbcEngineDriver();
+
+        assert(driver instanceof FarragoUnregisteredJdbcEngineDriver);
 
         Properties sessionProps = new Properties(newProperties());
         sessionProps.setProperty("sessionName", sessionName);

@@ -395,17 +395,17 @@ public class UtilTest
         properties.put("foo", "george");
         properties.put("bar", "ringo");
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, String> entry : Util.entries(properties)) {
+        for (Map.Entry<String, String> entry : Util.toMap(properties).entrySet()) {
             sb.append(entry.getKey()).append("=").append(entry.getValue());
             sb.append(";");
         }
         assertEquals("bar=ringo;foo=george;", sb.toString());
 
-        assertEquals(2, Util.entries(properties).size());
+        assertEquals(2, Util.toMap(properties).entrySet().size());
 
         properties.put("nonString", 34);
         try {
-            for (Map.Entry<String, String> entry : Util.entries(properties)) {
+            for (Map.Entry<String, String> entry : Util.toMap(properties).entrySet()) {
                 String s = entry.getValue();
                 Util.discard(s);
             }

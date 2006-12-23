@@ -447,7 +447,7 @@ public class FarragoDatabase
 
         // The applyFennelExtensionParameters method may have modified the
         // properties, so copy them back.
-        for (Map.Entry<String, String> entry : Util.entries(properties)) {
+        for (Map.Entry<String, String> entry : Util.toMap(properties).entrySet()) {
             configMap.put(entry.getKey(), entry.getValue());
         }
 

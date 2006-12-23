@@ -101,6 +101,16 @@ public class DdlMedHandler
                 validateAttribute(column);
             }
         }
+        
+        SqlAccessType allowedAccess = medColumnSet.getAllowedAccess();
+        if (columnSet.getAllowedAccess() == null) {
+            columnSet.setAllowedAccess(allowedAccess.toString());
+        } else {
+            Util.permAssert(
+                columnSet.getAllowedAccess().equals(
+                    medColumnSet.getAllowedAccess().toString()),
+                "Catalog allowed access doesn't match MED allowed access");
+        }
     }
 
     // implement FarragoSessionDdlHandler

@@ -1514,7 +1514,7 @@ public class Util
     }
 
     /**
-     * Makes a {@link Properties} object iterable over (String, String) pairs.
+     * Converts a {@link Properties} object to a {@link Map<String, String>}.
      *
      * <p>This is necessary because {@link Properties} is a dinosaur class.
      * It ought to extend <code>Map&lt;String,String&gt;</code>, but instead
@@ -1524,22 +1524,15 @@ public class Util
      *
      * <pre>
      * Properties properties;
-     * for (Map.Entry<String, String> entry = Util.entries(properties)) {
+     * for (Map.Entry<String, String> entry = Util.toMap(properties).entrySet()) {
      *   println("key=" + entry.getKey() + ", value=" + entry.getValue());
      * }
      * </pre>
      */
-    public static Set<Map.Entry<String,String>> entries(
+    public static Map<String, String> toMap(
         final Properties properties)
     {
-        AbstractMap<String, String> map = new AbstractMap<String, String>()
-        {
-            public Set<Entry<String, String>> entrySet()
-            {
-                return (Set) properties.entrySet();
-            }
-        };
-        return map.entrySet();
+        return (Map) properties;
     }
 
     //~ Inner Classes ----------------------------------------------------------
