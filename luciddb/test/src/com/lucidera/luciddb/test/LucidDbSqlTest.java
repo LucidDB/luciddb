@@ -118,8 +118,8 @@ public class LucidDbSqlTest extends FarragoTestCase
     protected void runTest()
         throws Exception
     {
-        // mask out source control Id
-        addDiffMask("\\$Id.*\\$");
+        // mask out source control Id, etc
+        setRefFileDiffMasks();
         runSqlLineTest(getName());
     }
 

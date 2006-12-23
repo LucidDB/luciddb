@@ -219,6 +219,13 @@ public abstract class ResultSetTestCase
                 actualLists.get(i));
         }
     }
+
+    // FIXME jvs 22-Dec-2006:  Eliminate this; just temporary
+    // so I can use PIC to integrate Jack's eigenchange 8351.
+    protected void setRefFileDiffMasks()
+    {
+        addDiffMask("\\$Id.*\\$");
+    }
 }
 
 // End FarragoTestCase.java
