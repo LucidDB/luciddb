@@ -64,28 +64,54 @@
 +---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Verify that type of character string literals is CHARACTER as it should be
+0: jdbc:farrago:> -- dtbug 401 (JIRA FRG-74)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- singleline literals
 0: jdbc:farrago:> create view literal_view(lit1,lit2,lit3,lit4,lit5) 
 . . . . . . . . > as values ('pumpkin ','pie','','  ',cast('' as varchar(0)));
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select column_name,type_name,column_size
+0: jdbc:farrago:> select column_name,type_name,column_size,nullable
 . . . . . . . . > from sys_boot.jdbc_metadata.columns_view
 . . . . . . . . > where table_name='LITERAL_VIEW'
 . . . . . . . . > order by 1;
-+--------------+------------+--------------+
-| COLUMN_NAME  | TYPE_NAME  | COLUMN_SIZE  |
-+--------------+------------+--------------+
-| LIT1         | CHAR       | 8            |
-| LIT2         | CHAR       | 3            |
-| LIT3         | CHAR       | 0            |
-| LIT4         | CHAR       | 2            |
-| LIT5         | VARCHAR    | 0            |
-+--------------+------------+--------------+
++--------------+------------+--------------+-----------+
+| COLUMN_NAME  | TYPE_NAME  | COLUMN_SIZE  | NULLABLE  |
++--------------+------------+--------------+-----------+
+| LIT1         | CHAR       | 8            | 0         |
+| LIT2         | CHAR       | 3            | 0         |
+| LIT3         | CHAR       | 0            | 0         |
+| LIT4         | CHAR       | 2            | 0         |
+| LIT5         | VARCHAR    | 0            | 0         |
++--------------+------------+--------------+-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- multiline literals
+0: jdbc:farrago:> create view literal_view2(lit1,lit2,lit3,lit4) 
+. . . . . . . . > as values ('pump'
+. . . . . . . . > 'kin ','p'
+. . . . . . . . > 'ie',''
+. . . . . . . . > '',' '
+. . . . . . . . > ' ');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select column_name,type_name,column_size,nullable
+. . . . . . . . > from sys_boot.jdbc_metadata.columns_view
+. . . . . . . . > where table_name='LITERAL_VIEW2'
+. . . . . . . . > order by 1;
++--------------+------------+--------------+-----------+
+| COLUMN_NAME  | TYPE_NAME  | COLUMN_SIZE  | NULLABLE  |
++--------------+------------+--------------+-----------+
+| LIT1         | CHAR       | 8            | 0         |
+| LIT2         | CHAR       | 3            | 0         |
+| LIT3         | CHAR       | 0            | 0         |
+| LIT4         | CHAR       | 2            | 0         |
++--------------+------------+--------------+-----------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> select * from literal_view;
 'LIT1','LIT2','LIT3','LIT4','LIT5'
 'pumpkin ','pie','','  ',''
+0: jdbc:farrago:> select * from literal_view2;
+'LIT1','LIT2','LIT3','LIT4'
+'pumpkin ','pie','','  '
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- FRG-38:  boundary conditions with index on real datatype
