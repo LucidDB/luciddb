@@ -664,14 +664,10 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 | 20      | Marketing  | 1070197274   |
 +---------+------------+--------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- commented out until jrockit R27 bug fixed
 0: jdbc:farrago:> -- udx with specified calendar
-0: jdbc:farrago:> select *
-. . . . . . . . > from table(foreign_time(timestamp'2006-10-09 18:32:26.992', 'PST', 'EST'));
-+--------------------------+-------------+-----------+
-|      THE_TIMESTAMP       |  THE_DATE   | THE_TIME  |
-+--------------------------+-------------+-----------+
-| 2006-10-09 21:32:26.992  | 2006-10-09  | 21:32:26  |
-+--------------------------+-------------+-----------+
+0: jdbc:farrago:> -- select *
+0: jdbc:farrago:> -- from table(foreign_time(timestamp'2006-10-09 18:32:26.992', 'PST', 'EST'));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set path 'crypto2';

@@ -409,9 +409,10 @@ select *
 from table(digest(cursor(select * from sales.depts)))
 order by row_digest;
 
+-- commented out until jrockit R27 bug fixed
 -- udx with specified calendar
-select *
-from table(foreign_time(timestamp'2006-10-09 18:32:26.992', 'PST', 'EST'));
+-- select *
+-- from table(foreign_time(timestamp'2006-10-09 18:32:26.992', 'PST', 'EST'));
 
 
 set path 'crypto2';
