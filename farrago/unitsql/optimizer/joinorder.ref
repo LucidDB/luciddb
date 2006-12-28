@@ -840,4 +840,27 @@
 '        LcsRowScanRel(table=[[LOCALDB, JO, REVN_PRD]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$REVN_PRD$REVN_YR, SYS$CLUSTERED_INDEX$REVN_PRD$REVN_YR_MO]], residual columns=[[4]])'
 '          FennelValuesRel(tuples=[[{ '[', 1995, ']', 1995 }]])'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- LER-3639 -- Projects should not be pulled up in this case because the
+0: jdbc:farrago:> -- projection expression is used as a join key.  If this query is not properly
+0: jdbc:farrago:> -- optimized, a cartesian join is incorrectly chosen.
+0: jdbc:farrago:> create table t1(t1a char(10));
+0: jdbc:farrago:> create table t2(t2a char(10));
+0: jdbc:farrago:> create table t3(t3a char(10));
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T1', 4841);
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T2', 25199);
+0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T3', 25199);
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from (select t1a||t2a as a from t1, t2 where t1a = t2a) as x, t3
+. . . . . . . . > where t3a = a;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" A, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T3A) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[||($t1, $t0)], A=[$t2])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$T2A]])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..1=[{exprs}])'
+'        LcsRowScanRel(table=[[LOCALDB, JO, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$T3A]])'
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

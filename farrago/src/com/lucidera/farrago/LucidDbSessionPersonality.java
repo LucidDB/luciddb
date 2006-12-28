@@ -241,17 +241,25 @@ public class LucidDbSessionPersonality
         }
         
         // Execute rules that are needed to do proper join optimization:
-        // 1) Pull up projects above joins to maximize the number of join
+        // 1) Push down filters so they're closest to the RelNode they apply to.
+        //    This also needs to be done before the pull project rules because
+        //    filters need to be pushed into joins in order for the pull up
+        //    project rules to properly determine whether projects can be pulled
+        //    up.
+        // 2) Pull up projects above joins to maximize the number of join
         //    factors.
-        // 2) Push the projects back down so row scans are projected and also so
+        // 3) Push the projects back down so row scans are projected and also so
         //    we can determine which fields are projected above each join.
-        // 3) Push down filters so they're closest to the RelNode they apply
-        //    to.
-        // 4) Convert the join inputs into MultiJoinRels and also pull projects
+        // 4) Push down filters a second time to push filters past any projects
+        //    that were pushed down.
+        // 5) Convert the join inputs into MultiJoinRels and also pull projects
         //    back up, but only the ones above joins so we preserve projects
         //    on top of row scans but maximize the number of join factors.
-        // 5) Optimize join ordering.
+        // 6) Optimize join ordering.
    
+        // Push down filters
+        applyPushDownFilterRules(builder);
+        
         // Pull up projects
         builder.addGroupBegin();      
         builder.addRuleInstance(new RemoveTrivialProjectRule());
@@ -270,25 +278,8 @@ public class LucidDbSessionPersonality
         // Push the projects back down
         applyPushDownProjectRules(builder);
         
-        // Push filters down
-        builder.addGroupBegin();
-        builder.addRuleInstance(new PushFilterPastSetOpRule());
-        builder.addRuleInstance(new PushFilterPastProjectRule());
-        builder.addRuleInstance(
-            new PushFilterPastJoinRule(
-                new RelOptRuleOperand(
-                    FilterRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(JoinRel.class, null)
-                    }),
-                "with filter above join"));
-        builder.addRuleInstance(
-            new PushFilterPastJoinRule(
-                new RelOptRuleOperand(JoinRel.class, null),
-                "without filter above join"));      
-        // merge filters
-        builder.addRuleInstance(new MergeFilterRule());
-        builder.addGroupEnd();     
+        // Push filters down again after pulling and pushing projects
+        applyPushDownFilterRules(builder);
 
         // Convert 2-way joins to n-way joins.  Do the conversion bottom-up
         // so once a join is converted to a MultiJoinRel, you're ensured that
@@ -510,6 +501,33 @@ public class LucidDbSessionPersonality
     
     /**
      * Applies rules that push filters past various RelNodes.
+     * 
+     * @param builder HEP program builder
+     */
+    private void applyPushDownFilterRules(HepProgramBuilder builder)
+    {
+        builder.addGroupBegin();
+        builder.addRuleInstance(new PushFilterPastSetOpRule());
+        builder.addRuleInstance(new PushFilterPastProjectRule());
+        builder.addRuleInstance(
+            new PushFilterPastJoinRule(
+                new RelOptRuleOperand(
+                    FilterRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(JoinRel.class, null)
+                    }),
+                "with filter above join"));
+        builder.addRuleInstance(
+            new PushFilterPastJoinRule(
+                new RelOptRuleOperand(JoinRel.class, null),
+                "without filter above join"));      
+        // merge filters
+        builder.addRuleInstance(new MergeFilterRule());
+        builder.addGroupEnd();     
+    }
+    
+    /**
+     * Applies rules that push projects past various RelNodes.
      * 
      * @param builder HEP program builder
      */

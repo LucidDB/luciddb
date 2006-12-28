@@ -362,3 +362,16 @@ SELECT DISTINCT AL1.CUST_SERV_ACCT_KEY
     AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
     AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY
     AND AL5.SAS_FNL_BIL_INDCR='Y' AND AL4.REVN_YR=1995;
+
+-- LER-3639 -- Projects should not be pulled up in this case because the
+-- projection expression is used as a join key.  If this query is not properly
+-- optimized, a cartesian join is incorrectly chosen.
+create table t1(t1a char(10));
+create table t2(t2a char(10));
+create table t3(t3a char(10));
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T1', 4841);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T2', 25199);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T3', 25199);
+explain plan for
+select * from (select t1a||t2a as a from t1, t2 where t1a = t2a) as x, t3
+where t3a = a;
