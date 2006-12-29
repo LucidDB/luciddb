@@ -336,13 +336,17 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 3, 2, 1]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2, INTEGER D3) NOT NULL])'
-'    FennelCartesianProductRel(leftouterjoin=[false])'
+'    FennelCalcRel(expr#0..3=[{inputs}], F=[$t1], D3=[$t2], D2=[$t3], D1=[$t0])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCartesianProductRel(leftouterjoin=[false])'
-'          LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F]])'
-'          LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$D3$D3]])'
-'        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2]])'
-'      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1]])'
+'        LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1]])'
+'        FennelBufferRel(inMemory=[false], multiPass=[true])'
+'          FennelCalcRel(expr#0..2=[{inputs}], F=[$t1], D3=[$t2], D2=[$t0])'
+'            FennelCartesianProductRel(leftouterjoin=[false])'
+'              LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2]])'
+'              FennelBufferRel(inMemory=[false], multiPass=[true])'
+'                FennelCartesianProductRel(leftouterjoin=[false])'
+'                  LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F]])'
+'                  LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$D3$D3]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- non-comparsion expression
 0: jdbc:farrago:> explain plan for select f, d1 from f, d1
@@ -358,13 +362,14 @@
 0: jdbc:farrago:> explain plan for select f, d1, d2 from f, d1, d2
 . . . . . . . . >     where f.f_d1 + d1.d1_f = d2.d2_f;
 'column0'
-'IterCalcRel(expr#0..5=[{inputs}], expr#6=[+($t1, $t5)], expr#7=[=($t6, $t3)], F=[$t0], D1=[$t4], D2=[$t2], $condition=[$t7])'
+'IterCalcRel(expr#0..5=[{inputs}], expr#6=[+($t3, $t1)], expr#7=[=($t6, $t5)], F=[$t2], D1=[$t0], D2=[$t4], $condition=[$t7])'
 '  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1]])'
-'        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
+'      FennelBufferRel(inMemory=[false], multiPass=[true])'
+'        FennelCartesianProductRel(leftouterjoin=[false])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1]])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- filter with 2 tables but both on one side of the comparison operator
 0: jdbc:farrago:> explain plan for select f, d1 from f, d1
@@ -857,6 +862,20 @@
 '  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" A, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T3A) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])'
 '      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[||($t1, $t0)], A=[$t2])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$T2A]])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..1=[{exprs}])'
+'        LcsRowScanRel(table=[[LOCALDB, JO, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$T3A]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- same query as above except without the subquery in the from clause
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from t1, t2, t3 where t1a = t2a and t1a||t2a = t3a;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1, 0, 3]], outputRowType=[RecordType(CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1A, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T3A) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[2]], rightKeys=[[1]], joinType=[INNER])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[||($t1, $t0)], proj#0..2=[{exprs}])'
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$T2A]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'

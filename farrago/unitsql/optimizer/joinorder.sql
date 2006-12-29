@@ -375,3 +375,7 @@ call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T3', 25199);
 explain plan for
 select * from (select t1a||t2a as a from t1, t2 where t1a = t2a) as x, t3
 where t3a = a;
+
+-- same query as above except without the subquery in the from clause
+explain plan for
+select * from t1, t2, t3 where t1a = t2a and t1a||t2a = t3a;

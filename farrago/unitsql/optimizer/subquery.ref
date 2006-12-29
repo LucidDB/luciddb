@@ -3592,18 +3592,17 @@ FROM `DEPTS2` (state=,code=0)
 |   FennelReshapeRel(projection=[[3, 2]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1) NOT NULL])                                               |
 |     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 0]], joinType=[RIGHT])                                                                                             |
 |       LhxAggRel(groupCount=[2], agg#0=[SINGLE_VALUE(2)])                                                                                                            |
-|         FennelReshapeRel(projection=[[0, 1, 1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL $f00, INTEGER NOT NULL DEPTNO) NOT NULL])         |
-|           FennelCartesianProductRel(leftouterjoin=[false])                                                                                                          |
-|             FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])                                                           |
-|               LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                         |
-|                 FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])                                          |
-|                 LhxAggRel(groupCount=[1])                                                                                                                           |
-|                   FennelRenameRel(fieldNames=[[$f0]])                                                                                                               |
-|                     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])  |
-|             FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                     |
+|         FennelReshapeRel(projection=[[1, 0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL $f00, INTEGER NOT NULL DEPTNO) NOT NULL])         |
+|           LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])                                                                                             |
+|             FennelCartesianProductRel(leftouterjoin=[false])                                                                                                        |
 |               LhxAggRel(groupCount=[1])                                                                                                                             |
 |                 FennelRenameRel(fieldNames=[[$f0]])                                                                                                                 |
 |                   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])    |
+|               FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                   |
+|                 LhxAggRel(groupCount=[1])                                                                                                                           |
+|                   FennelRenameRel(fieldNames=[[$f0]])                                                                                                               |
+|                     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])  |
+|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])                                              |
 |       FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 

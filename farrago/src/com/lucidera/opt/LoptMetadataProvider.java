@@ -305,8 +305,9 @@ public class LoptMetadataProvider
         // computed by a formula that favors asymmetry between input sizes,
         // since hash join does better in that case (only the build side needs
         // to fit in memory).  This is bogus in cases where we can't even use
-        // hash join.  Anyway, the factor works out to 10 in the case of the
-        // two inputs being of equal size, and decreases exponentially down to
+        // hash join so we special case cartesian product joins.  Anyway, the
+        // factor works out to 10 in the case of a cartesian product join or if
+        // the two inputs are of equal size.  It decreases exponentially down to
         // to an asymptote of 1 representing one side being infinitely larger
         // than the other.  If one input is twice as big as the other,
         // the factor is 10^(1/2) = ~3.16.
@@ -323,7 +324,10 @@ public class LoptMetadataProvider
         double maxInputRowCount = Math.max(leftRowCount, rightRowCount);
         if (maxInputRowCount > 0) {
             double joinRowCount = RelMetadataQuery.getRowCount(rel);
-            joinRowCount *= Math.pow(10.0, minInputRowCount / maxInputRowCount);
+            double factor =
+                (rel.getCondition().isAlwaysTrue())
+                    ? 1.0 : (minInputRowCount / maxInputRowCount);
+            joinRowCount *= Math.pow(10.0, factor);
             result += joinRowCount;
         }
 
