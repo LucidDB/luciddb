@@ -223,6 +223,11 @@
 <text>To derive EFFECTIVE_TO_TIMESTAMP, both input columns must be ordered in ascending order.</text>
 </exception>
 
+<exception id="900420" name="ParameterMustBeEitherRestrictOrCascade">
+<text>Syntax error: parameter must be either ''RESTRICT'' or ''CASCADE''.</text>
+</exception>
+
+
 <!-- ====================================================================== -->
  Messages
 <!-- ====================================================================== -->
