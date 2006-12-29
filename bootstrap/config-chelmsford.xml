@@ -15,7 +15,7 @@
 <!ENTITY aspen_p4user    "guest">
 
 <!ENTITY buildresultsbase "http://64.81.57.79:8082/cruisecontrol/buildresults">
-<!ENTITY mailhost         "mail.speakeasy.com">
+<!ENTITY mailhost         "mail.speakeasy.net">
 <!ENTITY reportsuccess    "always">
 <!ENTITY returnname       "Build Monkey">
 <!ENTITY returnaddress    "buildmonkey@fishtaco.org">
