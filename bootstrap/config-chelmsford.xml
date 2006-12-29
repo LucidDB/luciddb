@@ -2,7 +2,7 @@
 
 <!DOCTYPE cruisecontrol [
 
-<!ENTITY open_p4port     "chumley:1666">
+<!ENTITY open_p4port     "perforce.eigenbase.org:1666">
 <!ENTITY open_p4client   "cruise.chelmsford">
 <!ENTITY open_p4user     "guest">
 <!ENTITY open_root       "//open/dt/dev">
@@ -10,12 +10,12 @@
 <!ENTITY open_default.build.home     "/home/cruise/work">
 <!ENTITY open_integration.build.home "/home/cruise/work/build">
 
-<!ENTITY aspen_p4port    "chumley:1667">
+<!ENTITY aspen_p4port    "jhyde.dyndns.org:1666">
 <!ENTITY aspen_p4client  "cruise.chelmsford">
 <!ENTITY aspen_p4user    "guest">
 
-<!ENTITY buildresultsbase "http://zuercher.dyndns.org:8082/cruisecontrol/buildresults">
-<!ENTITY mailhost         "smtp.rcn.com">
+<!ENTITY buildresultsbase "http://64.81.57.79:8082/cruisecontrol/buildresults">
+<!ENTITY mailhost         "mail.speakeasy.com">
 <!ENTITY reportsuccess    "always">
 <!ENTITY returnname       "Build Monkey">
 <!ENTITY returnaddress    "buildmonkey@fishtaco.org">
