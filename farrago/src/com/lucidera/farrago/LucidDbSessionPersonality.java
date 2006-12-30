@@ -280,6 +280,12 @@ public class LucidDbSessionPersonality
         
         // Push filters down again after pulling and pushing projects
         applyPushDownFilterRules(builder);
+        
+        // Merge any projects that are now on top of one another as a result
+        // of pushing filters.  This ensures that the subprogram below fires
+        // the 3 rules described in lockstep fashion on only the nodes related
+        // to joins.
+        builder.addRuleInstance(new MergeProjectRule(true));
 
         // Convert 2-way joins to n-way joins.  Do the conversion bottom-up
         // so once a join is converted to a MultiJoinRel, you're ensured that
@@ -289,7 +295,7 @@ public class LucidDbSessionPersonality
         // projects, we need to also merge any projects we generate as a
         // result of the pullup.
         //
-        // These two rules are applied within a subprogram so they can be
+        // These three rules are applied within a subprogram so they can be
         // applied one after the other in lockstep fashion.
         HepProgramBuilder subprogramBuilder = new HepProgramBuilder();
         subprogramBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
