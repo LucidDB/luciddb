@@ -40,41 +40,57 @@ import java.io.*;
 public abstract class DropSchemaIfExistsUdp {
     
     public static void execute(String schemaName, String restrictOrCascade) 
-        throws ApplibException {
+        throws ApplibException, SQLException {
         
-        try {
-            PreparedStatement ps;
-            Statement stmt;
-            ResultSet rs;
-            Connection conn = null;
-            StringWriter sw;
-            StackWriter stackw;
-            PrintWriter pw;
-            
-            // set up a jdbc connection
-            conn = DriverManager.getConnection("jdbc:default:connection");
-            stmt = conn.createStatement();
-            
-            // make sure restrictOrCascade actually says "RESTRICT" or "CASCADE"
-            if (!restrictOrCascade.toUpperCase().equals("RESTRICT") 
-                && !restrictOrCascade.toUpperCase().equals("CASCADE")) {
-                throw ApplibResourceObject.get().ParameterMustBeEitherRestrictOrCascade.ex();
-            }
-            
-            // try to drop the schema
-            sw = new StringWriter();
-            stackw = new StackWriter(sw, StackWriter.INDENT_SPACE4);
-            pw = new PrintWriter(stackw);
-            pw.print("drop schema ");
-            StackWriter.printSqlIdentifier(pw, schemaName);
-            pw.print(" " + restrictOrCascade);
-            pw.close();
-            stmt.executeUpdate(sw.toString());
+        PreparedStatement ps;
+        Statement stmt;
+        ResultSet rs;
+        Connection conn = null;
+        StringWriter sw;
+        StackWriter stackw;
+        PrintWriter pw;
+        
+        // set up a jdbc connection
+        conn = DriverManager.getConnection("jdbc:default:connection");
+        stmt = conn.createStatement();
+        
+        // make sure restrictOrCascade actually says "RESTRICT" or "CASCADE"
+        if (!restrictOrCascade.toUpperCase().equals("RESTRICT") 
+            && !restrictOrCascade.toUpperCase().equals("CASCADE")) {
+            throw ApplibResourceObject.get().
+                ParameterMustBeEitherRestrictOrCascade.ex();
+        }
 
-        } catch (SQLException e) {
-            // just swallow all SQLExceptions, we want this UDP to be quiet.
+        // make sure schema exists, exit otherwise
+        ps = conn.prepareStatement(
+            "select SCHEMA_NAME from SYS_ROOT.DBA_SCHEMAS where SCHEMA_NAME = ?");
+        ps.setString(1, schemaName);
+        rs = ps.executeQuery();
+        if (!rs.next()) {
             return;
         }
+        
+        // try to drop the schema
+        sw = new StringWriter();
+        stackw = new StackWriter(sw, StackWriter.INDENT_SPACE4);
+        pw = new PrintWriter(stackw);
+        pw.print("drop schema ");
+        StackWriter.printSqlIdentifier(pw, schemaName);
+        pw.print(" " + restrictOrCascade);
+        pw.close();
+        String query = sw.toString();
+        
+        try {
+            stmt.executeUpdate(sw.toString());
+        } catch (SQLException e) {
+            if (restrictOrCascade.equals("RESTRICT")) {
+                // suppress complaints about requiring 'CASCADE'
+                return;
+            } else {
+                // if we did use 'CASCADE', it's something else
+                throw e;
+            }
+        } 
     }
 }
 
