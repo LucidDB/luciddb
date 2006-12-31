@@ -672,6 +672,27 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * @return class name of the wrapper for the primitive  data type.
+     */
+    public static String getPrimitiveWrapperJavaClassName(RelDataType type)
+    {
+        if (type == null) {
+            return null;
+        }
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return null;
+        }
+
+        switch (typeName.getOrdinal()) {
+            case SqlTypeName.Boolean_ordinal:
+                return "Boolean";
+            default:
+                return getNumericJavaClassName(type);
+        }
+    }
+
+    /**
      * @return class name of the numeric data type.
      */
     public static String getNumericJavaClassName(RelDataType type)
