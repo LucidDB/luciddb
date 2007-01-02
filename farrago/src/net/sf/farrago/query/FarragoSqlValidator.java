@@ -33,6 +33,7 @@ import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
+import org.eigenbase.reltype.RelDataTypeFactory;
 
 
 /**
@@ -45,8 +46,36 @@ public class FarragoSqlValidator
     extends SqlValidatorImpl
 {
 
+    final FarragoPreparingStmt preparingStmt;
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Constructor that allows caller to specify dependant objects rather
+     * than relying on the preparingStmt to supply them.  This constructor is 
+     * is friendlier to class extension as well as providing more control during
+     * test setup.
+     */
+    public FarragoSqlValidator(
+        SqlOperatorTable opTab,
+        SqlValidatorCatalogReader catalogReader,
+        RelDataTypeFactory typeFactory,
+        Compatible compatible,
+        FarragoPreparingStmt preparingStmt)
+    {
+        super(
+            opTab,
+            catalogReader,
+            typeFactory,
+            compatible);
+
+        this.preparingStmt = preparingStmt;
+    }
+
+    /**
+     * Constructor that relies on the preparingStmt object to provide various
+     * other objects during initialization.  
+     */
     FarragoSqlValidator(
         FarragoPreparingStmt preparingStmt,
         Compatible compatible)
@@ -56,6 +85,8 @@ public class FarragoSqlValidator
             preparingStmt,
             preparingStmt.getFarragoTypeFactory(),
             compatible);
+        
+        this.preparingStmt = preparingStmt;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -69,7 +100,7 @@ public class FarragoSqlValidator
     }
 
     // override SqlValidator
-    protected boolean shouldExpandIdentifiers()
+    public boolean shouldExpandIdentifiers()
     {
         // Farrago always wants to expand stars and identifiers during
         // validation since we use the validated representation as a canonical
@@ -146,7 +177,7 @@ public class FarragoSqlValidator
 
     private FarragoPreparingStmt getPreparingStmt()
     {
-        return (FarragoPreparingStmt) getCatalogReader();
+        return preparingStmt;
     }
 
     // override SqlValidatorImpl
