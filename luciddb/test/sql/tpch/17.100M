@@ -14,10 +14,10 @@
 . . . . . . . . >     P_CONTAINER = 'MED BOX' AND
 . . . . . . . . >     P_PARTKEY = TEMP.L_PARTKEY AND
 . . . . . . . . >     L.L_QUANTITY < TEMP.AVGQTY;
-+--------------+
-|  AVG_YEARLY  |
-+--------------+
-| 23512.75285  |
-+--------------+
++---------------+
+|  AVG_YEARLY   |
++---------------+
+| 23512.752857  |
++---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
