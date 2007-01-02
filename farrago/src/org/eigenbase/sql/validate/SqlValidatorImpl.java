@@ -1282,7 +1282,7 @@ public class SqlValidatorImpl
         this.rewriteCalls = rewriteCalls;
     }
 
-    protected boolean shouldExpandIdentifiers()
+    public boolean shouldExpandIdentifiers()
     {
         return expandIdentifiers;
     }
@@ -1333,6 +1333,9 @@ public class SqlValidatorImpl
             case SqlKind.IdentifierORDINAL:
             case SqlKind.OverORDINAL:
                 alias = deriveAlias(node, -1);
+                if (alias == null){
+                    alias = deriveAlias(node, nextGeneratedId++);
+                }
                 if (shouldExpandIdentifiers()) {
                     newNode = SqlValidatorUtil.addAlias(node, alias);
                 }

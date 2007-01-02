@@ -492,7 +492,7 @@ public class SqlToRelTestBase
         }
 
         // override SqlValidator
-        protected boolean shouldExpandIdentifiers()
+        public boolean shouldExpandIdentifiers()
         {
             return true;
         }

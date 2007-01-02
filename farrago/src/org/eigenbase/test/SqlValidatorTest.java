@@ -2313,7 +2313,7 @@ public class SqlValidatorTest
             "Column count mismatch in UNION");
     }
 
-    public void testUnionCountMismatcWithValueshFails()
+    public void testUnionCountMismatcWithValuesFails()
     {
         checkFails(
             "select * from ( values (1))" + NL
@@ -2332,7 +2332,7 @@ public class SqlValidatorTest
             + "union" + NL
             + "select ^*^ from ( values (1))",
             "Column count mismatch in UNION");
-  }
+    }
 
     public void testUnionTypeMismatchFails()
     {
@@ -3386,25 +3386,43 @@ public class SqlValidatorTest
     {
         SqlValidator validator = tester.getValidator();
         validator.setCallRewrite(false);
-        tester.checkRewrite(
-            validator,
-            "select coalesce(deptno, empno) from emp",
-            "SELECT COALESCE(`DEPTNO`, `EMPNO`)"
-            + NL
-            + "FROM `EMP`");
+        if (validator.shouldExpandIdentifiers()) {
+            tester.checkRewrite(
+                validator,
+                "select coalesce(deptno, empno) from emp",
+                TestUtil.fold(
+                "SELECT COALESCE(`EMP`.`DEPTNO`, `EMP`.`EMPNO`)\n"
+                 + "FROM `SALES`.`EMP` AS `EMP`"));
+        } else {
+            tester.checkRewrite(
+                validator,
+                "select coalesce(deptno, empno) from emp",
+                "SELECT COALESCE(`DEPTNO`, `EMPNO`)"
+                + NL
+                + "FROM `EMP`");
+        }
     }
 
     public void testCoalesceWithRewrite()
     {
         SqlValidator validator = tester.getValidator();
         validator.setCallRewrite(true);
-        tester.checkRewrite(
-            validator,
-            "select coalesce(deptno, empno) from emp",
-            "SELECT CASE WHEN `DEPTNO` IS NOT NULL THEN `DEPTNO` "
-            + "ELSE `EMPNO` END"
-            + NL
-            + "FROM `EMP`");
+        if (validator.shouldExpandIdentifiers()) {
+            tester.checkRewrite(
+                validator,
+                "select coalesce(deptno, empno) from emp",
+                TestUtil.fold(
+                    "SELECT CASE WHEN `EMP`.`DEPTNO` IS NOT NULL THEN `EMP`.`DEPTNO` ELSE `EMP`.`EMPNO` END\n"
+                + "FROM `SALES`.`EMP` AS `EMP`"));
+        } else {
+            tester.checkRewrite(
+                validator,
+                "select coalesce(deptno, empno) from emp",
+                "SELECT CASE WHEN `DEPTNO` IS NOT NULL THEN `DEPTNO` "
+                + "ELSE `EMPNO` END"
+                + NL
+                + "FROM `EMP`");
+        }
     }
 
     public void testNew()
