@@ -164,22 +164,22 @@ public class LoptMetadataProvider
         // NOTE jvs 19-Apr-2006: This holy formula is preserved straight from
         // Broadbase.  It is the geometric average of the number of rows in the
         // table and the number of rows which will be produced by the row scan
-        // ExecStream.  Consider a million-row table.  If we're going to produce
-        // all the rows, then the cost is one million, on the assumption that
-        // the optimizer won't bother with the extra cost of index lookup.  If
-        // we're only going to produce one row, then the cost is one thousand
-        // (not one), the idea being that we'll have to do some work (e.g.
-        // bitmap intersection) to identify that row.  This would be a bad
-        // assumption for OLTP index lookup, but it's reasonable for analytic
-        // queries.  If we're going to produce 10% of the rows, the cost works
-        // out to about a third of a million.  Sargable filters are of interest
-        // regardless of whether they are evaluated via an unclustered index on
-        // the assumption that we can handle the residuals during clustered
-        // index scan (not true yet but should be soon).  For our purposes here,
-        // semijoin selectivity is rolled into sargableSelectivity since it lets
-        // us skip rows.  Non-sargable filters are NOT taken into account here
-        // because they have to be handled via a calculator on top, so they
-        // don't reduce the cost of the row scan itself in any way.
+        // ExecStream.  Consider a million-row table.  If we're going to
+        // produce all the rows, then the cost is one million, on the
+        // assumption that the optimizer won't bother with the extra cost of
+        // index lookup.  If we're only going to produce one row, then the cost
+        // is one thousand (not one), the idea being that we'll have to do some
+        // work (e.g.  bitmap intersection) to identify that row.  This would
+        // be a bad assumption for OLTP index lookup, but it's reasonable for
+        // analytic queries.  If we're going to produce 10% of the rows, the
+        // cost works out to about a third of a million.  Sargable filters are
+        // of interest regardless of whether they are evaluated via an
+        // unclustered index because we can handle the residuals during
+        // clustered index scan.  For our purposes here, semijoin selectivity
+        // is rolled into sargableSelectivity since it lets us skip rows.
+        // Non-sargable filters are NOT taken into account here because they
+        // have to be handled via a calculator on top, so they don't reduce the
+        // cost of the row scan itself in any way.
         return Math.sqrt(nRowsInTable * sargableRowCount);
     }
 
@@ -324,6 +324,13 @@ public class LoptMetadataProvider
         double maxInputRowCount = Math.max(leftRowCount, rightRowCount);
         if (maxInputRowCount > 0) {
             double joinRowCount = RelMetadataQuery.getRowCount(rel);
+
+            // REVIEW jvs 2-Jan-2006:  What about the case of a
+            // a real join which can't be implemented via hash join?
+            // Instead of testing for isAlwaysTrue(), we could
+            // try to analyze the join condition to predict whether
+            // we'll be able to implement it via hash join.
+            
             double factor =
                 (rel.getCondition().isAlwaysTrue())
                     ? 1.0 : (minInputRowCount / maxInputRowCount);

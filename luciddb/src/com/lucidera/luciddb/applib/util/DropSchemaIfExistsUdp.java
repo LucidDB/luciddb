@@ -79,6 +79,8 @@ public abstract class DropSchemaIfExistsUdp {
         pw.print(" " + restrictOrCascade);
         pw.close();
         String query = sw.toString();
+
+        // REVIEW jvs 2-Jan-2007:  Why suppress in the RESTRICT case?
         
         try {
             stmt.executeUpdate(sw.toString());
