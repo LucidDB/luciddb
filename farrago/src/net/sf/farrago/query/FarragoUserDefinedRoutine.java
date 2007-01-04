@@ -230,8 +230,8 @@ public class FarragoUserDefinedRoutine
         }
 
         Class [] javaParamClasses = new Class[nJavaParams];
+        boolean hasListParam = false;
         if (iLeftParen == -1) {
-            List params = routine.getParameter();
             for (int i = 0; i < nParams; ++i) {
                 RelDataType type = getParamTypes()[i];
                 javaParamClasses[i] =
@@ -239,6 +239,9 @@ public class FarragoUserDefinedRoutine
                         type);
                 if (javaParamClasses[i] == null) {
                     throw Util.needToImplement(type);
+                }
+                if (javaParamClasses[i] == List.class) {
+                    hasListParam = true;
                 }
             }
             if (isTableFunction()) {
@@ -326,7 +329,7 @@ public class FarragoUserDefinedRoutine
             throw FarragoResource.instance().PluginInitFailed.ex(
                 javaClassName,
                 ex);
-        }
+        }      
 
         int modifiers = javaMethod.getModifiers();
         if (!Modifier.isStatic(modifiers) || !Modifier.isPublic(modifiers)) {
@@ -391,6 +394,18 @@ public class FarragoUserDefinedRoutine
                 }
             }
         }
+        
+        // verify that List parameters corresponding to COLUMN_LIST parameters
+        // are declared as List<String>
+        if (hasListParam) {
+            if (!validateListParams(javaMethod, javaParamClasses)) {
+                throw FarragoResource.instance()
+                .ValidatorInvalidColumnListParam.ex(
+                    repos.getLocalizedObjectName(routine),
+                    repos.getLocalizedObjectName(
+                        javaUnmangledMethodName));
+            }
+        }
 
         return javaMethod;
     }
@@ -401,6 +416,40 @@ public class FarragoUserDefinedRoutine
             return false;
         }
         return t1.getFamily() == t2.getFamily();
+    }
+    
+    /**
+     * Examines parameters corresponding to List parameters and ensures that
+     * they are List&lt;String&gt; types
+     * 
+     * @param javaMethod the java method containing the parameters
+     * @param javaParamClasses classes of the parameter
+     * 
+     * @return true if List parameters are List&lt;String&gt; parameters
+     */
+    private boolean validateListParams(
+        Method javaMethod,
+        Class [] javaParamClasses)
+    {
+        Type [] genericTypes = javaMethod.getGenericParameterTypes();
+        for (int i = 0; i < javaParamClasses.length; i++) {
+            if (javaParamClasses[i] == List.class) {
+                if (!(genericTypes[i] instanceof ParameterizedType)) {
+                    return false;
+                }
+                ParameterizedType pType = (ParameterizedType) genericTypes[i];
+                Type [] typeArgs = pType.getActualTypeArguments();
+                if (typeArgs.length != 1 || !(typeArgs[0] instanceof Class)) {
+                    return false;
+                }
+                Class typeClass = (Class) typeArgs[0];
+                if (typeClass != String.class) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
     }
 
     // implement OJRexImplementor

@@ -33,10 +33,9 @@ FENNEL_BEGIN_NAMESPACE
 class BTreeOwnerRootMap;
 
 /**
- * BTreeExecStreamParams defines parameters common to implementations of
- * BTreeExecStream.
+ * BTreeParams defines parameters used when accessing btrees
  */
-struct BTreeExecStreamParams : virtual public SingleOutputExecStreamParams
+struct BTreeParams
 {
     /**
      * Segment containing BTree.
@@ -72,7 +71,15 @@ struct BTreeExecStreamParams : virtual public SingleOutputExecStreamParams
      * Map for looking up variable index roots, or NULL for permanent root.
      */
     BTreeOwnerRootMap *pRootMap;
+};
 
+/**
+ * BTreeExecStreamParams defines parameters common to implementations of
+ * BTreeExecStream.
+ */
+struct BTreeExecStreamParams :
+    BTreeParams, virtual public SingleOutputExecStreamParams
+{
     explicit BTreeExecStreamParams();
 };
 
@@ -103,8 +110,6 @@ protected:
     
     SharedBTreeReader newReader();
     SharedBTreeWriter newWriter();
-    static void copyParamsToDescriptor(
-        BTreeDescriptor &,BTreeExecStreamParams const &);
 
     /**
      * Forgets the current reader or writer's search, releasing any page locks
@@ -116,6 +121,10 @@ public:
     virtual void open(bool restart);
     virtual void closeImpl();
 
+    static void copyParamsToDescriptor(
+        BTreeDescriptor &,
+        BTreeParams const &,
+        SharedCacheAccessor const &);
     static SharedBTreeWriter newWriter(BTreeExecStreamParams const &params);
 };
 

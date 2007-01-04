@@ -32,6 +32,8 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
+// REVIEW jvs 3-Dec-2006: Need to implement getChildExps() like SortRel?
+// Should probably factor out a SortRelBase.
 
 /**
  * FennelSortRel is the relational expression corresponding to a sort
@@ -46,11 +48,7 @@ public class FennelSortRel
 
     //~ Instance fields --------------------------------------------------------
 
-    /**
-     * 0-based ordinals of fields on which to sort, from most significant to
-     * least significant.
-     */
-    private final Integer [] keyProjection;
+    private final RelFieldCollation [] collations;
     
     /**
      * Whether to discard tuples with duplicate keys.
@@ -65,6 +63,7 @@ public class FennelSortRel
      * @param cluster RelOptCluster for this rel
      * @param child rel producing rows to be sorted
      * @param keyProjection 0-based ordinals of fields making up sort key
+     * (all ascending)
      * @param discardDuplicates whether to discard duplicates based on key
      */
     public FennelSortRel(
@@ -73,15 +72,48 @@ public class FennelSortRel
         Integer [] keyProjection,
         boolean discardDuplicates)
     {
+        this(
+            cluster, child,
+            convertKeyProjection(keyProjection),
+            discardDuplicates);
+    }
+
+    /**
+     * Creates a new FennelSortRel object.
+     *
+     * @param cluster RelOptCluster for this rel
+     * @param child rel producing rows to be sorted
+     * @param collations array of sort specifications
+     * @param discardDuplicates whether to discard duplicates based on key
+     */
+    public FennelSortRel(
+        RelOptCluster cluster,
+        RelNode child,
+        RelFieldCollation [] collations,
+        boolean discardDuplicates)
+    {
         super(cluster, child);
 
-        // TODO:  validate that keyProject references are distinct
-        this.keyProjection = keyProjection;
+        // TODO:  validate that collations are distinct
+        this.collations = collations;
         this.discardDuplicates = discardDuplicates;
     }
 
     //~ Methods ----------------------------------------------------------------
 
+    private static RelFieldCollation [] convertKeyProjection(
+        Integer [] keyProjection)
+    {
+        RelFieldCollation [] collations =
+            new RelFieldCollation [keyProjection.length];
+        for (int i = 0; i < keyProjection.length; ++i) {
+            collations[i] = new RelFieldCollation(
+                keyProjection[i],
+                RelFieldCollation.Direction.Ascending);
+        }
+        return collations;
+    }
+    
     // override Rel
     public boolean isDistinct()
     {
@@ -89,7 +121,7 @@ public class FennelSortRel
         // the sort key is the whole tuple
         return
             discardDuplicates
-            && (keyProjection.length == getRowType().getFieldList().size());
+            && (collations.length == getRowType().getFieldList().size());
     }
 
     public boolean isDiscardDuplicates()
@@ -104,7 +136,7 @@ public class FennelSortRel
             new FennelSortRel(
                 getCluster(),
                 getChild().clone(),
-                keyProjection,
+                collations,
                 discardDuplicates);
         clone.inheritTraitsFrom(this);
         return clone;
@@ -118,10 +150,10 @@ public class FennelSortRel
             // Therefore one sort column has .5 * rowCount,
             // 2 sort columns give .75 * rowCount.
             // Zero sort columns yields 1 row (or 0 if the input is empty).
-            if (keyProjection.length == 0) {
+            if (collations.length == 0) {
                 rowCount = 1;
             } else {
-                rowCount *= (1.0 - Math.pow(.5, keyProjection.length));
+                rowCount *= (1.0 - Math.pow(.5, collations.length));
             }
         }
         return rowCount;
@@ -143,12 +175,24 @@ public class FennelSortRel
     // override RelNode
     public void explain(RelOptPlanWriter pw)
     {
+        // TODO jvs 3-Dec-2006:  fix this and SortRel to be consistent
+        
+        String [] keys = new String[collations.length];
+        for (int i = 0; i <collations.length; ++i) {
+            keys[i] = "" + collations[i].getFieldIndex();
+            if (collations[i].getDirection()
+                != RelFieldCollation.Direction.Ascending)
+            {
+                keys[i] += " " + collations[i].getDirection();
+            }
+        }
+        
         pw.explain(
             this,
             new String[] { "child", "key", "discardDuplicates" },
             new Object[] {
-                Arrays.asList(keyProjection),
-            Boolean.valueOf(discardDuplicates)
+                Arrays.asList(keys),
+                Boolean.valueOf(discardDuplicates)
             });
     }
 
@@ -161,10 +205,28 @@ public class FennelSortRel
         sortingStream.setDistinctness(
             discardDuplicates ? DistinctnessEnum.DUP_DISCARD
             : DistinctnessEnum.DUP_ALLOW);
+        List<Integer> keyProj = new ArrayList<Integer>();
+        List<Integer> descendingProj = new ArrayList<Integer>();
+        int iKey = 0;
+        for (RelFieldCollation collation : collations) {
+            keyProj.add(collation.getFieldIndex());
+            if (collation.getDirection() !=
+                RelFieldCollation.Direction.Ascending)
+            {
+                assert(collation.getDirection() ==
+                    RelFieldCollation.Direction.Descending);
+                descendingProj.add(iKey);
+            }
+            ++iKey;
+        }
         sortingStream.setKeyProj(
             FennelRelUtil.createTupleProjection(
                 repos,
-                keyProjection));
+                keyProj));
+        sortingStream.setDescendingProj(
+            FennelRelUtil.createTupleProjection(
+                repos,
+                descendingProj));
         Double numInputRows = RelMetadataQuery.getRowCount(getChild());
         if (numInputRows == null) {
             sortingStream.setEstimatedNumRows(-1);
@@ -180,11 +242,6 @@ public class FennelSortRel
     // implement FennelRel
     public RelFieldCollation [] getCollations()
     {
-        RelFieldCollation [] collations =
-            new RelFieldCollation[keyProjection.length];
-        for (int i = 0; i < keyProjection.length; ++i) {
-            collations[i] = new RelFieldCollation(keyProjection[i].intValue());
-        }
         return collations;
     }
 }

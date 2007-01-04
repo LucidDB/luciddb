@@ -116,11 +116,13 @@ public class FennelStorage
      * @param hStream handle to stream
      * @param hTxn handle to txn in which stream is being opened
      * @param javaStreamMap optional FennelJavaStreamMap
+     * @param javaErrorTarget error target handles row errors
      */
     static native void tupleStreamGraphOpen(
         long hStreamGraph,
         long hTxn,
-        FennelJavaStreamMap javaStreamMap)
+        FennelJavaStreamMap javaStreamMap,
+        FennelJavaErrorTarget javaErrorTarget)
         throws SQLException;
 
     /**

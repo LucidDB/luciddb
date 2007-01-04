@@ -81,6 +81,7 @@ public class JavaToSqlTypeConversionRules
         rules.put(BigDecimal.class, SqlTypeName.Decimal);
 
         rules.put(ResultSet.class, SqlTypeName.Cursor);
+        rules.put(List.class, SqlTypeName.ColumnList);
     }
 
     //~ Methods ----------------------------------------------------------------

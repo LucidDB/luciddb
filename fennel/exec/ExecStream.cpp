@@ -105,7 +105,12 @@ void ExecStream::setResourceAllocation(
 void ExecStream::open(bool restart)
 {
     if (restart) {
+        // REVIEW jvs 3-Jan-2007:  We used to be able to assert this,
+        // but now that we've introduced early close to release
+        // resources, we can't.
+#if 0
         assert(isOpen);
+#endif
     } else {
         // NOTE: this assertion is bad because in case of multiple
         // inheritance, open can be called twice.  So we rely on the

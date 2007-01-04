@@ -88,12 +88,28 @@ class ExecStreamBuilder : public boost::noncopyable
         ProxyExecutionStreamDef &);
 
     /**
-     * Adds dataflows between a stream and its inputs. Interposes
-     * provisioning adapters as required.
+     * Adds dataflows between a stream and its inputs, in the case where
+     * the source input has only one output. Interposes provisioning adapters
+     * as required.
      *
      * @param streamDef corresponding Java stream definition being converted
      */
     void buildStreamInputs(
+        ProxyExecutionStreamDef &streamDef);
+
+    /**
+     * @return true if a stream has multiple outputs
+     */
+    bool hasMultipleOutputs(
+        ProxyExecutionStreamDef &streamDef);
+
+    /**
+     * Adds dataflows between a stream and its outputs, preserving order in
+     * the case where a stream has multiple outputs.
+     *
+     * @param streamDef corresponding Java stream definition being converted
+     */
+    void buildStreamOutputs(
         ProxyExecutionStreamDef &streamDef);
 
 public:

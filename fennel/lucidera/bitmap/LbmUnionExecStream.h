@@ -87,11 +87,6 @@ class LbmUnionExecStream : public ConfluenceExecStream
     DynamicParamId segmentLimitParamId;
 
     /**
-     * True if dynamic parameters have been created
-     */
-    bool dynParamsCreated;
-
-    /**
      * Tuple datum used to store dynamic paramter for ridLimit
      */
     TupleDatum ridLimitDatum;
@@ -246,7 +241,6 @@ class LbmUnionExecStream : public ConfluenceExecStream
     bool produceTuple();
 
 public:
-    explicit LbmUnionExecStream();
     virtual void prepare(LbmUnionExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);

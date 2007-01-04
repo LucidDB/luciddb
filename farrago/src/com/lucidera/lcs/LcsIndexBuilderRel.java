@@ -94,16 +94,19 @@ class LcsIndexBuilderRel
             implementor.visitFennelChild((FennelRel) getChild());
         FarragoTypeFactory typeFactory = getFarragoTypeFactory();
 
+        FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
         LcsIndexGuide indexGuide =
-            new LcsIndexGuide(
-                typeFactory,
-                FarragoCatalogUtil.getIndexTable(index),
-                index);
+            new LcsIndexGuide(typeFactory, table, index);
         FennelRelParamId paramId = implementor.allocateRelParamId();
+        FarragoRepos repos = FennelRelUtil.getRepos(this);
+        FemLocalIndex deletionIndex =
+            FarragoCatalogUtil.isIndexUnique(index) ?
+                FarragoCatalogUtil.getDeletionIndex(repos, table) : null;
         LcsCompositeStreamDef bitmapSet =
             indexGuide.newBitmapAppend(
                 this,
                 index,
+                deletionIndex,
                 implementor,
                 true,
                 paramId);

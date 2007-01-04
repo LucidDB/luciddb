@@ -27,6 +27,8 @@
 #include "fennel/common/FemEnums.h"
 #include "fennel/tuple/TupleDescriptor.h"
 
+#include <vector>
+
 FENNEL_BEGIN_NAMESPACE
 
 /**
@@ -48,12 +50,20 @@ struct ExternalSortExecStreamParams : public ConduitExecStreamParams
      */
     SharedSegment pTempSegment;
     
-    // TODO:  ASC/DESC and generalized collation support
     /**
      * Sort key projection (relative to tupleDesc).
      */
     TupleProjection keyProj;
 
+    // TODO:  generalized collation support
+    /**
+     * Vector with positions corresponding to those of keyProj; true indicates
+     * a descending key column, while false indicates asscending.  If this
+     * vector is empty, all columns are assumed to be ascending; otherwise, it
+     * must be the same length as keyProj.
+     */
+    std::vector<bool> descendingKeyColumns;
+    
     /**
      * Whether to materialize one big final run, or return results
      * directly from last merge stage.

@@ -26,7 +26,14 @@ select * from (select name from sales.depts order by name);
 -- ORDER BY on explicit TABLE
 table sales.depts order by name;
 
-alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-
--- LucidDB doesn't support ORDER BY DESC yet
+-- ORDER BY DESC
 select name from sales.depts order by name desc;
+
+-- ORDER BY DESC, ASC
+select deptno, name from sales.emps order by deptno desc, name asc;
+
+-- ORDER BY DESC, DESC
+select deptno, name from sales.emps order by deptno desc, name desc;
+
+-- ORDER BY ASC, DESC
+select deptno, name from sales.emps order by deptno asc, name desc;

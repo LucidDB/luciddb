@@ -98,7 +98,10 @@ public class FarragoOJRexCastImplementor
         RelDataType rhsType = call.operands[0].getType();
         Expression rhsExp = operands[0];
 
-        if (lhsType.getSqlTypeName() == SqlTypeName.Cursor) {
+        SqlTypeName lhsTypeName = lhsType.getSqlTypeName();
+        if (lhsTypeName == SqlTypeName.Cursor ||
+            lhsTypeName == SqlTypeName.ColumnList)
+        {
             // Conversion should already have been taken care of outside.
             return rhsExp;
         }

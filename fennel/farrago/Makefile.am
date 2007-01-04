@@ -11,6 +11,7 @@ CmdInterpreter.cpp \
 ExecStreamBuilder.cpp \
 ExecStreamFactory.cpp \
 Fem.cpp \
+JavaErrorTarget.cpp \
 JavaExcn.cpp \
 JavaSinkExecStream.cpp \
 JavaTraceTarget.cpp \

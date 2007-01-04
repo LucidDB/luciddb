@@ -52,6 +52,8 @@ abstract public class AbstractResultSet
     protected boolean wasNull;
     protected int fetchSize = 0;
 
+    protected int maxRows;
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -1605,6 +1607,14 @@ abstract public class AbstractResultSet
     {
         throw new UnsupportedOperationException(
             "Operation not supported right now");
+    }
+
+    /**
+     * @see {@link Statement#setMaxRows}
+     */
+    public void setMaxRows(int maxRows)
+    {
+        this.maxRows = maxRows;
     }
 
     // Errors

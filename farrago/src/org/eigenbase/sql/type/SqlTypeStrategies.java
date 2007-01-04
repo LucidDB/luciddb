@@ -737,6 +737,12 @@ public abstract class SqlTypeStrategies
         new ExplicitReturnTypeInference(SqlTypeName.Cursor);
 
     /**
+     * Type-inference strategy which always returns "COLUMN_LIST".
+     */
+    public static final SqlReturnTypeInference rtiColumnList =
+        new ExplicitReturnTypeInference(SqlTypeName.ColumnList);
+    
+    /**
      * Type-inference strategy whereby the result type of a call is using its
      * operands biggest type, using the SQL:1999 rules described in "Data types
      * of results of aggregations". These rules are used in union, except,

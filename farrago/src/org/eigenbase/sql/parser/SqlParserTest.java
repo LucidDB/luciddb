@@ -1577,6 +1577,19 @@ public class SqlParserTest
             "FROM `EMPS`))), 'name'))"
                 }));
     }
+    
+    public void testCollectionTableWithColumnListParam()
+    {
+        check(
+            "select * from table(dedup(cursor(select * from emps)," +
+            "row(empno, name)))",
+            TestUtil.fold(
+                new String[] {
+                    "SELECT *",
+            "FROM TABLE(`DEDUP`((CURSOR ((SELECT *",
+            "FROM `EMPS`))), (ROW(`EMPNO`, `NAME`))))"
+                }));
+    }
 
     public void testIllegalCursors()
     {

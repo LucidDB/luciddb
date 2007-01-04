@@ -36,6 +36,7 @@
 #include "fennel/exec/CartesianJoinExecStream.h"
 #include "fennel/exec/SortedAggExecStream.h"
 #include "fennel/exec/ReshapeExecStream.h"
+#include "fennel/exec/SplitterExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 
@@ -131,7 +132,7 @@ void ExecStreamTestSuite::testMergeExecStream()
 
     MergeExecStreamParams paramsMerge;
     paramsMerge.outputTupleDesc.push_back(attrDesc);
-        
+
     ExecStreamEmbryo mergeStreamEmbryo;
     mergeStreamEmbryo.init(new MergeExecStream(),paramsMerge);
     mergeStreamEmbryo.getStream()->setName("MergeExecStream");
@@ -534,6 +535,121 @@ void ExecStreamTestSuite::testSingleValueAggExecStream()
     CompositeExecStreamGenerator expectedResultGenerator(columnGeneratorsOut);
 
     verifyOutput(*pOutputStream, mockParams.nRows, expectedResultGenerator);
+}
+
+void ExecStreamTestSuite::testMergeImplicitPullInputs()
+{
+    // This testcase exercises the case where production of rows from inputs
+    // into the MergeExecStream needs to occur independent of explicit requests
+    // made by the MergeExecStream.  The initial input is a single stream
+    // that is split by a SplitterExecStream and then brought back together by
+    // the MergeExecSteam in a different order from the original input.
+
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+
+    // Initial input stream is a repeating sequence of
+    // 0, 1, 2, ... nInputs - 1, 0, 1, 2, ..., nInputs - 1, 0, 1, 2, ...
+    // Note that we're using a column generator here because there's already a
+    // column generator class that produces the kind of input stream we need.
+    
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    // needs to fill up at least 2 buffers per input into the merge
+    uint nInputs = 5;
+    uint nRows = nInputs * 4000;
+    mockParams.nRows = nRows;
+    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerator;
+    columnGenerator.push_back(
+        SharedInt64ColumnGenerator(
+            new DupRepeatingSeqColumnGenerator(nInputs, 1)));
+    mockParams.pGenerator.reset(
+        new CompositeExecStreamGenerator(columnGenerator));
+
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+
+    // split the mock data stream with each value being redirected to
+    // one of the merge inputs, based on its value, by using reshape streams
+    // to filter the input values
+
+    SplitterExecStreamParams splitterParams;
+    ExecStreamEmbryo splitterStreamEmbryo;
+    splitterStreamEmbryo.init(new SplitterExecStream(), splitterParams);
+    splitterStreamEmbryo.getStream()->setName("SplitterExecStream");
+
+    vector<vector<ExecStreamEmbryo> > reshapeEmbryoStreamList;
+    for (int i = 0; i < nInputs; i++) {
+        ReshapeExecStreamParams rsParams;
+        boost::shared_array<FixedBuffer> pBuffer;
+        rsParams.compOp = COMP_EQ;
+        pBuffer.reset(new FixedBuffer[8]);
+        int64_t key = i;
+        TupleDescriptor compareDesc;
+        compareDesc.push_back(attrDesc);
+        TupleData compareData;
+        compareData.compute(compareDesc);
+        compareData[0].pData = (PConstBuffer) &key;
+        TupleAccessor tupleAccessor;
+        tupleAccessor.compute(compareDesc);
+        tupleAccessor.marshal(compareData, pBuffer.get());
+        rsParams.pCompTupleBuffer = pBuffer;
+        TupleProjection tupleProj;
+        tupleProj.push_back(0);
+        rsParams.inputCompareProj = tupleProj;
+        rsParams.outputProj = tupleProj;
+
+        ExecStreamEmbryo rsStreamEmbryo;
+        rsStreamEmbryo.init(new ReshapeExecStream(), rsParams);
+        std::ostringstream oss;
+        oss << "ReshapeExecStream" << "#" << i;
+        rsStreamEmbryo.getStream()->setName(oss.str());
+
+        vector<ExecStreamEmbryo> reshapeStreamEmbryo;
+        reshapeStreamEmbryo.push_back(rsStreamEmbryo);
+
+        // since the splitter needs to pass through all rows but the merge
+        // needs to return each input in the order of the inputs, we need to
+        // buffer all but the first input to prevent the splitter from blocking
+        if (i != 0) {
+            SegBufferExecStreamParams bufParams;
+            bufParams.scratchAccessor.pSegment = pRandomSegment;
+            bufParams.scratchAccessor.pCacheAccessor = pCache;
+            bufParams.multipass = false;
+
+            ExecStreamEmbryo bufStreamEmbryo;
+            bufStreamEmbryo.init(new SegBufferExecStream(), bufParams);
+            std::ostringstream oss;
+            oss << "SegBufferExecStream" << "#" << i;
+            bufStreamEmbryo.getStream()->setName(oss.str());
+
+            reshapeStreamEmbryo.push_back(bufStreamEmbryo);
+        }
+        reshapeEmbryoStreamList.push_back(reshapeStreamEmbryo);
+    }
+
+    // merge the inputs with each input being read in sequence
+    MergeExecStreamParams mergeParams;
+    mergeParams.outputTupleDesc.push_back(attrDesc);
+
+    ExecStreamEmbryo mergeStreamEmbryo;
+    mergeStreamEmbryo.init(new MergeExecStream(), mergeParams);
+    mergeStreamEmbryo.getStream()->setName("MergeExecStream");
+
+    SharedExecStream pOutputStream =
+        prepareDAG(
+            mockStreamEmbryo,
+            splitterStreamEmbryo,
+            reshapeEmbryoStreamList,
+            mergeStreamEmbryo);
+
+    // setup the generator for the expected result -- 0's, followed by 1's,
+    // followed by 2's, etc.
+    StairCaseExecStreamGenerator expectedResultGenerator(1, nRows/nInputs);
+
+    verifyOutput(*pOutputStream, nRows, expectedResultGenerator);
 }
 
 // End ExecStreamTest.cpp

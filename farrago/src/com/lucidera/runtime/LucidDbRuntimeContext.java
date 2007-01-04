@@ -21,7 +21,6 @@
 package com.lucidera.runtime;
 
 import com.lucidera.farrago.*;
-import com.lucidera.opt.*;
 
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
@@ -484,7 +483,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             if (row != null) {
                 return row.toString();
             } else {
-                return values.toString();
+                return Util.flatArrayToString(values);
             }
         }
     }
@@ -584,7 +583,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             for (int i = 0; i < fieldCount; i++) {
                 try {
                     args[prefixCount+i] = 
-                        quoteValue(getValue(i).toString());
+                        quoteValue(getValue(i));
                 } catch (IllegalAccessException ex2) {
                     tracer.severe("could not log row error field " 
                         + getName(i) + ": " + ex2);
@@ -613,6 +612,15 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         private final char QUOTE_CHAR = '"';
         private final String ONE_QUOTE = "\"";
         private final String TWO_QUOTES = "\"\"";
+
+        /**
+         * Converts an object to a string then quotes it
+         */
+        private String quoteValue(Object o)
+        {
+            String s = (o == null) ? null : o.toString();
+            return quoteValue(s);
+        }
 
         /**
          * Quotes a string, if required, for standard CSV format
@@ -752,19 +760,10 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                 }
                 // NOTE: if an error causes an exception, do not log it
                 if (quota.errorCount > quota.errorMax) {
-                    EigenbaseException ex2;
                     String field = getFieldName(tag, columnIndex);
                     String row = getRecordString();
-                    String messages = Util.getMessages(ex);
-                    if (columnIndex == 0) {
-                        ex2 = 
-                            FarragoResource.instance().JavaCalcConditionError
-                            .ex(row, messages);
-                    } else { 
-                        ex2 = 
-                            FarragoResource.instance().JavaCalcError.ex(
-                                field, row, messages);
-                    }
+                    EigenbaseException ex2 = 
+                        makeRowError(ex, row, columnIndex, field);
                     if (quota.errorMax > 0) {
                         throw FarragoResource.instance().ErrorLimitExceeded.ex(
                             quota.errorMax, Util.getMessages(ex2));

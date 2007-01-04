@@ -221,6 +221,10 @@ public class FarragoOJRexImplementorTable
             new FarragoOJRexStaticMethodImplementor(
                 FarragoSyntheticObject.class,
                 "testIsDifferentFrom"));
+        
+        registerOperator(
+            SqlStdOperatorTable.columnListConstructor,
+            new FarragoOJRexColumnListImplementor());
 
         registerContextOp(SqlStdOperatorTable.userFunc);
         registerContextOp(SqlStdOperatorTable.systemUserFunc);

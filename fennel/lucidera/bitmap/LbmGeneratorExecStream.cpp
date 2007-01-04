@@ -26,11 +26,6 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-LbmGeneratorExecStream::LbmGeneratorExecStream()
-{
-    dynParamsCreated = false;
-}
-
 void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
 {
     BTreeExecStream::prepare(params);
@@ -44,7 +39,7 @@ void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
     scratchLock.accessSegment(scratchAccessor);
     scratchPageSize = scratchAccessor.pSegment->getUsablePageSize();
 
-    // setup input tuple
+    // setup input tuple -- numRowsToLoad, startRid
     assert(inAccessors[0]->getTupleDesc().size() == 2);
     inputTuple.compute(inAccessors[0]->getTupleDesc());
 
@@ -83,10 +78,10 @@ void LbmGeneratorExecStream::open(bool restart)
     skipRead = false;
     rowCount = 0;
     batchRead = false;
+    doneReading = false;
     if (!restart) {
         pDynamicParamManager->createParam(
             insertRowCountParamId, inAccessors[0]->getTupleDesc()[0]);
-        dynParamsCreated = true;
     }
 }
 
@@ -131,8 +126,13 @@ ExecStreamResult LbmGeneratorExecStream::execute(
 {
     // read the start rid and num of rows to load
     
-    if (inAccessors[0]->getState() != EXECBUF_EOS) {
+    if (inAccessors[0]->getState() == EXECBUF_EOS) {
+        if (doneReading) {
+            pOutAccessor->markEOS();
+            return EXECRC_EOS;
+        }
 
+    } else {
         if (!inAccessors[0]->demandData()) {
             return EXECRC_BUF_UNDERFLOW;
         }
@@ -155,13 +155,14 @@ ExecStreamResult LbmGeneratorExecStream::execute(
         // set number of rows to load in a dynamic parameter that
         // splicer will later read
         pDynamicParamManager->writeParam(insertRowCountParamId, inputTuple[0]);
+
         inAccessors[0]->consumeTuple();
 
         // special case where there are no rows -- don't bother reading
         // from the table because we may end up reading deleted rows
         if (!createIndex && numRowsToLoad == 0) {
-            pOutAccessor->markEOS();
-            return EXECRC_EOS;
+            doneReading = true;
+            return EXECRC_BUF_UNDERFLOW;
         }
 
         // position to the starting rid
@@ -170,8 +171,8 @@ ExecStreamResult LbmGeneratorExecStream::execute(
             SharedLcsClusterReader &pScan = pClusters[iClu];
             if (!pScan->position(startRid)) {
                 // empty table
-                pOutAccessor->markEOS();
-                return EXECRC_EOS;
+                doneReading = true;
+                return EXECRC_BUF_UNDERFLOW;
             }
             syncColumns(pScan);
         }
@@ -179,10 +180,6 @@ ExecStreamResult LbmGeneratorExecStream::execute(
         // initialize bitmap table to a single entry, assuming we're
         // starting with singleton bitmaps
         initBitmapTable(1);
-    }
-
-    if (pOutAccessor->getState() == EXECBUF_EOS) {
-        return EXECRC_EOS;
     }
 
     // take care of any pending flushes first
@@ -222,8 +219,8 @@ ExecStreamResult LbmGeneratorExecStream::execute(
         if (!createIndex) {
             assert(rowCount == numRowsToLoad);
         }
-        pOutAccessor->markEOS();
-        return EXECRC_EOS;
+        doneReading = true;
+        return EXECRC_BUF_UNDERFLOW;
     default:
         permAssert(false);
     }
@@ -323,9 +320,6 @@ void LbmGeneratorExecStream::closeImpl()
 {
     BTreeExecStream::closeImpl();
     LcsRowScanBaseExecStream::closeImpl();
-    if (dynParamsCreated) {
-        pDynamicParamManager->deleteParam(insertRowCountParamId);
-    }
     keyCodes.clear();
     bitmapTable.clear();
     scratchPages.clear();

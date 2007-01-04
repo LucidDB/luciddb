@@ -229,16 +229,20 @@ public abstract class DdlHandler
 
         Object typeObj = validator.getSqlDefinition(abstractElement);
 
-        // Special handling for cursor types
+        // Special handling for cursor and columnList types
         if (typeObj == null) {
-            if (element.getType().getName().equals("CURSOR")) {
+            if (element.getType().getName().equals("CURSOR") ||
+                element.getType().getName().equals("COLUMN_LIST"))
+            {
                 // previously validated
                 return;
             }
         }
         if (typeObj instanceof SqlIdentifier) {
             SqlIdentifier id = (SqlIdentifier) typeObj;
-            assert (id.getSimple().equals("CURSOR"));
+            assert (
+                id.getSimple().equals("CURSOR") ||
+                id.getSimple().equals("COLUMN_LIST"));
             element.setType(
                 validator.getStmtValidator().findSqldataType(id));
             element.setCollationName("");

@@ -215,7 +215,6 @@ protected:
     bool produceTuple(TupleData bitmapTuple);
 
 public:
-    explicit LbmMinusExecStream();
     virtual void prepare(LbmMinusExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);

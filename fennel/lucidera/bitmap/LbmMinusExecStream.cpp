@@ -26,10 +26,6 @@
 
 FENNEL_BEGIN_CPPFILE("$Id:");
 
-LbmMinusExecStream::LbmMinusExecStream() : LbmBitOpExecStream()
-{
-}
-
 void LbmMinusExecStream::prepare(LbmMinusExecStreamParams const &params)
 {
     LbmBitOpExecStream::prepare(params);

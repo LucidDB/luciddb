@@ -145,17 +145,20 @@ public class FennelStreamGraph
      * @param fennelTxnContext transaction context in which stream graph should
      * participate
      * @param javaStreamMap optional FennelJavaStreamMap
+     * @param javaErrorTarget error target handles row errors
      */
     public void open(
         FennelTxnContext fennelTxnContext,
-        FennelJavaStreamMap javaStreamMap)
+        FennelJavaStreamMap javaStreamMap,
+        FennelJavaErrorTarget javaErrorTarget)
     {
         traceGraphHandle("open");
         try {
             FennelStorage.tupleStreamGraphOpen(
                 streamGraphHandle,
                 fennelTxnContext.getTxnHandleLong(),
-                javaStreamMap);
+                javaStreamMap,
+                javaErrorTarget);
         } catch (SQLException ex) {
             throw fennelDbHandle.handleNativeException(ex);
         }

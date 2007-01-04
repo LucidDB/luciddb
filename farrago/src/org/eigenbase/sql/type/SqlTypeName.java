@@ -159,6 +159,9 @@ public class SqlTypeName
     public static final int Cursor_ordinal = 25;
     public static final SqlTypeName Cursor =
         new SqlTypeName("CURSOR", Cursor_ordinal, PrecNoScaleNo);
+    public static final int ColumnList_ordinal = 26;
+    public static final SqlTypeName ColumnList =
+        new SqlTypeName("COLUMN_LIST", ColumnList_ordinal, PrecNoScaleNo);
 
     /**
      * Array of all allowable {@link SqlTypeName} values.
@@ -168,7 +171,7 @@ public class SqlTypeName
             Boolean, Integer, Varchar, Date, Time, Timestamp, Null, Decimal,
             Any, Char, Binary, Varbinary, Tinyint, Smallint, Bigint, Real,
             Double, Symbol, IntervalYearMonth, IntervalDayTime,
-            Float, Multiset, Distinct, Structured, Row, Cursor
+            Float, Multiset, Distinct, Structured, Row, Cursor, ColumnList
         };
 
     // categorizations used by SqlTypeFamily definitions
@@ -226,6 +229,10 @@ public class SqlTypeName
 
     public static final SqlTypeName [] cursorTypes = {
             Cursor
+        };
+    
+    public static final SqlTypeName [] columnListTypes = {
+            ColumnList
         };
 
     /**
@@ -439,6 +446,8 @@ public class SqlTypeName
             return Types.STRUCT;
         case Cursor_ordinal:
             return Types.OTHER + 1;
+        case ColumnList_ordinal:
+            return Types.OTHER + 2;
         default:
             return Types.OTHER;
         }

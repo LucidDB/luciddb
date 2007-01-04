@@ -31,6 +31,7 @@ import com.lucidera.runtime.*;
 import com.lucidera.type.*;
 
 import java.io.*;
+import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -133,11 +134,6 @@ public class LucidDbSessionPersonality
         // but LucidDB does support MERGE (unlike vanilla Farrago)
         if (feature == featureResource.SQLFeature_F312) {
             return true;
-        }
-
-        // LucidDB doesn't support ORDER BY DESC...yet
-        if (feature == featureResource.SQLConformance_OrderByDesc){
-            return false;
         }
         
         return super.supportsFeature(feature);
@@ -681,17 +677,43 @@ public class LucidDbSessionPersonality
     }
     
     // implement FarragoSessionPersonality
-    public void updateRowCounts(
+    public void getRowCounts(
+        ResultSet resultSet,
+        List<Long> rowCounts,
+        TableModificationRel.Operation tableModOp)
+        throws SQLException
+    {
+        boolean found = resultSet.next();
+        assert (found);
+        boolean nextRowCount = addRowCount(resultSet, rowCounts);
+        if (tableModOp == TableModificationRel.Operation.INSERT ||
+            tableModOp == TableModificationRel.Operation.MERGE)
+        {
+            // inserts may have a violation rowcount whereas merges may have
+            // both a violation count and a deletion count
+            if (nextRowCount) {
+                nextRowCount = addRowCount(resultSet, rowCounts);
+            }
+        }
+        if (tableModOp == TableModificationRel.Operation.MERGE) {
+            if (nextRowCount) {
+                nextRowCount = addRowCount(resultSet, rowCounts);
+            }
+        }
+        assert (!nextRowCount);
+    }
+    
+    // implement FarragoSessionPersonality
+    public long updateRowCounts(
         FarragoSession session,
         List<String> tableName,
-        long insertedRowCount,
-        long deletedRowCount,
-        long updateRowCount,
+        List<Long> rowCounts,
         TableModificationRel.Operation tableModOp)
-    {
+    {      
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         FarragoRepos repos = session.getRepos();
         boolean rollback = false;
+        long affectedRowCount = 0;
         try {
             repos.beginReposTxn(true);
             rollback = true;
@@ -708,15 +730,46 @@ public class LucidDbSessionPersonality
                     FemAbstractColumnSet.class);       
             long currRowCount = columnSet.getRowCount();
             long currDeletedRowCount = columnSet.getDeletedRowCount();
+            
+            // categorize the rowcounts returned by the statement
+            long insertedRowCount = 0;
+            long deletedRowCount = 0;
+            long violationRowCount = 0;
+            int numRowCounts = rowCounts.size();
+            if (tableModOp == TableModificationRel.Operation.DELETE) {
+                deletedRowCount = rowCounts.get(0);
+            } else if (tableModOp == TableModificationRel.Operation.INSERT) {
+                insertedRowCount = rowCounts.get(0);
+                if (numRowCounts == 2) {
+                    violationRowCount = rowCounts.get(1);
+                }
+            } else if (tableModOp == TableModificationRel.Operation.MERGE) {
+                insertedRowCount = rowCounts.get(0);
+                if (FarragoCatalogUtil.hasUniqueKey(columnSet)) {
+                    violationRowCount = rowCounts.get(1);
+                    if (numRowCounts == 3) {
+                        deletedRowCount = rowCounts.get(2);
+                    }
+                } else {
+                    if (numRowCounts == 2) {
+                        deletedRowCount = rowCounts.get(1);
+                    }
+                }              
+            } else {
+                assert(false);
+            }
                
             // update the rowcounts based on the operation
             if (tableModOp == TableModificationRel.Operation.INSERT) {
-                currRowCount += insertedRowCount;
+                affectedRowCount = insertedRowCount - violationRowCount;
+                currRowCount += affectedRowCount;               
             } else if (tableModOp == TableModificationRel.Operation.DELETE) {
+                affectedRowCount = deletedRowCount;
                 currRowCount -= deletedRowCount;
                 currDeletedRowCount += deletedRowCount;
             } else if (tableModOp == TableModificationRel.Operation.MERGE) {
-                long newRowCount = insertedRowCount - deletedRowCount;
+                affectedRowCount = insertedRowCount - violationRowCount;
+                long newRowCount = affectedRowCount - deletedRowCount;
                 currRowCount += newRowCount;
                 currDeletedRowCount += deletedRowCount;
                 session.getSessionVariables().setLong(
@@ -744,6 +797,8 @@ public class LucidDbSessionPersonality
             }
             stmtValidator.closeAllocation();
         }
+        
+        return affectedRowCount;
     }
     
     // implement FarragoSessionPersonality

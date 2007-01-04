@@ -87,6 +87,9 @@ typedef JniProxyIter<ProxyDatabaseParam> SharedProxyDatabaseParam;
 class ProxyDbHandle;
 typedef JniProxyIter<ProxyDbHandle> SharedProxyDbHandle;
 
+class ProxyDynamicParameter;
+typedef JniProxyIter<ProxyDynamicParameter> SharedProxyDynamicParameter;
+
 class ProxyEndTxnCmd;
 typedef JniProxyIter<ProxyEndTxnCmd> SharedProxyEndTxnCmd;
 
@@ -198,6 +201,9 @@ typedef JniProxyIter<ProxySortedAggStreamDef> SharedProxySortedAggStreamDef;
 class ProxySortingStreamDef;
 typedef JniProxyIter<ProxySortingStreamDef> SharedProxySortingStreamDef;
 
+class ProxySplicerIndexAccessorDef;
+typedef JniProxyIter<ProxySplicerIndexAccessorDef> SharedProxySplicerIndexAccessorDef;
+
 class ProxySplitterStreamDef;
 typedef JniProxyIter<ProxySplitterStreamDef> SharedProxySplitterStreamDef;
 
@@ -285,10 +291,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getInputFlow();
-static jmethodID meth_getInputFlow;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
+SharedProxyExecStreamDataFlow getInputFlow();
+static jmethodID meth_getInputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -313,8 +319,10 @@ class ProxyBarrierStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
-int32_t getRowCountInput();
-static jmethodID meth_getRowCountInput;
+BarrierReturnMode getReturnMode();
+static jmethodID meth_getReturnMode;
+SharedProxyDynamicParameter getDynamicParameter();
+static jmethodID meth_getDynamicParameter;
 };
 
 class ProxyBufferingTupleStreamDef
@@ -587,6 +595,16 @@ class ProxyDbHandle
 public:
 };
 
+class ProxyDynamicParameter
+: virtual public JniProxy
+{
+public:
+int32_t getParameterId();
+static jmethodID meth_getParameterId;
+SharedProxyBarrierStreamDef getBarrier();
+static jmethodID meth_getBarrier;
+};
+
 class ProxyExecStreamDataFlow
 : virtual public JniProxy
 {
@@ -779,8 +797,6 @@ class ProxyLbmGeneratorStreamDef
 public:
 int32_t getInsertRowCountParamId();
 static jmethodID meth_getInsertRowCountParamId;
-int32_t getDeleteRowCountParamId();
-static jmethodID meth_getDeleteRowCountParamId;
 bool isCreateIndex();
 static jmethodID meth_isCreateIndex;
 };
@@ -826,15 +842,15 @@ public:
 };
 
 class ProxyLbmSplicerStreamDef
-: virtual public JniProxy, virtual public ProxyIndexStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
 int32_t getInsertRowCountParamId();
 static jmethodID meth_getInsertRowCountParamId;
-bool isIgnoreDuplicates();
-static jmethodID meth_isIgnoreDuplicates;
-int32_t getDeleteRowCountParamId();
-static jmethodID meth_getDeleteRowCountParamId;
+int32_t getWriteRowCountParamId();
+static jmethodID meth_getWriteRowCountParamId;
+SharedProxySplicerIndexAccessorDef getIndexAccessor();
+static jmethodID meth_getIndexAccessor;
 };
 
 class ProxyLbmUnionStreamDef
@@ -945,6 +961,16 @@ Distinctness getDistinctness();
 static jmethodID meth_getDistinctness;
 int64_t getEstimatedNumRows();
 static jmethodID meth_getEstimatedNumRows;
+SharedProxyTupleProjection getDescendingProj();
+static jmethodID meth_getDescendingProj;
+};
+
+class ProxySplicerIndexAccessorDef
+: virtual public JniProxy, virtual public ProxyIndexAccessorDef
+{
+public:
+SharedProxyLbmSplicerStreamDef getSplicer();
+static jmethodID meth_getSplicer;
 };
 
 class ProxySplitterStreamDef
@@ -1193,6 +1219,8 @@ virtual void visit(ProxyDatabaseParam &)
 { unhandledVisit(); }
 virtual void visit(ProxyDbHandle &)
 { unhandledVisit(); }
+virtual void visit(ProxyDynamicParameter &)
+{ unhandledVisit(); }
 virtual void visit(ProxyEndTxnCmd &)
 { unhandledVisit(); }
 virtual void visit(ProxyExecStreamDataFlow &)
@@ -1266,6 +1294,8 @@ virtual void visit(ProxyReshapeStreamDef &)
 virtual void visit(ProxySortedAggStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxySortingStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxySplicerIndexAccessorDef &)
 { unhandledVisit(); }
 virtual void visit(ProxySplitterStreamDef &)
 { unhandledVisit(); }

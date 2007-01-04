@@ -30,6 +30,19 @@ void LbmSegmentReader::init(
     TupleData &bitmapSegTuple)
 {
     LbmSegmentReaderBase::init(pInAccessorInit, bitmapSegTuple);
+    initCommon();
+}
+
+void LbmSegmentReader::init(
+    SharedLbmTupleReader &pTupleReaderInit,
+    TupleData &bitmapSegTuple)
+{
+    LbmSegmentReaderBase::init(pTupleReaderInit, bitmapSegTuple);
+    initCommon();
+}
+
+void LbmSegmentReader::initCommon()
+{
     firstReadDone = false;
 }
 

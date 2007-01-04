@@ -81,6 +81,11 @@ class FennelResource : ResourceBundle
     std::string scratchMemExhausted() const;
 
     /**
+     * <code>uniqueConstraintViolated</code> is 'Unique constraint violation'
+     */
+    std::string uniqueConstraintViolated() const;
+
+    /**
      * <code>readDataFailed</code> is 'Could not read data file {0}'
      */
     std::string readDataFailed(const std::string &p0) const;
@@ -164,6 +169,7 @@ class FennelResource : ResourceBundle
     ResourceDefinition _invalidParam;
     ResourceDefinition _scalarQueryReturnedMultipleRows;
     ResourceDefinition _scratchMemExhausted;
+    ResourceDefinition _uniqueConstraintViolated;
     ResourceDefinition _readDataFailed;
     ResourceDefinition _dataTransferFailed;
     ResourceDefinition _writeLogFailed;

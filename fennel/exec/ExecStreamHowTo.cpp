@@ -338,7 +338,7 @@ void UniqExecStream::open(bool restart)
 {
     ConduitExecStream::open(restart);
     previousTupleValid = false;
-    if (!restart) {
+    if (!pLastTupleSaved) {
         uint cbTupleMax =
             pInAccessor->getConsumptionTupleAccessor().getMaxByteCount();
         pLastTupleSaved.reset(new FixedBuffer[cbTupleMax]);
@@ -347,8 +347,8 @@ void UniqExecStream::open(bool restart)
 </code></pre>
 
 The restart flag is only true when a stream is restarted in the middle of an
-execution (e.g. as part of a nested loop join).  In the restart case,
-UniqExecStream can skip reallocating its private buffer.
+execution (e.g. as part of a nested loop join).  Note that in rare cases,
+open may be called with restart=true even after a close.
 
 <hr>
 

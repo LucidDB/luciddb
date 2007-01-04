@@ -211,6 +211,18 @@ public interface SqlValidator
      * Validates a call to an operator.
      */
     void validateCall(SqlCall call, SqlValidatorScope scope);
+    
+    /**
+     * Validates a COLUMN_LIST parameter
+     * 
+     * @param function function containing COLUMN_LIST parameter
+     * @param argTypes function arguments
+     * @param operands operands passed into the function call
+     */
+    void validateColumnListParams(
+        SqlFunction function,
+        RelDataType [] argTypes,
+        SqlNode [] operands);
 
     /**
      * Derives the type of a node in a given scope. If the type has already been
@@ -336,6 +348,13 @@ public interface SqlValidator
     void setValidatedNodeType(
         SqlNode node,
         RelDataType type);
+    
+    /**
+     * Removes a node from the set of validated nodes
+     * 
+     * @param node node to be removed
+     */
+    void removeValidatedNodeType(SqlNode node);
 
     /**
      * Returns an object representing the "unknown" type.
@@ -424,9 +443,22 @@ public interface SqlValidator
 
     /**
      * Declares a SELECT expression as a cursor.
+     * 
+     * @param select select expression associated with the cursor
      */
     void declareCursor(SqlSelect select);
 
+    /**
+     * Pushes a new instance of a cursor map on to the cursor map stack.
+     * Each cursor map corresponds to a specific function call.
+     */
+    void pushCursorMap();
+    
+    /**
+     * Removes the topmost entry from the cursor map stack.
+     */
+    void popCursorMap();
+    
     /**
      * Enables or disables expansion of identifiers.
      *
@@ -476,7 +508,7 @@ public interface SqlValidator
     SqlNode expandOrderExpr(SqlSelect select, SqlNode orderExpr);
 
     SqlNode expand(SqlNode expr, SqlValidatorScope scope);
-
+    
     //~ Inner Classes ----------------------------------------------------------
 
     /**

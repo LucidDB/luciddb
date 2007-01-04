@@ -32,6 +32,7 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
@@ -182,6 +183,20 @@ public abstract class FarragoCatalogUtil
         return index.getName().startsWith(
             "SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY");
     }
+    
+    /**
+     * Determines whether an index implements either a primary key or a
+     * unique constraint
+     * 
+     * @param index the index in question
+     *
+     * @return true if is either the primary key index or a unique constraint
+     * index
+     */
+    public static boolean isIndexUnique(FemLocalIndex index)
+    {
+        return ((CwmIndex) index).isUnique();
+    }
 
     /**
      * Determines whether an index implements an internal deletion index.
@@ -232,6 +247,63 @@ public abstract class FarragoCatalogUtil
             }
         }
         return null;
+    }
+    
+    /**
+     * Returns a bitmap with bits set for any column from a table that is part
+     * of either a primary key or a unique constraint
+     * 
+     * @param table the table of interest
+     * 
+     * @return bitmap with set bits
+     */
+    public static BitSet getUniqueKeyCols(CwmClassifier table)
+    {
+        BitSet uniqueCols = new BitSet();
+        
+        // first retrieve the columns from the primary key
+        FemPrimaryKeyConstraint primKey =
+            FarragoCatalogUtil.getPrimaryKey(table);
+        if (primKey != null) {
+            addKeyCols((List) primKey.getFeature(), uniqueCols);
+        }
+
+        // then, loop through each unique constraint
+        List<FemUniqueKeyConstraint> uniqueConstraints =
+            FarragoCatalogUtil.getUniqueKeyConstraints(table);
+        for (FemUniqueKeyConstraint uniqueConstraint : uniqueConstraints) {
+            addKeyCols((List) uniqueConstraint.getFeature(), uniqueCols);
+        }
+        
+        return uniqueCols;
+    }
+    
+    private static void addKeyCols(
+        List<FemAbstractColumn> keyCols,
+        BitSet keys)
+    {
+        for (FemAbstractColumn keyCol : keyCols) {
+            keys.set(keyCol.getOrdinal());
+        }
+    }
+    
+    /**
+     * Determines whether a table contains a unique key
+     * 
+     * @param table the table of interest
+     * 
+     * @return true if the table has a unique key
+     */
+    public static boolean hasUniqueKey(CwmClassifier table)
+    {
+        for (CwmModelElement obj : table.getOwnedElement()) {
+            if (obj instanceof FemPrimaryKeyConstraint ||
+                obj instanceof FemUniqueKeyConstraint)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

@@ -41,6 +41,10 @@ FlatFileExecStream *FlatFileExecStream::newFlatFileExecStream()
     return new FlatFileExecStreamImpl();
 }
 
+// NOTE: keep this consistent with the Farrago java file
+//   com.lucidera.farrago.namespace.flatfile.FlatFileFennelRel.java 
+const uint FlatFileExecStreamImpl::MAX_ROW_ERROR_TEXT_WIDTH = 4000;
+
 // TODO: remove Fennel calc code and linking
 void FlatFileExecStreamImpl::prepare(
     FlatFileExecStreamParams const &params)
@@ -48,9 +52,7 @@ void FlatFileExecStreamImpl::prepare(
     SingleOutputExecStream::prepare(params);
 
     header = params.header;
-    logging = (params.errorFilePath.size() > 0);
     dataFilePath = params.dataFilePath;
-    errorFilePath = params.errorFilePath;
     lenient = params.lenient;
     trim = params.trim;
     mapped = params.mapped;
@@ -325,7 +327,6 @@ ExecStreamResult FlatFileExecStreamImpl::execute(
 
         // close stream if no more rows are available
         if (done) {
-            detectMajorErrors();
             pOutAccessor->markEOS();
             return EXECRC_EOS;
         }
@@ -492,60 +493,31 @@ void FlatFileExecStreamImpl::logError(
     const std::string reason,
     const FlatFileRowParseResult &result)
 {
-    
     this->reason = reason;
-    std::string rowText =
-        std::string(result.current, result.next-result.current);
 
-    if (! logging) {
-        return;
-    }
-    if (! pErrorFile) {
-        DeviceMode openMode;
-        openMode.create = 1;
-        try {
-            pErrorFile.reset(
-                new RandomAccessFileDevice(errorFilePath, openMode));
-        } catch (SysCallExcn e) {
-            FENNEL_TRACE(TRACE_SEVERE, e.getMessage());
-            throw FennelExcn(
-                FennelResource::instance().writeLogFailed(errorFilePath));
-        }
-        filePosition = pErrorFile->getSizeInBytes();
+    // initialize logging objects
+    if (errorDesc.size() == 0) {
+        // TODO: get project specific type factory
+        StandardTypeDescriptorFactory typeFactory;
+        StoredTypeDescriptor const &typeDesc =
+            typeFactory.newDataType(STANDARD_TYPE_VARCHAR);
+        bool nullable = true;
+
+        errorDesc.push_back(
+            TupleAttributeDescriptor(
+                typeDesc,
+                nullable,
+                MAX_ROW_ERROR_TEXT_WIDTH));
+
+        errorTuple.compute(errorDesc);
     }
 
-    std::ostringstream oss;
-    oss << reason << ", " << rowText << endl;
-    std::string record = oss.str();
-    uint targetSize = record.size()*sizeof(char);
-            
-    pErrorFile->setSizeInBytes(filePosition + targetSize);
-    RandomAccessRequest writeRequest;
-    writeRequest.pDevice = pErrorFile.get();
-    writeRequest.cbOffset = filePosition;
-    writeRequest.cbTransfer = targetSize;
-    writeRequest.type = RandomAccessRequest::WRITE;
-    char *data = const_cast<char *>(record.c_str());
-    FlatFileBinding binding(errorFilePath, data, targetSize);
-    writeRequest.bindingList.push_back(binding);
-    pErrorFile->transfer(writeRequest);
-    filePosition += targetSize;
-}
+    uint length = result.next-result.current;
+    length = std::min(length, MAX_ROW_ERROR_TEXT_WIDTH);
+    errorTuple[0].pData = (PConstBuffer) result.current;
+    errorTuple[0].cbData = length;
 
-void FlatFileExecStreamImpl::detectMajorErrors()
-{
-    if (nRowsOutput > 0 && nRowErrors > 0) {
-        // TODO: we probably shouldn't throw an error here, but we should
-        // warn user that errors were encountered and were written to log
-        //throw FennelExcn(FennelResource::instance().errorsEncountered(
-        //                     dataFilePath, errorFilePath));
-    }
-    if (nRowsOutput > 0 || nRowErrors == 0) return;
-    checkRowDelimiter();
-    // REVIEW: perhaps we shouldn't throw an error here. If the data being
-    // read is not crucial, we may want to swallow this.
-    throw FennelExcn(
-        FennelResource::instance().noRowsReturned(dataFilePath, reason));
+    postError(ROW_ERROR, reason, errorDesc, errorTuple, -1);
 }
 
 void FlatFileExecStreamImpl::checkRowDelimiter()
@@ -565,10 +537,6 @@ void FlatFileExecStreamImpl::closeImpl()
 void FlatFileExecStreamImpl::releaseResources()
 {
     pBuffer->close();
-    if (pErrorFile) {
-        pErrorFile->flush();
-        pErrorFile.reset();
-    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -260,9 +260,22 @@ public class SqlTypeFactoryImpl
                             precision);
                 } else {
                     // this catch-all case covers type variable, and both fixed
+
+                    SqlTypeName newTypeName = type.getSqlTypeName();
+
+                    if (shouldRaggedFixedLengthValueUnionBeVariable()) {
+                        if (resultType.getPrecision() != type.getPrecision()) {
+                            if (newTypeName == SqlTypeName.Char) {
+                                newTypeName = SqlTypeName.Varchar;
+                            } else if (newTypeName == SqlTypeName.Binary) {
+                                newTypeName = SqlTypeName.Varbinary;
+                            }
+                        }
+                    }
+                    
                     resultType =
                         createSqlType(
-                            type.getSqlTypeName(),
+                            newTypeName,
                             precision);
                 }
             } else if (SqlTypeUtil.isExactNumeric(type)) {
@@ -385,6 +398,22 @@ public class SqlTypeFactoryImpl
         } else {
             return resultType;
         }
+    }
+
+    /**
+     * Controls behavior discussed <a
+     * href="http://sf.net/mailarchive/message.php?msg_id=13337379">here</a>.
+     *
+     * @return false (the default) to provide strict SQL:2003 behavior;
+     * true to provide pragmatic behavior
+     *
+     * @sql.2003 Part 2 Section 9.3 Syntax Rule 3.a.iii.3
+     */
+    protected boolean shouldRaggedFixedLengthValueUnionBeVariable()
+    {
+        // TODO jvs 30-Nov-2006:  implement SQL-Flagger support
+        // for warning about non-standard usage
+        return false;
     }
 
     private RelDataType createDoublePrecisionType()

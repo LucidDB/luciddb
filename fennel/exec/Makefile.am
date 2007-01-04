@@ -9,6 +9,8 @@ ConfluenceExecStream.cpp \
 CopyExecStream.cpp \
 DfsTreeExecStreamScheduler.cpp \
 DynamicParam.cpp \
+ErrorSource.cpp \
+ErrorTarget.cpp \
 ExecStream.cpp \
 ExecStreamGovernor.cpp \
 ExecStreamGraph.cpp \

@@ -125,6 +125,11 @@ public:
      * @param dest destination tupledata for parameter
      */
     void readParam(DynamicParamId dynamicParamId, TupleDatum &dest);
+    
+    /**
+     * Deletes all dynamic parameters 
+     */
+    void deleteAllParams();
 };
 
 inline TupleDatum const &DynamicParam::getDatum() const

@@ -608,33 +608,27 @@ public class SqlToRelConverterTest
         rel.explain(planWriter);
         pw.flush();
         TestUtil.assertEqualsVerbose(
-            TestUtil.fold(
-                new String[] {
-                    "<RelNode type=\"ProjectRel\">",
-            "\t<Property name=\"EXPR$0\">",
-            "\t\t+(1, 2)\t</Property>",
-            "\t<Property name=\"EXPR$1\">",
-            "\t\t3\t</Property>",
-            "\t<Inputs>",
-            "\t\t<RelNode type=\"ProjectRel\">",
-            "\t\t\t<Property name=\"EXPR$0\">",
-            "\t\t\t\t$0\t\t\t</Property>",
-            "\t\t\t<Inputs>",
-            "\t\t\t\t<RelNode type=\"ProjectRel\">",
-            "\t\t\t\t\t<Property name=\"EXPR$0\">",
-            "\t\t\t\t\t\ttrue\t\t\t\t\t</Property>",
-            "\t\t\t\t\t<Inputs>",
-            "\t\t\t\t\t\t<RelNode type=\"OneRowRel\">",
-            "\t\t\t\t\t\t\t<Inputs/>",
-            "\t\t\t\t\t\t</RelNode>",
-            "\t\t\t\t\t</Inputs>",
-            "\t\t\t\t</RelNode>",
-            "\t\t\t</Inputs>",
-            "\t\t</RelNode>",
-            "\t</Inputs>",
-            "</RelNode>",
-            ""
-                }),
+            TestUtil.fold(new String[] {
+                "<RelNode type=\"ProjectRel\">",
+                "\t<Property name=\"EXPR$0\">",
+                "\t\t+(1, 2)\t</Property>",
+                "\t<Property name=\"EXPR$1\">",
+                "\t\t3\t</Property>",
+                "\t<Inputs>",
+                "\t\t<RelNode type=\"ProjectRel\">",
+                "\t\t\t<Property name=\"EXPR$0\">",
+                "\t\t\t\t$0\t\t\t</Property>",
+                "\t\t\t<Inputs>",
+                "\t\t\t\t<RelNode type=\"ValuesRel\">",
+                "\t\t\t\t\t<Property name=\"tuples\">",
+                "\t\t\t\t\t\t[{ true }]\t\t\t\t\t</Property>",
+                "\t\t\t\t\t<Inputs/>",
+                "\t\t\t\t</RelNode>",
+                "\t\t\t</Inputs>",
+                "\t\t</RelNode>",
+                "\t</Inputs>",
+                "</RelNode>",
+                ""}),
             sw.toString());
     }
 }

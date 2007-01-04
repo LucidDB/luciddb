@@ -676,6 +676,18 @@ public:
      * @return true if the tuple is a singleton. 
      */
     inline static bool isSingleton(TupleData const &inputTuple);
+
+    /**
+     * Gets the startRID of a bitmap tuple.
+     *
+     * <p>Note: gcc 4.0.3 fails if this method is named getStartRID
+     *
+     * @param tuple tuple in which an LbmEntry is stored.
+     *
+     * @return startRID of the specified tuple
+     */
+    inline static LcsRid getStartRid(
+        TupleData const &tuple);
 };
 
 
@@ -689,6 +701,11 @@ inline bool LbmEntry::isSingleton(TupleData const &inputTuple)
         inputTuple[inputTuple.size()-1].isNull());
 }
 
+inline LcsRid LbmEntry::getStartRid(
+    TupleData const &tuple)
+{
+    return *reinterpret_cast<LcsRid const *> (tuple[tuple.size()-3].pData);
+}
 
 inline bool LbmEntry::isSingleton() const
 {

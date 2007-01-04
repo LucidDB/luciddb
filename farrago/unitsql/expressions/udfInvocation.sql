@@ -221,12 +221,86 @@ parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.foreignTime';
 
+-- UDX that contains a column list parameter
+create function stringifyColumns(
+    c cursor,
+    cl select from c,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringifyColumns';
+
+-- UDX that contains 2 column list parameters referencing the same cursor
+create function stringify2ColumnLists(
+    cl select from c,
+    c2 select from c,
+    c cursor,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringify2ColumnLists';
+
+-- UDX that contains 2 column list parameters referencing different cursors
+create function combineStringifyColumns(
+    c1 cursor,
+    cl1 select from c1,
+    c2 cursor,
+    cl2 select from c2,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.combineStringifyColumns';
+
+-- same as above but arguments are jumbled
+create function combineStringifyColumnsJumbledArgs(
+    cl2 select from c2,
+    c1 cursor,
+    delimiter varchar(128),
+    c2 cursor,
+    cl1 select from c1)
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.combineStringifyColumnsJumbledArgs';
+
 create view ramp_view as select * from table(ramp(3));
 
 create view stringified_view as 
 select * 
 from table(stringify(
     cursor(select * from sales.depts where deptno=20 order by 1),
+    '|'));
+
+create view stringifiedColumns_view as
+select * 
+from table(stringifyColumns(
+    cursor(select * from sales.emps where deptno=20 order by 1),
+    row(name, empno, gender),
+    '|'));
+
+create view combineStringifiedColumns_view as
+select * 
+from table(combineStringifyColumns(
+    cursor(select * from sales.emps where deptno=20 order by 1),
+    row(name, empno, gender),
+    cursor(select * from sales.depts where deptno= 20 order by 1),
+    row(name),
+    '|'));
+
+-- should fail : empno doesn't exist
+select * 
+from table(stringifyColumns(
+    cursor(select * from sales.depts where deptno=20 order by 1),
+    row(name, empno),
     '|'));
 
 -- should fail:  we don't allow mutual recursion either
@@ -400,9 +474,51 @@ from table(stringify(
     cursor(select * from sales.depts order by 1),
     '|'))
 order by 1;
+select upper(v)
+from table(stringifyColumns(
+    cursor(select * from sales.depts order by 1),
+    row(name),
+    '|'))
+order by 1;
+select upper(v)
+from table(stringify2ColumnLists(
+    row(empno, name),
+    row(deptno, gender),
+    cursor(select * from sales.emps order by 1),
+    '|'))
+order by 1;
+select upper(v)
+from table(combineStringifyColumns(
+    cursor(select empno, name, deptno, gender from sales.emps order by 1),
+    row(empno, name, gender),
+    cursor(select empno, name, deptno, city from sales.emps order by 1),
+    row(empno, name, city),
+    '|'))
+order by 1;
+select upper(v)
+from table(combineStringifyColumnsJumbledArgs(
+    row(empno, name, city),
+    cursor(select empno, name, deptno, gender from sales.emps order by 1),
+    '|',
+    cursor(select empno, name, deptno, city from sales.emps order by 1),
+    row(empno, name, gender)))
+order by 1;
+select *
+from table(stringifyColumns(
+    cursor(select * from sales.depts where deptno=20 order by 1),
+    row(name),
+    '|'))
+union all
+select *
+from table(stringifyColumns(
+    cursor(select * from sales.emps where deptno=20 order by 1),
+    row(name, empno, gender),
+    '|'));
 
 -- udx invocation with input via view
 select * from stringified_view;
+select * from stringifiedColumns_view;
+select * from combineStringifiedColumns_view;
 
 -- udx invocation with input auto-propagated to output
 select * 

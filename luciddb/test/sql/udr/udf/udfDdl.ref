@@ -75,21 +75,21 @@ Error: DDL validation error near line 1, column 8: Parameter style cannot be spe
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
-Error: DDL validation error near line 1, column 29: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
+Error: DDL validation error near line 1, column 33: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail:  can't declare OUT parameter to function
 0: jdbc:luciddb:> create function add_integers(out i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
-Error: DDL validation error near line 1, column 29: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
+Error: DDL validation error near line 1, column 34: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail:  can't declare INOUT parameter to function
 0: jdbc:luciddb:> create function add_integers(inout i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
-Error: DDL validation error near line 1, column 29: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
+Error: DDL validation error near line 1, column 36: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail:  reference to bogus parameter
 0: jdbc:luciddb:> create function add_integers(i int,j int)

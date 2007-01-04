@@ -11,6 +11,9 @@ alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 create table emps(
     empno int not null, name varchar(20) not null, deptno int,
     gender char(1), city char(30), age int, salary numeric(10,2));
+create index iempno on emps(empno);
+create index ideptno on emps(deptno);
+create index icity on emps(city);
 create table tempemps(
     t_empno int, t_name varchar(25), t_deptno int, t_gender char(1),
     t_city char(35), t_age int);
@@ -20,11 +23,11 @@ insert into emps(empno, name, deptno, gender, city, age, salary)
     select case when name = 'John' then 130 else empno end,
         name, deptno, gender, city, age, age * 900 from sales.emps;
 select * from emps order by empno;
+insert into tempemps values(140, 'Barney', 10, 'M', 'San Mateo', 41);
+insert into tempemps values(150, 'Betty', 20, 'F', 'San Francisco', 40);
 insert into tempemps
     select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo'), age
         from emps;
-insert into tempemps values(140, 'Barney', 10, 'M', 'San Mateo', 41);
-insert into tempemps values(150, 'Betty', 20, 'F', 'San Francisco', 40);
 select * from tempemps order by t_empno;
 
 -- check rowcounts before doing any merges
@@ -52,6 +55,10 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+
+-- verify that the old rows are inserted before the new ones even
+-- though the new rows are stored first in the source table
+select lcs_rid(empno), * from emps order by 1;
 
 -- source select is a join
 delete from emps where name in ('BARNEY', 'BETTY');
@@ -299,6 +306,13 @@ merge into emps e
         update set name = cast('FRED' as varchar(20));
 select * from emps order by empno;
 
+-- LDB-241 -- allow non-SqlCall SqlNode in the ON condition
+merge into emps e
+    using tempemps t on false
+    when matched then
+        update set name = 'should not be updated';
+select * from emps order by empno;
+
 -----------------
 -- Explain output
 -----------------
@@ -426,6 +440,23 @@ merge into emps e
         e.name = cast('Fred' as varchar(20))
     when matched then
         update set name = cast('FRED' as varchar(20));
+
+explain plan for
+merge into emps e
+    using tempemps t on false
+    when matched then
+        update set name = 'should not be updated';
+
+-- source for INSERT matches the columns from the source table
+create table comic (empid int primary key, name varchar(30));
+create table comic_stg (empid int, name varchar(30));
+explain plan for
+merge into comic tgt using comic_stg src on src.empid = tgt.empid
+    when matched then
+        update set name = src.name
+    when not matched then
+        insert (empid, name)
+        values (src.empid, src.name);
 
 --------------
 -- Error cases

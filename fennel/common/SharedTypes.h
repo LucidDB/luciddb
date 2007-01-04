@@ -126,6 +126,9 @@ typedef boost::shared_ptr<PseudoUuidGenerator> SharedPseudoUuidGenerator;
 class TraceTarget;
 typedef boost::shared_ptr<TraceTarget> SharedTraceTarget;
 
+class ErrorTarget;
+typedef boost::shared_ptr<ErrorTarget> SharedErrorTarget;
+
 class CheckpointThread;
 typedef boost::shared_ptr<CheckpointThread> SharedCheckpointThread;
 
@@ -196,6 +199,9 @@ typedef boost::shared_ptr<LcsClusterReader> SharedLcsClusterReader;
 
 class LbmEntry;
 typedef boost::shared_ptr<LbmEntry> SharedLbmEntry;
+
+class LbmTupleReader;
+typedef boost::shared_ptr<LbmTupleReader> SharedLbmTupleReader;
 
 class ByteBuffer;
 typedef boost::shared_ptr<ByteBuffer> SharedByteBuffer;

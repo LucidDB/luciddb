@@ -23,7 +23,8 @@ LhxJoinExecStreamTest \
 LbmMinusExecStreamTest \
 LhxAggExecStreamTest \
 LbmNormalizerExecStreamTest \
-LbmSortedAggExecStreamTest
+LbmSortedAggExecStreamTest \
+LbmReaderTest
 
 TESTS = $(noinst_PROGRAMS)
 
@@ -43,6 +44,7 @@ LbmMinusExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmMinusExecStreamTest.
 LhxAggExecStreamTest_SOURCES=LhxAggExecStreamTest.cpp
 LbmNormalizerExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmNormalizerExecStreamTest.cpp
 LbmSortedAggExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmSortedAggExecStreamTest.cpp
+LbmReaderTest_SOURCES=LbmExecStreamTestBase.cpp LbmReaderTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
 

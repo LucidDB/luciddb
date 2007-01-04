@@ -34,10 +34,10 @@
 +---------+---------+----------+
 | EXPR$0  | EXPR$1  |  EXPR$2  |
 +---------+---------+----------+
-|         |         |          |
-|         | y       |          |
-|         | t       |          |
-| e 3rd   | orn     |          |
+| Mark    | att     | 4567890  |
+| e 3rd   | orn     | 2399175  |
+| egory   | ery     | 34-2355  |
+| phram   | rit     | 3454321  |
 +---------+---------+----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select fname, applib.rightN(sex, 1)
@@ -62,13 +62,13 @@
 +---------------+-------------+
 |     FNAME     |   EXPR$1    |
 +---------------+-------------+
-| 2Tito1        |             |
-| Dirk the 3rd  |        3rd  |
-| Ephram        |             |
-| Gregory       |             |
-| Lilah         |  344  2     |
-| Mark          |             |
-| Mary          |             |
+| 2Tito1        | 88 8888to1  |
+| Dirk the 3rd  | 23991753rd  |
+| Ephram        | 3454321ram  |
+| Gregory       | 34-2355ory  |
+| Lilah         |  344  2lah  |
+| Mark          | 4567890ark  |
+| Mary          | 56-7843ary  |
 +---------------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- nested

@@ -353,6 +353,7 @@
       <include pattern="resource.deps" />
       <include pattern="FarragoPackage.deps" />
       <include pattern="fennel" />
+      <include pattern="fennel.tuple" />
     </pattern>
 
     <access-rule>

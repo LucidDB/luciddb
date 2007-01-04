@@ -683,7 +683,23 @@ public class StandardConvertletTable
                 overlaps);
 
             return cx.convertExpression(call3);
+        } else if (op instanceof SqlRowOperator &&
+            cx.getValidator().getValidatedNodeType(call).getSqlTypeName() ==
+                SqlTypeName.ColumnList)
+        {
+            RexNode [] columns = new RexNode[operands.length];
+            RexBuilder rexBuilder = cx.getRexBuilder();
+            for (int i = 0; i < columns.length; i++) {
+                columns[i] =
+                    rexBuilder.makeLiteral(
+                        ((SqlIdentifier) operands[i]).getSimple());
+            }
+            return
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.columnListConstructor,
+                    columns);
         }
+        
         final RexNode [] exprs = convertExpressionList(cx, operands);
         return cx.getRexBuilder().makeCall(op, exprs);
     }

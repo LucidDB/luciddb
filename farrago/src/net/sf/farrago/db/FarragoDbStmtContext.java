@@ -255,30 +255,12 @@ public class FarragoDbStmtContext
         }
         if (isDml) {
             success = false;
-            long mergeRowCount = 0;
-            try {
-                boolean found = resultSet.next();
-                assert (found);
-                updateCount = resultSet.getLong(1);
-                boolean nextRowCount = resultSet.next();
-                if (executableStmt.getTableModOp() ==
-                    TableModificationRel.Operation.MERGE)
-                {
-                    // additional rowcount does not occur when the MERGE
-                    // is an INSERT-only merge; otherwise, the second rowcount
-                    // is the total rows affected (either newly inserted or
-                    // updated) and the first rowcount is the number of rows
-                    // deleted (as a result of updates)
-                    if (nextRowCount) {
-                        mergeRowCount = updateCount;
-                        updateCount = resultSet.getLong(1);
-                        nextRowCount = resultSet.next();
-                    }
-                }
-                assert (!nextRowCount);
-                if (tracer.isLoggable(Level.FINE)) {
-                    tracer.fine("Update count = " + updateCount);
-                }
+            List<Long> rowCounts = new ArrayList<Long>();
+            try {               
+                session.getPersonality().getRowCounts(
+                    resultSet,
+                    rowCounts,
+                    executableStmt.getTableModOp());                
                 success = true;
             } catch (SQLException ex) {
                 throw FarragoResource.instance().DmlFailure.ex(ex);
@@ -296,10 +278,9 @@ public class FarragoDbStmtContext
                     clearExecutingStmtInfo();
                 }
             }
-            // REVIEW jvs 26-Nov-2006:  Do we need this test?  We're
-            // already inside of an isDml block.
-            if (executableStmt.isDml()) {
-                updateRowCounts(updateCount, mergeRowCount);
+            updateCount = updateRowCounts(rowCounts);
+            if (tracer.isLoggable(Level.FINE)) {
+                tracer.fine("Update count = " + updateCount);
             }         
         }
 
@@ -375,49 +356,30 @@ public class FarragoDbStmtContext
     /**
      * Update catalog row counts
      * 
-     * @param updateCount number of rows updated by the statement; in the case
-     * of a MERGE statement, this is the number of newly inserted rows as well
-     * as the number of rows updated by the MERGE
-     * @param mergeRowCount number of rows updated by the MERGE statement
+     * @param rowCounts row counts returned by the DML operation
+     * 
+     * @return rowcount affected by the DML operation
      */
-    private void updateRowCounts(long updateCount, long mergeRowCount)
+    private long updateRowCounts(List<Long> rowCounts)
     {
         TableModificationRel.Operation tableModOp =
             executableStmt.getTableModOp();
         // marked as DML, but doesn't actually modify a table; e.g., a
         // procedure call
         if (tableModOp == null) {
-            return;
+            return 0;
         }
         List<String> targetTable = getDmlTarget();
         // if there's no target table (e.g., for a create index), then this
         // isn't really a DML statement
         if (targetTable == null) {
-            return;
+            return 0;
         }
-        
-        long insertRowCount = 0;
-        long deleteRowCount = 0;
-        long updateRowCount = 0;
-        if (tableModOp == TableModificationRel.Operation.INSERT) {
-            insertRowCount = updateCount;
-        } else if (tableModOp == TableModificationRel.Operation.DELETE) {
-            deleteRowCount = updateCount;
-        } else if (tableModOp == TableModificationRel.Operation.MERGE) {
-            insertRowCount = updateCount;
-            deleteRowCount = mergeRowCount;
-        } else if (tableModOp == TableModificationRel.Operation.UPDATE) {
-            updateRowCount = updateCount;
-        } else {
-            assert(false);
-        }
-        
-        session.getPersonality().updateRowCounts(
+
+        return session.getPersonality().updateRowCounts(
             session,
             targetTable,
-            insertRowCount,
-            deleteRowCount,
-            updateRowCount,
+            rowCounts,
             executableStmt.getTableModOp());
     }
     

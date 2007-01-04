@@ -95,6 +95,12 @@ void DynamicParamManager::readParam(
     dest.memCopyFrom(getParamInternal(dynamicParamId).datum);
 }
 
+void DynamicParamManager::deleteAllParams()
+{
+    StrictMutexGuard mutexGuard(mutex);
+    paramMap.erase(paramMap.begin(), paramMap.end());
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End DynamicParam.cpp

@@ -51,18 +51,14 @@ static const uint firstOneBit[256] = {
 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
 };
 
-void LbmRidReader::init(
-    SharedExecStreamBufAccessor &pInAccessorInit,
-    TupleData &bitmapSegTuple)
+void LbmRidReaderBase::initCommon()
 {
-    pInAccessor = pInAccessorInit;
-    segmentReader.init(pInAccessor, bitmapSegTuple);
     firstReadDone = false;
     nextRid = LcsRid(0);
     resetState();
 }
 
-void LbmRidReader::resetState()
+void LbmRidReaderBase::resetState()
 {
     // set state information so that next call to readRidAndAdvance
     // will read "nextRid"
@@ -71,7 +67,7 @@ void LbmRidReader::resetState()
     curRid = LcsRid(7);
 }
 
-ExecStreamResult LbmRidReader::searchForNextRid()
+ExecStreamResult LbmRidReaderBase::searchForNextRid()
 {
     // recompute bitOffset in current byte base on current rid
     uint bitOffset = opaqueToInt(curRid) % LbmOneByteSize;
@@ -125,7 +121,7 @@ ExecStreamResult LbmRidReader::searchForNextRid()
     return EXECRC_YIELD;
 }
 
-ExecStreamResult LbmRidReader::advanceToRid(LcsRid rid)
+ExecStreamResult LbmRidReaderBase::advanceToRid(LcsRid rid)
 {
     assert(firstReadDone);
 
@@ -163,7 +159,7 @@ ExecStreamResult LbmRidReader::advanceToRid(LcsRid rid)
     return searchForNextRid();
 }
 
-ExecStreamResult LbmRidReader::readRidAndAdvance(LcsRid &rid)
+ExecStreamResult LbmRidReaderBase::readRidAndAdvance(LcsRid &rid)
 {
     // advance to position we are supposed to be at, and then keep
     // advancing until we hit a set bit
@@ -179,6 +175,111 @@ ExecStreamResult LbmRidReader::readRidAndAdvance(LcsRid &rid)
     moveNext = true;
 
     return EXECRC_YIELD;
+}
+
+void LbmRidReader::init(
+    SharedExecStreamBufAccessor &pInAccessor,
+    TupleData &bitmapSegTuple)
+{
+    segmentReader.init(pInAccessor, bitmapSegTuple);
+    initCommon();
+}
+
+void LbmIterableRidReader::initCommon()
+{
+    LbmRidReaderBase::initCommon();
+    buffered = false;
+}
+
+void LbmTupleRidReader::init(TupleData &bitmapSegTuple) 
+{
+    if (!pSharedReader) {
+        pReader = new LbmSingleTupleReader();
+        pSharedReader.reset(pReader);
+    }
+    pReader->init(bitmapSegTuple);
+
+    segmentReader.init(pSharedReader, bitmapSegTuple);
+    LbmIterableRidReader::initCommon();
+}
+
+LbmDeletionIndexReader::~LbmDeletionIndexReader()
+{
+    endSearch();
+}
+
+void LbmDeletionIndexReader::init(
+    SharedBTreeReader &btreeReaderInit,
+    TupleData &bitmapSegTuple)
+{
+    // the btree must be a deletion index
+    assert(btreeReaderInit->getTupleDescriptor().size() == 3);
+    assert(bitmapSegTuple.size() == 3);
+
+    btreeReader = btreeReaderInit;
+    pBitmapSegTuple = &bitmapSegTuple;
+    searchEntry.compute(btreeReader->getKeyDescriptor());
+    emptyIndexUnknown = true;
+    currTuple = false;
+}
+
+void LbmDeletionIndexReader::initRidReader()
+{
+    currTuple = true;
+    ridReader.init(*pBitmapSegTuple);
+    btreeRid = ridReader.getNext();
+}
+
+void LbmDeletionIndexReader::endSearch()
+{
+    if (btreeReader) {
+        btreeReader->endSearch();
+    }
+}
+
+bool LbmDeletionIndexReader::isEmpty()
+{
+    if (emptyIndexUnknown) {
+        emptyIndex = !btreeReader->searchFirst();
+        emptyIndexUnknown = false;
+    }
+    return emptyIndex;
+}
+
+bool LbmDeletionIndexReader::searchForRid(LcsRid rid)
+{
+    if (isEmpty()) {
+        return false;
+    }
+
+    LcsRid prevSrid = LcsRid(0);
+    if (currTuple) {
+        prevSrid = LbmEntry::getStartRid(*pBitmapSegTuple);
+    }
+
+    searchEntry[0].pData = reinterpret_cast<PConstBuffer>(&rid);
+    btreeReader->searchForKey(searchEntry, DUP_SEEK_BEGIN, false);
+    btreeReader->getTupleAccessorForRead().unmarshal(*pBitmapSegTuple);
+    LcsRid foundSrid = LbmEntry::getStartRid(*pBitmapSegTuple);
+    assert(foundSrid <= rid);
+
+    // determine whether the tuple rid reader must be restarted. it should
+    // be restarted if the tuple has changed or if the rid we are searching
+    // for would be positioned before the last rid read.
+    bool sameTuple = (currTuple && prevSrid == foundSrid);
+    if ( (!sameTuple) || rid < btreeRid ) {
+        initRidReader();
+    }
+
+    // advance within a tuple to search for the rid
+    while (btreeRid < rid) {
+        if (ridReader.hasNext()) {
+            btreeRid = ridReader.getNext();
+        } else {
+            break;
+        }
+    }
+    return (btreeRid == rid);
 }
 
 FENNEL_END_CPPFILE("$Id$");

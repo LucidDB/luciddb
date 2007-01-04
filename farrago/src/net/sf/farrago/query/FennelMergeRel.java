@@ -39,7 +39,6 @@ import org.eigenbase.reltype.*;
 class FennelMergeRel
     extends FennelMultipleRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -112,6 +111,7 @@ class FennelMergeRel
 
         FemMergeStreamDef mergeStream = repos.newFemMergeStreamDef();
         mergeStream.setSequential(true);
+        mergeStream.setPrePullInputs(false);
 
         for (int i = 0; i < inputs.length; i++) {
             FemExecutionStreamDef inputStream =

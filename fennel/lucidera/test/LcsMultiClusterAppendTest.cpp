@@ -20,6 +20,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/common/FemEnums.h"
 #include "fennel/test/ExecStreamUnitTestBase.h"
 #include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
 #include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
@@ -201,7 +202,7 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
     
     BarrierExecStreamParams barrierParams;
     barrierParams.outputTupleDesc.push_back(attrDesc_int64);
-    barrierParams.rowCountInput = -1;
+    barrierParams.returnMode = BARRIER_RET_ANY_INPUT;
 
     ExecStreamEmbryo barrierStreamEmbryo;
     barrierStreamEmbryo.init(new BarrierExecStream(), barrierParams);

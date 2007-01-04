@@ -25,10 +25,6 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-LbmIntersectExecStream::LbmIntersectExecStream() : LbmBitOpExecStream()
-{
-}
-
 void LbmIntersectExecStream::prepare(LbmIntersectExecStreamParams const &params)
 {
     LbmBitOpExecStream::prepare(params);

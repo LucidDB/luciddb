@@ -38,6 +38,7 @@ import java.net.*;
 import java.nio.charset.*;
 
 import java.sql.*;
+import java.text.*;
 
 import java.util.*;
 import java.util.logging.*;
@@ -85,6 +86,13 @@ public class Util
      */
     public static final String fileSeparator =
         System.getProperty("file.separator");
+
+    /**
+     * Datetime format string for generating a timestamp string to be used 
+     * as part of a filename. Conforms to SimpleDateFormat conventions.
+     */
+    public static final String fileTimestampFormat = "yyyy-MM-dd_HH_mm_ss";
+
     public static final Object [] emptyObjectArray = new Object[0];
     public static final String [] emptyStringArray = new String[0];
     public static final SqlMoniker [] emptySqlMonikerArray = new SqlMoniker[0];
@@ -458,6 +466,24 @@ public class Util
     }
 
     /**
+     * Prints a flat array of objects as [e1,e2,...]
+     */
+    public static String flatArrayToString(Object[] a)
+    {
+        StringBuffer sb = new StringBuffer("[");
+        for (int i = 0; i < a.length; i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            if (a[i] != null) {
+                sb.append(a[i].toString());
+            }
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    /**
      * Formats a {@link BigDecimal} value to a string in scientific notation For
      * example<br>
      *
@@ -573,6 +599,16 @@ public class Util
         }
         path = "file://" + path;
         return new URL(path);
+    }
+
+    /**
+     * Gets a timestamp string for use in file names. The generated 
+     * timestamp string reflects the current time.
+     */
+    public static String getFileTimestamp()
+    {
+        SimpleDateFormat sdf = new SimpleDateFormat(fileTimestampFormat);
+        return sdf.format(new java.util.Date());
     }
 
     public static Expression clone(Expression exp)

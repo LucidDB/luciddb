@@ -92,32 +92,32 @@ InStrUdf: invalid argument: inStr=hello there! subStr= startPos=1 nthAppearance=
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from flpview
 . . . . . . . . > order by 1;
-+----------------------------------------------+------------+
-|                     FLP                      | INSTR_FLP  |
-+----------------------------------------------+------------+
-| 2Tito1               888 888 8888            | 0          |
-| Dirk the 3rdTreethorn8622399175              | 25         |
-| Ephram      Vestrit  (321)3454321            | 0          |
-| Gregory     Packery  (342) 234-2355          | 28         |
-| Lilah       Lowe        234    412   344  2  | 25         |
-| Mark        Wyatt    1234567890              | 23         |
-| Mary        O Brian  234-456-7843            | 22         |
-+----------------------------------------------+------------+
++----------------------------------+------------+
+|               FLP                | INSTR_FLP  |
++----------------------------------+------------+
+| 2Tito1888 888 8888               | 0          |
+| Dirk the 3rdTreethorn8622399175  | 25         |
+| EphramVestrit(321)3454321        | 0          |
+| GregoryPackery(342) 234-2355     | 21         |
+| LilahLowe   234    412   344  2  | 13         |
+| MarkWyatt1234567890              | 11         |
+| MaryO Brian234-456-7843          | 12         |
++----------------------------------+------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select flp, applib.instr(flp, 'a', -3, 2)
 . . . . . . . . > from flpview
 . . . . . . . . > order by 1;
-+----------------------------------------------+---------+
-|                     FLP                      | EXPR$1  |
-+----------------------------------------------+---------+
-| 2Tito1               888 888 8888            | 0       |
-| Dirk the 3rdTreethorn8622399175              | 0       |
-| Ephram      Vestrit  (321)3454321            | 0       |
-| Gregory     Packery  (342) 234-2355          | 0       |
-| Lilah       Lowe        234    412   344  2  | 0       |
-| Mark        Wyatt    1234567890              | 2       |
-| Mary        O Brian  234-456-7843            | 2       |
-+----------------------------------------------+---------+
++----------------------------------+---------+
+|               FLP                | EXPR$1  |
++----------------------------------+---------+
+| 2Tito1888 888 8888               | 0       |
+| Dirk the 3rdTreethorn8622399175  | 0       |
+| EphramVestrit(321)3454321        | 0       |
+| GregoryPackery(342) 234-2355     | 0       |
+| LilahLowe   234    412   344  2  | 0       |
+| MarkWyatt1234567890              | 2       |
+| MaryO Brian234-456-7843          | 2       |
++----------------------------------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view flpview;

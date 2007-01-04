@@ -166,6 +166,21 @@ public class FarragoRelImplementor
     }
 
     // implement FennelRelImplementor
+    public void setErrorRecordType(
+        FennelRel rel,
+        FemExecutionStreamDef streamDef,
+        RelDataType errorType)
+    {
+        // retrieve the stream name early to perform a 
+        // (stream => error record type) mapping by stream name
+        String streamName = getStreamGlobalName(streamDef, rel);
+        streamDef.setName(streamName);
+
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(rel);
+        stmt.mapResultSetType(streamName, errorType);
+    }
+
+    // implement FennelRelImplementor
     public FemExecutionStreamDef visitFennelChild(FennelRel rel)
     {
         scopeStack.add(
@@ -274,13 +289,15 @@ public class FarragoRelImplementor
         RelNode rel,
         RelDataType rowType)
     {
-        if (streamDef.getName() != null) {
+        if (streamDefSet.contains(streamDef)) {
             // already registered
             return;
         }
 
-        String streamName = getStreamGlobalName(streamDef, rel);
-        streamDef.setName(streamName);
+        if (streamDef.getName() == null) {
+            String streamName = getStreamGlobalName(streamDef, rel);
+            streamDef.setName(streamName);
+        }
         streamDefSet.add(streamDef);
 
         // REVIEW jvs 15-Nov-2004:  This is dangerous because rowType

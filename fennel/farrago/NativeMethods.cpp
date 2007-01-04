@@ -187,7 +187,7 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamRestart(
 extern "C" JNIEXPORT void JNICALL
 Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
     JNIEnv *pEnvInit, jclass, jlong hStreamGraph, jlong hTxn,
-    jobject hJavaStreamMap)
+    jobject hJavaStreamMap, jobject hJavaErrorTarget)
 {
     JniEnvRef pEnv(pEnvInit);
     try {
@@ -195,10 +195,13 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
             CmdInterpreter::getStreamGraphHandleFromLong(hStreamGraph);
         CmdInterpreter::TxnHandle &txnHandle =
             CmdInterpreter::getTxnHandleFromLong(hTxn);
-        // Provide runtime context for stream open(), which a scheduler may defer
-        // til after out java caller returns: hence the global ref.
-        streamGraphHandle.javaRuntimeContext = pEnv->NewGlobalRef(hJavaStreamMap);
+        // Provide runtime context for stream open(), which a scheduler may
+        // defer til after out java caller returns: hence the global ref.
+        streamGraphHandle.javaRuntimeContext =
+            pEnv->NewGlobalRef(hJavaStreamMap);
         streamGraphHandle.pExecStreamGraph->setTxn(txnHandle.pTxn);
+        streamGraphHandle.pExecStreamGraph->setErrorTarget(
+            CmdInterpreter::newErrorTarget(hJavaErrorTarget));
         txnHandle.pResourceGovernor->requestResources(
             *(streamGraphHandle.pExecStreamGraph));
         streamGraphHandle.pExecStreamGraph->open();

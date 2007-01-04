@@ -474,3 +474,57 @@ language java
 parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.digest';
+
+-- should succeed: column list parameter
+create function stringifyColumns(
+    c cursor,
+    cl select from c,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringifyColumns';
+
+-- should fail : no matching source cursor name
+create function bad_stringifyColumns(
+    c cursor,
+    cl select from nonExistent,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
+
+-- following 2 should fail : external method not declared as List<String>
+create function bad_stringifyColumns(
+    c cursor,
+    cl select from c,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.badStringifyColumns1';
+
+create function bad_stringifyColumns(
+    c cursor,
+    cl select from c,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.badStringifyColumns2';
+
+-- should fail : external method has wrong type for COLUMN_LIST parameter
+create function bad_stringifyColumns(
+    c cursor,
+    cl select from c,
+    delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.badStringifyColumns3';

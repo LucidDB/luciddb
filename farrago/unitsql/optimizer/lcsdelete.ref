@@ -239,7 +239,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableDeleteRel(table=[[LOCALDB, LCSDEL, DELTAB]])'
-'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t1):BIGINT NOT NULL], expr#3=[null], expr#4=[CAST($t3):VARBINARY(512)], rid=[$t2], descriptor=[$t4], segment=[$t4])'
+'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t1):BIGINT NOT NULL], rid=[$t2])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI])'
 '        LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$DELTAB$C1]])'
 '        FennelMergeRel'

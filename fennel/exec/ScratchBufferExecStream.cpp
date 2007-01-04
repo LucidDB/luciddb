@@ -57,7 +57,7 @@ void ScratchBufferExecStream::open(bool restart)
     assert(pOutAccessor);
     assert(pOutAccessor->getProvision() == BUFPROV_PRODUCER);
 
-    if (!restart) {
+    if (!bufferLock.isLocked()) {
         bufferLock.allocatePage();
     }
 

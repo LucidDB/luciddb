@@ -21,6 +21,7 @@
 */
 package net.sf.farrago.session;
 
+import java.sql.*;
 import java.util.*;
 
 import org.eigenbase.jmi.*;
@@ -34,7 +35,6 @@ import org.eigenbase.sql.type.*;
 import org.eigenbase.resource.EigenbaseResource;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.db.*;
 import net.sf.farrago.fem.sql2003.*;
 
 
@@ -295,6 +295,21 @@ public interface FarragoSessionPersonality
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain);
     
     /**
+     * Gives this personality the opportunity to retrieve rowcount information
+     * returned by a DML operation.
+     * 
+     * @param resultSet result set returned by DML operation
+     * @rowCounts list of rowcounts returned by the DML operation
+     * @param table modification operation that caused the
+     * rowcounts to be modified
+     */
+    public void getRowCounts(
+        ResultSet resultSet,
+        List<Long> rowCounts,
+        TableModificationRel.Operation tableModOp)
+        throws SQLException;
+    
+    /**
      * Gives this personality the opportunity to update rowcount information in
      * the catalog tables for a specified table as a result of a particular
      * DML operation.
@@ -302,21 +317,16 @@ public interface FarragoSessionPersonality
      * @param session session that needs to update rowcounts
      * @param tableName fully qualified table name for which rowcounts will be
      * updated
-     * @param insertedRowCount count of the number of rows inserted by the DML
-     * statement
-     * @param deletedRowCount count of the number of rows deleted by the DML
-     * statement
-     * @param updateRowCount count of the number of rows updated by the DML
-     * statement
+     * @param rowCounts list of row counts returned by the DML statement
      * @param tableModOp table modification operation that caused the
      * rowcounts to be modified
+     * 
+     * @return number of rows affected by the DML operation
      */
-    public void updateRowCounts(
+    public long updateRowCounts(
         FarragoSession session,
         List<String> tableName,
-        long insertedRowCount,
-        long deletedRowCount,
-        long updateRowCount,
+        List<Long> rowCounts,
         TableModificationRel.Operation tableModOp);
     
     /**

@@ -2031,6 +2031,21 @@ SqlNode Expression3(ExprContext exprContext) :
     |
     e = CursorExpression(exprContext) { return e; }
     |
+    LOOKAHEAD(3)
+    <ROW> <LPAREN> list = SimpleIdentifierCommaList() <RPAREN>
+    {
+        pos = getPos();
+        if (exprContext != EXPR_ACCEPT_ALL &&
+            exprContext != EXPR_ACCEPT_CURSOR)
+        {
+            throw SqlUtil.newContextException(
+                pos,
+                EigenbaseResource.instance().IllegalRowExpression.ex());
+        }
+        return SqlStdOperatorTable.rowConstructor.createCall(
+            pos, SqlParserUtil.toNodeArray(list));
+    }
+    |
     op = PrefixRowOperator()
     {
         prefixRowOpPos = getPos();

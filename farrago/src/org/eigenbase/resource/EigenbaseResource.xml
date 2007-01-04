@@ -95,6 +95,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>''FROM'' near {0}, without operands preceding it is illegal</text>
 </exception>
 
+<exception id="100095" name="IllegalRowExpression">
+    <text>ROW expression encountered in illegal context</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Validator resources 121,000 - 130,000 -->
 <!-- ====================================================================== -->

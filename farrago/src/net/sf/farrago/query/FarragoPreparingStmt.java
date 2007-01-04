@@ -585,7 +585,8 @@ public class FarragoPreparingStmt
                         preparedResult.isDml(),
                         preparedResult.getTableModOp(),
                         getReferencedObjectTimestampMap(),
-                        tableAccessMap);
+                        tableAccessMap,
+                        resultSetTypeMap);
             }
         } else {
             assert (preparedResult instanceof PreparedExplanation);
@@ -986,13 +987,13 @@ public class FarragoPreparingStmt
         return rexNode;
     }
 
-    void setDmlValidation(SqlIdentifier target, PrivilegedAction action)
+    public void setDmlValidation(SqlIdentifier target, PrivilegedAction action)
     {
         dmlTarget = target;
         dmlAction = action;
     }
 
-    void clearDmlValidation()
+    public void clearDmlValidation()
     {
         dmlTarget = null;
         dmlAction = null;
@@ -1024,6 +1025,10 @@ public class FarragoPreparingStmt
             sqlToRelConverter.setDefaultValueFactory(
                 new ReposDefaultValueFactory(this));
             sqlToRelConverter.enableTableAccessConversion(false);
+            // currently the only physical implementation available
+            // for ValuesRel is FennelValuesRel
+            sqlToRelConverter.enableValuesRelCreation(
+                getRepos().isFennelEnabled());
         }
         return sqlToRelConverter;
     }
@@ -1400,7 +1405,7 @@ public class FarragoPreparingStmt
         allDependencies.add(supplier);
     }
 
-    void mapResultSetType(
+    public void mapResultSetType(
         String resultSetName,
         RelDataType rowType)
     {

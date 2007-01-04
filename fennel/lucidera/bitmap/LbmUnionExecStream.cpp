@@ -27,11 +27,6 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-LbmUnionExecStream::LbmUnionExecStream()
-{
-    dynParamsCreated = false;
-}
-
 void LbmUnionExecStream::prepare(LbmUnionExecStreamParams const &params)
 {
     ConfluenceExecStream::prepare(params);
@@ -119,7 +114,6 @@ void LbmUnionExecStream::open(bool restart)
         // create dynamic parameters
         pDynamicParamManager->createParam(
             ridLimitParamId, pOutAccessor->getTupleDesc()[0]);
-        dynParamsCreated = true;
         pDynamicParamManager->writeParam(ridLimitParamId, ridLimitDatum);
     } else {
         workspace.reset();
@@ -189,9 +183,6 @@ ExecStreamResult LbmUnionExecStream::execute(
 void LbmUnionExecStream::closeImpl()
 {
     ConfluenceExecStream::closeImpl();
-    if (dynParamsCreated) {
-        pDynamicParamManager->deleteParam(ridLimitParamId);
-    }
 
     if (scratchAccessor.pSegment) {
         scratchAccessor.pSegment->deallocatePageRange(

@@ -704,6 +704,14 @@ public class SqlStdOperatorTable
         new SqlCursorConstructor();
 
     /**
+     * The COLUMN_LIST constructor.  e.g. the ROW() call in "<code>SELECT * FROM
+     * TABLE(DEDUP(CURSOR(SELECT * FROM EMPS), ROW(name, empno)))
+     * </code>".
+     */
+    public static final SqlColumnListConstructor columnListConstructor =
+        new SqlColumnListConstructor();
+    
+    /**
      * The <code>UNNEST<code>operator.
      */
     public static final SqlSpecialOperator unnestOperator =

@@ -26,6 +26,7 @@
 
 #include "fennel/common/AtomicCounter.h"
 #include "fennel/common/PseudoUuid.h"
+#include "fennel/tuple/TupleDescriptor.h"
 
 #include <jni.h>
 #include <locale>
@@ -123,6 +124,27 @@ public:
     void suppressDetach();
 
     ~JniEnvAutoRef();
+};
+
+/**
+ * JniLocalFrame is a holder for a Jni local frame. The use of a short lived
+ * local frame allows Java object references to be automatically released,
+ * so that Java objects can be garbage collected within Fennel code. This
+ * holder class ensures that a local frame pushed onto the execution stack
+ * will be paired with a call to pop the frame.
+ */
+class JniLocalFrame
+{
+    JNIEnv *pEnv;
+    bool success;
+
+public:
+    /**
+     * Creates a new local reference frame, in which at least a given number 
+     * of local references can be created.
+     */
+    JniLocalFrame(JNIEnv *pEnv, jint capacity);
+    ~JniLocalFrame();
 };
 
 class ConfigMap;
@@ -450,6 +472,11 @@ public:
     {
         return handleCount;
     }
+
+    /**
+     * Constructs a FemTupleDescriptor xmi string
+     */
+    static std::string getXmi(const TupleDescriptor &tupleDesc);
 };
 
 class JniPseudoUuidGenerator : public PseudoUuidGenerator

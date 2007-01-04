@@ -501,6 +501,14 @@ explain plan for
             s.customer = c.id and
             c.city = st.city and st.state = 'New York'
         order by sid;
+-- shuffle the order of the tables in the from clause
+explain plan for
+    select sid, c.id
+        from customer c, sales s, state st
+        where
+            s.customer = c.id and
+            c.city = st.city and st.state = 'New York'
+        order by sid;
 
 -- product can be removed because its join key with t can be obtained from
 -- sales
@@ -549,6 +557,12 @@ select sid, s.quantity
     order by sid;
 select sid, c.id
     from sales s, state st, customer c
+    where
+        s.customer = c.id and
+        c.city = st.city and st.state = 'New York'
+    order by sid;
+select sid, c.id
+    from customer c, sales s, state st
     where
         s.customer = c.id and
         c.city = st.city and st.state = 'New York'

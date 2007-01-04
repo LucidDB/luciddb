@@ -20,6 +20,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/common/FennelResource.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/lucidera/bitmap/LbmGeneratorExecStream.h"
 #include "fennel/lucidera/bitmap/LbmSplicerExecStream.h"
@@ -28,41 +29,83 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 void LbmSplicerExecStream::prepare(LbmSplicerExecStreamParams const &params)
 {
-    BTreeExecStream::prepare(params);
-    ConduitExecStream::prepare(params);
+    DiffluenceExecStream::prepare(params);
+    scratchAccessor = params.scratchAccessor;
 
-    assert(treeDescriptor.tupleDescriptor == pInAccessor->getTupleDesc());
-    bitmapTupleDesc = treeDescriptor.tupleDescriptor;
+    // Setup btree accessed by splicer
+    assert(params.bTreeParams.size() <= 2);
+    assert(params.bTreeParams[0].pRootMap == NULL);
+    BTreeExecStream::copyParamsToDescriptor(
+        writeBTreeDesc,
+        params.bTreeParams[0],
+        params.pCacheAccessor);
+    
+    insertRowCountParamId = params.insertRowCountParamId;
+    computeRowCount = (opaqueToInt(insertRowCountParamId) == 0);
+    writeRowCountParamId = params.writeRowCountParamId;
+
+    bitmapTupleDesc = writeBTreeDesc.tupleDescriptor;
     bTreeTupleData.compute(bitmapTupleDesc);
     tempBTreeTupleData.compute(bitmapTupleDesc);
     inputTuple.compute(bitmapTupleDesc);
-    nIdxKeys = treeDescriptor.keyProjection.size() - 1;
+    nIdxKeys = writeBTreeDesc.keyProjection.size() - 1;
 
-    insertRowCountParamId = params.insertRowCountParamId;
-    computeRowCount = (opaqueToInt(insertRowCountParamId) == 0);
-    ignoreDuplicates = params.ignoreDuplicates;
+    // if the rowcount needs to be computed, then the input contains singleton
+    // rids; so setup a special tupleData to receive that input
+    if (computeRowCount) {
+        assert(nIdxKeys == 0);
+        assert(pInAccessor->getTupleDesc().size() == 1);
+        singletonTuple.compute(pInAccessor->getTupleDesc());
+        inputTuple[1].pData = NULL;
+        inputTuple[1].cbData = 0;
+        inputTuple[2].pData = NULL;
+        inputTuple[2].cbData = 0;
+    } else {
+        assert(
+            writeBTreeDesc.tupleDescriptor == pInAccessor->getTupleDesc());
+    }
 
     uint minEntrySize;
-
     LbmEntry::getSizeBounds(
         bitmapTupleDesc,
-        treeDescriptor.segmentAccessor.pSegment->getUsablePageSize(),
+        writeBTreeDesc.segmentAccessor.pSegment->getUsablePageSize(),
         minEntrySize,
         maxEntrySize);
 
-    // setup output tuple and accessor
-    outputTuple.compute(pOutAccessor->getTupleDesc());
+    // setup output tuple
+    outputTuple.compute(outAccessors[0]->getTupleDesc());
     outputTuple[0].pData = (PConstBuffer) &numRowsLoaded;
-    outputTupleAccessor = &pOutAccessor->getScratchTupleAccessor();
+    assert(outputTuple.size() == 1);
+
+    // constraint checking
+    uniqueKey = false;
+    if (params.bTreeParams.size() >= 2) {
+        uniqueKey = true;
+        BTreeExecStream::copyParamsToDescriptor(
+            deletionBTreeDesc,
+            params.bTreeParams[1],
+            params.pCacheAccessor);
+        deletionTuple.compute(deletionBTreeDesc.tupleDescriptor);
+
+        TupleDescriptor currUniqueKeyDesc;
+        for (uint i = 0; i < nIdxKeys; i++) {
+            currUniqueKeyDesc.push_back(bitmapTupleDesc[i]);
+        }
+        currUniqueKey.computeAndAllocate(currUniqueKeyDesc);
+
+        // setup violation output
+        if (outAccessors.size() > 1) {
+            violationAccessor = outAccessors[1];
+            violationTuple.compute(violationAccessor->getTupleDesc());
+        }
+    }
 }
 
 void LbmSplicerExecStream::open(bool restart)
 {
-    BTreeExecStream::open(restart);
-    ConduitExecStream::open(restart);
+    DiffluenceExecStream::open(restart);
 
     if (!restart) {
-
         bitmapBuffer.reset(new FixedBuffer[maxEntrySize]);
         mergeBuffer.reset(new FixedBuffer[maxEntrySize]);
         pCurrentEntry = SharedLbmEntry(new LbmEntry());
@@ -71,44 +114,70 @@ void LbmSplicerExecStream::open(bool restart)
             bitmapTupleDesc);
 
         bTreeWriter = SharedBTreeWriter(
-            new BTreeWriter(treeDescriptor, scratchAccessor, false));
+            new BTreeWriter(writeBTreeDesc, scratchAccessor, false));
 
-        outputTupleBuffer.reset(
-            new(FixedBuffer[outputTupleAccessor->getMaxByteCount()]));
+        if (opaqueToInt(writeRowCountParamId) > 0) {
+            pDynamicParamManager->createParam(
+                writeRowCountParamId,
+                outAccessors[0]->getTupleDesc()[0]);
+        }
+
+        if (uniqueKey) {
+            SharedBTreeReader deletionBTreeReader = SharedBTreeReader(
+                new BTreeReader(deletionBTreeDesc));
+            deletionReader.init(deletionBTreeReader, deletionTuple);
+        }
     }
     isDone = false;
     currEntry = false;
     currExistingEntry = false;
     numRowsLoaded = 0;
-    if (bTreeWriter->searchFirst() == false) {
-        bTreeWriter->endSearch();
-        emptyTable = true;
-        // switch writer to monotonic now that we know the table
-        // is empty
-        bTreeWriter.reset();
-        bTreeWriter = SharedBTreeWriter(
-            new BTreeWriter(treeDescriptor, scratchAccessor, true));
-    } else {
-        emptyTable = false;
-    }
+
+    currValidation = false;
+    firstValidation = true;
+    emptyTableUnknown = true;
 }
 
 void LbmSplicerExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
-    ConduitExecStream::getResourceRequirements(minQuantity, optQuantity);
+    DiffluenceExecStream::getResourceRequirements(minQuantity, optQuantity);
 
     // btree pages
     minQuantity.nCachePages += 5;
+    if (uniqueKey) {
+        minQuantity.nCachePages += 5;
+    }
 
     optQuantity = minQuantity;
+}
+
+bool LbmSplicerExecStream::isEmpty()
+{
+    if (emptyTableUnknown) {
+        if (bTreeWriter->searchFirst() == false) {
+            bTreeWriter->endSearch();
+            emptyTable = true;
+            // switch writer to monotonic now that we know the table
+            // is empty
+            bTreeWriter.reset();
+            bTreeWriter = SharedBTreeWriter(
+                new BTreeWriter(writeBTreeDesc, scratchAccessor, true));
+        } else {
+            emptyTable = false;
+        }
+        emptyTableUnknown = false;
+    }
+    return emptyTable;
 }
 
 ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
 {
     if (isDone) {
-        pOutAccessor->markEOS();
+        for (uint i = 0; i < outAccessors.size(); i++) {
+            outAccessors[i]->markEOS();
+        }
         return EXECRC_EOS;
     }
 
@@ -125,32 +194,30 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
                 pDynamicParamManager->getParam(
                     insertRowCountParamId).getDatum().pData);
         }
-        outputTupleAccessor->marshal(outputTuple, outputTupleBuffer.get());
-        pOutAccessor->provideBufferForConsumption(
-            outputTupleBuffer.get(),
-            outputTupleBuffer.get() +
-                outputTupleAccessor->getCurrentByteCount());
+        if (opaqueToInt(writeRowCountParamId) > 0) {
+            TupleDatum rowCountDatum;
+            rowCountDatum.pData = (PConstBuffer) &numRowsLoaded;
+            rowCountDatum.cbData = sizeof(numRowsLoaded);
+            pDynamicParamManager->writeParam(
+                writeRowCountParamId,
+                rowCountDatum);
+        }
+        bool rc = outAccessors[0]->produceTuple(outputTuple);
+        assert(rc);
         isDone = true;
         return EXECRC_BUF_OVERFLOW;
     }
 
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
-        if (!pInAccessor->demandData()) {
-            return EXECRC_BUF_UNDERFLOW;
+        ExecStreamResult rc = getValidatedTuple();
+        if (rc != EXECRC_YIELD) {
+            return rc;
         }
 
-        pInAccessor->unmarshalTuple(inputTuple);
-        if (computeRowCount) {
-            // if the rowcount needs to be computed, then the input tuples
-            // must all be singletons
-            assert(LbmEntry::isSingleton(inputTuple));
-            numRowsLoaded++;
-        }
+        if (uniqueRequired(inputTuple)) {
 
-        FENNEL_TRACE(TRACE_FINE, "input Tuple from sorter");
-        FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(inputTuple));
-
-        if (!currEntry) {
+            upsertSingleton(inputTuple);
+        } else if (!currEntry) {
 
             // if the key already exists in the index, splice the
             // entry just read to the existing btree entry
@@ -191,28 +258,24 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
 
 void LbmSplicerExecStream::closeImpl()
 {
-    BTreeExecStream::closeImpl();
-    ConduitExecStream::closeImpl();
+    bTreeWriter->endSearch();
+    deletionReader.endSearch();
+    DiffluenceExecStream::closeImpl();
     bitmapBuffer.reset();
     mergeBuffer.reset();
     pCurrentEntry.reset();
     bTreeWriter.reset();
-    outputTupleBuffer.reset();
-}
-
-ExecStreamBufProvision LbmSplicerExecStream::getOutputBufProvision() const
-{
-    return BUFPROV_PRODUCER;
 }
 
 bool LbmSplicerExecStream::existingEntry(TupleData const &bitmapEntry)
 {
-    if (!emptyTable) {
+    if (!isEmpty()) {
         // if entry already exists in the btree, then the current bitmap
         // entry becomes that existing btree entry
         if (findBTreeEntry(bitmapEntry, bTreeTupleData)) {
             currExistingEntry = true;
             createNewBitmapEntry(bTreeTupleData);
+            bTreeWriterMoved = false;
             return true;
         }
     }
@@ -249,7 +312,7 @@ void LbmSplicerExecStream::findBetterEntry(TupleData const &bitmapEntry)
 {
     // If there is a better entry, write out the existing one and set the
     // current to the btree entry found
-    if (!emptyTable) {
+    if (!isEmpty()) {
         if (findBTreeEntry(bitmapEntry, bTreeTupleData)) {
 
             LcsRid btreeRid = *reinterpret_cast<LcsRid const *>
@@ -284,19 +347,6 @@ void LbmSplicerExecStream::spliceEntry(TupleData &bitmapEntry)
     FENNEL_TRACE(TRACE_FINE, pCurrentEntry->toString());
     FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(bitmapEntry));
 
-    // if we're in ignore duplicate mode, ignore duplicate rid entries rather
-    // than trying to splice them
-    if (ignoreDuplicates) {
-        assert(LbmEntry::isSingleton(bitmapEntry));
-        LcsRid rid = *((LcsRid *) bitmapEntry[nIdxKeys].pData);
-        if (pCurrentEntry->containsRid(rid)) {
-            if (computeRowCount) {
-                numRowsLoaded--;
-            }
-            return;
-        }
-    }
-
     if (!pCurrentEntry->mergeEntry(bitmapEntry)) {
         insertBitmapEntry();
         createNewBitmapEntry(bitmapEntry);
@@ -305,26 +355,34 @@ void LbmSplicerExecStream::spliceEntry(TupleData &bitmapEntry)
 
 void LbmSplicerExecStream::insertBitmapEntry()
 {
+    TupleData const &indexTuple = pCurrentEntry->produceEntryTuple();
+
     // implement btree updates as deletes followed by inserts
     if (currExistingEntry) {
         // when we're inserting in random singleton mode, we may have
         // repositioned in the btree, trying to find a better btree entry,
         // so we need to position back to the original btree entry before
-        // we delete it
-        if (computeRowCount) {
+        // we delete it. the btree may also reposition for validation
+        if (bTreeWriterMoved) {
+            for (uint i = 0; i < nIdxKeys; i++) {
+                tempBTreeTupleData[i] = indexTuple[i];
+            }
+        }
+        if (computeRowCount || bTreeWriterMoved) {
             tempBTreeTupleData[nIdxKeys].pData =
                 (PConstBuffer) &currBTreeStartRid;
             bool match = findBTreeEntry(tempBTreeTupleData, tempBTreeTupleData);
             assert(match);
         }
+        FENNEL_TRACE(TRACE_FINE, "delete Tuple from BTree");
+        FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(tempBTreeTupleData));
+
         bTreeWriter->deleteCurrent();
         currExistingEntry = false;
     }
 
-    TupleData const &indexTuple = pCurrentEntry->produceEntryTuple();
-
-     FENNEL_TRACE(TRACE_FINE, "insert Tuple into BTree");
-     FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(indexTuple));
+    FENNEL_TRACE(TRACE_FINE, "insert Tuple into BTree");
+    FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(indexTuple));
 
     bTreeWriter->insertTupleData(indexTuple, DUP_FAIL);
 }
@@ -335,6 +393,152 @@ void LbmSplicerExecStream::createNewBitmapEntry(TupleData const &bitmapEntry)
     currBTreeStartRid = *reinterpret_cast<LcsRid const *>
         (bitmapEntry[nIdxKeys].pData);
     currEntry = true;
+}
+
+void LbmSplicerExecStream::upsertSingleton(TupleData const &bitmapEntry)
+{
+    if (!isEmpty()) {
+        if (findBTreeEntry(bitmapEntry, bTreeTupleData)) {
+            assert(LbmEntry::isSingleton(bTreeTupleData));
+            bTreeWriter->deleteCurrent();
+        }
+    }
+    bTreeWriter->insertTupleData(bitmapEntry, DUP_FAIL);
+}
+
+ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
+{
+    if (!currValidation) {
+        if (!pInAccessor->demandData()) {
+            return EXECRC_BUF_UNDERFLOW;
+        }
+
+        if (computeRowCount) {
+            pInAccessor->unmarshalTuple(singletonTuple);
+            inputTuple[0] = singletonTuple[0];
+            numRowsLoaded++;
+        } else {
+            pInAccessor->unmarshalTuple(inputTuple);
+        }
+
+        FENNEL_TRACE(TRACE_FINE, "input Tuple from sorter");
+        FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(inputTuple));
+
+        if (!uniqueRequired(inputTuple)) {
+            return EXECRC_YIELD;
+        }
+
+        // count existing entries for key, if the key has not been seen yet
+        if (firstValidation
+            || bitmapTupleDesc.compareTuplesKey(
+                inputTuple, currUniqueKey, nIdxKeys) != 0)
+        {
+            firstValidation = false;
+            currUniqueKey.resetBuffer();
+            for (uint i= 0; i < nIdxKeys; i++) {
+                currUniqueKey[i].memCopyFrom(inputTuple[i]);
+            }
+            nKeyRows = countKeyRows(inputTuple);
+        }
+
+        // prepare to emit rids for key violations
+        inputRidReader.init(inputTuple);
+        nullUpsertRid = true;
+        currValidation = true;
+    }
+
+    // if there were no undeleted values for the current key, we can
+    // insert/update a single rid
+    if (nKeyRows == 0) {
+        assert(getUpsertRidPtr() == NULL);
+        setUpsertRid(inputRidReader.getNext());
+        nKeyRows++;
+    }
+    // all other rids are rejected as duplicate keys
+    while (inputRidReader.hasNext()) {
+        if (! violationTuple.size()) {
+            // if there is a possibility of violations, the splicer should
+            // have been initialized with a second output
+            permAssert(false);
+        }
+        LcsRid rid = inputRidReader.peek();
+        violationTuple[0].pData = reinterpret_cast<PConstBuffer>(&rid);
+        violationTuple[0].cbData = 8;
+        if (!violationAccessor->produceTuple(violationTuple)) {
+            return EXECRC_BUF_OVERFLOW;
+        }
+        postViolation(inputTuple, violationTuple);
+        inputRidReader.advance();
+    }
+    currValidation = false;
+
+    if (getUpsertRidPtr() != NULL) {
+        // since a rid was accepted, return it as a validated tuple
+        inputTuple[nIdxKeys].pData =
+            reinterpret_cast<PConstBuffer>(getUpsertRidPtr());
+        inputTuple[nIdxKeys].cbData = 8;
+        inputTuple[nIdxKeys+1].pData = NULL;
+        inputTuple[nIdxKeys+1].cbData = 0;
+        inputTuple[nIdxKeys+2].pData = NULL;
+        inputTuple[nIdxKeys+2].cbData = 0;
+        return EXECRC_YIELD;
+    }
+
+    // otherwise every rid of the current tuple was rejected and we
+    // continue to the next tuple
+    pInAccessor->consumeTuple();
+    return getValidatedTuple();
+}
+
+bool LbmSplicerExecStream::uniqueRequired(const TupleData &tuple)
+{
+    if (uniqueKey) {
+        for (uint i = 0; i < nIdxKeys; i++) {
+            if (tuple[i].isNull()) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+uint LbmSplicerExecStream::countKeyRows(const TupleData &tuple)
+{
+    assert(uniqueKey);
+    if (isEmpty()) {
+        return 0;
+    }
+
+    if (!findBTreeEntry(inputTuple, bTreeTupleData)) {
+        return 0;
+    }
+    assert(LbmEntry::isSingleton(bTreeTupleData));
+    LcsRid rid = LbmEntry::getStartRid(bTreeTupleData);
+
+    if (deletionReader.searchForRid(rid)) {
+        return 0;
+    }
+    return 1;
+}
+
+void LbmSplicerExecStream::postViolation(
+    const TupleData &input, const TupleData &violation)
+{
+    if (!errorTuple.size()) {
+        for (uint i = 0; i < nIdxKeys+1; i++) {
+            errorDesc.push_back(bitmapTupleDesc[i]);
+        }
+        errorTuple.compute(errorDesc);
+        errorMsg = FennelResource::instance().uniqueConstraintViolated();
+    }
+
+    for (uint i = 0; i < nIdxKeys; i++) {
+        errorTuple[i] = input[i];
+    }
+    errorTuple[nIdxKeys] = violation[0];
+
+    postError(ROW_ERROR, errorMsg, errorDesc, errorTuple, -1);
 }
 
 FENNEL_END_CPPFILE("$Id$");

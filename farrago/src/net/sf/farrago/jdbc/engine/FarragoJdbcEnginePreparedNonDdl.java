@@ -69,7 +69,7 @@ public class FarragoJdbcEnginePreparedNonDdl
     {
         try {
             stmtContext.execute();
-            return (stmtContext.getResultSet() != null);
+            return (openCursorResultSet() != null);
         } catch (Throwable ex) {
             throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
@@ -84,8 +84,9 @@ public class FarragoJdbcEnginePreparedNonDdl
         }
         try {
             stmtContext.execute();
-            assert (stmtContext.getResultSet() != null);
-            return stmtContext.getResultSet();
+            ResultSet resultSet = openCursorResultSet();
+            assert (resultSet != null);
+            return resultSet;
         } catch (Throwable ex) {
             throw FarragoJdbcEngineDriver.newSqlException(ex);
         }

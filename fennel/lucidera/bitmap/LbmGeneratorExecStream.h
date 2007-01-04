@@ -70,6 +70,25 @@ struct LbmGeneratorExecStreamParams :
     bool createIndex;
 };
 
+/**
+ * LbmGeneratorExecStream reads the column store clusters corresponding to
+ * the columns of an index, and creates bitmap entries for those rows.  Its
+ * input is a rowcount, indicating the number of rows it needs to create
+ * entries for, and the startRid corresponding to the first row.  It's assumed
+ * that the rows it needs to create entries for are all sequential, starting at
+ * that start value.
+ *
+ * <p>If possible, LbmGeneratorExecStream will try to take advantage of
+ * compressed column store batches to create bitmap entries spanning multiple
+ * rows.
+ *
+ * <p>As output, LbmGeneratorExecStream writes out the bitmap entries it has
+ * created.  It also passes along the rowcount passed in as its input, using
+ * a dynamic parameter that will be read downstream.
+ *
+ * @author Zelaine Fong
+ * @version $Id$
+ */
 class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
 {
     /**
@@ -88,11 +107,6 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
      * Dynamic parameter id used to pass along number of rows loaded
      */
     DynamicParamId insertRowCountParamId;
-
-    /**
-     * True if dynamic parameters have been created
-     */
-    bool dynParamsCreated;
 
     /**
      * True if index is being loaded as part of a create index statement
@@ -238,6 +252,11 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
     bool skipRead;
 
     /**
+     * If true, all rows from the column store table have been read
+     */
+    bool doneReading;
+
+    /**
      * Generates bitmaps for a single column index
      *
      * @param quantum quantum for stream
@@ -356,7 +375,6 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
     bool flushEntry(uint keycode);
 
 public:
-    explicit LbmGeneratorExecStream();
     virtual void prepare(LbmGeneratorExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);

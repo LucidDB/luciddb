@@ -429,7 +429,7 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 '    FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(BIGINT EXPR$0, INTEGER C0) NOT NULL])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, LCS_RID]], clustered indexes=[[I_C0]])'
-'        FennelValuesRel(tuples=[[{ 0 }]])'
+'        FennelValuesRel(tuples=[[{ 1 }]])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select lcs_rid(t.c0), c0 from (values(1)), tencols t order by 2;
 'column0'
@@ -438,6 +438,6 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 '    FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(BIGINT EXPR$0, INTEGER C0) NOT NULL])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, LCS_RID]], clustered indexes=[[I_C0]])'
-'        FennelValuesRel(tuples=[[{ 0 }]])'
+'        FennelValuesRel(tuples=[[{ 1 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

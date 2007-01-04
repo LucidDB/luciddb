@@ -89,6 +89,12 @@ public class TupleIterResultSet
     public boolean next()
         throws SQLException
     {
+        if (maxRows > 0) {
+            if (row >= maxRows) {
+                return false;
+            }
+        }
+
         try {
             Object next =
                 (timeoutTupleIter != null)
@@ -102,8 +108,8 @@ public class TupleIterResultSet
                 throw new RuntimeException();
             }
 
-            this.current = next;
-            this.row++;
+            current = next;
+            row++;
             return true;
         } catch (QueueIterator.TimeoutException e) {
             throw new SqlTimeoutException();

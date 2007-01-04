@@ -23,6 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/CmdInterpreter.h"
+#include "fennel/farrago/JavaErrorTarget.h"
 #include "fennel/farrago/JavaTraceTarget.h"
 #include "fennel/exec/ExecStreamGraphEmbryo.h"
 #include "fennel/exec/SimpleExecStreamGovernor.h"
@@ -153,6 +154,14 @@ CmdInterpreter::StreamGraphHandle::~StreamGraphHandle()
 JavaTraceTarget *CmdInterpreter::newTraceTarget()
 {
     return new JavaTraceTarget();
+}
+
+SharedErrorTarget CmdInterpreter::newErrorTarget(
+    jobject fennelJavaErrorTarget)
+{
+    SharedErrorTarget errorTarget;
+    errorTarget.reset(new JavaErrorTarget(fennelJavaErrorTarget));
+    return errorTarget;
 }
 
 void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)

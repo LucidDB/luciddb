@@ -25,11 +25,6 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-LbmBitOpExecStream::LbmBitOpExecStream()
-{
-    dynParamsCreated = false;
-}
-
 void LbmBitOpExecStream::prepare(LbmBitOpExecStreamParams const &params)
 {
     ConfluenceExecStream::prepare(params);
@@ -87,7 +82,6 @@ void LbmBitOpExecStream::open(bool restart)
             rowLimitParamId, pOutAccessor->getTupleDesc()[nKeys]);
         pDynamicParamManager->createParam(
             startRidParamId, pOutAccessor->getTupleDesc()[nKeys]);
-        dynParamsCreated = true;
     } else {
         segmentWriter.reset();
     }
@@ -193,10 +187,6 @@ bool LbmBitOpExecStream::produceTuple(TupleData bitmapTuple)
 void LbmBitOpExecStream::closeImpl()
 {
     ConfluenceExecStream::closeImpl();
-    if (dynParamsCreated) {
-        pDynamicParamManager->deleteParam(rowLimitParamId);
-        pDynamicParamManager->deleteParam(startRidParamId);
-    }
     outputBuf.reset();
     byteSegBuf.reset();
 }

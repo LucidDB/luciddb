@@ -68,6 +68,11 @@ void ExecStreamGraphImpl::setTxn(SharedLogicalTxn pTxnInit)
     pTxn = pTxnInit;
 }
 
+void ExecStreamGraphImpl::setErrorTarget(SharedErrorTarget pErrorTargetInit)
+{
+    pErrorTarget = pErrorTargetInit;
+}
+
 void ExecStreamGraphImpl::setScratchSegment(
     SharedSegment pScratchSegmentInit)
 {
@@ -463,12 +468,16 @@ void ExecStreamGraphImpl::open()
 
 void ExecStreamGraphImpl::openStream(SharedExecStream pStream)
 {
+    if (pErrorTarget) {
+        pStream->initErrorSource(pErrorTarget, pStream->getName());
+    }
     pStream->open(false);
 }
 
 void ExecStreamGraphImpl::closeImpl()
 {
     isOpen = false;
+    pDynamicParamManager->deleteAllParams();
     if (sortedStreams.empty()) {
         // in case prepare was never called
         sortStreams();
@@ -658,6 +667,22 @@ void ExecStreamGraphImpl::renderGraphviz(std::ostream &dotStream)
         DotVertexRenderer(*this),
         DotEdgeRenderer(*this),
         DotGraphRenderer());
+}
+
+void ExecStreamGraphImpl::closeProducers(ExecStreamId streamId)
+{
+    ExecStreamGraphImpl::InEdgeIterPair inEdges =
+        boost::in_edges(streamId, graphRep);
+    for (; inEdges.first != inEdges.second; ++(inEdges.first)) {
+        ExecStreamGraphImpl::Edge edge = *(inEdges.first);
+        // move streamId upstream
+        streamId = boost::source(edge,graphRep);
+        // close the producers of this stream before closing the stream
+        // itself
+        closeProducers(streamId);
+        SharedExecStream pStream = getStreamFromVertex(streamId);
+        pStream->close();
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

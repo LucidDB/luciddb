@@ -2245,23 +2245,16 @@ public abstract class RelOptUtil
             project.getProjectExps(),
             null);
 
-        // first, make a copy of the bitmaps, creating a new one if needed
+        // create new copies of the bitmaps
         RelNode [] multiJoinInputs = multiJoin.getInputs();
         int nInputs = multiJoinInputs.length;
-        BitSet [] origProjFields = multiJoin.getProjFields();
         BitSet [] newProjFields = new BitSet[nInputs];      
         for (int i = 0; i < nInputs; i++) {
-            if (origProjFields[i] == null) {
-                newProjFields[i] =
-                    new BitSet(multiJoinInputs[i].getRowType().getFieldCount());
-            } else {
-                newProjFields[i] =
-                    newProjFields[i] = (BitSet) origProjFields[i].clone();
-            }
+            newProjFields[i] =
+                new BitSet(multiJoinInputs[i].getRowType().getFieldCount());
         }
         
-        // OR the bitmap for each input into the MultiJoinRel with the bits
-        // found in the expressions
+        // set the bits found in the expressions
         int currInput = -1;
         int startField = 0;
         int nFields = 0;

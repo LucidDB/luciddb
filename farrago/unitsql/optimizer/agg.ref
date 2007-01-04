@@ -934,7 +934,8 @@ Error: From line 5, column 57 to line 5, column 72: Aggregate expression is ille
 '      FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
-'            IterOneRowRel'
+'            FennelToIteratorConverter'
+'              FennelValuesRel(tuples=[[{ 0 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > SELECT 
@@ -954,7 +955,8 @@ Error: From line 5, column 57 to line 5, column 72: Aggregate expression is ille
 '      FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
-'            IterOneRowRel'
+'            FennelToIteratorConverter'
+'              FennelValuesRel(tuples=[[{ 0 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- expect error
 0: jdbc:farrago:> explain plan for

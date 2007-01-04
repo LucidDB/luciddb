@@ -167,8 +167,9 @@ public class LcsTableDeleteRel
         if (sort) {
             FemSortingStreamDef sortingStream =
                 indexGuide.newSorter(
-                    deletionIndex, 
-                    RelMetadataQuery.getRowCount(getChild()));
+                    deletionIndex,
+                    RelMetadataQuery.getRowCount(getChild()),
+                    true);
             implementor.addDataFlowFromProducerToConsumer(input, sortingStream);
             input = sortingStream;
         } else {
@@ -178,13 +179,14 @@ public class LcsTableDeleteRel
         }
 
         FemLbmSplicerStreamDef splicer =
-            indexGuide.newSplicer(this, deletionIndex, 0, false);
+            indexGuide.newSplicer(this, deletionIndex, null, 0, 0);
         implementor.addDataFlowFromProducerToConsumer(input, splicer);
 
         FemBarrierStreamDef barrier =
             indexGuide.newBarrier(
-                this,
-                LcsIndexGuide.BarrierReturnFirstInput);
+                getRowType(),
+                BarrierReturnModeEnum.BARRIER_RET_ANY_INPUT,
+                0);
         implementor.addDataFlowFromProducerToConsumer(splicer, barrier);
 
         return barrier;
