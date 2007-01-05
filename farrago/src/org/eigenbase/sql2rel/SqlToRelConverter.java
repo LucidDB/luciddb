@@ -81,6 +81,7 @@ public class SqlToRelConverter
     private static final Logger sqlToRelTracer =
         EigenbaseTrace.getSqlToRelTracer();
     private boolean decorrelationEnabled;
+    private boolean shouldCreateValuesRel;
     
     /**
      * Fields used in name resolution for correlated subqueries.
@@ -152,6 +153,7 @@ public class SqlToRelConverter
         this.exprConverter =
             new SqlNodeToRexConverterImpl(new StandardConvertletTable());
         decorrelationEnabled = true;
+        shouldCreateValuesRel = true;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -224,6 +226,19 @@ public class SqlToRelConverter
     public void enableTableAccessConversion(boolean enabled)
     {
         shouldConvertTableAccess = enabled;
+    }
+
+    /**
+     * Controls whether instances of {@link ValuesRel} are generated.  These
+     * may not be supported by all physical implementations.  To have any
+     * effect, this must be called before any convert method.
+     *
+     * @param enabled true to allow ValuesRel to be generated (the default);
+     * false to force substitution of ProjectRel+OneRowRel instead
+     */
+    public void enableValuesRelCreation(boolean enabled)
+    {
+        shouldCreateValuesRel = enabled;
     }
 
     private void checkConvertedType(SqlNode query, RelNode result)
@@ -1002,105 +1017,144 @@ public class SqlToRelConverter
         // expression.  The semantic difference is that a table expression can
         // return multiple rows.
         if (seek instanceof SqlNodeList) {
-            // NOTE jvs 30-Apr-2006: We combine all rows consisting entirely of
-            // literals into a single ValuesRel; this gives the optimizer a
-            // smaller input tree.  For everything else (computed expressions,
-            // row subqueries), we union each row in as a projection on top of a
-            // OneRowRel.
-
-            List<List<RexLiteral>> tupleList =
-                new ArrayList<List<RexLiteral>>();
-            RelDataType rowType = validator.getValidatedNodeType(seek);
-            rowType = SqlTypeUtil.promoteToRowType(
-                    typeFactory,
-                    rowType,
-                    null);
-
-            SqlNodeList nodeList = (SqlNodeList) seek;
-            List<RelNode> unionInputs = new ArrayList<RelNode>();
-            for (SqlNode node : nodeList) {
-                SqlCall call;
-                if (isRowConstructor(node)) {
-                    call = (SqlCall) node;
-                    List<RexLiteral> tuple = new ArrayList<RexLiteral>();
-                    int i = 0;
-                    for (SqlNode operand : call.operands) {
-                        if (!(operand instanceof SqlLiteral) ||
-                            ((SqlLiteral)operand).getValue() == null) {
-                            tuple = null;
-                            break;
-                        }
-                        RexLiteral rexLiteral =
-                            (RexLiteral) exprConverter.convertLiteral(
-                                bb,
-                                (SqlLiteral) operand);
-                        rexLiteral = coerceLiteral(
-                                rexLiteral,
-                                rowType,
-                                i++);
-                        tuple.add(rexLiteral);
-                    }
-                    if (tuple != null) {
-                        tupleList.add(tuple);
-                        continue;
-                    }
-                } else {
-                    if (node instanceof SqlLiteral &&
-                        ((SqlLiteral)node).getValue() != null) {
-                        RexLiteral rexLiteral =
-                            (RexLiteral) exprConverter.convertLiteral(
-                                bb,
-                                (SqlLiteral) node);
-                        rexLiteral = coerceLiteral(
-                                rexLiteral,
-                                rowType,
-                                0);
-                        tupleList.add(
-                            Collections.singletonList(rexLiteral));
-                        continue;
-                    }
-
-                    // convert "1" to "row(1)"
-                    call =
-                        SqlStdOperatorTable.rowConstructor.createCall(
-                            SqlParserPos.ZERO,
-                            node);
-                }
-                unionInputs.add(convertRowConstructor(bb, call));
-            }
-            ValuesRel valuesRel = new ValuesRel(
-                    cluster,
-                    rowType,
-                    tupleList);
-            RelNode resultRel;
-            if (unionInputs.isEmpty()) {
-                resultRel = valuesRel;
-            } else {
-                if (!tupleList.isEmpty()) {
-                    unionInputs.add(valuesRel);
-                }
-                UnionRel unionRel =
-                    new UnionRel(
-                        cluster,
-                        unionInputs.toArray(RelNode.emptyArray),
-                        true);
-                resultRel = unionRel;
-            }
-            leaves.add(resultRel);
-            return resultRel;
+            return convertRowValues(
+                bb,
+                seek,
+                ((SqlNodeList) seek).getList(),
+                false);
         } else {
             return convertQueryRecursive(seek, false);
         }
     }
 
-    private RexLiteral coerceLiteral(
-        RexLiteral literal,
+    private RelNode convertRowValues(
+        Blackboard bb,
+        SqlNode rowList,
+        Collection<SqlNode> rows,
+        boolean allowLiteralsOnly)
+    {
+        // NOTE jvs 30-Apr-2006: We combine all rows consisting entirely of
+        // literals into a single ValuesRel; this gives the optimizer a smaller
+        // input tree.  For everything else (computed expressions, row
+        // subqueries), we union each row in as a projection on top of a
+        // OneRowRel.
+        
+        List<List<RexLiteral>> tupleList =
+            new ArrayList<List<RexLiteral>>();
+        RelDataType rowType = validator.getValidatedNodeType(rowList);
+        rowType = SqlTypeUtil.promoteToRowType(
+            typeFactory,
+            rowType,
+            null);
+
+        List<RelNode> unionInputs = new ArrayList<RelNode>();
+        for (SqlNode node : rows) {
+            SqlCall call;
+            if (isRowConstructor(node)) {
+                call = (SqlCall) node;
+                List<RexLiteral> tuple = new ArrayList<RexLiteral>();
+                int i = 0;
+                for (SqlNode operand : call.operands) {
+                    RexLiteral rexLiteral = convertLiteralInValuesList(
+                        operand,
+                        bb,
+                        rowType,
+                        i++);
+                    if ((rexLiteral == null) && allowLiteralsOnly) {
+                        return null;
+                    }
+                    if ((rexLiteral == null) || !shouldCreateValuesRel) {
+                        // fallback to convertRowConstructor
+                        tuple = null;
+                        break;
+                    }
+                    tuple.add(rexLiteral);
+                }
+                if (tuple != null) {
+                    tupleList.add(tuple);
+                    continue;
+                }
+            } else {
+                RexLiteral rexLiteral = convertLiteralInValuesList(
+                    node,
+                    bb,
+                    rowType,
+                    0);
+                if ((rexLiteral != null) && shouldCreateValuesRel) {
+                    tupleList.add(
+                        Collections.singletonList(rexLiteral));
+                    continue;
+                } else {
+                    if ((rexLiteral == null) && allowLiteralsOnly) {
+                        return null;
+                    }
+                }
+                // convert "1" to "row(1)"
+                call =
+                    SqlStdOperatorTable.rowConstructor.createCall(
+                        SqlParserPos.ZERO,
+                        node);
+            }
+            unionInputs.add(convertRowConstructor(bb, call));
+        }
+        ValuesRel valuesRel = new ValuesRel(
+            cluster,
+            rowType,
+            tupleList);
+        RelNode resultRel;
+        if (unionInputs.isEmpty()) {
+            resultRel = valuesRel;
+        } else {
+            if (!tupleList.isEmpty()) {
+                unionInputs.add(valuesRel);
+            }
+            UnionRel unionRel =
+                new UnionRel(
+                    cluster,
+                    unionInputs.toArray(RelNode.emptyArray),
+                    true);
+            resultRel = unionRel;
+        }
+        leaves.add(resultRel);
+        return resultRel;
+    }
+
+    private RexLiteral convertLiteralInValuesList(
+        SqlNode sqlNode,
+        Blackboard bb,
         RelDataType rowType,
         int iField)
     {
+        if (!(sqlNode instanceof SqlLiteral)) {
+            return null;
+        }
         RelDataTypeField field =
             (RelDataTypeField) rowType.getFieldList().get(iField);
         RelDataType type = field.getType();
+        if (type.isStruct()) {
+            // null literals for weird stuff like UDT's need
+            // special handling during type flattening, so
+            // don't use ValuesRel for those
+            return null;
+        }
+                    
+        RexNode literalExpr =
+            exprConverter.convertLiteral(
+                bb,
+                (SqlLiteral) sqlNode);
+                    
+        if (!(literalExpr instanceof RexLiteral)) {
+            assert(literalExpr.isA(RexKind.Cast));
+            RexNode child =
+                ((RexCall) literalExpr).getOperands()[0];
+            assert(RexLiteral.isNullLiteral(child));
+            // NOTE jvs 22-Nov-2006:  we preserve type info
+            // in ValuesRel digest, so it's OK to lose it here
+            return (RexLiteral) child;
+        }
+
+        RexLiteral literal = (RexLiteral) literalExpr;
+        
         Comparable value = literal.getValue();
         
         if (SqlTypeUtil.isExactNumeric(type)) {
@@ -2282,17 +2336,20 @@ public class SqlToRelConverter
         if (insertCall != null) {
             RelNode insertRel = convertInsert(insertCall);
 
-            // there are 2 level of projections in the insert source; combine
+            // if there are 2 level of projections in the insert source, combine
             // them into a single project; level1 refers to the topmost project;
             // the level1 projection contains references to the level2
             // expressions, except in the case where no target expression was
             // provided, in which case, the expression is the default value for
-            // the column
+            // the column; or if the expressions directly map to the source
+            // table
             level1InsertExprs =
                 ((ProjectRel) insertRel.getInput(0)).getProjectExps();
-            level2InsertExprs =
-                ((ProjectRel) insertRel.getInput(0).getInput(0))
-                .getProjectExps();
+            if (insertRel.getInput(0).getInput(0) instanceof ProjectRel) {
+                level2InsertExprs =
+                    ((ProjectRel) insertRel.getInput(0).getInput(0))
+                    .getProjectExps();
+            }
             nLevel1Exprs = level1InsertExprs.length;
         }
 
@@ -2305,7 +2362,9 @@ public class SqlToRelConverter
         }
         RexNode [] projExprs = new RexNode[numProjExprs];
         for (int level1Idx = 0; level1Idx < nLevel1Exprs; level1Idx++) {
-            if (level1InsertExprs[level1Idx] instanceof RexInputRef) {
+            if (level2InsertExprs != null &&
+                level1InsertExprs[level1Idx] instanceof RexInputRef)
+            {
                 int level2Idx =
                     ((RexInputRef) level1InsertExprs[level1Idx]).getIndex();
                 projExprs[level1Idx] = level2InsertExprs[level2Idx];
@@ -2701,6 +2760,18 @@ public class SqlToRelConverter
         Blackboard bb,
         SqlCall values)
     {
+        // Attempt direct conversion to ValuesRel; if that fails, deal with
+        // fancy stuff like subqueries below.
+        RelNode valuesRel = convertRowValues(
+            bb,
+            values,
+            Arrays.asList(values.getOperands()),
+            true);
+        if (valuesRel != null) {
+            bb.setRoot(valuesRel, true);
+            return;
+        }
+        
         SqlNode [] rowConstructorList = values.getOperands();
         ArrayList<RelNode> unionRels = new ArrayList<RelNode>();
         for (int i = 0; i < rowConstructorList.length; i++) {
@@ -2738,7 +2809,7 @@ public class SqlToRelConverter
                     (RelNode []) unionRels.toArray(new RelNode[0]),
                     true),
                 true);
-        }
+         }
 
         // REVIEW jvs 22-Jan-2004:  should I add
         // mapScopeToLux.put(validator.getScope(values),bb.root);

@@ -2122,31 +2122,60 @@ FemRoutineParameter RoutineParam(FemRoutine routine) :
 {
     FemRoutineParameter param;
     SqlIdentifier name;
-
-    param = getRepos().newFemRoutineParameter();
-    routine.getParameter().add(param);
+    SqlIdentifier cursorName;
+    FemColumnListRoutineParameter columnListParam;
+    ParameterDirectionKind kind = null;
 }
 {
     [
         (
             <IN>
             {
-                param.setKind(ParameterDirectionKindEnum.PDK_IN);
+                kind = ParameterDirectionKindEnum.PDK_IN;
             }
             | <OUT>
             {
-                param.setKind(ParameterDirectionKindEnum.PDK_OUT);
+                kind = ParameterDirectionKindEnum.PDK_OUT;
             }
             | <INOUT>
             {
-                param.setKind(ParameterDirectionKindEnum.PDK_INOUT);
+                kind = ParameterDirectionKindEnum.PDK_INOUT;
             }
         )
     ]
     name = SimpleIdentifier()
+    (
+        param = NonColumnListRoutineParam(kind, name)
+        |
+        <SELECT> <FROM> cursorName = SimpleIdentifier()
+        {
+            columnListParam = getRepos().newFemColumnListRoutineParameter();
+            columnListParam.setKind(kind);
+            columnListParam.setName(name.getSimple());
+            columnListParam.setSourceCursorName(cursorName.getSimple());
+            farragoParser.getDdlValidator().setSqlDefinition(
+                columnListParam,
+                new SqlIdentifier("COLUMN_LIST", getPos()));
+            param = columnListParam;
+        }
+    )
     {
-        param.setName(name.getSimple());
+        routine.getParameter().add(param);
+        return param;
     }
+}
+
+FemRoutineParameter NonColumnListRoutineParam(
+    ParameterDirectionKind kind,
+    SqlIdentifier name) :
+{
+    FemRoutineParameter param;
+
+    param = getRepos().newFemRoutineParameter();
+    param.setKind(kind);
+    param.setName(name.getSimple());
+}
+{
     (
         TypedElement(param)
         |

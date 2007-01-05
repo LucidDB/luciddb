@@ -223,6 +223,57 @@ Error: Object definition contains recursive cycle (state=,code=0)
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.foreignTime';
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- UDX that contains a column list parameter
+0: jdbc:farrago:> create function stringifyColumns(
+. . . . . . . . >     c cursor,
+. . . . . . . . >     cl select from c,
+. . . . . . . . >     delimiter varchar(128))
+. . . . . . . . > returns table(v varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.stringifyColumns';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- UDX that contains 2 column list parameters referencing the same cursor
+0: jdbc:farrago:> create function stringify2ColumnLists(
+. . . . . . . . >     cl select from c,
+. . . . . . . . >     c2 select from c,
+. . . . . . . . >     c cursor,
+. . . . . . . . >     delimiter varchar(128))
+. . . . . . . . > returns table(v varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.stringify2ColumnLists';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- UDX that contains 2 column list parameters referencing different cursors
+0: jdbc:farrago:> create function combineStringifyColumns(
+. . . . . . . . >     c1 cursor,
+. . . . . . . . >     cl1 select from c1,
+. . . . . . . . >     c2 cursor,
+. . . . . . . . >     cl2 select from c2,
+. . . . . . . . >     delimiter varchar(128))
+. . . . . . . . > returns table(v varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name
+. . . . . . . . > 'class net.sf.farrago.test.FarragoTestUDR.combineStringifyColumns';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- same as above but arguments are jumbled
+0: jdbc:farrago:> create function combineStringifyColumnsJumbledArgs(
+. . . . . . . . >     cl2 select from c2,
+. . . . . . . . >     c1 cursor,
+. . . . . . . . >     delimiter varchar(128),
+. . . . . . . . >     c2 cursor,
+. . . . . . . . >     cl1 select from c1)
+. . . . . . . . > returns table(v varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name
+. . . . . . . . > 'class net.sf.farrago.test.FarragoTestUDR.combineStringifyColumnsJumbledArgs';
+0: jdbc:farrago:> 
 0: jdbc:farrago:> create view ramp_view as select * from table(ramp(3));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view stringified_view as 
@@ -230,6 +281,30 @@ Error: Object definition contains recursive cycle (state=,code=0)
 . . . . . . . . > from table(stringify(
 . . . . . . . . >     cursor(select * from sales.depts where deptno=20 order by 1),
 . . . . . . . . >     '|'));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view stringifiedColumns_view as
+. . . . . . . . > select * 
+. . . . . . . . > from table(stringifyColumns(
+. . . . . . . . >     cursor(select * from sales.emps where deptno=20 order by 1),
+. . . . . . . . >     row(name, empno, gender),
+. . . . . . . . >     '|'));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view combineStringifiedColumns_view as
+. . . . . . . . > select * 
+. . . . . . . . > from table(combineStringifyColumns(
+. . . . . . . . >     cursor(select * from sales.emps where deptno=20 order by 1),
+. . . . . . . . >     row(name, empno, gender),
+. . . . . . . . >     cursor(select * from sales.depts where deptno= 20 order by 1),
+. . . . . . . . >     row(name),
+. . . . . . . . >     '|'));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail : empno doesn't exist
+0: jdbc:farrago:> select * 
+. . . . . . . . > from table(stringifyColumns(
+. . . . . . . . >     cursor(select * from sales.depts where deptno=20 order by 1),
+. . . . . . . . >     row(name, empno),
+. . . . . . . . >     '|'));
+Error: From line 4, column 15 to line 4, column 19: Column 'EMPNO' not found in any table (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  we don't allow mutual recursion either
 0: jdbc:farrago:> create schema crypto
@@ -643,6 +718,92 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 | 20|MARKETING  |
 | 30|ACCOUNTS   |
 +---------------+
+0: jdbc:farrago:> select upper(v)
+. . . . . . . . > from table(stringifyColumns(
+. . . . . . . . >     cursor(select * from sales.depts order by 1),
+. . . . . . . . >     row(name),
+. . . . . . . . >     '|'))
+. . . . . . . . > order by 1;
++------------+
+|   EXPR$0   |
++------------+
+| ACCOUNTS   |
+| MARKETING  |
+| SALES      |
++------------+
+0: jdbc:farrago:> select upper(v)
+. . . . . . . . > from table(stringify2ColumnLists(
+. . . . . . . . >     row(empno, name),
+. . . . . . . . >     row(deptno, gender),
+. . . . . . . . >     cursor(select * from sales.emps order by 1),
+. . . . . . . . >     '|'))
+. . . . . . . . > order by 1;
++-------------------+
+|      EXPR$0       |
++-------------------+
+| 100|FRED|10|NULL  |
+| 110|ERIC|20|M     |
+| 110|JOHN|40|M     |
+| 120|WILMA|20|F    |
++-------------------+
+0: jdbc:farrago:> select upper(v)
+. . . . . . . . > from table(combineStringifyColumns(
+. . . . . . . . >     cursor(select empno, name, deptno, gender from sales.emps order by 1),
+. . . . . . . . >     row(empno, name, gender),
+. . . . . . . . >     cursor(select empno, name, deptno, city from sales.emps order by 1),
+. . . . . . . . >     row(empno, name, city),
+. . . . . . . . >     '|'))
+. . . . . . . . > order by 1;
++-------------------------+
+|         EXPR$0          |
++-------------------------+
+| 100|FRED|NULL           |
+| 100|FRED|NULL           |
+| 110|ERIC|M              |
+| 110|ERIC|SAN FRANCISCO  |
+| 110|JOHN|M              |
+| 110|JOHN|VANCOUVER      |
+| 120|WILMA|F             |
+| 120|WILMA|NULL          |
++-------------------------+
+0: jdbc:farrago:> select upper(v)
+. . . . . . . . > from table(combineStringifyColumnsJumbledArgs(
+. . . . . . . . >     row(empno, name, city),
+. . . . . . . . >     cursor(select empno, name, deptno, gender from sales.emps order by 1),
+. . . . . . . . >     '|',
+. . . . . . . . >     cursor(select empno, name, deptno, city from sales.emps order by 1),
+. . . . . . . . >     row(empno, name, gender)))
+. . . . . . . . > order by 1;
++-------------------------+
+|         EXPR$0          |
++-------------------------+
+| 100|FRED|NULL           |
+| 100|FRED|NULL           |
+| 110|ERIC|M              |
+| 110|ERIC|SAN FRANCISCO  |
+| 110|JOHN|M              |
+| 110|JOHN|VANCOUVER      |
+| 120|WILMA|F             |
+| 120|WILMA|NULL          |
++-------------------------+
+0: jdbc:farrago:> select *
+. . . . . . . . > from table(stringifyColumns(
+. . . . . . . . >     cursor(select * from sales.depts where deptno=20 order by 1),
+. . . . . . . . >     row(name),
+. . . . . . . . >     '|'))
+. . . . . . . . > union all
+. . . . . . . . > select *
+. . . . . . . . > from table(stringifyColumns(
+. . . . . . . . >     cursor(select * from sales.emps where deptno=20 order by 1),
+. . . . . . . . >     row(name, empno, gender),
+. . . . . . . . >     '|'));
++--------------+
+|      V       |
++--------------+
+| Marketing    |
+| 110|Eric|M   |
+| 120|Wilma|F  |
++--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- udx invocation with input via view
 0: jdbc:farrago:> select * from stringified_view;
@@ -651,6 +812,21 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 +---------------+
 | 20|Marketing  |
 +---------------+
+0: jdbc:farrago:> select * from stringifiedColumns_view;
++--------------+
+|      V       |
++--------------+
+| 110|Eric|M   |
+| 120|Wilma|F  |
++--------------+
+0: jdbc:farrago:> select * from combineStringifiedColumns_view;
++--------------+
+|      V       |
++--------------+
+| 110|Eric|M   |
+| 120|Wilma|F  |
+| Marketing    |
++--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- udx invocation with input auto-propagated to output
 0: jdbc:farrago:> select * 
@@ -664,14 +840,10 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 | 20      | Marketing  | 1070197274   |
 +---------+------------+--------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- commented out until jrockit R27 bug fixed
 0: jdbc:farrago:> -- udx with specified calendar
-0: jdbc:farrago:> select *
-. . . . . . . . > from table(foreign_time(timestamp'2006-10-09 18:32:26.992', 'PST', 'EST'));
-+--------------------------+-------------+-----------+
-|      THE_TIMESTAMP       |  THE_DATE   | THE_TIME  |
-+--------------------------+-------------+-----------+
-| 2006-10-09 21:32:26.992  | 2006-10-09  | 21:32:26  |
-+--------------------------+-------------+-----------+
+0: jdbc:farrago:> -- select *
+0: jdbc:farrago:> -- from table(foreign_time(timestamp'2006-10-09 18:32:26.992', 'PST', 'EST'));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set path 'crypto2';

@@ -116,6 +116,11 @@ protected:
     SharedLogicalTxn pTxn;
 
     /**
+     * Target for row errors.
+     */
+    SharedErrorTarget pErrorTarget;
+
+    /**
      * Source for scratch buffers.
      */
     SharedSegment pScratchSegment;
@@ -180,6 +185,7 @@ public:
 
     // implement ExecStreamGraph
     virtual void setTxn(SharedLogicalTxn pTxn);
+    virtual void setErrorTarget(SharedErrorTarget pErrorTarget);
     virtual void setScratchSegment(
         SharedSegment pScratchSegment);
     virtual void setResourceGovernor(
@@ -231,6 +237,7 @@ public:
     virtual int getDataflowCount();
     virtual void renderGraphviz(std::ostream &dotStream);
     virtual bool isAcyclic();
+    virtual void closeProducers(ExecStreamId streamId);
 };
 
 inline ExecStreamGraphImpl::GraphRep const &ExecStreamGraphImpl::getGraphRep()

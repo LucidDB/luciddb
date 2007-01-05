@@ -283,7 +283,7 @@ PBuffer ExternalSortRunLoader::quickSortFindPivot( uint l, uint r )
             tupleAccessor2.setCurrentTupleBuf(vals[j-1]);
             keyAccessor.unmarshal(keyData);
             keyAccessor2.unmarshal(keyData2);
-            if (sortInfo.keyDesc.compareTuples(keyData,keyData2) >= 0) {
+            if (sortInfo.compareKeys(keyData,keyData2) >= 0) {
                 break;
             }
             std::swap(vals[j],vals[j-1]);
@@ -311,7 +311,7 @@ uint ExternalSortRunLoader::quickSortPartition(uint l,uint r,PBuffer pivot)
             ++l;
             tupleAccessor2.setCurrentTupleBuf(getPointerArrayEntry(l));
             keyAccessor2.unmarshal(keyData2);
-            if (sortInfo.keyDesc.compareTuples(keyData2,keyData) >= 0) {
+            if (sortInfo.compareKeys(keyData2,keyData) >= 0) {
                 break;
             }
         }
@@ -319,7 +319,7 @@ uint ExternalSortRunLoader::quickSortPartition(uint l,uint r,PBuffer pivot)
             --r;
             tupleAccessor2.setCurrentTupleBuf(getPointerArrayEntry(r));
             keyAccessor2.unmarshal(keyData2);
-            if (sortInfo.keyDesc.compareTuples(keyData2,keyData) <= 0) {
+            if (sortInfo.compareKeys(keyData2,keyData) <= 0) {
                 break;
             }
         }

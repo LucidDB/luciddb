@@ -76,21 +76,21 @@ Error: DDL validation error near line 1, column 8: Parameter style cannot be spe
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
-Error: DDL validation error near line 1, column 29: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
+Error: DDL validation error near line 1, column 33: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't declare OUT parameter to function
 0: jdbc:farrago:> create function add_integers(out i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
-Error: DDL validation error near line 1, column 29: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
+Error: DDL validation error near line 1, column 34: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't declare INOUT parameter to function
 0: jdbc:farrago:> create function add_integers(inout i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
-Error: DDL validation error near line 1, column 29: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
+Error: DDL validation error near line 1, column 36: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  reference to bogus parameter
 0: jdbc:farrago:> create function add_integers(i int,j int)
@@ -538,5 +538,63 @@ Error: DDL validation error near line 1, column 8: Non-table routine "UDFTEST"."
 . . . . . . . . > parameter style system defined java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.digest';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed: column list parameter
+0: jdbc:farrago:> create function stringifyColumns(
+. . . . . . . . >     c cursor,
+. . . . . . . . >     cl select from c,
+. . . . . . . . >     delimiter varchar(128))
+. . . . . . . . > returns table(v varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.stringifyColumns';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail : no matching source cursor name
+0: jdbc:farrago:> create function bad_stringifyColumns(
+. . . . . . . . >     c cursor,
+. . . . . . . . >     cl select from nonExistent,
+. . . . . . . . >     delimiter varchar(128))
+. . . . . . . . > returns table(v varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
+Error: DDL validation error near line 1, column 8: Cannot locate source cursor "NONEXISTENT" for COLUMN_LIST routine parameter "CL" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- following 2 should fail : external method not declared as List<String>
+0: jdbc:farrago:> create function bad_stringifyColumns(
+. . . . . . . . >     c cursor,
+. . . . . . . . >     cl select from c,
+. . . . . . . . >     delimiter varchar(128))
+. . . . . . . . > returns table(v varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.badStringifyColumns1';
+Error: DDL validation error near line 1, column 8: COLUMN_LIST parameters for routine "UDFTEST"."BAD_STRINGIFYCOLUMNS" must be declared as java.util.List<String> in the external Java method "net.sf.farrago.test.FarragoTestUDR.badStringifyColumns1(java.sql.ResultSet, java.util.List, java.lang.String, java.sql.PreparedStatement)" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function bad_stringifyColumns(
+. . . . . . . . >     c cursor,
+. . . . . . . . >     cl select from c,
+. . . . . . . . >     delimiter varchar(128))
+. . . . . . . . > returns table(v varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.badStringifyColumns2';
+Error: DDL validation error near line 1, column 8: COLUMN_LIST parameters for routine "UDFTEST"."BAD_STRINGIFYCOLUMNS" must be declared as java.util.List<String> in the external Java method "net.sf.farrago.test.FarragoTestUDR.badStringifyColumns2(java.sql.ResultSet, java.util.List, java.lang.String, java.sql.PreparedStatement)" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail : external method has wrong type for COLUMN_LIST parameter
+0: jdbc:farrago:> create function bad_stringifyColumns(
+. . . . . . . . >     c cursor,
+. . . . . . . . >     cl select from c,
+. . . . . . . . >     delimiter varchar(128))
+. . . . . . . . > returns table(v varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.badStringifyColumns3';
+Error: DDL validation error near line 1, column 8: Unknown external Java method "net.sf.farrago.test.FarragoTestUDR.badStringifyColumns3(java.sql.ResultSet, java.util.List, java.lang.String, java.sql.PreparedStatement)" referenced by routine "UDFTEST"."BAD_STRINGIFYCOLUMNS" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

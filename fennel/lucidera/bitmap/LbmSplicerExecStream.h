@@ -23,36 +23,81 @@
 #define Fennel_LbmSplicerExecStream_Included
 
 #include "fennel/btree/BTreeWriter.h"
-#include "fennel/exec/ConduitExecStream.h"
+#include "fennel/exec/DiffluenceExecStream.h"
 #include "fennel/exec/DynamicParam.h"
-#include "fennel/ftrs/BTreeExecStream.h"
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleData.h"
+#include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/lucidera/bitmap/LbmEntry.h"
+#include "fennel/lucidera/bitmap/LbmRidReader.h"
 #include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
-struct LbmSplicerExecStreamParams :
-    public BTreeExecStreamParams, public ConduitExecStreamParams
+struct LbmSplicerExecStreamParams : public DiffluenceExecStreamParams
 {
+    std::vector<BTreeParams> bTreeParams;
+
     DynamicParamId insertRowCountParamId;
 
-    bool ignoreDuplicates;
+    DynamicParamId writeRowCountParamId;
 };
 
-class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
+/**
+ * LbmSplicerExecStream takes as input a stream of bitmap entries.  If
+ * possible, it splices the entries into larger entries before writing them
+ * into a btree.  The bitmap entries from the input can correspond to new
+ * entries, or they may need to be spliced into existing entries in the btree.
+ *
+ * <p>As output, LbmSplicerExecStream writes out a count corresponding to the
+ * number of new row values inserted into the btree.  This value is either
+ * directly computed by LbmSplicerExecStream (provided the bitmap entry inputs
+ * all correspond to singleton rids), or it is passed into LbmSplicerExecStream
+ * via a dynamic parameter.
+ *
+ * <p>Optionally, LbmSplicerExecStream may also write out the row count into
+ * a dynamic parameter that is read downstream by another exec stream.
+ *
+ * <p>If the index being updated is a primary key or a unique key, then
+ * multiple entries mapping to the same key value are rejected. When a new
+ * key value is encountered, undeleted entries are counted for that key value.
+ * If an entry already exists, then all inputs with the key value are
+ * rejected. Otherwise, if no entry exists, a single input RID is accepted as
+ * the valid insert (or update). (We deviate from the SQL standard.) In order
+ * to count existing entries, we read from the deletion index. Violations are
+ * written to a second output. Unique keys differ from primary keys in that
+ * multiple entries are allowed for null keys.
+ *
+ * @author Zelaine Fong
+ * @version $Id$
+ */
+class LbmSplicerExecStream : public DiffluenceExecStream
 {
     /**
-     * Parameter id of dynamic parameter containing final row count
+     * Scratch accessor
+     */
+    SegmentAccessor scratchAccessor;
+
+    /**
+     * Descriptor corresponding to the btree that splicer writes to
+     */
+    BTreeDescriptor writeBTreeDesc;
+
+    /**
+     * Descriptor corresponding to the deletion index btree
+     */
+    BTreeDescriptor deletionBTreeDesc;
+
+    /**
+     * Parameter id of dynamic parameter containing final insert row count
      */
     DynamicParamId insertRowCountParamId;
     
     /**
-     * If true, ignore inputs containing rid values that are duplicates.  Only
-     * works when the inputs are singletons.
+     * Parameter id of the dynamic parameter used to write the row count
+     * affected by this stream that will be read downstream
      */
-    bool ignoreDuplicates;
+    DynamicParamId writeRowCountParamId;
 
     /**
      * Maximum size of an LbmEntry
@@ -91,6 +136,15 @@ class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
     LcsRid currBTreeStartRid;
 
     /**
+     * True if we need to determine emptyTable. We can't do this in init()
+     * because upstream ExecStream's may insert into the index being updated.
+     * An example of early update is when the deletion phase of a merge
+     * statement appends the deletion index. The same index may be later
+     * is appended for merge violations. 
+     */
+    bool emptyTableUnknown;
+
+    /**
      * True if table that the bitmap is being constructed on was empty to
      * begin with
      */
@@ -100,6 +154,14 @@ class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
      * Writes btree index corresponding to bitmap
      */
     SharedBTreeWriter bTreeWriter;
+
+    /**
+     * Whether btree writer position was moved for unique constraint
+     * validation. If currExistingEntry is true, then the btree writer is
+     * expected to stay positioned at the existing entry. However, constraint
+     * validation may run side searches and can reposition the btree writer.
+     */
+    bool bTreeWriterMoved;
 
     /**
      * True if output has been produced
@@ -112,19 +174,15 @@ class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
     TupleData inputTuple;
 
     /**
-     * Output tuple
+     * Input tuple corresponding to singleton entries.  Used only in the
+     * case where the rowcount needs to be computed by splicer.
+     */
+    TupleData singletonTuple;
+
+    /**
+     * Output tuple containing rowcount
      */
     TupleData outputTuple;
-
-    /**
-     * Output accessor
-     */
-    TupleAccessor *outputTupleAccessor;
-
-    /**
-     * Buffer holding the outputTuple to provide to the consumers
-     */
-    boost::scoped_array<FixedBuffer> outputTupleBuffer;
 
     /**
      * Number of rows loaded into bitmap index
@@ -152,6 +210,90 @@ class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
      * reading it from a dynamic parameter
      */
     bool computeRowCount;
+
+    /**
+     * Whether the index being updated is a unique key
+     */
+    bool uniqueKey;
+
+    /**
+     * Whether an input tuple is currently being validated
+     */
+    bool currValidation;
+
+    /**
+     * Whether any tuple has been validated yet
+     */
+    bool firstValidation;
+
+    /**
+     * The current unique key value being validated
+     */
+    TupleDataWithBuffer currUniqueKey;
+
+    /**
+     * Number of rows for the current key value (after taking into account
+     * the deletion index)
+     */
+    uint nKeyRows;
+
+    /**
+     * Reads rids from the deletion index
+     */
+    LbmDeletionIndexReader deletionReader;
+
+    /**
+     * Current tuple for deletion index rid reader
+     */
+    TupleData deletionTuple;
+
+    /**
+     * Reads rids from an input tuple
+     */
+    LbmTupleRidReader inputRidReader;
+
+    /**
+     * True if no RID has been accepted as the update/insert for the
+     * current key value
+     */
+    bool nullUpsertRid;
+
+    /**
+     * If a RID has been accepted as the update/insert for the current
+     * key value, this contains the value of the accepted RID
+     */
+    LcsRid upsertRid;
+
+    /**
+     * Accessor for the violation output stream
+     */
+    SharedExecStreamBufAccessor violationAccessor;
+
+    /**
+     * Violation data tuple
+     */
+    TupleData violationTuple;
+
+    /**
+     * Error message for constraint violations
+     */
+    std::string errorMsg;
+
+    /**
+     * TupleDescriptor for error records
+     */
+    TupleDescriptor errorDesc;
+
+    /**
+     * TupleData used to build error records
+     */
+    TupleData errorTuple;
+
+    /**
+     * Determines, and remembers whether the bitmap being updated is empty.
+     * Should only be called when the bitmap is actually ready for access.
+     */
+    bool isEmpty();
 
     /**
      * Determines whether a bitmap entry already exists in the bitmap index,
@@ -212,6 +354,70 @@ class LbmSplicerExecStream : public BTreeExecStream, ConduitExecStream
      */
     void createNewBitmapEntry(TupleData const &bitmapEntry);
 
+    /**
+     * Efficient update or insert of tuples into unique indexes
+     *
+     * @param bitmapEntry tupledata corresponding to the entry to be upserted
+     */
+    void upsertSingleton(TupleData const &bitmapEntry);
+
+    /**
+     * Reads input tuples and filters out Rids that cause key violations.
+     * Key violations are posted to an ErrorTarget for logging while Rids
+     * are output to a violation stream for deletion. This method completes
+     * when a valid tuple has been generated. Sets the inputTuple field.
+     *
+     * @return EXECRC_YIELD on success, or other status codes for input
+     * stream underflow, end of input stream, or violation stream overflow
+     */
+    ExecStreamResult getValidatedTuple();
+
+    /**
+     * Determines whether a tuple key must be unique. A tuple key must be
+     * unique if the index has a uniqueness constraint and the tuple key
+     * does not contain any nulls.
+     *
+     * @param tuple input tuple to be checked for uniqueness requirments
+     *
+     * @return true if the tuple key must be unique
+     */
+    bool uniqueRequired(const TupleData &tuple);
+
+    /**
+     * Counts the number of rows in the index with a particular key value, 
+     * prior to modification. This count factors in the deletion index.
+     *
+     * @param tuple tupledata containing the key value to search the index for
+     *
+     * @return number of rows with a key value, less the deleted rows
+     */
+    uint countKeyRows(const TupleData &tuple);
+
+    /**
+     * For key values that can only have one valid rid, remembers the value
+     * of a single rid that was chosen to be for insert or update.
+     *
+     * @param rid a rid to be inserted into the index
+     */
+    inline void setUpsertRid(LcsRid rid);
+
+    /**
+     * For key values that can only have one valid rid, gets a pointer to a
+     * rid to be inserted into the index.
+     *
+     * @return a pointer to a rid to be inserted, or NULL if none was set
+     */
+    inline const LcsRid *getUpsertRidPtr() const;
+
+    /**
+     * Generates an error record and posts it to an ErrorTarget
+     *
+     * @param input the input tuple causing the error
+     *
+     * @param violation the violation tuple created for the error
+     */
+    void postViolation(const TupleData &input, const TupleData &violation);
+
 public:
     virtual void prepare(LbmSplicerExecStreamParams const &params);
     virtual void open(bool restart);
@@ -220,8 +426,22 @@ public:
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);
     virtual void closeImpl();
-    virtual ExecStreamBufProvision getOutputBufProvision() const;
 };
+
+/**************************************************************
+  Definitions of inline methods for class LbmSplicerExecStream
+***************************************************************/
+
+inline void LbmSplicerExecStream::setUpsertRid(LcsRid rid)
+{
+    nullUpsertRid = false;
+    upsertRid = rid;
+}
+
+inline const LcsRid *LbmSplicerExecStream::getUpsertRidPtr() const
+{
+    return (nullUpsertRid ? NULL : &upsertRid);
+}
 
 FENNEL_END_NAMESPACE
 

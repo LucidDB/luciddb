@@ -10,6 +10,14 @@ enum AggFunction {
 
 static std::string AggFunction_names[] = {"AGG_FUNC_SUM","AGG_FUNC_COUNT","AGG_FUNC_MIN","AGG_FUNC_MAX","AGG_FUNC_SINGLE_VALUE",""};
 
+enum BarrierReturnMode {
+    BARRIER_RET_FIRST_INPUT,
+    BARRIER_RET_ANY_INPUT,
+    BARRIER_RET_ALL_INPUTS
+};
+
+static std::string BarrierReturnMode_names[] = {"BARRIER_RET_FIRST_INPUT","BARRIER_RET_ANY_INPUT","BARRIER_RET_ALL_INPUTS",""};
+
 enum CompOperator {
     COMP_NOOP,
     COMP_EQ,

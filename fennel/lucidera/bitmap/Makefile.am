@@ -2,6 +2,7 @@ include $(top_srcdir)/am_include.mk
 
 noinst_LTLIBRARIES=libbitmap.la
 libbitmap_la_SOURCES=\
+LbmTupleReader.cpp \
 LbmSegment.cpp \
 LbmSegmentReaderBase.cpp \
 LbmSegmentReader.cpp \

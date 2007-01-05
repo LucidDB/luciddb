@@ -68,11 +68,11 @@ create table t(
 
 -- 350, 100, 300
 insert into t (j) values (1), (2), (3);
--- 500, 100 (fail), ...
+-- 500, 100 (fail), 300 (fail)
 insert into t (j) values (4), (5), (6);
--- 300 (fail)
-insert into t (j) values (7);
 -- 500
+insert into t (j) values (7);
+-- 100 (fail)
 insert into t (j) values (8);
 
 select * from t;

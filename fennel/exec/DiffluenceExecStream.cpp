@@ -28,6 +28,11 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+DiffluenceExecStreamParams::DiffluenceExecStreamParams()
+{
+    outputTupleFormat = TUPLE_FORMAT_STANDARD;
+}
+
 void DiffluenceExecStream::setOutputBufAccessors(
     std::vector<SharedExecStreamBufAccessor> const &outAccessorsInit)
 {
@@ -38,12 +43,20 @@ void DiffluenceExecStream::prepare(DiffluenceExecStreamParams const &params)
 {
     SingleInputExecStream::prepare(params);
     
-    // By default, shape for all outputs is the same as the input.
+    // By default, shape for all outputs is the same as the input if the 
+    // outputTupleDesc wasn't explicitly set.
+    TupleDescriptor tupleDesc;
+    TupleFormat tupleFormat;
+    if (params.outputTupleDesc.empty()) {
+        tupleDesc = pInAccessor->getTupleDesc();
+        tupleFormat = pInAccessor->getTupleFormat();
+    } else {
+        tupleDesc = params.outputTupleDesc;
+        tupleFormat = params.outputTupleFormat;
+    }
     for (uint i = 0; i < outAccessors.size(); ++i) {
         assert(outAccessors[i]->getProvision() == getOutputBufProvision());
-        outAccessors[i]->setTupleShape(
-            pInAccessor->getTupleDesc(),
-            pInAccessor->getTupleFormat());
+        outAccessors[i]->setTupleShape(tupleDesc, tupleFormat);
     }
 }
 

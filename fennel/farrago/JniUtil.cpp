@@ -27,6 +27,7 @@
 #include "fennel/common/FennelResource.h"
 #include "fennel/common/ConfigMap.h"
 #include "fennel/common/Backtrace.h"
+#include "fennel/tuple/StoredTypeDescriptor.h"
 
 #ifdef __MINGW32__
 #include <process.h>
@@ -390,6 +391,36 @@ void JniUtil::traceHandleCount(
     }
 }
 
+std::string JniUtil::getXmi(const TupleDescriptor &tupleDescriptor)
+{
+    std::ostringstream oss;
+    oss << "<XMI xmi.version = '1.2' "
+        << "xmlns:FEMFennel = 'org.omg.xmi.namespace.FEMFennel'>" << std::endl;
+    oss << "<XMI.content>" << std::endl;
+    oss << "<FEMFennel:TupleDescriptor>" << std::endl;
+    for (uint i = 0; i < tupleDescriptor.size(); ++i) {
+        TupleAttributeDescriptor const &attrDescriptor =
+            tupleDescriptor[i];
+        oss << "<FEMFennel:TupleDescriptor.AttrDescriptor>";
+        oss << "<FEMFennel:TupleAttrDescriptor ";
+        oss << "typeOrdinal='";
+        oss << attrDescriptor.pTypeDescriptor->getOrdinal();
+        oss << "' ";
+        oss << "isNullable='";
+        oss << (attrDescriptor.isNullable ? "true" : "false");
+        oss << "' ";
+        oss << "byteLength='";
+        oss << attrDescriptor.cbStorage;
+        oss << "' ";
+        oss << "/>" << std::endl;
+        oss << "</FEMFennel:TupleDescriptor.AttrDescriptor>";
+    }
+    oss << "</FEMFennel:TupleDescriptor>" << std::endl;
+    oss << "</XMI.content>" << std::endl;
+    oss << "</XMI>" << std::endl;
+    std::string s = oss.str();
+    return s;
+}
 
 JniExceptionChecker::~JniExceptionChecker()
 {
@@ -438,6 +469,29 @@ void JniEnvRef::handleExcn(std::exception &ex)
     jthrowable t = (jthrowable)
         pEnv->NewObject(classSQLException,constructor,jMessage);
     pEnv->Throw(t);
+}
+
+JniLocalFrame::JniLocalFrame(JNIEnv *pEnvInit, jint capacity)
+{
+    pEnv = pEnvInit;
+    jint rc = pEnv->PushLocalFrame(capacity);
+
+    if (rc < 0) {
+        success = false;
+        jthrowable excn = pEnv->ExceptionOccurred();
+        if (excn) {
+            throw JavaExcn(excn);
+        }
+    } else {
+        success = true;
+    }
+}
+
+JniLocalFrame::~JniLocalFrame()
+{
+    if (success) {
+        pEnv->PopLocalFrame(NULL);
+    }
 }
 
 void JniPseudoUuidGenerator::generateUuid(PseudoUuid &pseudoUuid)

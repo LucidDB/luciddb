@@ -162,9 +162,20 @@ public class LcsTableAppendRel
                 repos,
                 lcsTable,
                 input,
-                this);
-
-        return appendStreamDef.toStreamDef(implementor);
+                this,
+                RelMetadataQuery.getRowCount(getChild()));
+        
+        // create the top half of the insertion stream
+        FemBarrierStreamDef clusterAppendBarrier =
+            appendStreamDef.createClusterAppendStreams(implementor);      
+        
+        // if there are clustered indexes, create the bottom half of the
+        // insertion stream; otherwise, just return the cluster append barrier
+        return
+            appendStreamDef.createBitmapAppendStreams(
+                implementor,
+                clusterAppendBarrier,
+                0);
     }
 }
 

@@ -95,7 +95,8 @@ class FarragoExecutableJavaStmt
             isDml,
             tableModOp,
             referencedObjectTimestampMap,
-            tableAccessMap);
+            tableAccessMap,
+            resultSetTypeMap);
 
         this.packageDir = packageDir;
         this.rowClass = rowClass;

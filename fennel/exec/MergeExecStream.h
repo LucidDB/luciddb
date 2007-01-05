@@ -64,7 +64,7 @@ class MergeExecStream : public ConfluenceExecStream
      * End of input buffer currently being consumed.
      */
     PConstBuffer pLastConsumptionEnd;
-    
+
 public:
     // implement ExecStream
     virtual void prepare(MergeExecStreamParams const &params);

@@ -67,10 +67,47 @@ Error: From line 1, column 23 to line 1, column 26: ORDER BY is only allowed on 
 | 10      | Sales      |
 +---------+------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- LucidDB doesn't support ORDER BY DESC yet
+0: jdbc:farrago:> -- ORDER BY DESC
 0: jdbc:farrago:> select name from sales.depts order by name desc;
-Error: Descending sort (ORDER BY DESC) not supported (state=,code=0)
++------------+
+|    NAME    |
++------------+
+| Sales      |
+| Marketing  |
+| Accounts   |
++------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- ORDER BY DESC, ASC
+0: jdbc:farrago:> select deptno, name from sales.emps order by deptno desc, name asc;
++---------+--------+
+| DEPTNO  |  NAME  |
++---------+--------+
+| 40      | John   |
+| 20      | Eric   |
+| 20      | Wilma  |
+| 10      | Fred   |
++---------+--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- ORDER BY DESC, DESC
+0: jdbc:farrago:> select deptno, name from sales.emps order by deptno desc, name desc;
++---------+--------+
+| DEPTNO  |  NAME  |
++---------+--------+
+| 40      | John   |
+| 20      | Wilma  |
+| 20      | Eric   |
+| 10      | Fred   |
++---------+--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- ORDER BY ASC, DESC
+0: jdbc:farrago:> select deptno, name from sales.emps order by deptno asc, name desc;
++---------+--------+
+| DEPTNO  |  NAME  |
++---------+--------+
+| 10      | Fred   |
+| 20      | Wilma  |
+| 20      | Eric   |
+| 40      | John   |
++---------+--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

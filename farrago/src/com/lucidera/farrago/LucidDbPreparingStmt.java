@@ -20,6 +20,8 @@
 */
 package com.lucidera.farrago;
 
+import org.eigenbase.sql.validate.*;
+
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.sql2003.*;
 
@@ -68,6 +70,18 @@ public class LucidDbPreparingStmt extends FarragoPreparingStmt
         }
         
         return super.mayCacheImplementation();
+    }
+    
+    // implement FarragoSessionPreparingStmt
+    public SqlValidator getSqlValidator()
+    {
+        if (sqlValidator == null) {
+            sqlValidator =
+                new LucidDbSqlValidator(
+                    this,
+                    SqlValidator.Compatible.Default);
+        }
+        return sqlValidator;
     }
 }
 

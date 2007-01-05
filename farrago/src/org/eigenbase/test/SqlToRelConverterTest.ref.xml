@@ -230,8 +230,7 @@ ProjectRel(DEPTNO=[$0], NAME=[$1])
 ProjectRel(EXPR$0=[$1])
   JoinRel(condition=[true], joinType=[inner])
     ProjectRel(EXPR$0=[$0])
-      ProjectRel(EXPR$0=[true])
-        OneRowRel
+      ValuesRel(tuples=[[{ true }]])
     CollectRel
       ProjectRel(DEPTNO=[$0])
         TableAccessRel(table=[[SALES, DEPT]])
@@ -553,11 +552,7 @@ UnionRel(all=[false])
 UnionRel(all=[true])
   UnionRel(all=[true])
     ProjectRel(EXPR$0=[$0])
-      UnionRel(all=[true])
-        ProjectRel(EXPR$0=[10])
-          OneRowRel
-        ProjectRel(EXPR$0=[20])
-          OneRowRel
+      ValuesRel(tuples=[[{ 10 }, { 20 }]])
     ProjectRel(EXPR$0=[34])
       TableAccessRel(table=[[SALES, EMP]])
   ProjectRel(EXPR$0=[$0])
@@ -609,11 +604,7 @@ ProjectRel(DEPTNO=[$7])
           FilterRel(condition=[>($0, 20)])
             TableAccessRel(table=[[SALES, DEPT]])
       ProjectRel(EXPR$0=[$0])
-        UnionRel(all=[true])
-          ProjectRel(EXPR$0=[45])
-            OneRowRel
-          ProjectRel(EXPR$0=[67])
-            OneRowRel
+        ValuesRel(tuples=[[{ 45 }, { 67 }]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -648,8 +639,7 @@ ProjectRel(DEPTNO=[$7])
             <![CDATA[
 ProjectRel(EXPR$0=[CAST(CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), <>(1, 2))):BOOLEAN NOT NULL])
   ProjectRel(EXPR$0=[$0])
-    ProjectRel(EXPR$0=[true])
-      OneRowRel
+    ValuesRel(tuples=[[{ true }]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -669,8 +659,7 @@ ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), 
             <![CDATA[
 ProjectRel(EXPR$0=[CAST(CASE(IS NULL(1), IS NULL(2), IS NULL(2), IS NULL(1), =(1, 2))):BOOLEAN NOT NULL])
   ProjectRel(EXPR$0=[$0])
-    ProjectRel(EXPR$0=[true])
-      OneRowRel
+    ValuesRel(tuples=[[{ true }]])
 ]]>
         </Resource>
         <Resource name="sql">

@@ -58,6 +58,7 @@ class FarragoExecutableFennelStmt
     protected final String xmiFennelPlan;
     private final Map<String, String> referencedObjectTimestampMap;
     private final String streamName;
+    private final Map<String, RelDataType> resultSetTypeMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -69,13 +70,15 @@ class FarragoExecutableFennelStmt
         boolean isDml,
         TableModificationRel.Operation tableModOp,
         Map<String, String> referencedObjectTimestampMap,
-        TableAccessMap tableAccessMap)
+        TableAccessMap tableAccessMap,
+        Map<String, RelDataType> typeMap)
     {
         super(dynamicParamRowType, isDml, tableModOp, tableAccessMap);
 
         this.xmiFennelPlan = xmiFennelPlan;
         this.streamName = streamName;
         this.referencedObjectTimestampMap = referencedObjectTimestampMap;
+        this.resultSetTypeMap = typeMap;
 
         rowType = preparedRowType;
     }
@@ -156,6 +159,12 @@ class FarragoExecutableFennelStmt
         // the same time, we don't want to account for the entire size with
         // both, as that would double count the memory.
         return xmiSize / 2;
+    }
+
+    // implement FarragoSessionExecutableStmt
+    public Map<String, RelDataType> getResultSetTypeMap()
+    {
+        return resultSetTypeMap;
     }
 }
 

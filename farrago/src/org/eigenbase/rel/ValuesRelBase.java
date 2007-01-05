@@ -27,6 +27,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 
 
@@ -148,10 +149,20 @@ public abstract class ValuesRelBase
             assert (s.endsWith("]"));
             renderList.add("{ " + s.substring(1, s.length() - 1) + " }");
         }
-        pw.explain(
-            this,
-            new String[] { "tuples" },
-            new Object[] { renderList });
+        if (pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES) {
+            // For rel digest, include the row type since a rendered
+            // literal may leave the type ambiguous (e.g. "null").
+            pw.explain(
+                this,
+                new String[] { "type", "tuples" },
+                new Object[] { rowType, renderList });
+        } else {
+            // For normal EXPLAIN PLAN, omit the type.
+            pw.explain(
+                this,
+                new String[] { "tuples" },
+                new Object[] { renderList });
+        }
     }
 }
 

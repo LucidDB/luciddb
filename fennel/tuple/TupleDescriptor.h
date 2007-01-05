@@ -72,6 +72,14 @@ public:
 /**
  * A TupleDescriptor specifies a vector of stored attributes, as explained in
  * the <a href="structTupleDesign.html#TupleDescriptor">design docs</a>.
+ *
+ *<p>
+ *
+ * The compareTuples[Key] methods return the standard zero, negative,
+ * or positive to indicate EQ, LT, GT.  However, rather than returning
+ * -1 or 1 for LT/GT, they return the 1-based ordinal of the first
+ * non-equal column (negated if LT).  This allows a caller to
+ * implement ORDER BY DESC without having to pass in ASC/DESC information.
  */
 class TupleDescriptor : public std::vector<TupleAttributeDescriptor>
 {

@@ -22,6 +22,7 @@
 */
 package net.sf.farrago.runtime;
 
+import java.nio.*;
 import java.sql.*;
 import java.sql.Date;
 
@@ -61,7 +62,8 @@ public class FarragoRuntimeContext
     extends FarragoCompoundAllocation
     implements FarragoSessionRuntimeContext,
         RelOptConnection,
-        FennelJavaStreamMap
+        FennelJavaStreamMap,
+        FennelJavaErrorTarget
 {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -104,6 +106,8 @@ public class FarragoRuntimeContext
     private ClassLoader statementClassLoader;
     private Map<String, RelDataType> resultSetTypeMap;
     protected long stmtId;
+
+    private NativeRuntimeContext nativeContext;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -488,7 +492,7 @@ public class FarragoRuntimeContext
     public void openStreams()
     {
         assert (streamGraph != null);
-        streamGraph.open(fennelTxnContext, this);
+        streamGraph.open(fennelTxnContext, this, this);
     }
 
     // implement FarragoSessionRuntimeContext
@@ -919,12 +923,12 @@ public class FarragoRuntimeContext
         boolean isWarning)
     {
         return handleRowErrorHelper(
-            columnValues.toString(), ex, columnIndex, tag, isWarning);
+            Util.flatArrayToString(columnValues), 
+            ex, columnIndex, tag, isWarning);
     }
 
     /**
      * Helper for various handleRowError methods
-     * FIXME: not all exceptions are errors, not all errors are calc errors
      */
     private EigenbaseException handleRowErrorHelper(
         String row,
@@ -933,20 +937,59 @@ public class FarragoRuntimeContext
         String tag,
         boolean isWarning)
     {
-        EigenbaseException ex2;
-        if (columnIndex == 0) {
-            ex2 = FarragoResource.instance().JavaCalcConditionError.ex(
-                row,
-                Util.getMessages(ex));
-        } else {
-            ex2 = FarragoResource.instance().JavaCalcError.ex(
-                Integer.toString(columnIndex),
-                row,
-                Util.getMessages(ex));
-        }
         EigenbaseTrace.getStatementTracer().log(
-            Level.WARNING, "java calc exception", ex2);
+            Level.WARNING, "Row level exception",
+            makeRowError(ex, row, columnIndex, null));
         return null;
+    }
+
+    /**
+     * Makes a row error based on conventions for column index
+     * 
+     * @param ex the runtime exception encountered
+     * @param row string representing the row on which an exception occurred
+     * @param index index of the column being processed at the time 
+     *   the exception was encountered, or 0 for an error processing a 
+     *   conditional expression, or -1 for a non-specific error
+     * @param field optional column name, used in constructing the error 
+     *   message when columnIndex > 0
+     * 
+     * @return a non-nested exception summarizing the row error
+     */
+    protected EigenbaseException makeRowError(
+        RuntimeException ex,
+        String row,
+        int index,
+        String field)
+    {
+        FarragoResource resource = FarragoResource.instance();
+        String msgs = Util.getMessages(ex);
+
+        if (index < 0) {
+            return resource.JavaRowError.ex(row, msgs);
+        } else if (index == 0) {
+            return resource.JavaCalcConditionError.ex(row, msgs);
+        } else {
+            String fieldName = (field != null) 
+                ? field : Integer.toString(index);
+            return resource.JavaCalcError.ex(
+                fieldName, row, msgs);
+        }
+    }
+
+    // implement FennelJavaErrorTarget
+    public Object handleRowError(
+        String source,
+        boolean isWarning,
+        String msg,
+        ByteBuffer byteBuffer,
+        int index)
+    {
+        if (nativeContext == null) {
+            nativeContext = new NativeRuntimeContext(this);
+        }
+        return nativeContext.handleRowError(source, isWarning, msg, 
+            byteBuffer, index);
     }
 
     //~ Inner Classes ----------------------------------------------------------

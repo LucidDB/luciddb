@@ -238,7 +238,7 @@ public class LoptMetadataTest
             + "   DATE'2002-01-01', TIME'12:01:01', TIMESTAMP'2004-01-01 12:01:01'),"
             + "  ('mystery', null, null, null, null, "
             + "   null, null, null),"
-            + "  ('mystery', null, null, null, null, "
+            + "  ('mystery2', null, null, null, null, "
             + "   null, null, null)");
         stmt.executeUpdate(
             "analyze table WINES compute statistics for all columns");

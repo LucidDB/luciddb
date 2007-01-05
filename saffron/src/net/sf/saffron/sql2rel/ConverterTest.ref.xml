@@ -245,14 +245,9 @@ ProjectRel(i=[$0], j=[$1])
 ProjectRel(EXPR$0=[$0], EXPR$00=[$1])
   JoinRel(condition=[true], joinType=[inner])
     ProjectRel(EXPR$0=[$0])
-      UnionRel(all=[true])
-        ProjectRel(EXPR$0=[1])
-          OneRowRel
-        ProjectRel(EXPR$0=[2])
-          OneRowRel
+      ValuesRel(tuples=[[{ 1 }, { 2 }]])
     ProjectRel(EXPR$0=[$0])
-      ProjectRel(EXPR$0=[3])
-        OneRowRel
+      ValuesRel(tuples=[[{ 3 }]])
 ]]>
         </Resource>
     </TestCase>

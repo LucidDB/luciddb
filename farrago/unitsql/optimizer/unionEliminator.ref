@@ -10,8 +10,7 @@
 | IterCalcRel(expr#0..1=[{inputs}], expr#2=[$SLICE($t1)], EXPR$0=[$t2])  |
 |   FennelToIteratorConverter                                            |
 |     FennelCartesianProductRel(leftouterjoin=[false])                   |
-|       FennelCalcRel(expr#0=[{inputs}], expr#1=[true], EXPR$0=[$t1])    |
-|         FennelValuesRel(tuples=[[{ 0 }]])                              |
+|       FennelValuesRel(tuples=[[{ true }]])                             |
 |       FennelPullCollectRel                                             |
 |         FennelValuesRel(tuples=[[{ 622 }]])                            |
 +------------------------------------------------------------------------+

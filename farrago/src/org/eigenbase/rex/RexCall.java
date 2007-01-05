@@ -154,6 +154,8 @@ public class RexCall
             return RexKind.NewSpecification;
         case SqlKind.ReinterpretORDINAL:
             return RexKind.Reinterpret;
+        case SqlKind.ColumnListConstructorORDINAL:
+            return RexKind.Row;
         default:
             throw kind.unexpected();
         }

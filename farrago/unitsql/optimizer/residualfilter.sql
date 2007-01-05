@@ -240,3 +240,13 @@ city = '' order by 1;
 
 select * from lcsemps where city = 'Pescadero' or 
 city is null order by 1;
+
+-- Run analyze stats and make sure filters with lower selectivity are evaluated
+-- first
+analyze table t1 compute statistics for all columns;
+
+explain plan for select * from t1 where a > 10 and c = 20;
+explain plan for select * from t1 where c = 20 and a > 10;
+
+explain plan for select * from t1 where (a > 1 and a < 30) and c in (5, 10);
+explain plan for select * from t1 where (c > 1 and c < 30) and a in (5, 10);

@@ -61,10 +61,58 @@ explain plan for
 select name from emps where empno
 in (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+
+-- verify fix for LER-2691 (incorrect IN list padding)
+-- requires Farrago personality because LucidDB aggregates 
+-- raggedy CHAR to VARCHAR
+create table test1(col varchar(2) not null primary key);
+insert into test1 values 'B', 'A1';
+
+explain plan for 
+select col from test1
+where col in (
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'B', 'A1', 'A1', 'A1');
+
+select col from test1
+where col in (
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'B', 'A1', 'A1', 'A1')
+order by col;
+
+create table test2(col char(2) not null primary key);
+insert into test2 values 'B', 'A1';
+
+explain plan for 
+select col from test2
+where col in (
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'B', 'A1', 'A1', 'A1');
+
+select col from test2
+where col in (
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'A1', 'A1', 'A1', 'A1',
+'A1', 'B', 'A1', 'A1', 'A1')
+order by col;
+
+drop table test1;
+drop table test2;
 
 -- not in and null value
 -- not in requires outer join
-alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
 explain plan without implementation for 
@@ -115,48 +163,3 @@ select name from emps
 where empno not in (20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20)
 order by name;
 
--- http://jira.lucidera.com/browse/LER-2691
-create table test1(col varchar(2));
-insert into test1 values 'B', 'A1';
-
-explain plan for 
-select col from test1
-where col in (
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'B', 'A1', 'A1', 'A1');
-
-select col from test1
-where col in (
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'B', 'A1', 'A1', 'A1')
-order by col;
-
-create table test2(col char(2));
-insert into test2 values 'B', 'A1';
-
-explain plan for 
-select col from test2
-where col in (
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'B', 'A1', 'A1', 'A1');
-
-select col from test2
-where col in (
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'A1', 'A1', 'A1', 'A1',
-'A1', 'B', 'A1', 'A1', 'A1')
-order by col;
-
-drop table test1;
-drop table test2;

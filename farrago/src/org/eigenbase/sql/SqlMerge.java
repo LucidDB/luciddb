@@ -122,9 +122,9 @@ public class SqlMerge
     /**
      * @return the condition expression to determine whether to update or insert
      */
-    public SqlCall getCondition()
+    public SqlNode getCondition()
     {
-        return (SqlCall) operands[CONDITION_OPERAND];
+        return (SqlNode) operands[CONDITION_OPERAND];
     }
 
     /**

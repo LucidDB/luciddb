@@ -3071,6 +3071,30 @@ public class FarragoJdbcTest
         }
     }
 
+    /**
+     * Tests {@link Statement.setMaxRows}.
+     */
+    public void testMaxRows()
+        throws Exception
+    {
+        assertEquals(0, stmt.getMaxRows());
+        stmt.setMaxRows(1);
+        assertEquals(1, stmt.getMaxRows());
+        String sql = "select name from sales.depts order by 1";
+        resultSet = stmt.executeQuery(sql);
+        Set refSet = new HashSet();
+        refSet.add("Accounts");
+        compareResultSet(refSet);
+        stmt.setMaxRows(0);
+        assertEquals(0, stmt.getMaxRows());
+        resultSet = stmt.executeQuery(sql);
+        refSet = new HashSet();
+        refSet.add("Accounts");
+        refSet.add("Marketing");
+        refSet.add("Sales");
+        compareResultSet(refSet);
+    }
+
     //~ Inner Interfaces -------------------------------------------------------
 
     public static interface JdbcTester

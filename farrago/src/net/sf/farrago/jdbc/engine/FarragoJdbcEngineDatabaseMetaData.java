@@ -1464,6 +1464,7 @@ public class FarragoJdbcEngineDatabaseMetaData
     {
         protected StringBuilder sql;
         protected List<Serializable> values;
+        private boolean whereAdded;
 
         protected QueryBuilder(String base)
         {
@@ -1473,11 +1474,12 @@ public class FarragoJdbcEngineDatabaseMetaData
 
         void addConjunction()
         {
-            if (values.isEmpty()) {
+            if (!whereAdded) {
                 sql.append(" WHERE ");
             } else {
                 sql.append(" AND ");
             }
+            whereAdded = true;
         }
 
         void addPattern(

@@ -538,7 +538,7 @@ void ExecStreamGovernorTest::testGovernor(
 
     BarrierExecStreamParams barrierParams;
     barrierParams.outputTupleDesc.push_back(int8AttrDesc);
-    barrierParams.rowCountInput = -1;
+    barrierParams.returnMode = BARRIER_RET_ANY_INPUT;
 
     ExecStreamEmbryo barrierStreamEmbryo;
     barrierStreamEmbryo.init(new BarrierExecStream(), barrierParams);

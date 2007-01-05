@@ -696,3 +696,12 @@ language java
 parameter style java
 reads sql data
 external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.ComputeStatisticsForSchemaUdp.execute';
+
+-- UDP for dropping a schema if it exists
+create or replace procedure drop_schema_if_exists(
+in schemaname varchar(255),
+in restrict_or_cascade varchar(255))
+language java
+parameter style java
+reads sql data
+external name  'applib.applibJar:com.lucidera.luciddb.applib.util.DropSchemaIfExistsUdp.execute';

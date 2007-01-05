@@ -226,15 +226,41 @@ public class SqlFunction
         SqlValidatorScope scope,
         SqlCall call)
     {
+        return deriveType(validator, scope, call, true);
+    }
+    
+    private RelDataType deriveType(
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call,
+        boolean convertRowArgToColumnList)
+    {    
         final SqlNode [] operands = call.operands;
         RelDataType [] argTypes = new RelDataType[operands.length];
 
         // Scope for operands. Usually the same as 'scope'.
         final SqlValidatorScope operandScope = scope.getOperandScope(call);
+        
+        // Indicate to the validator that we're validating a new function call
+        validator.pushCursorMap();
 
+        boolean containsRowArg = false;
         for (int i = 0; i < operands.length; ++i) {
-            RelDataType nodeType =
-                validator.deriveType(operandScope, operands[i]);
+            RelDataType nodeType;
+            
+            // for row arguments that should be converted to ColumnList types,
+            // set the nodeType to a ColumnList type but defer validating the
+            // arguments of the row constructor until we know for sure that the
+            // row argument maps to a ColumnList type
+            if (operands[i].getKind() == SqlKind.Row &&
+                convertRowArgToColumnList)
+            {
+                containsRowArg = true;
+                RelDataTypeFactory typeFactory = validator.getTypeFactory();
+                nodeType = typeFactory.createSqlType(SqlTypeName.ColumnList);
+            } else {
+                nodeType = validator.deriveType(operandScope, operands[i]);
+            }
             validator.setValidatedNodeType(operands[i], nodeType);
             argTypes[i] = nodeType;
         }
@@ -245,6 +271,35 @@ public class SqlFunction
                 getNameAsId(),
                 argTypes,
                 getFunctionType());
+        
+        // if we couldn't find a function with  a COLUMN_LIST type, retry, but
+        // this time, don't convert the row argument to a COLUMN_LIST type;
+        // otherwise, go back and revalidate the row operands (corresponding to
+        // column references), now that we can set the scope to that of the
+        // source cursor referenced by that ColumnList type
+        if (containsRowArg) {
+            if (function == null) {
+                // remove the already validated node types corresponding to
+                // row arguments before revalidating
+                for (int i = 0; i < operands.length; ++i) {
+                    if (operands[i].getKind() == SqlKind.Row) {
+                        validator.removeValidatedNodeType(operands[i]);
+                    }
+                }
+                validator.popCursorMap();
+                return deriveType(validator, scope, call, false);
+            } else {
+                validator.validateColumnListParams(
+                    function,
+                    argTypes,
+                    operands);
+            }
+        }
+        
+        // we've finished validating cursor parameters, so we can pop the
+        // cursor map corresponding to the current call off the cursor map stack
+        validator.popCursorMap();
+        
         if (getFunctionType() == SqlFunctionCategory.UserDefinedConstructor) {
             return
                 validator.deriveConstructorType(

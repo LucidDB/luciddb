@@ -77,11 +77,6 @@ protected:
     DynamicParamId startRidParamId;
 
     /**
-     * True if dynamic parameters have been created
-     */
-    bool dynParamsCreated;
-
-    /**
      * Tuple datum used to store dynamic paramter for rowLimit
      */
     TupleDatum rowLimitDatum;
@@ -229,7 +224,6 @@ protected:
     virtual bool produceTuple(TupleData bitmapTuple);
 
 public:
-    explicit LbmBitOpExecStream();
     virtual void prepare(LbmBitOpExecStreamParams const &params);
     virtual void open(bool restart);
     virtual void closeImpl();

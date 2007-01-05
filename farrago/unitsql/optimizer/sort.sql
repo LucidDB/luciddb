@@ -25,6 +25,9 @@ explain plan for
 select emps.city from emps order by city;
 
 explain plan for
+select emps.city from emps order by city desc;
+
+explain plan for
 select emps.city a from emps order by a;
 
 -- order on non select list items

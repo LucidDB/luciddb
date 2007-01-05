@@ -109,6 +109,19 @@ public interface FennelRelImplementor
      */
     public FennelDynamicParamId translateParamId(
         FennelRelParamId relParamId);
+
+    /**
+     * Sets the format of error records for an execution stream.
+     * 
+     * @param implementor an implementor for Fennel relations
+     * @param rel relation to which the execution stream belongs
+     * @param streamDef stream definition of stream that may produce errors
+     * @param errorType row type of error records produced by the stream
+     */
+    public void setErrorRecordType(
+        FennelRel rel,
+        FemExecutionStreamDef streamDef,
+        RelDataType errorType);
 }
 
 // End FennelRelImplementor.java

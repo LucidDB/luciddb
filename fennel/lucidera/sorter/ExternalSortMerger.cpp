@@ -142,7 +142,7 @@ void ExternalSortMerger::heapify(uint i)
         tupleAccessor2.setCurrentTupleBuf(mergeInfo[i].val);
         keyAccessor.unmarshal(keyData);
         keyAccessor2.unmarshal(keyData2);
-        if (sortInfo.keyDesc.compareTuples(keyData,keyData2) < 0) {
+        if (sortInfo.compareKeys(keyData,keyData2) < 0) {
             highest = l;
         }
     }
@@ -152,7 +152,7 @@ void ExternalSortMerger::heapify(uint i)
         tupleAccessor2.setCurrentTupleBuf(mergeInfo[highest].val);
         keyAccessor.unmarshal(keyData);
         keyAccessor2.unmarshal(keyData2);
-        if (sortInfo.keyDesc.compareTuples(keyData,keyData2) < 0) {
+        if (sortInfo.compareKeys(keyData,keyData2) < 0) {
             highest = r;
         }
     }

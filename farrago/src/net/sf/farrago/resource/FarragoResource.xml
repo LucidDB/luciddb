@@ -629,6 +629,19 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot alter sequence for {0} because it was not defined as an identity column</text>
 </exception>
 
+<exception id="421080" name="ValidatorUniqueKeyUpdate">
+<text>Cannot update unique key column ({0})</text>
+</exception>
+
+<exception id="421090" name="ValidatorNoMatchingSourceCursor"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Cannot locate source cursor {0} for COLUMN_LIST {1}</text>
+</exception>
+
+<exception id="421100" name="ValidatorInvalidColumnListParam"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>COLUMN_LIST parameters for {0} must be declared as java.util.List&lt;String&gt; in the external Java method {1}</text>
+</exception>
 
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
@@ -738,6 +751,12 @@ Messages: {3}</text>
 
 <exception id="450152" name="JavaCalcConditionError">
 <text>Could not calculate condition for input:
+{0}
+Messages: {1}</text>
+</exception>
+
+<exception id="450152" name="JavaRowError">
+<text>Could not process input:
 {0}
 Messages: {1}</text>
 </exception>
@@ -1354,6 +1373,10 @@ Messages: {1}</text>
 
 <message id="510055" name="UmlPrimaryKeyConstraint">
 <text>PRIMARY KEY constraint</text>
+</message>
+
+<message id="510056" name="UmlColumnListRoutineParameter">
+<text>routine parameter</text>
 </message>
 
 <!-- ====================================================================== -->

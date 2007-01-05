@@ -127,6 +127,16 @@ class ExecStreamSubFactory_lu
         CmdInterpreter::readTupleProjection(
             params.keyProj,
             streamDef.getKeyProj());
+        params.descendingKeyColumns.resize(params.keyProj.size(), false);
+        if (streamDef.getDescendingProj()) {
+            TupleProjection descendingProj;
+            CmdInterpreter::readTupleProjection(
+                descendingProj,
+                streamDef.getDescendingProj());
+            for (uint i = 0; i < descendingProj.size(); ++i) {
+                params.descendingKeyColumns[descendingProj[i]] = true;
+            }
+        }
         pEmbryo->init(
             ExternalSortExecStream::newExternalSortExecStream(),
             params);
@@ -225,11 +235,23 @@ class ExecStreamSubFactory_lu
     virtual void visit(ProxyLbmSplicerStreamDef &streamDef)
     {
         LbmSplicerExecStreamParams params;
-        pExecStreamFactory->readTupleStreamParams(params, streamDef);
-        pExecStreamFactory->readBTreeStreamParams(params, streamDef);
+        pExecStreamFactory->readExecStreamParams(params, streamDef);
+        pExecStreamFactory->readTupleDescriptor(
+            params.outputTupleDesc,
+            streamDef.getOutputDesc());
+        SharedProxySplicerIndexAccessorDef pIndexAccessorDef =
+            streamDef.getIndexAccessor();
+        for ( ; pIndexAccessorDef; ++pIndexAccessorDef) {
+            BTreeExecStreamParams bTreeParams;
+            pExecStreamFactory->readBTreeParams(
+                bTreeParams,
+                *pIndexAccessorDef);
+            params.bTreeParams.push_back(bTreeParams);
+        }
         params.insertRowCountParamId =
             readDynamicParamId(streamDef.getInsertRowCountParamId());
-        params.ignoreDuplicates = streamDef.isIgnoreDuplicates();
+        params.writeRowCountParamId =
+            readDynamicParamId(streamDef.getWriteRowCountParamId());
         pEmbryo->init(new LbmSplicerExecStream(), params);
     }
 

@@ -88,13 +88,13 @@ Replacement character must be a single character (state=,code=0)
 +---------------------------+---------------------+
 |          EXPR$0           |       EXPR$1        |
 +---------------------------+---------------------+
-| 2Tito1      2Tito1        |                     |
+| 2Tito12Tito1              |                     |
 | Dirk the 3rdDiKk the 3Kd  | TreethornTreethorn  |
-| Ephram      EphKam        | Vestrit  Vestrit    |
-| Gregory     GKegoKy       | Packery  PackerY    |
-| Lilah       Lilah         | Lowe     Lowe       |
-| Mark        MaKk          | Wyatt    WYatt      |
-| Mary        MaKy          | O Brian  O Brian    |
+| EphramEphKam              | VestritVestrit      |
+| GregoryGKegoKy            | PackeryPackerY      |
+| LilahLilah                | LoweLowe            |
+| MarkMaKk                  | WyattWYatt          |
+| MaryMaKy                  | O BrianO Brian      |
 +---------------------------+---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select first || applib.char_replace(first, 'r', 'K'), cast (newage as integer) + cast (applib.char_replace(newage, 51, 48) as integer)
@@ -103,13 +103,13 @@ Replacement character must be a single character (state=,code=0)
 +---------------------------+---------+
 |          EXPR$0           | EXPR$1  |
 +---------------------------+---------+
-| 2Tito1      2Tito1        | 44      |
+| 2Tito12Tito1              | 44      |
 | Dirk the 3rdDiKk the 3Kd  | 48      |
-| Ephram      EphKam        | 124     |
-| Gregory     GKegoKy       | 110     |
-| Lilah       Lilah         | 54      |
-| Mark        MaKk          | 38      |
-| Mary        MaKy          | 34      |
+| EphramEphKam              | 124     |
+| GregoryGKegoKy            | 110     |
+| LilahLilah                | 54      |
+| MarkMaKk                  | 38      |
+| MaryMaKy                  | 34      |
 +---------------------------+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- nested applib.char_replace

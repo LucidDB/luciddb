@@ -26,7 +26,6 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 
@@ -82,25 +81,20 @@ public class LcsTableDeleteRule
 
         ProjectRel origProj = (ProjectRel) call.rels[1];
 
-        // replace the project with one that projects out the rid and 2 null
-        // columns to simulate a singleton bitmap entry; need to cast the
-        // rid expression to not nullable since that is what Fennel expects
+        // replace the project with one that projects out the rid column to
+        // not nullable since that is what Fennel expects
         RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();
         RexNode ridExpr =
             rexBuilder.makeCast(
                 rexBuilder.getTypeFactory().createSqlType(SqlTypeName.Bigint),
                 LucidDbSpecialOperators.makeRidExpr(rexBuilder, origProj));
-        RexNode nullLiteral =
-            rexBuilder.makeNullLiteral(
-                SqlTypeName.Varbinary,
-                LcsIndexGuide.LbmBitmapSegMaxSize);
-        RexNode [] singletonExpr = { ridExpr, nullLiteral, nullLiteral };
-        String [] fieldNames = { "rid", "descriptor", "segment" };
+        RexNode [] singletonRidExpr = { ridExpr };
+        String [] fieldNames = { "rid" };
 
         ProjectRel projRel =
             (ProjectRel) CalcRel.createProject(
                 origProj.getChild(),
-                singletonExpr,
+                singletonRidExpr,
                 fieldNames);
 
         RelNode fennelInput =

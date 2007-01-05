@@ -74,23 +74,23 @@
 |  500 - 999.99 million  |
 +------------------------+
 0: jdbc:luciddb:> values company_revenue(-20);
-+------------------------+
-|         EXPR$0         |
-+------------------------+
-| UNKNOWN                |
-+------------------------+
++----------+
+|  EXPR$0  |
++----------+
+| UNKNOWN  |
++----------+
 0: jdbc:luciddb:> values company_revenue(3.32);
-+------------------------+
-|         EXPR$0         |
-+------------------------+
-|    0 - 0.5 million     |
-+------------------------+
++---------------------+
+|       EXPR$0        |
++---------------------+
+|    0 - 0.5 million  |
++---------------------+
 0: jdbc:luciddb:> values company_revenue(12312.372189);
-+------------------------+
-|         EXPR$0         |
-+------------------------+
-|    0 - 0.5 million     |
-+------------------------+
++---------------------+
+|       EXPR$0        |
++---------------------+
+|    0 - 0.5 million  |
++---------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Tests for EDUCATIONAL_LEVEL
 0: jdbc:luciddb:> 
@@ -166,25 +166,25 @@
 . . . . . . . . > end);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values number_of_employees(12);
-+--------------+
-|    EXPR$0    |
-+--------------+
-|     1-24     |
-+--------------+
++-----------+
+|  EXPR$0   |
++-----------+
+|     1-24  |
++-----------+
 0: jdbc:luciddb:> values number_of_employees(123890109);
-+--------------+
-|    EXPR$0    |
-+--------------+
-| > 20000      |
-+--------------+
++----------+
+|  EXPR$0  |
++----------+
+| > 20000  |
++----------+
 0: jdbc:luciddb:> values number_of_employees(324.324);
 Error: From line 1, column 8 to line 1, column 35: No match found for function signature NUMBER_OF_EMPLOYEES(<NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> values number_of_employees(-234);
-+--------------+
-|    EXPR$0    |
-+--------------+
-| UNKNOWN      |
-+--------------+
++----------+
+|  EXPR$0  |
++----------+
+| UNKNOWN  |
++----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Tests for INCOME_RANGE

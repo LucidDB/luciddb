@@ -22,26 +22,27 @@
 #ifndef Fennel_LbmRidReader_Included
 #define Fennel_LbmRidReader_Included
 
+#include "fennel/btree/BTreeReader.h"
 #include "fennel/exec/ExecStreamDefs.h"
+#include "fennel/lucidera/bitmap/LbmEntry.h"
 #include "fennel/lucidera/bitmap/LbmSegmentReader.h"
+#include "fennel/lucidera/bitmap/LbmTupleReader.h"
 
 FENNEL_BEGIN_NAMESPACE
 
+class LbmSingleTupleReader;
+
 /**
- * LbmRidReader provides the interace necessary to read RIDs from bit segments.
+ * LbmRidReaderBase provides an interace for reading RIDs from bit segments.
  * It utilizes LbmSegmentReader to read byte segments and then advances within
  * the byte to find set bits, returning the RIDs corresponding to those bits.
  *
  * @author Zelaine Fong
  * @version $Id$
  */
-class LbmRidReader : public LbmSegment
+class LbmRidReaderBase : public LbmSegment
 {
-    /**
-     * Input stream accessor
-     */
-    SharedExecStreamBufAccessor pInAccessor;
-
+protected:
     /**
      * Segment reader
      */
@@ -86,19 +87,12 @@ class LbmRidReader : public LbmSegment
      */
     ExecStreamResult searchForNextRid();
 
-public:
     /**
-     * Initializes reader to start reading rids corresponding to bit segments
-     * from a specified input stream
-     *
-     * @param pInAccessorInit input stream accessor
-     *
-     * @param bitmapSegTuple tuple data for reading segments
+     * Common initialization method, called by all other init methods
      */
-    void init(
-        SharedExecStreamBufAccessor &pInAccessorInit,
-        TupleData &bitmapSegTuple);
+    void initCommon();
 
+public:
     /**
      * Advances input to the next rowid >= rid where rowid corresponds to a
      * set bit in a bitmap segment
@@ -120,6 +114,248 @@ public:
     ExecStreamResult readRidAndAdvance(LcsRid &rid);
 };
 
+/**
+ * LbmRidReader provides an interface for reading RIDs from an input stream
+ */
+class LbmRidReader: public LbmRidReaderBase
+{
+public:
+    /**
+     * Initializes reader to start reading rids corresponding to bit segments
+     * from a specified input stream
+     *
+     * @param pInAccessorInit input stream accessor
+     *
+     * @param bitmapSegTuple tuple data for reading segments
+     */
+    void init(
+        SharedExecStreamBufAccessor &pInAccessorInit,
+        TupleData &bitmapSegTuple);
+};
+
+/**
+ * LbmIterableRidReader provides an iterator interface to a rid reader.
+ *
+ * <p>Note that this class does not support the buffer underflow state,
+ * EXECRC_BUF_UNDERFLOW. An assertion error will be thrown if the segment
+ * reader is initialized with a tuple reader that returns this state.
+ */
+class LbmIterableRidReader : protected LbmRidReaderBase
+{
+protected:
+    /**
+     * True if a rid has been read, but not consumed
+     */
+    bool buffered;
+
+    /**
+     * If a rid has been buffered, this field contains its value
+     */
+    LcsRid bufferedRid;
+
+    /**
+     * Common initialization method, called by all other init methods
+     */
+    void initCommon();
+
+    /**
+     * Searches for the next rid and buffers it
+     *
+     * @return true if there was another input rid
+     */
+    inline bool searchForNextRid();
+
+public:
+    /**
+     * Determines whether there are more rids to be read
+     *
+     * @return true if there was another input rid
+     */
+    inline bool hasNext();
+
+    /**
+     * Peeks at the current rid value without consuming it. An assertion
+     * error is thrown if there are no more rids to be read.
+     *
+     * @return the first unread rid value
+     */
+    inline LcsRid peek();
+
+    /**
+     * Advances past the current rid value. As assertion error is thrown
+     * if there are no more rids to be read.
+     */
+    inline void advance();
+
+    /**
+     * Gets the current rid value and advances to the next one. An assertion
+     * error is thrown if there are not more rids to be read.
+     *
+     * @return the current rid value, before the reader is advanced
+     */
+    inline LcsRid getNext();
+};
+
+/**
+ * LbmTupleRidReader is a class for reading rids from bitmap tuples
+ */
+class LbmTupleRidReader : public LbmIterableRidReader
+{
+    /**
+     * Typed pointer to internal tuple reader
+     */
+    LbmSingleTupleReader *pReader;
+
+    /**
+     * Shared pointer to internal tuple reader
+     */
+    SharedLbmTupleReader pSharedReader;
+
+public:
+    /**
+     * Initializes reader to start reading rids corresponding to bit segments
+     * from a specified input tuple
+     *
+     * @param bitmapSegTuple tuple data for reading segments
+     */
+    void init(TupleData &bitmapSegTuple);
+};
+
+/**
+ * LbmBTreeRidReader is a class for reading RIDs from a deletion index
+ */
+class LbmDeletionIndexReader
+{
+    /**
+     * Deletion index btree reader
+     */
+    SharedBTreeReader btreeReader;
+
+    /**
+     * Pointer to tuple data containing a btree bitmap segment
+     */
+    TupleData *pBitmapSegTuple;
+
+    /**
+     * TupleData for searching btree
+     */
+    TupleData searchEntry;
+
+    /**
+     * Whether a tuple is currently being searched
+     */
+    bool currTuple;
+
+    /**
+     * Reads rids from a tuple sequentially
+     */
+    LbmTupleRidReader ridReader;
+
+    /**
+     * The last rid read
+     */
+    LcsRid btreeRid;
+
+    /**
+     * True if the deletion index is empty
+     */
+    bool emptyIndex;
+
+    /**
+     * True if it is not known whether the deletion index is empty
+     */
+    bool emptyIndexUnknown;
+
+    /**
+     * Reinitializes the internal rid reader. Should be called whenever
+     * a new tuple is read or to restart a read on the current tuple.
+     */
+    void initRidReader();
+
+public:
+    ~LbmDeletionIndexReader();
+
+    /**
+     * Initializes reader to search for RIDs stored in a btree 
+     * specified BTreeReader
+     *
+     * @param btreeReader input btree reader
+     *
+     * @param bitmapSegTuple tuple data for reading segments
+     */
+    void init(
+        SharedBTreeReader &btreeReader,
+        TupleData &bitmapSegTuple);
+
+    /**
+     * Releases any locks held
+     */
+    void endSearch();
+
+    /**
+     * Determines whether the deletion index is empty
+     */
+    bool isEmpty();
+
+    /**
+     * Searches for a RID in the btree
+     *
+     * @param rid the RID to search for
+     *
+     * @return true if the RID was found, false otherwise
+     */
+    bool searchForRid(LcsRid rid);
+};
+
+/**************************************************************
+  Definitions of inline methods for class LbmIterableRidReader
+***************************************************************/
+
+inline bool LbmIterableRidReader::searchForNextRid()
+{
+    ExecStreamResult rc = readRidAndAdvance(bufferedRid);
+    switch (rc)
+    {
+    case EXECRC_YIELD:
+        buffered = true;
+        break;
+    case EXECRC_EOS:
+        buffered = false;
+        break;
+    default:
+        permAssert(false);
+    }
+    return buffered;
+}
+
+inline bool LbmIterableRidReader::hasNext()
+{
+    if (buffered) {
+        return true;
+    }
+    return searchForNextRid();
+}
+
+inline LcsRid LbmIterableRidReader::peek()
+{
+    bool valid = hasNext();
+    assert(valid);
+    return bufferedRid;
+}
+
+inline void LbmIterableRidReader::advance()
+{
+    bool valid = hasNext();
+    assert(valid);
+    buffered = false;
+}
+
+inline LcsRid LbmIterableRidReader::getNext()
+{
+    LcsRid next = peek();
+    advance();
+    return next;
+}
 
 FENNEL_END_NAMESPACE
 

@@ -69,7 +69,12 @@ public:
                 ExecStreamTestSuite,testReshapeExecStreamCastFilter);
             FENNEL_UNIT_TEST_CASE(
                 ExecStreamTestSuite,testReshapeExecStreamNoCastFilter);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSingleValueAggExecStream);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testSingleValueAggExecStream);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testMergeImplicitPullInputs);
         }
     }
 
@@ -81,6 +86,7 @@ public:
     void testSumAggExecStream();
     void testReshapeExecStream();
     void testSingleValueAggExecStream();
+    void testMergeImplicitPullInputs();
     
     void testCartesianJoinExecStreamOuter()
     {

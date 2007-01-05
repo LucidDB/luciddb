@@ -28,6 +28,7 @@ import com.lucidera.farrago.fennel.*;
 import com.lucidera.lurql.*;
 
 import java.io.*;
+import java.sql.*;
 import java.util.*;
 
 import javax.jmi.reflect.*;
@@ -461,14 +462,46 @@ public class FarragoDefaultSessionPersonality
     }
     
     // implement FarragoSessionPersonality
-    public void updateRowCounts(
+    public void getRowCounts(
+        ResultSet resultSet,
+        List<Long> rowCounts,
+        TableModificationRel.Operation tableModOp)
+        throws SQLException
+    {
+        boolean found = resultSet.next();
+        assert (found);
+        boolean nextRowCount = addRowCount(resultSet, rowCounts);
+        if (tableModOp == TableModificationRel.Operation.INSERT &&
+            nextRowCount)
+        {
+            // if the insert is on a column store table, a second rowcount
+            // may be returned, indicating the number of insert violations
+            nextRowCount = addRowCount(resultSet, rowCounts);
+        }
+        assert (!nextRowCount);
+    }
+    
+    protected boolean addRowCount(ResultSet resultSet, List<Long> rowCounts)
+        throws SQLException
+    {
+        rowCounts.add(resultSet.getLong(1));
+        return resultSet.next();
+    }
+    
+    // implement FarragoSessionPersonality
+    public long updateRowCounts(
         FarragoSession session,
         List<String> tableName,
-        long insertedRowCount,
-        long deletedRowCount,
-        long updateRowCount,
+        List<Long> rowCounts,
         TableModificationRel.Operation tableModOp)
     {
+        long count = rowCounts.get(0);
+        if (tableModOp == TableModificationRel.Operation.INSERT) {
+            if (rowCounts.size() == 2) {
+                count -= rowCounts.get(1);
+            }
+        }
+        return count;
     }
     
     // implement FarragoSessionPersonality

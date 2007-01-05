@@ -64,6 +64,11 @@ struct TupleDatum
     inline bool isNull() const;
 
     /**
+     * Set this TupleDatum to a NULL value.
+     */
+    inline void setNull();
+
+    /**
      * Copy assignment(shallow copy).
      *
      * @note
@@ -144,6 +149,11 @@ inline TupleDatum::TupleDatum(TupleDatum const &other)
 inline bool TupleDatum::isNull() const
 {
     return (!pData);
+}
+
+inline void TupleDatum::setNull()
+{
+    pData = NULL;
 }
 
 inline TupleDatum &TupleDatum::operator = (TupleDatum const &other)

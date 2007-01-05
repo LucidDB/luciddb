@@ -29,10 +29,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
-
-import java.util.*;
-import java.text.*;
-
+import org.eigenbase.util.*;
 
 /**
  * LoptIterCalcRule decorates an IterCalcRel with an error handling tag, 
@@ -144,8 +141,6 @@ public abstract class LoptIterCalcRule extends RelOptRule
 
     // index acess rule, hash rules
 
-    private static String tagTimestampFormat = "yyyy-MM-dd_HH_mm_ss";
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -220,7 +215,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
         sb.append(".").append(qualifiedName[2]);
         if (rel != null) {
             sb.append("." + rel.getId());
-            sb.append("_" + getTimestampString());
+            sb.append("_" + Util.getFileTimestamp());
         }
         return sb.toString();
     }
@@ -234,14 +229,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
     {
         // the timestamp should guarantee a unique default tag
         // and might be more readable than a uuid
-        return "IterCalcRel" + rel.getId() + "_" + getTimestampString();
-    }
-
-    protected String getTimestampString()
-    {
-        DateFormat tagTimestampFormatter = 
-            new SimpleDateFormat(tagTimestampFormat);
-        return tagTimestampFormatter.format(new Date());
+        return "IterCalcRel" + rel.getId() + "_" + Util.getFileTimestamp();
     }
 
     protected void setIterCalcTypeMap(

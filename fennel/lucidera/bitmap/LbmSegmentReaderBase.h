@@ -39,9 +39,9 @@ class LbmSegmentReaderBase : public LbmSegment
 {
 protected:
     /**
-     * Input stream accessor
+     * Input tuple reader
      */
-    SharedExecStreamBufAccessor pInAccessor;
+    SharedLbmTupleReader pTupleReader;
 
     /**
      * Length of the current byte segment
@@ -90,6 +90,18 @@ protected:
      */
     void init(
         SharedExecStreamBufAccessor &pInAccessorInit,
+        TupleData &bitmapSegTupleInit);
+
+    /**
+     * Initializes reader to start reading bit segments from a specified
+     * tuple reader
+     *
+     * @param pTupleReaderInit input tuple reader
+     *
+     * @param bitmapSegTupleInit tuple data for reading segments
+     */
+    void init(
+        SharedLbmTupleReader &pTupleReaderInit,
         TupleData &bitmapSegTupleInit);
 
     /**

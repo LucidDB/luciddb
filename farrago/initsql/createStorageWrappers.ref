@@ -6,6 +6,19 @@
 0: jdbc:farrago:> -- create system-owned schema to hold objects like model extension plugin jars
 0: jdbc:farrago:> create or replace schema sys_boot.sys_boot;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'sys_boot.sys_boot';
+0: jdbc:farrago:> set path 'sys_boot.sys_boot';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- add system objects not yet created
+0: jdbc:farrago:> create or replace procedure update_system_objects()
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name
+. . . . . . . . > 'class net.sf.farrago.syslib.FarragoUpdateCatalogUDR.updateSystemObjects';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> call update_system_objects();
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create wrapper for access to MDR repositories
 0: jdbc:farrago:> create or replace foreign data wrapper sys_mdr
 . . . . . . . . > library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'

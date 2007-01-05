@@ -26,6 +26,8 @@
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/segment/SegmentAccessor.h"
 
+#include <vector>
+
 FENNEL_BEGIN_NAMESPACE
 
 /**
@@ -54,6 +56,11 @@ struct ExternalSortInfo
     TupleProjection keyProj;
 
     /**
+     * @see ExternalSortExecStreamParams
+     */
+    std::vector<bool> descendingKeyColumns;
+    
+    /**
      * Descriptor for projected sort key tuples.
      */
     TupleDescriptor keyDesc;
@@ -74,6 +81,18 @@ struct ExternalSortInfo
     uint cbPage;
 
     explicit ExternalSortInfo();
+
+    /**
+     * Compares two keys, taking ASC/DESC into account.
+     *
+     * @param key1 first key to compare
+     *
+     * @param key2 second key to compare
+     *
+     * @return negative for key1 < key2; zero for key1 == key2;
+     * positive for key1 > key2
+     */
+    int compareKeys(TupleData const &key1, TupleData const &key2);
 };
 
 FENNEL_END_NAMESPACE

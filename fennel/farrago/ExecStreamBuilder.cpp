@@ -53,7 +53,7 @@ void ExecStreamBuilder::buildStreamGraph(
         buildStream(*pStreamDef);
     }
 
-    // PASS 2: add dataflows
+    // PASS 2: add input dataflows (provided the source input has only output)
     pStreamDef = cmd.getStreamDefs();
     for (; pStreamDef; ++pStreamDef) {
         buildStreamInputs(*pStreamDef);
@@ -68,8 +68,15 @@ void ExecStreamBuilder::buildStreamGraph(
                 pAdaptedStream->getStreamId());
         }
     }
+    
+    // PASS 3: add output dataflows in the cases where a stream has multiple
+    // outputs
+    pStreamDef = cmd.getStreamDefs();
+    for (; pStreamDef; ++pStreamDef) {
+        buildStreamOutputs(*pStreamDef);
+    }
 
-    // PASS 3: sort and prepare streams
+    // PASS 4: sort and prepare streams
     graphEmbryo.prepareGraph(
         streamFactory.getDatabase()->getSharedTraceTarget(),
         "xo.");
@@ -89,9 +96,46 @@ void ExecStreamBuilder::buildStreamInputs(
     SharedProxyExecStreamDataFlow pInputFlow = streamDef.getInputFlow();
     for (; pInputFlow; ++pInputFlow) {
         SharedProxyExecutionStreamDef pInput = pInputFlow->getProducer();
+        // If the source input has multiple outputs, defer adding that flow
+        // till later so we can add those flows in the order in which they
+        // appear in the output flow list.  
+        //
+        // NOTE zfong 12/4/06 - By deferring adding the input flows in the
+        // scenario described above, this means we don't handle the case where
+        // a dataflow is an ordered dataflow for both an input and an output.
+        // The ordering will only be preserved on the output flows.
+        if (hasMultipleOutputs(*pInput)) {
+            continue;
+        }
         std::string inputName = pInput->getName();
         graphEmbryo.addDataflow(inputName, name);
     }
+}
+
+void ExecStreamBuilder::buildStreamOutputs(
+    ProxyExecutionStreamDef &streamDef)
+{
+    std::string name = streamDef.getName();
+    SharedProxyExecStreamDataFlow pOutputFlow = streamDef.getOutputFlow();
+    if (!hasMultipleOutputs(streamDef)) {
+        return;
+    }
+    for (; pOutputFlow; ++pOutputFlow) {
+        SharedProxyExecutionStreamDef pOutput = pOutputFlow->getConsumer();
+        std::string outputName = pOutput->getName();
+        graphEmbryo.addDataflow(name, outputName);
+    }
+}
+
+bool ExecStreamBuilder::hasMultipleOutputs(
+    ProxyExecutionStreamDef &streamDef)
+{
+    SharedProxyExecStreamDataFlow pOutputFlow =  streamDef.getOutputFlow();
+    if (!pOutputFlow) {
+        return false;
+    }
+    ++pOutputFlow;
+    return (pOutputFlow);
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -27,7 +27,8 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
 
 /**
- * LucidDbRuntimeContext applies LucidDb semantics for query execution.
+ * LucidDbTypeFactory overrides {@link FarragoTypeFactoryImpl} with
+ * LucidDB-specific type derivation rules.
  *
  * @author John Pham
  * @version $Id$
@@ -165,6 +166,13 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
         }
         
         return null;
+    }
+
+    // override SqlTypeFactoryImpl by requesting pragmatic behavior
+    // instead of strict SQL:2003 behavior
+    protected boolean shouldRaggedFixedLengthValueUnionBeVariable()
+    {
+        return true;
     }
 }
 

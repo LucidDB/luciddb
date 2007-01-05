@@ -20,6 +20,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/common/FemEnums.h"
 #include "fennel/test/ExecStreamUnitTestBase.h"
 #include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
 #include "fennel/lucidera/sorter/ExternalSortExecStream.h"
@@ -82,6 +83,12 @@ protected:
      */
     void initBTreeExecStreamParam(
         BTreeExecStreamParams &param, shared_ptr<BTreeDescriptor> pBTreeDesc);
+
+    /**
+     * Initializes BTreeParams structure
+     */
+    void initBTreeParam(
+        BTreeParams &param, shared_ptr<BTreeDescriptor> pBTreeDesc);
 
     /**
      * Initializes a cluster scan def structure for a LcsRowScanBase exec
@@ -579,7 +586,7 @@ void LbmSearchTest::loadTableAndIndex(
     BarrierExecStreamParams barrierParams;
     barrierParams.outputTupleDesc.push_back(attrDesc_int64);
     barrierParams.outputTupleDesc.push_back(attrDesc_int64);
-    barrierParams.rowCountInput = -1;
+    barrierParams.returnMode = BARRIER_RET_ANY_INPUT;
 
     ExecStreamEmbryo clusterBarrierStreamEmbryo;
     clusterBarrierStreamEmbryo.init(new BarrierExecStream(), barrierParams);
@@ -675,13 +682,18 @@ void LbmSearchTest::loadTableAndIndex(
     // 8. setup splicer
 
     LbmSplicerExecStreamParams splicerParams;
+    splicerParams.scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache, 15);
+    splicerParams.pCacheAccessor = pCache;
+    BTreeParams bTreeParams;
     initBTreeBitmapDesc(
-        splicerParams.tupleDesc, splicerParams.keyProj, nKeys);
-    initBTreeExecStreamParam(splicerParams, pBTreeDesc);
+        bTreeParams.tupleDesc, bTreeParams.keyProj, nKeys);
+    initBTreeParam(bTreeParams, pBTreeDesc);
+    bTreeParams.rootPageId = pBTreeDesc->rootPageId;
+    splicerParams.bTreeParams.push_back(bTreeParams);
     splicerParams.insertRowCountParamId = DynamicParamId(1);
-    splicerParams.ignoreDuplicates = false;
+    splicerParams.writeRowCountParamId = DynamicParamId(0);
     splicerParams.outputTupleDesc.push_back(attrDesc_int64);
-    splicerParams.rootPageId = pBTreeDesc->rootPageId;
 
     ExecStreamEmbryo splicerStreamEmbryo;
     splicerStreamEmbryo.init(new LbmSplicerExecStream(), splicerParams);
@@ -721,6 +733,12 @@ void LbmSearchTest::initBTreeExecStreamParam(
 {
     param.scratchAccessor = pSegmentFactory->newScratchSegment(pCache, 15);
     param.pCacheAccessor = pCache;
+    initBTreeParam(param, pBTreeDesc);
+}
+
+void LbmSearchTest::initBTreeParam(
+    BTreeParams &param, shared_ptr<BTreeDescriptor> pBTreeDesc)
+{
     param.pSegment = pRandomSegment;
     param.pRootMap = 0;
 

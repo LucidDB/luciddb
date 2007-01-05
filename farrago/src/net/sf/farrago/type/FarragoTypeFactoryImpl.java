@@ -1035,6 +1035,8 @@ public class FarragoTypeFactoryImpl
             return java.sql.Timestamp.class;
         case SqlTypeName.Cursor_ordinal:
             return java.sql.ResultSet.class;
+        case SqlTypeName.ColumnList_ordinal:
+            return List.class;
         default:
             return getClassForPrimitive(type);
         }

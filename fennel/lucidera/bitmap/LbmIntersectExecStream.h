@@ -65,7 +65,6 @@ class LbmIntersectExecStream : public LbmBitOpExecStream
     bool intersectSegments(uint len);
 
 public:
-    explicit LbmIntersectExecStream();
     virtual void prepare(LbmIntersectExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);

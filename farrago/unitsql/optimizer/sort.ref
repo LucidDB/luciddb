@@ -49,6 +49,13 @@
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
+. . . . . . . . > select emps.city from emps order by city desc;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0 Descending]], discardDuplicates=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > select emps.city a from emps order by a;
 'column0'
 'FennelToIteratorConverter'

@@ -52,6 +52,11 @@ class LbmSegmentReader : public LbmSegmentReaderBase
      */
     ExecStreamResult readSegment();
 
+    /**
+     * Common initialization method, called by all other init methods
+     */
+    void initCommon();
+
 public:
     /**
      * Initializes reader to start reading bit segments from a specified
@@ -63,6 +68,18 @@ public:
      */
     void init(
         SharedExecStreamBufAccessor &pInAccessorInit,
+        TupleData &bitmapSegTupleInit);
+
+    /**
+     * Initializes reader to start reading bit segments from a specified
+     * tuple reader
+     *
+     * @param pTupleReaderInit input tuple reader
+     *
+     * @param bitmapSegTupleInit tuple data for reading segments
+     */
+    void init(
+        SharedLbmTupleReader &pTupleReaderInit,
         TupleData &bitmapSegTupleInit);
 
     /**

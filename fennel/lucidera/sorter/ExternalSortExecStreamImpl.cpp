@@ -24,6 +24,7 @@
 #include "fennel/lucidera/sorter/ExternalSortExecStreamImpl.h"
 #include "fennel/segment/Segment.h"
 #include "fennel/segment/SegStreamAllocation.h"
+#include "fennel/exec/ExecStreamGraphImpl.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -38,6 +39,24 @@ ExternalSortInfo::ExternalSortInfo()
     nSortMemPages = 0;
     nSortMemPagesPerRun = 0;
     cbPage = 0;
+}
+
+int ExternalSortInfo::compareKeys(TupleData const &key1, TupleData const &key2)
+{
+    int c = keyDesc.compareTuples(key1, key2);
+    if (!c) {
+        return 0;
+    }
+    // abs(c) is 1-based column ordinal
+    int i = (c > 0) ? c : -c;
+    // shift to 0-based
+    --i;
+    if (descendingKeyColumns[i]) {
+        // flip comparison result for DESC
+        return -c;
+    } else {
+        return c;
+    }
 }
 
 void ExternalSortExecStreamImpl::prepare(
@@ -67,6 +86,11 @@ void ExternalSortExecStreamImpl::prepare(
     assert(params.outputTupleDesc == srcRecDef);
     sortInfo.tupleDesc = srcRecDef;
     sortInfo.keyDesc.projectFrom(sortInfo.tupleDesc,params.keyProj);
+    sortInfo.descendingKeyColumns = params.descendingKeyColumns;
+    if (sortInfo.descendingKeyColumns.empty()) {
+        // default is all ascending
+        sortInfo.descendingKeyColumns.resize(sortInfo.keyProj.size(), false);
+    }
     sortInfo.cbPage = params.pTempSegment->getFullPageSize();
     sortInfo.memSegmentAccessor = params.scratchAccessor;
     sortInfo.externalSegmentAccessor.pCacheAccessor = params.pCacheAccessor;
@@ -186,6 +210,10 @@ ExecStreamResult ExternalSortExecStreamImpl::execute(
                 }
             }
             mergeFirstResult();
+            // close the producers now that we've read all input
+            ExecStreamGraphImpl &graphImpl =
+                dynamic_cast<ExecStreamGraphImpl&>(getGraph());
+            graphImpl.closeProducers(getStreamId());
             resultsReady = true;
         }
     }

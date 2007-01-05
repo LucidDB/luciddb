@@ -25,6 +25,7 @@
 #define Fennel_ExecStream_Included
 
 #include "fennel/exec/ExecStreamDefs.h"
+#include "fennel/exec/ErrorSource.h"
 #include "fennel/common/ClosableObject.h"
 #include "fennel/common/TraceSource.h"
 #include "fennel/tuple/TupleDescriptor.h"
@@ -45,7 +46,8 @@ FENNEL_BEGIN_NAMESPACE
 class ExecStream
     : public boost::noncopyable,
         virtual public ClosableObject,
-        virtual public TraceSource
+        virtual public TraceSource,
+        virtual public ErrorSource
 {
     friend class ExecStreamGraphImpl;
 protected:

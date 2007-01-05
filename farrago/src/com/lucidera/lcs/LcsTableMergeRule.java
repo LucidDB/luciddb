@@ -31,7 +31,6 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.type.*;
 
 
 /**
@@ -238,26 +237,17 @@ public class LcsTableMergeRule
                 rexBuilder,
                 nInsertFields);
 
-        // Project out the rid and 2 null columns as well as the
-        // expressions that make up a new insert target row.  The content of
-        // insert target row depends on whether the rid is null or non-null.
-        // In the case of the former, it corresponds to the target of the
-        // INSERT substatement while in the latter, it corresponds to the
-        // UPDATE.  These will be implemented using a CASE expression.  If
-        // only an UPDATE substatement is present, no CASE expression is
-        // required.
-        RexNode [] projExprs = new RexNode[nTargetFields + 3];
-        String [] fieldNames = new String[nTargetFields + 3];
+        // Project out the rid column as well as the expressions that make up 
+        // a new insert target row.  The content of insert target row depends
+        // on whether the rid is null or non-null.  In the case of the former,
+        // it corresponds to the target of the INSERT substatement while in
+        // the latter, it corresponds to the UPDATE.  These will be implemented
+        // using a CASE expression.  If only an UPDATE substatement is present,
+        // no CASE expression is required.
+        RexNode [] projExprs = new RexNode[nTargetFields + 1];
+        String [] fieldNames = new String[nTargetFields + 1];
         projExprs[0] = ridExpr;
-        RexNode nullLiteral =
-            rexBuilder.makeNullLiteral(
-                SqlTypeName.Varbinary,
-                LcsIndexGuide.LbmBitmapSegMaxSize);
-        projExprs[1] = nullLiteral;
-        projExprs[2] = nullLiteral;
         fieldNames[0] = "rid";
-        fieldNames[1] = "descriptor";
-        fieldNames[2] = "segment";
 
         // when expression used in the case expression
         RexNode whenExpr = null;
@@ -284,16 +274,16 @@ public class LcsTableMergeRule
             }
 
             if (updateOnly) {
-                projExprs[i + 3] = updateExpr;
+                projExprs[i + 1] = updateExpr;
             } else {
-                projExprs[i + 3] =
+                projExprs[i + 1] =
                     rexBuilder.makeCall(
                         SqlStdOperatorTable.caseOperator,
                         whenExpr,
                         origProjExprs[i],
                         updateExpr);
             }
-            fieldNames[i + 3] = targetFields[i].getName();
+            fieldNames[i + 1] = targetFields[i].getName();
         }
 
         return CalcRel.createProject(child, projExprs, fieldNames);
@@ -345,21 +335,16 @@ public class LcsTableMergeRule
         List<RexNode> oldVals = new ArrayList<RexNode>();
         List<RexNode> newVals = new ArrayList<RexNode>();
         
+        Map<String, Integer> targetColnoMap = new HashMap<String, Integer>();
+        for (int i = 0; i < nTargetFields; i++) {
+            targetColnoMap.put(targetFields[i].getName(), i);
+        }
         for (int i = 0; i < updateList.size(); i++) {
 
-            // TODO jvs 7-Oct-2006:  avoid O(n^2) with a HashMap
-            
             // find the original target column corresponding to the update
             // column
-            int targetColno;
-            for (targetColno = 0; targetColno < nTargetFields; targetColno++) {
-                if (targetFields[targetColno].getName().equals(
-                    updateList.get(i)))
-                {
-                    break;
-                }
-            }
-            assert(targetColno < nTargetFields);
+            Integer targetColno = targetColnoMap.get(updateList.get(i));
+            assert(targetColno != null);
 
             // build up row lists
             RexNode origValue = origProjExprs[nInsertFields + targetColno];

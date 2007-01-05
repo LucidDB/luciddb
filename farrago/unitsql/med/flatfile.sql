@@ -14,7 +14,6 @@ options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'csv',
     with_header 'yes', 
-    log_directory 'testlog/',
     lenient 'no');
 
 
@@ -71,7 +70,6 @@ foreign data wrapper sys_file_wrapper
 options (
     file_extension '',
     line_delimiter '\t', 
-    log_directory 'testlog/',
     lenient 'no');
 
 create foreign table flatfile_badLineDelim(
@@ -92,7 +90,6 @@ foreign data wrapper sys_file_wrapper
 options (
     file_extension 'csv',
     field_delimiter '\t', 
-    log_directory 'testlog/',
     lenient 'no');
 
 create foreign table flatfile_badFieldDelim(
@@ -117,7 +114,6 @@ options (
     file_extension 'csv',
     with_header 'no',
     line_delimiter 'G', 
-    log_directory 'testlog/',
     lenient 'no');
 
 create foreign table flatfile_incompleteColumn(
@@ -127,6 +123,7 @@ create foreign table flatfile_incompleteColumn(
 server flatfile_server_incompleteColumn
 options (filename 'unitsql/med/flatfiles/noheader');
 
+-- Note: Farrago's error handler quietly swallows row errors
 select * from flatfile_incompleteColumn;
 
 --
@@ -164,7 +161,6 @@ options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'txt',
     with_header 'yes', 
-    log_directory 'testlog/',
     lenient 'no');
 
 select * from flatfile_server_rowTooLong.BCP."longrow";
@@ -182,8 +178,7 @@ options (
     file_extension 'esc',
     control_file_extension 'ctl',
     with_header 'yes', 
-    escape_char '\',
-    log_directory 'testlog/');
+    escape_char '\');
 
 select * from flatfile_server_esc.BCP."example" order by 3;
 
@@ -202,8 +197,7 @@ options (
     file_extension 'dat',
     with_header 'no',
     field_delimiter '',
-    line_delimiter '\r\n', 
-    log_directory 'testlog/');
+    line_delimiter '\r\n');
 
 --
 -- 2.2 valid definition
@@ -217,8 +211,7 @@ options (
     field_delimiter '',
     escape_char '',
     quote_char '',
-    line_delimiter '\r\n', 
-    log_directory 'testlog/');
+    line_delimiter '\r\n');
 
 select * from flatfile_server_fixed.BCP."fixed" order by 3;
 
@@ -255,8 +248,7 @@ create server flatfile_server_empty
 foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
-    file_extension 'txt',
-    log_directory 'testlog/');
+    file_extension 'txt');
 
 select * from flatfile_server_empty.SAMPLE."empty";
 
@@ -292,8 +284,7 @@ options (
     directory 'unitsql/med/flatfiles/',
     control_file_extension 'bcp2',
     file_extension 'txt',
-    with_header 'no',
-    log_directory 'testlog/');
+    with_header 'no');
 
 select * from flatfile_server_badbcp.BCP."nobcpheader";
 
@@ -338,8 +329,7 @@ foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'fail',
-    control_file_extension 'failbcp',
-    log_directory 'testlog/');
+    control_file_extension 'failbcp');
 
 import foreign schema bcp
 from server flatfile_server_fail
@@ -365,8 +355,7 @@ foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'csv',
-    with_header 'yes', 
-    log_directory 'testlog/');
+    with_header 'yes');
 
 import foreign schema bcp
 from server flatfiledir_server
@@ -451,8 +440,7 @@ foreign data wrapper local_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'csv',
-    with_header 'yes', 
-    log_directory 'testlog/');
+    with_header 'yes');
 
 -- query for available schemas
 select * from table(sys_boot.mgmt.browse_foreign_schemas('FF_SERVER'))

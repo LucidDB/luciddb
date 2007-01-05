@@ -70,17 +70,12 @@ public class FennelSortRule
             return;
         }
 
-        Integer [] keyProjection = new Integer[sortRel.getCollations().length];
-        for (int i = 0; i < keyProjection.length; ++i) {
-            keyProjection[i] = sortRel.getCollations()[i].getFieldIndex();
-        }
-
         boolean discardDuplicates = false;
         FennelSortRel fennelSortRel =
             new FennelSortRel(
                 sortRel.getCluster(),
                 fennelInput,
-                keyProjection,
+                sortRel.getCollations(),
                 discardDuplicates);
         call.transformTo(fennelSortRel);
     }

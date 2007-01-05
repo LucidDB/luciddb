@@ -38,12 +38,9 @@ import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.plugin.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.pretty.*;
@@ -107,6 +104,7 @@ public class DdlRoutineHandler
                 ++iOrdinal;
             }
             validateRoutineParam(param);
+            
             if (param.getType().getName().equals("CURSOR")) {
                 if (!(FarragoCatalogUtil.isTableFunction(routine))) {
                     throw validator.newPositionalError(
@@ -117,6 +115,11 @@ public class DdlRoutineHandler
                 }
             }
         }
+        
+        // validate column list parameters, now that we've set the types of
+        // the source cursor parameters
+        validateColumnListParams(routine);
+        
         if (FarragoCatalogUtil.isTableFunction(routine)) {
             routine.setUdx(true);
             validateAttributeSet(routine);
@@ -513,6 +516,41 @@ public class DdlRoutineHandler
         validateTypedElement(param, (FemRoutine) param.getBehavioralFeature());
     }
 
+    private void validateColumnListParams(FemRoutine routine)
+    {
+        for (FemRoutineParameter param :
+            Util.cast(routine.getParameter(), FemRoutineParameter.class))
+        {
+            if (param.getType().getName().equals("COLUMN_LIST")) {
+                // for COLUMN_LIST parameters, make sure the routine contains
+                // a CURSOR parameter matching the COLUMN_LIST parameter's
+                // source cursor
+                FemColumnListRoutineParameter colListParam =
+                    (FemColumnListRoutineParameter) param;
+                String sourceCursor = colListParam.getSourceCursorName();
+                boolean found = false;
+                for (FemRoutineParameter p :
+                    Util.cast(
+                        routine.getParameter(), FemRoutineParameter.class))
+                {
+                    if (p.getName().equals(sourceCursor)) {
+                        if (p.getType().getName().equals("CURSOR")) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!found) {
+                    throw validator.newPositionalError(
+                        routine,
+                        res.ValidatorNoMatchingSourceCursor.ex(
+                            repos.getLocalizedObjectName(sourceCursor),
+                            repos.getLocalizedObjectName(param)));
+                }
+            }
+        }
+    }
+    
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemJar jar)
     {

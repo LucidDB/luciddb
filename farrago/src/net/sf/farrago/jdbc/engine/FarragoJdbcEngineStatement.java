@@ -27,6 +27,7 @@ import java.sql.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.session.*;
 
+import org.eigenbase.util14.*;
 
 /**
  * FarragoJdbcEngineStatement implements the {@link java.sql.Statement}
@@ -57,6 +58,11 @@ public class FarragoJdbcEngineStatement
      * Underlying statement context.
      */
     protected FarragoSessionStmtContext stmtContext;
+
+    /**
+     * @see {@link Statement#setMaxRows}
+     */
+    private int maxRows;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -108,7 +114,7 @@ public class FarragoJdbcEngineStatement
             if (stmtContext.isPrepared()) {
                 stmtContext.execute();
 
-                if (stmtContext.getResultSet() != null) {
+                if (openCursorResultSet() != null) {
                     unprepare = false;
                     return true;
                 } else {
@@ -169,9 +175,10 @@ public class FarragoJdbcEngineStatement
                 throw new SQLException(ERRMSG_NOT_A_QUERY + sql);
             }
             stmtContext.execute();
-            assert (stmtContext.getResultSet() != null);
+            ResultSet resultSet = openCursorResultSet();
+            assert (resultSet != null);
             unprepare = false;
-            return stmtContext.getResultSet();
+            return resultSet;
         } catch (SQLException ex) {
             throw ex;
         } catch (Throwable ex) {
@@ -253,14 +260,17 @@ public class FarragoJdbcEngineStatement
     public void setMaxRows(int max)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        if (max < 0) {
+            throw new SQLException("setMaxRows requires non-negative argument");
+        }
+        maxRows = max;
     }
 
     // implement Statement
     public int getMaxRows()
         throws SQLException
     {
-        return 0;
+        return maxRows;
     }
 
     // implement Statement
@@ -287,6 +297,19 @@ public class FarragoJdbcEngineStatement
             timeoutMillis = 1000;
         }
         return timeoutMillis / 1000;
+    }
+
+    protected ResultSet openCursorResultSet()
+    {
+        ResultSet resultSet = stmtContext.getResultSet();
+        if (resultSet == null) {
+            return null;
+        }
+        if (resultSet instanceof AbstractResultSet) {
+            AbstractResultSet abstractResultSet = (AbstractResultSet) resultSet;
+            abstractResultSet.setMaxRows(maxRows);
+        }
+        return resultSet;
     }
 
     // implement Statement

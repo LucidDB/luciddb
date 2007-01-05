@@ -25,7 +25,6 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 
@@ -47,11 +46,17 @@ import org.eigenbase.sql.type.*;
 public class LcsTableMergeRel
     extends MedAbstractFennelTableModRel
 {
+    //~ Static fields/initializers ---------------------------------------------
+    
+    enum ReshapeProjectionType {
+        PROJECT_RID, PROJECT_NONRIDS, PROJECT_ALL
+    }
 
     //~ Instance fields --------------------------------------------------------
 
     private boolean updateOnly;
     private boolean insertOnly;
+    private Double estimatedNumRows;
 
     /* Refinement for TableModificationRelBase.table. */
     final LcsTable lcsTable;
@@ -157,11 +162,10 @@ public class LcsTableMergeRel
     // override RelNode
     public RelDataType getExpectedInputRowType(int ordinalInParent)
     {
-        // When there is both an UPDATE and INSERT substatement, the
-        // input consists of the bitmap entry (rid, descriptor, segment)
-        // followed by the fields of the table.  If there is only an INSERT,
-        // then only the fields of the table are in the input.  If there
-        // is only an UPDATE, then the rid is not nullable.
+        // When there is both an UPDATE and INSERT substatement, the input
+        // consists of a rid followed by the fields of the table.  If there is
+        // only an INSERT, then only the fields of the table are in the input.
+        // If there is only an UPDATE, then the rid is not nullable.
         assert (ordinalInParent == 0);
         RelDataType rowType;
         if (insertOnly) {
@@ -170,8 +174,8 @@ public class LcsTableMergeRel
             rowType =
                 getCluster().getTypeFactory().createJoinType(
                     new RelDataType[] {
-                        createBitmapEntryRowType(!updateOnly),
-                    table.getRowType()
+                        createRidRowType(!updateOnly),
+                        table.getRowType()
                     });
         }
         return rowType;
@@ -181,148 +185,273 @@ public class LcsTableMergeRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FennelRel childFennelRel = (FennelRel) getChild();
-        FemExecutionStreamDef input =
+        FemExecutionStreamDef childInput =
             implementor.visitFennelChild(childFennelRel);
 
         CwmTable table = (CwmTable) lcsTable.getCwmColumnSet();
         FarragoRepos repos = FennelRelUtil.getRepos(this);
         LcsIndexGuide indexGuide = lcsTable.getIndexGuide();
-        FemLocalIndex deletionIndex =
-            FarragoCatalogUtil.getDeletionIndex(repos, table);
 
         // Setup the execution stream as follows:
         //
-        //                              Reshape -------> Insert
-        //                                 /                 \
-        // ChildInput -> Buffer -> Splitter                Barrier
-        //                                 \                 /
-        //                              Reshape -> Sort -> Delete
+        //          ChildInput
+        //              |
+        //         SourceBuffer
+        //              |
+        //          RidSplitter
+        //          /        \
+        //       NotNull     Null
+        //       Reshape    Reshape
+        //          |           |
+        //          |     NullRidBuffer
+        //          \         /
+        //             Merge
+        //               |
+        //       InsertDeleteSplitter
+        //           /        \
+        //     InsertReshape DeleteReshape
+        //          |           |
+        //          |        Distinct
+        //          |           |
+        //     ClusterAppends  Sort
+        //          |           |
+        //           \        Delete
+        //            \        /
+        //          InsertBarrier
+        //                |
+        //          Bitmap Appends              
         //
-        // If there only an INSERT substatement, the splitter, the
-        // Reshape/Sort/Delete substream, and the Reshape before the INSERT
-        // are not necessary.
+        // 1) SourceBuffer is used to buffer the source rows so reading of the
+        //    target rows doesn't conflict with writing the target table.
+        // 2) The RidSplitter, NotNullReshape, NullReshape, NullRidBuffer,
+        //    Merge substream is used to rearrange the order of the source rows
+        //    so rows with null target rids (corresponding to new insert rows)
+        //    appear afterrows with non-null target rids (corresponding to
+        //    update rows).  NotNullReshape filters on rows where the target
+        //    rids are non-null while NullReshape filters on rows where the
+        //    target rids are null.  The NullRidBuffer is needed to buffer up
+        //    the rows with null rids values so all rows with non-null rid
+        //    values can be produced by the Merge before the null ones.
+        // 3) The substream starting at InsertDeleteSplitter splits the source
+        //    rows so deletion rids are passed to the left and insert rows
+        //    (both new rows and modified rows) are passed to the right.
+        // 4) If this is an INSERT-only or UPDATE-only merge, then the
+        //    substream described in #2 above is omitted.
+        // 5) If this is an INSERT-only merge, then the substream described in
+        //    #3 above omits the deletion substream. 
 
-        FemBufferingTupleStreamDef buffer = newInputBuffer(repos);
-        implementor.addDataFlowFromProducerToConsumer(input, buffer);
+        FemBufferingTupleStreamDef sourceBuffer = newInputBuffer(repos);
+        implementor.addDataFlowFromProducerToConsumer(childInput, sourceBuffer);
 
-        FemSplitterStreamDef splitter;
-        FemExecutionStreamDef insertProducer;
+        // if MERGE with both insert and update, create the substream to
+        // separate the non-null rids from the null rids; then connect that
+        // to the splitter that separates the insert and delete substreams
+        FemSplitterStreamDef insertDeleteSplitter;
+        FemExecutionStreamDef insertDeleteProducer;
         if (insertOnly) {
-            splitter = null;
-            insertProducer = buffer;
+            insertDeleteSplitter = null;
+            insertDeleteProducer = sourceBuffer;
         } else {
-            splitter = indexGuide.newSplitter((SingleRel) childFennelRel);
-            implementor.addDataFlowFromProducerToConsumer(buffer, splitter);
-            insertProducer = splitter;
-        }
-
-        // create the delete substream
-        FemLbmSplicerStreamDef deleter = null;
-        if (!insertOnly) {
-            // if we only have an UPDATE substatement, null rids have already
-            // been filtered out
-            boolean compRid;
-            CompOperatorEnum compOp;
+            FemExecutionStreamDef splitterInput;
             if (updateOnly) {
-                compRid = false;
-                compOp = CompOperatorEnum.COMP_NOOP;
+                splitterInput = sourceBuffer;
             } else {
-                compRid = true;
-                compOp = CompOperatorEnum.COMP_NE;
+                splitterInput =
+                    createRidSplitterStream(
+                        implementor,
+                        indexGuide,
+                        childFennelRel,
+                        sourceBuffer);
             }
-            FemReshapeStreamDef deleteReshape =
-                newMergeReshape(
-                    compRid,
-                    compOp,
-                    true,
-                    childFennelRel);
+            insertDeleteSplitter =
+                indexGuide.newSplitter(childFennelRel.getRowType());
             implementor.addDataFlowFromProducerToConsumer(
-                splitter,
-                deleteReshape);
-            Double estimatedNumRows = RelMetadataQuery.getRowCount(getChild());
-            if (estimatedNumRows != null && !updateOnly) {
-                // TODO zfong 9/7/06 - In the case of a non-update only
-                // merge, arbitrarily assume that half the source rows are
-                // to be updated and half are inserted.  We can get a
-                // better estimate by converting the source join from an
-                // outer join to an inner join and getting the rowcount
-                // from that inner join.
-                estimatedNumRows = estimatedNumRows / 2;
-            }
-            FemSortingStreamDef sortingStream =
-                indexGuide.newSorter(deletionIndex, estimatedNumRows);
-            implementor.addDataFlowFromProducerToConsumer(
-                deleteReshape,
-                sortingStream);
-            // setup a splicer that ignores duplicate rid entries; this is
-            // needed because we currently do not enforce (via uniqueness
-            // constraints) the ANSI SQL requirement that there be only
-            // one source row for every target row; since this constraint
-            // is not enforced, it's possible for duplicate target rid
-            // values to be generated; therefore, we want splicer to ignore
-            // these duplicates when inserting rid values into the deletion
-            // index
-            deleter = indexGuide.newSplicer(this, deletionIndex, 0, true);
-            implementor.addDataFlowFromProducerToConsumer(
-                sortingStream,
-                deleter);
+                splitterInput,
+                insertDeleteSplitter);
+            insertDeleteProducer = insertDeleteSplitter;
         }
-
-        // create the insert substream
+        
+        // create the cluster append substream
         FemExecutionStreamDef appendProducer;
         if (insertOnly) {
-            appendProducer = insertProducer;
+            appendProducer = insertDeleteProducer;
         } else {
             FemReshapeStreamDef insertReshape =
-                newMergeReshape(
+                createMergeReshape(
                     false,
                     CompOperatorEnum.COMP_NOOP,
-                    false,
+                    ReshapeProjectionType.PROJECT_NONRIDS,
                     childFennelRel);
             implementor.addDataFlowFromProducerToConsumer(
-                insertProducer,
+                insertDeleteProducer,
                 insertReshape);
             appendProducer = insertReshape;
         }
-        LcsAppendStreamDef appendStreamDef =
-            new LcsAppendStreamDef(repos, lcsTable, appendProducer, this);
-        FemExecutionStreamDef appendSubStream =
-            appendStreamDef.toStreamDef(implementor);
-
-        FemBarrierStreamDef barrier;
-        if (insertOnly) {
-            barrier =
-                indexGuide.newBarrier(
-                    this,
-                    LcsIndexGuide.BarrierReturnFirstInput);
-        } else {
-            barrier =
-                indexGuide.newBarrier(
-                    this,
-                    LcsIndexGuide.BarrierReturnAllInputs);
-            implementor.addDataFlowFromProducerToConsumer(deleter, barrier);
+        estimatedNumRows = RelMetadataQuery.getRowCount(getChild());
+        if (estimatedNumRows != null && !updateOnly) {
+            // TODO zfong 9/7/06 - In the case of a non-update only
+            // merge, arbitrarily assume that half the source rows are
+            // to be updated and half are inserted.  We can get a
+            // better estimate by converting the source join from an
+            // outer join to an inner join and getting the rowcount
+            // from that inner join.
+            estimatedNumRows = estimatedNumRows / 2;
         }
-        implementor.addDataFlowFromProducerToConsumer(appendSubStream, barrier);
+        LcsAppendStreamDef appendStreamDef =
+            new LcsAppendStreamDef(
+                repos,
+                lcsTable,
+                appendProducer,
+                this,
+                estimatedNumRows);
+        FemBarrierStreamDef clusterAppends =
+            appendStreamDef.createClusterAppendStreams(implementor);
 
-        return barrier;
+        // create the delete substream, unless this is an INSERT only merge
+        int writeRowCountParamId = 0;
+        FemLbmSplicerStreamDef deleter = null;
+        if (!insertOnly) {
+            FennelRelParamId fennelParamId = implementor.allocateRelParamId();
+            writeRowCountParamId =
+                implementor.translateParamId(fennelParamId).intValue();
+            deleter =
+                createDeleteStream(
+                    repos,
+                    implementor,
+                    indexGuide,
+                    appendStreamDef,
+                    childFennelRel,
+                    insertDeleteSplitter,
+                    writeRowCountParamId);
+        }
+       
+        // create the barrier that reconnects the cluster appends and the
+        // delete; if there are no indexes, then this is the final barrier,
+        // in which case the barrier needs to be setup to receive the
+        // deletion rowcount
+        FemBarrierStreamDef insertBarrier;
+        if (insertOnly) {
+            insertBarrier = clusterAppends;
+        } else {
+            RelDataType barrierOutputType;
+            int dynParam;
+            if (FarragoCatalogUtil.getUnclusteredIndexes(repos, table).size()
+                > 0)
+            {
+                barrierOutputType = indexGuide.getUnclusteredInputType();
+                dynParam = 0;
+            } else {
+                barrierOutputType = getRowType();
+                dynParam = writeRowCountParamId;
+            }
+            insertBarrier =
+                indexGuide.newBarrier(
+                    barrierOutputType,
+                    BarrierReturnModeEnum.BARRIER_RET_FIRST_INPUT,
+                    dynParam);         
+            implementor.addDataFlowFromProducerToConsumer(
+                clusterAppends,
+                insertBarrier);
+            implementor.addDataFlowFromProducerToConsumer(
+                deleter,
+                insertBarrier);
+        }
+        
+        // finally, create the bitmap append streams
+        return
+            appendStreamDef.createBitmapAppendStreams(
+                implementor,
+                insertBarrier,
+                writeRowCountParamId);
+    }
+    
+    /**
+     * Creates a substream that takes a input containing rid values.  Rearranges
+     * the input such that non-null rids are written to the output of the
+     * substream before the null rids.
+     * 
+     * @param implementor FennelRel implementor
+     * @param indexGuide index guide
+     * @param childFennelRel FennelRel corresponding to the source input for the
+     * MERGE
+     * @param sourceBuffer the stream def corresponding to the input into the
+     * substream to be created
+     * 
+     * @return a MergeStreamDef that outputs the rows with rows containing
+     * non-null rids appearing before rows with null rids
+     */
+    private FemMergeStreamDef createRidSplitterStream(
+        FennelRelImplementor implementor,
+        LcsIndexGuide indexGuide,
+        FennelRel childFennelRel,
+        FemBufferingTupleStreamDef sourceBuffer)
+    {
+        FemSplitterStreamDef ridSplitter =
+            indexGuide.newSplitter(childFennelRel.getRowType());
+        implementor.addDataFlowFromProducerToConsumer(
+            sourceBuffer,
+            ridSplitter);
+        
+        FemReshapeStreamDef notNullReshape =
+            createMergeReshape(
+                true,
+                CompOperatorEnum.COMP_NE,
+                ReshapeProjectionType.PROJECT_ALL,
+                childFennelRel);
+        implementor.addDataFlowFromProducerToConsumer(
+            ridSplitter,
+            notNullReshape);
+        
+        FemReshapeStreamDef nullReshape =
+            createMergeReshape(
+                true,
+                CompOperatorEnum.COMP_EQ,
+                ReshapeProjectionType.PROJECT_ALL,
+                childFennelRel);
+        implementor.addDataFlowFromProducerToConsumer(
+            ridSplitter,
+            nullReshape);
+        FarragoRepos repos = FennelRelUtil.getRepos(this);
+        FemBufferingTupleStreamDef nullRidBuffer = newInputBuffer(repos);
+        implementor.addDataFlowFromProducerToConsumer(
+            nullReshape,
+            nullRidBuffer);
+        
+        FemMergeStreamDef mergeStream = repos.newFemMergeStreamDef();
+        mergeStream.setSequential(true);
+        mergeStream.setPrePullInputs(false);
+        mergeStream.setOutputDesc(
+            FennelRelUtil.createTupleDescriptorFromRowType(
+                repos,
+                getCluster().getTypeFactory(),
+                childFennelRel.getRowType()));
+        implementor.addDataFlowFromProducerToConsumer(
+            notNullReshape,
+            mergeStream);
+        implementor.addDataFlowFromProducerToConsumer(
+            nullRidBuffer,
+            mergeStream);
+        
+        return mergeStream;     
     }
 
     /**
-     * Creates a Reshape execution stream for either the delete or insert
-     * portion of the overall MERGE execution stream
+     * Creates a Reshape execution stream used within the MERGE execution stream
+     * that optionally compares the rid column in its input to either null or
+     * non-null.  Also projects the input based on a specified parameter.
      *
      * @param compareRid true if the stream will be doing rid comparison
      * @param compOp the operator to use in the rid comparison
-     * @param projRids if true, project rids from input; otherwise, project all
-     * columns except the rid
-     * @param input input that will be reshaped
+     * @param projType the type of projection to be done (either project only
+     * the rid column, the non-null rid columns, or all columns)
+     * @param input FennelRel corresponding to the input that will be reshaped
      *
      * @return created Reshape execution stream
      */
-    FemReshapeStreamDef newMergeReshape(
+    private FemReshapeStreamDef createMergeReshape(
         boolean compareRid,
         CompOperator compOp,
-        boolean projRids,
+        ReshapeProjectionType projType,
         FennelRel input)
     {
         FarragoRepos repos = FennelRelUtil.getRepos(this);
@@ -365,27 +494,34 @@ public class LcsTableMergeRel
 
         Integer [] outputProj;
         RelDataType outputRowType;
-        if (projRids) {
-            outputProj = FennelRelUtil.newIotaProjection(3);
+        if (projType == ReshapeProjectionType.PROJECT_RID) {
+            outputProj = new Integer [] { 0 };
 
             // rid needs to not be nullable in the output since the delete
             // (i.e., splicer) expects non-null rid values
-            outputRowType = createBitmapEntryRowType(false);
+            outputRowType = createRidRowType(false);
         } else {
-            int nNonRidFields = inputFields.length - 3;
+            int nFieldsNotProjected =
+                (projType == ReshapeProjectionType.PROJECT_NONRIDS) ? 1 : 0;
+            int nFieldsProjected = inputFields.length - nFieldsNotProjected;
             outputProj =
                 FennelRelUtil.newBiasedIotaProjection(
-                    nNonRidFields,
-                    3);
-
-            RelDataType [] nonRidFieldTypes = new RelDataType[nNonRidFields];
-            String [] fieldNames = new String[nNonRidFields];
-            for (int i = 0; i < nNonRidFields; i++) {
-                nonRidFieldTypes[i] = inputFields[i + 3].getType();
-                fieldNames[i] = inputFields[i + 3].getName();
+                    nFieldsProjected,
+                    nFieldsNotProjected);
+            if (projType == ReshapeProjectionType.PROJECT_ALL) {
+                outputRowType = input.getRowType();
+            } else {
+                RelDataType [] projFieldTypes =
+                    new RelDataType[nFieldsProjected];
+                String [] fieldNames = new String[nFieldsProjected];
+                for (int i = 0; i < nFieldsProjected; i++) {
+                    projFieldTypes[i] =
+                        inputFields[i + nFieldsNotProjected].getType();
+                    fieldNames[i] = inputFields[i + nFieldsNotProjected].getName();
+                }
+                outputRowType =
+                    typeFactory.createStructType(projFieldTypes, fieldNames);
             }
-            outputRowType =
-                typeFactory.createStructType(nonRidFieldTypes, fieldNames);
         }
 
         reshape.setOutputProjection(
@@ -400,23 +536,15 @@ public class LcsTableMergeRel
     }
 
     /**
-     * Creates a rowtype corresponding to a bitmap entry. It consists of a rid
-     * followed by 2 varbinary's corresponding to the segment and descriptor in
-     * a bitmap entry.
-     *
+     * Creates a rowtype corresponding to a single rid column
+     * 
      * @param nullableRid if true, create the rid type column as nullable
      *
      * @return created rowtype
      */
-    private RelDataType createBitmapEntryRowType(boolean nullableRid)
+    private RelDataType createRidRowType(boolean nullableRid)
     {
         RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
-        RelDataType varBinaryType =
-            typeFactory.createTypeWithNullability(
-                typeFactory.createSqlType(
-                    SqlTypeName.Varbinary,
-                    LcsIndexGuide.LbmBitmapSegMaxSize),
-                true);
         RelDataType ridType;
         if (nullableRid) {
             ridType =
@@ -428,10 +556,67 @@ public class LcsTableMergeRel
         }
         RelDataType rowType =
             typeFactory.createStructType(
-                new RelDataType[] { ridType, varBinaryType, varBinaryType },
-                new String[] { "rid", "descriptor", "segment" });
+                new RelDataType[] { ridType },
+                new String[] { "rid" });
 
         return rowType;
+    }
+    
+    /**
+     * Creates the substream for deleting rows for the MERGE statement
+     * 
+     * @param repos repository
+     * @param implementor FennelRel implementor
+     * @param indexGuide index guide
+     * @param appendStreamDef the append stream that this delete stream is
+     * associated with
+     * @param childFennelRel FennelRel corresponding to the source input for
+     * the MERGE
+     * @param splitter the splitter producer that passes rows to the delete
+     * substream
+     * @param writeRowCountParamId parameter id that the splicer stream will
+     * use to write out its rowcount to be read by a downstream barrier
+     * 
+     * @return stream def for the deletion substream
+     */
+    private FemLbmSplicerStreamDef createDeleteStream(
+        FarragoRepos repos,
+        FennelRelImplementor implementor,
+        LcsIndexGuide indexGuide,
+        LcsAppendStreamDef appendStreamDef,
+        FennelRel childFennelRel,
+        FemSplitterStreamDef splitter,
+        int writeRowCountParamId)        
+    {
+        // if we only have an UPDATE substatement, null rids have already
+        // been filtered out, so the delete reshape stream only needs to
+        // project out the rid columns
+        boolean compRid;
+        CompOperatorEnum compOp;
+        if (updateOnly) {
+            compRid = false;
+            compOp = CompOperatorEnum.COMP_NOOP;
+        } else {
+            compRid = true;
+            compOp = CompOperatorEnum.COMP_NE;
+        }
+        FemReshapeStreamDef deleteReshape =
+            createMergeReshape(
+                compRid,
+                compOp,
+                ReshapeProjectionType.PROJECT_RID,
+                childFennelRel);
+        implementor.addDataFlowFromProducerToConsumer(
+            splitter,
+            deleteReshape);
+        
+        return
+            appendStreamDef.createDeleteRidStream(
+                implementor,
+                deleteReshape,
+                estimatedNumRows,
+                writeRowCountParamId,
+                true);
     }
 }
 

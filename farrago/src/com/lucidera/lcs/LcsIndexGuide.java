@@ -62,22 +62,6 @@ public class LcsIndexGuide
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final int LbmBitmapSegMaxSize = 512;
-    
-    /**
-     * Return the first input into the barrier
-     */
-    protected static final int BarrierReturnFirstInput = 0;
-    
-    /**
-     * All inputs into the barrier return the same rowcount, so any can be
-     * used as the return value
-     */
-    protected static final int BarrierReturnAnyInput = -1;
-    
-    /**
-     * Return all inputs in the barrier, one row per input
-     */
-    protected static final int BarrierReturnAllInputs = -2;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -700,7 +684,23 @@ public class LcsIndexGuide
         return typeFactory.createStructType(types, names);
     }
 
-    protected FemSplitterStreamDef newSplitter(SingleRel rel)
+    /**
+     * Creates the row data type of error records produced by a splicer 
+     * when there unique constraint violations. The row type generated 
+     * contains the same column types as the btree key [K1, K2, ..., RID]
+     * 
+     * @param uniqueIndex the unique index updated by the splicer
+     * 
+     * @return row data type for splicer error records
+     */
+    public RelDataType createSplicerErrorType(FemLocalIndex uniqueIndex) {
+        // get projections for [keys ..., rid]
+        int nKeys = uniqueIndex.getIndexedFeature().size();
+        Integer[] keyProj = FennelRelUtil.newIotaProjection(nKeys+1);
+        return createUnclusteredRowType(uniqueIndex, keyProj);
+    }
+
+    protected FemSplitterStreamDef newSplitter(RelDataType outputRowType)
     {
         FemSplitterStreamDef splitter = repos.newFemSplitterStreamDef();
 
@@ -708,30 +708,42 @@ public class LcsIndexGuide
             FennelRelUtil.createTupleDescriptorFromRowType(
                 repos,
                 typeFactory,
-                rel.getChild().getRowType()));
+                outputRowType));
         return splitter;
     }
 
-    protected FemBarrierStreamDef newBarrier(FennelRel rel, int rowCountInput)
+    protected FemBarrierStreamDef newBarrier(
+        RelDataType outputRowType,
+        BarrierReturnMode returnMode,
+        int deleteRowCountParamId)
     {
         FemBarrierStreamDef barrier = repos.newFemBarrierStreamDef();
 
-        // rowCountInput indicates which input stream or streams contain the
-        // row count that the barrier should produce
-        barrier.setRowCountInput(rowCountInput);
+        // returnMode indicates which input stream or streams contain the
+        // data that the barrier should produce
+        barrier.setReturnMode(returnMode);
+        
+        // if this is the final barrier in a MERGE statement, setup the
+        // barrier to receive the upstream deletion rowcount
+        if (deleteRowCountParamId > 0) {
+            FemDynamicParameter dynParam = repos.newFemDynamicParameter();
+            dynParam.setParameterId(deleteRowCountParamId);
+            barrier.getDynamicParameter().add(dynParam);
+        }
 
         barrier.setOutputDesc(
             FennelRelUtil.createTupleDescriptorFromRowType(
                 repos,
                 typeFactory,
-                rel.getRowType()));
+                outputRowType));
 
         return barrier;
     }
 
     protected FemLcsClusterAppendStreamDef newClusterAppend(
         FennelRel rel,
-        FemLocalIndex clusterIndex)
+        FemLocalIndex clusterIndex,
+        boolean hasIndexes)
     {
         FemLcsClusterAppendStreamDef clusterAppend =
             repos.newFemLcsClusterAppendStreamDef();
@@ -764,6 +776,9 @@ public class LcsIndexGuide
 
         clusterAppend.setClusterColProj(
             FennelRelUtil.createTupleProjection(repos, clusterColProj));
+        if (hasIndexes) {
+            clusterAppend.setOutputDesc(getUnclusteredInputDesc());
+        }
 
         return clusterAppend;
     }
@@ -799,9 +814,10 @@ public class LcsIndexGuide
     protected LcsCompositeStreamDef newBitmapAppend(
         FennelRel rel,
         FemLocalIndex index,
+        FemLocalIndex deletionIndex,
         FennelRelImplementor implementor,
         boolean createIndex,
-        FennelRelParamId dynParamId)
+        FennelRelParamId insertDynParamId)
     {
         // create the streams
         FemExecutionStreamDef generator =
@@ -809,14 +825,15 @@ public class LcsIndexGuide
                 rel,
                 index,
                 createIndex,
-                implementor.translateParamId(dynParamId).intValue());
-        FemExecutionStreamDef sorter = newSorter(index, null);
+                implementor.translateParamId(insertDynParamId).intValue());
+        FemExecutionStreamDef sorter = newSorter(index, null, false);
         FemExecutionStreamDef splicer =
             newSplicer(
                 rel,
                 index,
-                implementor.translateParamId(dynParamId).intValue(),
-                false);
+                deletionIndex,
+                implementor.translateParamId(insertDynParamId).intValue(),
+                0);
 
         // link them up
         implementor.addDataFlowFromProducerToConsumer(generator, sorter);
@@ -887,8 +904,19 @@ public class LcsIndexGuide
         return generator;
     }
 
+    /**
+     * Creates a sort streamDef for sorting bitmap entries
+     * 
+     * @param index index corresponding to the bitmap entries that will be
+     * sorted
+     * @param estimatedNumRows estimated number of input rows into the sort
+     * @param ridOnly true if this sort will only be used to sort single rid
+     * values
+     * 
+     * @return the created sort streamDef
+     */
     protected FemSortingStreamDef newSorter(
-        FemLocalIndex index, Double estimatedNumRows)
+        FemLocalIndex index, Double estimatedNumRows, boolean ridOnly)
     {
         FemSortingStreamDef sortingStream = repos.newFemSortingStreamDef();
 
@@ -898,7 +926,9 @@ public class LcsIndexGuide
         //
         sortingStream.setDistinctness(DistinctnessEnum.DUP_ALLOW);
         sortingStream.setKeyProj(createUnclusteredBTreeKeyProj(index));
-        sortingStream.setOutputDesc(createUnclusteredBTreeTupleDesc(index));
+        if (!ridOnly) {
+            sortingStream.setOutputDesc(createUnclusteredBTreeTupleDesc(index));
+        }
         // estimated number of rows in the sort input; if unknown, set to -1
         if (estimatedNumRows == null) {
             sortingStream.setEstimatedNumRows(-1);
@@ -911,20 +941,54 @@ public class LcsIndexGuide
     protected FemLbmSplicerStreamDef newSplicer(
         FennelRel rel,
         FemLocalIndex index,
+        FemLocalIndex deletionIndex,
         int insertRowCountParamId,
-        boolean ignoreDuplicates)
+        int writeRowCountParamId)
     {
         FemLbmSplicerStreamDef splicer = repos.newFemLbmSplicerStreamDef();
 
+        // Setup the index that splicer will be writing to
+        FemSplicerIndexAccessorDef indexAccessor =
+            repos.newFemSplicerIndexAccessorDef();
+        defineIndexAccessor(
+            indexAccessor,
+            rel,
+            index,
+            false,
+            true);
+        splicer.getIndexAccessor().add(indexAccessor);
+        
+        // Setup the deletion index if the splicer will be reading from it
+        if (deletionIndex != null) {
+            indexAccessor = repos.newFemSplicerIndexAccessorDef();
+            defineIndexAccessor(
+                indexAccessor,
+                rel,
+                deletionIndex,
+                false,
+                false);
+            splicer.getIndexAccessor().add(indexAccessor);
+        }
+        
         //
         // The splicer is the terminal stream of a bitmap stream set.
         // It's output type is the same as the rel's: the standard
         // Dml output type.
         //
-        defineIndexStream(splicer, rel, index, false, true);
-
         splicer.setInsertRowCountParamId(insertRowCountParamId);
-        splicer.setIgnoreDuplicates(ignoreDuplicates);
+        splicer.setWriteRowCountParamId(writeRowCountParamId);
+
+        // NOTE zfong 11/30/06 - Splicer may also write out rid values.
+        // As it turns out, the type of a rid is currently the same as a
+        // rowcount. 
+        RelDataType rowType = typeFactory.createStructType(
+            new RelDataType[] { typeFactory.createSqlType(SqlTypeName.Bigint) },
+            new String[] { "ROWCOUNT" });
+        splicer.setOutputDesc(
+            FennelRelUtil.createTupleDescriptorFromRowType(
+                repos,
+                typeFactory,
+                rowType));
 
         return splicer;
     }

@@ -33,6 +33,15 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct DiffluenceExecStreamParams : virtual public SingleInputExecStreamParams
 {
+    /**
+     * Output tuple descriptor.  Currently, all outputs must have the same
+     * descriptor.
+     */
+    TupleDescriptor outputTupleDesc;
+
+    TupleFormat outputTupleFormat;
+
+    explicit DiffluenceExecStreamParams();
 };
     
 /**
@@ -50,6 +59,12 @@ protected:
      * List of output buffer accessors.
      */
     std::vector<SharedExecStreamBufAccessor> outAccessors;
+
+    /**
+     * Output tuple descriptor.  Currently, all outputs must have the same
+     * descriptor.
+     */
+    TupleDescriptor outputTupleDesc;
 
 public:
     // implement ExecStream

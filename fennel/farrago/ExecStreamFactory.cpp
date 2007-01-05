@@ -130,8 +130,20 @@ void ExecStreamFactory::visit(ProxyBarrierStreamDef &streamDef)
 {
     BarrierExecStreamParams params;
     readTupleStreamParams(params, streamDef);
-    params.rowCountInput = streamDef.getRowCountInput();
+    params.returnMode = streamDef.getReturnMode();
+    readBarrierDynamicParams(params, streamDef);
     embryo.init(new BarrierExecStream(), params);
+}
+
+void ExecStreamFactory::readBarrierDynamicParams(
+    BarrierExecStreamParams &params,
+    ProxyBarrierStreamDef &streamDef)
+{
+    SharedProxyDynamicParameter dynamicParam = streamDef.getDynamicParameter();
+    for ( ; dynamicParam; ++dynamicParam) {
+        DynamicParamId p = (DynamicParamId) dynamicParam->getParameterId();
+        params.parameterIds.push_back(p);
+    }
 }
 
 void ExecStreamFactory::visit(ProxyBufferingTupleStreamDef &streamDef)
@@ -217,6 +229,8 @@ void ExecStreamFactory::visit(ProxyMergeStreamDef &streamDef)
     readTupleStreamParams(params, streamDef);
     // MergeExecStream doesn't support anything but sequential yet
     assert(streamDef.isSequential());
+    // prePullInputs parameter isn't actually supported yet
+    assert(!streamDef.isPrePullInputs());
     embryo.init(new MergeExecStream(), params);
 }
 
@@ -276,6 +290,8 @@ void ExecStreamFactory::visit(ProxySortingStreamDef &streamDef)
     CmdInterpreter::readTupleProjection(
         params.keyProj,
         streamDef.getKeyProj());
+    // TODO jvs 3-Dec-2006:  pass along streamDef.getDescendingProj() once
+    // btree can deal with it
     params.tupleDesc = params.outputTupleDesc;
     embryo.init(new BTreeSortExecStream(), params);
 }
@@ -284,6 +300,7 @@ void ExecStreamFactory::visit(ProxySplitterStreamDef &streamDef)
 {
     SplitterExecStreamParams params;
     readExecStreamParams(params, streamDef);
+    readTupleDescriptor(params.outputTupleDesc, streamDef.getOutputDesc());
     embryo.init(new SplitterExecStream(), params);
 }
 
@@ -433,7 +450,13 @@ void ExecStreamFactory::readBTreeStreamParams(
     ProxyIndexAccessorDef &streamDef)
 {
     assert(params.pCacheAccessor);
-    
+    readBTreeParams(params, streamDef);
+}
+
+void ExecStreamFactory::readBTreeParams(
+    BTreeParams &params,
+    ProxyIndexAccessorDef &streamDef)
+{
     params.segmentId = SegmentId(streamDef.getSegmentId());
     params.pageOwnerId = PageOwnerId(streamDef.getIndexId());
     params.pSegment = pDatabase->getSegmentById(params.segmentId);

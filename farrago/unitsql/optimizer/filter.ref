@@ -140,10 +140,84 @@
 '          FennelRenameRel(fieldNames=[[$f1, $f10]])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 0]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify fix for LER-2691 (incorrect IN list padding)
+0: jdbc:farrago:> -- requires Farrago personality because LucidDB aggregates 
+0: jdbc:farrago:> -- raggedy CHAR to VARCHAR
+0: jdbc:farrago:> create table test1(col varchar(2) not null primary key);
+0: jdbc:farrago:> insert into test1 values 'B', 'A1';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select col from test1
+. . . . . . . . > where col in (
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'B', 'A1', 'A1', 'A1');
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[=($t1, $t2)], COL=[$t0], $condition=[$t3])'
+'  IterCalcRel(expr#0..2=[{inputs}], $f0=[$t1], $f1=[$t2], ROW_VALUE=[$t0])'
+'    FennelToIteratorConverter'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'          FennelValuesRel(tuples=[[{ 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'B ' }, { 'A1' }, { 'A1' }, { 'A1' }]])'
+'        FennelBufferRel(inMemory=[false], multiPass=[true])'
+'          FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[[0, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TEST1], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select col from test1
+. . . . . . . . > where col in (
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'B', 'A1', 'A1', 'A1')
+. . . . . . . . > order by col;
+'COL'
+'A1'
+'B '
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table test2(col char(2) not null primary key);
+0: jdbc:farrago:> insert into test2 values 'B', 'A1';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select col from test2
+. . . . . . . . > where col in (
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'B', 'A1', 'A1', 'A1');
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[=($t1, $t2)], COL=[$t0], $condition=[$t3])'
+'  IterCalcRel(expr#0..2=[{inputs}], $f0=[$t1], $f1=[$t2], ROW_VALUE=[$t0])'
+'    FennelToIteratorConverter'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'          FennelValuesRel(tuples=[[{ 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'B ' }, { 'A1' }, { 'A1' }, { 'A1' }]])'
+'        FennelBufferRel(inMemory=[false], multiPass=[true])'
+'          FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[[0, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TEST2], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select col from test2
+. . . . . . . . > where col in (
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
+. . . . . . . . > 'A1', 'B', 'A1', 'A1', 'A1')
+. . . . . . . . > order by col;
+'COL'
+'A1'
+'B '
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table test1;
+0: jdbc:farrago:> drop table test2;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- not in and null value
 0: jdbc:farrago:> -- not in requires outer join
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan without implementation for 
@@ -157,10 +231,7 @@
 '        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 '      AggregateRel(groupCount=[1], agg#0=[MIN(1)])'
 '        ProjectRel($f0=[$0], $f1=[true])'
-'          UnionRel(all=[true])'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ValuesRel(tuples=[[{ 10 }]])'
+'          ValuesRel(tuples=[[{ 10 }, { null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select name from emps 
@@ -177,12 +248,7 @@
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
 '            FennelToIteratorConverter'
-'              FennelMergeRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                FennelRenameRel(fieldNames=[[EXPR$0]])'
-'                  FennelValuesRel(tuples=[[{ 10 }]])'
+'              FennelValuesRel(tuples=[[{ 10 }, { null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select name from emps 
 . . . . . . . . > where empno not in (10, null)
@@ -255,9 +321,7 @@
 '              OneRowRel'
 '            ProjectRel(EXPR$0=[*(10, 2)])'
 '              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ValuesRel(tuples=[[{ 10 }]])'
+'            ValuesRel(tuples=[[{ 10 }, { null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select name from emps
@@ -350,11 +414,8 @@
 '                IteratorToFennelConverter'
 '                  IterCalcRel(expr#0=[{inputs}], expr#1=[20], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
 '                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
 '                FennelRenameRel(fieldNames=[[EXPR$0]])'
-'                  FennelValuesRel(tuples=[[{ 10 }]])'
+'                  FennelValuesRel(tuples=[[{ 10 }, { null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select name from emps
 . . . . . . . . > where empno not in (10+10, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10*2, 10, null)
@@ -376,47 +437,7 @@
 '        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 '      AggregateRel(groupCount=[1], agg#0=[MIN(1)])'
 '        ProjectRel($f0=[$0], $f1=[true])'
-'          UnionRel(all=[true])'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
-'            ProjectRel(EXPR$0=[CAST(null):INTEGER])'
-'              OneRowRel'
+'          ValuesRel(tuples=[[{ null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select name from emps
@@ -433,67 +454,7 @@
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
 '            FennelToIteratorConverter'
-'              FennelMergeRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
-'                IteratorToFennelConverter'
-'                  IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], EXPR$0=[$t2])'
-'                    IterOneRowRel'
+'              FennelValuesRel(tuples=[[{ null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }, { null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select name from emps
 . . . . . . . . > where empno not in (null, null, null, null, null, null, null, null,null, null, null, null,null, null, null, null,null, null, null, null)
@@ -529,69 +490,5 @@
 'John'
 'Wilma'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- http://jira.lucidera.com/browse/LER-2691
-0: jdbc:farrago:> create table test1(col varchar(2));
-0: jdbc:farrago:> insert into test1 values 'B', 'A1';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . > select col from test1
-. . . . . . . . > where col in (
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'B', 'A1', 'A1', 'A1');
-'column0'
-'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COL) NOT NULL])'
-'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[RIGHTSEMI])'
-'      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ROW_VALUE, VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'        FennelValuesRel(tuples=[[{ 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'B ' }, { 'A1' }, { 'A1' }, { 'A1' }]])'
-'      LcsRowScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST1$COL]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select col from test1
-. . . . . . . . > where col in (
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'B', 'A1', 'A1', 'A1')
-. . . . . . . . > order by col;
-'COL'
-'A1'
-'B '
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table test2(col char(2));
-0: jdbc:farrago:> insert into test2 values 'B', 'A1';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . > select col from test2
-. . . . . . . . > where col in (
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'B', 'A1', 'A1', 'A1');
-'column0'
-'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COL) NOT NULL])'
-'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[RIGHTSEMI])'
-'      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ROW_VALUE, CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
-'        FennelValuesRel(tuples=[[{ 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'B ' }, { 'A1' }, { 'A1' }, { 'A1' }]])'
-'      LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$COL]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select col from test2
-. . . . . . . . > where col in (
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'A1', 'A1', 'A1', 'A1',
-. . . . . . . . > 'A1', 'B', 'A1', 'A1', 'A1')
-. . . . . . . . > order by col;
-'COL'
-'A1'
-'B '
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table test1;
-0: jdbc:farrago:> drop table test2;
 0: jdbc:farrago:> !quit

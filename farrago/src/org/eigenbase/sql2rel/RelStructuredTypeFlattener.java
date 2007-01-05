@@ -351,7 +351,8 @@ public class RelStructuredTypeFlattener
             }
             newCollations[i] =
                 new RelFieldCollation(
-                    getNewForOldInput(oldInput));
+                    getNewForOldInput(oldInput),
+                    oldCollations[i].getDirection());
         }
         SortRel newRel =
             new SortRel(

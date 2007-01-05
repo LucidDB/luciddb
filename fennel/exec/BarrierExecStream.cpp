@@ -23,6 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/BarrierExecStream.h"
+#include "fennel/exec/ExecStreamGraphImpl.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -31,25 +32,36 @@ void BarrierExecStream:: prepare(BarrierExecStreamParams const &params)
     TupleDescriptor outputTupleDesc;
     
     ConfluenceExecStream::prepare(params);
-
-    /*
-     * The output tuple from the producers should be the same, and the output
-     * from barrier should be the same as its input
-     */
+    returnMode = params.returnMode;
+    parameterIds = params.parameterIds;
     outputTupleDesc = inAccessors[0]->getTupleDesc();
 
-    for (int i = 1; i < inAccessors.size(); i ++) {
-        assert(inAccessors[0]->getTupleDesc() ==
-            inAccessors[i]->getTupleDesc());
-    }
+    // validate the input and output descriptors
     assert(outputTupleDesc == pOutAccessor->getTupleDesc());
-    
-    inputTuple.compute(outputTupleDesc);
-    outputTuple.compute(outputTupleDesc);
+    if (parameterIds.size() > 0) {
+        assert(outputTupleDesc.size() == 1);
+        dynParamVal.compute(outputTupleDesc);
+    }
+    if (!returnFirstInput()) {
+        for (uint i = 1; i < inAccessors.size(); i ++) {
+            assert(outputTupleDesc == inAccessors[i]->getTupleDesc());
+        }
+    }
+
+    if (returnAnyInput()) {
+        inputTuple.compute(outputTupleDesc);
+        compareTuple.compute(outputTupleDesc);
+    }
 
     outputTupleAccessor = &pOutAccessor->getScratchTupleAccessor();
-
-    rowCountInput = params.rowCountInput;
+    outputBufSize = outputTupleAccessor->getMaxByteCount();
+    uint nRows = parameterIds.size();
+    if (returnAllInputs()) {
+        nRows += inAccessors.size();
+    } else {
+        nRows += 1;
+    }
+    outputBufSize *= nRows;
 }
 
 void BarrierExecStream::open(bool restart)
@@ -58,13 +70,9 @@ void BarrierExecStream::open(bool restart)
     iInput = 0;
 
     if (!restart) {
-        uint bufSize = outputTupleAccessor->getMaxByteCount();
-        if (returnAllInputs()) {
-            bufSize *= inAccessors.size();
-        }
-        outputTupleBuffer.reset(new FixedBuffer[bufSize]);
-        outputTupleAccessor->setCurrentTupleBuf(outputTupleBuffer.get());
+        outputTupleBuffer.reset(new FixedBuffer[outputBufSize]);
     }
+    curOutputPos = 0;
     isDone = false;
 }
 
@@ -91,29 +99,7 @@ ExecStreamResult BarrierExecStream::execute(ExecStreamQuantum const &quantum)
         switch (inAccessors[iInput]->getState()) {
         case EXECBUF_OVERFLOW:
         case EXECBUF_NONEMPTY:
-            inAccessors[iInput]->unmarshalTuple(inputTuple);
-            if ((returnAnyInput() && iInput == 0) ||
-               (returnOneInput() && iInput == rowCountInput))
-            {
-                // copy input to output if this is the correct input stream
-                outputTupleAccessor->marshal(
-                    inputTuple, outputTupleBuffer.get());
-                outputTupleAccessor->unmarshal(outputTuple);
-            } else if (returnAnyInput()) {
-                // in the case where all inputs are supposed to return the
-                // same rowcount, make sure that is the case
-                permAssert((inAccessors[iInput]->getTupleDesc()).
-                            compareTuples(inputTuple, outputTuple) == 0);
-            } else if (returnAllInputs()) {
-                // copy the input to the apppropriate position in the output
-                // buffer
-                outputTupleAccessor->marshal(
-                    inputTuple,
-                    outputTupleBuffer.get() + iInput *
-                        outputTupleAccessor->getMaxByteCount());
-            }
-
-            inAccessors[iInput]->consumeTuple();
+            processInputTuple();
             // fall through
         case EXECBUF_UNDERFLOW:
             return EXECRC_BUF_UNDERFLOW;
@@ -128,16 +114,29 @@ ExecStreamResult BarrierExecStream::execute(ExecStreamQuantum const &quantum)
         }
     }
 
-    // Write out the output buffer and indicate OVERFLOW.
-    uint bufSize = outputTupleAccessor->getMaxByteCount();
-    if (returnAllInputs()) {
-        bufSize *= inAccessors.size();
+    // write out the data passed in via dynamic parameters
+    for (uint i = 0; i < parameterIds.size(); i++) {
+        DynamicParam const &param =
+            pDynamicParamManager->getParam(parameterIds[i]);
+        assert(param.getDesc() == inAccessors[0]->getTupleDesc()[0]);
+        dynParamVal[0] = param.getDatum();
+        outputTupleAccessor->marshal(
+            dynParamVal,
+            outputTupleBuffer.get() + curOutputPos);
+        curOutputPos += outputTupleAccessor->getCurrentByteCount();
     }
+
+    // Write out the output buffer and indicate OVERFLOW.
     pOutAccessor->provideBufferForConsumption(
         outputTupleBuffer.get(), 
-        outputTupleBuffer.get() + bufSize);
+        outputTupleBuffer.get() + outputBufSize);
 
+    // close the producers to free up resources
+    ExecStreamGraphImpl &graphImpl =
+        dynamic_cast<ExecStreamGraphImpl&>(getGraph());
+    graphImpl.closeProducers(getStreamId());
     isDone = true;
+
     return EXECRC_BUF_OVERFLOW;
 }
 
@@ -151,6 +150,58 @@ void BarrierExecStream::closeImpl()
 {
     ConfluenceExecStream::closeImpl();
     outputTupleBuffer.reset();
+}
+
+void BarrierExecStream::processInputTuple()
+{
+    switch (returnMode) {
+
+    case BARRIER_RET_FIRST_INPUT:
+    case BARRIER_RET_ANY_INPUT:
+        // copy input to output if first input
+        if (iInput == 0) {
+            curOutputPos +=
+                copyInputData(outputTupleBuffer.get(), inAccessors[iInput]);
+            outputTupleAccessor->setCurrentTupleBuf(outputTupleBuffer.get());
+            outputTupleAccessor->unmarshal(compareTuple);
+        } else if (returnAnyInput()) {
+            // sanity check in the case where all inputs are supposed to
+            // return the same output -- make sure that is the case
+            inAccessors[iInput]->unmarshalTuple(inputTuple);
+            permAssert(
+                (inAccessors[iInput]->getTupleDesc()).compareTuples(
+                    inputTuple, compareTuple) == 0);
+        } else {
+            inAccessors[iInput]->accessConsumptionTuple();
+        }
+        break;
+
+    case BARRIER_RET_ALL_INPUTS:
+        // copy the entire input tuple to the apppropriate position in
+        // the output buffer
+        curOutputPos +=
+            copyInputData(
+                outputTupleBuffer.get() + curOutputPos,
+                inAccessors[iInput]);
+        break;
+
+    default:
+        permAssert(false);
+    }
+
+    inAccessors[iInput]->consumeTuple();
+}
+
+uint BarrierExecStream::copyInputData(
+    PBuffer destBuffer,
+    SharedExecStreamBufAccessor &pInAccessor)
+{
+    uint nBytes = pInAccessor->accessConsumptionTuple().getCurrentByteCount();
+    memcpy(
+        destBuffer,
+        pInAccessor->getConsumptionStart(),
+        nBytes);
+    return nBytes;
 }
 
 FENNEL_END_CPPFILE("$Id$");

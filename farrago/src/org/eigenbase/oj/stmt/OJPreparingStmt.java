@@ -109,6 +109,11 @@ public abstract class OJPreparingStmt
 
     //~ Methods ----------------------------------------------------------------
 
+    public RelOptSchema getRelOptSchema()
+    {
+        return connection.getRelOptSchema();
+    }
+    
     public Environment getEnvironment()
     {
         return env;

@@ -69,6 +69,10 @@
     <text>Cache scratch memory exhausted</text>
   </message>
 
+  <message id="440080" name="uniqueConstraintViolated">
+    <text>Unique constraint violation</text>
+  </message>
+
   <!-- message id range 441000-441999 reserved for external data wrapper -->
 
   <!-- message id range 441900-441999 reserved for flatfile data wrapper -->

@@ -22,6 +22,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/lucidera/bitmap/LbmSegmentReader.h"
+#include "fennel/lucidera/bitmap/LbmTupleReader.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -29,7 +30,18 @@ void LbmSegmentReaderBase::init(
     SharedExecStreamBufAccessor &pInAccessorInit,
     TupleData &bitmapSegTuple)
 {
-    pInAccessor = pInAccessorInit;
+    LbmStreamTupleReader *pNewReader = new LbmStreamTupleReader();
+    pNewReader->init(pInAccessorInit, bitmapSegTuple);
+    SharedLbmTupleReader pTupleReader(pNewReader);
+
+    init(pTupleReader, bitmapSegTuple);
+}
+
+void LbmSegmentReaderBase::init(
+    SharedLbmTupleReader &pTupleReaderInit,
+    TupleData &bitmapSegTuple)
+{
+    pTupleReader = pTupleReaderInit;
     pBitmapSegTuple = &bitmapSegTuple;
     iSrid = bitmapSegTuple.size() - 3;
     iSegmentDesc = iSrid + 1;
@@ -45,19 +57,10 @@ void LbmSegmentReaderBase::init(
 
 ExecStreamResult LbmSegmentReaderBase::readBitmapSegTuple()
 {
-    if (pInAccessor->getState() == EXECBUF_EOS) {
-        return EXECRC_EOS;
+    ExecStreamResult rc = pTupleReader->read(pBitmapSegTuple);
+    if (rc != EXECRC_YIELD) {
+        return rc;
     }
-
-    // consume the previous input if there was one
-    if (pInAccessor->isTupleConsumptionPending()) {
-        pInAccessor->consumeTuple();
-    }
-    if (!pInAccessor->demandData()) {
-        return EXECRC_BUF_UNDERFLOW;
-    }
-
-    pInAccessor->unmarshalTuple(*pBitmapSegTuple);
 
     // extract starting rid and compute its equivalent byte segment number
     startRID = *reinterpret_cast<LcsRid const *>

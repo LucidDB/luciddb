@@ -31,6 +31,7 @@ import com.lucidera.runtime.*;
 import com.lucidera.type.*;
 
 import java.io.*;
+import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -134,11 +135,6 @@ public class LucidDbSessionPersonality
         if (feature == featureResource.SQLFeature_F312) {
             return true;
         }
-
-        // LucidDB doesn't support ORDER BY DESC...yet
-        if (feature == featureResource.SQLConformance_OrderByDesc){
-            return false;
-        }
         
         return super.supportsFeature(feature);
     }
@@ -241,17 +237,25 @@ public class LucidDbSessionPersonality
         }
         
         // Execute rules that are needed to do proper join optimization:
-        // 1) Pull up projects above joins to maximize the number of join
+        // 1) Push down filters so they're closest to the RelNode they apply to.
+        //    This also needs to be done before the pull project rules because
+        //    filters need to be pushed into joins in order for the pull up
+        //    project rules to properly determine whether projects can be pulled
+        //    up.
+        // 2) Pull up projects above joins to maximize the number of join
         //    factors.
-        // 2) Push the projects back down so row scans are projected and also so
+        // 3) Push the projects back down so row scans are projected and also so
         //    we can determine which fields are projected above each join.
-        // 3) Push down filters so they're closest to the RelNode they apply
-        //    to.
-        // 4) Convert the join inputs into MultiJoinRels and also pull projects
+        // 4) Push down filters a second time to push filters past any projects
+        //    that were pushed down.
+        // 5) Convert the join inputs into MultiJoinRels and also pull projects
         //    back up, but only the ones above joins so we preserve projects
         //    on top of row scans but maximize the number of join factors.
-        // 5) Optimize join ordering.
+        // 6) Optimize join ordering.
    
+        // Push down filters
+        applyPushDownFilterRules(builder);
+        
         // Pull up projects
         builder.addGroupBegin();      
         builder.addRuleInstance(new RemoveTrivialProjectRule());
@@ -270,25 +274,14 @@ public class LucidDbSessionPersonality
         // Push the projects back down
         applyPushDownProjectRules(builder);
         
-        // Push filters down
-        builder.addGroupBegin();
-        builder.addRuleInstance(new PushFilterPastSetOpRule());
-        builder.addRuleInstance(new PushFilterPastProjectRule());
-        builder.addRuleInstance(
-            new PushFilterPastJoinRule(
-                new RelOptRuleOperand(
-                    FilterRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(JoinRel.class, null)
-                    }),
-                "with filter above join"));
-        builder.addRuleInstance(
-            new PushFilterPastJoinRule(
-                new RelOptRuleOperand(JoinRel.class, null),
-                "without filter above join"));      
-        // merge filters
-        builder.addRuleInstance(new MergeFilterRule());
-        builder.addGroupEnd();     
+        // Push filters down again after pulling and pushing projects
+        applyPushDownFilterRules(builder);
+        
+        // Merge any projects that are now on top of one another as a result
+        // of pushing filters.  This ensures that the subprogram below fires
+        // the 3 rules described in lockstep fashion on only the nodes related
+        // to joins.
+        builder.addRuleInstance(new MergeProjectRule(true));
 
         // Convert 2-way joins to n-way joins.  Do the conversion bottom-up
         // so once a join is converted to a MultiJoinRel, you're ensured that
@@ -298,7 +291,7 @@ public class LucidDbSessionPersonality
         // projects, we need to also merge any projects we generate as a
         // result of the pullup.
         //
-        // These two rules are applied within a subprogram so they can be
+        // These three rules are applied within a subprogram so they can be
         // applied one after the other in lockstep fashion.
         HepProgramBuilder subprogramBuilder = new HepProgramBuilder();
         subprogramBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
@@ -513,6 +506,33 @@ public class LucidDbSessionPersonality
      * 
      * @param builder HEP program builder
      */
+    private void applyPushDownFilterRules(HepProgramBuilder builder)
+    {
+        builder.addGroupBegin();
+        builder.addRuleInstance(new PushFilterPastSetOpRule());
+        builder.addRuleInstance(new PushFilterPastProjectRule());
+        builder.addRuleInstance(
+            new PushFilterPastJoinRule(
+                new RelOptRuleOperand(
+                    FilterRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(JoinRel.class, null)
+                    }),
+                "with filter above join"));
+        builder.addRuleInstance(
+            new PushFilterPastJoinRule(
+                new RelOptRuleOperand(JoinRel.class, null),
+                "without filter above join"));      
+        // merge filters
+        builder.addRuleInstance(new MergeFilterRule());
+        builder.addGroupEnd();     
+    }
+    
+    /**
+     * Applies rules that push projects past various RelNodes.
+     * 
+     * @param builder HEP program builder
+     */
     private void applyPushDownProjectRules(HepProgramBuilder builder)
     {
         builder.addGroupBegin();
@@ -657,17 +677,43 @@ public class LucidDbSessionPersonality
     }
     
     // implement FarragoSessionPersonality
-    public void updateRowCounts(
+    public void getRowCounts(
+        ResultSet resultSet,
+        List<Long> rowCounts,
+        TableModificationRel.Operation tableModOp)
+        throws SQLException
+    {
+        boolean found = resultSet.next();
+        assert (found);
+        boolean nextRowCount = addRowCount(resultSet, rowCounts);
+        if (tableModOp == TableModificationRel.Operation.INSERT ||
+            tableModOp == TableModificationRel.Operation.MERGE)
+        {
+            // inserts may have a violation rowcount whereas merges may have
+            // both a violation count and a deletion count
+            if (nextRowCount) {
+                nextRowCount = addRowCount(resultSet, rowCounts);
+            }
+        }
+        if (tableModOp == TableModificationRel.Operation.MERGE) {
+            if (nextRowCount) {
+                nextRowCount = addRowCount(resultSet, rowCounts);
+            }
+        }
+        assert (!nextRowCount);
+    }
+    
+    // implement FarragoSessionPersonality
+    public long updateRowCounts(
         FarragoSession session,
         List<String> tableName,
-        long insertedRowCount,
-        long deletedRowCount,
-        long updateRowCount,
+        List<Long> rowCounts,
         TableModificationRel.Operation tableModOp)
-    {
+    {      
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         FarragoRepos repos = session.getRepos();
         boolean rollback = false;
+        long affectedRowCount = 0;
         try {
             repos.beginReposTxn(true);
             rollback = true;
@@ -684,15 +730,46 @@ public class LucidDbSessionPersonality
                     FemAbstractColumnSet.class);       
             long currRowCount = columnSet.getRowCount();
             long currDeletedRowCount = columnSet.getDeletedRowCount();
+            
+            // categorize the rowcounts returned by the statement
+            long insertedRowCount = 0;
+            long deletedRowCount = 0;
+            long violationRowCount = 0;
+            int numRowCounts = rowCounts.size();
+            if (tableModOp == TableModificationRel.Operation.DELETE) {
+                deletedRowCount = rowCounts.get(0);
+            } else if (tableModOp == TableModificationRel.Operation.INSERT) {
+                insertedRowCount = rowCounts.get(0);
+                if (numRowCounts == 2) {
+                    violationRowCount = rowCounts.get(1);
+                }
+            } else if (tableModOp == TableModificationRel.Operation.MERGE) {
+                insertedRowCount = rowCounts.get(0);
+                if (FarragoCatalogUtil.hasUniqueKey(columnSet)) {
+                    violationRowCount = rowCounts.get(1);
+                    if (numRowCounts == 3) {
+                        deletedRowCount = rowCounts.get(2);
+                    }
+                } else {
+                    if (numRowCounts == 2) {
+                        deletedRowCount = rowCounts.get(1);
+                    }
+                }              
+            } else {
+                assert(false);
+            }
                
             // update the rowcounts based on the operation
             if (tableModOp == TableModificationRel.Operation.INSERT) {
-                currRowCount += insertedRowCount;
+                affectedRowCount = insertedRowCount - violationRowCount;
+                currRowCount += affectedRowCount;               
             } else if (tableModOp == TableModificationRel.Operation.DELETE) {
+                affectedRowCount = deletedRowCount;
                 currRowCount -= deletedRowCount;
                 currDeletedRowCount += deletedRowCount;
             } else if (tableModOp == TableModificationRel.Operation.MERGE) {
-                long newRowCount = insertedRowCount - deletedRowCount;
+                affectedRowCount = insertedRowCount - violationRowCount;
+                long newRowCount = affectedRowCount - deletedRowCount;
                 currRowCount += newRowCount;
                 currDeletedRowCount += deletedRowCount;
                 session.getSessionVariables().setLong(
@@ -720,6 +797,8 @@ public class LucidDbSessionPersonality
             }
             stmtValidator.closeAllocation();
         }
+        
+        return affectedRowCount;
     }
     
     // implement FarragoSessionPersonality

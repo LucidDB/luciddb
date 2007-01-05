@@ -257,8 +257,8 @@ class CompositeExecStreamGenerator : public MockProducerExecStreamGenerator
 
 public:
     explicit CompositeExecStreamGenerator(
-            vector<shared_ptr<ColumnGenerator<int64_t> > > const &generators)
-        : generators(generators)
+        vector<shared_ptr<ColumnGenerator<int64_t> > > const &generatorsInit)
+        : generators(generatorsInit)
     {
         currentRow = uint(-1);
         currentCol = columnCount() - 1;

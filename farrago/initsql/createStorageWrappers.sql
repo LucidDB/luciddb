@@ -6,6 +6,19 @@
 -- create system-owned schema to hold objects like model extension plugin jars
 create or replace schema sys_boot.sys_boot;
 
+set schema 'sys_boot.sys_boot';
+set path 'sys_boot.sys_boot';
+
+-- add system objects not yet created
+create or replace procedure update_system_objects()
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoUpdateCatalogUDR.updateSystemObjects';
+
+call update_system_objects();
+
 -- create wrapper for access to MDR repositories
 create or replace foreign data wrapper sys_mdr
 library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'

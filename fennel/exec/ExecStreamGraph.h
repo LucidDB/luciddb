@@ -109,6 +109,15 @@ public:
         SharedLogicalTxn pTxn) = 0;
 
     /**
+     * Sets the ErrorTarget to which this graph's streams should
+     * send row errors.
+     *
+     * @param pErrorTarget error target
+     */
+    virtual void setErrorTarget(
+        SharedErrorTarget pErrorTarget) = 0;
+
+    /**
      * Sets the ScratchSegment from which this graph's streams should
      * allocate memory buffers.
      *
@@ -361,6 +370,13 @@ public:
      * @return true if graph has no cycles
      */
     virtual bool isAcyclic() = 0;
+
+    /**
+     * Close the producers of a stream given its stream id
+     *
+     * @param streamId stream id of the stream whose producers will be closed
+     */
+    virtual void closeProducers(ExecStreamId streamId) = 0;
 };
 
 inline ExecStreamScheduler *ExecStreamGraph::getScheduler() const

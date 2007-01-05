@@ -64,10 +64,10 @@ JNIEXPORT jlong JNICALL Java_net_sf_farrago_fennel_FennelStorage_executeJavaCmd
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage
  * Method:    tupleStreamGraphOpen
- * Signature: (JJLnet/sf/farrago/fennel/FennelJavaStreamMap;)V
+ * Signature: (JJLnet/sf/farrago/fennel/FennelJavaStreamMap;Lnet/sf/farrago/fennel/FennelJavaErrorTarget;)V
  */
 JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen
-  (JNIEnv *, jclass, jlong, jlong, jobject);
+  (JNIEnv *, jclass, jlong, jlong, jobject, jobject);
 
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage

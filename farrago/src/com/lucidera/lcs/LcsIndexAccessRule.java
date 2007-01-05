@@ -29,12 +29,14 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.stat.*;
 
 
 /**
@@ -271,28 +273,30 @@ class LcsIndexAccessRule
         LcsRowScanRel origRowScan)
     {
         if (residualColumnCount > 0) {
+            
+            RelStatSource tabStats =
+                RelMetadataQuery.getStatistics(origRowScan);
 
+            // sort the column filters based on selectivity first
+            ColumnFilter [] columnFilters =
+                new ColumnFilter[residualColumnCount];
             for (int i = 0; i < residualColumnCount; i++) {
-                SargBinding sargBinding = residualSargBindingList.get(i);    
+                SargBinding sargBinding = residualSargBindingList.get(i);
+                SargIntervalSequence sargSeq = 
+                    FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
                 RexInputRef fieldAccess = sargBinding.getInputRef();
-                residualColumns[i] = fieldAccess.getIndex();
+                columnFilters[i] =
+                    new ColumnFilter(fieldAccess.getIndex(), sargSeq, tabStats);
             }
-
-            Arrays.sort(residualColumns);
+            Arrays.sort(columnFilters, columnFilters[0]);
 
             FemAbstractAttribute [] searchColumns = new FemAbstractAttribute[1];
 
+            // then create the actual column filters in that sort order
             for (int i = 0; i < residualColumnCount; i++) {
-                SargBinding sargBinding = residualSargBindingList.get(i);
-                RexInputRef fieldAccess = sargBinding.getInputRef();
-                int idx =
-                    Arrays.binarySearch(
-                        residualColumns,
-                        fieldAccess.getIndex());
-                assert(idx >=0);
-
+                residualColumns[i] = columnFilters[i].columnNumber;
                 searchColumns[0] = 
-                    origRowScan.getColumnForFieldAccess(residualColumns[idx]);
+                    origRowScan.getColumnForFieldAccess(residualColumns[i]);
 
                 RelDataType keyRowType =
                     getSearchKeyRowType(
@@ -300,18 +304,15 @@ class LcsIndexAccessRule
                         origRowScan, 
                         searchColumns);
 
-                SargIntervalSequence sargSeq = 
-                    FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
-
                 List<SargIntervalSequence> sargSeqList = 
                     new ArrayList<SargIntervalSequence>();
-                sargSeqList.add(sargSeq);
+                sargSeqList.add(columnFilters[i].sargSeq);
 
-                valueRels[idx] =  FennelRelUtil.convertSargExpr(callTraits,
+                valueRels[i] =  FennelRelUtil.convertSargExpr(callTraits,
                     keyRowType,origRowScan.getCluster(), sargSeqList);
 
-                valueRels[idx] = mergeTraitsAndConvert(callTraits, 
-                    FennelRel.FENNEL_EXEC_CONVENTION, valueRels[idx]);
+                valueRels[i] = mergeTraitsAndConvert(callTraits, 
+                    FennelRel.FENNEL_EXEC_CONVENTION, valueRels[i]);
             }
         }
     }
@@ -621,6 +622,62 @@ class LcsIndexAccessRule
             this.matchedPos = matchedPos;
             this.sargSeqList = sargSeqList;
         }
+    }
+    
+    /**
+     * ColumnFilter is used to sort sargable column filters, based on the
+     * selectivity of the filters.  A ColumnFilter is represented by the
+     * column number and sargable interval sequence associated with the column.
+     */
+    private class ColumnFilter implements Comparator<ColumnFilter>
+    {
+        private int columnNumber;
+        private SargIntervalSequence sargSeq;
+        private RelStatSource tabStats;
+        
+        ColumnFilter(
+            int columnNumber,
+            SargIntervalSequence sargSeq,
+            RelStatSource tabStats)
+        {
+            this.columnNumber = columnNumber;
+            this.sargSeq = sargSeq;
+            this.tabStats = tabStats;
+        }
+        
+        public int compare(ColumnFilter cf1, ColumnFilter cf2)
+        {
+            // sort based on the selectivity if stats are available; otherwise,
+            // just sort on column number to ensure that results are
+            // deterministic
+            Double colSel1 = computeSelectivity(cf1);
+            Double colSel2 = computeSelectivity(cf2);
+            if (colSel1 != null && colSel2 != null) {
+                return
+                    (colSel1 < colSel2) ? -1 :
+                        ((colSel1 == colSel2) ? 0 : 1); 
+            } else {
+                return
+                    (cf1.columnNumber < cf2.columnNumber) ? -1 :
+                        ((cf1.columnNumber == cf2.columnNumber) ? 0 : 1);                  
+            }
+        }
+        
+        private Double computeSelectivity(ColumnFilter columnFilter)
+        {
+            RelStatColumnStatistics colStats = null;
+            if (tabStats != null) {
+                colStats =
+                    tabStats.getColumnStatistics(
+                        columnFilter.columnNumber,
+                        columnFilter.sargSeq);
+            }
+            Double colSel = null;
+            if (colStats != null) {
+                colSel = colStats.getSelectivity();
+            }
+            return colSel;
+        }       
     }
 }
 

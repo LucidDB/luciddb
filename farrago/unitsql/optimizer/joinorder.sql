@@ -362,3 +362,43 @@ SELECT DISTINCT AL1.CUST_SERV_ACCT_KEY
     AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
     AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY
     AND AL5.SAS_FNL_BIL_INDCR='Y' AND AL4.REVN_YR=1995;
+
+-- this query exercises ensuring that all projections are merged before
+-- converting joins to MultiJoinRels; the resulting query plan
+-- should NOT contain cartesian product joins
+explain plan for
+SELECT AL1.CU_ID, AL4.REVN_YR_MO, SUM(AL5.USG_VAL),
+ SUM(AL5.USG_BILL_THERM), SUM(AL5.USGC_BILL_KW_VAL),
+ SUM(AL5.RSD_SVC_BILG_AMT), AL5.RSD_CU_CNT
+FROM
+ CUST_SERV_ACCT AL1,
+ GEOG AL2,
+ SERV_PLAN AL3,
+ REVN_PRD AL4,
+ REVN_DTL_RAND AL5
+WHERE (AL5.REVN_YR_MO=AL4.REVN_YR_MO
+ AND AL2.GEOG_KEY=AL5.GEOG_KEY AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+ AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY)
+ AND (AL2.ST_CD='IN' AND AL2.GEOG_CNTY_DESC='LAPORTE'
+ AND AL4.REVN_YR=1995 AND AL3.SRVPLN_NM LIKE '%DUSK%'
+ AND AL3.SPO_NM LIKE '%SODIUM%'
+ AND AL3.RC_DESC='RESIDENTIAL - GENERAL SERVICE')
+GROUP BY AL1.CU_ID, AL4.REVN_YR_MO, AL5.RSD_CU_CNT;
+
+
+-- LER-3639 -- Projects should not be pulled up in this case because the
+-- projection expression is used as a join key.  If this query is not properly
+-- optimized, a cartesian join is incorrectly chosen.
+create table t1(t1a char(10));
+create table t2(t2a char(10));
+create table t3(t3a char(10));
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T1', 4841);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T2', 25199);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T3', 25199);
+explain plan for
+select * from (select t1a||t2a as a from t1, t2 where t1a = t2a) as x, t3
+where t3a = a;
+
+-- same query as above except without the subquery in the from clause
+explain plan for
+select * from t1, t2, t3 where t1a = t2a and t1a||t2a = t3a;

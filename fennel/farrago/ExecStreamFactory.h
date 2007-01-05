@@ -34,6 +34,7 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+class BarrierExecStreamParams;
 class BTreeExecStreamParams;
 class BTreeReadExecStreamParams;
 class BTreeScanExecStreamParams;
@@ -133,6 +134,10 @@ protected:
         FtrsTableWriterExecStreamParams &,
         ProxyTableWriterDef &);
 
+    void readBarrierDynamicParams(
+        BarrierExecStreamParams &,
+        ProxyBarrierStreamDef &);
+
 public:
     explicit ExecStreamFactory(
         SharedDatabase pDatabase,
@@ -185,6 +190,10 @@ public:
     void readBTreeStreamParams(
         BTreeExecStreamParams &,
         ProxyIndexAccessorDef &);    
+
+    void readBTreeParams(
+        BTreeParams &,
+        ProxyIndexAccessorDef &);
 
     void readBTreeSearchStreamParams(
         BTreeSearchExecStreamParams &,

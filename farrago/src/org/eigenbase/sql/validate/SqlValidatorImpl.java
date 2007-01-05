@@ -112,6 +112,16 @@ public class SqlValidatorImpl
      * cursors as inputs to table functions.
      */
     private final Set<SqlNode> cursorSet = new HashSet<SqlNode>();
+    
+    /**
+     * Stack of cursor maps that map a cursor (based on its position relative
+     * to other cursor parameters within a function call) to the SELECT 
+     * associated with the cursor.  A stack is needed to handle nested function
+     * calls.  The function call currently being validated is at the top of the
+     * stack.
+     */
+    protected final Stack<Map<Integer, SqlSelect>> cursorMapStack =
+        new Stack<Map<Integer, SqlSelect>>();
 
     private int nextGeneratedId;
     protected final RelDataTypeFactory typeFactory;
@@ -225,6 +235,23 @@ public class SqlValidatorImpl
     public void declareCursor(SqlSelect select)
     {
         cursorSet.add(select);
+        
+        // add the cursor to a map that maps the cursor to its select based on
+        // the position of the cursor relative to other cursors in that call
+        Map<Integer, SqlSelect> cursorMap = cursorMapStack.peek();
+        int numCursors = cursorMap.size();
+        cursorMap.put(numCursors, select);
+    }
+    
+    public void pushCursorMap()
+    {
+        Map<Integer, SqlSelect> cursorMap = new HashMap<Integer, SqlSelect>();
+        cursorMapStack.push(cursorMap);
+    }
+    
+    public void popCursorMap()
+    {
+        cursorMapStack.pop();
     }
 
     /**
@@ -993,6 +1020,11 @@ public class SqlValidatorImpl
         RelDataType type)
     {
         setValidatedNodeTypeImpl(node, type);
+    }
+    
+    public void removeValidatedNodeType(SqlNode node)
+    {
+        nodeToTypeMap.remove(node);
     }
 
     void setValidatedNodeTypeImpl(SqlNode node, RelDataType type)
@@ -2715,7 +2747,7 @@ public class SqlValidatorImpl
     }
 
     public void validateMerge(SqlMerge call)
-    {
+    {   
         SqlSelect sqlSelect = call.getSourceSelect();
         // REVIEW zfong 5/25/06 - Does an actual type have to be passed into
         // validateSelect()?
@@ -3086,6 +3118,14 @@ public class SqlValidatorImpl
             setOriginal(newExpr, expr);
         }
         return newExpr;
+    }
+    
+    public void validateColumnListParams(
+        SqlFunction function,
+        RelDataType [] argTypes,
+        SqlNode [] operands)
+    {
+        throw new UnsupportedOperationException();
     }
 
     //~ Inner Classes ----------------------------------------------------------
