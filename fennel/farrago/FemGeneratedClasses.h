@@ -289,14 +289,14 @@ class ProxyExecutionStreamDef
 : virtual public JniProxy
 {
 public:
-SharedProxyTupleDescriptor getOutputDesc();
-static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getOutputFlow();
-static jmethodID meth_getOutputFlow;
-SharedProxyExecStreamDataFlow getInputFlow();
-static jmethodID meth_getInputFlow;
 std::string getName();
 static jmethodID meth_getName;
+SharedProxyTupleDescriptor getOutputDesc();
+static jmethodID meth_getOutputDesc;
+SharedProxyExecStreamDataFlow getInputFlow();
+static jmethodID meth_getInputFlow;
+SharedProxyExecStreamDataFlow getOutputFlow();
+static jmethodID meth_getOutputFlow;
 };
 
 class ProxyTupleStreamDef
@@ -371,10 +371,10 @@ class ProxyCmdBeginTxn
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
-SharedProxyTxnHandle getResultHandle();
-static jmethodID meth_getResultHandle;
 bool isReadOnly();
 static jmethodID meth_isReadOnly;
+SharedProxyTxnHandle getResultHandle();
+static jmethodID meth_getResultHandle;
 };
 
 class ProxyCmdCheckpoint
@@ -427,12 +427,12 @@ class ProxyIndexCmd
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
-int64_t getSegmentId();
-static jmethodID meth_getSegmentId;
-int64_t getIndexId();
-static jmethodID meth_getIndexId;
 SharedProxyTupleDescriptor getTupleDesc();
 static jmethodID meth_getTupleDesc;
+int64_t getIndexId();
+static jmethodID meth_getIndexId;
+int64_t getSegmentId();
+static jmethodID meth_getSegmentId;
 SharedProxyTupleProjection getKeyProj();
 static jmethodID meth_getKeyProj;
 SharedProxyTupleProjection getLeafPageIdProj();
@@ -547,10 +547,10 @@ class ProxyColumnName
 : virtual public JniProxy
 {
 public:
-SharedProxyFlatFileTupleStreamDef getFlatFile();
-static jmethodID meth_getFlatFile;
 std::string getName();
 static jmethodID meth_getName;
+SharedProxyFlatFileTupleStreamDef getFlatFile();
+static jmethodID meth_getFlatFile;
 };
 
 class ProxyCorrelation
@@ -609,6 +609,8 @@ class ProxyExecStreamDataFlow
 : virtual public JniProxy
 {
 public:
+bool isImplicit();
+static jmethodID meth_isImplicit;
 SharedProxyExecutionStreamDef getProducer();
 static jmethodID meth_getProducer;
 SharedProxyExecutionStreamDef getConsumer();
@@ -619,38 +621,38 @@ class ProxyFlatFileTupleStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
-std::string getDataFilePath();
-static jmethodID meth_getDataFilePath;
-std::string getErrorFilePath();
-static jmethodID meth_getErrorFilePath;
-bool isHasHeader();
-static jmethodID meth_isHasHeader;
-int32_t getNumRowsScan();
-static jmethodID meth_getNumRowsScan;
-std::string getFieldDelimiter();
-static jmethodID meth_getFieldDelimiter;
-std::string getRowDelimiter();
-static jmethodID meth_getRowDelimiter;
-std::string getQuoteCharacter();
-static jmethodID meth_getQuoteCharacter;
-std::string getEscapeCharacter();
-static jmethodID meth_getEscapeCharacter;
-std::string getCalcProgram();
-static jmethodID meth_getCalcProgram;
-int32_t getCodePage();
-static jmethodID meth_getCodePage;
-bool isTranslationRecovery();
-static jmethodID meth_isTranslationRecovery;
-std::string getSubstituteCharacter();
-static jmethodID meth_getSubstituteCharacter;
-bool isTrim();
-static jmethodID meth_isTrim;
-bool isMapped();
-static jmethodID meth_isMapped;
 bool isLenient();
 static jmethodID meth_isLenient;
 SharedProxyColumnName getColumn();
 static jmethodID meth_getColumn;
+std::string getDataFilePath();
+static jmethodID meth_getDataFilePath;
+bool isMapped();
+static jmethodID meth_isMapped;
+bool isTrim();
+static jmethodID meth_isTrim;
+std::string getSubstituteCharacter();
+static jmethodID meth_getSubstituteCharacter;
+bool isTranslationRecovery();
+static jmethodID meth_isTranslationRecovery;
+int32_t getCodePage();
+static jmethodID meth_getCodePage;
+std::string getCalcProgram();
+static jmethodID meth_getCalcProgram;
+std::string getEscapeCharacter();
+static jmethodID meth_getEscapeCharacter;
+std::string getQuoteCharacter();
+static jmethodID meth_getQuoteCharacter;
+std::string getRowDelimiter();
+static jmethodID meth_getRowDelimiter;
+std::string getFieldDelimiter();
+static jmethodID meth_getFieldDelimiter;
+int32_t getNumRowsScan();
+static jmethodID meth_getNumRowsScan;
+bool isHasHeader();
+static jmethodID meth_isHasHeader;
+std::string getErrorFilePath();
+static jmethodID meth_getErrorFilePath;
 };
 
 class ProxyGenericStreamDef
@@ -677,12 +679,12 @@ class ProxyIndexAccessorDef
 public:
 int64_t getRootPageId();
 static jmethodID meth_getRootPageId;
-int64_t getSegmentId();
-static jmethodID meth_getSegmentId;
-int64_t getIndexId();
-static jmethodID meth_getIndexId;
 SharedProxyTupleDescriptor getTupleDesc();
 static jmethodID meth_getTupleDesc;
+int64_t getIndexId();
+static jmethodID meth_getIndexId;
+int64_t getSegmentId();
+static jmethodID meth_getSegmentId;
 };
 
 class ProxyIndexStreamDef
@@ -715,12 +717,12 @@ bool isOuterJoin();
 static jmethodID meth_isOuterJoin;
 bool isUniqueKey();
 static jmethodID meth_isUniqueKey;
-SharedProxyTupleProjection getInputKeyProj();
-static jmethodID meth_getInputKeyProj;
-SharedProxyTupleProjection getInputJoinProj();
-static jmethodID meth_getInputJoinProj;
 SharedProxyTupleProjection getInputDirectiveProj();
 static jmethodID meth_getInputDirectiveProj;
+SharedProxyTupleProjection getInputJoinProj();
+static jmethodID meth_getInputJoinProj;
+SharedProxyTupleProjection getInputKeyProj();
+static jmethodID meth_getInputKeyProj;
 };
 
 class ProxyIndexWriterDef
@@ -729,10 +731,10 @@ class ProxyIndexWriterDef
 public:
 SharedProxyTupleProjection getInputProj();
 static jmethodID meth_getInputProj;
-Distinctness getDistinctness();
-static jmethodID meth_getDistinctness;
 bool isUpdateInPlace();
 static jmethodID meth_isUpdateInPlace;
+Distinctness getDistinctness();
+static jmethodID meth_getDistinctness;
 SharedProxyTableWriterDef getTableWriter();
 static jmethodID meth_getTableWriter;
 };
@@ -751,10 +753,10 @@ class ProxyJavaTransformStreamDef
 public:
 std::string getJavaClassName();
 static jmethodID meth_getJavaClassName;
-std::string getReserved();
-static jmethodID meth_getReserved;
 int32_t getStreamId();
 static jmethodID meth_getStreamId;
+std::string getReserved();
+static jmethodID meth_getReserved;
 };
 
 class ProxyLbmBitOpStreamDef
@@ -781,12 +783,12 @@ class ProxyLcsRowScanStreamDef
 public:
 SharedProxyTupleProjection getOutputProj();
 static jmethodID meth_getOutputProj;
-bool isFullScan();
-static jmethodID meth_isFullScan;
-bool isHasExtraFilter();
-static jmethodID meth_isHasExtraFilter;
 SharedProxyTupleProjection getResidualFilterColumns();
 static jmethodID meth_getResidualFilterColumns;
+bool isHasExtraFilter();
+static jmethodID meth_isHasExtraFilter;
+bool isFullScan();
+static jmethodID meth_isFullScan;
 SharedProxyLcsClusterScanDef getClusterScan();
 static jmethodID meth_getClusterScan;
 };
@@ -859,10 +861,10 @@ class ProxyLbmUnionStreamDef
 public:
 int32_t getRidLimitParamId();
 static jmethodID meth_getRidLimitParamId;
-int32_t getConsumerSridParamId();
-static jmethodID meth_getConsumerSridParamId;
 int32_t getSegmentLimitParamId();
 static jmethodID meth_getSegmentLimitParamId;
+int32_t getConsumerSridParamId();
+static jmethodID meth_getConsumerSridParamId;
 };
 
 class ProxyLcsClusterAppendStreamDef
@@ -903,22 +905,22 @@ bool isLeftOuter();
 static jmethodID meth_isLeftOuter;
 SharedProxyTupleProjection getLeftKeyProj();
 static jmethodID meth_getLeftKeyProj;
-SharedProxyTupleProjection getRightKeyProj();
-static jmethodID meth_getRightKeyProj;
-int64_t getNumBuildRows();
-static jmethodID meth_getNumBuildRows;
-int64_t getCndBuildKeys();
-static jmethodID meth_getCndBuildKeys;
-bool isLeftInner();
-static jmethodID meth_isLeftInner;
-bool isRightInner();
-static jmethodID meth_isRightInner;
-bool isRightOuter();
-static jmethodID meth_isRightOuter;
-bool isSetopDistinct();
-static jmethodID meth_isSetopDistinct;
 bool isSetopAll();
 static jmethodID meth_isSetopAll;
+bool isSetopDistinct();
+static jmethodID meth_isSetopDistinct;
+bool isRightOuter();
+static jmethodID meth_isRightOuter;
+bool isRightInner();
+static jmethodID meth_isRightInner;
+bool isLeftInner();
+static jmethodID meth_isLeftInner;
+int64_t getCndBuildKeys();
+static jmethodID meth_getCndBuildKeys;
+int64_t getNumBuildRows();
+static jmethodID meth_getNumBuildRows;
+SharedProxyTupleProjection getRightKeyProj();
+static jmethodID meth_getRightKeyProj;
 };
 
 class ProxyMergeStreamDef
@@ -945,12 +947,12 @@ class ProxyReshapeStreamDef
 public:
 CompOperator getCompareOp();
 static jmethodID meth_getCompareOp;
-std::string getTupleCompareBytesBase64();
-static jmethodID meth_getTupleCompareBytesBase64;
-SharedProxyTupleProjection getInputCompareProjection();
-static jmethodID meth_getInputCompareProjection;
 SharedProxyTupleProjection getOutputProjection();
 static jmethodID meth_getOutputProjection;
+SharedProxyTupleProjection getInputCompareProjection();
+static jmethodID meth_getInputCompareProjection;
+std::string getTupleCompareBytesBase64();
+static jmethodID meth_getTupleCompareBytesBase64;
 };
 
 class ProxySortingStreamDef
@@ -959,12 +961,12 @@ class ProxySortingStreamDef
 public:
 Distinctness getDistinctness();
 static jmethodID meth_getDistinctness;
-int64_t getEstimatedNumRows();
-static jmethodID meth_getEstimatedNumRows;
-SharedProxyTupleProjection getDescendingProj();
-static jmethodID meth_getDescendingProj;
 bool isEarlyClose();
 static jmethodID meth_isEarlyClose;
+SharedProxyTupleProjection getDescendingProj();
+static jmethodID meth_getDescendingProj;
+int64_t getEstimatedNumRows();
+static jmethodID meth_getEstimatedNumRows;
 };
 
 class ProxySplicerIndexAccessorDef
@@ -1045,12 +1047,12 @@ class ProxyTupleAttrAccessor
 public:
 int32_t getNullBitIndex();
 static jmethodID meth_getNullBitIndex;
-int32_t getFixedOffset();
-static jmethodID meth_getFixedOffset;
-int32_t getEndIndirectOffset();
-static jmethodID meth_getEndIndirectOffset;
 int32_t getBitValueIndex();
 static jmethodID meth_getBitValueIndex;
+int32_t getEndIndirectOffset();
+static jmethodID meth_getEndIndirectOffset;
+int32_t getFixedOffset();
+static jmethodID meth_getFixedOffset;
 };
 
 class ProxyTupleAttrDescriptor
@@ -1113,36 +1115,36 @@ class ProxyWindowDef
 : virtual public JniProxy
 {
 public:
+int32_t getOffset();
+static jmethodID meth_getOffset;
 SharedProxyTupleProjection getOrderKeyList();
 static jmethodID meth_getOrderKeyList;
-bool isPhysical();
-static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
+bool isPhysical();
+static jmethodID meth_isPhysical;
 SharedProxyWindowPartitionDef getPartition();
 static jmethodID meth_getPartition;
 SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
-int32_t getOffset();
-static jmethodID meth_getOffset;
 };
 
 class ProxyWindowPartitionDef
 : virtual public JniProxy
 {
 public:
-SharedProxyTupleProjection getPartitionKeyList();
-static jmethodID meth_getPartitionKeyList;
-std::string getInitializeProgram();
-static jmethodID meth_getInitializeProgram;
-std::string getAddProgram();
-static jmethodID meth_getAddProgram;
-std::string getDropProgram();
-static jmethodID meth_getDropProgram;
-SharedProxyTupleDescriptor getBucketDesc();
-static jmethodID meth_getBucketDesc;
 SharedProxyWindowDef getWindow();
 static jmethodID meth_getWindow;
+SharedProxyTupleProjection getPartitionKeyList();
+static jmethodID meth_getPartitionKeyList;
+SharedProxyTupleDescriptor getBucketDesc();
+static jmethodID meth_getBucketDesc;
+std::string getDropProgram();
+static jmethodID meth_getDropProgram;
+std::string getAddProgram();
+static jmethodID meth_getAddProgram;
+std::string getInitializeProgram();
+static jmethodID meth_getInitializeProgram;
 };
 
 class ProxyWindowStreamDef
@@ -1151,10 +1153,10 @@ class ProxyWindowStreamDef
 public:
 bool isFilter();
 static jmethodID meth_isFilter;
-std::string getOutputProgram();
-static jmethodID meth_getOutputProgram;
 SharedProxyTupleProjection getInputOrderKeyList();
 static jmethodID meth_getInputOrderKeyList;
+std::string getOutputProgram();
+static jmethodID meth_getOutputProgram;
 SharedProxyWindowDef getWindow();
 static jmethodID meth_getWindow;
 };
