@@ -135,6 +135,8 @@ void LbmExecStreamTestBase::initSorterExecStream(
         params.keyProj.push_back(i);
     }
     params.storeFinalRun = false;
+    params.estimatedNumRows = MAXU;
+    params.earlyClose = false;
 
     embryo.init(ExternalSortExecStream::newExternalSortExecStream(), params);
     embryo.getStream()->setName("SorterExecStream");

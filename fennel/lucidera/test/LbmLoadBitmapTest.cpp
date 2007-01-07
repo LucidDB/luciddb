@@ -444,6 +444,8 @@ void LbmLoadBitmapTest::testLoad(
         sortParams.scratchAccessor =
             pSegmentFactory->newScratchSegment(pCache, 10);
         sortParams.storeFinalRun = false;
+        sortParams.estimatedNumRows = MAXU;
+        sortParams.earlyClose = false;
         
         ExecStreamEmbryo sortStreamEmbryo;
         sortStreamEmbryo.init(

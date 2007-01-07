@@ -492,6 +492,9 @@ void LhxJoinExecStreamTest::testImpl(
         sortParams.scratchAccessor =
             pSegmentFactory->newScratchSegment(pCache, 10);
         sortParams.keyProj.push_back(0);
+        sortParams.storeFinalRun = false;
+        sortParams.estimatedNumRows = MAXU;
+        sortParams.earlyClose = false;
         ExecStreamEmbryo sortStreamEmbryo;
         sortStreamEmbryo.init(
             ExternalSortExecStream::newExternalSortExecStream(),sortParams);

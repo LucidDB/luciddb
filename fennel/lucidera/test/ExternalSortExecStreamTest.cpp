@@ -175,6 +175,7 @@ void ExternalSortExecStreamTest::testImpl(
     sortParams.outputTupleDesc.push_back(attrDesc);
     sortParams.distinctness = DUP_ALLOW;
     sortParams.estimatedNumRows = nRows;
+    sortParams.earlyClose = false;
     sortParams.pTempSegment = pRandomSegment;
     sortParams.pCacheAccessor = pCache;
     // 10 total cache pages, 5% in reserve ==> 9 scratch pages per stream graph

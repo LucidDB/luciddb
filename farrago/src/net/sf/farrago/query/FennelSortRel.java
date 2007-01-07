@@ -233,6 +233,7 @@ public class FennelSortRel
         } else {
             sortingStream.setEstimatedNumRows(numInputRows.longValue());
         }
+        sortingStream.setEarlyClose(false);
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild()),
             sortingStream);

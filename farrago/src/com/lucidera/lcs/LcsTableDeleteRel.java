@@ -151,10 +151,11 @@ public class LcsTableDeleteRel
         // Determine whether we need to sort the input into the delete.
         // If the input is sorted on the rid column, we can bypass the sort,
         // but still need to buffer the input since the input reads from
-        // the deletion index while the delete writes to it.  We know that
-        // the input is sorted on the rid if the input is sorted on the first
-        // field in the input, as the delete always projects the rid in the
-        // first column of its input.
+        // the deletion index while the delete writes to it.  (For that reason,
+        // the sort also needs to do an early close on its producers.)  We know
+        // that the input is sorted on the rid if the input is sorted on the
+        // first field in the input, as the delete always projects the rid in
+        // the first column of its input.
         //
         // NOTE zfong 5/23/06 - The code below only works with Fennel calc.
         // Java calc methods are not propagating collation information.
@@ -169,6 +170,7 @@ public class LcsTableDeleteRel
                 indexGuide.newSorter(
                     deletionIndex,
                     RelMetadataQuery.getRowCount(getChild()),
+                    true,
                     true);
             implementor.addDataFlowFromProducerToConsumer(input, sortingStream);
             input = sortingStream;

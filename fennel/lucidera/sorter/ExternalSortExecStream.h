@@ -75,6 +75,11 @@ struct ExternalSortExecStreamParams : public ConduitExecStreamParams
      * were available to estimate this value.
      */
     RecordNum estimatedNumRows;
+
+    /**
+     * If true, close producers once all input has been read
+     */
+    bool earlyClose;
 };
 
 /**

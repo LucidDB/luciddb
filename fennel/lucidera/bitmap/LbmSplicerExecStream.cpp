@@ -56,10 +56,6 @@ void LbmSplicerExecStream::prepare(LbmSplicerExecStreamParams const &params)
         assert(nIdxKeys == 0);
         assert(pInAccessor->getTupleDesc().size() == 1);
         singletonTuple.compute(pInAccessor->getTupleDesc());
-        inputTuple[1].pData = NULL;
-        inputTuple[1].cbData = 0;
-        inputTuple[2].pData = NULL;
-        inputTuple[2].cbData = 0;
     } else {
         assert(
             writeBTreeDesc.tupleDescriptor == pInAccessor->getTupleDesc());
@@ -416,6 +412,10 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
         if (computeRowCount) {
             pInAccessor->unmarshalTuple(singletonTuple);
             inputTuple[0] = singletonTuple[0];
+            inputTuple[1].pData = NULL;
+            inputTuple[1].cbData = 0;
+            inputTuple[2].pData = NULL;
+            inputTuple[2].cbData = 0;
             numRowsLoaded++;
         } else {
             pInAccessor->unmarshalTuple(inputTuple);
