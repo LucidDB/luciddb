@@ -1,94 +1,94 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- This script creates a simple schema used by some of the unit tests.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set verbose true
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create local sales schema
-0: jdbc:farrago:> create schema sales;
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table depts(
-. . . . . . . . >     deptno integer not null primary key,
-. . . . . . . . >     name varchar(128) not null constraint depts_unique_name unique);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table emps(
-. . . . . . . . >     empno integer not null,
-. . . . . . . . >     name varchar(128) not null,
-. . . . . . . . >     deptno integer not null,
-. . . . . . . . >     gender char(1) default 'M',
-. . . . . . . . >     city varchar(128),
-. . . . . . . . >     empid integer not null unique,
-. . . . . . . . >     age integer,
-. . . . . . . . >     public_key varbinary(50),
-. . . . . . . . >     slacker boolean,
-. . . . . . . . >     manager boolean not null,
-. . . . . . . . >     primary key(deptno,empno))
-. . . . . . . . >     create index emps_ux on emps(name);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create global temporary table temps(
-. . . . . . . . >     empno integer not null,
-. . . . . . . . >     name varchar(128) not null,
-. . . . . . . . >     deptno integer not null,
-. . . . . . . . >     gender char(1),
-. . . . . . . . >     city varchar(128),
-. . . . . . . . >     empid integer default 999 not null,
-. . . . . . . . >     age integer,
-. . . . . . . . >     public_key varbinary(50),
-. . . . . . . . >     slacker boolean,
-. . . . . . . . >     manager boolean not null,
-. . . . . . . . >     primary key(deptno,empno)) on commit delete rows
-. . . . . . . . >     create clustered index temps_cx on temps(empno);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view empsview as
-. . . . . . . . > select empno, name from emps;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view tempsview as
-. . . . . . . . > select empno, name from temps;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view joinview as
-. . . . . . . . > select depts.name as dname,emps.name as ename
-. . . . . . . . > from emps inner join depts
-. . . . . . . . > on emps.deptno=depts.deptno;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create function decrypt_public_key(k varbinary(50))
-. . . . . . . . > returns varchar(25)
-. . . . . . . . > language java
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.decryptPublicKey';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create function maybe_female(gender char(1))
-. . . . . . . . > returns boolean
-. . . . . . . . > contains sql
-. . . . . . . . > return not((gender = 'F') is false);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into depts values
-. . . . . . . . >     (10,trim('Sales')),
-. . . . . . . . >     (20,'Marketing'),
-. . . . . . . . >     (30,'Accounts');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into emps values
-. . . . . . . . >     (100,'Fred',10,null,null,30,25, x'41626320',true,false),
-. . . . . . . . >     (110,trim('Eric'),20,'M',trim('San Francisco'),3,80,x'416263',null,false),
-. . . . . . . . >     (110,'John',40,'M','Vancouver',2,null,x'58797A',false,true),
-. . . . . . . . >     (120,'Wilma',20,'F',null,1,50,null,null,true);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- define foreign server for hsqldb sample data
-0: jdbc:farrago:> create server hsqldb_demo
-. . . . . . . . > foreign data wrapper sys_jdbc
-. . . . . . . . > options(
-. . . . . . . . >     driver_class 'org.hsqldb.jdbcDriver',
-. . . . . . . . >     url 'jdbc:hsqldb:testcases/hsqldb/scott',
-. . . . . . . . >     user_name 'SA',
-. . . . . . . . >     table_types 'TABLE,VIEW');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create Volcano personality "jar" for use by tests that need it
-0: jdbc:farrago:> create jar sys_boot.sys_boot.volcano_plugin 
-. . . . . . . . > library 'class net.sf.farrago.defimpl.FarragoVolcanoPersonalityFactory' 
-. . . . . . . . > options(0);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- likewise for LucidDB session personality
-0: jdbc:farrago:> create jar sys_boot.sys_boot.luciddb_plugin 
-. . . . . . . . > library 'class com.lucidera.farrago.LucidDbSessionFactory' 
-. . . . . . . . > options(0);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> -- $Id$
+> -- This script creates a simple schema used by some of the unit tests.
+> 
+> !set verbose true
+> 
+> -- create local sales schema
+> create schema sales;
+> set schema 'sales';
+> 
+> create table depts(
+>     deptno integer not null primary key,
+>     name varchar(128) not null constraint depts_unique_name unique);
+> 
+> create table emps(
+>     empno integer not null,
+>     name varchar(128) not null,
+>     deptno integer not null,
+>     gender char(1) default 'M',
+>     city varchar(128),
+>     empid integer not null unique,
+>     age integer,
+>     public_key varbinary(50),
+>     slacker boolean,
+>     manager boolean not null,
+>     primary key(deptno,empno))
+>     create index emps_ux on emps(name);
+> 
+> create global temporary table temps(
+>     empno integer not null,
+>     name varchar(128) not null,
+>     deptno integer not null,
+>     gender char(1),
+>     city varchar(128),
+>     empid integer default 999 not null,
+>     age integer,
+>     public_key varbinary(50),
+>     slacker boolean,
+>     manager boolean not null,
+>     primary key(deptno,empno)) on commit delete rows
+>     create clustered index temps_cx on temps(empno);
+> 
+> create view empsview as
+> select empno, name from emps;
+> 
+> create view tempsview as
+> select empno, name from temps;
+> 
+> create view joinview as
+> select depts.name as dname,emps.name as ename
+> from emps inner join depts
+> on emps.deptno=depts.deptno;
+> 
+> create function decrypt_public_key(k varbinary(50))
+> returns varchar(25)
+> language java
+> no sql
+> external name 'class net.sf.farrago.test.FarragoTestUDR.decryptPublicKey';
+> 
+> create function maybe_female(gender char(1))
+> returns boolean
+> contains sql
+> return not((gender = 'F') is false);
+> 
+> insert into depts values
+>     (10,trim('Sales')),
+>     (20,'Marketing'),
+>     (30,'Accounts');
+> 
+> insert into emps values
+>     (100,'Fred',10,null,null,30,25, x'41626320',true,false),
+>     (110,trim('Eric'),20,'M',trim('San Francisco'),3,80,x'416263',null,false),
+>     (110,'John',40,'M','Vancouver',2,null,x'58797A',false,true),
+>     (120,'Wilma',20,'F',null,1,50,null,null,true);
+> 
+> -- define foreign server for hsqldb sample data
+> create server hsqldb_demo
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.hsqldb.jdbcDriver',
+>     url 'jdbc:hsqldb:testcases/hsqldb/scott',
+>     user_name 'SA',
+>     table_types 'TABLE,VIEW');
+> 
+> -- create Volcano personality "jar" for use by tests that need it
+> create jar sys_boot.sys_boot.volcano_plugin 
+> library 'class net.sf.farrago.defimpl.FarragoVolcanoPersonalityFactory' 
+> options(0);
+> 
+> -- likewise for LucidDB session personality
+> create jar sys_boot.sys_boot.luciddb_plugin 
+> library 'class com.lucidera.farrago.LucidDbSessionFactory' 
+> options(0);
+> 
+> !quit

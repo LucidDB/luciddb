@@ -1,43 +1,43 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test casts between string types
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- test basic integer conversions
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create schema s;
-0: jdbc:farrago:> set schema 's';
-0: jdbc:farrago:> create table ints (
-. . . . . . . . >     x integer not null primary key,
-. . . . . . . . >     si smallint not null,
-. . . . . . . . >     i integer not null,
-. . . . . . . . >     bi bigint not null);
-0: jdbc:farrago:> insert into ints values (1, 1, 1, 1);
-0: jdbc:farrago:> insert into ints values (2, -1, -1, -1);
-0: jdbc:farrago:> insert into ints values (3, 0, 0, 0);
-0: jdbc:farrago:> insert into ints values (4, 32767, 2147483647, 9223372036854775807);
-0: jdbc:farrago:> insert into ints values (5, -32768, -2147483648, -9223372036854775808);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table exacts (
-. . . . . . . . >     x integer not null primary key,
-. . . . . . . . >     i decimal(5,0) not null,
-. . . . . . . . >     r decimal(4,2) not null);
-0: jdbc:farrago:> insert into exacts values (1, 1, 1.00);
-0: jdbc:farrago:> insert into exacts values (2, -1, -1.00);
-0: jdbc:farrago:> insert into exacts values (3, 0, 0.00);
-0: jdbc:farrago:> insert into exacts values (4, 99999, 99.99);
-0: jdbc:farrago:> insert into exacts values (5, -99999, -99.99);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table approx (
-. . . . . . . . >     x integer not null primary key,
-. . . . . . . . >     r real not null,
-. . . . . . . . >     d double not null);
-0: jdbc:farrago:> insert into approx values (1, 1.0, 1.0);
-0: jdbc:farrago:> insert into approx values (2, -1.0, -1.0);
-0: jdbc:farrago:> insert into approx values (3, 0.0, 0.0);
-0: jdbc:farrago:> insert into approx values (4, 3.1415927, 3.141592653589793);
-0: jdbc:farrago:> insert into approx values (5, 31.415927, 31.41592653589793);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from ints;
+> -- $Id$
+> -- Test casts between string types
+> 
+> --
+> -- test basic integer conversions
+> --
+> create schema s;
+> set schema 's';
+> create table ints (
+>     x integer not null primary key,
+>     si smallint not null,
+>     i integer not null,
+>     bi bigint not null);
+> insert into ints values (1, 1, 1, 1);
+> insert into ints values (2, -1, -1, -1);
+> insert into ints values (3, 0, 0, 0);
+> insert into ints values (4, 32767, 2147483647, 9223372036854775807);
+> insert into ints values (5, -32768, -2147483648, -9223372036854775808);
+> 
+> create table exacts (
+>     x integer not null primary key,
+>     i decimal(5,0) not null,
+>     r decimal(4,2) not null);
+> insert into exacts values (1, 1, 1.00);
+> insert into exacts values (2, -1, -1.00);
+> insert into exacts values (3, 0, 0.00);
+> insert into exacts values (4, 99999, 99.99);
+> insert into exacts values (5, -99999, -99.99);
+> 
+> create table approx (
+>     x integer not null primary key,
+>     r real not null,
+>     d double not null);
+> insert into approx values (1, 1.0, 1.0);
+> insert into approx values (2, -1.0, -1.0);
+> insert into approx values (3, 0.0, 0.0);
+> insert into approx values (4, 3.1415927, 3.141592653589793);
+> insert into approx values (5, 31.415927, 31.41592653589793);
+> 
+> select * from ints;
 +----+---------+--------------+-----------------------+
 | X  |   SI    |      I       |          BI           |
 +----+---------+--------------+-----------------------+
@@ -47,7 +47,7 @@
 | 4  | 32767   | 2147483647   | 9223372036854775807   |
 | 5  | -32768  | -2147483648  | -9223372036854775808  |
 +----+---------+--------------+-----------------------+
-0: jdbc:farrago:> select * from exacts;
+> select * from exacts;
 +----+---------+---------+
 | X  |    I    |    R    |
 +----+---------+---------+
@@ -57,7 +57,7 @@
 | 4  | 99999   | 99.99   |
 | 5  | -99999  | -99.99  |
 +----+---------+---------+
-0: jdbc:farrago:> select * from approx;
+> select * from approx;
 +----+------------+--------------------+
 | X  |     R      |         D          |
 +----+------------+--------------------+
@@ -67,11 +67,11 @@
 | 4  | 3.1415927  | 3.141592653589793  |
 | 5  | 31.415928  | 31.41592653589793  |
 +----+------------+--------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- cast numbers to char
-0: jdbc:farrago:> --
-0: jdbc:farrago:> select cast(si as char(6))  from ints;
+> 
+> --
+> -- cast numbers to char
+> --
+> select cast(si as char(6))  from ints;
 +---------+
 | EXPR$0  |
 +---------+
@@ -81,7 +81,7 @@
 | 32767   |
 | -32768  |
 +---------+
-0: jdbc:farrago:> select cast(i as char(11)) from ints;
+> select cast(i as char(11)) from ints;
 +--------------+
 |    EXPR$0    |
 +--------------+
@@ -91,7 +91,7 @@
 | 2147483647   |
 | -2147483648  |
 +--------------+
-0: jdbc:farrago:> select cast(bi as char(20)) from ints;
+> select cast(bi as char(20)) from ints;
 +-----------------------+
 |        EXPR$0         |
 +-----------------------+
@@ -101,7 +101,7 @@
 | 9223372036854775807   |
 | -9223372036854775808  |
 +-----------------------+
-0: jdbc:farrago:> select cast(i as char(6)) from exacts;
+> select cast(i as char(6)) from exacts;
 +---------+
 | EXPR$0  |
 +---------+
@@ -111,7 +111,7 @@
 | 99999   |
 | -99999  |
 +---------+
-0: jdbc:farrago:> select cast(r as char(6)) from exacts;
+> select cast(r as char(6)) from exacts;
 +---------+
 | EXPR$0  |
 +---------+
@@ -121,11 +121,11 @@
 | 99.99   |
 | -99.99  |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- REVIEW: Results are likely to be non-portable, as float representations
-0: jdbc:farrago:> -- REVIEW: will differ on various processors. Should round or truncate
-0: jdbc:farrago:> -- REVIEW: results lexically. -JK 2004/08/11
-0: jdbc:farrago:> select cast(r as char(10)) from approx;
+> 
+> -- REVIEW: Results are likely to be non-portable, as float representations
+> -- REVIEW: will differ on various processors. Should round or truncate
+> -- REVIEW: results lexically. -JK 2004/08/11
+> select cast(r as char(10)) from approx;
 +-------------+
 |   EXPR$0    |
 +-------------+
@@ -135,7 +135,7 @@
 | 3.141593E0  |
 | 3.141593E1  |
 +-------------+
-0: jdbc:farrago:> select cast(d as char(23)) from approx;
+> select cast(d as char(23)) from approx;
 +--------------------------+
 |          EXPR$0          |
 +--------------------------+
@@ -145,11 +145,11 @@
 | 3.141592653589793E0      |
 | 3.141592653589793E1      |
 +--------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- cast numbers to varchar
-0: jdbc:farrago:> --
-0: jdbc:farrago:> select cast(si as varchar(6)) from ints;
+> 
+> --
+> -- cast numbers to varchar
+> --
+> select cast(si as varchar(6)) from ints;
 +---------+
 | EXPR$0  |
 +---------+
@@ -159,7 +159,7 @@
 | 32767   |
 | -32768  |
 +---------+
-0: jdbc:farrago:> select cast(i as varchar(11)) from ints;
+> select cast(i as varchar(11)) from ints;
 +--------------+
 |    EXPR$0    |
 +--------------+
@@ -169,7 +169,7 @@
 | 2147483647   |
 | -2147483648  |
 +--------------+
-0: jdbc:farrago:> select cast(bi as varchar(20)) from ints;
+> select cast(bi as varchar(20)) from ints;
 +-----------------------+
 |        EXPR$0         |
 +-----------------------+
@@ -179,7 +179,7 @@
 | 9223372036854775807   |
 | -9223372036854775808  |
 +-----------------------+
-0: jdbc:farrago:> select cast(i as varchar(6)) from exacts;
+> select cast(i as varchar(6)) from exacts;
 +---------+
 | EXPR$0  |
 +---------+
@@ -189,7 +189,7 @@
 | 99999   |
 | -99999  |
 +---------+
-0: jdbc:farrago:> select cast(r as varchar(6)) from exacts;
+> select cast(r as varchar(6)) from exacts;
 +---------+
 | EXPR$0  |
 +---------+
@@ -199,91 +199,91 @@
 | 99.99   |
 | -99.99  |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- cast numbers to char that's too small
-0: jdbc:farrago:> --
-0: jdbc:farrago:> select cast(si as char(3)) from ints;
+> 
+> 
+> --
+> -- cast numbers to char that's too small
+> --
+> select cast(si as char(3)) from ints;
 Error: could not calculate results for the following row:
 [ 32767 ]
 Messages:
 [0]:PC=1 Code=22001 (state=,code=0)
-0: jdbc:farrago:> select cast(i as char(5)) from ints;
+> select cast(i as char(5)) from ints;
 Error: could not calculate results for the following row:
 [ 2147483647 ]
 Messages:
 [0]:PC=1 Code=22001 (state=,code=0)
-0: jdbc:farrago:> select cast(bi as char(10)) from ints;
+> select cast(bi as char(10)) from ints;
 Error: could not calculate results for the following row:
 [ 9223372036854775807 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> select cast(i as char(3)) from exacts;
+> select cast(i as char(3)) from exacts;
 Error: could not calculate results for the following row:
 [ 99999 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> select cast(r as char(3)) from exacts;
+> select cast(r as char(3)) from exacts;
 Error: could not calculate results for the following row:
 [ 100 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> select cast(r as char(3)) from approx;
+> select cast(r as char(3)) from approx;
 Error: could not calculate results for the following row:
 [ -1 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> select cast(d as char(3)) from approx;
+> select cast(d as char(3)) from approx;
 Error: could not calculate results for the following row:
 [ -1 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- cast numbers to varchar that's too small
-0: jdbc:farrago:> --
-0: jdbc:farrago:> select cast(si as varchar(3)) from ints;
+> 
+> 
+> --
+> -- cast numbers to varchar that's too small
+> --
+> select cast(si as varchar(3)) from ints;
 Error: could not calculate results for the following row:
 [ 32767 ]
 Messages:
 [0]:PC=1 Code=22001 (state=,code=0)
-0: jdbc:farrago:> select cast(i as varchar(5)) from ints;
+> select cast(i as varchar(5)) from ints;
 Error: could not calculate results for the following row:
 [ 2147483647 ]
 Messages:
 [0]:PC=1 Code=22001 (state=,code=0)
-0: jdbc:farrago:> select cast(bi as varchar(10)) from ints;
+> select cast(bi as varchar(10)) from ints;
 Error: could not calculate results for the following row:
 [ 9223372036854775807 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> select cast(i as varchar(3)) from exacts;
+> select cast(i as varchar(3)) from exacts;
 Error: could not calculate results for the following row:
 [ 99999 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> select cast(r as varchar(3)) from exacts;
+> select cast(r as varchar(3)) from exacts;
 Error: could not calculate results for the following row:
 [ 100 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> select cast(r as varchar(3)) from approx;
+> select cast(r as varchar(3)) from approx;
 Error: could not calculate results for the following row:
 [ -1 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> select cast(d as varchar(3)) from approx;
+> select cast(d as varchar(3)) from approx;
 Error: could not calculate results for the following row:
 [ -1 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- REVIEW: Results are likely to be non-portable, as float representations
-0: jdbc:farrago:> -- REVIEW: will differ on various processors. Should round or truncate
-0: jdbc:farrago:> -- REVIEW: results lexically. -JK 2004/08/11
-0: jdbc:farrago:> select cast(d as varchar(23)) from approx;
+> 
+> -- REVIEW: Results are likely to be non-portable, as float representations
+> -- REVIEW: will differ on various processors. Should round or truncate
+> -- REVIEW: results lexically. -JK 2004/08/11
+> select cast(d as varchar(23)) from approx;
 +----------------------+
 |        EXPR$0        |
 +----------------------+
@@ -293,10 +293,10 @@ Messages:
 | 3.141592653589793E0  |
 | 3.141592653589793E1  |
 +----------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: fennel displays more than 8 digits. (plus signg ...), that caused diff.
-0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_JAVA';
-0: jdbc:farrago:> select cast(r as varchar(23)) from approx;
+> 
+> -- TODO: fennel displays more than 8 digits. (plus signg ...), that caused diff.
+> alter system set "calcVirtualMachine"='CALCVM_JAVA';
+> select cast(r as varchar(23)) from approx;
 +-------------+
 |   EXPR$0    |
 +-------------+
@@ -306,10 +306,10 @@ Messages:
 | 3.141593E0  |
 | 3.141593E1  |
 +-------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table ints;
-0: jdbc:farrago:> drop table exacts;
-0: jdbc:farrago:> drop table approx;
-0: jdbc:farrago:> drop schema s;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> drop table ints;
+> drop table exacts;
+> drop table approx;
+> drop schema s;
+> 
+> !quit

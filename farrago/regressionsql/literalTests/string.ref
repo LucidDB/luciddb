@@ -1,130 +1,130 @@
-0: jdbc:farrago:> -- $Id$ 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 'unknown';
+> -- $Id$ 
+> 
+> values 'unknown';
 +----------+
 |  EXPR$0  |
 +----------+
 | unknown  |
 +----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- LDB-141
-0: jdbc:farrago:> values 'not \u my \u problem';
+> 
+> -- LDB-141
+> values 'not \u my \u problem';
 +-----------------------+
 |        EXPR$0         |
 +-----------------------+
 | not \u my \u problem  |
 +-----------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test datatype
-0: jdbc:farrago:> create schema test;
-0: jdbc:farrago:> set schema 'test';
-0: jdbc:farrago:> create table t_char(char_col char(1) not null primary key, char_col2 char(1));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- negative test
-0: jdbc:farrago:> insert into t_char values(true,null);
+> 
+> -- test datatype
+> create schema test;
+> set schema 'test';
+> create table t_char(char_col char(1) not null primary key, char_col2 char(1));
+> 
+> -- negative test
+> insert into t_char values(true,null);
 Error: At line 0, column 0: Cannot assign to target field 'CHAR_COL' of type CHAR(1) from source field 'EXPR$0' of type BOOLEAN (state=,code=0)
-0: jdbc:farrago:> insert into t_char values(1234,null);
+> insert into t_char values(1234,null);
 Error: At line 0, column 0: Cannot assign to target field 'CHAR_COL' of type CHAR(1) from source field 'EXPR$0' of type INTEGER (state=,code=0)
-0: jdbc:farrago:> insert into t_char values(1e400,null);
+> insert into t_char values(1e400,null);
 Error: From line 1, column 27 to line 1, column 31: Numeric literal '1E400' out of range (state=,code=0)
-0: jdbc:farrago:> insert into t_char values(-1.2345678901234e-200,null);
+> insert into t_char values(-1.2345678901234e-200,null);
 Error: At line 0, column 0: Cannot assign to target field 'CHAR_COL' of type CHAR(1) from source field 'EXPR$0' of type DOUBLE (state=,code=0)
-0: jdbc:farrago:> insert into t_char values(-1234.03,null);
+> insert into t_char values(-1234.03,null);
 Error: At line 0, column 0: Cannot assign to target field 'CHAR_COL' of type CHAR(1) from source field 'EXPR$0' of type DECIMAL(6, 2) (state=,code=0)
-0: jdbc:farrago:> insert into t_char values(x'ff',null);
+> insert into t_char values(x'ff',null);
 Error: At line 0, column 0: Cannot assign to target field 'CHAR_COL' of type CHAR(1) from source field 'EXPR$0' of type BINARY(1) (state=,code=0)
-0: jdbc:farrago:> -- char(1) too short to hold these - will give error
-0: jdbc:farrago:> insert into t_char values(time '12:01:01',null);
+> -- char(1) too short to hold these - will give error
+> insert into t_char values(time '12:01:01',null);
 Error: At line 0, column 0: Cannot assign to target field 'CHAR_COL' of type CHAR(1) from source field 'EXPR$0' of type TIME(0) (state=,code=0)
-0: jdbc:farrago:> insert into t_char values(date '1999-01-08',null);
+> insert into t_char values(date '1999-01-08',null);
 Error: At line 0, column 0: Cannot assign to target field 'CHAR_COL' of type CHAR(1) from source field 'EXPR$0' of type DATE (state=,code=0)
-0: jdbc:farrago:> insert into t_char values(TIMESTAMP '2004-12-01 12:01:01',null);
+> insert into t_char values(TIMESTAMP '2004-12-01 12:01:01',null);
 Error: At line 0, column 0: Cannot assign to target field 'CHAR_COL' of type CHAR(1) from source field 'EXPR$0' of type TIMESTAMP(0) (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- REVIEW: SZ: 8/11/2004: not strictly an error.  this should truncate and
-0: jdbc:farrago:> --  generate a warning, which we'll probably never see in sqlline.
-0: jdbc:farrago:> insert into t_char values('string value',null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- insert the right values
-0: jdbc:farrago:> insert into t_char values('m',null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- null value test
-0: jdbc:farrago:> insert into t_char values(null, null); 
+> 
+> -- REVIEW: SZ: 8/11/2004: not strictly an error.  this should truncate and
+> --  generate a warning, which we'll probably never see in sqlline.
+> insert into t_char values('string value',null);
+> 
+> -- insert the right values
+> insert into t_char values('m',null);
+> 
+> -- null value test
+> insert into t_char values(null, null); 
 Error: could not calculate results for the following row:
 [ NULL, NULL ]
 Messages:
 [0]:PC=3 Code=22004 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t_char;
+> 
+> select * from t_char;
 +-----------+------------+
 | CHAR_COL  | CHAR_COL2  |
 +-----------+------------+
 | m         |            |
 | s         |            |
 +-----------+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table t_char;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test varchar datatype
-0: jdbc:farrago:> create table t_varchar(varchar_col varchar(30) not null primary key, varchar_col2 varchar(1));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- negative test
-0: jdbc:farrago:> insert into t_varchar values(1e400,null);
+> 
+> drop table t_char;
+> 
+> -- test varchar datatype
+> create table t_varchar(varchar_col varchar(30) not null primary key, varchar_col2 varchar(1));
+> 
+> -- negative test
+> insert into t_varchar values(1e400,null);
 Error: From line 1, column 30 to line 1, column 34: Numeric literal '1E400' out of range (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(x'ff',null);
+> insert into t_varchar values(x'ff',null);
 Error: At line 0, column 0: Cannot assign to target field 'VARCHAR_COL' of type VARCHAR(30) from source field 'EXPR$0' of type BINARY(1) (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(true,null);
+> insert into t_varchar values(true,null);
 Error: At line 0, column 0: Cannot assign to target field 'VARCHAR_COL' of type VARCHAR(30) from source field 'EXPR$0' of type BOOLEAN (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(false,null);
+> insert into t_varchar values(false,null);
 Error: At line 0, column 0: Cannot assign to target field 'VARCHAR_COL' of type VARCHAR(30) from source field 'EXPR$0' of type BOOLEAN (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(4444,null);
+> insert into t_varchar values(4444,null);
 Error: At line 0, column 0: Cannot assign to target field 'VARCHAR_COL' of type VARCHAR(30) from source field 'EXPR$0' of type INTEGER (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(99999999,null);
+> insert into t_varchar values(99999999,null);
 Error: At line 0, column 0: Cannot assign to target field 'VARCHAR_COL' of type VARCHAR(30) from source field 'EXPR$0' of type INTEGER (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(0.0,null);
+> insert into t_varchar values(0.0,null);
 Error: At line 0, column 0: Cannot assign to target field 'VARCHAR_COL' of type VARCHAR(30) from source field 'EXPR$0' of type DECIMAL(2, 1) (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(-1.1,null);
+> insert into t_varchar values(-1.1,null);
 Error: At line 0, column 0: Cannot assign to target field 'VARCHAR_COL' of type VARCHAR(30) from source field 'EXPR$0' of type DECIMAL(2, 1) (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(-4444.22,null);
+> insert into t_varchar values(-4444.22,null);
 Error: At line 0, column 0: Cannot assign to target field 'VARCHAR_COL' of type VARCHAR(30) from source field 'EXPR$0' of type DECIMAL(6, 2) (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(time '12:01:01',null);
+> insert into t_varchar values(time '12:01:01',null);
 Error: At line 0, column 0: Cannot assign to target field 'VARCHAR_COL' of type VARCHAR(30) from source field 'EXPR$0' of type TIME(0) (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(date '1999-01-08',null);
+> insert into t_varchar values(date '1999-01-08',null);
 Error: At line 0, column 0: Cannot assign to target field 'VARCHAR_COL' of type VARCHAR(30) from source field 'EXPR$0' of type DATE (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(TIMESTAMP '2004-12-01 12:01:01',null);
+> insert into t_varchar values(TIMESTAMP '2004-12-01 12:01:01',null);
 Error: At line 0, column 0: Cannot assign to target field 'VARCHAR_COL' of type VARCHAR(30) from source field 'EXPR$0' of type TIMESTAMP(0) (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(-1.2345678901234e-200,null);
+> insert into t_varchar values(-1.2345678901234e-200,null);
 Error: At line 0, column 0: Cannot assign to target field 'VARCHAR_COL' of type VARCHAR(30) from source field 'EXPR$0' of type DOUBLE (state=,code=0)
-0: jdbc:farrago:> select * from t_varchar;
+> select * from t_varchar;
 +--------------+---------------+
 | VARCHAR_COL  | VARCHAR_COL2  |
 +--------------+---------------+
 +--------------+---------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- warning tests
-0: jdbc:farrago:> -- 31 character string truncates to 30, but should get an warning
-0: jdbc:farrago:> insert into t_varchar values('1234567890123456789012345678901',null);
-0: jdbc:farrago:> select * from t_varchar;
+> 
+> -- warning tests
+> -- 31 character string truncates to 30, but should get an warning
+> insert into t_varchar values('1234567890123456789012345678901',null);
+> select * from t_varchar;
 +---------------------------------+---------------+
 |           VARCHAR_COL           | VARCHAR_COL2  |
 +---------------------------------+---------------+
 | 123456789012345678901234567890  |               |
 +---------------------------------+---------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- positive tests
-0: jdbc:farrago:> insert into t_varchar values('1.23E-50',null);
-0: jdbc:farrago:> insert into t_varchar values('1.23E50',null);
-0: jdbc:farrago:> insert into t_varchar values('-1.23E50',null);
-0: jdbc:farrago:> insert into t_varchar values('-1.23E-50',null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- null value test
-0: jdbc:farrago:> insert into t_varchar values(null, null); 
+> 
+> -- positive tests
+> insert into t_varchar values('1.23E-50',null);
+> insert into t_varchar values('1.23E50',null);
+> insert into t_varchar values('-1.23E50',null);
+> insert into t_varchar values('-1.23E-50',null);
+> 
+> -- null value test
+> insert into t_varchar values(null, null); 
 Error: could not calculate results for the following row:
 [ NULL, NULL ]
 Messages:
 [0]:PC=3 Code=22004 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t_varchar;
+> 
+> select * from t_varchar;
 +---------------------------------+---------------+
 |           VARCHAR_COL           | VARCHAR_COL2  |
 +---------------------------------+---------------+
@@ -134,9 +134,9 @@ Messages:
 | 1.23E50                         |               |
 | 123456789012345678901234567890  |               |
 +---------------------------------+---------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table t_varchar;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop schema test;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> drop table t_varchar;
+> 
+> drop schema test;
+> 
+> !quit

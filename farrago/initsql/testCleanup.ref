@@ -1,14 +1,14 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- This script effects a cleanup after unit tests
-0: jdbc:farrago:> -- (actual cleanup work is done by FarragoTestCase.CleanUp),
-0: jdbc:farrago:> -- and also verifies repository integrity.
-0: jdbc:farrago:> !set verbose true
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should return empty set
-0: jdbc:farrago:> select * from table(sys_boot.mgmt.repository_integrity_violations());
+> -- $Id$
+> -- This script effects a cleanup after unit tests
+> -- (actual cleanup work is done by FarragoTestCase.CleanUp),
+> -- and also verifies repository integrity.
+> !set verbose true
+> 
+> -- should return empty set
+> select * from table(sys_boot.mgmt.repository_integrity_violations());
 +--------------+---------+
 | DESCRIPTION  | MOF_ID  |
 +--------------+---------+
 +--------------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

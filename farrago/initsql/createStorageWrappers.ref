@@ -1,90 +1,90 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- This script creates the builtin storage data wrappers
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set verbose true
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create system-owned schema to hold objects like model extension plugin jars
-0: jdbc:farrago:> create or replace schema sys_boot.sys_boot;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sys_boot.sys_boot';
-0: jdbc:farrago:> set path 'sys_boot.sys_boot';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- add system objects not yet created
-0: jdbc:farrago:> create or replace procedure update_system_objects()
-. . . . . . . . > language java
-. . . . . . . . > parameter style system defined java
-. . . . . . . . > no sql
-. . . . . . . . > external name
-. . . . . . . . > 'class net.sf.farrago.syslib.FarragoUpdateCatalogUDR.updateSystemObjects';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call update_system_objects();
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create wrapper for access to MDR repositories
-0: jdbc:farrago:> create or replace foreign data wrapper sys_mdr
-. . . . . . . . > library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create access to system's own MOF repository
-0: jdbc:farrago:> create or replace server sys_mof
-. . . . . . . . > foreign data wrapper sys_mdr
-. . . . . . . . > options(root_package_name 'MOF', schema_name 'MODEL');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create access to system's own CWM repository
-0: jdbc:farrago:> create or replace server sys_cwm
-. . . . . . . . > foreign data wrapper sys_mdr
-. . . . . . . . > options(root_package_name 'CWM');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create access to system's own Farrago-specific portion of repository
-0: jdbc:farrago:> create or replace server sys_fem
-. . . . . . . . > foreign data wrapper sys_mdr
-. . . . . . . . > options(root_package_name 'FEM');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create wrapper for access to local FTRS data
-0: jdbc:farrago:> create or replace local data wrapper sys_ftrs
-. . . . . . . . > library 'class net.sf.farrago.namespace.ftrs.FtrsDataWrapper'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create wrapper for access to local LucidDB column-store data
-0: jdbc:farrago:> create or replace local data wrapper sys_column_store
-. . . . . . . . > library 'class com.lucidera.lcs.LcsDataWrapper'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create wrapper for access to local mock data
-0: jdbc:farrago:> create or replace local data wrapper sys_mock
-. . . . . . . . > library 'class net.sf.farrago.namespace.mock.MedMockLocalDataWrapper'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create wrapper for access to foreign mock data
-0: jdbc:farrago:> create or replace foreign data wrapper sys_mock_foreign
-. . . . . . . . > library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create singleton server for local FTRS row-store data
-0: jdbc:farrago:> create or replace server sys_ftrs_data_server
-. . . . . . . . > local data wrapper sys_ftrs;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create singleton server for local LucidDB column-store data
-0: jdbc:farrago:> create or replace server sys_column_store_data_server
-. . . . . . . . > local data wrapper sys_column_store;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create singleton server for local mock row-store data
-0: jdbc:farrago:> create or replace server sys_mock_data_server
-. . . . . . . . > local data wrapper sys_mock;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create singleton server for foreign mock data
-0: jdbc:farrago:> create or replace server sys_mock_foreign_data_server
-. . . . . . . . > foreign data wrapper sys_mock_foreign;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create wrapper for access to JDBC data
-0: jdbc:farrago:> create or replace foreign data wrapper sys_jdbc
-. . . . . . . . > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create wrapper for access to flatfile data
-0: jdbc:farrago:> create or replace foreign data wrapper sys_file_wrapper
-. . . . . . . . > library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
-. . . . . . . . > language java;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> -- $Id$
+> -- This script creates the builtin storage data wrappers
+> 
+> !set verbose true
+> 
+> -- create system-owned schema to hold objects like model extension plugin jars
+> create or replace schema sys_boot.sys_boot;
+> 
+> set schema 'sys_boot.sys_boot';
+> set path 'sys_boot.sys_boot';
+> 
+> -- add system objects not yet created
+> create or replace procedure update_system_objects()
+> language java
+> parameter style system defined java
+> no sql
+> external name
+> 'class net.sf.farrago.syslib.FarragoUpdateCatalogUDR.updateSystemObjects';
+> 
+> call update_system_objects();
+> 
+> -- create wrapper for access to MDR repositories
+> create or replace foreign data wrapper sys_mdr
+> library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
+> language java;
+> 
+> 
+> -- create access to system's own MOF repository
+> create or replace server sys_mof
+> foreign data wrapper sys_mdr
+> options(root_package_name 'MOF', schema_name 'MODEL');
+> 
+> -- create access to system's own CWM repository
+> create or replace server sys_cwm
+> foreign data wrapper sys_mdr
+> options(root_package_name 'CWM');
+> 
+> -- create access to system's own Farrago-specific portion of repository
+> create or replace server sys_fem
+> foreign data wrapper sys_mdr
+> options(root_package_name 'FEM');
+> 
+> 
+> -- create wrapper for access to local FTRS data
+> create or replace local data wrapper sys_ftrs
+> library 'class net.sf.farrago.namespace.ftrs.FtrsDataWrapper'
+> language java;
+> 
+> -- create wrapper for access to local LucidDB column-store data
+> create or replace local data wrapper sys_column_store
+> library 'class com.lucidera.lcs.LcsDataWrapper'
+> language java;
+> 
+> -- create wrapper for access to local mock data
+> create or replace local data wrapper sys_mock
+> library 'class net.sf.farrago.namespace.mock.MedMockLocalDataWrapper'
+> language java;
+> 
+> -- create wrapper for access to foreign mock data
+> create or replace foreign data wrapper sys_mock_foreign
+> library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+> language java;
+> 
+> -- create singleton server for local FTRS row-store data
+> create or replace server sys_ftrs_data_server
+> local data wrapper sys_ftrs;
+> 
+> -- create singleton server for local LucidDB column-store data
+> create or replace server sys_column_store_data_server
+> local data wrapper sys_column_store;
+> 
+> -- create singleton server for local mock row-store data
+> create or replace server sys_mock_data_server
+> local data wrapper sys_mock;
+> 
+> -- create singleton server for foreign mock data
+> create or replace server sys_mock_foreign_data_server
+> foreign data wrapper sys_mock_foreign;
+> 
+> -- create wrapper for access to JDBC data
+> create or replace foreign data wrapper sys_jdbc
+> library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
+> language java;
+> 
+> -- create wrapper for access to flatfile data
+> create or replace foreign data wrapper sys_file_wrapper
+> library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+> language java;
+> 
+> !quit

@@ -1,53 +1,53 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test optimization of outer join queries
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema oj;
-0: jdbc:farrago:> set schema 'oj';
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table A(k int, a int not null);
-0: jdbc:farrago:> create table B(k int, b int not null);
-0: jdbc:farrago:> create table C(k int, c int not null);
-0: jdbc:farrago:> create table D(k int, d int not null);
-0: jdbc:farrago:> insert into A values (1, 1), (2, 2), (3, 3);
-0: jdbc:farrago:> insert into B values (1, 2), (2, 3), (3, 4);
-0: jdbc:farrago:> insert into C values (1, 2), (2, 3), (3, 4);
-0: jdbc:farrago:> insert into D values (1, 3), (2, 4), (3, 5);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---------------------------------------------------
-0: jdbc:farrago:> -- Set 1 -- RHS of topmost join is (C inner join D)
-0: jdbc:farrago:> ---------------------------------------------------
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> -- $Id$
+> 
+> -- Test optimization of outer join queries
+> 
+> create schema oj;
+> set schema 'oj';
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> create table A(k int, a int not null);
+> create table B(k int, b int not null);
+> create table C(k int, c int not null);
+> create table D(k int, d int not null);
+> insert into A values (1, 1), (2, 2), (3, 3);
+> insert into B values (1, 2), (2, 3), (3, 4);
+> insert into C values (1, 2), (2, 3), (3, 4);
+> insert into D values (1, 3), (2, 4), (3, 5);
+> 
+> ---------------------------------------------------
+> -- Set 1 -- RHS of topmost join is (C inner join D)
+> ---------------------------------------------------
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     left outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     right outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 |    |    | 4  | 4  |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     full outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -55,24 +55,24 @@
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     inner join
+>     (select c, d from C inner join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> 
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     left outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -80,261 +80,50 @@
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     right outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 |    |    | 4  | 4  |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    | 4  | 4  |
-|    | 4  |    |    |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-| 1  |    |    |    |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    | 4  | 4  |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    | 4  | 4  |
-| 1  |    |    |    |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    | 4  |    |    |
-| 1  |    |    |    |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    | 4  | 4  |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     full outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 |    |    | 4  | 4  |
 |    | 4  |    |    |
-| 1  |    |    |    |
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     inner join
+>     (select c, d from C inner join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---------------------------------------------------------
-0: jdbc:farrago:> -- Set 2 -- RHS of topmost join is (C right outer join D)
-0: jdbc:farrago:> ---------------------------------------------------------
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    |    | 5  |
-|    |    | 4  | 4  |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    |    | 5  |
-|    |    | 4  | 4  |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    | 4  |    |    |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    |    | 5  |
-|    |    | 4  | 4  |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    |    | 5  |
-|    |    | 4  | 4  |
-|    | 4  |    |    |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> 
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     left outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -342,52 +131,50 @@
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     right outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
-|    |    |    | 5  |
 |    |    | 4  | 4  |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     full outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
-|    |    |    | 5  |
 |    |    | 4  | 4  |
 | 1  |    |    |    |
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     inner join
+>     (select c, d from C inner join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> 
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     left outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -396,12 +183,66 @@
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     right outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    | 4  | 4  |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     full outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    | 4  | 4  |
+|    | 4  |    |    |
+| 1  |    |    |    |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     inner join
+>     (select c, d from C inner join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> 
+> ---------------------------------------------------------
+> -- Set 2 -- RHS of topmost join is (C right outer join D)
+> ---------------------------------------------------------
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     left outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     right outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -409,12 +250,171 @@
 |    |    | 4  | 4  |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     full outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 4  | 4  |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     inner join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> 
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     left outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    | 4  |    |    |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     right outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 4  | 4  |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     full outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 4  | 4  |
+|    | 4  |    |    |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     inner join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> 
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     left outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+| 1  |    |    |    |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     right outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 4  | 4  |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     full outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 4  | 4  |
+| 1  |    |    |    |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     inner join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> 
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     left outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    | 4  |    |    |
+| 1  |    |    |    |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     right outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 4  | 4  |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     full outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -425,39 +425,39 @@
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     inner join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------------------------------------
-0: jdbc:farrago:> -- Set 3 - RHS of topmost join is (C left outer join D)
-0: jdbc:farrago:> -------------------------------------------------------
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> 
+> -------------------------------------------------------
+> -- Set 3 - RHS of topmost join is (C left outer join D)
+> -------------------------------------------------------
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     left outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     right outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -465,12 +465,12 @@
 |    |    | 4  | 4  |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     full outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -479,25 +479,25 @@
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     inner join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 | 2  | 2  | 2  |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> 
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     left outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -505,12 +505,12 @@
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     right outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -518,12 +518,12 @@
 |    |    | 4  | 4  |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     full outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -533,25 +533,25 @@
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     inner join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 | 2  | 2  | 2  |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> 
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     left outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -559,12 +559,12 @@
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     right outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -572,12 +572,12 @@
 |    |    | 4  | 4  |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     full outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -587,25 +587,25 @@
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     inner join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 | 2  | 2  | 2  |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> 
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     left outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -614,12 +614,12 @@
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     right outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
@@ -627,242 +627,15 @@
 |    |    | 4  | 4  |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     full outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
-|    |    | 2  |    |
-|    |    | 4  | 4  |
-|    | 4  |    |    |
-| 1  |    |    |    |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-| 2  | 2  | 2  |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------------------------------------
-0: jdbc:farrago:> -- Set 4 - RHS of topmost join is (C full outer join D)
-0: jdbc:farrago:> -------------------------------------------------------
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    |    | 5  |
-|    |    | 2  |    |
-|    |    | 4  | 4  |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    |    | 5  |
-|    |    | 2  |    |
-|    |    | 4  | 4  |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-| 2  | 2  | 2  |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    | 4  |    |    |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    |    | 5  |
-|    |    | 2  |    |
-|    |    | 4  | 4  |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    |    | 5  |
-|    |    | 2  |    |
-|    |    | 4  | 4  |
-|    | 4  |    |    |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-| 2  | 2  | 2  |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-| 1  |    |    |    |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    |    | 5  |
-|    |    | 2  |    |
-|    |    | 4  | 4  |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    |    | 5  |
-|    |    | 2  |    |
-|    |    | 4  | 4  |
-| 1  |    |    |    |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-| 2  | 2  | 2  |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    | 4  |    |    |
-| 1  |    |    |    |
-| 2  | 2  |    |    |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    |    | 5  |
-|    |    | 2  |    |
-|    |    | 4  | 4  |
-| 3  | 3  | 3  | 3  |
-+----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d
-. . . . . . . . > order by 1, 2, 3, 4;
-+----+----+----+----+
-| A  | B  | C  | D  |
-+----+----+----+----+
-|    |    |    | 5  |
 |    |    | 2  |    |
 |    |    | 4  | 4  |
 |    | 4  |    |    |
@@ -870,29 +643,256 @@
 | 2  | 2  |    |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c
-. . . . . . . . > order by 1, 2, 3, 4;
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     inner join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
 +----+----+----+----+
 | A  | B  | C  | D  |
 +----+----+----+----+
 | 2  | 2  | 2  |    |
 | 3  | 3  | 3  | 3  |
 +----+----+----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------------------------
-0: jdbc:farrago:> -- explain on a subset of the above queries
-0: jdbc:farrago:> -------------------------------------------
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d;
+> 
+> -------------------------------------------------------
+> -- Set 4 - RHS of topmost join is (C full outer join D)
+> -------------------------------------------------------
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     left outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     right outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 2  |    |
+|    |    | 4  | 4  |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     full outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 2  |    |
+|    |    | 4  | 4  |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     inner join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+| 2  | 2  | 2  |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> 
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     left outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    | 4  |    |    |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     right outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 2  |    |
+|    |    | 4  | 4  |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     full outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 2  |    |
+|    |    | 4  | 4  |
+|    | 4  |    |    |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     inner join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+| 2  | 2  | 2  |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> 
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     left outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+| 1  |    |    |    |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     right outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 2  |    |
+|    |    | 4  | 4  |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     full outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 2  |    |
+|    |    | 4  | 4  |
+| 1  |    |    |    |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     inner join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+| 2  | 2  | 2  |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> 
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     left outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    | 4  |    |    |
+| 1  |    |    |    |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     right outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 2  |    |
+|    |    | 4  | 4  |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     full outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+|    |    |    | 5  |
+|    |    | 2  |    |
+|    |    | 4  | 4  |
+|    | 4  |    |    |
+| 1  |    |    |    |
+| 2  | 2  |    |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     inner join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c
+> order by 1, 2, 3, 4;
++----+----+----+----+
+| A  | B  | C  | D  |
++----+----+----+----+
+| 2  | 2  | 2  |    |
+| 3  | 3  | 3  | 3  |
++----+----+----+----+
+> 
+> -------------------------------------------
+> -- explain on a subset of the above queries
+> -------------------------------------------
+> !set outputformat csv
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     left outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[LEFT])'
@@ -902,12 +902,12 @@
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d;
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     right outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[3, 4, 0, 1]], outputRowType=[RecordType(INTEGER A, INTEGER B, INTEGER NOT NULL C, INTEGER NOT NULL D) NOT NULL])'
@@ -920,12 +920,12 @@
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c and b = d;
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     full outer join
+>     (select c, d from C inner join D on c = d)
+>     on a = c and b = d;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], outputRowType=[RecordType(INTEGER A, INTEGER B, INTEGER C, INTEGER D) NOT NULL])'
@@ -937,12 +937,12 @@
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C inner join D on c = d)
-. . . . . . . . >     on a = c;
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     inner join
+>     (select c, d from C inner join D on c = d)
+>     on a = c;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])'
@@ -954,13 +954,13 @@
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL C, INTEGER CAST($0):INTEGER) NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '    LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d;
+> 
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     right outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[2, 3, 1, 0]], outputRowType=[RecordType(INTEGER A, INTEGER B, INTEGER C, INTEGER NOT NULL D) NOT NULL])'
@@ -972,12 +972,12 @@
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d;
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     full outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[FULL])'
@@ -989,12 +989,12 @@
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c;
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     inner join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[2, 3, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER B, INTEGER C, INTEGER NOT NULL D) NOT NULL])'
@@ -1007,12 +1007,12 @@
 '          FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER CAST($0):INTEGER) NOT NULL])'
 '            LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C right outer join D on c = d)
-. . . . . . . . >     on a = c and b = d;
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     left outer join
+>     (select c, d from C right outer join D on c = d)
+>     on a = c and b = d;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], outputRowType=[RecordType(INTEGER A, INTEGER B, INTEGER C, INTEGER D) NOT NULL])'
@@ -1024,13 +1024,13 @@
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d;
+> 
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     full outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 3, 4]], outputRowType=[RecordType(INTEGER A, INTEGER B, INTEGER C, INTEGER D) NOT NULL])'
@@ -1042,12 +1042,12 @@
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c;
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     inner join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 0, 2, 3]], outputRowType=[RecordType(INTEGER A, INTEGER NOT NULL B, INTEGER NOT NULL C, INTEGER D) NOT NULL])'
@@ -1060,12 +1060,12 @@
 '          FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL C, INTEGER CAST($0):INTEGER) NOT NULL])'
 '            LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d;
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     left outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[LEFT])'
@@ -1075,12 +1075,12 @@
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C left outer join D on c = d)
-. . . . . . . . >     on a = c and b = d;
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     right outer join
+>     (select c, d from C left outer join D on c = d)
+>     on a = c and b = d;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[3, 4, 0, 1]], outputRowType=[RecordType(INTEGER A, INTEGER B, INTEGER NOT NULL C, INTEGER D) NOT NULL])'
@@ -1092,13 +1092,13 @@
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[FULL])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A inner join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c;
+> 
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A inner join B on a = b)
+>     inner join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 3, 4]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER NOT NULL B, INTEGER C, INTEGER D) NOT NULL])'
@@ -1110,12 +1110,12 @@
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[FULL])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A right outer join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d;
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A right outer join B on a = b)
+>     left outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 0, 3, 4]], outputRowType=[RecordType(INTEGER A, INTEGER NOT NULL B, INTEGER C, INTEGER D) NOT NULL])'
@@ -1127,12 +1127,12 @@
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[FULL])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A left outer join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d;
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A left outer join B on a = b)
+>     right outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[2, 3, 0, 1]], outputRowType=[RecordType(INTEGER A, INTEGER B, INTEGER C, INTEGER D) NOT NULL])'
@@ -1144,12 +1144,12 @@
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, b, c, d from
-. . . . . . . . >     (select a, b from A full outer join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c, d from C full outer join D on c = d)
-. . . . . . . . >     on a = c and b = d;
+> explain plan for
+> select a, b, c, d from
+>     (select a, b from A full outer join B on a = b)
+>     full outer join
+>     (select c, d from C full outer join D on c = d)
+>     on a = c and b = d;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[FULL])'
@@ -1159,17 +1159,17 @@
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[FULL])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------------------------
-0: jdbc:farrago:> -- inner selects contain projections
-0: jdbc:farrago:> ------------------------------------
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> -- can't pull because RHS generates nulls
-0: jdbc:farrago:> select a, bb, cc from
-. . . . . . . . >     A left outer join
-. . . . . . . . >     (select b*1 as bb, c*1 as cc from B inner join C on b = c)
-. . . . . . . . >     on a = bb
-. . . . . . . . > order by 1, 2, 3;
+> 
+> ------------------------------------
+> -- inner selects contain projections
+> ------------------------------------
+> !set outputformat table
+> -- can't pull because RHS generates nulls
+> select a, bb, cc from
+>     A left outer join
+>     (select b*1 as bb, c*1 as cc from B inner join C on b = c)
+>     on a = bb
+> order by 1, 2, 3;
 +----+-----+-----+
 | A  | BB  | CC  |
 +----+-----+-----+
@@ -1177,12 +1177,12 @@
 | 2  | 2   | 2   |
 | 3  | 3   | 3   |
 +----+-----+-----+
-0: jdbc:farrago:> -- can't pull because join condition references expression
-0: jdbc:farrago:> select a, bb, cc from
-. . . . . . . . >     A right outer join
-. . . . . . . . >     (select b*1 as bb, c*1 as cc from B inner join C on b = c)
-. . . . . . . . >     on a = bb
-. . . . . . . . > order by 1, 2, 3;
+> -- can't pull because join condition references expression
+> select a, bb, cc from
+>     A right outer join
+>     (select b*1 as bb, c*1 as cc from B inner join C on b = c)
+>     on a = bb
+> order by 1, 2, 3;
 +----+-----+-----+
 | A  | BB  | CC  |
 +----+-----+-----+
@@ -1190,12 +1190,12 @@
 | 2  | 2   | 2   |
 | 3  | 3   | 3   |
 +----+-----+-----+
-0: jdbc:farrago:> -- can pull
-0: jdbc:farrago:> select a, bb, cc from
-. . . . . . . . >     A right outer join
-. . . . . . . . >     (select b as bb, c*1 as cc from B inner join C on b = c)
-. . . . . . . . >     on a = bb
-. . . . . . . . > order by 1, 2, 3;
+> -- can pull
+> select a, bb, cc from
+>     A right outer join
+>     (select b as bb, c*1 as cc from B inner join C on b = c)
+>     on a = bb
+> order by 1, 2, 3;
 +----+-----+-----+
 | A  | BB  | CC  |
 +----+-----+-----+
@@ -1203,26 +1203,26 @@
 | 2  | 2   | 2   |
 | 3  | 3   | 3   |
 +----+-----+-----+
-0: jdbc:farrago:> -- can pull RHS since only LHS generates nulls
-0: jdbc:farrago:> select aa, bb, cc, dd from
-. . . . . . . . >     (select a as aa, b*1 as bb from A inner join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c as cc, d*1 as dd from C inner join D on c = d)
-. . . . . . . . >     on aa = cc
-. . . . . . . . > order by 1, 2, 3, 4;
+> -- can pull RHS since only LHS generates nulls
+> select aa, bb, cc, dd from
+>     (select a as aa, b*1 as bb from A inner join B on a = b)
+>     right outer join
+>     (select c as cc, d*1 as dd from C inner join D on c = d)
+>     on aa = cc
+> order by 1, 2, 3, 4;
 +-----+-----+-----+-----+
 | AA  | BB  | CC  | DD  |
 +-----+-----+-----+-----+
 |     |     | 4   | 4   |
 | 3   | 3   | 3   | 3   |
 +-----+-----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- can't pull because LHS generates nulls
-0: jdbc:farrago:> select aa, bb, c from
-. . . . . . . . >     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
-. . . . . . . . >     right outer join C
-. . . . . . . . >     on aa = c
-. . . . . . . . > order by 1, 2, 3;
+> 
+> -- can't pull because LHS generates nulls
+> select aa, bb, c from
+>     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
+>     right outer join C
+>     on aa = c
+> order by 1, 2, 3;
 +-----+-----+----+
 | AA  | BB  | C  |
 +-----+-----+----+
@@ -1230,51 +1230,51 @@
 | 2   | 2   | 2  |
 | 3   | 3   | 3  |
 +-----+-----+----+
-0: jdbc:farrago:> -- can't pull because join condition references expression
-0: jdbc:farrago:> select aa, bb, c from
-. . . . . . . . >     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
-. . . . . . . . >     left outer join C
-. . . . . . . . >     on aa = c
-. . . . . . . . > order by 1, 2, 3;
+> -- can't pull because join condition references expression
+> select aa, bb, c from
+>     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
+>     left outer join C
+>     on aa = c
+> order by 1, 2, 3;
 +-----+-----+----+
 | AA  | BB  | C  |
 +-----+-----+----+
 | 2   | 2   | 2  |
 | 3   | 3   | 3  |
 +-----+-----+----+
-0: jdbc:farrago:> -- can pull
-0: jdbc:farrago:> select aa, bb, c from
-. . . . . . . . >     (select a as aa, b*1 as bb from A inner join b on a = b)
-. . . . . . . . >     left outer join C
-. . . . . . . . >     on aa = c
-. . . . . . . . > order by 1, 2, 3;
+> -- can pull
+> select aa, bb, c from
+>     (select a as aa, b*1 as bb from A inner join b on a = b)
+>     left outer join C
+>     on aa = c
+> order by 1, 2, 3;
 +-----+-----+----+
 | AA  | BB  | C  |
 +-----+-----+----+
 | 2   | 2   | 2  |
 | 3   | 3   | 3  |
 +-----+-----+----+
-0: jdbc:farrago:> -- can pull LHS because only RHS generates nulls
-0: jdbc:farrago:> select aa, bb, cc, dd from
-. . . . . . . . >     (select a as aa, b*1 as bb from A inner join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c as cc, d*1 as dd from C inner join D on c = d)
-. . . . . . . . >     on aa = cc
-. . . . . . . . > order by 1, 2, 3, 4;
+> -- can pull LHS because only RHS generates nulls
+> select aa, bb, cc, dd from
+>     (select a as aa, b*1 as bb from A inner join B on a = b)
+>     left outer join
+>     (select c as cc, d*1 as dd from C inner join D on c = d)
+>     on aa = cc
+> order by 1, 2, 3, 4;
 +-----+-----+-----+-----+
 | AA  | BB  | CC  | DD  |
 +-----+-----+-----+-----+
 | 2   | 2   |     |     |
 | 3   | 3   | 3   | 3   |
 +-----+-----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- can't pull because both LHS and RHS generate nulls
-0: jdbc:farrago:> select aa, bb, cc, dd from
-. . . . . . . . >     (select a*1 as aa, b*1 as bb from A inner join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c*1 as cc, d*1 as dd from C inner join D on c = d)
-. . . . . . . . >     on aa = cc and bb = dd
-. . . . . . . . > order by 1, 2, 3, 4;
+> 
+> -- can't pull because both LHS and RHS generate nulls
+> select aa, bb, cc, dd from
+>     (select a*1 as aa, b*1 as bb from A inner join B on a = b)
+>     full outer join
+>     (select c*1 as cc, d*1 as dd from C inner join D on c = d)
+>     on aa = cc and bb = dd
+> order by 1, 2, 3, 4;
 +-----+-----+-----+-----+
 | AA  | BB  | CC  | DD  |
 +-----+-----+-----+-----+
@@ -1282,41 +1282,41 @@
 | 2   | 2   |     |     |
 | 3   | 3   | 3   | 3   |
 +-----+-----+-----+-----+
-0: jdbc:farrago:> -- can't pull because join condition references expressions
-0: jdbc:farrago:> select aa, bb, cc, dd from
-. . . . . . . . >     (select a*1 as aa, b*1 as bb from A inner join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c*1 as cc, d*1 as dd from C inner join D on c = d)
-. . . . . . . . >     on aa = cc and bb = dd
-. . . . . . . . > order by 1, 2, 3, 4;
+> -- can't pull because join condition references expressions
+> select aa, bb, cc, dd from
+>     (select a*1 as aa, b*1 as bb from A inner join B on a = b)
+>     inner join
+>     (select c*1 as cc, d*1 as dd from C inner join D on c = d)
+>     on aa = cc and bb = dd
+> order by 1, 2, 3, 4;
 +-----+-----+-----+-----+
 | AA  | BB  | CC  | DD  |
 +-----+-----+-----+-----+
 | 3   | 3   | 3   | 3   |
 +-----+-----+-----+-----+
-0: jdbc:farrago:> -- can pull
-0: jdbc:farrago:> select * from
-. . . . . . . . >     (select a as aa, b*1 as bb from A inner join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c as cc, d*1 as dd from C inner join D on c = d)
-. . . . . . . . >     on aa = cc 
-. . . . . . . . > order by 1, 2, 3, 4;
+> -- can pull
+> select * from
+>     (select a as aa, b*1 as bb from A inner join B on a = b)
+>     inner join
+>     (select c as cc, d*1 as dd from C inner join D on c = d)
+>     on aa = cc 
+> order by 1, 2, 3, 4;
 +-----+-----+-----+-----+
 | AA  | BB  | CC  | DD  |
 +-----+-----+-----+-----+
 | 3   | 3   | 3   | 3   |
 +-----+-----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------------------------
-0: jdbc:farrago:> -- explain on the projection queries
-0: jdbc:farrago:> ------------------------------------
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> -- can't pull because RHS generates nulls
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, bb, cc from
-. . . . . . . . >     A left outer join
-. . . . . . . . >     (select b*1 as bb, c*1 as cc from B inner join C on b = c)
-. . . . . . . . >     on a = bb;
+> 
+> ------------------------------------
+> -- explain on the projection queries
+> ------------------------------------
+> !set outputformat csv
+> -- can't pull because RHS generates nulls
+> explain plan for
+> select a, bb, cc from
+>     A left outer join
+>     (select b*1 as bb, c*1 as cc from B inner join C on b = c)
+>     on a = bb;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
@@ -1325,12 +1325,12 @@
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
-0: jdbc:farrago:> -- can't pull because join condition references expression
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, bb, cc from
-. . . . . . . . >     A right outer join
-. . . . . . . . >     (select b*1 as bb, c*1 as cc from B inner join C on b = c)
-. . . . . . . . >     on a = bb;
+> -- can't pull because join condition references expression
+> explain plan for
+> select a, bb, cc from
+>     A right outer join
+>     (select b*1 as bb, c*1 as cc from B inner join C on b = c)
+>     on a = bb;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[2, 0, 1]], outputRowType=[RecordType(INTEGER A, INTEGER NOT NULL BB, INTEGER NOT NULL CC) NOT NULL])'
@@ -1340,12 +1340,12 @@
 '          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
-0: jdbc:farrago:> -- can pull
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select a, bb, cc from
-. . . . . . . . >     A right outer join
-. . . . . . . . >     (select b as bb, c*1 as cc from B inner join C on b = c)
-. . . . . . . . >     on a = bb;
+> -- can pull
+> explain plan for
+> select a, bb, cc from
+>     A right outer join
+>     (select b as bb, c*1 as cc from B inner join C on b = c)
+>     on a = bb;
 'column0'
 'IterCalcRel(expr#0..2=[{inputs}], expr#3=[1], expr#4=[*($t2, $t3)], A=[$t1], BB=[$t0], CC=[$t4])'
 '  FennelToIteratorConverter'
@@ -1354,13 +1354,13 @@
 '        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
-0: jdbc:farrago:> -- can pull RHS since only LHS generates nulls
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select aa, bb, cc, dd from
-. . . . . . . . >     (select a as aa, b*1 as bb from A inner join B on a = b)
-. . . . . . . . >     right outer join
-. . . . . . . . >     (select c as cc, d*1 as dd from C inner join D on c = d)
-. . . . . . . . >     on aa = cc;
+> -- can pull RHS since only LHS generates nulls
+> explain plan for
+> select aa, bb, cc, dd from
+>     (select a as aa, b*1 as bb from A inner join B on a = b)
+>     right outer join
+>     (select c as cc, d*1 as dd from C inner join D on c = d)
+>     on aa = cc;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[*($t3, $t4)], AA=[$t1], BB=[$t2], CC=[$t0], DD=[$t5])'
 '  FennelToIteratorConverter'
@@ -1372,13 +1372,13 @@
 '            LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 '            LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- can't pull because LHS generates nulls
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select aa, bb, c from
-. . . . . . . . >     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
-. . . . . . . . >     right outer join C
-. . . . . . . . >     on aa = c;
+> 
+> -- can't pull because LHS generates nulls
+> explain plan for
+> select aa, bb, c from
+>     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
+>     right outer join C
+>     on aa = c;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 2, 0]], outputRowType=[RecordType(INTEGER AA, INTEGER BB, INTEGER NOT NULL C) NOT NULL])'
@@ -1388,12 +1388,12 @@
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
-0: jdbc:farrago:> -- can't pull because join condition references expression
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select aa, bb, c from
-. . . . . . . . >     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
-. . . . . . . . >     left outer join C
-. . . . . . . . >     on aa = c;
+> -- can't pull because join condition references expression
+> explain plan for
+> select aa, bb, c from
+>     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
+>     left outer join C
+>     on aa = c;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
@@ -1402,12 +1402,12 @@
 '        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
 '    LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
-0: jdbc:farrago:> -- can pull
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select aa, bb, c from
-. . . . . . . . >     (select a as aa, b*1 as bb from A inner join b on a = b)
-. . . . . . . . >     left outer join C
-. . . . . . . . >     on aa = c;
+> -- can pull
+> explain plan for
+> select aa, bb, c from
+>     (select a as aa, b*1 as bb from A inner join b on a = b)
+>     left outer join C
+>     on aa = c;
 'column0'
 'IterCalcRel(expr#0..2=[{inputs}], expr#3=[1], expr#4=[*($t1, $t3)], AA=[$t0], BB=[$t4], C=[$t2])'
 '  FennelToIteratorConverter'
@@ -1416,13 +1416,13 @@
 '        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
-0: jdbc:farrago:> -- can pull LHS because only RHS generates nulls
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select aa, bb, cc, dd from
-. . . . . . . . >     (select a as aa, b*1 as bb from A inner join B on a = b)
-. . . . . . . . >     left outer join
-. . . . . . . . >     (select c as cc, d*1 as dd from C inner join D on c = d)
-. . . . . . . . >     on aa = cc;
+> -- can pull LHS because only RHS generates nulls
+> explain plan for
+> select aa, bb, cc, dd from
+>     (select a as aa, b*1 as bb from A inner join B on a = b)
+>     left outer join
+>     (select c as cc, d*1 as dd from C inner join D on c = d)
+>     on aa = cc;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[*($t1, $t4)], AA=[$t0], BB=[$t5], CC=[$t2], DD=[$t3])'
 '  FennelToIteratorConverter'
@@ -1434,14 +1434,14 @@
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- can't pull because both LHS and RHS generate nulls
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select aa, bb, cc, dd from
-. . . . . . . . >     (select a*1 as aa, b*1 as bb from A inner join B on a = b)
-. . . . . . . . >     full outer join
-. . . . . . . . >     (select c*1 as cc, d*1 as dd from C inner join D on c = d)
-. . . . . . . . >     on aa = cc and bb = dd;
+> 
+> -- can't pull because both LHS and RHS generate nulls
+> explain plan for
+> select aa, bb, cc, dd from
+>     (select a*1 as aa, b*1 as bb from A inner join B on a = b)
+>     full outer join
+>     (select c*1 as cc, d*1 as dd from C inner join D on c = d)
+>     on aa = cc and bb = dd;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[FULL])'
@@ -1453,13 +1453,13 @@
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> -- can't pull because join condition references expressions
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select aa, bb, cc, dd from
-. . . . . . . . >     (select a*1 as aa, b*1 as bb from A inner join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c*1 as cc, d*1 as dd from C inner join D on c = d)
-. . . . . . . . >     on aa = cc and bb = dd;
+> -- can't pull because join condition references expressions
+> explain plan for
+> select aa, bb, cc, dd from
+>     (select a*1 as aa, b*1 as bb from A inner join B on a = b)
+>     inner join
+>     (select c*1 as cc, d*1 as dd from C inner join D on c = d)
+>     on aa = cc and bb = dd;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[INNER])'
@@ -1471,13 +1471,13 @@
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> -- can pull
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select aa, bb, cc, dd from
-. . . . . . . . >     (select a as aa, b*1 as bb from A inner join B on a = b)
-. . . . . . . . >     inner join
-. . . . . . . . >     (select c as cc, d*1 as dd from C inner join D on c = d)
-. . . . . . . . >     on aa = cc;
+> -- can pull
+> explain plan for
+> select aa, bb, cc, dd from
+>     (select a as aa, b*1 as bb from A inner join B on a = b)
+>     inner join
+>     (select c as cc, d*1 as dd from C inner join D on c = d)
+>     on aa = cc;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[*($t1, $t4)], expr#6=[*($t3, $t4)], AA=[$t0], BB=[$t5], CC=[$t2], DD=[$t6])'
 '  FennelToIteratorConverter'
@@ -1488,54 +1488,54 @@
 '          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- a simple example of why projects can't be pulled up if they're part of a
-0: jdbc:farrago:> -- null-generating input in an outer join; the two selects below should return
-0: jdbc:farrago:> -- different results
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> create table t1(a int not null);
-0: jdbc:farrago:> insert into t1 values (1), (2);
-0: jdbc:farrago:> create table t2(a int not null, b int);
-0: jdbc:farrago:> insert into t2 values (1, null);
-0: jdbc:farrago:> select * from t1 left outer join
-. . . . . . . . >     (select a, coalesce(b, -99) from t2) as t2
-. . . . . . . . >     on t1.a = t2.a;
+> 
+> -- a simple example of why projects can't be pulled up if they're part of a
+> -- null-generating input in an outer join; the two selects below should return
+> -- different results
+> !set outputformat table
+> create table t1(a int not null);
+> insert into t1 values (1), (2);
+> create table t2(a int not null, b int);
+> insert into t2 values (1, null);
+> select * from t1 left outer join
+>     (select a, coalesce(b, -99) from t2) as t2
+>     on t1.a = t2.a;
 +----+-----+---------+
 | A  | A0  | EXPR$1  |
 +----+-----+---------+
 | 1  | 1   | -99     |
 | 2  |     |         |
 +----+-----+---------+
-0: jdbc:farrago:> select t1.a, t2.a, coalesce(t2.b, -99)
-. . . . . . . . >     from t1 left outer join t2 on t1.a = t2.a;
+> select t1.a, t2.a, coalesce(t2.b, -99)
+>     from t1 left outer join t2 on t1.a = t2.a;
 +----+----+---------+
 | A  | A  | EXPR$2  |
 +----+----+---------+
 | 1  | 1  | -99     |
 | 2  |    | -99     |
 +----+----+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- testcase to ensure that predicates are appropriately converted before being
-0: jdbc:farrago:> -- passed into metadata queries; in this particular case, the left outer join
-0: jdbc:farrago:> -- is converted into a right outer join because there's a filter on y; there's
-0: jdbc:farrago:> -- also a filter on x, but because x is null generating, that filter is not
-0: jdbc:farrago:> -- pushed down; as a result, the outer join becomes a right outer join and the
-0: jdbc:farrago:> -- columns returned from that outer join are returned in reverse order;
-0: jdbc:farrago:> -- therefore the filter on x needs to be adjusted accordingly before its
-0: jdbc:farrago:> -- passed into metadata queries on the new outer join node; otherwise, the
-0: jdbc:farrago:> -- metadata routines will try to manipulate a filter that compares an integer
-0: jdbc:farrago:> -- against a varchar column
-0: jdbc:farrago:> create table x(x0 int);
-0: jdbc:farrago:> create table y(y0 varchar(10), y1 int);
-0: jdbc:farrago:> create table z(z0 varchar(10), z1 int);
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select distinct x0, y0, z0
-. . . . . . . . >     from
-. . . . . . . . >         y left outer join x on y1 = x0,
-. . . . . . . . >         z
-. . . . . . . . >     where
-. . . . . . . . >         x0 = z1 and y1 = 1 and x0 > 0;
+> 
+> -- testcase to ensure that predicates are appropriately converted before being
+> -- passed into metadata queries; in this particular case, the left outer join
+> -- is converted into a right outer join because there's a filter on y; there's
+> -- also a filter on x, but because x is null generating, that filter is not
+> -- pushed down; as a result, the outer join becomes a right outer join and the
+> -- columns returned from that outer join are returned in reverse order;
+> -- therefore the filter on x needs to be adjusted accordingly before its
+> -- passed into metadata queries on the new outer join node; otherwise, the
+> -- metadata routines will try to manipulate a filter that compares an integer
+> -- against a varchar column
+> create table x(x0 int);
+> create table y(y0 varchar(10), y1 int);
+> create table z(z0 varchar(10), z1 int);
+> !set outputformat csv
+> explain plan for
+> select distinct x0, y0, z0
+>     from
+>         y left outer join x on y1 = x0,
+>         z
+>     where
+>         x0 = z1 and y1 = 1 and x0 > 0;
 'column0'
 'FennelToIteratorConverter'
 '  LhxAggRel(groupCount=[3])'
@@ -1547,11 +1547,11 @@
 '              FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])'
 '            LcsRowScanRel(table=[[LOCALDB, OJ, X]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$X$X0]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, Z]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$Z$Z0, SYS$CLUSTERED_INDEX$Z$Z1]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- LER-2472 - cartesian product joins with outer joins -- ROJ needs to be
-0: jdbc:farrago:> -- converted to a LOJ for the cartesian product join to be valid
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select a, b from A right outer join B on a = 1;
+> 
+> -- LER-2472 - cartesian product joins with outer joins -- ROJ needs to be
+> -- converted to a LOJ for the cartesian product join to be valid
+> explain plan for
+>     select a, b from A right outer join B on a = 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER A, INTEGER NOT NULL B) NOT NULL])'
@@ -1559,8 +1559,8 @@
 '      LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]], residual columns=[[1]])'
 '        FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])'
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> select a, b from A right outer join B on a = 1;
+> !set outputformat table
+> select a, b from A right outer join B on a = 1;
 +----+----+
 | A  | B  |
 +----+----+
@@ -1568,47 +1568,47 @@
 | 1  | 3  |
 | 1  | 4  |
 +----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------------
-0: jdbc:farrago:> -- removable outer joins
-0: jdbc:farrago:> ------------------------
-0: jdbc:farrago:> create table BUniq(k int, b int not null unique);
-0: jdbc:farrago:> insert into BUniq values (1, 2), (2, 3), (3, 4);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select A.* from A left outer join BUniq on a = b;
+> 
+> ------------------------
+> -- removable outer joins
+> ------------------------
+> create table BUniq(k int, b int not null unique);
+> insert into BUniq values (1, 2), (2, 3), (3, 4);
+> 
+> !set outputformat csv
+> explain plan for
+>     select A.* from A left outer join BUniq on a = b;
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select A.* from A left outer join BUniq on b = a;
+> explain plan for
+>     select A.* from A left outer join BUniq on b = a;
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select A.* from BUniq right outer join A on a = b;
+> explain plan for
+>     select A.* from BUniq right outer join A on a = b;
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select a from (select a, b from A left outer join BUniq on a = b), C
-. . . . . . . . >         where a = c;
+> explain plan for
+>     select a from (select a, b from A left outer join BUniq on a = b), C
+>         where a = c;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER NOT NULL A) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
-0: jdbc:farrago:> -- two join keys
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . >     select A.* from A left outer join BUniq B on a = b and A.k = B.k;
+> -- two join keys
+> explain plan for 
+>     select A.* from A left outer join BUniq B on a = b and A.k = B.k;
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> select A.* from A left outer join BUniq on a = b order by a;
+> 
+> !set outputformat table
+> select A.* from A left outer join BUniq on a = b order by a;
 +----+----+
 | K  | A  |
 +----+----+
@@ -1616,7 +1616,7 @@
 | 2  | 2  |
 | 3  | 3  |
 +----+----+
-0: jdbc:farrago:> select A.* from A left outer join BUniq on b = a order by a;
+> select A.* from A left outer join BUniq on b = a order by a;
 +----+----+
 | K  | A  |
 +----+----+
@@ -1624,7 +1624,7 @@
 | 2  | 2  |
 | 3  | 3  |
 +----+----+
-0: jdbc:farrago:> select A.* from BUniq right outer join A on a = b order by a;
+> select A.* from BUniq right outer join A on a = b order by a;
 +----+----+
 | K  | A  |
 +----+----+
@@ -1632,15 +1632,15 @@
 | 2  | 2  |
 | 3  | 3  |
 +----+----+
-0: jdbc:farrago:> select a from (select a, b from A left outer join BUniq on a = b), C
-. . . . . . . . >     where a = c order by a;
+> select a from (select a, b from A left outer join BUniq on a = b), C
+>     where a = c order by a;
 +----+
 | A  |
 +----+
 | 2  |
 | 3  |
 +----+
-0: jdbc:farrago:> select A.* from A left outer join BUniq B on a = b and A.k = B.k order by a;
+> select A.* from A left outer join BUniq B on a = b and A.k = B.k order by a;
 +----+----+
 | K  | A  |
 +----+----+
@@ -1648,57 +1648,57 @@
 | 2  | 2  |
 | 3  | 3  |
 +----+----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ----------------------------
-0: jdbc:farrago:> -- non-removable outer joins
-0: jdbc:farrago:> ----------------------------
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> -- full outer join
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select A.* from A full outer join BUniq on a = b;
+> 
+> ----------------------------
+> -- non-removable outer joins
+> ----------------------------
+> !set outputformat csv
+> -- full outer join
+> explain plan for
+>     select A.* from A full outer join BUniq on a = b;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER K, INTEGER A) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[FULL])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$B]])'
-0: jdbc:farrago:> -- join keys not unique
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select A.* from A left outer join B on a = b;
+> -- join keys not unique
+> explain plan for
+>     select A.* from A left outer join B on a = b;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER K, INTEGER NOT NULL A) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select A.* from A left outer join B on a = b and A.k = B.k;
+> explain plan for
+>     select A.* from A left outer join B on a = b and A.k = B.k;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER K, INTEGER NOT NULL A) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[1, 0]], rightKeys=[[1, 0]], joinType=[LEFT])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B, SYS$CLUSTERED_INDEX$B$K]])'
-0: jdbc:farrago:> -- null generating factor projected in projection list
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from A left outer join BUniq on a = b;
+> -- null generating factor projected in projection list
+> explain plan for
+>     select * from A left outer join BUniq on a = b;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[LEFT])'
 '    LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
 '    LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$B, SYS$CLUSTERED_INDEX$BUNIQ$K]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select A.*, BUniq.k from A left outer join BUniq on a = b;
+> explain plan for
+>     select A.*, BUniq.k from A left outer join BUniq on a = b;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2]], outputRowType=[RecordType(INTEGER K, INTEGER NOT NULL A, INTEGER K0) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[LEFT])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$B, SYS$CLUSTERED_INDEX$BUNIQ$K]])'
-0: jdbc:farrago:> -- null generating factor referenced in a join with another table
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select a from (select a, b from A left outer join BUniq on a = b), C
-. . . . . . . . >         where b = c;
+> -- null generating factor referenced in a join with another table
+> explain plan for
+>     select a from (select a, b from A left outer join BUniq on a = b), C
+>         where b = c;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER NOT NULL A) NOT NULL])'
@@ -1708,10 +1708,10 @@
 '        LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$B]])'
 '      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL C, INTEGER CAST($0):INTEGER) NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select a from
-. . . . . . . . >         (select a, Buniq.k from A left outer join BUniq on a = b) X, C
-. . . . . . . . >         where X.k = c;
+> explain plan for
+>     select a from
+>         (select a, Buniq.k from A left outer join BUniq on a = b) X, C
+>         where X.k = c;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER NOT NULL A) NOT NULL])'
@@ -1722,17 +1722,17 @@
 '          LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$B, SYS$CLUSTERED_INDEX$BUNIQ$K]])'
 '      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL C, INTEGER CAST($0):INTEGER) NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
-0: jdbc:farrago:> -- non-equijoin filter
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select A.* from A left outer join BUniq on true;
+> -- non-equijoin filter
+> explain plan for
+>     select A.* from A left outer join BUniq on true;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER K, INTEGER NOT NULL A) NOT NULL])'
 '    FennelCartesianProductRel(leftouterjoin=[true])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
 '      LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$K]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select A.* from A left outer join BUniq on a > 1;
+> explain plan for
+>     select A.* from A left outer join BUniq on a > 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER K, INTEGER NOT NULL A) NOT NULL])'
@@ -1741,9 +1741,9 @@
 '        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
 '      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$K]])'
-0: jdbc:farrago:> -- non-input references
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select A.* from A left outer join B on a = 1;
+> -- non-input references
+> explain plan for
+>     select A.* from A left outer join B on a = 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER K, INTEGER NOT NULL A) NOT NULL])'
@@ -1752,8 +1752,8 @@
 '        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
 '      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$K]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select A.* from A left outer join BUniq on a + 1 = b + 1;
+> explain plan for
+>     select A.* from A left outer join BUniq on a + 1 = b + 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER K, INTEGER NOT NULL A) NOT NULL])'
@@ -1762,9 +1762,9 @@
 '        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
 '      FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[+($t0, $t1)], B=[$t0], +($0, 1)=[$t2])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$B]])'
-0: jdbc:farrago:> -- no keys from null generating factor
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select A.* from A left outer join B on a = A.k;
+> -- no keys from null generating factor
+> explain plan for
+>     select A.* from A left outer join B on a = A.k;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER K, INTEGER NOT NULL A) NOT NULL])'
@@ -1773,5 +1773,5 @@
 '        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
 '      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$K]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

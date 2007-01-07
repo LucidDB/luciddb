@@ -1,67 +1,67 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Tests semijoin transformations
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema sj;
-0: jdbc:farrago:> set schema 'sj';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set session personality to LucidDB so all tables
-0: jdbc:farrago:> -- will be column-store by default
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table t(
-. . . . . . . . >     a int, b char(20), c varchar(20) not null,
-. . . . . . . . >     d varchar(128) not null);
-0: jdbc:farrago:> create index it_d on t(d);
-0: jdbc:farrago:> create index it_bd on t(b, d);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into t values(1, 'abcdef', 'no match', 'this is row 1');
-0: jdbc:farrago:> insert into t values(2, 'abcdef', 'ghijkl', 'this is row 2');
-0: jdbc:farrago:> insert into t values(3, 'abcdef', 'ghijkl', 'this is row 3');
-0: jdbc:farrago:> insert into t values(4, null, 'ghijkl', 'this is row 4');
-0: jdbc:farrago:> insert into t values(5, null, 'ghijkl', 'no match');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- although this table has the same number of rows as t, we will force this
-0: jdbc:farrago:> -- to be the dimension table in the semijoin by putting a dummy filter on
-0: jdbc:farrago:> -- the table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table smalltable(
-. . . . . . . . >     s1 varchar(128) not null, s2 int, s3 varchar(128) not null,
-. . . . . . . . >         s4 varchar(128) not null);
-0: jdbc:farrago:> insert into smalltable values('this is row 1', 1, 'abcdef', 'ghijkl');
-0: jdbc:farrago:> insert into smalltable values('this is row 2', 2, 'abcdef', 'ghijkl');
-0: jdbc:farrago:> insert into smalltable values('this is row 3', 3, 'abcdef', 'ghijkl');
-0: jdbc:farrago:> insert into smalltable values('this is row 4', 4, 'abcdef', 'ghijkl');
-0: jdbc:farrago:> insert into smalltable values('this is row 5', 5, 'abcdef', 'ghijkl');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Create fake statistics.  The stats do not match the actual data in the
-0: jdbc:farrago:> -- tables and are meant to force the optimizer to choose semijoins
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'T', 10000);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SMALLTABLE', 10);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'SJ', 'T', 'B', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'SJ', 'T', 'D', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'SJ', 'SMALLTABLE', 'S1', 10, 100, 10, 1,
-. . . . . . . . >     'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'SJ', 'SMALLTABLE', 'S3', 10, 100, 10, 1,
-. . . . . . . . >     'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- explain plan tests
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ----------------------
-0: jdbc:farrago:> -- single column joins
-0: jdbc:farrago:> ----------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.b = s.s3 and s.s1 = 'this is row 1' 
-. . . . . . . . >     order by a;
+> -- $Id$
+> -- Tests semijoin transformations
+> 
+> create schema sj;
+> set schema 'sj';
+> 
+> -- set session personality to LucidDB so all tables
+> -- will be column-store by default
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> create table t(
+>     a int, b char(20), c varchar(20) not null,
+>     d varchar(128) not null);
+> create index it_d on t(d);
+> create index it_bd on t(b, d);
+> 
+> insert into t values(1, 'abcdef', 'no match', 'this is row 1');
+> insert into t values(2, 'abcdef', 'ghijkl', 'this is row 2');
+> insert into t values(3, 'abcdef', 'ghijkl', 'this is row 3');
+> insert into t values(4, null, 'ghijkl', 'this is row 4');
+> insert into t values(5, null, 'ghijkl', 'no match');
+> 
+> -- although this table has the same number of rows as t, we will force this
+> -- to be the dimension table in the semijoin by putting a dummy filter on
+> -- the table
+> 
+> create table smalltable(
+>     s1 varchar(128) not null, s2 int, s3 varchar(128) not null,
+>         s4 varchar(128) not null);
+> insert into smalltable values('this is row 1', 1, 'abcdef', 'ghijkl');
+> insert into smalltable values('this is row 2', 2, 'abcdef', 'ghijkl');
+> insert into smalltable values('this is row 3', 3, 'abcdef', 'ghijkl');
+> insert into smalltable values('this is row 4', 4, 'abcdef', 'ghijkl');
+> insert into smalltable values('this is row 5', 5, 'abcdef', 'ghijkl');
+> 
+> -- Create fake statistics.  The stats do not match the actual data in the
+> -- tables and are meant to force the optimizer to choose semijoins
+> 
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'T', 10000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SMALLTABLE', 10);
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'SJ', 'T', 'B', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'SJ', 'T', 'D', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'SJ', 'SMALLTABLE', 'S1', 10, 100, 10, 1,
+>     'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'SJ', 'SMALLTABLE', 'S3', 10, 100, 10, 1,
+>     'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> 
+> -- explain plan tests
+> 
+> !set outputformat csv
+> 
+> ----------------------
+> -- single column joins
+> ----------------------
+> 
+> explain plan for select *
+>     from t inner join smalltable s
+>     on t.b = s.s3 and s.s1 = 'this is row 1' 
+>     order by a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -79,10 +79,10 @@
 '        FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[0]])'
 '            FennelValuesRel(tuples=[[{ '[', 'this is row 1', ']', 'this is row 1' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.d = s.s1 where s.s2 > 0 order by a;
+> 
+> explain plan for select *
+>     from t inner join smalltable s
+>     on t.d = s.s1 where s.s2 > 0 order by a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -96,14 +96,14 @@
 '                  FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
 '      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -----------------
-0: jdbc:farrago:> -- negative cases
-0: jdbc:farrago:> -----------------
-0: jdbc:farrago:> -- no index available to process join
-0: jdbc:farrago:> explain plan for select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.c = s.s4 where s.s2 > 0;
+> 
+> -----------------
+> -- negative cases
+> -----------------
+> -- no index available to process join
+> explain plan for select *
+>     from t inner join smalltable s
+>     on t.c = s.s4 where s.s2 > 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3, 5, 6, 7, 8]], outputRowType=[RecordType(INTEGER A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL C, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4) NOT NULL])'
@@ -112,11 +112,11 @@
 '        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A, SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$C, SYS$CLUSTERED_INDEX$T$D]])'
 '      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter not of the form cola = colb
-0: jdbc:farrago:> explain plan for select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.d = upper(s.s1) where s.s2 > 0;
+> 
+> -- filter not of the form cola = colb
+> explain plan for select *
+>     from t inner join smalltable s
+>     on t.d = upper(s.s1) where s.s2 > 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7]], outputRowType=[RecordType(INTEGER A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL C, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4) NOT NULL])'
@@ -125,22 +125,22 @@
 '      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[UPPER($t0)], proj#0..4=[{exprs}])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '          FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- no filter on dimension table, so not worthwhile to do a semijoin
-0: jdbc:farrago:> explain plan for select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.d = s.s1;
+> 
+> -- no filter on dimension table, so not worthwhile to do a semijoin
+> explain plan for select *
+>     from t inner join smalltable s
+>     on t.d = s.s1;
 'column0'
 'FennelToIteratorConverter'
 '  LhxJoinRel(leftKeys=[[3]], rightKeys=[[0]], joinType=[INNER])'
 '    LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A, SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$C, SYS$CLUSTERED_INDEX$T$D]])'
 '    LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- outer joins -- should not use semijoin
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select *
-. . . . . . . . > from t left outer join smalltable s
-. . . . . . . . > on t.b = s.s3 and s.s1 = 'this is row 1';
+> 
+> -- outer joins -- should not use semijoin
+> explain plan for
+> select *
+> from t left outer join smalltable s
+> on t.b = s.s3 and s.s1 = 'this is row 1';
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3, 5, 6, 7, 8]], outputRowType=[RecordType(INTEGER A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL C, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" S4) NOT NULL])'
@@ -150,10 +150,10 @@
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[0]])'
 '          FennelValuesRel(tuples=[[{ '[', 'this is row 1', ']', 'this is row 1' }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select *
-. . . . . . . . > from t right outer join smalltable s
-. . . . . . . . > on t.b = s.s3 and s.s1 = 'this is row 1';
+> explain plan for
+> select *
+> from t right outer join smalltable s
+> on t.b = s.s3 and s.s1 = 'this is row 1';
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[6, 7, 8, 9, 0, 1, 2, 3]], outputRowType=[RecordType(INTEGER A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4) NOT NULL])'
@@ -162,10 +162,10 @@
 '        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]])'
 '      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=[true], proj#0..5=[{exprs}])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A, SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$C, SYS$CLUSTERED_INDEX$T$D]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select *
-. . . . . . . . > from t full outer join smalltable s
-. . . . . . . . > on t.b = s.s3 and s.s1 = 'this is row 1';
+> explain plan for
+> select *
+> from t full outer join smalltable s
+> on t.b = s.s3 and s.s1 = 'this is row 1';
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[6, 7, 8, 9, 0, 1, 2, 3]], outputRowType=[RecordType(INTEGER A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" S4) NOT NULL])'
@@ -174,13 +174,13 @@
 '        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]])'
 '      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=[true], proj#0..5=[{exprs}])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A, SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$C, SYS$CLUSTERED_INDEX$T$D]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- this outer join uses HashJoin since join types match
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select *
-. . . . . . . . > from t full outer join smalltable s
-. . . . . . . . > on t.d = s.s1 where s.s2 > 0
-. . . . . . . . > order by a;
+> 
+> -- this outer join uses HashJoin since join types match
+> explain plan for
+> select *
+> from t full outer join smalltable s
+> on t.d = s.s1 where s.s2 > 0
+> order by a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -188,12 +188,12 @@
 '      LhxJoinRel(leftKeys=[[3]], rightKeys=[[0]], joinType=[FULL])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A, SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$C, SYS$CLUSTERED_INDEX$T$D]])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> select *
-. . . . . . . . > from t full outer join smalltable s
-. . . . . . . . > on t.d = s.s1 where s.s2 > 0
-. . . . . . . . > order by a;
+> 
+> !set outputformat table
+> select *
+> from t full outer join smalltable s
+> on t.d = s.s1 where s.s2 > 0
+> order by a;
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
 | A  |           B           |     C     |       D        |       S1       | S2  |   S3    |   S4    |
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
@@ -203,14 +203,14 @@
 | 3  | abcdef                | ghijkl    | this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
 | 4  |                       | ghijkl    | this is row 4  | this is row 4  | 4   | abcdef  | ghijkl  |
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---------------------
-0: jdbc:farrago:> -- multi-column joins
-0: jdbc:farrago:> ---------------------
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> explain plan for select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.d = s.s1 and t.b = s.s3 where s.s2 > 0 order by a;
+> 
+> ---------------------
+> -- multi-column joins
+> ---------------------
+> !set outputformat csv
+> explain plan for select *
+>     from t inner join smalltable s
+>     on t.d = s.s1 and t.b = s.s3 where s.s2 > 0 order by a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -228,11 +228,11 @@
 '        FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '            FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- same as above except join columns are reversed
-0: jdbc:farrago:> explain plan for select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.b = s.s3 and s.s1 = t.d where s.s2 > 0 order by a;
+> 
+> -- same as above except join columns are reversed
+> explain plan for select *
+>     from t inner join smalltable s
+>     on t.b = s.s3 and s.s1 = t.d where s.s2 > 0 order by a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -250,12 +250,12 @@
 '        FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '            FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- join on 3 columns but index only on 2 columns
-0: jdbc:farrago:> explain plan for select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
-. . . . . . . . >     order by a;
+> 
+> -- join on 3 columns but index only on 2 columns
+> explain plan for select *
+>     from t inner join smalltable s
+>     on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
+>     order by a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -273,12 +273,12 @@
 '        FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '            FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- same query but filters juggled around
-0: jdbc:farrago:> explain plan for select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on s.s4 = t.c and s.s1 = t.d and s.s3 = t.b where s.s2 > 0
-. . . . . . . . >     order by a;
+> 
+> -- same query but filters juggled around
+> explain plan for select *
+>     from t inner join smalltable s
+>     on s.s4 = t.c and s.s1 = t.d and s.s3 = t.b where s.s2 > 0
+>     order by a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -296,16 +296,16 @@
 '        FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '            FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---------------------------------------
-0: jdbc:farrago:> -- run queries above that use semijoins
-0: jdbc:farrago:> ---------------------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.b = s.s3 and s.s1 = 'this is row 1' order by a;
+> 
+> ---------------------------------------
+> -- run queries above that use semijoins
+> ---------------------------------------
+> 
+> !set outputformat table
+> 
+> select *
+>     from t inner join smalltable s
+>     on t.b = s.s3 and s.s1 = 'this is row 1' order by a;
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
 | A  |           B           |     C     |       D        |       S1       | S2  |   S3    |   S4    |
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
@@ -313,10 +313,10 @@
 | 2  | abcdef                | ghijkl    | this is row 2  | this is row 1  | 1   | abcdef  | ghijkl  |
 | 3  | abcdef                | ghijkl    | this is row 3  | this is row 1  | 1   | abcdef  | ghijkl  |
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.d = s.s1 where s.s2 > 0 order by a;
+> 
+> select *
+>     from t inner join smalltable s
+>     on t.d = s.s1 where s.s2 > 0 order by a;
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
 | A  |           B           |     C     |       D        |       S1       | S2  |   S3    |   S4    |
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
@@ -325,10 +325,10 @@
 | 3  | abcdef                | ghijkl    | this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
 | 4  |                       | ghijkl    | this is row 4  | this is row 4  | 4   | abcdef  | ghijkl  |
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.d = s.s1 and t.b = s.s3 where s.s2 > 0 order by a;
+> 
+> select *
+>     from t inner join smalltable s
+>     on t.d = s.s1 and t.b = s.s3 where s.s2 > 0 order by a;
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
 | A  |           B           |     C     |       D        |       S1       | S2  |   S3    |   S4    |
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
@@ -336,10 +336,10 @@
 | 2  | abcdef                | ghijkl    | this is row 2  | this is row 2  | 2   | abcdef  | ghijkl  |
 | 3  | abcdef                | ghijkl    | this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.b = s.s3 and s.s1 = t.d where s.s2 > 0 order by a;
+> 
+> select *
+>     from t inner join smalltable s
+>     on t.b = s.s3 and s.s1 = t.d where s.s2 > 0 order by a;
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
 | A  |           B           |     C     |       D        |       S1       | S2  |   S3    |   S4    |
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
@@ -347,102 +347,102 @@
 | 2  | abcdef                | ghijkl    | this is row 2  | this is row 2  | 2   | abcdef  | ghijkl  |
 | 3  | abcdef                | ghijkl    | this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
 +----+-----------------------+-----------+----------------+----------------+-----+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
-. . . . . . . . >     order by a;
+> 
+> select *
+>     from t inner join smalltable s
+>     on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
+>     order by a;
 +----+-----------------------+---------+----------------+----------------+-----+---------+---------+
 | A  |           B           |    C    |       D        |       S1       | S2  |   S3    |   S4    |
 +----+-----------------------+---------+----------------+----------------+-----+---------+---------+
 | 2  | abcdef                | ghijkl  | this is row 2  | this is row 2  | 2   | abcdef  | ghijkl  |
 | 3  | abcdef                | ghijkl  | this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
 +----+-----------------------+---------+----------------+----------------+-----+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select *
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on s.s4 = t.c and s.s1 = t.d and s.s3 = t.b where s.s2 > 0
-. . . . . . . . >     order by a;
+> 
+> select *
+>     from t inner join smalltable s
+>     on s.s4 = t.c and s.s1 = t.d and s.s3 = t.b where s.s2 > 0
+>     order by a;
 +----+-----------------------+---------+----------------+----------------+-----+---------+---------+
 | A  |           B           |    C    |       D        |       S1       | S2  |   S3    |   S4    |
 +----+-----------------------+---------+----------------+----------------+-----+---------+---------+
 | 2  | abcdef                | ghijkl  | this is row 2  | this is row 2  | 2   | abcdef  | ghijkl  |
 | 3  | abcdef                | ghijkl  | this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
 +----+-----------------------+---------+----------------+----------------+-----+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------
-0: jdbc:farrago:> -- n-way semijoins
-0: jdbc:farrago:> ------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table sales(
-. . . . . . . . >     sid int, product_id int, salesperson int, customer int, quantity int);
-0: jdbc:farrago:> create index i_sales_pid on sales(product_id);
-0: jdbc:farrago:> create index i_sales_sp on sales(salesperson);
-0: jdbc:farrago:> create index i_sales_cust on sales(customer);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table product(
-. . . . . . . . >     id int unique not null, name char(20), color char(10), size char(1));
-0: jdbc:farrago:> create table salesperson(id int unique not null, name char(20), age int);
-0: jdbc:farrago:> create table customer(
-. . . . . . . . >     id int unique not null, company char(20), city char(20) not null);
-0: jdbc:farrago:> create table state(city char(20) unique not null, state char(20));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index i_product_color on product(color);
-0: jdbc:farrago:> create index i_product_size on product(size);
-0: jdbc:farrago:> create index i_customer_city on customer(city);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into product values(1, 'radio', 'black', 'S');
-0: jdbc:farrago:> insert into product values(2, 'phone', 'white', 'M');
-0: jdbc:farrago:> insert into salesperson values(1, 'XYZ', 30);
-0: jdbc:farrago:> insert into salesperson values(2, 'UVW', 40);
-0: jdbc:farrago:> insert into customer values(1, 'ABC', 'San Mateo');
-0: jdbc:farrago:> insert into customer values(2, 'DEF', 'New York City');
-0: jdbc:farrago:> insert into state values('San Mateo', 'CA');
-0: jdbc:farrago:> insert into state values('New York City', 'New York');
-0: jdbc:farrago:> insert into sales values(1, 1, 1, 1, 10);
-0: jdbc:farrago:> insert into sales values(2, 1, 1, 2, 20);
-0: jdbc:farrago:> insert into sales values(3, 1, 2, 1, 30);
-0: jdbc:farrago:> insert into sales values(4, 1, 2, 2, 40);
-0: jdbc:farrago:> insert into sales values(5, 2, 1, 1, 50);
-0: jdbc:farrago:> insert into sales values(6, 2, 1, 2, 60);
-0: jdbc:farrago:> insert into sales values(7, 2, 2, 1, 70);
-0: jdbc:farrago:> insert into sales values(8, 2, 2, 2, 80);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- more faking of stats; note also that the predicates chosen in the
-0: jdbc:farrago:> -- actual queries aren't necessarily selective in reality but the stats
-0: jdbc:farrago:> -- make the optimizer think they are
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALES', 100000);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'PRODUCT', 20);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALESPERSON', 10);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'CUSTOMER', 100);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'STATE', 5);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'SJ', 'SALES', 'PRODUCT_ID', 20, 100, 20, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'SJ', 'SALES', 'SALESPERSON', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'SJ', 'SALES', 'CUSTOMER', 100, 100, 100, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'SJ', 'PRODUCT', 'ID', 20, 100, 20, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'SJ', 'SALESPERSON', 'ID', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'SJ', 'CUSTOMER', 'ID', 100, 100, 100, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'SJ', 'CUSTOMER', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'SJ', 'STATE', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, p.name, p.color, p.size, s.quantity
-. . . . . . . . >         from sales s, product p
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S'
-. . . . . . . . >         order by sid;
+> 
+> ------------------
+> -- n-way semijoins
+> ------------------
+> 
+> create table sales(
+>     sid int, product_id int, salesperson int, customer int, quantity int);
+> create index i_sales_pid on sales(product_id);
+> create index i_sales_sp on sales(salesperson);
+> create index i_sales_cust on sales(customer);
+> 
+> create table product(
+>     id int unique not null, name char(20), color char(10), size char(1));
+> create table salesperson(id int unique not null, name char(20), age int);
+> create table customer(
+>     id int unique not null, company char(20), city char(20) not null);
+> create table state(city char(20) unique not null, state char(20));
+> 
+> create index i_product_color on product(color);
+> create index i_product_size on product(size);
+> create index i_customer_city on customer(city);
+> 
+> insert into product values(1, 'radio', 'black', 'S');
+> insert into product values(2, 'phone', 'white', 'M');
+> insert into salesperson values(1, 'XYZ', 30);
+> insert into salesperson values(2, 'UVW', 40);
+> insert into customer values(1, 'ABC', 'San Mateo');
+> insert into customer values(2, 'DEF', 'New York City');
+> insert into state values('San Mateo', 'CA');
+> insert into state values('New York City', 'New York');
+> insert into sales values(1, 1, 1, 1, 10);
+> insert into sales values(2, 1, 1, 2, 20);
+> insert into sales values(3, 1, 2, 1, 30);
+> insert into sales values(4, 1, 2, 2, 40);
+> insert into sales values(5, 2, 1, 1, 50);
+> insert into sales values(6, 2, 1, 2, 60);
+> insert into sales values(7, 2, 2, 1, 70);
+> insert into sales values(8, 2, 2, 2, 80);
+> 
+> -- more faking of stats; note also that the predicates chosen in the
+> -- actual queries aren't necessarily selective in reality but the stats
+> -- make the optimizer think they are
+> 
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALES', 100000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'PRODUCT', 20);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALESPERSON', 10);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'CUSTOMER', 100);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'STATE', 5);
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'SJ', 'SALES', 'PRODUCT_ID', 20, 100, 20, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'SJ', 'SALES', 'SALESPERSON', 10, 100, 10, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'SJ', 'SALES', 'CUSTOMER', 100, 100, 100, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'SJ', 'PRODUCT', 'ID', 20, 100, 20, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'SJ', 'SALESPERSON', 'ID', 10, 100, 10, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'SJ', 'CUSTOMER', 'ID', 100, 100, 100, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'SJ', 'CUSTOMER', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'SJ', 'STATE', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> 
+> !set outputformat csv
+> 
+> explain plan for
+>     select sid, p.name, p.color, p.size, s.quantity
+>         from sales s, product p
+>         where
+>             s.product_id = p.id and p.size = 'S'
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -461,14 +461,14 @@
 '          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
 '            LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '              FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- push semijoin past filter
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, p.name, p.color, p.size, s.quantity
-. . . . . . . . >         from product p, sales s
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S' and sid > 2
-. . . . . . . . >         order by sid;
+> 
+> -- push semijoin past filter
+> explain plan for
+>     select sid, p.name, p.color, p.size, s.quantity
+>         from product p, sales s
+>         where
+>             s.product_id = p.id and p.size = 'S' and sid > 2
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -488,16 +488,16 @@
 '          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
 '            LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '              FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- push semijoin past joins
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, p.name, p.color, p.size, sp.name, s.quantity
-. . . . . . . . >         from sales s, product p, salesperson sp
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and
-. . . . . . . . >             s.salesperson = sp.id and
-. . . . . . . . >             p.size >= 'M' and sp.age >= 30
-. . . . . . . . >         order by sid;
+> 
+> -- push semijoin past joins
+> explain plan for
+>     select sid, p.name, p.color, p.size, sp.name, s.quantity
+>         from sales s, product p, salesperson sp
+>         where
+>             s.product_id = p.id and
+>             s.salesperson = sp.id and
+>             p.size >= 'M' and sp.age >= 30
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -531,16 +531,16 @@
 '        FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SALESPERSON]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SALESPERSON$NAME]], residual columns=[[2]])'
 '            FennelValuesRel(tuples=[[{ '[', 30, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, p.name, p.color, p.size, sp.name, c.company
-. . . . . . . . >         from customer c, salesperson sp, product p, sales s
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and
-. . . . . . . . >             s.salesperson = sp.id and 
-. . . . . . . . >             s.customer = c.id and
-. . . . . . . . >             p.size >= 'M' and sp.age >= 30 and c.city >= 'N'
-. . . . . . . . >         order by sid;
+> 
+> explain plan for
+>     select sid, p.name, p.color, p.size, sp.name, c.company
+>         from customer c, salesperson sp, product p, sales s
+>         where
+>             s.product_id = p.id and
+>             s.salesperson = sp.id and 
+>             s.customer = c.id and
+>             p.size >= 'M' and sp.age >= 30 and c.city >= 'N'
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -590,17 +590,17 @@
 '        FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SALESPERSON]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SALESPERSON$NAME]], residual columns=[[2]])'
 '            FennelValuesRel(tuples=[[{ '[', 30, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- push semijoin past filter and join
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, p.name, p.color, p.size, sp.name, s.quantity
-. . . . . . . . >         from product p, sales s, salesperson sp
-. . . . . . . . >         where
-. . . . . . . . >             s.sid < 3 and
-. . . . . . . . >             s.product_id = p.id and
-. . . . . . . . >             s.salesperson = sp.id and
-. . . . . . . . >             p.size >= 'M' and sp.age >= 30
-. . . . . . . . >         order by sid;
+> 
+> -- push semijoin past filter and join
+> explain plan for
+>     select sid, p.name, p.color, p.size, sp.name, s.quantity
+>         from product p, sales s, salesperson sp
+>         where
+>             s.sid < 3 and
+>             s.product_id = p.id and
+>             s.salesperson = sp.id and
+>             p.size >= 'M' and sp.age >= 30
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -635,15 +635,15 @@
 '        FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER CAST($0):INTEGER) NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SALESPERSON]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SALESPERSON$NAME]], residual columns=[[2]])'
 '            FennelValuesRel(tuples=[[{ '[', 30, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- chained join
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, c.company, c.city, st.state
-. . . . . . . . >         from sales s, state st, customer c
-. . . . . . . . >         where
-. . . . . . . . >             s.customer = c.id and
-. . . . . . . . >             c.city = st.city and st.state = 'New York'
-. . . . . . . . >         order by sid;
+> 
+> -- chained join
+> explain plan for
+>     select sid, c.company, c.city, st.state
+>         from sales s, state st, customer c
+>         where
+>             s.customer = c.id and
+>             c.city = st.city and st.state = 'New York'
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -673,16 +673,16 @@
 '                        FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 '            LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
 '              FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- index can be used for both semijoins and table filtering
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, p.name, p.color, p.size, s.quantity
-. . . . . . . . >         from sales s, product p
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S' and
-. . . . . . . . >             s.salesperson > 0
-. . . . . . . . >         order by sid;
+> 
+> -- index can be used for both semijoins and table filtering
+> 
+> explain plan for
+>     select sid, p.name, p.color, p.size, s.quantity
+>         from sales s, product p
+>         where
+>             s.product_id = p.id and p.size = 'S' and
+>             s.salesperson > 0
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -705,14 +705,14 @@
 '          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
 '            LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '              FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, p.name, p.color, p.size, s.quantity
-. . . . . . . . >         from sales s, product p
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S' and
-. . . . . . . . >             s.salesperson = 1
-. . . . . . . . >         order by sid;
+> 
+> explain plan for
+>     select sid, p.name, p.color, p.size, s.quantity
+>         from sales s, product p
+>         where
+>             s.product_id = p.id and p.size = 'S' and
+>             s.salesperson = 1
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -734,14 +734,14 @@
 '          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
 '            LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '              FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, p.name, p.color, p.size, s.quantity
-. . . . . . . . >         from sales s, product p
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S' and
-. . . . . . . . >             s.salesperson > 0 and s.customer > 0
-. . . . . . . . >         order by sid;
+> 
+> explain plan for
+>     select sid, p.name, p.color, p.size, s.quantity
+>         from sales s, product p
+>         where
+>             s.product_id = p.id and p.size = 'S' and
+>             s.salesperson > 0 and s.customer > 0
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -767,19 +767,19 @@
 '          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
 '            LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '              FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- cartesian product join where the RHS of the cartesian product join contains
-0: jdbc:farrago:> -- a semijoin where the dimension table is processed using index intersection;
-0: jdbc:farrago:> -- this testcase ensures that things behave correctly if an early close is done
-0: jdbc:farrago:> -- on the bitmap intersect
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select a, sid, name, color, size, quantity
-. . . . . . . . >         from t left outer join
-. . . . . . . . >         (select * from  sales s, product p
-. . . . . . . . >             where
-. . . . . . . . >                 s.product_id = p.id and p.size = 'S' and p.color = 'black')
-. . . . . . . . >         on true
-. . . . . . . . >     order by a, sid;
+> 
+> -- cartesian product join where the RHS of the cartesian product join contains
+> -- a semijoin where the dimension table is processed using index intersection;
+> -- this testcase ensures that things behave correctly if an early close is done
+> -- on the bitmap intersect
+> explain plan for
+>     select a, sid, name, color, size, quantity
+>         from t left outer join
+>         (select * from  sales s, product p
+>             where
+>                 s.product_id = p.id and p.size = 'S' and p.color = 'black')
+>         on true
+>     order by a, sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -807,17 +807,17 @@
 '                    FennelValuesRel(tuples=[[{ '[', 'black     ', ']', 'black     ' }]])'
 '                  LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
 '                    FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- similar to the above query except the dimension table is processed using
-0: jdbc:farrago:> -- a bitmap merge
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select a, sid, name, color, size, quantity
-. . . . . . . . >         from t left outer join
-. . . . . . . . >         (select * from  sales s, product p
-. . . . . . . . >             where
-. . . . . . . . >                 s.product_id = p.id and p.color > 'w')
-. . . . . . . . >         on true
-. . . . . . . . >     order by a, sid;
+> 
+> -- similar to the above query except the dimension table is processed using
+> -- a bitmap merge
+> explain plan for
+>     select a, sid, name, color, size, quantity
+>         from t left outer join
+>         (select * from  sales s, product p
+>             where
+>                 s.product_id = p.id and p.color > 'w')
+>         on true
+>     order by a, sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -841,15 +841,15 @@
 '                LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '                  LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_COLOR], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '                    FennelValuesRel(tuples=[[{ '(', 'w         ', '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- semijoin can't be used here because we don't push semijoins past aggregates
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select s.product_id from
-. . . . . . . . >         (select sum(quantity), product_id from sales group by product_id) s,
-. . . . . . . . >         product p
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S'
-. . . . . . . . >         order by 1;
+> 
+> -- semijoin can't be used here because we don't push semijoins past aggregates
+> explain plan for
+>     select s.product_id from
+>         (select sum(quantity), product_id from sales group by product_id) s,
+>         product p
+>         where
+>             s.product_id = p.id and p.size = 'S'
+>         order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -863,17 +863,17 @@
 '          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
 '            LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '              FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -----------------------------
-0: jdbc:farrago:> -- run the n-way join queries
-0: jdbc:farrago:> -----------------------------
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sid, p.name, p.color, p.size, s.quantity
-. . . . . . . . >     from sales s, product p
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and p.size = 'S'
-. . . . . . . . >     order by sid;
+> 
+> -----------------------------
+> -- run the n-way join queries
+> -----------------------------
+> !set outputformat table
+> 
+> select sid, p.name, p.color, p.size, s.quantity
+>     from sales s, product p
+>     where
+>         s.product_id = p.id and p.size = 'S'
+>     order by sid;
 +------+-----------------------+-------------+-------+-----------+
 | SID  |         NAME          |    COLOR    | SIZE  | QUANTITY  |
 +------+-----------------------+-------------+-------+-----------+
@@ -882,26 +882,26 @@
 | 3    | radio                 | black       | S     | 30        |
 | 4    | radio                 | black       | S     | 40        |
 +------+-----------------------+-------------+-------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sid, p.name, p.color, p.size, s.quantity
-. . . . . . . . >     from product p, sales s
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and p.size = 'S' and sid > 2
-. . . . . . . . >     order by sid;
+> 
+> select sid, p.name, p.color, p.size, s.quantity
+>     from product p, sales s
+>     where
+>         s.product_id = p.id and p.size = 'S' and sid > 2
+>     order by sid;
 +------+-----------------------+-------------+-------+-----------+
 | SID  |         NAME          |    COLOR    | SIZE  | QUANTITY  |
 +------+-----------------------+-------------+-------+-----------+
 | 3    | radio                 | black       | S     | 30        |
 | 4    | radio                 | black       | S     | 40        |
 +------+-----------------------+-------------+-------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sid, p.name, p.color, p.size, sp.name, s.quantity
-. . . . . . . . >     from sales s, product p, salesperson sp
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and
-. . . . . . . . >         s.salesperson = sp.id and
-. . . . . . . . >         p.size >= 'M' and sp.age >= 30
-. . . . . . . . >     order by sid;
+> 
+> select sid, p.name, p.color, p.size, sp.name, s.quantity
+>     from sales s, product p, salesperson sp
+>     where
+>         s.product_id = p.id and
+>         s.salesperson = sp.id and
+>         p.size >= 'M' and sp.age >= 30
+>     order by sid;
 +------+-----------------------+-------------+-------+-----------------------+-----------+
 | SID  |         NAME          |    COLOR    | SIZE  |         NAME          | QUANTITY  |
 +------+-----------------------+-------------+-------+-----------------------+-----------+
@@ -914,15 +914,15 @@
 | 7    | phone                 | white       | M     | UVW                   | 70        |
 | 8    | phone                 | white       | M     | UVW                   | 80        |
 +------+-----------------------+-------------+-------+-----------------------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sid, p.name, p.color, p.size, sp.name, c.company
-. . . . . . . . >     from customer c, salesperson sp, product p, sales s
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and
-. . . . . . . . >         s.salesperson = sp.id and 
-. . . . . . . . >         s.customer = c.id and
-. . . . . . . . >         p.size >= 'M' and sp.age >= 30 and c.city >= 'N'
-. . . . . . . . >     order by sid;
+> 
+> select sid, p.name, p.color, p.size, sp.name, c.company
+>     from customer c, salesperson sp, product p, sales s
+>     where
+>         s.product_id = p.id and
+>         s.salesperson = sp.id and 
+>         s.customer = c.id and
+>         p.size >= 'M' and sp.age >= 30 and c.city >= 'N'
+>     order by sid;
 +------+-----------------------+-------------+-------+-----------------------+-----------------------+
 | SID  |         NAME          |    COLOR    | SIZE  |         NAME          |        COMPANY        |
 +------+-----------------------+-------------+-------+-----------------------+-----------------------+
@@ -935,28 +935,28 @@
 | 7    | phone                 | white       | M     | UVW                   | ABC                   |
 | 8    | phone                 | white       | M     | UVW                   | DEF                   |
 +------+-----------------------+-------------+-------+-----------------------+-----------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sid, p.name, p.color, p.size, sp.name, s.quantity
-. . . . . . . . >     from product p, sales s, salesperson sp
-. . . . . . . . >     where
-. . . . . . . . >         s.sid < 3 and
-. . . . . . . . >         s.product_id = p.id and
-. . . . . . . . >         s.salesperson = sp.id and
-. . . . . . . . >         p.size >= 'M' and sp.age >= 30
-. . . . . . . . >     order by sid;
+> 
+> select sid, p.name, p.color, p.size, sp.name, s.quantity
+>     from product p, sales s, salesperson sp
+>     where
+>         s.sid < 3 and
+>         s.product_id = p.id and
+>         s.salesperson = sp.id and
+>         p.size >= 'M' and sp.age >= 30
+>     order by sid;
 +------+-----------------------+-------------+-------+-----------------------+-----------+
 | SID  |         NAME          |    COLOR    | SIZE  |         NAME          | QUANTITY  |
 +------+-----------------------+-------------+-------+-----------------------+-----------+
 | 1    | radio                 | black       | S     | XYZ                   | 10        |
 | 2    | radio                 | black       | S     | XYZ                   | 20        |
 +------+-----------------------+-------------+-------+-----------------------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sid, c.company, c.city, st.state
-. . . . . . . . >     from sales s, state st, customer c
-. . . . . . . . >     where
-. . . . . . . . >         s.customer = c.id and
-. . . . . . . . >         c.city = st.city and st.state = 'New York'
-. . . . . . . . >         order by sid;
+> 
+> select sid, c.company, c.city, st.state
+>     from sales s, state st, customer c
+>     where
+>         s.customer = c.id and
+>         c.city = st.city and st.state = 'New York'
+>         order by sid;
 +------+-----------------------+-----------------------+-----------------------+
 | SID  |        COMPANY        |         CITY          |         STATE         |
 +------+-----------------------+-----------------------+-----------------------+
@@ -965,13 +965,13 @@
 | 6    | DEF                   | New York City         | New York              |
 | 8    | DEF                   | New York City         | New York              |
 +------+-----------------------+-----------------------+-----------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sid, p.name, p.color, p.size, s.quantity
-. . . . . . . . >     from sales s, product p
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and p.size = 'S' and
-. . . . . . . . >         s.salesperson > 0
-. . . . . . . . >     order by sid;
+> 
+> select sid, p.name, p.color, p.size, s.quantity
+>     from sales s, product p
+>     where
+>         s.product_id = p.id and p.size = 'S' and
+>         s.salesperson > 0
+>     order by sid;
 +------+-----------------------+-------------+-------+-----------+
 | SID  |         NAME          |    COLOR    | SIZE  | QUANTITY  |
 +------+-----------------------+-------------+-------+-----------+
@@ -980,26 +980,26 @@
 | 3    | radio                 | black       | S     | 30        |
 | 4    | radio                 | black       | S     | 40        |
 +------+-----------------------+-------------+-------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sid, p.name, p.color, p.size, s.quantity
-. . . . . . . . >     from sales s, product p
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and p.size = 'S' and
-. . . . . . . . >         s.salesperson = 1
-. . . . . . . . >     order by sid;
+> 
+> select sid, p.name, p.color, p.size, s.quantity
+>     from sales s, product p
+>     where
+>         s.product_id = p.id and p.size = 'S' and
+>         s.salesperson = 1
+>     order by sid;
 +------+-----------------------+-------------+-------+-----------+
 | SID  |         NAME          |    COLOR    | SIZE  | QUANTITY  |
 +------+-----------------------+-------------+-------+-----------+
 | 1    | radio                 | black       | S     | 10        |
 | 2    | radio                 | black       | S     | 20        |
 +------+-----------------------+-------------+-------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sid, p.name, p.color, p.size, s.quantity
-. . . . . . . . >     from sales s, product p
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and p.size = 'S' and
-. . . . . . . . >         s.salesperson > 0 and s.customer > 0
-. . . . . . . . >     order by sid;
+> 
+> select sid, p.name, p.color, p.size, s.quantity
+>     from sales s, product p
+>     where
+>         s.product_id = p.id and p.size = 'S' and
+>         s.salesperson > 0 and s.customer > 0
+>     order by sid;
 +------+-----------------------+-------------+-------+-----------+
 | SID  |         NAME          |    COLOR    | SIZE  | QUANTITY  |
 +------+-----------------------+-------------+-------+-----------+
@@ -1008,16 +1008,16 @@
 | 3    | radio                 | black       | S     | 30        |
 | 4    | radio                 | black       | S     | 40        |
 +------+-----------------------+-------------+-------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- run the queries below twice to ensure proper handling when executing a
-0: jdbc:farrago:> -- previously closed stream graph
-0: jdbc:farrago:> select a, sid, name, color, size, quantity
-. . . . . . . . >     from t left outer join
-. . . . . . . . >     (select * from  sales s, product p
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S' and p.color = 'black')
-. . . . . . . . >     on true
-. . . . . . . . > order by a, sid;
+> 
+> -- run the queries below twice to ensure proper handling when executing a
+> -- previously closed stream graph
+> select a, sid, name, color, size, quantity
+>     from t left outer join
+>     (select * from  sales s, product p
+>         where
+>             s.product_id = p.id and p.size = 'S' and p.color = 'black')
+>     on true
+> order by a, sid;
 +----+------+-----------------------+-------------+-------+-----------+
 | A  | SID  |         NAME          |    COLOR    | SIZE  | QUANTITY  |
 +----+------+-----------------------+-------------+-------+-----------+
@@ -1042,13 +1042,13 @@
 | 5  | 3    | radio                 | black       | S     | 30        |
 | 5  | 4    | radio                 | black       | S     | 40        |
 +----+------+-----------------------+-------------+-------+-----------+
-0: jdbc:farrago:> select a, sid, name, color, size, quantity
-. . . . . . . . >     from t left outer join
-. . . . . . . . >     (select * from  sales s, product p
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S' and p.color = 'black')
-. . . . . . . . >     on true
-. . . . . . . . > order by a, sid;
+> select a, sid, name, color, size, quantity
+>     from t left outer join
+>     (select * from  sales s, product p
+>         where
+>             s.product_id = p.id and p.size = 'S' and p.color = 'black')
+>     on true
+> order by a, sid;
 +----+------+-----------------------+-------------+-------+-----------+
 | A  | SID  |         NAME          |    COLOR    | SIZE  | QUANTITY  |
 +----+------+-----------------------+-------------+-------+-----------+
@@ -1073,14 +1073,14 @@
 | 5  | 3    | radio                 | black       | S     | 30        |
 | 5  | 4    | radio                 | black       | S     | 40        |
 +----+------+-----------------------+-------------+-------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select a, sid, name, color, size, quantity
-. . . . . . . . >     from t left outer join
-. . . . . . . . >     (select * from  sales s, product p
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.color > 'w')
-. . . . . . . . >     on true
-. . . . . . . . > order by a, sid;
+> 
+> select a, sid, name, color, size, quantity
+>     from t left outer join
+>     (select * from  sales s, product p
+>         where
+>             s.product_id = p.id and p.color > 'w')
+>     on true
+> order by a, sid;
 +----+------+-----------------------+-------------+-------+-----------+
 | A  | SID  |         NAME          |    COLOR    | SIZE  | QUANTITY  |
 +----+------+-----------------------+-------------+-------+-----------+
@@ -1105,13 +1105,13 @@
 | 5  | 7    | phone                 | white       | M     | 70        |
 | 5  | 8    | phone                 | white       | M     | 80        |
 +----+------+-----------------------+-------------+-------+-----------+
-0: jdbc:farrago:> select a, sid, name, color, size, quantity
-. . . . . . . . >     from t left outer join
-. . . . . . . . >     (select * from  sales s, product p
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.color > 'w')
-. . . . . . . . >     on true
-. . . . . . . . > order by a, sid;
+> select a, sid, name, color, size, quantity
+>     from t left outer join
+>     (select * from  sales s, product p
+>         where
+>             s.product_id = p.id and p.color > 'w')
+>     on true
+> order by a, sid;
 +----+------+-----------------------+-------------+-------+-----------+
 | A  | SID  |         NAME          |    COLOR    | SIZE  | QUANTITY  |
 +----+------+-----------------------+-------------+-------+-----------+
@@ -1136,15 +1136,15 @@
 | 5  | 7    | phone                 | white       | M     | 70        |
 | 5  | 8    | phone                 | white       | M     | 80        |
 +----+------+-----------------------+-------------+-------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --------------------------------------------------------------------------
-0: jdbc:farrago:> -- semijoin used for IN clause; customer column has 100 distinct values so
-0: jdbc:farrago:> -- the semijoin should be worthwhile
-0: jdbc:farrago:> --------------------------------------------------------------------------
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from sales where customer in
-. . . . . . . . >         (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+> 
+> --------------------------------------------------------------------------
+> -- semijoin used for IN clause; customer column has 100 distinct values so
+> -- the semijoin should be worthwhile
+> --------------------------------------------------------------------------
+> !set outputformat csv
+> explain plan for
+>     select * from sales where customer in
+>         (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
@@ -1155,9 +1155,9 @@
 '            FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ROW_VALUE) NOT NULL])'
 '              LhxAggRel(groupCount=[1])'
 '                FennelValuesRel(tuples=[[{ 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 }, { 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from sales where customer in
-. . . . . . . . >         (select id from customer where id < 10);
+> explain plan for
+>     select * from sales where customer in
+>         (select id from customer where id < 10);
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
@@ -1170,11 +1170,11 @@
 '                LcsNormalizerRel'
 '                  LcsIndexOnlyScanRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$CUSTOMER$ID], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])'
 '                    FennelValuesRel(tuples=[[{ '-', null, ')', 10 }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> select * from sales where customer in
-. . . . . . . . >     (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-. . . . . . . . >     order by sid;
+> 
+> !set outputformat table
+> select * from sales where customer in
+>     (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+>     order by sid;
 +------+-------------+--------------+-----------+-----------+
 | SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY  |
 +------+-------------+--------------+-----------+-----------+
@@ -1187,10 +1187,10 @@
 | 7    | 2           | 2            | 1         | 70        |
 | 8    | 2           | 2            | 2         | 80        |
 +------+-------------+--------------+-----------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sales where customer in
-. . . . . . . . >     (select id from customer where id < 10)
-. . . . . . . . >     order by sid;
+> 
+> select * from sales where customer in
+>     (select id from customer where id < 10)
+>     order by sid;
 +------+-------------+--------------+-----------+-----------+
 | SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY  |
 +------+-------------+--------------+-----------+-----------+
@@ -1203,13 +1203,13 @@
 | 7    | 2           | 2            | 1         | 70        |
 | 8    | 2           | 2            | 2         | 80        |
 +------+-------------+--------------+-----------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --------------------------
-0: jdbc:farrago:> -- test semijoins on views
-0: jdbc:farrago:> --------------------------
-0: jdbc:farrago:> create view vt(vc, vd, vb, vbd) as
-. . . . . . . . >     select upper(c), trim(d), b, b || d from t;
-0: jdbc:farrago:> select * from vt;
+> 
+> --------------------------
+> -- test semijoins on views
+> --------------------------
+> create view vt(vc, vd, vb, vbd) as
+>     select upper(c), trim(d), b, b || d from t;
+> select * from vt;
 +-----------+----------------+-----------------------+------------------------------------+
 |    VC     |       VD       |          VB           |                VBD                 |
 +-----------+----------------+-----------------------+------------------------------------+
@@ -1219,13 +1219,13 @@
 | GHIJKL    | this is row 4  |                       |                                    |
 | GHIJKL    | no match       |                       |                                    |
 +-----------+----------------+-----------------------+------------------------------------+
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- semijoin should be usable in these two cases; for the second and third,
-0: jdbc:farrago:> -- should only use the index on column b
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from vt, smalltable s
-. . . . . . . . >         where vt.vb = s.s3 and s.s1 = 'this is row 1';
+> !set outputformat csv
+> 
+> -- semijoin should be usable in these two cases; for the second and third,
+> -- should only use the index on column b
+> explain plan for
+>     select * from vt, smalltable s
+>         where vt.vb = s.s3 and s.s1 = 'this is row 1';
 'column0'
 'IterCalcRel(expr#0..8=[{inputs}], expr#9=[UPPER($t1)], expr#10=[FLAG(Both)], expr#11=[' '], expr#12=[TRIM($t10, $t11, $t2)], expr#13=[||($t0, $t2)], VC=[$t9], VD=[$t12], VB=[$t0], VBD=[$t13], S1=[$t4], S2=[$t5], S3=[$t6], S4=[$t7])'
 '  FennelToIteratorConverter'
@@ -1242,9 +1242,9 @@
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[0]])'
 '          FennelValuesRel(tuples=[[{ '[', 'this is row 1', ']', 'this is row 1' }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from vt, smalltable s
-. . . . . . . . >         where vt.vb = s.s3 and vt.vbd = s.s1 and s.s2 > 0;
+> explain plan for
+>     select * from vt, smalltable s
+>         where vt.vb = s.s3 and vt.vbd = s.s1 and s.s2 > 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[VC, VD, VB, VBD, S1, S2, S3, S4]])'
@@ -1262,9 +1262,9 @@
 '        FennelReshapeRel(projection=[[0, 1, 2, 3, 2, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary", VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '            FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from vt, smalltable s
-. . . . . . . . >         where vt.vb = s.s3 and vt.vd = s.s1 and s.s2 > 0;
+> explain plan for
+>     select * from vt, smalltable s
+>         where vt.vb = s.s3 and vt.vd = s.s1 and s.s2 > 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[VC, VD, VB, VBD, S1, S2, S3, S4]])'
@@ -1282,10 +1282,10 @@
 '        FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '            FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- but not in these cases
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from vt, smalltable s where vt.vd = s.s1 and s.s2 > 0;
+> 
+> -- but not in these cases
+> explain plan for
+>     select * from vt, smalltable s where vt.vd = s.s1 and s.s2 > 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[VC, VD, VB, VBD, S1, S2, S3, S4]])'
@@ -1294,9 +1294,9 @@
 '        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[[1, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$C, SYS$CLUSTERED_INDEX$T$D]])'
 '      LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '        FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from vt, smalltable s
-. . . . . . . . >         where vt.vbd = s.s3 and s.s1 = 'this is row 1';
+> explain plan for
+>     select * from vt, smalltable s
+>         where vt.vbd = s.s3 and s.s1 = 'this is row 1';
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[VC, VD, VB, VBD, S1, S2, S3, S4]])'
@@ -1307,11 +1307,11 @@
 '        FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, INTEGER S2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(148) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[0]])'
 '            FennelValuesRel(tuples=[[{ '[', 'this is row 1', ']', 'this is row 1' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- run the queries corresponding to the cases where semijoins can be used
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> select * from vt, smalltable s
-. . . . . . . . >     where vt.vb = s.s3 and s.s1 = 'this is row 1' order by vc;
+> 
+> -- run the queries corresponding to the cases where semijoins can be used
+> !set outputformat table
+> select * from vt, smalltable s
+>     where vt.vb = s.s3 and s.s1 = 'this is row 1' order by vc;
 +-----------+----------------+-----------------------+------------------------------------+----------------+-----+---------+---------+
 |    VC     |       VD       |          VB           |                VBD                 |       S1       | S2  |   S3    |   S4    |
 +-----------+----------------+-----------------------+------------------------------------+----------------+-----+---------+---------+
@@ -1319,14 +1319,14 @@
 | GHIJKL    | this is row 3  | abcdef                | abcdef              this is row 3  | this is row 1  | 1   | abcdef  | ghijkl  |
 | NO MATCH  | this is row 1  | abcdef                | abcdef              this is row 1  | this is row 1  | 1   | abcdef  | ghijkl  |
 +-----------+----------------+-----------------------+------------------------------------+----------------+-----+---------+---------+
-0: jdbc:farrago:> select * from vt, smalltable s
-. . . . . . . . >     where vt.vb = s.s3 and vt.vbd = s.s1 and s.s2 > 0 order by vc;
+> select * from vt, smalltable s
+>     where vt.vb = s.s3 and vt.vbd = s.s1 and s.s2 > 0 order by vc;
 +-----+-----+-----+------+-----+-----+-----+-----+
 | VC  | VD  | VB  | VBD  | S1  | S2  | S3  | S4  |
 +-----+-----+-----+------+-----+-----+-----+-----+
 +-----+-----+-----+------+-----+-----+-----+-----+
-0: jdbc:farrago:> select * from vt, smalltable s
-. . . . . . . . >     where vt.vb = s.s3 and vt.vd = s.s1 and s.s2 > 0 order by vc;
+> select * from vt, smalltable s
+>     where vt.vb = s.s3 and vt.vd = s.s1 and s.s2 > 0 order by vc;
 +-----------+----------------+-----------------------+------------------------------------+----------------+-----+---------+---------+
 |    VC     |       VD       |          VB           |                VBD                 |       S1       | S2  |   S3    |   S4    |
 +-----------+----------------+-----------------------+------------------------------------+----------------+-----+---------+---------+
@@ -1334,17 +1334,17 @@
 | GHIJKL    | this is row 3  | abcdef                | abcdef              this is row 3  | this is row 3  | 3   | abcdef  | ghijkl  |
 | NO MATCH  | this is row 1  | abcdef                | abcdef              this is row 1  | this is row 1  | 1   | abcdef  | ghijkl  |
 +-----------+----------------+-----------------------+------------------------------------+----------------+-----+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------------------------------------
-0: jdbc:farrago:> -- cases where join with dimension table can be removed
-0: jdbc:farrago:> -------------------------------------------------------
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, p.id, s.quantity
-. . . . . . . . >         from sales s, product p
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S'
-. . . . . . . . >         order by sid;
+> 
+> -------------------------------------------------------
+> -- cases where join with dimension table can be removed
+> -------------------------------------------------------
+> !set outputformat csv
+> explain plan for
+>     select sid, p.id, s.quantity
+>         from sales s, product p
+>         where
+>             s.product_id = p.id and p.size = 'S'
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1358,12 +1358,12 @@
 '                  LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
 '                    LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '                      FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid
-. . . . . . . . >         from product p, sales s
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S' and sid > 2
-. . . . . . . . >         order by sid;
+> explain plan for
+>     select sid
+>         from product p, sales s
+>         where
+>             s.product_id = p.id and p.size = 'S' and sid > 2
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1377,14 +1377,14 @@
 '                  LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '                    FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
 '      FennelValuesRel(tuples=[[{ '(', 2, '+', null }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, p.id as pid, sp.id spid, s.quantity
-. . . . . . . . >         from sales s, product p, salesperson sp
-. . . . . . . . >         where
-. . . . . . . . >             p.id = s.product_id and
-. . . . . . . . >             s.salesperson = sp.id and
-. . . . . . . . >             p.size = 'M' and sp.age = 30
-. . . . . . . . >         order by sid;
+> explain plan for
+>     select sid, p.id as pid, sp.id spid, s.quantity
+>         from sales s, product p, salesperson sp
+>         where
+>             p.id = s.product_id and
+>             s.salesperson = sp.id and
+>             p.size = 'M' and sp.age = 30
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1406,15 +1406,15 @@
 '                    LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
 '                      LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '                        FennelValuesRel(tuples=[[{ '[', 'M', ']', 'M' }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid
-. . . . . . . . >         from customer c, salesperson sp, product p, sales s
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and
-. . . . . . . . >             s.salesperson = sp.id and 
-. . . . . . . . >             s.customer = c.id and
-. . . . . . . . >             p.size = 'S' and sp.age = 40 and c.city >= 'N'
-. . . . . . . . >         order by sid;
+> explain plan for
+>     select sid
+>         from customer c, salesperson sp, product p, sales s
+>         where
+>             s.product_id = p.id and
+>             s.salesperson = sp.id and 
+>             s.customer = c.id and
+>             p.size = 'S' and sp.age = 40 and c.city >= 'N'
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1444,15 +1444,15 @@
 '                    LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '                      LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '                        FennelValuesRel(tuples=[[{ '[', 'N                   ', '+', null }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, s.quantity
-. . . . . . . . >         from product p, sales s, salesperson sp
-. . . . . . . . >         where
-. . . . . . . . >             s.sid < 3 and
-. . . . . . . . >             s.product_id = p.id and
-. . . . . . . . >             s.salesperson = sp.id and
-. . . . . . . . >             p.size >= 'M' and sp.age >= 30
-. . . . . . . . >         order by sid;
+> explain plan for
+>     select sid, s.quantity
+>         from product p, sales s, salesperson sp
+>         where
+>             s.sid < 3 and
+>             s.product_id = p.id and
+>             s.salesperson = sp.id and
+>             p.size >= 'M' and sp.age >= 30
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1475,13 +1475,13 @@
 '                      LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '                        FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
 '      FennelValuesRel(tuples=[[{ '(', null, ')', 3 }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, c.id
-. . . . . . . . >         from sales s, state st, customer c
-. . . . . . . . >         where
-. . . . . . . . >             s.customer = c.id and
-. . . . . . . . >             c.city = st.city and st.state = 'New York'
-. . . . . . . . >         order by sid;
+> explain plan for
+>     select sid, c.id
+>         from sales s, state st, customer c
+>         where
+>             s.customer = c.id and
+>             c.city = st.city and st.state = 'New York'
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1499,14 +1499,14 @@
 '                          LhxAggRel(groupCount=[1])'
 '                            LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
 '                              FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
-0: jdbc:farrago:> -- shuffle the order of the tables in the from clause
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, c.id
-. . . . . . . . >         from customer c, sales s, state st
-. . . . . . . . >         where
-. . . . . . . . >             s.customer = c.id and
-. . . . . . . . >             c.city = st.city and st.state = 'New York'
-. . . . . . . . >         order by sid;
+> -- shuffle the order of the tables in the from clause
+> explain plan for
+>     select sid, c.id
+>         from customer c, sales s, state st
+>         where
+>             s.customer = c.id and
+>             c.city = st.city and st.state = 'New York'
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1524,16 +1524,16 @@
 '                          LhxAggRel(groupCount=[1])'
 '                            LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
 '                              FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- product can be removed because its join key with t can be obtained from
-0: jdbc:farrago:> -- sales
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, s.quantity, t.c
-. . . . . . . . >         from sales s, product p, t
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S' and
-. . . . . . . . >             p.id = t.a
-. . . . . . . . >         order by sid;
+> 
+> -- product can be removed because its join key with t can be obtained from
+> -- sales
+> explain plan for
+>     select sid, s.quantity, t.c
+>         from sales s, product p, t
+>         where
+>             s.product_id = p.id and p.size = 'S' and
+>             p.id = t.a
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1550,14 +1550,14 @@
 '                      LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
 '                        LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '                          FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- run the queries
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> select sid, p.id, s.quantity
-. . . . . . . . >     from sales s, product p
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and p.size = 'S'
-. . . . . . . . >     order by sid;
+> 
+> -- run the queries
+> !set outputformat table
+> select sid, p.id, s.quantity
+>     from sales s, product p
+>     where
+>         s.product_id = p.id and p.size = 'S'
+>     order by sid;
 +------+-----+-----------+
 | SID  | ID  | QUANTITY  |
 +------+-----+-----------+
@@ -1566,64 +1566,64 @@
 | 3    | 1   | 30        |
 | 4    | 1   | 40        |
 +------+-----+-----------+
-0: jdbc:farrago:> select sid
-. . . . . . . . >     from product p, sales s
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and p.size = 'S' and sid > 2
-. . . . . . . . >     order by sid;
+> select sid
+>     from product p, sales s
+>     where
+>         s.product_id = p.id and p.size = 'S' and sid > 2
+>     order by sid;
 +------+
 | SID  |
 +------+
 | 3    |
 | 4    |
 +------+
-0: jdbc:farrago:> select sid, p.id as pid, sp.id spid, s.quantity
-. . . . . . . . >     from sales s, product p, salesperson sp
-. . . . . . . . >     where
-. . . . . . . . >         p.id = s.product_id and
-. . . . . . . . >         s.salesperson = sp.id and
-. . . . . . . . >         p.size = 'M' and sp.age = 30
-. . . . . . . . >     order by sid;
+> select sid, p.id as pid, sp.id spid, s.quantity
+>     from sales s, product p, salesperson sp
+>     where
+>         p.id = s.product_id and
+>         s.salesperson = sp.id and
+>         p.size = 'M' and sp.age = 30
+>     order by sid;
 +------+------+-------+-----------+
 | SID  | PID  | SPID  | QUANTITY  |
 +------+------+-------+-----------+
 | 5    | 2    | 1     | 50        |
 | 6    | 2    | 1     | 60        |
 +------+------+-------+-----------+
-0: jdbc:farrago:> select sid
-. . . . . . . . >     from customer c, salesperson sp, product p, sales s
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and
-. . . . . . . . >         s.salesperson = sp.id and 
-. . . . . . . . >         s.customer = c.id and
-. . . . . . . . >         p.size = 'S' and sp.age = 40 and c.city >= 'N'
-. . . . . . . . >     order by sid;
+> select sid
+>     from customer c, salesperson sp, product p, sales s
+>     where
+>         s.product_id = p.id and
+>         s.salesperson = sp.id and 
+>         s.customer = c.id and
+>         p.size = 'S' and sp.age = 40 and c.city >= 'N'
+>     order by sid;
 +------+
 | SID  |
 +------+
 | 3    |
 | 4    |
 +------+
-0: jdbc:farrago:> select sid, s.quantity
-. . . . . . . . >     from product p, sales s, salesperson sp
-. . . . . . . . >     where
-. . . . . . . . >         s.sid < 3 and
-. . . . . . . . >         s.product_id = p.id and
-. . . . . . . . >         s.salesperson = sp.id and
-. . . . . . . . >         p.size >= 'M' and sp.age >= 30
-. . . . . . . . >     order by sid;
+> select sid, s.quantity
+>     from product p, sales s, salesperson sp
+>     where
+>         s.sid < 3 and
+>         s.product_id = p.id and
+>         s.salesperson = sp.id and
+>         p.size >= 'M' and sp.age >= 30
+>     order by sid;
 +------+-----------+
 | SID  | QUANTITY  |
 +------+-----------+
 | 1    | 10        |
 | 2    | 20        |
 +------+-----------+
-0: jdbc:farrago:> select sid, c.id
-. . . . . . . . >     from sales s, state st, customer c
-. . . . . . . . >     where
-. . . . . . . . >         s.customer = c.id and
-. . . . . . . . >         c.city = st.city and st.state = 'New York'
-. . . . . . . . >     order by sid;
+> select sid, c.id
+>     from sales s, state st, customer c
+>     where
+>         s.customer = c.id and
+>         c.city = st.city and st.state = 'New York'
+>     order by sid;
 +------+-----+
 | SID  | ID  |
 +------+-----+
@@ -1632,12 +1632,12 @@
 | 6    | 2   |
 | 8    | 2   |
 +------+-----+
-0: jdbc:farrago:> select sid, c.id
-. . . . . . . . >     from customer c, sales s, state st
-. . . . . . . . >     where
-. . . . . . . . >         s.customer = c.id and
-. . . . . . . . >         c.city = st.city and st.state = 'New York'
-. . . . . . . . >     order by sid;
+> select sid, c.id
+>     from customer c, sales s, state st
+>     where
+>         s.customer = c.id and
+>         c.city = st.city and st.state = 'New York'
+>     order by sid;
 +------+-----+
 | SID  | ID  |
 +------+-----+
@@ -1646,12 +1646,12 @@
 | 6    | 2   |
 | 8    | 2   |
 +------+-----+
-0: jdbc:farrago:> select sid, s.quantity, t.c
-. . . . . . . . >     from sales s, product p, t
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and p.size = 'S' and
-. . . . . . . . >         p.id = t.a
-. . . . . . . . >     order by sid;
+> select sid, s.quantity, t.c
+>     from sales s, product p, t
+>     where
+>         s.product_id = p.id and p.size = 'S' and
+>         p.id = t.a
+>     order by sid;
 +------+-----------+-----------+
 | SID  | QUANTITY  |     C     |
 +------+-----------+-----------+
@@ -1660,17 +1660,17 @@
 | 3    | 30        | no match  |
 | 4    | 40        | no match  |
 +------+-----------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -----------------------------------------
-0: jdbc:farrago:> -- cases where the join cannot be removed
-0: jdbc:farrago:> -----------------------------------------
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- extra join filters
-0: jdbc:farrago:> explain plan for select t.*
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
-. . . . . . . . >     order by a;
+> 
+> -----------------------------------------
+> -- cases where the join cannot be removed
+> -----------------------------------------
+> !set outputformat csv
+> 
+> -- extra join filters
+> explain plan for select t.*
+>     from t inner join smalltable s
+>     on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
+>     order by a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1688,12 +1688,12 @@
 '        FennelReshapeRel(projection=[[0, 1, 2, 1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S4, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SMALLTABLE$S4]], residual columns=[[1]])'
 '            FennelValuesRel(tuples=[[{ '(', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- semijoin keys not unique
-0: jdbc:farrago:> explain plan for select t.*
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.b = s.s3 and s.s1 = 'this is row 1' 
-. . . . . . . . >     order by a;
+> 
+> -- semijoin keys not unique
+> explain plan for select t.*
+>     from t inner join smalltable s
+>     on t.b = s.s3 and s.s1 = 'this is row 1' 
+>     order by a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1711,14 +1711,14 @@
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[0]])'
 '            FennelValuesRel(tuples=[[{ '[', 'this is row 1', ']', 'this is row 1' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- references to non-semijoin key column in projection list
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select *
-. . . . . . . . >         from sales s, product p
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S'
-. . . . . . . . >         order by sid;
+> 
+> -- references to non-semijoin key column in projection list
+> explain plan for
+>     select *
+>         from sales s, product p
+>         where
+>             s.product_id = p.id and p.size = 'S'
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1737,12 +1737,12 @@
 '          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
 '            LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '              FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, p.name, s.quantity
-. . . . . . . . >         from sales s, product p
-. . . . . . . . >         where
-. . . . . . . . >             s.product_id = p.id and p.size = 'S'
-. . . . . . . . >         order by sid;
+> explain plan for
+>     select sid, p.name, s.quantity
+>         from sales s, product p
+>         where
+>             s.product_id = p.id and p.size = 'S'
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1761,18 +1761,18 @@
 '          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME]])'
 '            LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '              FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- state can be removed because city can be retrieved from customer; note that
-0: jdbc:farrago:> -- we can't remove customer instead of state because if we were to retrieve
-0: jdbc:farrago:> -- city from state instead of customer, we'd also need the city column from
-0: jdbc:farrago:> -- customer to join with state, resulting in neither join being removed
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, st.city
-. . . . . . . . >         from sales s, state st, customer c
-. . . . . . . . >         where
-. . . . . . . . >             s.customer = c.id and
-. . . . . . . . >             c.city = st.city and st.state = 'New York'
-. . . . . . . . >         order by sid;
+> 
+> -- state can be removed because city can be retrieved from customer; note that
+> -- we can't remove customer instead of state because if we were to retrieve
+> -- city from state instead of customer, we'd also need the city column from
+> -- customer to join with state, resulting in neither join being removed
+> explain plan for
+>     select sid, st.city
+>         from sales s, state st, customer c
+>         where
+>             s.customer = c.id and
+>             c.city = st.city and st.state = 'New York'
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1799,17 +1799,17 @@
 '                  LhxAggRel(groupCount=[1])'
 '                    LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
 '                      FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- neither customer or state can be removed because state is referenced in the
-0: jdbc:farrago:> -- projection list; therefore customer needs to be joined with state in order
-0: jdbc:farrago:> -- to retrieve the state column
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid, st.state
-. . . . . . . . >         from sales s, state st, customer c
-. . . . . . . . >         where
-. . . . . . . . >             s.customer = c.id and
-. . . . . . . . >             c.city = st.city and st.state = 'New York'
-. . . . . . . . >         order by sid;
+> 
+> -- neither customer or state can be removed because state is referenced in the
+> -- projection list; therefore customer needs to be joined with state in order
+> -- to retrieve the state column
+> explain plan for
+>     select sid, st.state
+>         from sales s, state st, customer c
+>         where
+>             s.customer = c.id and
+>             c.city = st.city and st.state = 'New York'
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1839,18 +1839,18 @@
 '                        FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 '            LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
 '              FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- although customer doesn't need to be joined with either state or sales
-0: jdbc:farrago:> -- because of semijoins with those two tables, it needs to be joined with t;
-0: jdbc:farrago:> -- so its join can't be removed
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select sid
-. . . . . . . . >         from sales s, state st, customer c, t
-. . . . . . . . >         where
-. . . . . . . . >             s.customer = c.id and
-. . . . . . . . >             c.city = st.city and st.state = 'New York' and
-. . . . . . . . >             c.city = t.c
-. . . . . . . . >         order by sid;
+> 
+> -- although customer doesn't need to be joined with either state or sales
+> -- because of semijoins with those two tables, it needs to be joined with t;
+> -- so its join can't be removed
+> explain plan for
+>     select sid
+>         from sales s, state st, customer c, t
+>         where
+>             s.customer = c.id and
+>             c.city = st.city and st.state = 'New York' and
+>             c.city = t.c
+>         order by sid;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -1880,22 +1880,22 @@
 '                        LcsRowScanRel(table=[[LOCALDB, SJ, STATE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$STATE$CITY, SYS$CLUSTERED_INDEX$STATE$STATE]], residual columns=[[1]])'
 '                          FennelValuesRel(tuples=[[{ '[', 'New York            ', ']', 'New York            ' }]])'
 '        LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$T$C]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> select t.*
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
-. . . . . . . . >     order by a;
+> 
+> !set outputformat table
+> select t.*
+>     from t inner join smalltable s
+>     on s.s1 = t.d and s.s3 = t.b and t.c = s.s4 where s.s2 > 0
+>     order by a;
 +----+-----------------------+---------+----------------+
 | A  |           B           |    C    |       D        |
 +----+-----------------------+---------+----------------+
 | 2  | abcdef                | ghijkl  | this is row 2  |
 | 3  | abcdef                | ghijkl  | this is row 3  |
 +----+-----------------------+---------+----------------+
-0: jdbc:farrago:> select t.*
-. . . . . . . . >     from t inner join smalltable s
-. . . . . . . . >     on t.b = s.s3 and s.s1 = 'this is row 1' 
-. . . . . . . . >     order by a;
+> select t.*
+>     from t inner join smalltable s
+>     on t.b = s.s3 and s.s1 = 'this is row 1' 
+>     order by a;
 +----+-----------------------+-----------+----------------+
 | A  |           B           |     C     |       D        |
 +----+-----------------------+-----------+----------------+
@@ -1903,11 +1903,11 @@
 | 2  | abcdef                | ghijkl    | this is row 2  |
 | 3  | abcdef                | ghijkl    | this is row 3  |
 +----+-----------------------+-----------+----------------+
-0: jdbc:farrago:> select *
-. . . . . . . . >     from sales s, product p
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and p.size = 'S'
-. . . . . . . . >     order by sid;
+> select *
+>     from sales s, product p
+>     where
+>         s.product_id = p.id and p.size = 'S'
+>     order by sid;
 +------+-------------+--------------+-----------+-----------+-----+-----------------------+-------------+-------+
 | SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY  | ID  |         NAME          |    COLOR    | SIZE  |
 +------+-------------+--------------+-----------+-----------+-----+-----------------------+-------------+-------+
@@ -1916,11 +1916,11 @@
 | 3    | 1           | 2            | 1         | 30        | 1   | radio                 | black       | S     |
 | 4    | 1           | 2            | 2         | 40        | 1   | radio                 | black       | S     |
 +------+-------------+--------------+-----------+-----------+-----+-----------------------+-------------+-------+
-0: jdbc:farrago:> select sid, p.name, s.quantity
-. . . . . . . . >     from sales s, product p
-. . . . . . . . >     where
-. . . . . . . . >         s.product_id = p.id and p.size = 'S'
-. . . . . . . . >     order by sid;
+> select sid, p.name, s.quantity
+>     from sales s, product p
+>     where
+>         s.product_id = p.id and p.size = 'S'
+>     order by sid;
 +------+-----------------------+-----------+
 | SID  |         NAME          | QUANTITY  |
 +------+-----------------------+-----------+
@@ -1929,12 +1929,12 @@
 | 3    | radio                 | 30        |
 | 4    | radio                 | 40        |
 +------+-----------------------+-----------+
-0: jdbc:farrago:> select sid, st.city
-. . . . . . . . >     from sales s, state st, customer c
-. . . . . . . . >     where
-. . . . . . . . >         s.customer = c.id and
-. . . . . . . . >         c.city = st.city and st.state = 'New York'
-. . . . . . . . >     order by sid;
+> select sid, st.city
+>     from sales s, state st, customer c
+>     where
+>         s.customer = c.id and
+>         c.city = st.city and st.state = 'New York'
+>     order by sid;
 +------+-----------------------+
 | SID  |         CITY          |
 +------+-----------------------+
@@ -1943,12 +1943,12 @@
 | 6    | New York City         |
 | 8    | New York City         |
 +------+-----------------------+
-0: jdbc:farrago:> select sid, st.state
-. . . . . . . . >     from sales s, state st, customer c
-. . . . . . . . >     where
-. . . . . . . . >         s.customer = c.id and
-. . . . . . . . >         c.city = st.city and st.state = 'New York'
-. . . . . . . . >     order by sid;
+> select sid, st.state
+>     from sales s, state st, customer c
+>     where
+>         s.customer = c.id and
+>         c.city = st.city and st.state = 'New York'
+>     order by sid;
 +------+-----------------------+
 | SID  |         STATE         |
 +------+-----------------------+
@@ -1957,16 +1957,16 @@
 | 6    | New York              |
 | 8    | New York              |
 +------+-----------------------+
-0: jdbc:farrago:> select sid
-. . . . . . . . >     from sales s, state st, customer c, t
-. . . . . . . . >     where
-. . . . . . . . >         s.customer = c.id and
-. . . . . . . . >         c.city = st.city and st.state = 'New York' and
-. . . . . . . . >         c.city = t.c
-. . . . . . . . >     order by sid;
+> select sid
+>     from sales s, state st, customer c, t
+>     where
+>         s.customer = c.id and
+>         c.city = st.city and st.state = 'New York' and
+>         c.city = t.c
+>     order by sid;
 +------+
 | SID  |
 +------+
 +------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

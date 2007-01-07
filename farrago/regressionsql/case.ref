@@ -1,13 +1,13 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Full vertical system testing of the case function
-0: jdbc:farrago:> -- 
-0: jdbc:farrago:> -- 
-0: jdbc:farrago:> -- The result is not primitive
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- condition is not nullable, list all possible cases, with else.
-0: jdbc:farrago:> select manager,
-. . . . . . . . >     case manager when true then 'Yes' when false then 'No' else 'Other' end
-. . . . . . . . > from sales.emps order by 1;
+> -- $Id$
+> -- Full vertical system testing of the case function
+> -- 
+> -- 
+> -- The result is not primitive
+> 
+> -- condition is not nullable, list all possible cases, with else.
+> select manager,
+>     case manager when true then 'Yes' when false then 'No' else 'Other' end
+> from sales.emps order by 1;
 +----------+---------+
 | MANAGER  | EXPR$1  |
 +----------+---------+
@@ -16,10 +16,10 @@
 | true     | Yes     |
 | true     | Yes     |
 +----------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- condition is not nullable, list one case, with else.
-0: jdbc:farrago:> select name, case name when 'Fred' then 'Yes' else 'Other' end from sales.emps
-. . . . . . . . >     order by 1;
+> 
+> -- condition is not nullable, list one case, with else.
+> select name, case name when 'Fred' then 'Yes' else 'Other' end from sales.emps
+>     order by 1;
 +--------+---------+
 |  NAME  | EXPR$1  |
 +--------+---------+
@@ -28,12 +28,12 @@
 | John   | Other   |
 | Wilma  | Other   |
 +--------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- condition is nullable, list all possible cases, with else.
-0: jdbc:farrago:> select slacker,
-. . . . . . . . >     case slacker when true then 'yes' when false then 'no' else 'other' end
-. . . . . . . . > from sales.emps order by 1;
+> 
+> 
+> -- condition is nullable, list all possible cases, with else.
+> select slacker,
+>     case slacker when true then 'yes' when false then 'no' else 'other' end
+> from sales.emps order by 1;
 +----------+---------+
 | SLACKER  | EXPR$1  |
 +----------+---------+
@@ -42,14 +42,14 @@
 | false    | no      |
 | true     | yes     |
 +----------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- The result is primitive
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- condition is not nullable, list all possible cases, with else.
-0: jdbc:farrago:> select manager,
-. . . . . . . . >     case manager when true then 1 when false then 2 else 3 end
-. . . . . . . . > from sales.emps order by 1;
+> 
+> 
+> -- The result is primitive
+> 
+> -- condition is not nullable, list all possible cases, with else.
+> select manager,
+>     case manager when true then 1 when false then 2 else 3 end
+> from sales.emps order by 1;
 +----------+---------+
 | MANAGER  | EXPR$1  |
 +----------+---------+
@@ -58,12 +58,12 @@
 | true     | 1       |
 | true     | 1       |
 +----------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- condition is not nullable, list all possible cases, without else.
-0: jdbc:farrago:> select name,
-. . . . . . . . >     case name when 'Fred' then 1 when 'Eric' then 2  when 'Wilma' then 3
-. . . . . . . . >         when 'John' then 4 end
-. . . . . . . . > from sales.emps order by 1;
+> 
+> -- condition is not nullable, list all possible cases, without else.
+> select name,
+>     case name when 'Fred' then 1 when 'Eric' then 2  when 'Wilma' then 3
+>         when 'John' then 4 end
+> from sales.emps order by 1;
 +--------+---------+
 |  NAME  | EXPR$1  |
 +--------+---------+
@@ -72,9 +72,9 @@
 | John   | 4       |
 | Wilma  | 3       |
 +--------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- condition is not nullable, list one case, with else.
-0: jdbc:farrago:> select empno, case empno when 120 then 1 else 2 end from sales.emps order by 1;
+> 
+> -- condition is not nullable, list one case, with else.
+> select empno, case empno when 120 then 1 else 2 end from sales.emps order by 1;
 +--------+---------+
 | EMPNO  | EXPR$1  |
 +--------+---------+
@@ -83,8 +83,8 @@
 | 110    | 2       |
 | 120    | 1       |
 +--------+---------+
-0: jdbc:farrago:> -- condition is not nullable, list one case, without else.
-0: jdbc:farrago:> select deptno, case deptno when 20 then 1 end from sales.emps order by 1;
+> -- condition is not nullable, list one case, without else.
+> select deptno, case deptno when 20 then 1 end from sales.emps order by 1;
 +---------+---------+
 | DEPTNO  | EXPR$1  |
 +---------+---------+
@@ -93,11 +93,11 @@
 | 20      | 1       |
 | 40      |         |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- condition is nullable, list all possible cases, with else. 
-0: jdbc:farrago:> select deptno,
-. . . . . . . . >     case deptno when 10 then 1 when 20 then 2 when 40 then 3 else 4 end
-. . . . . . . . > from sales.emps order by 1;
+> 
+> -- condition is nullable, list all possible cases, with else. 
+> select deptno,
+>     case deptno when 10 then 1 when 20 then 2 when 40 then 3 else 4 end
+> from sales.emps order by 1;
 +---------+---------+
 | DEPTNO  | EXPR$1  |
 +---------+---------+
@@ -106,10 +106,10 @@
 | 20      | 2       |
 | 40      | 3       |
 +---------+---------+
-0: jdbc:farrago:> -- condition is nullable, list all possible cases, without else.
-0: jdbc:farrago:> select slacker,
-. . . . . . . . >     case slacker when true then 1 when false then 2 end
-. . . . . . . . > from sales.emps order by 1;
+> -- condition is nullable, list all possible cases, without else.
+> select slacker,
+>     case slacker when true then 1 when false then 2 end
+> from sales.emps order by 1;
 +----------+---------+
 | SLACKER  | EXPR$1  |
 +----------+---------+
@@ -118,9 +118,9 @@
 | false    | 2       |
 | true     | 1       |
 +----------+---------+
-0: jdbc:farrago:> -- condition is nullable, list one case, with else.
-0: jdbc:farrago:> select slacker, case slacker when true then 1 else 2 end
-. . . . . . . . >     from sales.emps order by 1;
+> -- condition is nullable, list one case, with else.
+> select slacker, case slacker when true then 1 else 2 end
+>     from sales.emps order by 1;
 +----------+---------+
 | SLACKER  | EXPR$1  |
 +----------+---------+
@@ -129,8 +129,8 @@
 | false    | 2       |
 | true     | 1       |
 +----------+---------+
-0: jdbc:farrago:> -- condition is nullable, list one case, without else.
-0: jdbc:farrago:> select slacker, case slacker when true then 1 end from sales.emps order by 1;
+> -- condition is nullable, list one case, without else.
+> select slacker, case slacker when true then 1 end from sales.emps order by 1;
 +----------+---------+
 | SLACKER  | EXPR$1  |
 +----------+---------+
@@ -139,9 +139,9 @@
 | false    |         |
 | true     | 1       |
 +----------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select empno, case empno when 120 then 1 when 120 then 3 else 2 end
-. . . . . . . . >     from sales.emps order by 1;
+> 
+> select empno, case empno when 120 then 1 when 120 then 3 else 2 end
+>     from sales.emps order by 1;
 +--------+---------+
 | EMPNO  | EXPR$1  |
 +--------+---------+
@@ -150,11 +150,11 @@
 | 110    | 2       |
 | 120    | 1       |
 +--------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Fennel can not handle the following cases.
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
-0: jdbc:farrago:> -- condition is not nullable, list one case, without else.
-0: jdbc:farrago:> select deptno, case deptno when 10 then 'Yes' end from sales.emps order by 1;
+> 
+> -- Fennel can not handle the following cases.
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> -- condition is not nullable, list one case, without else.
+> select deptno, case deptno when 10 then 'Yes' end from sales.emps order by 1;
 +---------+---------+
 | DEPTNO  | EXPR$1  |
 +---------+---------+
@@ -163,10 +163,10 @@
 | 20      |         |
 | 40      |         |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- condition is nullable, list two case, with else.
-0: jdbc:farrago:> select age, case age when 50 then 'fifty' when 25 then 'twenty-five' end
-. . . . . . . . >     from sales.emps order by 1;
+> 
+> -- condition is nullable, list two case, with else.
+> select age, case age when 50 then 'fifty' when 25 then 'twenty-five' end
+>     from sales.emps order by 1;
 +------+--------------+
 | AGE  |    EXPR$1    |
 +------+--------------+
@@ -175,9 +175,9 @@
 | 50   | fifty        |
 | 80   |              |
 +------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- condition is nullable, list one case, without else.
-0: jdbc:farrago:> select gender, case gender when 'M' then 'Yes' end from sales.emps order by 1;
+> 
+> -- condition is nullable, list one case, without else.
+> select gender, case gender when 'M' then 'Yes' end from sales.emps order by 1;
 +---------+---------+
 | GENDER  | EXPR$1  |
 +---------+---------+
@@ -186,5 +186,5 @@
 | M       | Yes     |
 | M       | Yes     |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

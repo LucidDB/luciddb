@@ -1,60 +1,60 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Throws unsupported types at the system, to make sure the errors are
-0: jdbc:farrago:> -- civilized.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema types_test;
-0: jdbc:farrago:> set schema 'types_test';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test supported type (DECIMAL) 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table td(n integer not null primary key, d decimal);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table td5(n integer not null primary key, d decimal(5));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table td52(n integer not null primary key, d decimal(5, 2));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values (cast(null as decimal));
+> -- $Id$
+> -- Throws unsupported types at the system, to make sure the errors are
+> -- civilized.
+> 
+> create schema types_test;
+> set schema 'types_test';
+> 
+> -- Test supported type (DECIMAL) 
+> 
+> create table td(n integer not null primary key, d decimal);
+> 
+> create table td5(n integer not null primary key, d decimal(5));
+> 
+> create table td52(n integer not null primary key, d decimal(5, 2));
+> 
+> values (cast(null as decimal));
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values (cast(null as decimal(5)));
+> 
+> values (cast(null as decimal(5)));
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values (cast(null as decimal(5, 2)));
+> 
+> values (cast(null as decimal(5, 2)));
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values (cast(1.2 as decimal(5,2)));
+> 
+> values (cast(1.2 as decimal(5,2)));
 +---------+
 | EXPR$0  |
 +---------+
 | 1.20    |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test assignment rules
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> insert into sales.depts values(10,20);
+> 
+> 
+> -- Test assignment rules
+> 
+> -- should fail
+> insert into sales.depts values(10,20);
 Error: Cannot assign to target field 'NAME' of type VARCHAR(128) from source field 'EXPR$1' of type INTEGER (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> update sales.depts set deptno='Infinitum';
+> 
+> -- should fail
+> update sales.depts set deptno='Infinitum';
 Error: Cannot assign to target field 'DEPTNO' of type INTEGER from source field 'EXPR$0' of type CHAR(9) (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: Test unsupported types
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- End types.sql
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> 
+> -- TODO: Test unsupported types
+> 
+> -- End types.sql
+> 
+> !quit

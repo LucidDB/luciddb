@@ -1,32 +1,32 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test DDL on privileges
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Create a security manager and login as this user to perform all grant 
-0: jdbc:farrago:> -- tests. 
-0: jdbc:farrago:> -- TODO: grant all appropriate system privilege for this user once
-0: jdbc:farrago:> -- these privs are available.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create user SECMAN authorization 'Unknown';
-0: jdbc:farrago:> create user SECMAN_2 authorization 'Unknown';
-0: jdbc:farrago:> create user PRIV_USER1 authorization 'Unknown';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !closeall
+> -- $Id$
+> -- Test DDL on privileges
+> 
+> -- Create a security manager and login as this user to perform all grant 
+> -- tests. 
+> -- TODO: grant all appropriate system privilege for this user once
+> -- these privs are available.
+> 
+> create user SECMAN authorization 'Unknown';
+> create user SECMAN_2 authorization 'Unknown';
+> create user PRIV_USER1 authorization 'Unknown';
+> 
+> !closeall
 sqlline> !connect jdbc:farrago: SECMAN tiger
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test 1:
-0: jdbc:farrago:> -- 
-0: jdbc:farrago:> create schema privstest;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'privstest';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table pt1 (c1 int not null primary key, c2 int);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> grant SELECT on pt1 to PRIV_USER1 with grant option;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> grant SELECT on pt_notexist to PRIV_USER1 with grant option;
+> 
+> -- Test 1:
+> -- 
+> create schema privstest;
+> 
+> set schema 'privstest';
+> 
+> create table pt1 (c1 int not null primary key, c2 int);
+> 
+> grant SELECT on pt1 to PRIV_USER1 with grant option;
+> 
+> grant SELECT on pt_notexist to PRIV_USER1 with grant option;
 Error: DDL validation error near line 1, column 17: Reference to unknown table "PT_NOTEXIST" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select "name" from sys_fem."Security"."AuthId" order by 1;
+> 
+> select "name" from sys_fem."Security"."AuthId" order by 1;
 +-------------+
 |    name     |
 +-------------+
@@ -37,29 +37,29 @@ Error: DDL validation error near line 1, column 17: Reference to unknown table "
 | _SYSTEM     |
 | sa          |
 +-------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test 2: multiple privs
-0: jdbc:farrago:> -- 
-0: jdbc:farrago:> create table pt2 (c1 int not null primary key, c2 int);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view pv1 as select * from pt1;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> GRANT select, insert, delete, update ON PT2 TO PUBLIC;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> GRANT select ON pv1 TO PUBLIC;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> GRANT SELECT, UPDATE ON PT2 TO PRIV_USER1 GRANTED BY CURRENT_USER;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- specify fully qualified name 
-0: jdbc:farrago:> GRANT SELECT, INSERT, DELETE, UPDATE ON PRIVSTEST.PT2 to PRIV_USER1;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test 3: negative test
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- setup 
-0: jdbc:farrago:> create table pt3 (c1 int not null primary key, c2 int);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- Invalid privs
-0: jdbc:farrago:> grant sel on privstest.pt3 to PUBLIC;
+> 
+> -- Test 2: multiple privs
+> -- 
+> create table pt2 (c1 int not null primary key, c2 int);
+> 
+> create view pv1 as select * from pt1;
+> 
+> GRANT select, insert, delete, update ON PT2 TO PUBLIC;
+> 
+> GRANT select ON pv1 TO PUBLIC;
+> 
+> GRANT SELECT, UPDATE ON PT2 TO PRIV_USER1 GRANTED BY CURRENT_USER;
+> 
+> ---- specify fully qualified name 
+> GRANT SELECT, INSERT, DELETE, UPDATE ON PRIVSTEST.PT2 to PRIV_USER1;
+> 
+> -- Test 3: negative test
+> 
+> ---- setup 
+> create table pt3 (c1 int not null primary key, c2 int);
+> 
+> ---- Invalid privs
+> grant sel on privstest.pt3 to PUBLIC;
 Error: org.eigenbase.sql.parser.SqlParseException: Encountered "sel" at line 1, column 7.
 Was expecting one of:
     "ALL" ...
@@ -70,83 +70,83 @@ Was expecting one of:
     "SELECT" ...
     "UPDATE" ...
     "USAGE" ... (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- invalid object
-0: jdbc:farrago:> GRANT SELECT ON PRIVSTEST.PT_NOTEXIST TO PUBLIC WITH GRANT OPTION;
+> 
+> ---- invalid object
+> GRANT SELECT ON PRIVSTEST.PT_NOTEXIST TO PUBLIC WITH GRANT OPTION;
 Error: DDL validation error near line 1, column 27: Reference to unknown table "PT_NOTEXIST" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- incompatible priv vs. object type. EXECUTE vs TABLE
-0: jdbc:farrago:> grant execute on pt3 to public;
+> 
+> ---- incompatible priv vs. object type. EXECUTE vs TABLE
+> grant execute on pt3 to public;
 Error: Privilege EXECUTE is not applicable to PT3 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- todo: incompatible priv vs. object type. EXECUTE vs SEQUENCE
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- todo: incompatible priv vs. object type. INSERT vs SEQUENCE
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test 4: Test different object types VIEW, FUNCTION, PROCEDURE and ROUTINE
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- Create function, procedure and routine etc.
-0: jdbc:farrago:> create function add_integers_2(i int,j int)
-. . . . . . . . > returns int
-. . . . . . . . > contains sql
-. . . . . . . . > return i + j;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create procedure set_java_property(in name varchar(128),val varchar(128))
-. . . . . . . . > language java
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- Grant them away
-0: jdbc:farrago:> GRANT EXECUTE on SPECIFIC FUNCTION add_integers_2 to PUBLIC;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> GRANT EXECUTE on SPECIFIC PROCEDURE set_java_property to PUBLIC;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- Negative, specific a function with the PROCEDURE qualifier. Should fail
-0: jdbc:farrago:> GRANT EXECUTE on SPECIFIC PROCEDURE add_integers_2 to PUBLIC;
+> 
+> ---- todo: incompatible priv vs. object type. EXECUTE vs SEQUENCE
+> 
+> ---- todo: incompatible priv vs. object type. INSERT vs SEQUENCE
+> 
+> 
+> -- Test 4: Test different object types VIEW, FUNCTION, PROCEDURE and ROUTINE
+> 
+> ---- Create function, procedure and routine etc.
+> create function add_integers_2(i int,j int)
+> returns int
+> contains sql
+> return i + j;
+> 
+> create procedure set_java_property(in name varchar(128),val varchar(128))
+> language java
+> no sql
+> external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
+> 
+> 
+> ---- Grant them away
+> GRANT EXECUTE on SPECIFIC FUNCTION add_integers_2 to PUBLIC;
+> 
+> GRANT EXECUTE on SPECIFIC PROCEDURE set_java_property to PUBLIC;
+> 
+> ---- Negative, specific a function with the PROCEDURE qualifier. Should fail
+> GRANT EXECUTE on SPECIFIC PROCEDURE add_integers_2 to PUBLIC;
 Error: DDL validation error near line 1, column 37: Reference to unknown procedure "PRIVSTEST"."ADD_INTEGERS_2" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- Negative, specific a function with the PROCEDURE qualifier. Should fail
-0: jdbc:farrago:> GRANT EXECUTE on SPECIFIC FUNCTION set_java_property to PUBLIC;
+> 
+> ---- Negative, specific a function with the PROCEDURE qualifier. Should fail
+> GRANT EXECUTE on SPECIFIC FUNCTION set_java_property to PUBLIC;
 Error: DDL validation error near line 1, column 36: Reference to unknown function "PRIVSTEST"."SET_JAVA_PROPERTY" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- Check the catalog that the privileges are actually created accordingly
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test 5: Test with grantor as CURRENT_ROLE and CURRENT_USER
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- setup 
-0: jdbc:farrago:> create table pt5 (c1 int not null primary key, c2 int);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> grant select on pt5 to PUBLIC granted by CURRENT_USER;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: grant SELECT on pt5 to PUBLIC granted by CURRENT_ROLE
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test 6: Tests for insufficient privileges
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !closeall
+> 
+> ---- Check the catalog that the privileges are actually created accordingly
+> 
+> -- Test 5: Test with grantor as CURRENT_ROLE and CURRENT_USER
+> 
+> ---- setup 
+> create table pt5 (c1 int not null primary key, c2 int);
+> 
+> grant select on pt5 to PUBLIC granted by CURRENT_USER;
+> 
+> -- TODO: grant SELECT on pt5 to PUBLIC granted by CURRENT_ROLE
+> 
+> -- Test 6: Tests for insufficient privileges
+> 
+> !closeall
 sqlline> !connect jdbc:farrago: SECMAN_2 tiger
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'privstest';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  no grant
-0: jdbc:farrago:> select * from pt1;
+> 
+> set schema 'privstest';
+> 
+> -- should fail:  no grant
+> select * from pt1;
 Error: Privilege "SELECT" required for access to table "PRIVSTEST"."PT1" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should succeed:  via PUBLIC
-0: jdbc:farrago:> select * from pt2;
+> 
+> -- should succeed:  via PUBLIC
+> select * from pt2;
 +-----+-----+
 | C1  | C2  |
 +-----+-----+
 +-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should succeed:  via PUBLIC on view, even though underlying table pt1
-0: jdbc:farrago:> -- is inaccessible
-0: jdbc:farrago:> select * from pv1;
+> 
+> -- should succeed:  via PUBLIC on view, even though underlying table pt1
+> -- is inaccessible
+> select * from pv1;
 +-----+-----+
 | C1  | C2  |
 +-----+-----+
 +-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> 
+> !quit

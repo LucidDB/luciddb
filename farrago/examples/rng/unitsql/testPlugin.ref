@@ -1,14 +1,14 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test usage of RNG plugin
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that without plugin enabled, custom syntax is unrecognized
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema rngtest;
-0: jdbc:farrago:> set schema 'rngtest';
-0: jdbc:farrago:> set path 'rngtest';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> create rng rng1 external '${FARRAGO_HOME}/testgen/rng1.dat' seed 999;
+> -- $Id$
+> -- Test usage of RNG plugin
+> 
+> -- verify that without plugin enabled, custom syntax is unrecognized
+> 
+> create schema rngtest;
+> set schema 'rngtest';
+> set path 'rngtest';
+> 
+> -- should fail
+> create rng rng1 external '${FARRAGO_HOME}/testgen/rng1.dat' seed 999;
 Error: org.eigenbase.sql.parser.SqlParseException: Encountered "rng" at line 1, column 8.
 Was expecting one of:
     "CLUSTERED" ...
@@ -29,227 +29,227 @@ Was expecting one of:
     "JAR" ...
     "TYPE" ...
     "ORDERING" ... (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- now, enable plugin personality for this session
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.rngplugin;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create some random number generators; use seeds to guarantee determinism
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create rng rng1 external '${FARRAGO_HOME}/testgen/rng1.dat' seed 999;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create rng rng2 external '${FARRAGO_HOME}/testgen/rng2.dat' seed 999;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create rng rng3 external '${FARRAGO_HOME}/testgen/rng3.dat' seed 777;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create function rng_next_int(
-. . . . . . . . >     rng_name varchar(512),
-. . . . . . . . >     n int)
-. . . . . . . . > returns int
-. . . . . . . . > language java
-. . . . . . . . > reads sql data
-. . . . . . . . > external name 
-. . . . . . . . > 'sys_boot.sys_boot.rngplugin:net.sf.farrago.rng.FarragoRngUDR.rng_next_int';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test various ways of naming the rng
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng1',10);
+> 
+> 
+> -- now, enable plugin personality for this session
+> alter session implementation set jar sys_boot.sys_boot.rngplugin;
+> 
+> 
+> -- create some random number generators; use seeds to guarantee determinism
+> 
+> create rng rng1 external '${FARRAGO_HOME}/testgen/rng1.dat' seed 999;
+> 
+> create rng rng2 external '${FARRAGO_HOME}/testgen/rng2.dat' seed 999;
+> 
+> create rng rng3 external '${FARRAGO_HOME}/testgen/rng3.dat' seed 777;
+> 
+> create function rng_next_int(
+>     rng_name varchar(512),
+>     n int)
+> returns int
+> language java
+> reads sql data
+> external name 
+> 'sys_boot.sys_boot.rngplugin:net.sf.farrago.rng.FarragoRngUDR.rng_next_int';
+> 
+> -- test various ways of naming the rng
+> 
+> values rng_next_int('rng1',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 9       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('RNG1',10);
+> 
+> values rng_next_int('RNG1',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('localdb.rngtest."RNG1"',10);
+> 
+> values rng_next_int('localdb.rngtest."RNG1"',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('localdb.rngtest.rng1',10);
+> 
+> values rng_next_int('localdb.rngtest.rng1',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 7       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng1',10);
+> 
+> values rng_next_int('rng1',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 2       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng1',10);
+> 
+> values rng_next_int('rng1',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 5       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  bad schema
-0: jdbc:farrago:> values rng_next_int('sales.rng1',10);
+> 
+> -- should fail:  bad schema
+> values rng_next_int('sales.rng1',10);
 Error: DDL validation error: Reference to unknown random number generator "RNG1" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  no such RNG
-0: jdbc:farrago:> values rng_next_int('rng_nonexistent',10);
+> 
+> -- should fail:  no such RNG
+> values rng_next_int('rng_nonexistent',10);
 Error: DDL validation error: Reference to unknown random number generator "RNG_NONEXISTENT" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that rng with same initial seed yields same sequence
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng2',10);
+> 
+> 
+> -- verify that rng with same initial seed yields same sequence
+> 
+> values rng_next_int('rng2',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 9       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng2',10);
+> 
+> values rng_next_int('rng2',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng2',10);
+> 
+> values rng_next_int('rng2',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng2',10);
+> 
+> values rng_next_int('rng2',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 7       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng2',10);
+> 
+> values rng_next_int('rng2',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 2       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng2',10);
+> 
+> values rng_next_int('rng2',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 5       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that rng with different initial seed yields different sequence
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng3',10);
+> 
+> 
+> -- verify that rng with different initial seed yields different sequence
+> 
+> values rng_next_int('rng3',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 0       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng3',10);
+> 
+> values rng_next_int('rng3',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 6       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng3',10);
+> 
+> values rng_next_int('rng3',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 2       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng3',10);
+> 
+> values rng_next_int('rng3',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 2       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng3',10);
+> 
+> values rng_next_int('rng3',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 5       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values rng_next_int('rng3',10);
+> 
+> values rng_next_int('rng3',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 9       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test fancy syntax
-0: jdbc:farrago:> values next_random_int(ceiling 10 from rng2);
+> 
+> 
+> -- test fancy syntax
+> values next_random_int(ceiling 10 from rng2);
 +---------+
 | EXPR$0  |
 +---------+
 | 8       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values next_random_int(unbounded from rng2);
+> 
+> values next_random_int(unbounded from rng2);
 +------------+
 |   EXPR$0   |
 +------------+
 | 512689831  |
 +------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test view over rng
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view random_personality_view as
-. . . . . . . . > values next_random_int(ceiling 10 from rng2);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view random_udf_view as
-. . . . . . . . > values rng_next_int('rng2',10);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from random_personality_view;
+> 
+> 
+> -- test view over rng
+> 
+> create view random_personality_view as
+> values next_random_int(ceiling 10 from rng2);
+> 
+> create view random_udf_view as
+> values rng_next_int('rng2',10);
+> 
+> select * from random_personality_view;
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from random_udf_view;
+> 
+> select * from random_udf_view;
 +---------+
 | EXPR$0  |
 +---------+
 | 4       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  dependency
-0: jdbc:farrago:> drop rng rng2 restrict;
+> 
+> -- should fail:  dependency
+> drop rng rng2 restrict;
 Error: Dropping random number generator "RNGTEST"."RNG2" requires CASCADE because other objects still reference it (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  SELECT DISTINCT feature is disabled in this personality
-0: jdbc:farrago:> select distinct empno from sales.emps order by empno;
+> 
+> -- should fail:  SELECT DISTINCT feature is disabled in this personality
+> select distinct empno from sales.emps order by empno;
 Error: SELECT DISTINCT not supported (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- now, disable plugin personality for this session
-0: jdbc:farrago:> alter session implementation set default;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- flush query cache
-0: jdbc:farrago:> call sys_boot.mgmt.flush_code_cache();
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that DDL personality is wiped out
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> create rng rng4 external '${FARRAGO_HOME}/testgen/rng4.dat' seed 777;
+> 
+> -- now, disable plugin personality for this session
+> alter session implementation set default;
+> 
+> -- flush query cache
+> call sys_boot.mgmt.flush_code_cache();
+> 
+> -- verify that DDL personality is wiped out
+> -- should fail
+> create rng rng4 external '${FARRAGO_HOME}/testgen/rng4.dat' seed 777;
 Error: org.eigenbase.sql.parser.SqlParseException: Encountered "rng" at line 1, column 8.
 Was expecting one of:
     "CLUSTERED" ...
@@ -270,17 +270,17 @@ Was expecting one of:
     "JAR" ...
     "TYPE" ...
     "ORDERING" ... (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that we can still access plugin functionality via UDF
-0: jdbc:farrago:> values rng_next_int('rng3',10);
+> 
+> -- verify that we can still access plugin functionality via UDF
+> values rng_next_int('rng3',10);
 +---------+
 | EXPR$0  |
 +---------+
 | 0       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- sorry, view based on personality will no longer work  :(
-0: jdbc:farrago:> select * from random_personality_view;
+> 
+> -- sorry, view based on personality will no longer work  :(
+> select * from random_personality_view;
 Error: org.eigenbase.sql.parser.SqlParseException: Encountered "CEILING 10" at line 2, column 34.
 Was expecting one of:
     "ALL" ...
@@ -372,21 +372,21 @@ Was expecting one of:
     "CASE" ...
     "*" ...
     ")" ... (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- but view based on UDF will
-0: jdbc:farrago:> select * from random_udf_view;
+> 
+> -- but view based on UDF will
+> select * from random_udf_view;
 +---------+
 | EXPR$0  |
 +---------+
 | 5       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that DROP CASCADE works correctly even without DDL personality
-0: jdbc:farrago:> -- TODO:  use Java filesystem access to verify creation/deletion of .dat file
-0: jdbc:farrago:> drop schema rngtest cascade;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that SELECT DISTINCT is working again
-0: jdbc:farrago:> select distinct empno from sales.emps order by empno;
+> 
+> -- verify that DROP CASCADE works correctly even without DDL personality
+> -- TODO:  use Java filesystem access to verify creation/deletion of .dat file
+> drop schema rngtest cascade;
+> 
+> -- verify that SELECT DISTINCT is working again
+> select distinct empno from sales.emps order by empno;
 +--------+
 | EMPNO  |
 +--------+
@@ -394,10 +394,10 @@ Was expecting one of:
 | 110    |
 | 120    |
 +--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- last thing we do is to prepare for a restore of pre-upgrade catalog contents
-0: jdbc:farrago:> -- NOTE:  this will shut down the system, so don't add any commands
-0: jdbc:farrago:> -- after it
-0: jdbc:farrago:> alter system replace catalog;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> -- last thing we do is to prepare for a restore of pre-upgrade catalog contents
+> -- NOTE:  this will shut down the system, so don't add any commands
+> -- after it
+> alter system replace catalog;
+> 
+> !quit
