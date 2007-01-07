@@ -124,6 +124,7 @@ class ExecStreamSubFactory_lu
         params.pTempSegment = pDatabase->getTempSegment();
         params.storeFinalRun = false;
         params.estimatedNumRows = streamDef.getEstimatedNumRows();
+        params.earlyClose = streamDef.isEarlyClose();
         CmdInterpreter::readTupleProjection(
             params.keyProj,
             streamDef.getKeyProj());

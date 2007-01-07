@@ -826,7 +826,9 @@ public class LcsIndexGuide
                 index,
                 createIndex,
                 implementor.translateParamId(insertDynParamId).intValue());
-        FemExecutionStreamDef sorter = newSorter(index, null, false);
+        // do an early close in the sorter, in case there was an upstream
+        // insert into the deletion index, which the splicer may need to read
+        FemExecutionStreamDef sorter = newSorter(index, null, false, true);
         FemExecutionStreamDef splicer =
             newSplicer(
                 rel,
@@ -905,18 +907,26 @@ public class LcsIndexGuide
     }
 
     /**
-     * Creates a sort streamDef for sorting bitmap entries
+     * Creates a sort streamDef for sorting bitmap entries.
      * 
      * @param index index corresponding to the bitmap entries that will be
      * sorted
      * @param estimatedNumRows estimated number of input rows into the sort
      * @param ridOnly true if this sort will only be used to sort single rid
      * values
+     * @param earlyClose if true, setup the sorter to do an early close on its
+     * producers; in that case, the sorter will explicitly close its producers
+     * once it has read all its input; this is needed in the case where the
+     * producers of the sort reference a table that's modified by the consumers
+     * of the sort
      * 
      * @return the created sort streamDef
      */
     protected FemSortingStreamDef newSorter(
-        FemLocalIndex index, Double estimatedNumRows, boolean ridOnly)
+        FemLocalIndex index,
+        Double estimatedNumRows,
+        boolean ridOnly,
+        boolean earlyClose)
     {
         FemSortingStreamDef sortingStream = repos.newFemSortingStreamDef();
 
@@ -934,7 +944,9 @@ public class LcsIndexGuide
             sortingStream.setEstimatedNumRows(-1);
         } else {
             sortingStream.setEstimatedNumRows(estimatedNumRows.longValue());
-        }
+        }       
+        sortingStream.setEarlyClose(earlyClose);
+        
         return sortingStream;
     }
 
@@ -1297,6 +1309,7 @@ public class LcsIndexGuide
         sortingStream.setDistinctness(DistinctnessEnum.DUP_ALLOW);
         sortingStream.setKeyProj(createUnclusteredBitmapKeyProj());
         sortingStream.setOutputDesc(createUnclusteredBitmapTupleDesc());
+        sortingStream.setEarlyClose(false);
         // TODO zfong 8/16/06 - replace this with real stats when we can
         // call RelMetadataQuery.getRowCount on physical RelNodes
         sortingStream.setEstimatedNumRows(-1);

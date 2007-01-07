@@ -69,6 +69,7 @@ void ExternalSortExecStreamImpl::prepare(
     nParallel = 1;
     storeFinalRun = params.storeFinalRun;
     estimatedNumRows = params.estimatedNumRows;
+    earlyClose = params.earlyClose;
     
     switch (params.distinctness) {
     case DUP_ALLOW:
@@ -210,10 +211,14 @@ ExecStreamResult ExternalSortExecStreamImpl::execute(
                 }
             }
             mergeFirstResult();
+
             // close the producers now that we've read all input
-            ExecStreamGraphImpl &graphImpl =
-                dynamic_cast<ExecStreamGraphImpl&>(getGraph());
-            graphImpl.closeProducers(getStreamId());
+            if (earlyClose) {
+                ExecStreamGraphImpl &graphImpl =
+                    dynamic_cast<ExecStreamGraphImpl&>(getGraph());
+                graphImpl.closeProducers(getStreamId());
+            }
+
             resultsReady = true;
         }
     }

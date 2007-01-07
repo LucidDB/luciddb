@@ -402,9 +402,11 @@ public class LcsAppendStreamDef
         int writeRowCountParamId,
         boolean removeDups)
     {
-        // sort the rids so the splicer will have ordered input
+        // sort the rids so the splicer will have ordered input; note that
+        // we create a sorter that does early close; this may not be absolutely
+        // necessary in all cases, but it doesn't hurt
         FemSortingStreamDef sortingStream =
-            indexGuide.newSorter(deletionIndex, inputRowCount, true);
+            indexGuide.newSorter(deletionIndex, inputRowCount, true, true);
         implementor.addDataFlowFromProducerToConsumer(
             inputStream,
             sortingStream);

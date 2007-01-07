@@ -51,7 +51,7 @@
     <member type="todo" />
     <historyfile name="" />
   </argo>
-    <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Dec 19 11:39:14 PST 2006'>
+    <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Jan 05 08:24:03 PST 2007'>
       <XMI.header>    <XMI.documentation>
           <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
           <XMI.exporterVersion>0.20.x</XMI.exporterVersion>
@@ -235,6 +235,24 @@
                           </UML:StructuralFeature.multiplicity>
                           <UML:StructuralFeature.type>
                             <UML:Class xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7f9f'/>
+                          </UML:StructuralFeature.type>
+                        </UML:Attribute>
+                        <UML:Attribute xmi.id = '127-0-0-1-4e56d841:10ff311789d:-8000:0000000000000DB9'
+                          name = 'earlyClose' visibility = 'private' isSpecification = 'false' ownerScope = 'instance'>
+                          <UML:StructuralFeature.multiplicity>
+                            <UML:Multiplicity xmi.id = '127-0-0-1-4e56d841:10ff311789d:-8000:0000000000000DBA'>
+                              <UML:Multiplicity.range>
+                                <UML:MultiplicityRange xmi.id = '127-0-0-1-4e56d841:10ff311789d:-8000:0000000000000DBB'
+                                  lower = '1' upper = '1'/>
+                              </UML:Multiplicity.range>
+                            </UML:Multiplicity>
+                          </UML:StructuralFeature.multiplicity>
+                          <UML:Attribute.initialValue>
+                            <UML:Expression xmi.id = 'Ilsnmsmmsmm4fe91emf85207efd8mm7f84' language = 'java'
+                              body = ''/>
+                          </UML:Attribute.initialValue>
+                          <UML:StructuralFeature.type>
+                            <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fde'/>
                           </UML:StructuralFeature.type>
                         </UML:Attribute>
                       </UML:Classifier.feature>
@@ -13783,7 +13801,7 @@
         </path>
       </group>
       <group name="Fig4"
-           description="org.argouml.uml.diagram.static_structure.ui.FigClass[344, 208, 195, 70]pathVisible=false;operationsVisible=false;attributesVisible=true"
+           description="org.argouml.uml.diagram.static_structure.ui.FigClass[344, 208, 195, 83]pathVisible=false;operationsVisible=false;attributesVisible=true"
            href="Ilsmmsmmsmm4fe91emf85207efd8mm7fb0"
            fill="1"
            fillcolor="white"
@@ -13797,7 +13815,7 @@
           x="344"
           y="208"
           width="195"
-          height="70"
+          height="83"
           fill="1"
           fillcolor="white"
           stroke="0"
@@ -13872,7 +13890,7 @@
           </path>
         </group>
         <group name="Fig4.4"
-             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[345, 231, 194, 47]"
+             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[345, 231, 194, 60]"
              fill="1"
              fillcolor="white"
              stroke="0"
@@ -13885,7 +13903,7 @@
             x="345"
             y="231"
             width="194"
-            height="47"
+            height="60"
             fill="1"
             fillcolor="white"
             stroke="0"
@@ -13932,13 +13950,23 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >descendingProj : TupleProjection</text>
+          >descendingProj [0..1] : TupleProjection</text>
+          <text name="Fig4.4.5"
+            x="345"
+            y="271"
+            fill="0"
+            fillcolor="white"
+            stroke="0"
+            strokecolor="black"
+            font="Dialog"
+            textsize="10"
+          >earlyClose : Boolean</text>
         </group>
         <rectangle name="Fig4.5"
           x="344"
           y="208"
           width="195"
-          height="70"
+          height="83"
           fill="0"
           fillcolor="white"
           stroke="1"
@@ -38119,7 +38147,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >precision [0..1] : Integer</text>
+          >precision : Integer</text>
           <text name="Fig6.4.4"
             x="673"
             y="362"
@@ -38129,7 +38157,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >scale [0..1] : Integer</text>
+          >scale : Integer</text>
           <text name="Fig6.4.5"
             x="673"
             y="375"
@@ -38139,7 +38167,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >length [0..1] : Integer</text>
+          >length : Integer</text>
           <text name="Fig6.4.6"
             x="673"
             y="388"
@@ -38149,7 +38177,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >collationName [0..1] : String</text>
+          >collationName : String</text>
           <text name="Fig6.4.7"
             x="673"
             y="401"
@@ -38159,7 +38187,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >characterSetName [0..1] : String</text>
+          >characterSetName : String</text>
         </group>
         <rectangle name="Fig6.5"
           x="672"
@@ -39214,7 +39242,7 @@
           fill="1"
           fillcolor="white"
           stroke="0"
-          strokecolor="0 255 255"
+          strokecolor="black"
         />
         <group name="Fig18.1"
              description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[680, 472, 150, 2]"
@@ -39249,7 +39277,7 @@
           textsize="10"
         >ColumnListRoutineParameter</text>
         <group name="Fig18.3"
-             description="org.argouml.uml.diagram.ui.FigOperationsCompartment[681, 517, 149, 20]"
+             description="org.argouml.uml.diagram.ui.FigOperationsCompartment[681, 507, 149, 20]"
              fill="1"
              fillcolor="white"
              stroke="0"
@@ -39261,7 +39289,7 @@
           
           <rectangle name="Fig18.3.0"
             x="681"
-            y="517"
+            y="507"
             width="149"
             height="20"
             fill="1"
@@ -39279,9 +39307,9 @@
             visibility="0"
           >
             <moveto x="681"
-                    y="517" />
+                    y="507" />
             <lineto x="830"
-                    y="517" />
+                    y="507" />
           </path>
         </group>
         <group name="Fig18.4"

@@ -963,6 +963,8 @@ int64_t getEstimatedNumRows();
 static jmethodID meth_getEstimatedNumRows;
 SharedProxyTupleProjection getDescendingProj();
 static jmethodID meth_getDescendingProj;
+bool isEarlyClose();
+static jmethodID meth_isEarlyClose;
 };
 
 class ProxySplicerIndexAccessorDef

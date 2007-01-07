@@ -186,6 +186,8 @@ create table customer(
     id int unique not null, company char(20), city char(20) not null);
 create table state(city char(20) unique not null, state char(20));
 
+create index i_product_color on product(color);
+create index i_product_size on product(size);
 create index i_customer_city on customer(city);
 
 insert into product values(1, 'radio', 'black', 'S');
@@ -315,6 +317,30 @@ explain plan for
             s.salesperson > 0 and s.customer > 0
         order by sid;
 
+-- cartesian product join where the RHS of the cartesian product join contains
+-- a semijoin where the dimension table is processed using index intersection;
+-- this testcase ensures that things behave correctly if an early close is done
+-- on the bitmap intersect
+explain plan for
+    select a, sid, name, color, size, quantity
+        from t left outer join
+        (select * from  sales s, product p
+            where
+                s.product_id = p.id and p.size = 'S' and p.color = 'black')
+        on true
+    order by a, sid;
+
+-- similar to the above query except the dimension table is processed using
+-- a bitmap merge
+explain plan for
+    select a, sid, name, color, size, quantity
+        from t left outer join
+        (select * from  sales s, product p
+            where
+                s.product_id = p.id and p.color > 'w')
+        on true
+    order by a, sid;
+
 -- semijoin can't be used here because we don't push semijoins past aggregates
 explain plan for
     select s.product_id from
@@ -394,6 +420,38 @@ select sid, p.name, p.color, p.size, s.quantity
         s.product_id = p.id and p.size = 'S' and
         s.salesperson > 0 and s.customer > 0
     order by sid;
+
+-- run the queries below twice to ensure proper handling when executing a
+-- previously closed stream graph
+select a, sid, name, color, size, quantity
+    from t left outer join
+    (select * from  sales s, product p
+        where
+            s.product_id = p.id and p.size = 'S' and p.color = 'black')
+    on true
+order by a, sid;
+select a, sid, name, color, size, quantity
+    from t left outer join
+    (select * from  sales s, product p
+        where
+            s.product_id = p.id and p.size = 'S' and p.color = 'black')
+    on true
+order by a, sid;
+
+select a, sid, name, color, size, quantity
+    from t left outer join
+    (select * from  sales s, product p
+        where
+            s.product_id = p.id and p.color > 'w')
+    on true
+order by a, sid;
+select a, sid, name, color, size, quantity
+    from t left outer join
+    (select * from  sales s, product p
+        where
+            s.product_id = p.id and p.color > 'w')
+    on true
+order by a, sid;
 
 --------------------------------------------------------------------------
 -- semijoin used for IN clause; customer column has 100 distinct values so

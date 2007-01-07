@@ -134,6 +134,11 @@ class ExternalSortExecStreamImpl : public ExternalSortExecStream
      */
     int estimatedNumRows;
 
+    /**
+     * If true, close producers once all input has been read
+     */
+    bool earlyClose;
+
 // ----------------------------------------------------------------------
 // private methods
 // ----------------------------------------------------------------------
