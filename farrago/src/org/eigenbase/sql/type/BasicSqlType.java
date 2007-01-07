@@ -121,7 +121,7 @@ public class BasicSqlType
      */
     BasicSqlType createWithNullability(boolean nullable)
     {
-        BasicSqlType ret = null;
+        BasicSqlType ret;
         try {
             ret = (BasicSqlType) this.clone();
         } catch (CloneNotSupportedException e) {
@@ -276,6 +276,59 @@ public class BasicSqlType
             sb.append(collation.getCollationName());
             sb.append("\"");
         }
+    }
+
+    /**
+     * Returns a value which is a limit for this type.
+     *
+     * <p>For example,
+     * <table border="1">
+     * <tr>
+     * <th>Datatype</th>
+     * <th>sign</th><th>limit</th><th>beyond</th><th>precision</th><th>scale</th>
+     * <th>Returns</th>
+     * </tr>
+     * <tr>
+     * <td>Integer</th>
+     * <td>true</td><td>true</td><td>false</td><td>-1</td><td>-1</td>
+     * <td>2147483647 (2 ^ 31 -1 = MAXINT)</td>
+     * </tr>
+     * <tr>
+     * <td>Integer</th>
+     * <td>true</td><td>true</td><td>true</td><td>-1</td><td>-1</td>
+     * <td>2147483648 (2 ^ 31 = MAXINT + 1)</td>
+     * </tr>
+     * <tr>
+     * <td>Integer</th>
+     * <td>false</td><td>true</td><td>false</td><td>-1</td><td>-1</td>
+     * <td>-2147483648 (-2 ^ 31 = MININT)</td>
+     * </tr>
+     * <tr>
+     * <td>Boolean</th>
+     * <td>true</td><td>true</td><td>false</td><td>-1</td><td>-1</td>
+     * <td>TRUE</td>
+     * </tr>
+     * <tr>
+     * <td>Varchar</th>
+     * <td>true</td><td>true</td><td>false</td><td>10</td><td>-1</td>
+     * <td>'ZZZZZZZZZZ'</td>
+     * </tr>
+     * </table>
+     *
+     * @param sign If true, returns upper limit, otherwise lower limit
+     * @param limit If true, returns value at or near to overflow; otherwise
+     *   value at or near to underflow
+     * @param beyond If true, returns the value just beyond the limit,
+     *   otherwise the value at the limit
+     * @return Limit value
+     */
+    public Object getLimit(
+        boolean sign, SqlTypeName.Limit limit, boolean beyond)
+    {
+        int precision = typeName.allowsPrec() ? this.getPrecision() : -1;
+        int scale = typeName.allowsScale() ? this.getScale() : -1;
+        return typeName.getLimit(
+            sign, limit, beyond, precision, scale);
     }
 }
 

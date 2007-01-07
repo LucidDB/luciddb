@@ -2282,6 +2282,7 @@ SqlNumericLiteral UnsignedNumericLiteral() :
 SqlLiteral NumericLiteral() :
 {
     SqlNumericLiteral num;
+    SqlParserPos pos;
 }
 {
     <PLUS> num = UnsignedNumericLiteral()
@@ -2289,9 +2290,9 @@ SqlLiteral NumericLiteral() :
         return num;
     }
     |
-    <MINUS> num = UnsignedNumericLiteral()
+    <MINUS> { pos = getPos(); } num = UnsignedNumericLiteral()
     {
-        return SqlLiteral.createNegative(num);
+        return SqlLiteral.createNegative(num, pos.plus(getPos()));
     }
     |
     num = UnsignedNumericLiteral()

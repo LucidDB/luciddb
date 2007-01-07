@@ -232,7 +232,7 @@ public abstract class AbstractSqlTester
      */
     protected SqlOperator getFor()
     {
-        Assert.assertNotNull("Must call isFor()", operator);
+        Assert.assertNotNull("Must call setFor()", operator);
         return operator;
     }
 

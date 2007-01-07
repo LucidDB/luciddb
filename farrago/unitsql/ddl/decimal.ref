@@ -9,7 +9,7 @@
 0: jdbc:farrago:> create table td5(n integer not null primary key, d decimal(5));
 0: jdbc:farrago:> create table td52(n integer not null primary key, d decimal(5, 2));
 0: jdbc:farrago:> create table td52notnull(n integer not null primary key, 
-. . . . . . . . >     d decimal(5, 2) not null);
+0: jdbc:farrago:>     d decimal(5, 2) not null);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Test table creation with numeric type (should be same as decimal)
 0: jdbc:farrago:> create table tn(n integer not null primary key, d numeric);
@@ -71,15 +71,15 @@ Error: From line 1, column 27 to line 1, column 45: Numeric literal '92233720368
 0: jdbc:farrago:> insert into td values(21, 9223372036854775807.5);
 Error: From line 1, column 27 to line 1, column 47: Numeric literal '9223372036854775807.5' out of range (state=,code=0)
 0: jdbc:farrago:> insert into td values(22, -9223372036854775809);
-Error: From line 1, column 28 to line 1, column 46: Numeric literal '-9223372036854775809' out of range (state=,code=0)
+Error: From line 1, column 27 to line 1, column 46: Numeric literal '-9223372036854775809' out of range (state=,code=0)
 0: jdbc:farrago:> insert into td values(23, -9223372036854775808.5);
-Error: From line 1, column 28 to line 1, column 48: Numeric literal '-9223372036854775808.5' out of range (state=,code=0)
+Error: From line 1, column 27 to line 1, column 48: Numeric literal '-9223372036854775808.5' out of range (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Numeric literal is out of range
 0: jdbc:farrago:> insert into td values(24, 9223372036854775807.13213);
 Error: From line 1, column 27 to line 1, column 51: Numeric literal '9223372036854775807.13213' out of range (state=,code=0)
 0: jdbc:farrago:> insert into td values(25, -9223372036854775808.12321);
-Error: From line 1, column 28 to line 1, column 52: Numeric literal '-9223372036854775808.12321' out of range (state=,code=0)
+Error: From line 1, column 27 to line 1, column 52: Numeric literal '-9223372036854775808.12321' out of range (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should give error
 0: jdbc:farrago:> insert into td5 values(20, 100000);

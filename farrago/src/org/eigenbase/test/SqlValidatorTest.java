@@ -862,6 +862,12 @@ public class SqlValidatorTest
             "(?s).*Cast function cannot convert value of type TIME\\(0\\) to type DATE.*");
     }
 
+    public void testCastBinaryLiteral()
+    {
+        checkExpFails("cast(x'0dd' as binary(5))",
+            "Binary literal string must contain an even number of hexits");
+    }
+
     public void testDateTime()
     {
         // LOCAL_TIME

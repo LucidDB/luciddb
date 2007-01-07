@@ -199,8 +199,8 @@ void
 castStrToVarCharA(RegisterRef<char*>* result,
                   RegisterRef<char*>* src)
 {
-    assert(StandardTypeDescriptor::isTextArray(result->type()));
-    assert(StandardTypeDescriptor::isTextArray(src->type()));
+    assert(StandardTypeDescriptor::isArray(result->type()));
+    assert(StandardTypeDescriptor::isArray(src->type()));
     
     if (src->isNull()) {
         result->toNull();
@@ -225,8 +225,8 @@ void
 castStrToCharA(RegisterRef<char*>* result,
                RegisterRef<char*>* src)
 {
-    assert(StandardTypeDescriptor::isTextArray(result->type()));
-    assert(StandardTypeDescriptor::isTextArray(src->type()));
+    assert(StandardTypeDescriptor::isArray(result->type()));
+    assert(StandardTypeDescriptor::isArray(src->type()));
     
     if (src->isNull()) {
         result->toNull();
@@ -247,183 +247,269 @@ castStrToCharA(RegisterRef<char*>* result,
 }
 
 
+// TODO: cases where the result is smaller than the input could
+// probably benefit from operating by reference instead of by value
+void
+castStrToVarBinaryA(RegisterRef<char*>* result,
+                    RegisterRef<char*>* src)
+{
+    assert(StandardTypeDescriptor::isArray(result->type()));
+    assert(StandardTypeDescriptor::isArray(src->type()));
+    
+    if (src->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        int rightTruncWarning = 0;
+        result->length(SqlStrCastToVarChar<1,1>(result->pointer(),
+                                                result->storage(),
+                                                src->pointer(),
+                                                src->stringLength(),
+                                                &rightTruncWarning,
+                                                0));
+        if (rightTruncWarning) {
+            // TODO: throw 22001 as a warning
+//            throw "22001";
+        }
+    }
+}
+
+// TODO: cases where the result is smaller than the input could
+// probably benefit from operating by reference instead of by value
+void
+castStrToBinaryA(RegisterRef<char*>* result,
+                 RegisterRef<char*>* src)
+{
+    assert(StandardTypeDescriptor::isArray(result->type()));
+    assert(StandardTypeDescriptor::isArray(src->type()));
+    
+    if (src->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        int rightTruncWarning = 0;
+        result->length(SqlStrCastToChar<1,1>(result->pointer(),
+                                             result->storage(),
+                                             src->pointer(),
+                                             src->stringLength(),
+                                             &rightTruncWarning,
+                                             0));
+
+        if (rightTruncWarning) {
+            // TODO: throw 22001 as a warning
+//            throw "22001";
+        }
+    }   
+}
+
+
 void
 ExtCastRegister(ExtendedInstructionTable* eit)
 {
     assert(eit != NULL);
-    
-    vector<StandardTypeDescriptorOrdinal> params_1B_1C;
-    params_1B_1C.push_back(STANDARD_TYPE_BOOL);
-    params_1B_1C.push_back(STANDARD_TYPE_CHAR);
 
-    vector<StandardTypeDescriptorOrdinal> params_1B_1V;
-    params_1B_1V.push_back(STANDARD_TYPE_BOOL);
-    params_1B_1V.push_back(STANDARD_TYPE_VARCHAR);
+    vector<StandardTypeDescriptorOrdinal> params_1bo_1c;
+    params_1bo_1c.push_back(STANDARD_TYPE_BOOL);
+    params_1bo_1c.push_back(STANDARD_TYPE_CHAR);
 
-    vector<StandardTypeDescriptorOrdinal> params_1I_1C;
-    params_1I_1C.push_back(STANDARD_TYPE_INT_64);
-    params_1I_1C.push_back(STANDARD_TYPE_CHAR);
+    vector<StandardTypeDescriptorOrdinal> params_1bo_1vc;
+    params_1bo_1vc.push_back(STANDARD_TYPE_BOOL);
+    params_1bo_1vc.push_back(STANDARD_TYPE_VARCHAR);
 
-    vector<StandardTypeDescriptorOrdinal> params_1I_1V;
-    params_1I_1V.push_back(STANDARD_TYPE_INT_64);
-    params_1I_1V.push_back(STANDARD_TYPE_VARCHAR);
+    vector<StandardTypeDescriptorOrdinal> params_1s8_1c;
+    params_1s8_1c.push_back(STANDARD_TYPE_INT_64);
+    params_1s8_1c.push_back(STANDARD_TYPE_CHAR);
 
-    vector<StandardTypeDescriptorOrdinal> params_1I_1C_PS;
-    params_1I_1C_PS.push_back(STANDARD_TYPE_INT_64);
-    params_1I_1C_PS.push_back(STANDARD_TYPE_CHAR);
-    params_1I_1C_PS.push_back(STANDARD_TYPE_INT_32);
-    params_1I_1C_PS.push_back(STANDARD_TYPE_INT_32);
+    vector<StandardTypeDescriptorOrdinal> params_1s8_1vc;
+    params_1s8_1vc.push_back(STANDARD_TYPE_INT_64);
+    params_1s8_1vc.push_back(STANDARD_TYPE_VARCHAR);
 
-    vector<StandardTypeDescriptorOrdinal> params_1I_1V_PS;
-    params_1I_1V_PS.push_back(STANDARD_TYPE_INT_64);
-    params_1I_1V_PS.push_back(STANDARD_TYPE_VARCHAR);
-    params_1I_1V_PS.push_back(STANDARD_TYPE_INT_32);
-    params_1I_1V_PS.push_back(STANDARD_TYPE_INT_32);
+    vector<StandardTypeDescriptorOrdinal> params_1s8_1c_PS;
+    params_1s8_1c_PS.push_back(STANDARD_TYPE_INT_64);
+    params_1s8_1c_PS.push_back(STANDARD_TYPE_CHAR);
+    params_1s8_1c_PS.push_back(STANDARD_TYPE_INT_32);
+    params_1s8_1c_PS.push_back(STANDARD_TYPE_INT_32);
 
-    vector<StandardTypeDescriptorOrdinal> params_1D_1C;
-    params_1D_1C.push_back(STANDARD_TYPE_DOUBLE);
-    params_1D_1C.push_back(STANDARD_TYPE_CHAR);
+    vector<StandardTypeDescriptorOrdinal> params_1s8_1vc_PS;
+    params_1s8_1vc_PS.push_back(STANDARD_TYPE_INT_64);
+    params_1s8_1vc_PS.push_back(STANDARD_TYPE_VARCHAR);
+    params_1s8_1vc_PS.push_back(STANDARD_TYPE_INT_32);
+    params_1s8_1vc_PS.push_back(STANDARD_TYPE_INT_32);
 
-    vector<StandardTypeDescriptorOrdinal> params_1D_1V;
-    params_1D_1V.push_back(STANDARD_TYPE_DOUBLE);
-    params_1D_1V.push_back(STANDARD_TYPE_VARCHAR);
+    vector<StandardTypeDescriptorOrdinal> params_1d_1c;
+    params_1d_1c.push_back(STANDARD_TYPE_DOUBLE);
+    params_1d_1c.push_back(STANDARD_TYPE_CHAR);
 
-    vector<StandardTypeDescriptorOrdinal> params_1C_1B;
-    params_1C_1B.push_back(STANDARD_TYPE_CHAR);
-    params_1C_1B.push_back(STANDARD_TYPE_BOOL);
+    vector<StandardTypeDescriptorOrdinal> params_1d_1vc;
+    params_1d_1vc.push_back(STANDARD_TYPE_DOUBLE);
+    params_1d_1vc.push_back(STANDARD_TYPE_VARCHAR);
 
-    vector<StandardTypeDescriptorOrdinal> params_1V_1B;
-    params_1V_1B.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_1B.push_back(STANDARD_TYPE_BOOL);
+    vector<StandardTypeDescriptorOrdinal> params_1c_1bo;
+    params_1c_1bo.push_back(STANDARD_TYPE_CHAR);
+    params_1c_1bo.push_back(STANDARD_TYPE_BOOL);
 
-    vector<StandardTypeDescriptorOrdinal> params_1C_1I;
-    params_1C_1I.push_back(STANDARD_TYPE_CHAR);
-    params_1C_1I.push_back(STANDARD_TYPE_INT_64);
+    vector<StandardTypeDescriptorOrdinal> params_1vc_1bo;
+    params_1vc_1bo.push_back(STANDARD_TYPE_VARCHAR);
+    params_1vc_1bo.push_back(STANDARD_TYPE_BOOL);
 
-    vector<StandardTypeDescriptorOrdinal> params_1V_1I;
-    params_1V_1I.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_1I.push_back(STANDARD_TYPE_INT_64);
+    vector<StandardTypeDescriptorOrdinal> params_1c_1s8;
+    params_1c_1s8.push_back(STANDARD_TYPE_CHAR);
+    params_1c_1s8.push_back(STANDARD_TYPE_INT_64);
 
-    vector<StandardTypeDescriptorOrdinal> params_1C_1I_PS;
-    params_1C_1I_PS.push_back(STANDARD_TYPE_CHAR);
-    params_1C_1I_PS.push_back(STANDARD_TYPE_INT_64);
-    params_1C_1I_PS.push_back(STANDARD_TYPE_INT_32);
-    params_1C_1I_PS.push_back(STANDARD_TYPE_INT_32);
+    vector<StandardTypeDescriptorOrdinal> params_1vc_1s8;
+    params_1vc_1s8.push_back(STANDARD_TYPE_VARCHAR);
+    params_1vc_1s8.push_back(STANDARD_TYPE_INT_64);
 
-    vector<StandardTypeDescriptorOrdinal> params_1V_1I_PS;
-    params_1V_1I_PS.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_1I_PS.push_back(STANDARD_TYPE_INT_64);
-    params_1V_1I_PS.push_back(STANDARD_TYPE_INT_32);
-    params_1V_1I_PS.push_back(STANDARD_TYPE_INT_32);
+    vector<StandardTypeDescriptorOrdinal> params_1c_1s8_PS;
+    params_1c_1s8_PS.push_back(STANDARD_TYPE_CHAR);
+    params_1c_1s8_PS.push_back(STANDARD_TYPE_INT_64);
+    params_1c_1s8_PS.push_back(STANDARD_TYPE_INT_32);
+    params_1c_1s8_PS.push_back(STANDARD_TYPE_INT_32);
 
-    vector<StandardTypeDescriptorOrdinal> params_1C_1D;
-    params_1C_1D.push_back(STANDARD_TYPE_CHAR);
-    params_1C_1D.push_back(STANDARD_TYPE_DOUBLE);
+    vector<StandardTypeDescriptorOrdinal> params_1vc_1s8_PS;
+    params_1vc_1s8_PS.push_back(STANDARD_TYPE_VARCHAR);
+    params_1vc_1s8_PS.push_back(STANDARD_TYPE_INT_64);
+    params_1vc_1s8_PS.push_back(STANDARD_TYPE_INT_32);
+    params_1vc_1s8_PS.push_back(STANDARD_TYPE_INT_32);
 
-    vector<StandardTypeDescriptorOrdinal> params_1V_1D;
-    params_1V_1D.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_1D.push_back(STANDARD_TYPE_DOUBLE);
+    vector<StandardTypeDescriptorOrdinal> params_1c_1d;
+    params_1c_1d.push_back(STANDARD_TYPE_CHAR);
+    params_1c_1d.push_back(STANDARD_TYPE_DOUBLE);
 
-    vector<StandardTypeDescriptorOrdinal> params_1C_1R;
-    params_1C_1R.push_back(STANDARD_TYPE_CHAR);
-    params_1C_1R.push_back(STANDARD_TYPE_REAL);
+    vector<StandardTypeDescriptorOrdinal> params_1vc_1d;
+    params_1vc_1d.push_back(STANDARD_TYPE_VARCHAR);
+    params_1vc_1d.push_back(STANDARD_TYPE_DOUBLE);
 
-    vector<StandardTypeDescriptorOrdinal> params_1V_1R;
-    params_1V_1R.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_1R.push_back(STANDARD_TYPE_REAL);
+    vector<StandardTypeDescriptorOrdinal> params_1c_1r;
+    params_1c_1r.push_back(STANDARD_TYPE_CHAR);
+    params_1c_1r.push_back(STANDARD_TYPE_REAL);
 
-    vector<StandardTypeDescriptorOrdinal> params_1V_1C;
-    params_1V_1C.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_1C.push_back(STANDARD_TYPE_CHAR);
+    vector<StandardTypeDescriptorOrdinal> params_1vc_1r;
+    params_1vc_1r.push_back(STANDARD_TYPE_VARCHAR);
+    params_1vc_1r.push_back(STANDARD_TYPE_REAL);
 
-    vector<StandardTypeDescriptorOrdinal> params_1C_1V;
-    params_1C_1V.push_back(STANDARD_TYPE_CHAR);
-    params_1C_1V.push_back(STANDARD_TYPE_VARCHAR);
+    vector<StandardTypeDescriptorOrdinal> params_1vc_1c;
+    params_1vc_1c.push_back(STANDARD_TYPE_VARCHAR);
+    params_1vc_1c.push_back(STANDARD_TYPE_CHAR);
 
-    vector<StandardTypeDescriptorOrdinal> params_1V_1V;
-    params_1V_1V.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_1V.push_back(STANDARD_TYPE_VARCHAR);
+    vector<StandardTypeDescriptorOrdinal> params_1c_1vc;
+    params_1c_1vc.push_back(STANDARD_TYPE_CHAR);
+    params_1c_1vc.push_back(STANDARD_TYPE_VARCHAR);
 
-    vector<StandardTypeDescriptorOrdinal> params_1C_1C;
-    params_1C_1C.push_back(STANDARD_TYPE_CHAR);
-    params_1C_1C.push_back(STANDARD_TYPE_CHAR);
+    vector<StandardTypeDescriptorOrdinal> params_1vc_1vc;
+    params_1vc_1vc.push_back(STANDARD_TYPE_VARCHAR);
+    params_1vc_1vc.push_back(STANDARD_TYPE_VARCHAR);
 
-    eit->add("castA", params_1B_1C,
+    vector<StandardTypeDescriptorOrdinal> params_1c_1c;
+    params_1c_1c.push_back(STANDARD_TYPE_CHAR);
+    params_1c_1c.push_back(STANDARD_TYPE_CHAR);
+
+    vector<StandardTypeDescriptorOrdinal> params_1vb_1b;
+    params_1vb_1b.push_back(STANDARD_TYPE_VARBINARY);
+    params_1vb_1b.push_back(STANDARD_TYPE_BINARY);
+
+    vector<StandardTypeDescriptorOrdinal> params_1b_1vb;
+    params_1b_1vb.push_back(STANDARD_TYPE_BINARY);
+    params_1b_1vb.push_back(STANDARD_TYPE_VARBINARY);
+
+    vector<StandardTypeDescriptorOrdinal> params_1vb_1vb;
+    params_1vb_1vb.push_back(STANDARD_TYPE_VARBINARY);
+    params_1vb_1vb.push_back(STANDARD_TYPE_VARBINARY);
+
+    vector<StandardTypeDescriptorOrdinal> params_1b_1b;
+    params_1b_1b.push_back(STANDARD_TYPE_BINARY);
+    params_1b_1b.push_back(STANDARD_TYPE_BINARY);
+
+    eit->add("castA", params_1bo_1c,
              (ExtendedInstruction2<bool, char*>*) NULL,
              &castStrToBooleanA);
-    eit->add("castA", params_1B_1V,
+    eit->add("castA", params_1bo_1vc,
              (ExtendedInstruction2<bool, char*>*) NULL,
              &castStrToBooleanA);
 
-    eit->add("castA", params_1I_1C,
+    eit->add("castA", params_1s8_1c,
              (ExtendedInstruction2<int64_t, char*>*) NULL,
              &castStrToExactA);
-    eit->add("castA", params_1I_1V,
+    eit->add("castA", params_1s8_1vc,
              (ExtendedInstruction2<int64_t, char*>*) NULL,
              &castStrToExactA);
 
-    eit->add("castA", params_1I_1C_PS,
+    eit->add("castA", params_1s8_1c_PS,
              (ExtendedInstruction4<int64_t, char*, int32_t, int32_t>*) NULL,
              &castStrToExactA);
-    eit->add("castA", params_1I_1V_PS,
+    eit->add("castA", params_1s8_1vc_PS,
              (ExtendedInstruction4<int64_t, char*, int32_t, int32_t>*) NULL,
              &castStrToExactA);
 
-    eit->add("castA", params_1D_1C,
+    eit->add("castA", params_1d_1c,
              (ExtendedInstruction2<double, char*>*) NULL,
              &castStrToApproxA);
-    eit->add("castA", params_1D_1V,
+    eit->add("castA", params_1d_1vc,
              (ExtendedInstruction2<double, char*>*) NULL,
              &castStrToApproxA);
 
-    eit->add("castA", params_1C_1B,
+    eit->add("castA", params_1c_1bo,
              (ExtendedInstruction2<char*, bool>*) NULL,
              &castBooleanToStrA);
-    eit->add("castA", params_1V_1B,
+    eit->add("castA", params_1vc_1bo,
              (ExtendedInstruction2<char*, bool>*) NULL,
              &castBooleanToStrA);
 
-    eit->add("castA", params_1C_1I,
+    eit->add("castA", params_1c_1s8,
              (ExtendedInstruction2<char*, int64_t>*) NULL,
              &castExactToStrA);
-    eit->add("castA", params_1V_1I,
+    eit->add("castA", params_1vc_1s8,
              (ExtendedInstruction2<char*, int64_t>*) NULL,
              &castExactToStrA);
 
-    eit->add("castA", params_1C_1I_PS,
+    eit->add("castA", params_1c_1s8_PS,
              (ExtendedInstruction4<char*, int64_t, int32_t, int32_t>*) NULL,
              &castExactToStrA);
-    eit->add("castA", params_1V_1I_PS,
+    eit->add("castA", params_1vc_1s8_PS,
              (ExtendedInstruction4<char*, int64_t, int32_t, int32_t>*) NULL,
              &castExactToStrA);
 
-    eit->add("castA", params_1C_1D,
+    eit->add("castA", params_1c_1d,
              (ExtendedInstruction2<char*, double>*) NULL,
              &castApproxToStrA);
-    eit->add("castA", params_1V_1D,
+    eit->add("castA", params_1vc_1d,
              (ExtendedInstruction2<char*, double>*) NULL,
              &castApproxToStrA);
 
-    eit->add("castA", params_1C_1R,
+    eit->add("castA", params_1c_1r,
              (ExtendedInstruction2<char*, float>*) NULL,
              &castApproxToStrA);
-    eit->add("castA", params_1V_1R,
+    eit->add("castA", params_1vc_1r,
              (ExtendedInstruction2<char*, float>*) NULL,
              &castApproxToStrA);
 
-    eit->add("castA", params_1C_1V,
+    eit->add("castA", params_1c_1vc,
              (ExtendedInstruction2<char*, char*>*) NULL,
              &castStrToCharA);
-    eit->add("castA", params_1C_1C,
+    eit->add("castA", params_1c_1c,
              (ExtendedInstruction2<char*, char*>*) NULL,
              &castStrToCharA);
 
-    eit->add("castA", params_1V_1C,
+    eit->add("castA", params_1vc_1c,
              (ExtendedInstruction2<char*, char*>*) NULL,
              &castStrToVarCharA);
-    eit->add("castA", params_1V_1V,
+    eit->add("castA", params_1vc_1vc,
              (ExtendedInstruction2<char*, char*>*) NULL,
              &castStrToVarCharA);
+
+    eit->add("castA", params_1b_1vb,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &castStrToBinaryA);
+    eit->add("castA", params_1b_1b,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &castStrToBinaryA);
+
+    eit->add("castA", params_1vb_1b,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &castStrToVarBinaryA);
+    eit->add("castA", params_1vb_1vb,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &castStrToVarBinaryA);
 }
 
 

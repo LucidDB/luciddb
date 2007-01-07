@@ -25,8 +25,14 @@ package org.eigenbase.sql.type;
 import java.io.*;
 
 import java.sql.*;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 import org.eigenbase.util.*;
+import org.eigenbase.sql.SqlLiteral;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 
 /**
@@ -65,6 +71,8 @@ public class SqlTypeName
     public static final int MAX_DATETIME_PRECISION = 3;
     public static final int MAX_NUMERIC_PRECISION = 19;
     public static final int MAX_NUMERIC_SCALE = 19;
+    public static final int MAX_CHAR_LENGTH = 65536;
+    public static final int MAX_BINARY_LENGTH = 65536;
 
     // SQL Type Definitions ------------------
     public static final int Boolean_ordinal = 0;
@@ -276,6 +284,7 @@ public class SqlTypeName
      * Bitwise-or of flags indicating allowable precision/scale combinations.
      */
     private final int signatures;
+    private static final BigDecimal TWO = new BigDecimal(2);
 
     //~ Constructors -----------------------------------------------------------
 
@@ -538,6 +547,403 @@ public class SqlTypeName
         throws ObjectStreamException
     {
         return SqlTypeName.get(_ordinal);
+    }
+
+    /**
+     * Returns the limit of this datatype.
+     *
+     * For example,
+     * <table border="1">
+     * <tr>
+     * <th>Datatype</th>
+     * <th>sign</th><th>limit</th><th>beyond</th><th>precision</th><th>scale</th>
+     * <th>Returns</th>
+     * </tr>
+     * <tr>
+     * <td>Integer</th>
+     * <td>true</td><td>true</td><td>false</td><td>-1</td><td>-1</td>
+     * <td>2147483647 (2 ^ 31 -1 = MAXINT)</td>
+     * </tr>
+     * <tr>
+     * <td>Integer</th>
+     * <td>true</td><td>true</td><td>true</td><td>-1</td><td>-1</td>
+     * <td>2147483648 (2 ^ 31 = MAXINT + 1)</td>
+     * </tr>
+     * <tr>
+     * <td>Integer</th>
+     * <td>false</td><td>true</td><td>false</td><td>-1</td><td>-1</td>
+     * <td>-2147483648 (-2 ^ 31 = MININT)</td>
+     * </tr>
+     * <tr>
+     * <td>Boolean</th>
+     * <td>true</td><td>true</td><td>false</td><td>-1</td><td>-1</td>
+     * <td>TRUE</td>
+     * </tr>
+     * <tr>
+     * <td>Varchar</th>
+     * <td>true</td><td>true</td><td>false</td><td>10</td><td>-1</td>
+     * <td>'ZZZZZZZZZZ'</td>
+     * </tr>
+     * </table>
+     *
+     * @param sign If true, returns upper limit, otherwise lower limit
+     * @param limit If true, returns value at or near to overflow; otherwise
+     *   value at or near to underflow
+     * @param beyond If true, returns the value just beyond the limit,
+     *   otherwise the value at the limit
+     * @param precision Precision, or -1 if not applicable
+     * @param scale Scale, or -1 if not applicable
+     * @return Limit value
+     */
+    public Object getLimit(
+        boolean sign, Limit limit, boolean beyond, int precision, int scale)
+    {
+        assert allowsPrecScale(precision != -1, scale != -1) : this;
+        if (limit == Limit.ZERO) {
+            if (beyond) {
+                return null;
+            }
+            sign = true;
+        }
+        Calendar calendar;
+
+        switch (this.getOrdinal()) {
+        case Boolean_ordinal:
+            switch (limit) {
+            case ZERO:
+                return false;
+            case UNDERFLOW:
+                return null;
+            case OVERFLOW:
+                if (beyond || !sign) {
+                    return null;
+                } else {
+                    return true;
+                }
+            default:
+                throw Util.unexpected(limit);
+            }
+
+        case Tinyint_ordinal:
+            return getNumericLimit(2, 8, sign, limit, beyond);
+
+        case Smallint_ordinal:
+            return getNumericLimit(2, 16, sign, limit, beyond);
+
+        case Integer_ordinal:
+            return getNumericLimit(2, 32, sign, limit, beyond);
+
+        case Bigint_ordinal:
+            return getNumericLimit(2, 64, sign, limit, beyond);
+
+        case Decimal_ordinal:
+            BigDecimal decimal =
+                getNumericLimit(10, precision, sign, limit, beyond);
+            if (decimal == null) {
+                return null;
+            }
+
+            // Decimal values must fit into 64 bits. So, the maximum value of
+            // a DECIMAL(19, 0) is 2^63 - 1, not 10^19 - 1.
+            switch (limit) {
+            case OVERFLOW:
+                final BigDecimal other =
+                    (BigDecimal) Bigint.getLimit(sign, limit, beyond, -1, -1);
+                if (decimal.compareTo(other) == (sign ? 1 : -1)) {
+                    decimal = other;
+                }
+            }
+
+            // Apply scale.
+            if (scale == 0) {
+                ;
+            } else if (scale > 0) {
+                decimal = decimal.divide(BigDecimal.TEN.pow(scale));
+            } else {
+                decimal = decimal.multiply(BigDecimal.TEN.pow(-scale));
+            }
+            return decimal;
+
+        case Char_ordinal:
+        case Varchar_ordinal:
+            if (!sign) {
+                return null; // this type does not have negative values
+            }
+            StringBuilder buf = new StringBuilder();
+            switch (limit) {
+            case ZERO:
+                break;
+            case UNDERFLOW:
+                if (beyond) {
+                    // There is no value between the empty string and the
+                    // smallest non-empty string.
+                    return null;
+                }
+                buf.append("a");
+                break;
+            case OVERFLOW:
+                for (int i = 0; i < precision; ++i) {
+                    buf.append("Z");
+                }
+                if (beyond) {
+                    buf.append("Z");
+                }
+                break;
+            }
+            return buf.toString();
+
+        case Binary_ordinal:
+        case Varbinary_ordinal:
+            if (!sign) {
+                return null; // this type does not have negative values
+            }
+            byte[] bytes;
+            switch (limit) {
+            case ZERO:
+                bytes = new byte[0];
+                break;
+            case UNDERFLOW:
+                if (beyond) {
+                    // There is no value between the empty string and the
+                    // smallest value.
+                    return null;
+                }
+                bytes = new byte[] {0x00};
+                break;
+            case OVERFLOW:
+                bytes = new byte[precision + (beyond ? 1 : 0)];
+                Arrays.fill(bytes, (byte) 0xff);
+                break;
+            default:
+                throw Util.unexpected(limit);
+            }
+            return bytes;
+
+        case Date_ordinal:
+            calendar = Calendar.getInstance();
+            switch (limit) {
+            case ZERO:
+                // The epoch.
+                calendar.set(Calendar.YEAR, 1970);
+                calendar.set(Calendar.MONTH, 0);
+                calendar.set(Calendar.DAY_OF_MONTH, 1);
+                break;
+            case UNDERFLOW:
+                return null;
+            case OVERFLOW:
+                if (beyond) {
+                    // It is impossible to represent an invalid year as a date
+                    // literal. SQL dates are represented as 'yyyy-mm-dd', and
+                    // 1 <= yyyy <= 9999 is valid. There is no year 0: the year
+                    // before 1AD is 1BC, so SimpleDateFormat renders the day
+                    // before 0001-01-01 (AD) as 0001-12-31 (BC), which looks
+                    // like a valid date.
+                    return null;
+                }
+                // "SQL:2003 6.1 <data type> Access Rules 6" says that year is
+                // between 1 and 9999, and days/months are the valid Gregorian
+                // calendar values for these years.
+                if (sign) {
+                    calendar.set(Calendar.YEAR, 9999);
+                    calendar.set(Calendar.MONTH, 11);
+                    calendar.set(Calendar.DAY_OF_MONTH, 31);
+                } else {
+                    calendar.set(Calendar.YEAR, 1);
+                    calendar.set(Calendar.MONTH, 0);
+                    calendar.set(Calendar.DAY_OF_MONTH, 1);
+                }
+                break;
+            }
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            return calendar;
+
+        case Time_ordinal:
+            if (!sign) {
+                return null; // this type does not have negative values
+            }
+            if (beyond) {
+                return null; // invalid values are impossible to represent
+            }
+            calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+            switch (limit) {
+            case ZERO:
+                // The epoch.
+                calendar.set(Calendar.HOUR_OF_DAY, 0);
+                calendar.set(Calendar.MINUTE, 0);
+                calendar.set(Calendar.SECOND, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
+                break;
+            case UNDERFLOW:
+                return null;
+            case OVERFLOW:
+                calendar.set(Calendar.HOUR_OF_DAY, 23);
+                calendar.set(Calendar.MINUTE, 59);
+                calendar.set(Calendar.SECOND, 59);
+                int millis =
+                    precision >= 3 ? 999 :
+                    precision == 2 ? 990 :
+                    precision == 1 ? 900 :
+                    0;
+                calendar.set(Calendar.MILLISECOND, millis);
+                break;
+            }
+            return calendar;
+
+        case Timestamp_ordinal:
+            calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+            switch (limit) {
+            case ZERO:
+                // The epoch.
+                calendar.set(Calendar.YEAR, 1970);
+                calendar.set(Calendar.MONTH, 0);
+                calendar.set(Calendar.DAY_OF_MONTH, 1);
+                calendar.set(Calendar.HOUR_OF_DAY, 0);
+                calendar.set(Calendar.MINUTE, 0);
+                calendar.set(Calendar.SECOND, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
+                break;
+            case UNDERFLOW:
+                return null;
+            case OVERFLOW:
+                if (beyond) {
+                    // It is impossible to represent an invalid year as a date
+                    // literal. SQL dates are represented as 'yyyy-mm-dd', and
+                    // 1 <= yyyy <= 9999 is valid. There is no year 0: the year
+                    // before 1AD is 1BC, so SimpleDateFormat renders the day
+                    // before 0001-01-01 (AD) as 0001-12-31 (BC), which looks
+                    // like a valid date.
+                    return null;
+                }
+                // "SQL:2003 6.1 <data type> Access Rules 6" says that year is
+                // between 1 and 9999, and days/months are the valid Gregorian
+                // calendar values for these years.
+                if (sign) {
+                    calendar.set(Calendar.YEAR, 9999);
+                    calendar.set(Calendar.MONTH, 11);
+                    calendar.set(Calendar.DAY_OF_MONTH, 31);
+                    calendar.set(Calendar.HOUR_OF_DAY, 23);
+                    calendar.set(Calendar.MINUTE, 59);
+                    calendar.set(Calendar.SECOND, 59);
+                    int millis =
+                        precision >= 3 ? 999 :
+                        precision == 2 ? 990 :
+                        precision == 1 ? 900 :
+                        0;
+                    calendar.set(Calendar.MILLISECOND, millis);
+                } else {
+                    calendar.set(Calendar.YEAR, 1);
+                    calendar.set(Calendar.MONTH, 0);
+                    calendar.set(Calendar.DAY_OF_MONTH, 1);
+                    calendar.set(Calendar.HOUR_OF_DAY, 0);
+                    calendar.set(Calendar.MINUTE, 0);
+                    calendar.set(Calendar.SECOND, 0);
+                    calendar.set(Calendar.MILLISECOND, 0);
+                }
+                break;
+            }
+            return calendar;
+
+        default:
+            throw unexpected();
+        }
+    }
+
+    /**
+     * Returns the maximum precision (or length) allowed for this type,
+     * or -1 if precision/length are not applicable for this type.
+     *
+     * @return Maximum allowed precision
+     */
+    public int getMaxPrecision()
+    {
+        switch (getOrdinal()) {
+        case Decimal_ordinal:
+            return MAX_NUMERIC_PRECISION;
+        case Varchar_ordinal:
+        case Char_ordinal:
+            return MAX_CHAR_LENGTH;
+        case Varbinary_ordinal:
+        case Binary_ordinal:
+            return MAX_BINARY_LENGTH;
+        case Time_ordinal:
+        case Timestamp_ordinal:
+            return MAX_DATETIME_PRECISION;
+        default:
+            return -1;
+        }
+    }
+
+    public enum Limit {
+        ZERO,
+        UNDERFLOW,
+        OVERFLOW
+    }
+
+    private BigDecimal getNumericLimit(
+        int radix,
+        int exponent,
+        boolean sign,
+        Limit limit,
+        boolean beyond)
+    {
+        switch (limit) {
+        case OVERFLOW:
+            // 2-based schemes run from -2^(N-1) to 2^(N-1)-1 e.g. -128 to +127
+            // 10-based schemas run from -(10^N-1) to 10^N-1 e.g. -99 to +99
+            final BigDecimal bigRadix = BigDecimal.valueOf(radix);
+            if (radix == 2) {
+                --exponent;
+            }
+            BigDecimal decimal = bigRadix.pow(exponent);
+            if (sign || radix != 2) {
+                decimal = decimal.subtract(BigDecimal.ONE);
+            }
+            if (beyond) {
+                decimal = decimal.add(BigDecimal.ONE);
+            }
+            if (!sign) {
+                decimal = decimal.negate();
+            }
+            return decimal;
+        case UNDERFLOW:
+            return beyond ? null :
+                sign ? BigDecimal.ONE :
+                    BigDecimal.ONE.negate();
+        case ZERO:
+            return BigDecimal.ZERO;
+        default:
+            throw Util.unexpected(limit);
+        }
+    }
+
+    public SqlLiteral createLiteral(Object o, SqlParserPos pos)
+    {
+        switch (getOrdinal()) {
+        case Boolean_ordinal:
+            return SqlLiteral.createBoolean((Boolean) o, pos);
+        case Tinyint_ordinal:
+        case Smallint_ordinal:
+        case Integer_ordinal:
+        case Bigint_ordinal:
+        case Decimal_ordinal:
+            return SqlLiteral.createExactNumeric(o.toString(), pos);
+        case Varchar_ordinal:
+        case Char_ordinal:
+            return SqlLiteral.createCharString((String) o, pos);
+        case Varbinary_ordinal:
+        case Binary_ordinal:
+            return SqlLiteral.createBinaryString((byte[]) o, pos);
+        case Date_ordinal:
+            return SqlLiteral.createDate((Calendar) o, pos);
+        case Time_ordinal:
+            return SqlLiteral.createTime((Calendar) o, 0 /* todo */, pos);
+        case Timestamp_ordinal:
+            return SqlLiteral.createTimestamp((Calendar) o, 0 /* todo */, pos);
+        default:
+            throw unexpected();
+        }
     }
 }
 
