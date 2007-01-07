@@ -355,11 +355,7 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1999 08
 > values date '2004-2-30';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '2004-2-30' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
 > values date '20005-4-3';
-+-------------+
-|   EXPR$0    |
-+-------------+
-|  005-04-03  |
-+-------------+
+Error: From line 1, column 13 to line 1, column 23: Date literal 'DATE '20005-04-03'' out of range (state=,code=0)
 > -- these should fail (bad month or date)
 > values date '2003-10-32';
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '2003-10-32' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
@@ -373,21 +369,21 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '2003-13
 > 
 > -- negative test
 > insert into t_date values('string value',null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type CHAR(12) (state=,code=0)
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type CHAR(12) (state=,code=0)
 > insert into t_date values(true,null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type BOOLEAN (state=,code=0)
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type BOOLEAN (state=,code=0)
 > insert into t_date values(1234,null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type INTEGER (state=,code=0)
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type INTEGER (state=,code=0)
 > insert into t_date values(1e400,null);
 Error: From line 1, column 27 to line 1, column 31: Numeric literal '1E400' out of range (state=,code=0)
 > insert into t_date values(-1.2345678901234e-200,null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type DOUBLE (state=,code=0)
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type DOUBLE (state=,code=0)
 > insert into t_date values(-1234.03,null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type DECIMAL(6, 2) (state=,code=0)
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type DECIMAL(6, 2) (state=,code=0)
 > insert into t_date values(x'ff',null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type BINARY(1) (state=,code=0)
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type BINARY(1) (state=,code=0)
 > insert into t_date values(time '12:01:01',null);
-Error: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type TIME(0) (state=,code=0)
+Error: At line 0, column 0: Cannot assign to target field 'DATE_COL' of type DATE from source field 'EXPR$0' of type TIME(0) (state=,code=0)
 > -- the next insert statement should be allowed.
 > -- insert into t_date values(timestamp '2004-12-01 12:01:01',null);
 > 
