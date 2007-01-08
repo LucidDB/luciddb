@@ -132,21 +132,27 @@ ExecStreamEmbryo &ExecStreamGraphEmbryo::getStreamEmbryo(
 
 void ExecStreamGraphEmbryo::addDataflow(
     const std::string &source,
-    const std::string &target)
+    const std::string &target,
+    bool isImplicit)
 {
     SharedExecStream pSourceStream = 
         pGraph->findStream(source);
     SharedExecStream pTargetStream = 
         pGraph->findStream(target);
-    ExecStreamBufProvision requiredDataflow =
-        pTargetStream->getInputBufProvision();
-    uint iOutput = pGraph->getOutputCount(pSourceStream->getStreamId());
-    addAdapterFor(source, iOutput, requiredDataflow);
-    SharedExecStream pInput = 
-        pGraph->findLastStream(source, iOutput);
+    SharedExecStream pInput;
+    if (isImplicit) {
+        pInput = pSourceStream;
+    } else {
+        ExecStreamBufProvision requiredDataflow =
+            pTargetStream->getInputBufProvision();
+        uint iOutput = pGraph->getOutputCount(pSourceStream->getStreamId());
+        addAdapterFor(source, iOutput, requiredDataflow);
+        pInput = pGraph->findLastStream(source, iOutput);
+    }
     pGraph->addDataflow(
         pInput->getStreamId(),
-        pTargetStream->getStreamId());
+        pTargetStream->getStreamId(),
+        isImplicit);
 }
 
 void ExecStreamGraphEmbryo::initStreamParams(ExecStreamParams &params)

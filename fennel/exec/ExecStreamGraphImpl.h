@@ -30,6 +30,7 @@
 #include <boost/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
+#include <boost/graph/filtered_graph.hpp>
 
 // REVIEW:  can this be pulled into fennel namespace somehow?
 namespace boost 
@@ -54,32 +55,72 @@ public:
         boost::vecS,
         boost::bidirectionalS,
         boost::property<boost::vertex_data_t,SharedExecStream>,
-        boost::property<boost::edge_data_t,SharedExecStreamBufAccessor> >
-    GraphRep;
+        boost::property<
+        boost::edge_data_t,SharedExecStreamBufAccessor,
+        boost::property<boost::edge_weight_t,int> > >
+    FullGraphRep;
 
-    typedef boost::graph_traits<GraphRep>::vertex_descriptor Vertex;
+    typedef boost::graph_traits<FullGraphRep>::vertex_descriptor Vertex;
+    typedef boost::graph_traits<FullGraphRep>::edge_descriptor Edge;
 
-    typedef boost::graph_traits<GraphRep>::edge_descriptor Edge;
+    typedef boost::graph_traits<FullGraphRep>::vertex_iterator FgVertexIter;
+    typedef boost::graph_traits<FullGraphRep>::edge_iterator FgEdgeIter;
+    typedef boost::graph_traits<FullGraphRep>::out_edge_iterator FgOutEdgeIter;
+    typedef boost::graph_traits<FullGraphRep>::in_edge_iterator FgInEdgeIter;
+    typedef std::pair<FgVertexIter,FgVertexIter> FgVertexIterPair;
+    typedef std::pair<FgEdgeIter,FgEdgeIter> FgEdgeIterPair;
+    typedef std::pair<FgOutEdgeIter,FgOutEdgeIter> FgOutEdgeIterPair;
+    typedef std::pair<FgInEdgeIter,FgInEdgeIter> FgInEdgeIterPair;
+    
+    typedef boost::property_map<FullGraphRep, boost::edge_weight_t>::type
+        EdgeWeightMap;
 
+    struct ExplicitEdgePredicate
+    {
+        EdgeWeightMap weightMap;
+
+        // NOTE jvs 6-Jan-2006:  Lack of keyword "explicit" on constructors
+        // here is intentional.
+        
+        ExplicitEdgePredicate()
+        {
+        }
+
+        ExplicitEdgePredicate(EdgeWeightMap weightMapInit)
+            : weightMap(weightMapInit)
+        {
+        }
+
+        bool operator () (Edge const &edge) const
+        {
+            return boost::get(weightMap, edge) > 0;
+        }
+    };
+    
+    typedef boost::filtered_graph<FullGraphRep, ExplicitEdgePredicate>
+        GraphRep;
     typedef boost::graph_traits<GraphRep>::vertex_iterator VertexIter;
-
     typedef boost::graph_traits<GraphRep>::edge_iterator EdgeIter;
-
     typedef boost::graph_traits<GraphRep>::out_edge_iterator OutEdgeIter;
-
     typedef boost::graph_traits<GraphRep>::in_edge_iterator InEdgeIter;
-
     typedef std::pair<VertexIter,VertexIter> VertexIterPair;
-
     typedef std::pair<EdgeIter,EdgeIter> EdgeIterPair;
-
     typedef std::pair<OutEdgeIter,OutEdgeIter> OutEdgeIterPair;
-
     typedef std::pair<InEdgeIter,InEdgeIter> InEdgeIterPair;
+
 
 protected:
 
-    GraphRep graphRep;
+    // NOTE jvs 8-Jan-2007:  We maintain two boost graphs;
+    // graphRep is the "full" graph, including both implicit
+    // and explicit dataflow edges; filteredGraph is a subgraph
+    // view selecting just the explicit dataflows.  Code which
+    // accesses the graph needs to decide which view it wants
+    // and use the corresponding iterators.
+    
+    FullGraphRep graphRep;
+    
+    GraphRep filteredGraph;
     
     typedef std::map<std::string,ExecStreamId> StreamMap;
     typedef StreamMap::const_iterator StreamMapConstIter;
@@ -179,6 +220,7 @@ public:
     virtual ~ExecStreamGraphImpl() {}
     
     inline GraphRep const &getGraphRep();
+    inline FullGraphRep const &getFullGraphRep();
     inline SharedExecStream getStreamFromVertex(Vertex);
     inline SharedExecStreamBufAccessor &getSharedBufAccessorFromEdge(Edge);
     inline ExecStreamBufAccessor &getBufAccessorFromEdge(Edge);
@@ -198,7 +240,8 @@ public:
     virtual void removeStream(ExecStreamId);
     virtual void addDataflow(
         ExecStreamId producerId,
-        ExecStreamId consumerId);
+        ExecStreamId consumerId,
+        bool isImplicit = false);
     virtual void addOutputDataflow(
         ExecStreamId producerId);
     virtual void addInputDataflow(
@@ -240,7 +283,14 @@ public:
     virtual void closeProducers(ExecStreamId streamId);
 };
 
-inline ExecStreamGraphImpl::GraphRep const &ExecStreamGraphImpl::getGraphRep()
+inline ExecStreamGraphImpl::GraphRep const &
+    ExecStreamGraphImpl::getGraphRep()
+{
+    return filteredGraph;
+}
+
+inline ExecStreamGraphImpl::FullGraphRep const &
+    ExecStreamGraphImpl::getFullGraphRep()
 {
     return graphRep;
 }

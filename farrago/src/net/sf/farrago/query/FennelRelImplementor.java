@@ -68,10 +68,8 @@ public interface FennelRelImplementor
         RelDataType rowType);
 
     /**
-     * Adds a new dataflow edge between two existing stream definitions. In
-     * cases where a stream has multiple inputs or outputs, order may be
-     * significant, in which case it is the caller's responsibility to add the
-     * flows in the desired order.
+     * Adds a new explicit dataflow edge between two existing stream
+     * definitions.  See the three-arg version for details.
      *
      * <p>NOTE jvs 14-Nov-2005: I gave this method a long name so that it
      * wouldn't be necessary to guess the direction when reading code that uses
@@ -83,6 +81,23 @@ public interface FennelRelImplementor
     public void addDataFlowFromProducerToConsumer(
         FemExecutionStreamDef producer,
         FemExecutionStreamDef consumer);
+
+    /**
+     * Adds a new dataflow edge between two existing stream definitions. In
+     * cases where a stream has multiple inputs or outputs, order may be
+     * significant, in which case it is the caller's responsibility to add the
+     * flows in the desired order.
+     *
+     * @param producer the upstream node of the dataflow
+     * @param consumer the downstream node of the dataflow
+     * @param boolean implicit false if this is an explicit dataflow
+     * edge between two ExecStreams; true if it represents implicit
+     * dataflow via a UDX reading from a cursor
+     */
+    public void addDataFlowFromProducerToConsumer(
+        FemExecutionStreamDef producer,
+        FemExecutionStreamDef consumer,
+        boolean implicit);
 
     /**
      * Returns the repository.

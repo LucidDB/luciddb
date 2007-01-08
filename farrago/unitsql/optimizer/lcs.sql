@@ -582,11 +582,19 @@ insert into test_large_varchars values(1,
 select char_length(i), * from test_large_varchars order by a;
 drop table test_large_varchars;
 
--- Clean up
+-- LER-3681 (verify that self-insert with a UDX in the middle does not
+-- hang due to lockout)
 
-alter session implementation set default;
+create function stringify(c cursor, delimiter varchar(128))
+returns table(v varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
 
--- drop schema
-drop schema lcs;
+create table self_insert_udx(a char(10));
+insert into self_insert_udx values('abc');
+insert into self_insert_udx 
+select * from table(stringify(cursor(select * from self_insert_udx), '|'));
 
 -- End lcs.sql

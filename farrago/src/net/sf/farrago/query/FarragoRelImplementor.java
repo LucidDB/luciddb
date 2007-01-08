@@ -269,7 +269,17 @@ public class FarragoRelImplementor
         FemExecutionStreamDef producer,
         FemExecutionStreamDef consumer)
     {
+        addDataFlowFromProducerToConsumer(producer, consumer, false);
+    }
+
+    // implement FennelRelImplementor
+    public void addDataFlowFromProducerToConsumer(
+        FemExecutionStreamDef producer,
+        FemExecutionStreamDef consumer,
+        boolean implicit)
+    {
         FemExecStreamDataFlow flow = getRepos().newFemExecStreamDataFlow();
+        flow.setImplicit(implicit);
         producer.getOutputFlow().add(flow);
         consumer.getInputFlow().add(flow);
     }
