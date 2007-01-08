@@ -193,7 +193,7 @@ shown in the following diagram:
 Here, each extent contains one extent map page followed by four data pages;
 real extents are much bigger.  The entries in the PageId 0 segment map page
 contain the number of unallocated pages in each extent (light gray rectangles
-represent unallocated blocks).  Each extent map contains the allocation status
+represent allocated blocks).  Each extent map contains the allocation status
 of the corresponding data pages, together with successor PageId entries,
 forming singly-linked lists terminated with NULL_PAGE_ID).  Storing the
 successor chain in the extent map allows for efficient prefetch even in the
