@@ -1,29 +1,29 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test expressions with different datatypes
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- VARCHAR comparison
-0: jdbc:farrago:> select name from sales.emps where city='San Francisco';
+> -- $Id$
+> -- Test expressions with different datatypes
+> 
+> -- VARCHAR comparison
+> select name from sales.emps where city='San Francisco';
 +-------+
 | NAME  |
 +-------+
 | Eric  |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test CHAR pad/truncation and VARCHAR truncation
-0: jdbc:farrago:> create schema s;
-0: jdbc:farrago:> set schema 's';
-0: jdbc:farrago:> create table t(i int not null primary key,c char(10),v varchar(10));
-0: jdbc:farrago:> insert into t values (1,'goober','goober');
-0: jdbc:farrago:> insert into t values (2,'endoplasmic reticulum','endoplasmic reticulum');
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> select * from t;
+> 
+> -- test CHAR pad/truncation and VARCHAR truncation
+> create schema s;
+> set schema 's';
+> create table t(i int not null primary key,c char(10),v varchar(10));
+> insert into t values (1,'goober','goober');
+> insert into t values (2,'endoplasmic reticulum','endoplasmic reticulum');
+> !set outputformat csv
+> select * from t;
 'I','C','V'
 '1','goober    ','goober'
 '2','endoplasmi','endoplasmi'
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Binary as hexstring
-0: jdbc:farrago:> select public_key from sales.emps order by 1;
+> !set outputformat table
+> 
+> -- Binary as hexstring
+> select public_key from sales.emps order by 1;
 +-------------+
 | PUBLIC_KEY  |
 +-------------+
@@ -32,116 +32,142 @@
 | 41626320    |
 | 58797A      |
 +-------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Date/time/timestamp literals
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values DATE '2004-12-01';
+> 
+> -- Date/time/timestamp literals
+> 
+> values DATE '2004-12-01';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 2004-12-01  |
 +-------------+
-0: jdbc:farrago:> values TIME '12:01:01';
+> values TIME '12:01:01';
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 12:01:01  |
 +-----------+
-0: jdbc:farrago:> values TIMESTAMP '2004-12-01 12:01:01';
+> values TIMESTAMP '2004-12-01 12:01:01';
 +------------------------+
 |         EXPR$0         |
 +------------------------+
 | 2004-12-01 12:01:01.0  |
 +------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Exponent literals
-0: jdbc:farrago:> -- dtbug 271
-0: jdbc:farrago:> select 0e0 from (values (0));
+> 
+> -- Exponent literals
+> -- dtbug 271
+> select 0e0 from (values (0));
 +---------+
 | EXPR$0  |
 +---------+
 | 0.0     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Verify that type of character string literals is CHARACTER as it should be
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view literal_view(lit1,lit2,lit3,lit4,lit5) 
-. . . . . . . . > as values ('pumpkin ','pie','','  ',cast('' as varchar(0)));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select column_name,type_name,column_size
-. . . . . . . . > from sys_boot.jdbc_metadata.columns_view
-. . . . . . . . > where table_name='LITERAL_VIEW'
-. . . . . . . . > order by 1;
-+--------------+------------+--------------+
-| COLUMN_NAME  | TYPE_NAME  | COLUMN_SIZE  |
-+--------------+------------+--------------+
-| LIT1         | CHAR       | 8            |
-| LIT2         | CHAR       | 3            |
-| LIT3         | CHAR       | 0            |
-| LIT4         | CHAR       | 2            |
-| LIT5         | VARCHAR    | 0            |
-+--------------+------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> select * from literal_view;
+> 
+> -- Verify that type of character string literals is CHARACTER as it should be
+> -- dtbug 401 (JIRA FRG-74)
+> 
+> -- singleline literals
+> create view literal_view(lit1,lit2,lit3,lit4,lit5) 
+> as values ('pumpkin ','pie','','  ',cast('' as varchar(0)));
+> 
+> select column_name,type_name,column_size,nullable
+> from sys_boot.jdbc_metadata.columns_view
+> where table_name='LITERAL_VIEW'
+> order by 1;
++--------------+------------+--------------+-----------+
+| COLUMN_NAME  | TYPE_NAME  | COLUMN_SIZE  | NULLABLE  |
++--------------+------------+--------------+-----------+
+| LIT1         | CHAR       | 8            | 0         |
+| LIT2         | CHAR       | 3            | 0         |
+| LIT3         | CHAR       | 0            | 0         |
+| LIT4         | CHAR       | 2            | 0         |
+| LIT5         | VARCHAR    | 0            | 0         |
++--------------+------------+--------------+-----------+
+> 
+> -- multiline literals
+> create view literal_view2(lit1,lit2,lit3,lit4) 
+> as values ('pump'
+> 'kin ','p'
+> 'ie',''
+> '',' '
+> ' ');
+> 
+> select column_name,type_name,column_size,nullable
+> from sys_boot.jdbc_metadata.columns_view
+> where table_name='LITERAL_VIEW2'
+> order by 1;
++--------------+------------+--------------+-----------+
+| COLUMN_NAME  | TYPE_NAME  | COLUMN_SIZE  | NULLABLE  |
++--------------+------------+--------------+-----------+
+| LIT1         | CHAR       | 8            | 0         |
+| LIT2         | CHAR       | 3            | 0         |
+| LIT3         | CHAR       | 0            | 0         |
+| LIT4         | CHAR       | 2            | 0         |
++--------------+------------+--------------+-----------+
+> 
+> !set outputformat csv
+> select * from literal_view;
 'LIT1','LIT2','LIT3','LIT4','LIT5'
 'pumpkin ','pie','','  ',''
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FRG-38:  boundary conditions with index on real datatype
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table rtable (r real primary key);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into rtable values(1);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from rtable;
+> select * from literal_view2;
+'LIT1','LIT2','LIT3','LIT4'
+'pumpkin ','pie','','  '
+> !set outputformat table
+> 
+> -- FRG-38:  boundary conditions with index on real datatype
+> 
+> create table rtable (r real primary key);
+> 
+> insert into rtable values(1);
+> 
+> select * from rtable;
 +------+
 |  R   |
 +------+
 | 1.0  |
 +------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from rtable where r <> 1.0;
+> 
+> select * from rtable where r <> 1.0;
 +----+
 | R  |
 +----+
 +----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from rtable where r = 1.0;
+> 
+> select * from rtable where r = 1.0;
 +------+
 |  R   |
 +------+
 | 1.0  |
 +------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from rtable where r > 1.0;
+> 
+> select * from rtable where r > 1.0;
 +----+
 | R  |
 +----+
 +----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from rtable where r >= 1.0;
+> 
+> select * from rtable where r >= 1.0;
 +------+
 |  R   |
 +------+
 | 1.0  |
 +------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from rtable where r < 1.0;
+> 
+> select * from rtable where r < 1.0;
 +----+
 | R  |
 +----+
 +----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from rtable where r <= 1.0;
+> 
+> select * from rtable where r <= 1.0;
 +------+
 |  R   |
 +------+
 | 1.0  |
 +------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- End datatypes.sql
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> -- End datatypes.sql
+> 
+> 
+> 
+> !quit

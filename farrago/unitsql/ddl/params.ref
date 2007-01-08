@@ -1,75 +1,75 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test system parameters
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  bad enum value
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'turing';
+> -- $Id$
+> -- Test system parameters
+> 
+> -- should work
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> 
+> -- should work
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> 
+> -- should fail:  bad enum value
+> alter system set "calcVirtualMachine" = 'turing';
 Error: Type mismatch in value ''turing'' for system parameter "calcVirtualMachine" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_AUTO';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> alter system set "cachePagesMax" = 1001;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  type mismatch
-0: jdbc:farrago:> alter system set "cachePagesMax" = 'a bunch';
+> 
+> -- should work
+> alter system set "calcVirtualMachine" = 'CALCVM_AUTO';
+> 
+> -- should work
+> alter system set "cachePagesMax" = 1001;
+> 
+> -- should fail:  type mismatch
+> alter system set "cachePagesMax" = 'a bunch';
 Error: Type mismatch in value ''a bunch'' for system parameter "cachePagesMax" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  unknown parameter
-0: jdbc:farrago:> alter system set "charlie" = 'horse';
+> 
+> -- should fail:  unknown parameter
+> alter system set "charlie" = 'horse';
 Error: Reference to unknown system parameter "charlie" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> alter system set "cachePagesInit" = 10;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work -- set it back to original value of 1000
-0: jdbc:farrago:> alter system set "cachePagesInit" = 1000;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> alter system set "cachePagesInit" = 0;
+> 
+> -- should work
+> alter system set "cachePagesInit" = 10;
+> 
+> -- should work -- set it back to original value of 1000
+> alter system set "cachePagesInit" = 1000;
+> 
+> -- should fail
+> alter system set "cachePagesInit" = 0;
 Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesMax'. (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> alter system set "cachePagesInit" = -1;
+> 
+> -- should fail
+> alter system set "cachePagesInit" = -1;
 Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesMax'. (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail -- cachePagesMax is 1000
-0: jdbc:farrago:> alter system set "cachePagesInit" = 100001;
+> 
+> -- should fail -- cachePagesMax is 1000
+> alter system set "cachePagesInit" = 100001;
 Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesMax'. (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> alter system set "cachePagesInit" = 'abc';
+> 
+> -- should fail
+> alter system set "cachePagesInit" = 'abc';
 Error: Type mismatch in value ''abc'' for system parameter "cachePagesInit" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> alter system set "expectedConcurrentStatements" = 10;
-0: jdbc:farrago:> alter system set "expectedConcurrentStatements" = 4;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> alter system set "expectedConcurrentStatements" = 201;
+> 
+> -- should work
+> alter system set "expectedConcurrentStatements" = 10;
+> alter system set "expectedConcurrentStatements" = 4;
+> 
+> -- should fail
+> alter system set "expectedConcurrentStatements" = 201;
 Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesInit/5'. (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> alter system set "cacheReservePercentage" = 10;
-0: jdbc:farrago:> alter system set "cacheReservePercentage" = 5;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> alter system set "cacheReservePercentage" = 100;
+> 
+> -- should work
+> alter system set "cacheReservePercentage" = 10;
+> alter system set "cacheReservePercentage" = 5;
+> 
+> -- should fail
+> alter system set "cacheReservePercentage" = 100;
 Error: Invalid parameter setting.  Setting must be between 1 and 99. (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test session parameters
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> select * from sys_boot.mgmt.session_parameters_view
-. . . . . . . . >   where param_name in 
-. . . . . . . . >     ('catalogName', 'schemaName', 'sessionUserName', 'squeezeJdbcNumeric')
-. . . . . . . . >   order by 1;
+> 
+> -- Test session parameters
+> 
+> -- should work
+> select * from sys_boot.mgmt.session_parameters_view
+>   where param_name in 
+>     ('catalogName', 'schemaName', 'sessionUserName', 'squeezeJdbcNumeric')
+>   order by 1;
 +---------------------+--------------+
 |     PARAM_NAME      | PARAM_VALUE  |
 +---------------------+--------------+
@@ -78,63 +78,63 @@ Error: Invalid parameter setting.  Setting must be between 1 and 99. (state=,cod
 | sessionUserName     | sa           |
 | squeezeJdbcNumeric  | true         |
 +---------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail (farrago does not have this parameter)
-0: jdbc:farrago:> alter session set "logDir" = 'testlog';
+> 
+> -- should fail (farrago does not have this parameter)
+> alter session set "logDir" = 'testlog';
 Error: Reference to unknown system parameter "logDir" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> alter session set "squeezeJdbcNumeric" = 1;
+> 
+> -- should fail
+> alter session set "squeezeJdbcNumeric" = 1;
 Error: '1' is not a valid boolean value (state=,code=0)
-0: jdbc:farrago:> alter session set "squeezeJdbcNumeric" = 'or anything besides a boolean';
+> alter session set "squeezeJdbcNumeric" = 'or anything besides a boolean';
 Error: 'or anything besides a boolean' is not a valid boolean value (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> alter session set "squeezeJdbcNumeric" = false;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.session_parameters_view
-. . . . . . . . >   where param_name = 'squeezeJdbcNumeric';
+> 
+> -- should work
+> alter session set "squeezeJdbcNumeric" = false;
+> 
+> select * from sys_boot.mgmt.session_parameters_view
+>   where param_name = 'squeezeJdbcNumeric';
 +---------------------+--------------+
 |     PARAM_NAME      | PARAM_VALUE  |
 +---------------------+--------------+
 | squeezeJdbcNumeric  | false        |
 +---------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test LucidDb session parameters
-0: jdbc:farrago:> 
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work (luciddb inherits from farrago)
-0: jdbc:farrago:> alter session set "squeezeJdbcNumeric" = 'true';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> alter session set "logDir" = 'testlog';
-0: jdbc:farrago:> alter session set "etlProcessId" = 1234;
-0: jdbc:farrago:> alter session set "etlActionId" = 'LoadAccount';
-0: jdbc:farrago:> alter session set "errorMax" = 1000;
-0: jdbc:farrago:> alter session set "errorLogMax" = 1000;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> alter session set "logDir" = 'foobar';
+> 
+> -- Test LucidDb session parameters
+> 
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> -- should work (luciddb inherits from farrago)
+> alter session set "squeezeJdbcNumeric" = 'true';
+> 
+> -- should work
+> alter session set "logDir" = 'testlog';
+> alter session set "etlProcessId" = 1234;
+> alter session set "etlActionId" = 'LoadAccount';
+> alter session set "errorMax" = 1000;
+> alter session set "errorLogMax" = 1000;
+> 
+> -- should fail
+> alter session set "logDir" = 'foobar';
 Error: Directory foobar does not exist (state=,code=0)
-0: jdbc:farrago:> alter session set "logDir" = 'README';
+> alter session set "logDir" = 'README';
 Error: Directory README does not exist (state=,code=0)
-0: jdbc:farrago:> alter session set "logDir" = null;
+> alter session set "logDir" = null;
 Error: Type mismatch in value 'null' for system parameter "logDir" (state=,code=0)
-0: jdbc:farrago:> alter session set "errorMax" = true;
+> alter session set "errorMax" = true;
 Error: java.lang.NumberFormatException: For input string: "true" (state=,code=0)
-0: jdbc:farrago:> alter session set "errorLogMax" = 101.51;
+> alter session set "errorLogMax" = 101.51;
 Error: java.lang.NumberFormatException: For input string: "101.51" (state=,code=0)
-0: jdbc:farrago:> alter session set "errorMax" = 9876543210;
+> alter session set "errorMax" = 9876543210;
 Error: java.lang.NumberFormatException: For input string: "9876543210" (state=,code=0)
-0: jdbc:farrago:> alter session set "errorLogMax" = -1;
+> alter session set "errorLogMax" = -1;
 Error: Value '-1' is out of range for parameter of type errorLogMax (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> select * from sys_boot.mgmt.session_parameters_view
-. . . . . . . . >   where param_name in 
-. . . . . . . . >     ('logDir', 'etlProcessId', 'etlActionId', 'errorMax', 'errorLogMax')
-. . . . . . . . >   order by 1;
+> 
+> -- should work
+> select * from sys_boot.mgmt.session_parameters_view
+>   where param_name in 
+>     ('logDir', 'etlProcessId', 'etlActionId', 'errorMax', 'errorLogMax')
+>   order by 1;
 +---------------+--------------+
 |  PARAM_NAME   | PARAM_VALUE  |
 +---------------+--------------+
@@ -144,8 +144,8 @@ Error: Value '-1' is out of range for parameter of type errorLogMax (state=,code
 | etlProcessId  | 1234         |
 | logDir        | testlog      |
 +---------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> alter session set "etlActionId" = null;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> -- should work
+> alter session set "etlActionId" = null;
+> 
+> !quit

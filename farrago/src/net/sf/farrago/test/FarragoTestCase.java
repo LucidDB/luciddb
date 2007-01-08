@@ -40,6 +40,7 @@ import net.sf.farrago.db.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.jdbc.FarragoAbstractJdbcDriver;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
@@ -195,8 +196,10 @@ public abstract class FarragoTestCase
         }
         if (connection == null) {
             connection = newConnection();
-            repos = getSession().getRepos();
-            saveParameters();
+            if (connection instanceof FarragoJdbcEngineConnection) {
+                repos = getSession().getRepos();
+                saveParameters();
+            }
         } else {
             // cycle connections to discard any leftover session state; but do
             // it crab-wise so that repos doesn't get shut down in the middle
@@ -215,7 +218,9 @@ public abstract class FarragoTestCase
         Cleanup cleanup = CleanupFactory.getFactory().newCleanup("cleanup");
         try {
             cleanup.setUp();
-            cleanup.execute();
+            if (connection instanceof FarragoJdbcEngineConnection) {
+                cleanup.execute();
+            }
         } finally {
             // NOTE:  bypass staticTearDown
             cleanup.tearDownImpl();
@@ -265,16 +270,17 @@ public abstract class FarragoTestCase
     private static Connection newConnection()
         throws Exception
     {
-        FarragoUnregisteredJdbcEngineDriver driver = newJdbcEngineDriver();
+        FarragoAbstractJdbcDriver driver = newJdbcEngineDriver();
 
         // create sessionName with connection counter to help
         // distinguish connections during debugging
         String sessionName = ";sessionName=FarragoTestCase:" + ++connCounter;
-        Connection newConnection =
-            DriverManager.getConnection(
-                driver.getUrlPrefix() + sessionName,
-                FarragoCatalogInit.SA_USER_NAME,
-                null);
+        Properties props = new Properties();
+        props.put("user", FarragoCatalogInit.SA_USER_NAME);
+        props.put("password", "mumble");
+        Connection newConnection = driver.connect(
+            driver.getUrlPrefix() + sessionName,
+            props);
         if (newConnection.getMetaData().supportsTransactions()) {
             newConnection.setAutoCommit(false);
         }
@@ -489,7 +495,7 @@ public abstract class FarragoTestCase
      *
      * @throws Exception
      */
-    protected static FarragoUnregisteredJdbcEngineDriver newJdbcEngineDriver()
+    protected static FarragoAbstractJdbcDriver newJdbcEngineDriver()
         throws Exception
     {
         String driverName =
@@ -497,14 +503,15 @@ public abstract class FarragoTestCase
         if (driverName == null) {
             return new FarragoJdbcEngineDriver();
         }
-        Class<?> clazz = Class.forName(driverName);
-        return (FarragoUnregisteredJdbcEngineDriver) clazz.newInstance();
+        Class<FarragoUnregisteredJdbcEngineDriver> clazz =
+            (Class<FarragoUnregisteredJdbcEngineDriver>) Class.forName(driverName);
+        return clazz.newInstance();
     }
 
     protected void runSqlLineTest(String sqlFile)
         throws Exception
     {
-        FarragoUnregisteredJdbcEngineDriver driver = newJdbcEngineDriver();
+        FarragoAbstractJdbcDriver driver = newJdbcEngineDriver();
         assert (sqlFile.endsWith(".sql"));
         File sqlFileSansExt =
             new File(sqlFile.substring(0, sqlFile.length() - 4));
@@ -533,14 +540,17 @@ public abstract class FarragoTestCase
             new SequenceInputStream(inputStream, quitStream);
         try {
             OutputStream outputStream = openTestLogOutputStream(sqlFileSansExt);
-            PrintStream printStream = new PrintStream(outputStream);
+            FilterOutputStream filterStream =
+                new ReplacingOutputStream(
+                    outputStream, "(0: jdbc(:[^:>]+)+:|(\\. )*\\.?)>", ">");
+            PrintStream printStream = new PrintStream(filterStream);
             System.setOut(printStream);
             System.setErr(printStream);
 
             // tell SqlLine not to exit (this boolean is active-low)
             System.setProperty("sqlline.system.exit", "true");
             SqlLine.mainWithInputRedirection(args, sequenceStream);
-            printStream.flush();
+            printStream.close();
             if (shouldDiff()) {
                 diffTestLog();
             }
@@ -846,6 +856,37 @@ public abstract class FarragoTestCase
             for (String name : list) {
                 getStmt().execute("drop " + name);
             }
+        }
+    }
+
+    /**
+     * Stream which applies regular expression replacement to its contents.
+     *
+     * <p>Lame implementation which buffers its input and applies replacement
+     * only when {@link #close} is called.
+     */
+    private static class ReplacingOutputStream extends FilterOutputStream
+    {
+        private final OutputStream outputStream;
+        private final String seekPattern;
+        private final String replace;
+
+        public ReplacingOutputStream(
+            OutputStream outputStream, String seekPattern, String replace)
+        {
+            super(new ByteArrayOutputStream());
+            this.outputStream = outputStream;
+            this.seekPattern = seekPattern;
+            this.replace = replace;
+        }
+
+        public void close() throws IOException
+        {
+            super.close();
+            final String s = ((ByteArrayOutputStream) this.out).toString();
+            final String s2 = s.replaceAll(seekPattern, replace);
+            outputStream.write(s2.getBytes());
+            outputStream.close();
         }
     }
 }

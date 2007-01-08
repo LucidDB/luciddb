@@ -1,61 +1,61 @@
-0: jdbc:farrago:> -- Test management views
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(url) from sys_boot.mgmt.sessions_view;
+> -- Test management views
+> 
+> select count(url) from sys_boot.mgmt.sessions_view;
 +---------+
 | EXPR$0  |
 +---------+
 | 2       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sql_stmt from sys_boot.mgmt.statements_view;
+> 
+> select sql_stmt from sys_boot.mgmt.statements_view;
 +-----------------------------------------------------+
 |                      SQL_STMT                       |
 +-----------------------------------------------------+
 | select sql_stmt from sys_boot.mgmt.statements_view  |
 +-----------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(mof_id) from sys_boot.mgmt.objects_in_use_view;
+> 
+> select count(mof_id) from sys_boot.mgmt.objects_in_use_view;
 +---------+
 | EXPR$0  |
 +---------+
 | 2       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sys_boot.mgmt.sleep(1500) from (values(0));
+> 
+> select sys_boot.mgmt.sleep(1500) from (values(0));
 +---------+
 | EXPR$0  |
 +---------+
 | 0       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count("mofId") from sys_boot.mgmt.dba_foreign_wrappers_internal;
+> 
+> select count("mofId") from sys_boot.mgmt.dba_foreign_wrappers_internal;
 +---------+
 | EXPR$0  |
 +---------+
 | 4       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(*) from sys_boot.mgmt.dba_views_internal2
-. . . . . . . . > where catalog_name='SYS_BOOT' and schema_name='MGMT';
+> 
+> select count(*) from sys_boot.mgmt.dba_views_internal2
+> where catalog_name='SYS_BOOT' and schema_name='MGMT';
 +---------+
 | EXPR$0  |
 +---------+
 | 29      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select parameter_name from sys_boot.mgmt.dba_routine_parameters_internal1
-. . . . . . . . > where schema_name='MGMT' and routine_specific_name='SLEEP'
-. . . . . . . . > order by 1;
+> 
+> select parameter_name from sys_boot.mgmt.dba_routine_parameters_internal1
+> where schema_name='MGMT' and routine_specific_name='SLEEP'
+> order by 1;
 +-----------------+
 | PARAMETER_NAME  |
 +-----------------+
 | MILLIS          |
 | RETURN          |
 +-----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select foreign_wrapper_name, foreign_server_name
-. . . . . . . . > from sys_boot.mgmt.dba_foreign_servers_internal2
-. . . . . . . . > order by 1,2;
+> 
+> select foreign_wrapper_name, foreign_server_name
+> from sys_boot.mgmt.dba_foreign_servers_internal2
+> order by 1,2;
 +-----------------------+-------------------------------+
 | FOREIGN_WRAPPER_NAME  |      FOREIGN_SERVER_NAME      |
 +-----------------------+-------------------------------+
@@ -65,42 +65,42 @@
 | SYS_MDR               | SYS_MOF                       |
 | SYS_MOCK_FOREIGN      | SYS_MOCK_FOREIGN_DATA_SERVER  |
 +-----------------------+-------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema mtest;
-0: jdbc:farrago:> create table mtest.t(col int primary key);
-0: jdbc:farrago:> insert into mtest.t values (1), (2), (3);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(*) from sys_boot.mgmt.dba_schemas_internal2
-. . . . . . . . > where schema_name='MTEST';
+> 
+> create schema mtest;
+> create table mtest.t(col int primary key);
+> insert into mtest.t values (1), (2), (3);
+> 
+> select count(*) from sys_boot.mgmt.dba_schemas_internal2
+> where schema_name='MTEST';
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select table_name, table_type from sys_boot.mgmt.dba_tables_internal2
-. . . . . . . . > where schema_name='MTEST';
+> 
+> select table_name, table_type from sys_boot.mgmt.dba_tables_internal2
+> where schema_name='MTEST';
 +-------------+-------------+
 | TABLE_NAME  | TABLE_TYPE  |
 +-------------+-------------+
 | T           | LocalTable  |
 +-------------+-------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> analyze table mtest.t estimate statistics for all columns sample 66 percent;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select table_name, last_analyze_row_count 
-. . . . . . . . > from sys_boot.mgmt.dba_stored_tables_internal2
-. . . . . . . . > where schema_name='MTEST';
+> 
+> analyze table mtest.t estimate statistics for all columns sample 66 percent;
+> 
+> select table_name, last_analyze_row_count 
+> from sys_boot.mgmt.dba_stored_tables_internal2
+> where schema_name='MTEST';
 +-------------+-------------------------+
 | TABLE_NAME  | LAST_ANALYZE_ROW_COUNT  |
 +-------------+-------------------------+
 | T           | 3                       |
 +-------------+-------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop schema mtest cascade;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from table(sys_boot.mgmt.browse_foreign_schemas('HSQLDB_DEMO'))
-. . . . . . . . > order by schema_name;
+> 
+> drop schema mtest cascade;
+> 
+> select * from table(sys_boot.mgmt.browse_foreign_schemas('HSQLDB_DEMO'))
+> order by schema_name;
 +---------------------+--------------+
 |     SCHEMA_NAME     | DESCRIPTION  |
 +---------------------+--------------+
@@ -108,33 +108,33 @@
 | PUBLIC              |              |
 | SALES               |              |
 +---------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- specialize the JDBC foreign wrapper for a particular DBMS;
-0: jdbc:farrago:> -- note that the url setting is intended to be interpreted as a template
-0: jdbc:farrago:> create foreign data wrapper hsqldb_wrapper
-. . . . . . . . > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
-. . . . . . . . > language java
-. . . . . . . . > options(
-. . . . . . . . >     browse_connect_description 'Hypersonic',
-. . . . . . . . >     driver_class 'org.hsqldb.jdbcDriver',
-. . . . . . . . >     url 'jdbc:hsqldb:path/to/data'
-. . . . . . . . > );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- note that none of the system wrappers should have 
-0: jdbc:farrago:> -- browse_connect_description set, so don't need ORDER BY here
-0: jdbc:farrago:> select * from sys_boot.mgmt.browse_connect_foreign_wrappers;
+> 
+> -- specialize the JDBC foreign wrapper for a particular DBMS;
+> -- note that the url setting is intended to be interpreted as a template
+> create foreign data wrapper hsqldb_wrapper
+> library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
+> language java
+> options(
+>     browse_connect_description 'Hypersonic',
+>     driver_class 'org.hsqldb.jdbcDriver',
+>     url 'jdbc:hsqldb:path/to/data'
+> );
+> 
+> -- note that none of the system wrappers should have 
+> -- browse_connect_description set, so don't need ORDER BY here
+> select * from sys_boot.mgmt.browse_connect_foreign_wrappers;
 +-----------------------+-----------------------------+
 | FOREIGN_WRAPPER_NAME  | BROWSE_CONNECT_DESCRIPTION  |
 +-----------------------+-----------------------------+
 | HSQLDB_WRAPPER        | Hypersonic                  |
 +-----------------------+-----------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- query for available options with no proposed settings (empty_view)
-0: jdbc:farrago:> select * from table(
-. . . . . . . . >   sys_boot.mgmt.browse_connect_foreign_server(
-. . . . . . . . >     'HSQLDB_WRAPPER',
-. . . . . . . . >     cursor(table sys_boot.mgmt.browse_connect_empty_options)))
-. . . . . . . . > order by option_ordinal, option_choice_ordinal;
+> 
+> -- query for available options with no proposed settings (empty_view)
+> select * from table(
+>   sys_boot.mgmt.browse_connect_foreign_server(
+>     'HSQLDB_WRAPPER',
+>     cursor(table sys_boot.mgmt.browse_connect_empty_options)))
+> order by option_ordinal, option_choice_ordinal;
 +-----------------+-------------------+-----------------------------------------------------+---------------------+------------------------+---------------------------+
 | OPTION_ORDINAL  |    OPTION_NAME    |                 OPTION_DESCRIPTION                  | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  |    OPTION_CHOICE_VALUE    |
 +-----------------+-------------------+-----------------------------------------------------+---------------------+------------------------+---------------------------+
@@ -146,16 +146,16 @@
 | 4               | EXTENDED_OPTIONS  | Whether driver-specific options should be accepted  | true                | 0                      | FALSE                     |
 | 4               | EXTENDED_OPTIONS  | Whether driver-specific options should be accepted  | true                | 1                      | TRUE                      |
 +-----------------+-------------------+-----------------------------------------------------+---------------------+------------------------+---------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- query again with a real URL, asking for extended options:  
-0: jdbc:farrago:> -- should get back details direct from driver
-0: jdbc:farrago:> select option_name, option_choice_ordinal, option_choice_value from table(
-. . . . . . . . >   sys_boot.mgmt.browse_connect_foreign_server(
-. . . . . . . . >     'HSQLDB_WRAPPER',
-. . . . . . . . >     cursor(
-. . . . . . . . >         values ('URL', 'jdbc:hsqldb:testcases/hsqldb/scott'),
-. . . . . . . . >                ('EXTENDED_OPTIONS', 'TRUE'))))
-. . . . . . . . > order by option_ordinal, option_choice_ordinal;
+> 
+> -- query again with a real URL, asking for extended options:  
+> -- should get back details direct from driver
+> select option_name, option_choice_ordinal, option_choice_value from table(
+>   sys_boot.mgmt.browse_connect_foreign_server(
+>     'HSQLDB_WRAPPER',
+>     cursor(
+>         values ('URL', 'jdbc:hsqldb:testcases/hsqldb/scott'),
+>                ('EXTENDED_OPTIONS', 'TRUE'))))
+> order by option_ordinal, option_choice_ordinal;
 +-------------------+------------------------+-------------------------------------+
 |    OPTION_NAME    | OPTION_CHOICE_ORDINAL  |         OPTION_CHOICE_VALUE         |
 +-------------------+------------------------+-------------------------------------+
@@ -181,37 +181,37 @@
 | shutdown          | 0                      | true                                |
 | shutdown          | 1                      | false                               |
 +-------------------+------------------------+-------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOTE jvs 17-Sept-2006:  Next ones return too much noise to make
-0: jdbc:farrago:> -- it possible to check their results; just verify that they can execute
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from table(sys_boot.mgmt.threads()) where false;
+> 
+> -- NOTE jvs 17-Sept-2006:  Next ones return too much noise to make
+> -- it possible to check their results; just verify that they can execute
+> 
+> select * from table(sys_boot.mgmt.threads()) where false;
 +------------+--------------------+--------------+------------------+---------------+-----------+------------+-----------------+
 | THREAD_ID  | THREAD_GROUP_NAME  | THREAD_NAME  | THREAD_PRIORITY  | THREAD_STATE  | IS_ALIVE  | IS_DAEMON  | IS_INTERRUPTED  |
 +------------+--------------------+--------------+------------------+---------------+-----------+------------+-----------------+
 +------------+--------------------+--------------+------------------+---------------+-----------+------------+-----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from table(sys_boot.mgmt.thread_stack_entries()) where false;
+> 
+> select * from table(sys_boot.mgmt.thread_stack_entries()) where false;
 +------------+--------------+---------------+-------------+--------------+------------+-----------+------------+
 | THREAD_ID  | STACK_LEVEL  | ENTRY_STRING  | CLASS_NAME  | METHOD_NAME  | FILE_NAME  | LINE_NUM  | IS_NATIVE  |
 +------------+--------------+---------------+-------------+--------------+------------+-----------+------------+
 +------------+--------------+---------------+-------------+--------------+------------+-----------+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from table(sys_boot.mgmt.system_info()) where false;
+> 
+> select * from table(sys_boot.mgmt.system_info()) where false;
 +--------------+------------+-------------+-------------+
 | SOURCE_NAME  | ITEM_NAME  | ITEM_UNITS  | ITEM_VALUE  |
 +--------------+------------+-------------+-------------+
 +--------------+------------+-------------+-------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from table(sys_boot.mgmt.performance_counters()) where false;
+> 
+> select * from table(sys_boot.mgmt.performance_counters()) where false;
 +--------------+---------------+----------------+----------------+
 | SOURCE_NAME  | COUNTER_NAME  | COUNTER_UNITS  | COUNTER_VALUE  |
 +--------------+---------------+----------------+----------------+
 +--------------+---------------+----------------+----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select source_name, counter_name 
-. . . . . . . . > from table(sys_boot.mgmt.performance_counters())
-. . . . . . . . > order by source_name, counter_name;
+> 
+> select source_name, counter_name 
+> from table(sys_boot.mgmt.performance_counters())
+> order by source_name, counter_name;
 +--------------+-------------------------------+
 | SOURCE_NAME  |         COUNTER_NAME          |
 +--------------+-------------------------------+
@@ -240,18 +240,18 @@
 | JVM          | JvmMemoryUnused               |
 | JVM          | JvmNanoTime                   |
 +--------------+-------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set code cache size to some arbitrary number
-0: jdbc:farrago:> alter system set "codeCacheMaxBytes" = 42000;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.flush_code_cache();
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that flush did not modify code cache size
-0: jdbc:farrago:> select "codeCacheMaxBytes" from sys_fem."Config"."FarragoConfig";
+> 
+> -- set code cache size to some arbitrary number
+> alter system set "codeCacheMaxBytes" = 42000;
+> 
+> call sys_boot.mgmt.flush_code_cache();
+> 
+> -- verify that flush did not modify code cache size
+> select "codeCacheMaxBytes" from sys_fem."Config"."FarragoConfig";
 +--------------------+
 | codeCacheMaxBytes  |
 +--------------------+
 | 42000              |
 +--------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

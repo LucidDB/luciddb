@@ -1,49 +1,49 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------------------------
-0: jdbc:farrago:> -- SQL Tests for Reshape exec stream
-0: jdbc:farrago:> ------------------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema reshape;
-0: jdbc:farrago:> set schema 'reshape';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table t1(
-. . . . . . . . >     t1id int not null,
-. . . . . . . . >     t1a char(5) not null,
-. . . . . . . . >     t1b varchar(10),
-. . . . . . . . >     pk int primary key);
-0: jdbc:farrago:> create table t2(
-. . . . . . . . >     t2id int,
-. . . . . . . . >     t2a varchar(15),
-. . . . . . . . >     t2b char(20),
-. . . . . . . . >     pk int primary key);
-0: jdbc:farrago:> create table trunc(
-. . . . . . . . >     id int,
-. . . . . . . . >     a varchar(3),
-. . . . . . . . >     b varchar(2),
-. . . . . . . . >     pk int primary key);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into t1 values(1, 't1a1', 't1b1', 1);
-0: jdbc:farrago:> insert into t1 values(2, 't1a2', 't1b2', 2);
-0: jdbc:farrago:> insert into t1 values(3, 't1a3', 't1b3', 3);
-0: jdbc:farrago:> insert into t1 values(4, 't1a4', 't1b4', 4);
-0: jdbc:farrago:> insert into t1 values(5, 't1a5', 't1b5', 5);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into t2 values(1, 't2a1', 't2b1', 1);
-0: jdbc:farrago:> insert into t2 values(2, 't2a2', 't2b2', 2);
-0: jdbc:farrago:> insert into t2 values(3, 't2a3', 't2b3', 3);
-0: jdbc:farrago:> insert into t2 values(4, 't2a4', 't2b4', 4);
-0: jdbc:farrago:> insert into t2 values(5, 't2a5', 't2b5', 5);
-0: jdbc:farrago:> insert into t2 values(5, null, null, 6);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> --------------------------------
-0: jdbc:farrago:> -- the following are reshapeable
-0: jdbc:farrago:> --------------------------------
-0: jdbc:farrago:> -- simple project
-0: jdbc:farrago:> explain plan for select t2a, t1b, t1a, t2b from t1, t2;
+> -- $Id$
+> 
+> ------------------------------------
+> -- SQL Tests for Reshape exec stream
+> ------------------------------------
+> 
+> create schema reshape;
+> set schema 'reshape';
+> 
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> 
+> create table t1(
+>     t1id int not null,
+>     t1a char(5) not null,
+>     t1b varchar(10),
+>     pk int primary key);
+> create table t2(
+>     t2id int,
+>     t2a varchar(15),
+>     t2b char(20),
+>     pk int primary key);
+> create table trunc(
+>     id int,
+>     a varchar(3),
+>     b varchar(2),
+>     pk int primary key);
+> 
+> insert into t1 values(1, 't1a1', 't1b1', 1);
+> insert into t1 values(2, 't1a2', 't1b2', 2);
+> insert into t1 values(3, 't1a3', 't1b3', 3);
+> insert into t1 values(4, 't1a4', 't1b4', 4);
+> insert into t1 values(5, 't1a5', 't1b5', 5);
+> 
+> insert into t2 values(1, 't2a1', 't2b1', 1);
+> insert into t2 values(2, 't2a2', 't2b2', 2);
+> insert into t2 values(3, 't2a3', 't2b3', 3);
+> insert into t2 values(4, 't2a4', 't2b4', 4);
+> insert into t2 values(5, 't2a5', 't2b5', 5);
+> insert into t2 values(5, null, null, 6);
+> 
+> !set outputformat csv
+> --------------------------------
+> -- the following are reshapeable
+> --------------------------------
+> -- simple project
+> explain plan for select t2a, t1b, t1a, t2b from t1, t2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[2, 1, 0, 3]], outputRowType=[RecordType(VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B) NOT NULL])'
@@ -51,122 +51,122 @@
 '      FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
 '        FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- projections with simple casts
-0: jdbc:farrago:> explain plan for select cast(t2id as integer) from t2;
+> 
+> -- projections with simple casts
+> explain plan for select cast(t2id as integer) from t2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . >     select cast(t2b as varchar(10)), cast(t2a as varchar(5)) from t2;
+> explain plan for 
+>     select cast(t2b as varchar(10)), cast(t2a as varchar(5)) from t2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$1) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- casting in an insert-select that will truncate the data
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     insert into trunc select * from t1;
+> 
+> -- casting in an insert-select that will truncate the data
+> explain plan for
+>     insert into trunc select * from t1;
 'column0'
 'FennelToIteratorConverter'
 '  FtrsTableModificationRel(table=[[LOCALDB, RESHAPE, TRUNC]], operation=[INSERT], updateColumnList=[[]], flattened=[true])'
 '    FennelReshapeRel(projection=[[0, 1, 2, 3]], outputRowType=[RecordType(INTEGER ID, VARCHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" A, VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, INTEGER NOT NULL PK) NOT NULL])'
 '      FennelRenameRel(fieldNames=[[ID, A, B, PK]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0, 1, 2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filters that are supported
-0: jdbc:farrago:> -- ='s
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1 where t1id = 1 and t1b = 't1b1';
+> 
+> -- filters that are supported
+> -- ='s
+> explain plan for
+>     select * from t1 where t1id = 1 and t1b = 't1b1';
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[0, 2]], filterTuple=[[1, 't1b1']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1 where t1b = 't1b1' and t1id = 1;
+> explain plan for
+>     select * from t1 where t1b = 't1b1' and t1id = 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[2, 0]], filterTuple=[['t1b1', 1]], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t2 where 't2a2' = t2a and 2 = t2id;
+> explain plan for
+>     select * from t2 where 't2a2' = t2a and 2 = t2id;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[1, 0]], filterTuple=[['t2a2', 2]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> -- range operators
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t2 where t2id >= 3;
+> -- range operators
+> explain plan for
+>     select * from t2 where t2id >= 3;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[3]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1 where t1a > 't1a2';
+> explain plan for
+>     select * from t1 where t1a > 't1a2';
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[['t1a2 ']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1 where t1b <= 't1b3';
+> explain plan for
+>     select * from t1 where t1b <= 't1b3';
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LE], filterOrdinals=[[2]], filterTuple=[['t1b3']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t2 where t2a < 't2a4';
+> explain plan for
+>     select * from t2 where t2a < 't2a4';
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[['t2a4']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t2 where 't2b3' >= t2b;
+> explain plan for
+>     select * from t2 where 't2b3' >= t2b;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LE], filterOrdinals=[[2]], filterTuple=[['t2b3                ']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1 where 't1a3' > t1a;
+> explain plan for
+>     select * from t1 where 't1a3' > t1a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[['t1a3 ']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t1 where 't1b4' <= t1b;
+> explain plan for
+>     select * from t1 where 't1b4' <= t1b;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[2]], filterTuple=[['t1b4']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select * from t2 where 't2a4' < t2a;
+> explain plan for
+>     select * from t2 where 't2a4' < t2a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[['t2a4']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- range used with an equal
-0: jdbc:farrago:> explain plan for select * from t1 where t1id = 3 and t1b >= 't1b1';
+> 
+> -- range used with an equal
+> explain plan for select * from t1 where t1id = 3 and t1b >= 't1b1';
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[0, 2]], filterTuple=[[3, 't1b1']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for select * from t2 where t2id = 5 and t2b < 't3';
+> explain plan for select * from t2 where t2id = 5 and t2b < 't3';
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[0, 2]], filterTuple=[[5, 't3                  ']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for select * from t2 where t2a is null;
+> 
+> explain plan for select * from t2 where t2a is null;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[null]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- both project and filter
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select cast(t2b as varchar(10)), cast(t1b as varchar(5))
-. . . . . . . . >         from t1, t2 where t1.t1id = 1 and t2.t2id = 1;
+> 
+> -- both project and filter
+> explain plan for
+>     select cast(t2b as varchar(10)), cast(t1b as varchar(5))
+>         from t1, t2 where t1.t1id = 1 and t2.t2id = 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$1) NOT NULL])'
@@ -176,134 +176,134 @@
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
 '        FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[1]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B) NOT NULL])'
 '          FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[0, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select cast(t1b as varchar(5)) from t1 where t1id = 3;
+> explain plan for
+>     select cast(t1b as varchar(5)) from t1 where t1id = 3;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[3]], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -----------------------------------
-0: jdbc:farrago:> -- the following aren't reshapeable
-0: jdbc:farrago:> -----------------------------------
-0: jdbc:farrago:> -- non input refs/casts
-0: jdbc:farrago:> explain plan for select 1 from t1;
+> 
+> -----------------------------------
+> -- the following aren't reshapeable
+> -----------------------------------
+> -- non input refs/casts
+> explain plan for select 1 from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for select t1id + 10 from t1;
+> explain plan for select t1id + 10 from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[10], expr#2=[+($t0, $t1)], EXPR$0=[$t2])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> -- cast on an expression
-0: jdbc:farrago:> explain plan for select cast(upper(t1a) as varchar(10)) from t1;
+> -- cast on an expression
+> explain plan for select cast(upper(t1a) as varchar(10)) from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[UPPER($t0)], expr#2=[CAST($t1):VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$0=[$t2])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- casts that aren't supported
-0: jdbc:farrago:> explain plan for select cast(t1id as integer) from t1;
+> 
+> -- casts that aren't supported
+> explain plan for select cast(t1id as integer) from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):INTEGER NOT NULL], EXPR$0=[$t1])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for select cast(t1a as char(10)) from t1;
+> explain plan for select cast(t1a as char(10)) from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$0=[$t1])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for select cast(t1a as char(5)) from t1;
+> explain plan for select cast(t1a as char(5)) from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$0=[$t1])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for select cast(t1id as smallint) from t1;
+> explain plan for select cast(t1id as smallint) from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):SMALLINT NOT NULL], EXPR$0=[$t1])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- non-AND expression
-0: jdbc:farrago:> explain plan for select * from t1 where t1id = 1 or t1a = 't1a2';
+> 
+> -- non-AND expression
+> explain plan for select * from t1 where t1id = 1 or t1a = 't1a2';
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[=($t0, $t4)], expr#6=['t1a2'], expr#7=[=($t1, $t6)], expr#8=[OR($t5, $t7)], proj#0..3=[{exprs}], $condition=[$t8])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- invalid comparison operators
-0: jdbc:farrago:> explain plan for select * from t1 where t1b = 't1b1' and t1id in (1, 2);
+> 
+> -- invalid comparison operators
+> explain plan for select * from t1 where t1b = 't1b1' and t1id in (1, 2);
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=['t1b1'], expr#5=[=($t2, $t4)], expr#6=[1], expr#7=[=($t0, $t6)], expr#8=[2], expr#9=[=($t0, $t8)], expr#10=[OR($t7, $t9)], expr#11=[AND($t5, $t10)], proj#0..3=[{exprs}], $condition=[$t11])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for select * from t2 where true;
+> explain plan for select * from t2 where true;
 'column0'
 'FennelToIteratorConverter'
 '  FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> create table b(a int primary key, b boolean, c int);
-0: jdbc:farrago:> explain plan for select * from b where c = 1 and b;
+> create table b(a int primary key, b boolean, c int);
+> explain plan for select * from b where c = 1 and b;
 'column0'
 'IterCalcRel(expr#0..2=[{inputs}], expr#3=[1], expr#4=[=($t2, $t3)], expr#5=[AND($t4, $t1)], proj#0..2=[{exprs}], $condition=[$t5])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, B]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$B], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for select * from t2 where t2a <> 't2a3';
+> explain plan for select * from t2 where t2a <> 't2a3';
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=['t2a3'], expr#5=[<>($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- not comparing to a literal
-0: jdbc:farrago:> explain plan for select * from t1 where t1a = t1b;
+> 
+> -- not comparing to a literal
+> explain plan for select * from t1 where t1a = t1b;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t1, $t2)], proj#0..3=[{exprs}], $condition=[$t4])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for select * from t1 where t1a > t1b;
+> explain plan for select * from t1 where t1a > t1b;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[>($t1, $t2)], proj#0..3=[{exprs}], $condition=[$t4])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- multiple range predicates
-0: jdbc:farrago:> explain plan for select * from t1 where t1a > 't1a1' and t1a < 't1a4';
+> 
+> -- multiple range predicates
+> explain plan for select * from t1 where t1a > 't1a1' and t1a < 't1a4';
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=['t1a1'], expr#5=[>($t1, $t4)], expr#6=['t1a4'], expr#7=[<($t1, $t6)], expr#8=[AND($t5, $t7)], proj#0..3=[{exprs}], $condition=[$t8])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- not comparing against an input reference
-0: jdbc:farrago:> explain plan for select * from t1 where lower(t1b) = 't1b1';
+> 
+> -- not comparing against an input reference
+> explain plan for select * from t1 where lower(t1b) = 't1b1';
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[LOWER($t2)], expr#5=['t1b1'], expr#6=[=($t4, $t5)], proj#0..3=[{exprs}], $condition=[$t6])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- comparing against the same column twice
-0: jdbc:farrago:> explain plan for select * from t1 where t1id = 1 and t1id = 2;
+> 
+> -- comparing against the same column twice
+> explain plan for select * from t1 where t1id = 1 and t1id = 2;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[=($t0, $t4)], expr#6=[2], expr#7=[=($t0, $t6)], expr#8=[AND($t5, $t7)], proj#0..3=[{exprs}], $condition=[$t8])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for select * from t1 where t1id = 1 and t1id > 2;
+> explain plan for select * from t1 where t1id = 1 and t1id > 2;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[=($t0, $t4)], expr#6=[2], expr#7=[>($t0, $t6)], expr#8=[AND($t5, $t7)], proj#0..3=[{exprs}], $condition=[$t8])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> explain plan for select * from t1 where t1id > 1 and t1id = 2;
+> explain plan for select * from t1 where t1id > 1 and t1id = 2;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[>($t0, $t4)], expr#6=[2], expr#7=[=($t0, $t6)], expr#8=[AND($t5, $t7)], proj#0..3=[{exprs}], $condition=[$t8])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------------------------
-0: jdbc:farrago:> -- run the ones that are reshapeable
-0: jdbc:farrago:> ------------------------------------
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select t2a, t1b, t1a, t2b from t1, t2 order by 1, 2, 3, 4;
+> 
+> ------------------------------------
+> -- run the ones that are reshapeable
+> ------------------------------------
+> !set outputformat table
+> 
+> select t2a, t1b, t1a, t2b from t1, t2 order by 1, 2, 3, 4;
 +-------+-------+--------+-----------------------+
 |  T2A  |  T1B  |  T1A   |          T2B          |
 +-------+-------+--------+-----------------------+
@@ -338,8 +338,8 @@
 | t2a5  | t1b4  | t1a4   | t2b5                  |
 | t2a5  | t1b5  | t1a5   | t2b5                  |
 +-------+-------+--------+-----------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select cast(t2id as integer) from t2 order by 1;
+> 
+> select cast(t2id as integer) from t2 order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -350,7 +350,7 @@
 | 5       |
 | 5       |
 +---------+
-0: jdbc:farrago:> select cast(t2b as varchar(10)), cast(t2a as varchar(5)) from t2 order by 1, 2;
+> select cast(t2b as varchar(10)), cast(t2a as varchar(5)) from t2 order by 1, 2;
 +-------------+---------+
 |   EXPR$0    | EXPR$1  |
 +-------------+---------+
@@ -361,9 +361,9 @@
 | t2b4        | t2a4    |
 | t2b5        | t2a5    |
 +-------------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into trunc select * from t1;
-0: jdbc:farrago:> select * from trunc order by 1, 2;
+> 
+> insert into trunc select * from t1;
+> select * from trunc order by 1, 2;
 +-----+------+-----+-----+
 | ID  |  A   |  B  | PK  |
 +-----+------+-----+-----+
@@ -373,27 +373,27 @@
 | 4   | t1a  | t1  | 4   |
 | 5   | t1a  | t1  | 5   |
 +-----+------+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t1 where t1id = 1 and t1b = 't1b1' order by t1id;
+> 
+> select * from t1 where t1id = 1 and t1b = 't1b1' order by t1id;
 +-------+--------+-------+-----+
 | T1ID  |  T1A   |  T1B  | PK  |
 +-------+--------+-------+-----+
 | 1     | t1a1   | t1b1  | 1   |
 +-------+--------+-------+-----+
-0: jdbc:farrago:> select * from t1 where t1b = 't1b1' and t1id = 1 order by t1id;
+> select * from t1 where t1b = 't1b1' and t1id = 1 order by t1id;
 +-------+--------+-------+-----+
 | T1ID  |  T1A   |  T1B  | PK  |
 +-------+--------+-------+-----+
 | 1     | t1a1   | t1b1  | 1   |
 +-------+--------+-------+-----+
-0: jdbc:farrago:> select * from t2 where 't2a2' = t2a and 2 = t2id order by t2id;
+> select * from t2 where 't2a2' = t2a and 2 = t2id order by t2id;
 +-------+-------+-----------------------+-----+
 | T2ID  |  T2A  |          T2B          | PK  |
 +-------+-------+-----------------------+-----+
 | 2     | t2a2  | t2b2                  | 2   |
 +-------+-------+-----------------------+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t2 where t2id >= 3 order by t2id;
+> 
+> select * from t2 where t2id >= 3 order by t2id;
 +-------+-------+-----------------------+-----+
 | T2ID  |  T2A  |          T2B          | PK  |
 +-------+-------+-----------------------+-----+
@@ -402,7 +402,7 @@
 | 5     | t2a5  | t2b5                  | 5   |
 | 5     |       |                       | 6   |
 +-------+-------+-----------------------+-----+
-0: jdbc:farrago:> select * from t1 where t1a > 't1a2' order by t1id;
+> select * from t1 where t1a > 't1a2' order by t1id;
 +-------+--------+-------+-----+
 | T1ID  |  T1A   |  T1B  | PK  |
 +-------+--------+-------+-----+
@@ -410,7 +410,7 @@
 | 4     | t1a4   | t1b4  | 4   |
 | 5     | t1a5   | t1b5  | 5   |
 +-------+--------+-------+-----+
-0: jdbc:farrago:> select * from t1 where t1b <= 't1b3' order by t1id;
+> select * from t1 where t1b <= 't1b3' order by t1id;
 +-------+--------+-------+-----+
 | T1ID  |  T1A   |  T1B  | PK  |
 +-------+--------+-------+-----+
@@ -418,7 +418,7 @@
 | 2     | t1a2   | t1b2  | 2   |
 | 3     | t1a3   | t1b3  | 3   |
 +-------+--------+-------+-----+
-0: jdbc:farrago:> select * from t2 where t2a < 't2a4' order by t2id;
+> select * from t2 where t2a < 't2a4' order by t2id;
 +-------+-------+-----------------------+-----+
 | T2ID  |  T2A  |          T2B          | PK  |
 +-------+-------+-----------------------+-----+
@@ -426,7 +426,7 @@
 | 2     | t2a2  | t2b2                  | 2   |
 | 3     | t2a3  | t2b3                  | 3   |
 +-------+-------+-----------------------+-----+
-0: jdbc:farrago:> select * from t2 where 't2b3' >= t2b order by t2id;
+> select * from t2 where 't2b3' >= t2b order by t2id;
 +-------+-------+-----------------------+-----+
 | T2ID  |  T2A  |          T2B          | PK  |
 +-------+-------+-----------------------+-----+
@@ -434,79 +434,79 @@
 | 2     | t2a2  | t2b2                  | 2   |
 | 3     | t2a3  | t2b3                  | 3   |
 +-------+-------+-----------------------+-----+
-0: jdbc:farrago:> select * from t1 where 't1a3' > t1a order by t1id;
+> select * from t1 where 't1a3' > t1a order by t1id;
 +-------+--------+-------+-----+
 | T1ID  |  T1A   |  T1B  | PK  |
 +-------+--------+-------+-----+
 | 1     | t1a1   | t1b1  | 1   |
 | 2     | t1a2   | t1b2  | 2   |
 +-------+--------+-------+-----+
-0: jdbc:farrago:> select * from t1 where 't1b4' <= t1b order by t1id;
+> select * from t1 where 't1b4' <= t1b order by t1id;
 +-------+--------+-------+-----+
 | T1ID  |  T1A   |  T1B  | PK  |
 +-------+--------+-------+-----+
 | 4     | t1a4   | t1b4  | 4   |
 | 5     | t1a5   | t1b5  | 5   |
 +-------+--------+-------+-----+
-0: jdbc:farrago:> select * from t2 where 't2a4' < t2a order by t2id;
+> select * from t2 where 't2a4' < t2a order by t2id;
 +-------+-------+-----------------------+-----+
 | T2ID  |  T2A  |          T2B          | PK  |
 +-------+-------+-----------------------+-----+
 | 5     | t2a5  | t2b5                  | 5   |
 +-------+-------+-----------------------+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t1 where t1id = 3 and t1b >= 't1b1';
+> 
+> select * from t1 where t1id = 3 and t1b >= 't1b1';
 +-------+--------+-------+-----+
 | T1ID  |  T1A   |  T1B  | PK  |
 +-------+--------+-------+-----+
 | 3     | t1a3   | t1b3  | 3   |
 +-------+--------+-------+-----+
-0: jdbc:farrago:> select * from t2 where t2id = 5 and t2b < 't3';
+> select * from t2 where t2id = 5 and t2b < 't3';
 +-------+-------+-----------------------+-----+
 | T2ID  |  T2A  |          T2B          | PK  |
 +-------+-------+-----------------------+-----+
 | 5     | t2a5  | t2b5                  | 5   |
 +-------+-------+-----------------------+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t2 where t2a is null;
+> 
+> select * from t2 where t2a is null;
 +-------+------+------+-----+
 | T2ID  | T2A  | T2B  | PK  |
 +-------+------+------+-----+
 | 5     |      |      | 6   |
 +-------+------+------+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select cast(t2b as varchar(10)), cast(t1b as varchar(5))
-. . . . . . . . >     from t1, t2 where t1.t1id = 1 and t2.t2id = 1 order by 1, 2;
+> 
+> select cast(t2b as varchar(10)), cast(t1b as varchar(5))
+>     from t1, t2 where t1.t1id = 1 and t2.t2id = 1 order by 1, 2;
 +-------------+---------+
 |   EXPR$0    | EXPR$1  |
 +-------------+---------+
 | t2b1        | t1b1    |
 +-------------+---------+
-0: jdbc:farrago:> select cast(t1b as varchar(5)) from t1 where t1id = 3 order by 1;
+> select cast(t1b as varchar(5)) from t1 where t1id = 3 order by 1;
 +---------+
 | EXPR$0  |
 +---------+
 | t1b3    |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------
-0: jdbc:farrago:> -- LucidDb-specific tests
-0: jdbc:farrago:> -------------------------
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table d1(a decimal(10, 1));
-0: jdbc:farrago:> create table d2(a decimal(10, 1) not null);
-0: jdbc:farrago:> create table d3(a decimal(10, 2) not null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into d1 values(1.1);
-0: jdbc:farrago:> insert into d2 values(1.1);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- the two join columns are of two types because one allows nulls while the
-0: jdbc:farrago:> -- other doesn't; hash join requires them to be the same so it will cast the
-0: jdbc:farrago:> -- non-nullable one to allow nulls; reshape does handle this; but not the
-0: jdbc:farrago:> -- second query because the types are different
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> explain plan for select * from d1, d2 where d1.a = d2.a;
+> 
+> -------------------------
+> -- LucidDb-specific tests
+> -------------------------
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> create table d1(a decimal(10, 1));
+> create table d2(a decimal(10, 1) not null);
+> create table d3(a decimal(10, 2) not null);
+> 
+> insert into d1 values(1.1);
+> insert into d2 values(1.1);
+> 
+> -- the two join columns are of two types because one allows nulls while the
+> -- other doesn't; hash join requires them to be the same so it will cast the
+> -- non-nullable one to allow nulls; reshape does handle this; but not the
+> -- second query because the types are different
+> !set outputformat csv
+> explain plan for select * from d1, d2 where d1.a = d2.a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 1) NOT NULL A0) NOT NULL])'
@@ -514,7 +514,7 @@
 '      LcsRowScanRel(table=[[LOCALDB, RESHAPE, D1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$A]])'
 '      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(DECIMAL(10, 1) NOT NULL A, DECIMAL(10, 1) CAST($0):DECIMAL(10, 1)) NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, RESHAPE, D2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$A]])'
-0: jdbc:farrago:> explain plan for select * from d1, d3 where d1.a = d3.a;
+> explain plan for select * from d1, d3 where d1.a = d3.a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 2) NOT NULL A0) NOT NULL])'
@@ -527,13 +527,13 @@
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[Reinterpret($t0)], expr#2=[Reinterpret($t1)], A=[$t0], CAST($0):DECIMAL(11, 2)=[$t2])'
 '          FennelToIteratorConverter'
 '            LcsRowScanRel(table=[[LOCALDB, RESHAPE, D3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$D3$A]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> select * from d1, d2 where d1.a = d2.a;
+> 
+> !set outputformat table
+> select * from d1, d2 where d1.a = d2.a;
 +------+------+
 |  A   |  A0  |
 +------+------+
 | 1.1  | 1.1  |
 +------+------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

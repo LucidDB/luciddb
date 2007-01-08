@@ -1,6 +1,6 @@
-0: jdbc:farragotest:> -- $Id$
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select jplus(1, 1) from (values(true));
+> -- $Id$
+> 
+> explain plan for select jplus(1, 1) from (values(true));
 +-------------------------------------------------------------------------------------+
 |                                       column0                                       |
 +-------------------------------------------------------------------------------------+
@@ -8,8 +8,8 @@
 |   FennelToIteratorConverter                                                         |
 |     FennelValuesRel(tuples=[[{ true }]])                                            |
 +-------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select cplus(1, 1) from (values(true));
+> 
+> explain plan for select cplus(1, 1) from (values(true));
 +-----------------------------------------------------------------------------------------+
 |                                         column0                                         |
 +-----------------------------------------------------------------------------------------+
@@ -17,8 +17,8 @@
 |   FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[CPLUS($t1, $t1)], EXPR$0=[$t2])  |
 |     FennelValuesRel(tuples=[[{ true }]])                                                |
 +-----------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select cplus(1, 1), jplus(2, 2) from (values(true));
+> 
+> explain plan for select cplus(1, 1), jplus(2, 2) from (values(true));
 +-------------------------------------------------------------------------------------------------------------+
 |                                                   column0                                                   |
 +-------------------------------------------------------------------------------------------------------------+
@@ -27,8 +27,8 @@
 |     FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[CPLUS($t1, $t1)], expr#3=[2], $0=[$t2], $1=[$t3])  |
 |       FennelValuesRel(tuples=[[{ true }]])                                                                  |
 +-------------------------------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select jplus(2, 2), cplus(1, 1) from (values(true));
+> 
+> explain plan for select jplus(2, 2), cplus(1, 1) from (values(true));
 +-------------------------------------------------------------------------------------------------------------+
 |                                                   column0                                                   |
 +-------------------------------------------------------------------------------------------------------------+
@@ -37,8 +37,8 @@
 |     FennelCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[1], expr#3=[CPLUS($t2, $t2)], $0=[$t1], $1=[$t3])  |
 |       FennelValuesRel(tuples=[[{ true }]])                                                                  |
 +-------------------------------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select cplus(jplus(1, 1), 2) from (values(true));
+> 
+> explain plan for select cplus(jplus(1, 1), 2) from (values(true));
 +-------------------------------------------------------------------------------------------------------------+
 |                                                   column0                                                   |
 +-------------------------------------------------------------------------------------------------------------+
@@ -49,8 +49,8 @@
 |         FennelToIteratorConverter                                                                           |
 |           FennelValuesRel(tuples=[[{ true }]])                                                              |
 +-------------------------------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select jplus(cplus(1, 1), 2) from (values(true));
+> 
+> explain plan for select jplus(cplus(1, 1), 2) from (values(true));
 +-------------------------------------------------------------------------------------------------------------+
 |                                                   column0                                                   |
 +-------------------------------------------------------------------------------------------------------------+
@@ -59,8 +59,8 @@
 |     FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[CPLUS($t1, $t1)], expr#3=[2], $0=[$t2], $1=[$t3])  |
 |       FennelValuesRel(tuples=[[{ true }]])                                                                  |
 +-------------------------------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select empno, cplus(jplus(deptno, empid), age), jplus(cplus(deptno, empid), age), age from sales.emps;
+> 
+> explain plan for select empno, cplus(jplus(deptno, empid), age), jplus(cplus(deptno, empid), age), age from sales.emps;
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                              column0                                                                               |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -72,8 +72,8 @@
 |           FennelToIteratorConverter                                                                                                                                |
 |             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2, 5, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])  |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select * from sales.emps where jplus(deptno, 1) = 100;
+> 
+> explain plan for select * from sales.emps where jplus(deptno, 1) = 100;
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                           column0                                                                           |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -81,8 +81,8 @@
 |   FennelToIteratorConverter                                                                                                                                 |
 |     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])              |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select * from sales.emps where jplus(cplus(deptno, 1), 2) = 100;
+> 
+> explain plan for select * from sales.emps where jplus(cplus(deptno, 1), 2) = 100;
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                                column0                                                                                 |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -91,8 +91,8 @@
 |     FennelCalcRel(expr#0..9=[{inputs}], expr#10=[1], expr#11=[CPLUS($t2, $t10)], expr#12=[2], expr#13=[100], proj#0..9=[{exprs}], $10=[$t11], $11=[$t12], $12=[$t13])  |
 |       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])                       |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select * from sales.emps where cplus(jplus(deptno, 1), 2) = 100;
+> 
+> explain plan for select * from sales.emps where cplus(jplus(deptno, 1), 2) = 100;
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                                column0                                                                                 |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -103,17 +103,17 @@
 |         FennelToIteratorConverter                                                                                                                                      |
 |           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])                   |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> -- TODO zfong 4/28/06 - reenable the following two queries once FRG-90 is
-0: jdbc:farragotest:> -- resolved.  With the addition of the new PushProjectPastFilterRule, the
-0: jdbc:farragotest:> -- two queries below take even longer to run, so they have been temporarily
-0: jdbc:farragotest:> -- disabled.
-0: jdbc:farragotest:> --
-0: jdbc:farragotest:> -- explain plan for select cplus(jplus(deptno, 1), 2), jplus(cplus(deptno, 1), 2) from sales.emps where cplus(jplus(deptno, 1), 2) = 100 or jplus(cplus(deptno, 1), 2) = 100;
-0: jdbc:farragotest:> --
-0: jdbc:farragotest:> -- explain plan for select jplus(cplus(deptno, 1), 2), cplus(jplus(deptno, 1), 2) from sales.emps where cplus(jplus(deptno, 1), 2) = 100 or jplus(cplus(deptno, 1), 2) = 100;
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select jplus(cplus(deptno, 1), 2), cplus(jplus(deptno, 1), 2) from sales.emps where slacker;
+> 
+> -- TODO zfong 4/28/06 - reenable the following two queries once FRG-90 is
+> -- resolved.  With the addition of the new PushProjectPastFilterRule, the
+> -- two queries below take even longer to run, so they have been temporarily
+> -- disabled.
+> --
+> -- explain plan for select cplus(jplus(deptno, 1), 2), jplus(cplus(deptno, 1), 2) from sales.emps where cplus(jplus(deptno, 1), 2) = 100 or jplus(cplus(deptno, 1), 2) = 100;
+> --
+> -- explain plan for select jplus(cplus(deptno, 1), 2), cplus(jplus(deptno, 1), 2) from sales.emps where cplus(jplus(deptno, 1), 2) = 100 or jplus(cplus(deptno, 1), 2) = 100;
+> 
+> explain plan for select jplus(cplus(deptno, 1), 2), cplus(jplus(deptno, 1), 2) from sales.emps where slacker;
 +----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                            column0                                                                             |
 +----------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -125,10 +125,10 @@
 |           FennelCalcRel(expr#0..1=[{inputs}], expr#2=[2], expr#3=[1], expr#4=[CPLUS($t0, $t3)], DEPTNO=[$t0], $1=[$t2], $2=[$t3], $3=[$t4], $condition=[$t1])  |
 |             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 8]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])    |
 +----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> -- Test top-most level can be implemented in any calc and last
-0: jdbc:farragotest:> -- expression isn't a RexCall.  dtbug 210
-0: jdbc:farragotest:> explain plan for select deptno + jplus(cplus(deptno, 1), 2), empno, city from sales.emps;
+> 
+> -- Test top-most level can be implemented in any calc and last
+> -- expression isn't a RexCall.  dtbug 210
+> explain plan for select deptno + jplus(cplus(deptno, 1), 2), empno, city from sales.emps;
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                          column0                                                                          |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -137,9 +137,9 @@
 |     FennelCalcRel(expr#0..2=[{inputs}], expr#3=[1], expr#4=[CPLUS($t1, $t3)], expr#5=[2], proj#0..2=[{exprs}], $3=[$t4], $4=[$t5])                        |
 |       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])  |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> -- Equivalent to dtbug 210
-0: jdbc:farragotest:> explain plan for select cplus(t.r."second", 1) from (select jrow(deptno, empno) as r from sales.emps) as t;
+> 
+> -- Equivalent to dtbug 210
+> explain plan for select cplus(t.r."second", 1) from (select jrow(deptno, empno) as r from sales.emps) as t;
 +--------------------------------------------------------------------------------------------------------------------------+
 |                                                         column0                                                          |
 +--------------------------------------------------------------------------------------------------------------------------+
@@ -150,9 +150,9 @@
 |         FennelToIteratorConverter                                                                                        |
 |           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])  |
 +--------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> -- Found a bug related to this expression while debugging dtbug 210.
-0: jdbc:farragotest:> explain plan for select t.r."second", city from (select jrow(deptno, cplus(empno, 1)) as r, city from sales.emps) as t;
+> 
+> -- Found a bug related to this expression while debugging dtbug 210.
+> explain plan for select t.r."second", city from (select jrow(deptno, cplus(empno, 1)) as r, city from sales.emps) as t;
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                          column0                                                                          |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -161,7 +161,7 @@
 |     FennelCalcRel(expr#0..2=[{inputs}], expr#3=[1], expr#4=[CPLUS($t0, $t3)], DEPTNO=[$t1], CITY=[$t2], $2=[$t4])                                         |
 |       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])  |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> # End autoCalcRule.sql
-0: jdbc:farragotest:> 
-0: jdbc:farragotest:> !quit
+> 
+> # End autoCalcRule.sql
+> 
+> !quit

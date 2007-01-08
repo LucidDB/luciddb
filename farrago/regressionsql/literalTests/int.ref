@@ -1,133 +1,133 @@
-0: jdbc:farrago:> -- $Id$ 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test int literal
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 0;
+> -- $Id$ 
+> 
+> -- test int literal
+> 
+> values 0;
 +---------+
 | EXPR$0  |
 +---------+
 | 0       |
 +---------+
-0: jdbc:farrago:> values 1234;
+> values 1234;
 +---------+
 | EXPR$0  |
 +---------+
 | 1234    |
 +---------+
-0: jdbc:farrago:> values -1234;
+> values -1234;
 +---------+
 | EXPR$0  |
 +---------+
 | -1234   |
 +---------+
-0: jdbc:farrago:> values 34.5;
+> values 34.5;
 +---------+
 | EXPR$0  |
 +---------+
 | 34.5    |
 +---------+
-0: jdbc:farrago:> values 32767;
+> values 32767;
 +---------+
 | EXPR$0  |
 +---------+
 | 32767   |
 +---------+
-0: jdbc:farrago:> values -32767;
+> values -32767;
 +---------+
 | EXPR$0  |
 +---------+
 | -32767  |
 +---------+
-0: jdbc:farrago:> values 100000;
+> values 100000;
 +---------+
 | EXPR$0  |
 +---------+
 | 100000  |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 123456;
+> 
+> 
+> values 123456;
 +---------+
 | EXPR$0  |
 +---------+
 | 123456  |
 +---------+
-0: jdbc:farrago:> values -123456;
+> values -123456;
 +----------+
 |  EXPR$0  |
 +----------+
 | -123456  |
 +----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 2147483647;
+> 
+> values 2147483647;
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 2147483647  |
 +-------------+
-0: jdbc:farrago:> values -2147483647;
+> values -2147483647;
 +--------------+
 |    EXPR$0    |
 +--------------+
 | -2147483647  |
 +--------------+
-0: jdbc:farrago:> values 1000000000000;
+> values 1000000000000;
 +----------------+
 |     EXPR$0     |
 +----------------+
 | 1000000000000  |
 +----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 4567890123456789;
+> 
+> 
+> 
+> values 4567890123456789;
 +-------------------+
 |      EXPR$0       |
 +-------------------+
 | 4567890123456789  |
 +-------------------+
-0: jdbc:farrago:> values -4567890123456789;
+> values -4567890123456789;
 +--------------------+
 |       EXPR$0       |
 +--------------------+
 | -4567890123456789  |
 +--------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test datatype
-0: jdbc:farrago:> create schema test;
-0: jdbc:farrago:> set schema 'test';
-0: jdbc:farrago:> create table t_int(int_col int not null primary key,
-. . . . . . . . >         int_col2 int);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- negative test
-0: jdbc:farrago:> insert into t_int values('true',null);
+> 
+> -- test datatype
+> create schema test;
+> set schema 'test';
+> create table t_int(int_col int not null primary key,
+>         int_col2 int);
+> 
+> -- negative test
+> insert into t_int values('true',null);
 Error: At line 0, column 0: Cannot assign to target field 'INT_COL' of type INTEGER from source field 'EXPR$0' of type CHAR(4) (state=,code=0)
-0: jdbc:farrago:> insert into t_int values(TRUE,null);
+> insert into t_int values(TRUE,null);
 Error: At line 0, column 0: Cannot assign to target field 'INT_COL' of type INTEGER from source field 'EXPR$0' of type BOOLEAN (state=,code=0)
-0: jdbc:farrago:> insert into t_int values(1e400,null);
+> insert into t_int values(1e400,null);
 Error: From line 1, column 26 to line 1, column 30: Numeric literal '1E400' out of range (state=,code=0)
-0: jdbc:farrago:> insert into t_int values(x'ff',null);
+> insert into t_int values(x'ff',null);
 Error: At line 0, column 0: Cannot assign to target field 'INT_COL' of type INTEGER from source field 'EXPR$0' of type BINARY(1) (state=,code=0)
-0: jdbc:farrago:> insert into t_int values(date '1999-01-08',null);
+> insert into t_int values(date '1999-01-08',null);
 Error: At line 0, column 0: Cannot assign to target field 'INT_COL' of type INTEGER from source field 'EXPR$0' of type DATE (state=,code=0)
-0: jdbc:farrago:> insert into t_int values(time '12:01:01',null);
+> insert into t_int values(time '12:01:01',null);
 Error: At line 0, column 0: Cannot assign to target field 'INT_COL' of type INTEGER from source field 'EXPR$0' of type TIME(0) (state=,code=0)
-0: jdbc:farrago:> insert into t_int values(timestamp '2004-12-01 12:01:01',null);
+> insert into t_int values(timestamp '2004-12-01 12:01:01',null);
 Error: At line 0, column 0: Cannot assign to target field 'INT_COL' of type INTEGER from source field 'EXPR$0' of type TIMESTAMP(0) (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- insert the right value
-0: jdbc:farrago:> insert into t_int values(-1235.03,null);
-0: jdbc:farrago:> insert into t_int values(1234,null);
-0: jdbc:farrago:> insert into t_int values(-4567890123456789,null);
+> 
+> -- insert the right value
+> insert into t_int values(-1235.03,null);
+> insert into t_int values(1234,null);
+> insert into t_int values(-4567890123456789,null);
 Error: could not calculate results for the following row:
 [ -4567890123456789, NULL ]
 Messages:
 [0]:PC=0 Code=22003 (state=,code=0)
-0: jdbc:farrago:> insert into t_int values(-1.2345678901234e-200,null);
-0: jdbc:farrago:> -- null value test
-0: jdbc:farrago:> --insert into t_int values(null, null); 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t_int;
+> insert into t_int values(-1.2345678901234e-200,null);
+> -- null value test
+> --insert into t_int values(null, null); 
+> 
+> select * from t_int;
 +----------+-----------+
 | INT_COL  | INT_COL2  |
 +----------+-----------+
@@ -135,8 +135,8 @@ Messages:
 | 0        |           |
 | 1234     |           |
 +----------+-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table t_int;
-0: jdbc:farrago:> drop schema test;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> drop table t_int;
+> drop schema test;
+> 
+> !quit

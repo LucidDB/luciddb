@@ -122,9 +122,25 @@ Object FarragoSqlStmtEof() :
     (
         obj = DdlStmtEof()
         |
-        obj = SqlStmtEof()
-        |
-        obj = PsmBody()
+        (
+            /* 
+             * Insure that a read-only repository transaction is started.
+             * Note that view expansion can cause a second call into the
+             * parser, which requires us to avoid attempting to start
+             * the read txn twice.
+             */
+            {
+                FarragoReposTxnContext reposTxnContext = 
+                    farragoParser.getStmtValidator().getReposTxnContext();
+
+                if (!reposTxnContext.isReadTxnInProgress()) {
+                    reposTxnContext.beginReadTxn();
+                }
+            }
+            obj = SqlStmtEof()
+            |
+            obj = PsmBody()
+        )
     )
     <EOF>
     {
@@ -139,21 +155,26 @@ DdlStmt DdlStmtEof() :
     SqlNode expr;
     DdlReplaceOptions replaceOptions = new DdlReplaceOptions();
     SqlIdentifier newName;
+    FarragoReposTxnContext reposTxnContext = 
+        farragoParser.getStmtValidator().getReposTxnContext();
 }
 {
     (
         (
             <CREATE>
+            {
+                reposTxnContext.beginWriteTxn();
+            }
             [
-            	( <OR> <REPLACE> )
-	            {
-	                replaceOptions.setIsReplace(true);
-	            }
-	            [ ( <RENAME> <TO> newName = SimpleIdentifier() )
-		            {
-		                replaceOptions.setNewName(newName);
-		            }
-	            ]
+                ( <OR> <REPLACE> )
+                {
+                    replaceOptions.setIsReplace(true);
+                }
+                [ ( <RENAME> <TO> newName = SimpleIdentifier() )
+                    {
+                        replaceOptions.setNewName(newName);
+                    }
+                ]
             ]
             (
                 modelElement = SchemaDefinition()
@@ -181,6 +202,8 @@ DdlStmt DdlStmtEof() :
         (
             <DROP>
             {
+                reposTxnContext.beginWriteTxn();
+
                 // assume RESTRICT; CascadeOption() may override
                 dropRestrict = true;
             }
@@ -222,6 +245,9 @@ DdlStmt DdlStmtEof() :
         |
         (
             <TRUNCATE>
+            {
+                reposTxnContext.beginWriteTxn();
+            }
             (
                 <TABLE> modelElement = TableIdentifier()
             )
@@ -232,6 +258,9 @@ DdlStmt DdlStmtEof() :
         |
         (
             <SET>
+            {
+                reposTxnContext.beginWriteTxn();
+            }
             (
                 <CATALOG> expr = Expression(EXPR_ACCEPT_NONQUERY)
                 {
@@ -249,6 +278,9 @@ DdlStmt DdlStmtEof() :
         )
         |
         <ALTER>
+        {
+            reposTxnContext.beginWriteTxn();
+        }
         (
             <SYSTEM>
             (
@@ -272,6 +304,9 @@ DdlStmt DdlStmtEof() :
         )
         |
         <GRANT>
+        {
+            reposTxnContext.beginWriteTxn();
+        }
         (
             ddlStmt = GrantRoleStmt()
             |
@@ -280,23 +315,47 @@ DdlStmt DdlStmtEof() :
         |
         <CHECKPOINT>
         {
+            reposTxnContext.beginWriteTxn();
+
             ddlStmt = new DdlCheckpointStmt();
         }
         |
         <COMMIT>
         {
+            reposTxnContext.beginWriteTxn();
+
             ddlStmt = new DdlCommitStmt();
         }
         |
-        <ROLLBACK> ddlStmt = Rollback()
+        <ROLLBACK> 
+        {
+            reposTxnContext.beginWriteTxn();
+        }
+        ddlStmt = Rollback()
         |
-        <SAVEPOINT> ddlStmt = Savepoint()
+        <SAVEPOINT> 
+        {
+            reposTxnContext.beginWriteTxn();
+        }
+        ddlStmt = Savepoint()
         |
-        <RELEASE> <SAVEPOINT> ddlStmt = ReleaseSavepoint()
+        <RELEASE> <SAVEPOINT> 
+        {
+            reposTxnContext.beginWriteTxn();
+        }
+        ddlStmt = ReleaseSavepoint()
         |
-        <IMPORT> ddlStmt = ImportForeignSchemaStmt()
+        <IMPORT> 
+        {
+            reposTxnContext.beginWriteTxn();
+        }
+        ddlStmt = ImportForeignSchemaStmt()
         |
-        <ANALYZE> ddlStmt = AnalyzeStmt()
+        <ANALYZE> 
+        {
+            reposTxnContext.beginWriteTxn();
+        }
+        ddlStmt = AnalyzeStmt()
     )
     <EOF>
     {

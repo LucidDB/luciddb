@@ -1,28 +1,28 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test queries which make use of foreign namespaces
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Java calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create server mof_repository
-. . . . . . . . > foreign data wrapper sys_mdr
-. . . . . . . . > options(
-. . . . . . . . >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr',
-. . . . . . . . >     extent_name 'MOF', 
-. . . . . . . . >     schema_name 'MODEL');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- single-table projection with no filters
-0: jdbc:farrago:> select "name" from mof_repository.model."Exception" order by 1;
+> -- $Id$
+> -- Test queries which make use of foreign namespaces
+> 
+> -- force usage of Java calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> 
+> create server mof_repository
+> foreign data wrapper sys_mdr
+> options(
+>     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr',
+>     extent_name 'MOF', 
+>     schema_name 'MODEL');
+> 
+> -- single-table projection with no filters
+> select "name" from mof_repository.model."Exception" order by 1;
 +------------------+
 |       name       |
 +------------------+
 | NameNotFound     |
 | NameNotResolved  |
 +------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- single-table projection with filter
-0: jdbc:farrago:> select "name" from mof_repository.model."Class" where "isAbstract"
-. . . . . . . . > order by 1;
+> 
+> -- single-table projection with filter
+> select "name" from mof_repository.model."Class" where "isAbstract"
+> order by 1;
 +-----------------------+
 |         name          |
 +-----------------------+
@@ -36,19 +36,19 @@
 | StructuralFeature     |
 | TypedElement          |
 +-----------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- two-way one-to-many join
-0: jdbc:farrago:> select 
-. . . . . . . . >     e."name" as exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     e."mofId" = p."container"
-. . . . . . . . > order by 
-. . . . . . . . >     exception_name,param_name;
+> 
+> -- two-way one-to-many join
+> select 
+>     e."name" as exception_name,
+>     p."name" as param_name
+> from
+>     mof_repository.model."Exception" e
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     e."mofId" = p."container"
+> order by 
+>     exception_name,param_name;
 +------------------+--------------+
 |  EXCEPTION_NAME  |  PARAM_NAME  |
 +------------------+--------------+
@@ -56,40 +56,40 @@
 | NameNotResolved  | explanation  |
 | NameNotResolved  | restOfName   |
 +------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- two-way join with filter
-0: jdbc:farrago:> select 
-. . . . . . . . >     e."name" as exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     (select * 
-. . . . . . . . >     from mof_repository.model."Exception"
-. . . . . . . . >     where "name"='NameNotResolved') e
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     e."mofId" = p."container"
-. . . . . . . . > order by 
-. . . . . . . . >     exception_name,param_name;
+> 
+> -- two-way join with filter
+> select 
+>     e."name" as exception_name,
+>     p."name" as param_name
+> from
+>     (select * 
+>     from mof_repository.model."Exception"
+>     where "name"='NameNotResolved') e
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     e."mofId" = p."container"
+> order by 
+>     exception_name,param_name;
 +------------------+--------------+
 |  EXCEPTION_NAME  |  PARAM_NAME  |
 +------------------+--------------+
 | NameNotResolved  | explanation  |
 | NameNotResolved  | restOfName   |
 +------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- two-way many-to-one join
-0: jdbc:farrago:> select 
-. . . . . . . . >     p."name" as param_name,
-. . . . . . . . >     e."name" as exception_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > on 
-. . . . . . . . >     p."container" = e."mofId"
-. . . . . . . . > order by 
-. . . . . . . . >     param_name,exception_name;
+> 
+> -- two-way many-to-one join
+> select 
+>     p."name" as param_name,
+>     e."name" as exception_name
+> from
+>     mof_repository.model."Parameter" p
+> inner join
+>     mof_repository.model."Exception" e
+> on 
+>     p."container" = e."mofId"
+> order by 
+>     param_name,exception_name;
 +--------------+------------------+
 |  PARAM_NAME  |  EXCEPTION_NAME  |
 +--------------+------------------+
@@ -97,26 +97,26 @@
 | name         | NameNotFound     |
 | restOfName   | NameNotResolved  |
 +--------------+------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- three-way join
-0: jdbc:farrago:> select 
-. . . . . . . . >     namespace_name,
-. . . . . . . . >     exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     (select n."name" as namespace_name,e.
-. . . . . . . . >         "mofId" as e_id,e."name" as exception_name
-. . . . . . . . >     from
-. . . . . . . . >         mof_repository.model."Namespace" n
-. . . . . . . . >     inner join
-. . . . . . . . >         mof_repository.model."Exception" e
-. . . . . . . . >     on n."mofId" = e."container") ne
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     ne.e_id = p."container"
-. . . . . . . . > order by 
-. . . . . . . . >     namespace_name,exception_name,param_name;
+> 
+> -- three-way join
+> select 
+>     namespace_name,
+>     exception_name,
+>     p."name" as param_name
+> from
+>     (select n."name" as namespace_name,e.
+>         "mofId" as e_id,e."name" as exception_name
+>     from
+>         mof_repository.model."Namespace" n
+>     inner join
+>         mof_repository.model."Exception" e
+>     on n."mofId" = e."container") ne
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     ne.e_id = p."container"
+> order by 
+>     namespace_name,exception_name,param_name;
 +-----------------+------------------+--------------+
 | NAMESPACE_NAME  |  EXCEPTION_NAME  |  PARAM_NAME  |
 +-----------------+------------------+--------------+
@@ -124,91 +124,91 @@
 | Namespace       | NameNotResolved  | explanation  |
 | Namespace       | NameNotResolved  | restOfName   |
 +-----------------+------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- use outputformat xmlattr for outer joins so we can see nulls
-0: jdbc:farrago:> !set outputformat xmlattr
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- one-to-many left outer join
-0: jdbc:farrago:> select 
-. . . . . . . . >     p."name" as package_name,
-. . . . . . . . >     i."name" as import_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Package" p
-. . . . . . . . > left outer join
-. . . . . . . . >     mof_repository.model."Import" i
-. . . . . . . . > on 
-. . . . . . . . >     p."mofId" = i."container"
-. . . . . . . . > order by 
-. . . . . . . . >     package_name,import_name;
+> 
+> -- use outputformat xmlattr for outer joins so we can see nulls
+> !set outputformat xmlattr
+> 
+> -- one-to-many left outer join
+> select 
+>     p."name" as package_name,
+>     i."name" as import_name
+> from
+>     mof_repository.model."Package" p
+> left outer join
+>     mof_repository.model."Import" i
+> on 
+>     p."mofId" = i."container"
+> order by 
+>     package_name,import_name;
 <resultset>
   <result PACKAGE_NAME="CorbaIdlTypes" IMPORT_NAME="null"/>
   <result PACKAGE_NAME="Model" IMPORT_NAME="PrimitiveTypes"/>
   <result PACKAGE_NAME="PrimitiveTypes" IMPORT_NAME="null"/>
 </resultset>
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- many-to-one left outer join
-0: jdbc:farrago:> select 
-. . . . . . . . >     p."name" as param_name,
-. . . . . . . . >     e."name" as exception_name
-. . . . . . . . > from 
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > left outer join
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > on 
-. . . . . . . . >     p."container" = e."mofId"
-. . . . . . . . > where 
-. . . . . . . . >     p."name"='name'
-. . . . . . . . > order by
-. . . . . . . . >     param_name,exception_name;
+> 
+> -- many-to-one left outer join
+> select 
+>     p."name" as param_name,
+>     e."name" as exception_name
+> from 
+>     mof_repository.model."Parameter" p
+> left outer join
+>     mof_repository.model."Exception" e
+> on 
+>     p."container" = e."mofId"
+> where 
+>     p."name"='name'
+> order by
+>     param_name,exception_name;
 <resultset>
   <result PARAM_NAME="name" EXCEPTION_NAME="null"/>
   <result PARAM_NAME="name" EXCEPTION_NAME="null"/>
   <result PARAM_NAME="name" EXCEPTION_NAME="NameNotFound"/>
 </resultset>
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter which can be pushed down to foreign DBMS
-0: jdbc:farrago:> -- (but we don't support that yet)
-0: jdbc:farrago:> select dname 
-. . . . . . . . > from hsqldb_demo.sales.dept
-. . . . . . . . > where deptno=20;
+> 
+> -- filter which can be pushed down to foreign DBMS
+> -- (but we don't support that yet)
+> select dname 
+> from hsqldb_demo.sales.dept
+> where deptno=20;
 <resultset>
   <result DNAME="RESEARCH"/>
 </resultset>
-0: jdbc:farrago:>     
-0: jdbc:farrago:> -- now explain plans for above queries
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select "name" from mof_repository.model."Exception" order by 1;
+>     
+> -- now explain plans for above queries
+> !set outputformat csv
+> 
+> explain plan for
+> select "name" from mof_repository.model."Exception" order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" name) NOT NULL])'
 '      IteratorToFennelConverter'
 '        MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select "name" from mof_repository.model."Class" where "isAbstract"
-. . . . . . . . > order by 1;
+> 
+> explain plan for
+> select "name" from mof_repository.model."Class" where "isAbstract"
+> order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
 '      IterCalcRel(expr#0..9=[{inputs}], name=[$t0], $condition=[$t5])'
 '        MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Class]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     e."name" as exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     e."mofId" = p."container"
-. . . . . . . . > order by 
-. . . . . . . . >     exception_name,param_name;
+> 
+> explain plan for
+> select 
+>     e."name" as exception_name,
+>     p."name" as param_name
+> from
+>     mof_repository.model."Exception" e
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     e."mofId" = p."container"
+> order by 
+>     exception_name,param_name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -217,21 +217,21 @@
 '        MedMdrJoinRel(condition=[=($5, $9)], joinType=[inner])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     e."name" as exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     (select * 
-. . . . . . . . >     from mof_repository.model."Exception"
-. . . . . . . . >     where "name"='NameNotResolved') e
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     e."mofId" = p."container"
-. . . . . . . . > order by
-. . . . . . . . >      exception_name,param_name;
+> 
+> explain plan for
+> select 
+>     e."name" as exception_name,
+>     p."name" as param_name
+> from
+>     (select * 
+>     from mof_repository.model."Exception"
+>     where "name"='NameNotResolved') e
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     e."mofId" = p."container"
+> order by
+>      exception_name,param_name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -243,19 +243,19 @@
 '              IteratorToFennelConverter'
 '                MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     p."name" as param_name,
-. . . . . . . . >     e."name" as exception_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > on 
-. . . . . . . . >     p."container" = e."mofId"
-. . . . . . . . > order 
-. . . . . . . . >     by param_name,exception_name;
+> 
+> explain plan for
+> select 
+>     p."name" as param_name,
+>     e."name" as exception_name
+> from
+>     mof_repository.model."Parameter" p
+> inner join
+>     mof_repository.model."Exception" e
+> on 
+>     p."container" = e."mofId"
+> order 
+>     by param_name,exception_name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -264,27 +264,27 @@
 '        MedMdrJoinRel(condition=[=($2, $13)], joinType=[inner])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     namespace_name,
-. . . . . . . . >     exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     (select n."name" as namespace_name,e.
-. . . . . . . . >         "mofId" as e_id,e."name" as exception_name
-. . . . . . . . >     from
-. . . . . . . . >         mof_repository.model."Namespace" n
-. . . . . . . . >     inner join
-. . . . . . . . >         mof_repository.model."Exception" e
-. . . . . . . . >     on 
-. . . . . . . . >         n."mofId" = e."container") ne
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     ne.e_id = p."container"
-. . . . . . . . > order by 
-. . . . . . . . >     namespace_name,exception_name,param_name;
+> 
+> explain plan for
+> select 
+>     namespace_name,
+>     exception_name,
+>     p."name" as param_name
+> from
+>     (select n."name" as namespace_name,e.
+>         "mofId" as e_id,e."name" as exception_name
+>     from
+>         mof_repository.model."Namespace" n
+>     inner join
+>         mof_repository.model."Exception" e
+>     on 
+>         n."mofId" = e."container") ne
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     ne.e_id = p."container"
+> order by 
+>     namespace_name,exception_name,param_name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])'
@@ -298,19 +298,19 @@
 '                  MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Namespace]])'
 '                  MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     p."name" as package_name,
-. . . . . . . . >     i."name" as import_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Package" p
-. . . . . . . . > left outer join
-. . . . . . . . >     mof_repository.model."Import" i
-. . . . . . . . > on 
-. . . . . . . . >     p."mofId" = i."container"
-. . . . . . . . > order by 
-. . . . . . . . >     package_name,import_name;
+> 
+> explain plan for
+> select 
+>     p."name" as package_name,
+>     i."name" as import_name
+> from
+>     mof_repository.model."Package" p
+> left outer join
+>     mof_repository.model."Import" i
+> on 
+>     p."mofId" = i."container"
+> order by 
+>     package_name,import_name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -319,21 +319,21 @@
 '        MedMdrJoinRel(condition=[=($7, $11)], joinType=[left])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Package]])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Import]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     p."name" as param_name,
-. . . . . . . . >     e."name" as exception_name
-. . . . . . . . > from 
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > left outer join
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > on 
-. . . . . . . . >     p."container" = e."mofId"
-. . . . . . . . > where 
-. . . . . . . . >     p."name"='name'
-. . . . . . . . > order by 
-. . . . . . . . >     param_name,exception_name;
+> 
+> explain plan for
+> select 
+>     p."name" as param_name,
+>     e."name" as exception_name
+> from 
+>     mof_repository.model."Parameter" p
+> left outer join
+>     mof_repository.model."Exception" e
+> on 
+>     p."container" = e."mofId"
+> where 
+>     p."name"='name'
+> order by 
+>     param_name,exception_name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -343,11 +343,11 @@
 '          MedMdrJoinRel(condition=[=($2, $13)], joinType=[left])'
 '            MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
 '            MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . > select dname 
-. . . . . . . . > from hsqldb_demo.sales.dept
-. . . . . . . . > where deptno=20;
+> 
+> explain plan for 
+> select dname 
+> from hsqldb_demo.sales.dept
+> where deptno=20;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[20]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" DNAME) NOT NULL])'
@@ -355,20 +355,20 @@
 '      ResultSetToFarragoIteratorConverter'
 '        MedJdbcQueryRel(foreignSql=[SELECT *'
 'FROM "SALES"."DEPT"])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- join on pseudocolumn (FRG-69)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 
-. . . . . . . . >     e."name" as exception_name,
-. . . . . . . . >     p."name" as param_name
-. . . . . . . . > from
-. . . . . . . . >     mof_repository.model."Exception" e
-. . . . . . . . > inner join
-. . . . . . . . >     mof_repository.model."Parameter" p
-. . . . . . . . > on 
-. . . . . . . . >     e."mofId" = p."mofClassName"
-. . . . . . . . > ;
+> 
+> -- join on pseudocolumn (FRG-69)
+> 
+> explain plan for
+> select 
+>     e."name" as exception_name,
+>     p."name" as param_name
+> from
+>     mof_repository.model."Exception" e
+> inner join
+>     mof_repository.model."Parameter" p
+> on 
+>     e."mofId" = p."mofClassName"
+> ;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t1, $t3)], EXCEPTION_NAME=[$t0], PARAM_NAME=[$t2], $condition=[$t4])'
 '  FennelToIteratorConverter'
@@ -379,5 +379,5 @@
 '      FennelReshapeRel(projection=[[0, 7]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" name, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" mofClassName) NOT NULL])'
 '        IteratorToFennelConverter'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

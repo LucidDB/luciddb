@@ -1,228 +1,228 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Full vertical negative system testing
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
-0: jdbc:farrago:> -- and another time to use java. The caller of this script is setting the flag so no need
-0: jdbc:farrago:> -- to do it directly unless you need to do acrobatics.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- =============================================
-0: jdbc:farrago:> -- |                                            |
-0: jdbc:farrago:> -- |   EVERY QUERY IN THIS SCRIPT SHOULD FAIL   |
-0: jdbc:farrago:> -- |                                            |
-0: jdbc:farrago:> -- =============================================
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- empty escape string forbidden
-0: jdbc:farrago:> values 'x' LIKE 'x' escape '';
+> -- $Id$
+> -- Full vertical negative system testing
+> 
+> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
+> -- and another time to use java. The caller of this script is setting the flag so no need
+> -- to do it directly unless you need to do acrobatics.
+> 
+> -- =============================================
+> -- |                                            |
+> -- |   EVERY QUERY IN THIS SCRIPT SHOULD FAIL   |
+> -- |                                            |
+> -- =============================================
+> 
+> -- empty escape string forbidden
+> values 'x' LIKE 'x' escape '';
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22019 (state=,code=0)
-0: jdbc:farrago:> values 'x' similar to 'x' escape '';
+> values 'x' similar to 'x' escape '';
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22019 (state=,code=0)
-0: jdbc:farrago:> -- escape string with char length > 1 forbidden
-0: jdbc:farrago:> values 'x' like 'x' escape 'ab';
+> -- escape string with char length > 1 forbidden
+> values 'x' like 'x' escape 'ab';
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22019 (state=,code=0)
-0: jdbc:farrago:> values 'x' similar to 'x' escape 'ab';
+> values 'x' similar to 'x' escape 'ab';
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22019 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values true and 1;
+> 
+> values true and 1;
 Error: From line 1, column 8 to line 1, column 17: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
-0: jdbc:farrago:> values false and '';
+> values false and '';
 Error: From line 1, column 8 to line 1, column 19: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <CHAR(0)>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
-0: jdbc:farrago:> values 1.2 and unknown;
+> values 1.2 and unknown;
 Error: From line 1, column 8 to line 1, column 22: Cannot apply 'AND' to arguments of type '<DECIMAL(2, 1)> AND <BOOLEAN>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
-0: jdbc:farrago:> values unknown or 1;
+> values unknown or 1;
 Error: From line 1, column 8 to line 1, column 19: Cannot apply 'OR' to arguments of type '<BOOLEAN> OR <INTEGER>'. Supported form(s): '<BOOLEAN> OR <BOOLEAN>' (state=,code=0)
-0: jdbc:farrago:> values '' or x'';
+> values '' or x'';
 Error: From line 1, column 8 to line 1, column 16: Cannot apply 'OR' to arguments of type '<CHAR(0)> OR <BINARY(0)>'. Supported form(s): '<BOOLEAN> OR <BOOLEAN>' (state=,code=0)
-0: jdbc:farrago:> values not 1;
+> values not 1;
 Error: From line 1, column 8 to line 1, column 12: Cannot apply 'NOT' to arguments of type 'NOT<INTEGER>'. Supported form(s): 'NOT<BOOLEAN>' (state=,code=0)
-0: jdbc:farrago:> values not '';
+> values not '';
 Error: From line 1, column 8 to line 1, column 13: Cannot apply 'NOT' to arguments of type 'NOT<CHAR(0)>'. Supported form(s): 'NOT<BOOLEAN>' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 'a'||1;
+> 
+> values 'a'||1;
 Error: From line 1, column 8 to line 1, column 13: Cannot apply '||' to arguments of type '<CHAR(1)> || <INTEGER>'. Supported form(s): '<STRING> || <STRING>' (state=,code=0)
-0: jdbc:farrago:> values false||'a';
+> values false||'a';
 Error: From line 1, column 8 to line 1, column 17: Cannot apply '||' to arguments of type '<BOOLEAN> || <CHAR(1)>'. Supported form(s): '<STRING> || <STRING>' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 1/0;
+> 
+> values 1/0;
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22012 (state=,code=0)
-0: jdbc:farrago:> values 1.1/0.0;
+> values 1.1/0.0;
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=2 Code=22012 (state=,code=0)
-0: jdbc:farrago:> values MOD(1, 0);
+> values MOD(1, 0);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22012 (state=,code=0)
-0: jdbc:farrago:> values pow(0.0, -1.0);
+> values pow(0.0, -1.0);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=4 Code=22023 (state=,code=0)
-0: jdbc:farrago:> values ln(0.0);
+> values ln(0.0);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=2 Code=22023 (state=,code=0)
-0: jdbc:farrago:> values log10(0.0);
+> values log10(0.0);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=2 Code=22023 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 1='';
+> 
+> values 1='';
 Error: From line 1, column 8 to line 1, column 11: Cannot apply '=' to arguments of type '<INTEGER> = <CHAR(0)>'. Supported form(s): '<COMPARABLE_TYPE> = <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values false='';
+> values false='';
 Error: From line 1, column 8 to line 1, column 15: Cannot apply '=' to arguments of type '<BOOLEAN> = <CHAR(0)>'. Supported form(s): '<COMPARABLE_TYPE> = <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values x'101f'=0.001;
+> values x'101f'=0.001;
 Error: From line 1, column 8 to line 1, column 20: Cannot apply '=' to arguments of type '<BINARY(2)> = <DECIMAL(4, 3)>'. Supported form(s): '<COMPARABLE_TYPE> = <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values 1<>'';
+> values 1<>'';
 Error: From line 1, column 8 to line 1, column 12: Cannot apply '<>' to arguments of type '<INTEGER> <> <CHAR(0)>'. Supported form(s): '<COMPARABLE_TYPE> <> <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values false<>'';
+> values false<>'';
 Error: From line 1, column 8 to line 1, column 16: Cannot apply '<>' to arguments of type '<BOOLEAN> <> <CHAR(0)>'. Supported form(s): '<COMPARABLE_TYPE> <> <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values x''<>0.2;
+> values x''<>0.2;
 Error: From line 1, column 8 to line 1, column 15: Cannot apply '<>' to arguments of type '<BINARY(0)> <> <DECIMAL(2, 1)>'. Supported form(s): '<COMPARABLE_TYPE> <> <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values 1>true;
+> values 1>true;
 Error: From line 1, column 8 to line 1, column 13: Cannot apply '>' to arguments of type '<INTEGER> > <BOOLEAN>'. Supported form(s): '<COMPARABLE_TYPE> > <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values x''>'';
+> values x''>'';
 Error: From line 1, column 8 to line 1, column 13: Cannot apply '>' to arguments of type '<BINARY(0)> > <CHAR(0)>'. Supported form(s): '<COMPARABLE_TYPE> > <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values 1<false;
+> values 1<false;
 Error: From line 1, column 8 to line 1, column 14: Cannot apply '<' to arguments of type '<INTEGER> < <BOOLEAN>'. Supported form(s): '<COMPARABLE_TYPE> < <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values ''<0.1;
+> values ''<0.1;
 Error: From line 1, column 8 to line 1, column 13: Cannot apply '<' to arguments of type '<CHAR(0)> < <DECIMAL(2, 1)>'. Supported form(s): '<COMPARABLE_TYPE> < <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values 1>=true;
+> values 1>=true;
 Error: From line 1, column 8 to line 1, column 14: Cannot apply '>=' to arguments of type '<INTEGER> >= <BOOLEAN>'. Supported form(s): '<COMPARABLE_TYPE> >= <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> select x''>=name from sales.emps;
+> select x''>=name from sales.emps;
 Error: From line 1, column 8 to line 1, column 16: Cannot apply '>=' to arguments of type '<BINARY(0)> >= <VARCHAR(128)>'. Supported form(s): '<COMPARABLE_TYPE> >= <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values 1<=true;
+> values 1<=true;
 Error: From line 1, column 8 to line 1, column 14: Cannot apply '<=' to arguments of type '<INTEGER> <= <BOOLEAN>'. Supported form(s): '<COMPARABLE_TYPE> <= <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values ''<=0.0;
+> values ''<=0.0;
 Error: From line 1, column 8 to line 1, column 14: Cannot apply '<=' to arguments of type '<CHAR(0)> <= <DECIMAL(2, 1)>'. Supported form(s): '<COMPARABLE_TYPE> <= <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --should throw overflow error?
-0: jdbc:farrago:> --values 2147483647+1
-0: jdbc:farrago:> --values 1073741824*2;
-0: jdbc:farrago:> --how about underflow?
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 1 is true;
+> 
+> --should throw overflow error?
+> --values 2147483647+1
+> --values 1073741824*2;
+> --how about underflow?
+> 
+> values 1 is true;
 Error: From line 1, column 8 to line 1, column 16: Cannot apply 'IS TRUE' to arguments of type '<INTEGER> IS TRUE'. Supported form(s): '<BOOLEAN> IS TRUE' (state=,code=0)
-0: jdbc:farrago:> values '' is not true;
+> values '' is not true;
 Error: From line 1, column 8 to line 1, column 21: Cannot apply 'IS NOT TRUE' to arguments of type '<CHAR(0)> IS NOT TRUE'. Supported form(s): '<BOOLEAN> IS NOT TRUE' (state=,code=0)
-0: jdbc:farrago:> values 1 is false;
+> values 1 is false;
 Error: From line 1, column 8 to line 1, column 17: Cannot apply 'IS FALSE' to arguments of type '<INTEGER> IS FALSE'. Supported form(s): '<BOOLEAN> IS FALSE' (state=,code=0)
-0: jdbc:farrago:> values 0.01 is not false;
+> values 0.01 is not false;
 Error: From line 1, column 8 to line 1, column 24: Cannot apply 'IS NOT FALSE' to arguments of type '<DECIMAL(3, 2)> IS NOT FALSE'. Supported form(s): '<BOOLEAN> IS NOT FALSE' (state=,code=0)
-0: jdbc:farrago:> values x'' is unknown; 
+> values x'' is unknown; 
 Error: From line 1, column 8 to line 1, column 21: Cannot apply 'IS UNKNOWN' to arguments of type '<BINARY(0)> IS UNKNOWN'. Supported form(s): '<BOOLEAN> IS UNKNOWN' (state=,code=0)
-0: jdbc:farrago:> values x'' is not unknown;
+> values x'' is not unknown;
 Error: From line 1, column 8 to line 1, column 25: Cannot apply 'IS NOT UNKNOWN' to arguments of type '<BINARY(0)> IS NOT UNKNOWN'. Supported form(s): '<BOOLEAN> IS NOT UNKNOWN' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --prefix
-0: jdbc:farrago:> values -x'';
+> 
+> --prefix
+> values -x'';
 Error: From line 1, column 8 to line 1, column 11: Cannot apply '-' to arguments of type '-<BINARY(0)>'. Supported form(s): '-<NUMERIC>'
 '-<DATETIME_INTERVAL>' (state=,code=0)
-0: jdbc:farrago:> values -'2';
+> values -'2';
 Error: From line 1, column 8 to line 1, column 11: Cannot apply '-' to arguments of type '-<CHAR(1)>'. Supported form(s): '-<NUMERIC>'
 '-<DATETIME_INTERVAL>' (state=,code=0)
-0: jdbc:farrago:> values +x'';
+> values +x'';
 Error: From line 1, column 8 to line 1, column 11: Cannot apply '+' to arguments of type '+<BINARY(0)>'. Supported form(s): '+<NUMERIC>'
 '+<DATETIME_INTERVAL>' (state=,code=0)
-0: jdbc:farrago:> values +cast(null as date);
+> values +cast(null as date);
 Error: From line 1, column 8 to line 1, column 26: Cannot apply '+' to arguments of type '+<DATE>'. Supported form(s): '+<NUMERIC>'
 '+<DATETIME_INTERVAL>' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values x'' between x'' and 1;
+> 
+> values x'' between x'' and 1;
 Error: From line 0, column 0 to line 1, column 28: Cannot apply 'BETWEEN' to arguments of type '<BINARY(0)> BETWEEN <BINARY(0)> AND <INTEGER>'. Supported form(s): '<COMPARABLE_TYPE> BETWEEN <COMPARABLE_TYPE> AND <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values x'' not between '' and 3;
+> values x'' not between '' and 3;
 Error: From line 0, column 0 to line 1, column 31: Cannot apply 'NOT BETWEEN' to arguments of type '<BINARY(0)> NOT BETWEEN <CHAR(0)> AND <INTEGER>'. Supported form(s): '<COMPARABLE_TYPE> NOT BETWEEN <COMPARABLE_TYPE> AND <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values '' between '' and 1.0;
+> values '' between '' and 1.0;
 Error: From line 0, column 0 to line 1, column 28: Cannot apply 'BETWEEN' to arguments of type '<CHAR(0)> BETWEEN <CHAR(0)> AND <DECIMAL(2, 1)>'. Supported form(s): '<COMPARABLE_TYPE> BETWEEN <COMPARABLE_TYPE> AND <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> --all then's and else return null forbidden in SQL99
-0: jdbc:farrago:> values CASE 1 WHEN 1 THEN NULL WHEN 2 THEN NULL END;
+> --all then's and else return null forbidden in SQL99
+> values CASE 1 WHEN 1 THEN NULL WHEN 2 THEN NULL END;
 Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --according to the standard any trim character value that is not of length 1 should return a runtime error
-0: jdbc:farrago:> values trim('ab' from 'ab');
+> 
+> --according to the standard any trim character value that is not of length 1 should return a runtime error
+> values trim('ab' from 'ab');
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22027 (state=,code=0)
-0: jdbc:farrago:> values trim('' from 'ab');
+> values trim('' from 'ab');
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22027 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values position(1 in 'superman');
+> 
+> values position(1 in 'superman');
 Error: From line 1, column 8 to line 1, column 31: Cannot apply 'POSITION' to arguments of type 'POSITION(<INTEGER> IN <CHAR(8)>)'. Supported form(s): 'POSITION(<STRING> IN <STRING>)' (state=,code=0)
-0: jdbc:farrago:> values character_length(1);
+> values character_length(1);
 Error: From line 1, column 8 to line 1, column 26: Cannot apply 'CHARACTER_LENGTH' to arguments of type 'CHARACTER_LENGTH(<INTEGER>)'. Supported form(s): 'CHARACTER_LENGTH(<CHARACTER>)' (state=,code=0)
-0: jdbc:farrago:> values char_length(x'');
+> values char_length(x'');
 Error: From line 1, column 8 to line 1, column 23: Cannot apply 'CHAR_LENGTH' to arguments of type 'CHAR_LENGTH(<BINARY(0)>)'. Supported form(s): 'CHAR_LENGTH(<CHARACTER>)' (state=,code=0)
-0: jdbc:farrago:> values upper(0.02);
+> values upper(0.02);
 Error: From line 1, column 8 to line 1, column 18: Cannot apply 'UPPER' to arguments of type 'UPPER(<DECIMAL(3, 2)>)'. Supported form(s): 'UPPER(<CHARACTER>)' (state=,code=0)
-0: jdbc:farrago:> values lower(x'');
+> values lower(x'');
 Error: From line 1, column 8 to line 1, column 17: Cannot apply 'LOWER' to arguments of type 'LOWER(<BINARY(0)>)'. Supported form(s): 'LOWER(<CHARACTER>)' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --doesnt return the correct error message but keeping it active until its fixed
-0: jdbc:farrago:> --values initcap(cast(null as date));
-0: jdbc:farrago:> values initcap(1);
+> 
+> --doesnt return the correct error message but keeping it active until its fixed
+> --values initcap(cast(null as date));
+> values initcap(1);
 Error: From line 1, column 8 to line 1, column 17: Cannot apply 'INITCAP' to arguments of type 'INITCAP(<INTEGER>)'. Supported form(s): 'INITCAP(<CHARACTER>)' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values abs('');
+> 
+> values abs('');
 Error: From line 1, column 8 to line 1, column 14: Cannot apply 'ABS' to arguments of type 'ABS(<CHAR(0)>)'. Supported form(s): 'ABS(<NUMERIC>)'
 'ABS(<DATETIME_INTERVAL>)' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values nullif('',1);
+> 
+> values nullif('',1);
 Error: From line 1, column 8 to line 1, column 19: Cannot apply '=' to arguments of type '<CHAR(0)> = <INTEGER>'. Supported form(s): '<COMPARABLE_TYPE> = <COMPARABLE_TYPE>' (state=,code=0)
-0: jdbc:farrago:> values coalesce('a','b',1);
+> values coalesce('a','b',1);
 Error: From line 1, column 8 to line 1, column 26: Illegal mixing of types in CASE or COALESCE statement (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values localtime();
+> 
+> values localtime();
 Error: From line 1, column 8 to line 1, column 18: No match found for function signature LOCALTIME() (state=,code=0)
-0: jdbc:farrago:> values localtime(1,2);
+> values localtime(1,2);
 Error: From line 1, column 8 to line 1, column 21: No match found for function signature LOCALTIME(<NUMERIC>, <NUMERIC>) (state=,code=0)
-0: jdbc:farrago:> values localtime(-1);
+> values localtime(-1);
 Error: Argument to function 'LOCALTIME' must be a positive integer literal (state=,code=0)
-0: jdbc:farrago:> values localtimestamp();
+> values localtimestamp();
 Error: From line 1, column 8 to line 1, column 23: No match found for function signature LOCALTIMESTAMP() (state=,code=0)
-0: jdbc:farrago:> values localtimestamp(1,2);
+> values localtimestamp(1,2);
 Error: From line 1, column 8 to line 1, column 26: No match found for function signature LOCALTIMESTAMP(<NUMERIC>, <NUMERIC>) (state=,code=0)
-0: jdbc:farrago:> values localtimestamp(-3);
+> values localtimestamp(-3);
 Error: Argument to function 'LOCALTIMESTAMP' must be a positive integer literal (state=,code=0)
-0: jdbc:farrago:> values current_time(2,3);
+> values current_time(2,3);
 Error: From line 1, column 8 to line 1, column 24: No match found for function signature CURRENT_TIME(<NUMERIC>, <NUMERIC>) (state=,code=0)
-0: jdbc:farrago:> values current_timestamp(-1);
+> values current_timestamp(-1);
 Error: Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal (state=,code=0)
-0: jdbc:farrago:> values current_time(-20);
+> values current_time(-20);
 Error: Argument to function 'CURRENT_TIME' must be a positive integer literal (state=,code=0)
-0: jdbc:farrago:> values current_date(2);
+> values current_date(2);
 Error: From line 1, column 8 to line 1, column 22: No match found for function signature CURRENT_DATE(<NUMERIC>) (state=,code=0)
-0: jdbc:farrago:> values log10(1,2,3);
+> values log10(1,2,3);
 Error: From line 1, column 8 to line 1, column 19: Invalid number of arguments to function 'LOG10'. Was expecting 1 arguments (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values (1),(2,3);
+> 
+> values (1),(2,3);
 Error: From line 1, column 1 to line 1, column 16: Values passed to VALUES operator must have compatible types (state=,code=0)
-0: jdbc:farrago:> values (1),('1');
+> values (1),('1');
 Error: From line 1, column 1 to line 1, column 16: Values passed to VALUES operator must have compatible types (state=,code=0)
-0: jdbc:farrago:> values (1,'1'),(2,3);
+> values (1,'1'),(2,3);
 Error: From line 1, column 1 to line 1, column 20: Values passed to VALUES operator must have compatible types (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> 
+> 
+> !quit

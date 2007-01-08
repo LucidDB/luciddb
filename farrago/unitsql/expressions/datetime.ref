@@ -1,121 +1,121 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- test datetime comparisons.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema tempo;
-0: jdbc:farrago:> set schema 'tempo';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table datetime1(
-. . . . . . . . >     col1 int not null primary key,
-. . . . . . . . >     datecol date,
-. . . . . . . . >     timecol time(0),
-. . . . . . . . >     timestampcol timestamp(0));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- first test with Java calc
-0: jdbc:farrago:> alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into datetime1(col1,datecol,timecol,timestampcol) 
-. . . . . . . . > values(0, DATE '2004-12-21', TIME '12:22:33', TIMESTAMP '2004-12-21 12:22:33');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from datetime1 where datecol > DATE '2003-12-21';
+> -- $Id$
+> -- test datetime comparisons.
+> 
+> create schema tempo;
+> set schema 'tempo';
+> 
+> create table datetime1(
+>     col1 int not null primary key,
+>     datecol date,
+>     timecol time(0),
+>     timestampcol timestamp(0));
+> 
+> -- first test with Java calc
+> alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
+> 
+> insert into datetime1(col1,datecol,timecol,timestampcol) 
+> values(0, DATE '2004-12-21', TIME '12:22:33', TIMESTAMP '2004-12-21 12:22:33');
+> 
+> select * from datetime1 where datecol > DATE '2003-12-21';
 +-------+-------------+-----------+------------------------+
 | COL1  |   DATECOL   |  TIMECOL  |      TIMESTAMPCOL      |
 +-------+-------------+-----------+------------------------+
 | 0     | 2004-12-21  | 12:22:33  | 2004-12-21 12:22:33.0  |
 +-------+-------------+-----------+------------------------+
-0: jdbc:farrago:> select * from datetime1 where datecol > DATE '2005-12-21';
+> select * from datetime1 where datecol > DATE '2005-12-21';
 +-------+----------+----------+---------------+
 | COL1  | DATECOL  | TIMECOL  | TIMESTAMPCOL  |
 +-------+----------+----------+---------------+
 +-------+----------+----------+---------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from datetime1 where timecol > TIME '23:00:00';
+> 
+> 
+> select * from datetime1 where timecol > TIME '23:00:00';
 +-------+----------+----------+---------------+
 | COL1  | DATECOL  | TIMECOL  | TIMESTAMPCOL  |
 +-------+----------+----------+---------------+
 +-------+----------+----------+---------------+
-0: jdbc:farrago:> select * from datetime1 where timecol < TIME '23:00:00';
+> select * from datetime1 where timecol < TIME '23:00:00';
 +-------+-------------+-----------+------------------------+
 | COL1  |   DATECOL   |  TIMECOL  |      TIMESTAMPCOL      |
 +-------+-------------+-----------+------------------------+
 | 0     | 2004-12-21  | 12:22:33  | 2004-12-21 12:22:33.0  |
 +-------+-------------+-----------+------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from datetime1 where timestampcol > TIMESTAMP '2004-12-21 23:00:00';
+> 
+> select * from datetime1 where timestampcol > TIMESTAMP '2004-12-21 23:00:00';
 +-------+----------+----------+---------------+
 | COL1  | DATECOL  | TIMECOL  | TIMESTAMPCOL  |
 +-------+----------+----------+---------------+
 +-------+----------+----------+---------------+
-0: jdbc:farrago:> select * from datetime1 where timestampcol < TIMESTAMP '2004-12-21 23:00:00';
+> select * from datetime1 where timestampcol < TIMESTAMP '2004-12-21 23:00:00';
 +-------+-------------+-----------+------------------------+
 | COL1  |   DATECOL   |  TIMECOL  |      TIMESTAMPCOL      |
 +-------+-------------+-----------+------------------------+
 | 0     | 2004-12-21  | 12:22:33  | 2004-12-21 12:22:33.0  |
 +-------+-------------+-----------+------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- simple casting (not fully supported in java calc)
-0: jdbc:farrago:> values cast(date '1994-07-08' as varchar(10));
+> 
+> -- simple casting (not fully supported in java calc)
+> values cast(date '1994-07-08' as varchar(10));
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1994-07-08  |
 +-------------+
-0: jdbc:farrago:> values cast(time '17:05:08' as varchar(10));
+> values cast(time '17:05:08' as varchar(10));
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 17:05:08  |
 +-----------+
-0: jdbc:farrago:> // NOTE: this shows precision with Jdbc formatting
-. . . . . . . . > values cast(timestamp '1994-07-08 17:05:08' as varchar(20));
+> // NOTE: this shows precision with Jdbc formatting
+> values cast(timestamp '1994-07-08 17:05:08' as varchar(20));
 +-----------------------+
 |        EXPR$0         |
 +-----------------------+
 | 1994-07-08 17:05:08.  |
 +-----------------------+
-0: jdbc:farrago:> values cast('1994-07-08 17:05:08' as timestamp);
+> values cast('1994-07-08 17:05:08' as timestamp);
 +------------------------+
 |         EXPR$0         |
 +------------------------+
 | 1994-07-08 17:05:08.0  |
 +------------------------+
-0: jdbc:farrago:> values cast('1994-07-08' as date);
+> values cast('1994-07-08' as date);
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1994-07-08  |
 +-------------+
-0: jdbc:farrago:> values cast('17:05:08' as time);
+> values cast('17:05:08' as time);
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 17:05:08  |
 +-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast(null as date);
+> 
+> values cast(null as date);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as time);
+> values cast(null as time);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as timestamp);
+> values cast(null as timestamp);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- nullability testing (FRG-237)
-0: jdbc:farrago:> create table initial_null(i int primary key, d date);
-0: jdbc:farrago:> insert into initial_null values
-. . . . . . . . >   (1, null), (2, DATE'1987-2-5'), (3,DATE'1998-12-3');
-0: jdbc:farrago:> select * from initial_null order by i;
+> 
+> -- nullability testing (FRG-237)
+> create table initial_null(i int primary key, d date);
+> insert into initial_null values
+>   (1, null), (2, DATE'1987-2-5'), (3,DATE'1998-12-3');
+> select * from initial_null order by i;
 +----+-------------+
 | I  |      D      |
 +----+-------------+
@@ -123,8 +123,8 @@
 | 2  | 1987-02-05  |
 | 3  | 1998-12-03  |
 +----+-------------+
-0: jdbc:farrago:> select extract(day from ((DATE'2006-11-21' - d)day)) 
-. . . . . . . . >   from initial_null order by i;
+> select extract(day from ((DATE'2006-11-21' - d)day)) 
+>   from initial_null order by i;
 +---------+
 | EXPR$0  |
 +---------+
@@ -132,285 +132,285 @@
 | 7229    |
 | 2910    |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast( cast(null as time) as timestamp);
+> 
+> values cast( cast(null as time) as timestamp);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- now test with Fennel calc, which supports casts
-0: jdbc:farrago:> alter system set "calcVirtualMachine"  = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast(date '2004-12-21' as varchar(10));
+> 
+> -- now test with Fennel calc, which supports casts
+> alter system set "calcVirtualMachine"  = 'CALCVM_FENNEL';
+> 
+> values cast(date '2004-12-21' as varchar(10));
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 2004-12-21  |
 +-------------+
-0: jdbc:farrago:> values cast(time '12:01:01' as varchar(10));
+> values cast(time '12:01:01' as varchar(10));
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 12:01:01  |
 +-----------+
-0: jdbc:farrago:> values cast(date '2004-12-21' as char(10));
+> values cast(date '2004-12-21' as char(10));
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 2004-12-21  |
 +-------------+
-0: jdbc:farrago:> values cast(time '12:01:01' as char(10));
+> values cast(time '12:01:01' as char(10));
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 12:01:01    |
 +-------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail due to truncation
-0: jdbc:farrago:> values cast(timestamp '2004-12-21 12:01:01' as varchar(10));
+> 
+> -- should fail due to truncation
+> values cast(timestamp '2004-12-21 12:01:01' as varchar(10));
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> values cast(timestamp '2004-12-21 12:01:01' as char(10));
+> values cast(timestamp '2004-12-21 12:01:01' as char(10));
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should succeed
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast(timestamp '2004-12-21 12:01:01' as varchar(20));
+> 
+> -- should succeed
+> 
+> values cast(timestamp '2004-12-21 12:01:01' as varchar(20));
 +----------------------+
 |        EXPR$0        |
 +----------------------+
 | 2004-12-21 12:01:01  |
 +----------------------+
-0: jdbc:farrago:> values cast(timestamp '2004-12-21 12:01:01' as char(20));
+> values cast(timestamp '2004-12-21 12:01:01' as char(20));
 +-----------------------+
 |        EXPR$0         |
 +-----------------------+
 | 2004-12-21 12:01:01   |
 +-----------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- values cast('2004-12-21 12:01:01' as timestamp);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast('2004-12-21' as date);
+> 
+> -- values cast('2004-12-21 12:01:01' as timestamp);
+> 
+> values cast('2004-12-21' as date);
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 2004-12-21  |
 +-------------+
-0: jdbc:farrago:> values cast('12:01:01' as time);
+> values cast('12:01:01' as time);
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 12:01:01  |
 +-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test casting from date/time to char and back
-0: jdbc:farrago:> values cast( cast(timestamp '2004-12-21 12:01:01' as char(20)) 
-. . . . . . . . >             as timestamp);
+> 
+> -- test casting from date/time to char and back
+> values cast( cast(timestamp '2004-12-21 12:01:01' as char(20)) 
+>             as timestamp);
 +------------------------+
 |         EXPR$0         |
 +------------------------+
 | 2004-12-21 12:01:01.0  |
 +------------------------+
-0: jdbc:farrago:> values cast( cast(date '2004-12-21' as char(20))
-. . . . . . . . >             as date);
+> values cast( cast(date '2004-12-21' as char(20))
+>             as date);
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 2004-12-21  |
 +-------------+
-0: jdbc:farrago:> values cast( cast(time '12:01:01' as char(20))
-. . . . . . . . >             as time);
+> values cast( cast(time '12:01:01' as char(20))
+>             as time);
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 12:01:01  |
 +-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from datetime1 where datecol > DATE '2003-12-21';
+> 
+> select * from datetime1 where datecol > DATE '2003-12-21';
 +-------+-------------+-----------+------------------------+
 | COL1  |   DATECOL   |  TIMECOL  |      TIMESTAMPCOL      |
 +-------+-------------+-----------+------------------------+
 | 0     | 2004-12-21  | 12:22:33  | 2004-12-21 12:22:33.0  |
 +-------+-------------+-----------+------------------------+
-0: jdbc:farrago:> select * from datetime1 where datecol > DATE '2005-12-21';
+> select * from datetime1 where datecol > DATE '2005-12-21';
 +-------+----------+----------+---------------+
 | COL1  | DATECOL  | TIMECOL  | TIMESTAMPCOL  |
 +-------+----------+----------+---------------+
 +-------+----------+----------+---------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from datetime1 where timecol > TIME '23:00:00';
+> 
+> select * from datetime1 where timecol > TIME '23:00:00';
 +-------+----------+----------+---------------+
 | COL1  | DATECOL  | TIMECOL  | TIMESTAMPCOL  |
 +-------+----------+----------+---------------+
 +-------+----------+----------+---------------+
-0: jdbc:farrago:> select * from datetime1 where timecol < TIME '23:00:00';
+> select * from datetime1 where timecol < TIME '23:00:00';
 +-------+-------------+-----------+------------------------+
 | COL1  |   DATECOL   |  TIMECOL  |      TIMESTAMPCOL      |
 +-------+-------------+-----------+------------------------+
 | 0     | 2004-12-21  | 12:22:33  | 2004-12-21 12:22:33.0  |
 +-------+-------------+-----------+------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from datetime1 where timestampcol > TIMESTAMP '2004-12-21 23:00:00';
+> 
+> select * from datetime1 where timestampcol > TIMESTAMP '2004-12-21 23:00:00';
 +-------+----------+----------+---------------+
 | COL1  | DATECOL  | TIMECOL  | TIMESTAMPCOL  |
 +-------+----------+----------+---------------+
 +-------+----------+----------+---------------+
-0: jdbc:farrago:> select * from datetime1 where timestampcol < TIMESTAMP '2004-12-21 23:00:00';
+> select * from datetime1 where timestampcol < TIMESTAMP '2004-12-21 23:00:00';
 +-------+-------------+-----------+------------------------+
 | COL1  |   DATECOL   |  TIMECOL  |      TIMESTAMPCOL      |
 +-------+-------------+-----------+------------------------+
 | 0     | 2004-12-21  | 12:22:33  | 2004-12-21 12:22:33.0  |
 +-------+-------------+-----------+------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast(null as date);
+> 
+> values cast(null as date);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as time);
+> values cast(null as time);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as timestamp);
+> values cast(null as timestamp);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- a few more Java Calc tests involving insertions
-0: jdbc:farrago:> alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table d (
-. . . . . . . . >   d date primary key);
-0: jdbc:farrago:> insert into d values (
-. . . . . . . . >   date'2006-09-27');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> insert into d values (
-. . . . . . . . >   time'19:31:00');
+> 
+> -- a few more Java Calc tests involving insertions
+> alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
+> 
+> create table d (
+>   d date primary key);
+> insert into d values (
+>   date'2006-09-27');
+> 
+> -- should fail
+> insert into d values (
+>   time'19:31:00');
 Error: At line 0, column 0: Cannot assign to target field 'D' of type DATE from source field 'EXPR$0' of type TIME(0) (state=,code=0)
-0: jdbc:farrago:> insert into d values (
-. . . . . . . . >   timestamp'2006-09-27 20:31:00');
+> insert into d values (
+>   timestamp'2006-09-27 20:31:00');
 Error: At line 0, column 0: Cannot assign to target field 'D' of type DATE from source field 'EXPR$0' of type TIMESTAMP(0) (state=,code=0)
-0: jdbc:farrago:> insert into d values (
-. . . . . . . . >   cast(timestamp'2006-09-27 20:31:00' as date));
+> insert into d values (
+>   cast(timestamp'2006-09-27 20:31:00' as date));
 Error: Duplicate key detected:  [ 1159315200000 ] (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from d;
+> 
+> select * from d;
 +-------------+
 |      D      |
 +-------------+
 | 2006-09-27  |
 +-------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> truncate table d;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table t (
-. . . . . . . . >   t time primary key);
-0: jdbc:farrago:> insert into t values (
-. . . . . . . . >   time'19:31:00');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> insert into t values (
-. . . . . . . . >   date'2006-09-27');
+> 
+> truncate table d;
+> 
+> create table t (
+>   t time primary key);
+> insert into t values (
+>   time'19:31:00');
+> 
+> -- should fail
+> insert into t values (
+>   date'2006-09-27');
 Error: At line 0, column 0: Cannot assign to target field 'T' of type TIME from source field 'EXPR$0' of type DATE (state=,code=0)
-0: jdbc:farrago:> insert into t values (
-. . . . . . . . >   timestamp'2006-09-27 19:31:00');
+> insert into t values (
+>   timestamp'2006-09-27 19:31:00');
 Error: At line 0, column 0: Cannot assign to target field 'T' of type TIME from source field 'EXPR$0' of type TIMESTAMP(0) (state=,code=0)
-0: jdbc:farrago:> insert into t values (
-. . . . . . . . >   cast(timestamp'2006-09-27 19:31:00' as time));
+> insert into t values (
+>   cast(timestamp'2006-09-27 19:31:00' as time));
 Error: Duplicate key detected:  [ 70260000 ] (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t;
+> 
+> select * from t;
 +-----------+
 |     T     |
 +-----------+
 | 19:31:00  |
 +-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table ts(
-. . . . . . . . >   ts timestamp primary key);
-0: jdbc:farrago:> insert into ts values (
-. . . . . . . . >   timestamp'2006-09-27 19:31:00');
-0: jdbc:farrago:> insert into ts values (
-. . . . . . . . >   cast(date'2006-09-27' as timestamp));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> insert into ts values (
-. . . . . . . . >   date'2006-09-27');
+> 
+> create table ts(
+>   ts timestamp primary key);
+> insert into ts values (
+>   timestamp'2006-09-27 19:31:00');
+> insert into ts values (
+>   cast(date'2006-09-27' as timestamp));
+> 
+> -- should fail
+> insert into ts values (
+>   date'2006-09-27');
 Error: At line 0, column 0: Cannot assign to target field 'TS' of type TIMESTAMP from source field 'EXPR$0' of type DATE (state=,code=0)
-0: jdbc:farrago:> insert into ts values (
-. . . . . . . . >   time'19:31:00');
+> insert into ts values (
+>   time'19:31:00');
 Error: At line 0, column 0: Cannot assign to target field 'TS' of type TIMESTAMP from source field 'EXPR$0' of type TIME(0) (state=,code=0)
-0: jdbc:farrago:> -- Note: duplicate key value changes with time
-0: jdbc:farrago:> -- insert into ts values 
-0: jdbc:farrago:> --   (current_timestamp),
-0: jdbc:farrago:> --   (cast (current_time as timestamp));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from ts order by 1;
+> -- Note: duplicate key value changes with time
+> -- insert into ts values 
+> --   (current_timestamp),
+> --   (cast (current_time as timestamp));
+> 
+> select * from ts order by 1;
 +------------------------+
 |           TS           |
 +------------------------+
 | 2006-09-27 00:00:00.0  |
 | 2006-09-27 19:31:00.0  |
 +------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- boundary cases
-0: jdbc:farrago:> values cast (timestamp'2006-09-27 00:00:00' as date);
+> 
+> -- boundary cases
+> values cast (timestamp'2006-09-27 00:00:00' as date);
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 2006-09-27  |
 +-------------+
-0: jdbc:farrago:> values cast (timestamp'2006-09-27 23:59:59' as date);
+> values cast (timestamp'2006-09-27 23:59:59' as date);
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 2006-09-27  |
 +-------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast (timestamp'2006-09-27 00:00:00' as time);
+> 
+> values cast (timestamp'2006-09-27 00:00:00' as time);
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 00:00:00  |
 +-----------+
-0: jdbc:farrago:> values cast (timestamp'2006-09-27 23:59:59' as time);
+> values cast (timestamp'2006-09-27 23:59:59' as time);
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 23:59:59  |
 +-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test comparison
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should set date to current_date
-0: jdbc:farrago:> values cast(
-. . . . . . . . >   cast(time'19:31:00' as timestamp)
-. . . . . . . . >   as date) = current_date;
+> 
+> -- test comparison
+> 
+> -- should set date to current_date
+> values cast(
+>   cast(time'19:31:00' as timestamp)
+>   as date) = current_date;
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- ensure time does not keep unecessary components
-0: jdbc:farrago:> values cast (timestamp'2006-09-27 23:59:59' as time) = time'23:59:59';
+> 
+> -- ensure time does not keep unecessary components
+> values cast (timestamp'2006-09-27 23:59:59' as time) = time'23:59:59';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

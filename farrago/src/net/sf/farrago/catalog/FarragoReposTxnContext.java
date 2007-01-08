@@ -37,6 +37,7 @@ public class FarragoReposTxnContext
 
     private FarragoRepos repos;
     private boolean isTxnInProgress;
+    private boolean isReadTxnInProgress;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -61,13 +62,21 @@ public class FarragoReposTxnContext
     }
 
     /**
+     * @return whether a read-only transaction is currently in progress
+     */
+    public boolean isReadTxnInProgress()
+    {
+        return isTxnInProgress && isReadTxnInProgress;
+    }
+    
+    /**
      * Begins a new read-only transaction.
      */
     public void beginReadTxn()
     {
         assert (!isTxnInProgress);
         repos.beginReposTxn(false);
-        isTxnInProgress = true;
+        isTxnInProgress = isReadTxnInProgress = true;
     }
 
     /**
@@ -78,6 +87,7 @@ public class FarragoReposTxnContext
         assert (!isTxnInProgress);
         repos.beginReposTxn(true);
         isTxnInProgress = true;
+        isReadTxnInProgress = false;
     }
 
     /**
@@ -89,7 +99,8 @@ public class FarragoReposTxnContext
             return;
         }
         repos.endReposTxn(false);
-        isTxnInProgress = false;
+        isTxnInProgress = isReadTxnInProgress = false;
+        
     }
 
     /**

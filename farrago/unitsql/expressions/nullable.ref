@@ -1,62 +1,62 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test expressions on nullable data
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- comparison
-0: jdbc:farrago:> select name from sales.emps where age > 30;
+> -- $Id$
+> -- Test expressions on nullable data
+> 
+> -- comparison
+> select name from sales.emps where age > 30;
 +--------+
 |  NAME  |
 +--------+
 | Eric   |
 | Wilma  |
 +--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- use outputformat xmlattr so we can see nulls
-0: jdbc:farrago:> !set outputformat xmlattr
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- computation
-0: jdbc:farrago:> select age+1 from sales.emps order by 1;
+> 
+> -- use outputformat xmlattr so we can see nulls
+> !set outputformat xmlattr
+> 
+> -- computation
+> select age+1 from sales.emps order by 1;
 <resultset>
   <result EXPR$0="null"/>
   <result EXPR$0="26"/>
   <result EXPR$0="51"/>
   <result EXPR$0="81"/>
 </resultset>
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test boolean expressions with one nullable, one nonnullable
-0: jdbc:farrago:> select slacker, manager, 
-. . . . . . . . >        slacker and manager, not slacker and manager from sales.emps;
+> 
+> -- test boolean expressions with one nullable, one nonnullable
+> select slacker, manager, 
+>        slacker and manager, not slacker and manager from sales.emps;
 <resultset>
   <result SLACKER="true" MANAGER="false" EXPR$2="false" EXPR$3="false"/>
   <result SLACKER="null" MANAGER="false" EXPR$2="false" EXPR$3="false"/>
   <result SLACKER="null" MANAGER="true" EXPR$2="null" EXPR$3="null"/>
   <result SLACKER="false" MANAGER="true" EXPR$2="false" EXPR$3="true"/>
 </resultset>
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select slacker, manager, 
-. . . . . . . . >        slacker or manager, not slacker or manager from sales.emps;
+> 
+> select slacker, manager, 
+>        slacker or manager, not slacker or manager from sales.emps;
 <resultset>
   <result SLACKER="true" MANAGER="false" EXPR$2="true" EXPR$3="false"/>
   <result SLACKER="null" MANAGER="false" EXPR$2="null" EXPR$3="null"/>
   <result SLACKER="null" MANAGER="true" EXPR$2="true" EXPR$3="true"/>
   <result SLACKER="false" MANAGER="true" EXPR$2="true" EXPR$3="true"/>
 </resultset>
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test boolean expressions with both nullable
-0: jdbc:farrago:> select slacker, age < 60,
-. . . . . . . . >        slacker and (age < 60), not slacker and (age < 60) from sales.emps;
+> 
+> -- test boolean expressions with both nullable
+> select slacker, age < 60,
+>        slacker and (age < 60), not slacker and (age < 60) from sales.emps;
 <resultset>
   <result SLACKER="true" EXPR$1="true" EXPR$2="true" EXPR$3="false"/>
   <result SLACKER="null" EXPR$1="false" EXPR$2="false" EXPR$3="false"/>
   <result SLACKER="null" EXPR$1="true" EXPR$2="null" EXPR$3="null"/>
   <result SLACKER="false" EXPR$1="null" EXPR$2="false" EXPR$3="null"/>
 </resultset>
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select slacker, age < 60,
-. . . . . . . . >        slacker or (age < 60), not slacker or (age < 60) from sales.emps;
+> 
+> select slacker, age < 60,
+>        slacker or (age < 60), not slacker or (age < 60) from sales.emps;
 <resultset>
   <result SLACKER="true" EXPR$1="true" EXPR$2="true" EXPR$3="true"/>
   <result SLACKER="null" EXPR$1="false" EXPR$2="null" EXPR$3="null"/>
   <result SLACKER="null" EXPR$1="true" EXPR$2="true" EXPR$3="true"/>
   <result SLACKER="false" EXPR$1="null" EXPR$2="null" EXPR$3="true"/>
 </resultset>
-0: jdbc:farrago:> !quit
+> !quit

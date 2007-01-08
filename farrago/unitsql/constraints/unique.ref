@@ -1,12 +1,12 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test UNIQUE and PRIMARY KEY constraints
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail with duplicate
-0: jdbc:farrago:> insert into sales.depts values (30,'Fudge Factor Estimation');
+> -- $Id$
+> -- Test UNIQUE and PRIMARY KEY constraints
+> 
+> -- should fail with duplicate
+> insert into sales.depts values (30,'Fudge Factor Estimation');
 Error: Duplicate key detected:  [ 30 ] (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail with duplicate
-0: jdbc:farrago:> update sales.depts set name='Sales' where deptno=30;
+> 
+> -- should fail with duplicate
+> update sales.depts set name='Sales' where deptno=30;
 Error: Duplicate key detected:  [ 'Sales' ] (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

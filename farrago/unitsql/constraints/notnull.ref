@@ -1,15 +1,15 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test NOT NULL constraints
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- use Java calc because it gives better error messages
-0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOT NULL enforcement:  should fail
-0: jdbc:farrago:> insert into sales.depts values (null,'Nullification');
+> -- $Id$
+> -- Test NOT NULL constraints
+> 
+> -- use Java calc because it gives better error messages
+> alter system set "calcVirtualMachine"='CALCVM_JAVA';
+> 
+> -- NOT NULL enforcement:  should fail
+> insert into sales.depts values (null,'Nullification');
 Error: Target CAST($t0):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOT NULL enforcement:  should fail due to implicit NULL
-0: jdbc:farrago:> insert into sales.emps(name,empno) values ('wael',300);
+> 
+> -- NOT NULL enforcement:  should fail due to implicit NULL
+> insert into sales.emps(name,empno) values ('wael',300);
 Error: Target CAST($t2):INTEGER NOT NULL cannot be assigned null value (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

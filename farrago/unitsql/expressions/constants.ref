@@ -1,42 +1,33 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- test constants in operands.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test a constant reduction bug (LER-3482, rewrite from nullable to 
-0: jdbc:farrago:> -- not null used to cause trouble)
-0: jdbc:farrago:> select 'xxx' from
-. . . . . . . . > sales.emps where manager or empid > coalesce(5000,null);
+> -- $Id$
+> -- test constants in operands.
+> 
+> -- test a constant reduction bug (LER-3482, rewrite from nullable to 
+> -- not null used to cause trouble)
+> select 'xxx' from
+> sales.emps where manager or empid > coalesce(5000,null);
 +---------+
 | EXPR$0  |
 +---------+
 | xxx     |
 | xxx     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- first test with Java calc
-0: jdbc:farrago:> alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where false;
+> 
+> -- first test with Java calc
+> alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
+> 
+> select deptno from sales.depts where false;
 +---------+
 | DEPTNO  |
 +---------+
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where 0 > 1;
+> 
+> select deptno from sales.depts where 0 > 1;
 +---------+
 | DEPTNO  |
 +---------+
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where true;
-+---------+
-| DEPTNO  |
-+---------+
-| 10      |
-| 20      |
-| 30      |
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where 1 > 0;
+> 
+> select deptno from sales.depts where true;
 +---------+
 | DEPTNO  |
 +---------+
@@ -44,23 +35,8 @@
 | 20      |
 | 30      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- now test with Fennel calc
-0: jdbc:farrago:> alter system set "calcVirtualMachine"  = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where false;
-+---------+
-| DEPTNO  |
-+---------+
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where 0 > 1;
-+---------+
-| DEPTNO  |
-+---------+
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where true;
+> 
+> select deptno from sales.depts where 1 > 0;
 +---------+
 | DEPTNO  |
 +---------+
@@ -68,8 +44,23 @@
 | 20      |
 | 30      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where 1 > 0;
+> 
+> -- now test with Fennel calc
+> alter system set "calcVirtualMachine"  = 'CALCVM_FENNEL';
+> 
+> select deptno from sales.depts where false;
++---------+
+| DEPTNO  |
++---------+
++---------+
+> 
+> select deptno from sales.depts where 0 > 1;
++---------+
+| DEPTNO  |
++---------+
++---------+
+> 
+> select deptno from sales.depts where true;
 +---------+
 | DEPTNO  |
 +---------+
@@ -77,6 +68,15 @@
 | 20      |
 | 30      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> select deptno from sales.depts where 1 > 0;
++---------+
+| DEPTNO  |
++---------+
+| 10      |
+| 20      |
+| 30      |
++---------+
+> 
+> 
+> !quit

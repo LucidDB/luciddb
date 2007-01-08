@@ -1,13 +1,13 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test queries which execute row-by-row filters
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Fennel calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test an ORDER BY for which a sort is required
-0: jdbc:farrago:> select city from emps order by 1;
+> -- $Id$
+> -- Test queries which execute row-by-row filters
+> 
+> set schema 'sales';
+> 
+> -- force usage of Fennel calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> 
+> -- test an ORDER BY for which a sort is required
+> select city from emps order by 1;
 +----------------+
 |      CITY      |
 +----------------+
@@ -16,66 +16,66 @@
 | San Francisco  |
 | Vancouver      |
 +----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select city from emps order by 1;
+> 
+> -- verify plans
+> !set outputformat csv
+> 
+> explain plan for
+> select city from emps order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select city from emps order by emps.city;
+> 
+> explain plan for
+> select city from emps order by emps.city;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select emps.city from emps order by emps.city;
+> 
+> explain plan for
+> select emps.city from emps order by emps.city;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select emps.city from emps order by city;
+> 
+> explain plan for
+> select emps.city from emps order by city;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select emps.city from emps order by city desc;
+> 
+> explain plan for
+> select emps.city from emps order by city desc;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0 Descending]], discardDuplicates=[false])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select emps.city a from emps order by a;
+> 
+> explain plan for
+> select emps.city a from emps order by a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelRenameRel(fieldNames=[[A]])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- order on non select list items
-0: jdbc:farrago:> explain plan for select city from emps order by empno;
+> 
+> -- order on non select list items
+> explain plan for select city from emps order by empno;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
 '    FennelSortRel(key=[[1]], discardDuplicates=[false])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- correct plan and correct result
-0: jdbc:farrago:> -- using the user provided alias to disambiguate the columns with same names
-0: jdbc:farrago:> -- but from different tables.
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select emps.deptno a, depts.deptno b from emps, depts order by a, b;
+> 
+> -- correct plan and correct result
+> -- using the user provided alias to disambiguate the columns with same names
+> -- but from different tables.
+> explain plan for
+> select emps.deptno a, depts.deptno b from emps, depts order by a, b;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -84,8 +84,8 @@
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select emps.deptno a, depts.deptno b from emps, depts order by a, b;
+> 
+> select emps.deptno a, depts.deptno b from emps, depts order by a, b;
 'A','B'
 '10','10'
 '10','20'
@@ -99,11 +99,11 @@
 '40','10'
 '40','20'
 '40','30'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- order by columns with same alias
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select emps.deptno, depts.deptno from emps, depts
-. . . . . . . . > order by emps.deptno, depts.deptno;
+> 
+> -- order by columns with same alias
+> explain plan for
+> select emps.deptno, depts.deptno from emps, depts
+> order by emps.deptno, depts.deptno;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
@@ -111,7 +111,7 @@
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- end sort.sql
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> -- end sort.sql
+> 
+> !quit

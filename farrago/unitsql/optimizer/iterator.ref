@@ -1,24 +1,24 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test queries which abuse the implementation of conversion between Fennel 
-0: jdbc:farrago:> -- and Iterator calling convention.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOTE: many of the union.sql and cartesians.sql queries are good tests
-0: jdbc:farrago:> --       of Fennel/Iterator conversion as well.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Java calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Planner will use a single FennelToIteratorConverter instance for both 
-0: jdbc:farrago:> -- references to depts. Make sure we keep them straight.  (Yes this query
-0: jdbc:farrago:> -- is highly contrived.)
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . > select * from 
-. . . . . . . . >     (select deptno + 1, name from depts) as d,
-. . . . . . . . >     (select deptno as id, name from depts union select empno as id, name from emps) as n
-. . . . . . . . > where
-. . . . . . . . >     d.name = n.name;
+> -- $Id$
+> -- Test queries which abuse the implementation of conversion between Fennel 
+> -- and Iterator calling convention.
+> 
+> set schema 'sales';
+> 
+> -- NOTE: many of the union.sql and cartesians.sql queries are good tests
+> --       of Fennel/Iterator conversion as well.
+> 
+> -- force usage of Java calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> 
+> -- Planner will use a single FennelToIteratorConverter instance for both 
+> -- references to depts. Make sure we keep them straight.  (Yes this query
+> -- is highly contrived.)
+> explain plan for 
+> select * from 
+>     (select deptno + 1, name from depts) as d,
+>     (select deptno as id, name from depts union select empno as id, name from emps) as n
+> where
+>     d.name = n.name;
 +----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                               column0                                                                                |
 +----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -40,14 +40,14 @@
 |                 FennelRenameRel(fieldNames=[[ID, NAME]])                                                                                                             |
 |                   FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])                                      |
 +----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Execute to verify output.
-0: jdbc:farrago:> select * from 
-. . . . . . . . >     (select deptno + 1 as dnoplus, name from depts) as d,
-. . . . . . . . >     (select deptno as id, name from depts union select empno as id, name from emps) as n
-. . . . . . . . > where
-. . . . . . . . >     d.name = n.name
-. . . . . . . . > order by dnoplus;
+> 
+> -- Execute to verify output.
+> select * from 
+>     (select deptno + 1 as dnoplus, name from depts) as d,
+>     (select deptno as id, name from depts union select empno as id, name from emps) as n
+> where
+>     d.name = n.name
+> order by dnoplus;
 +----------+------------+-----+------------+
 | DNOPLUS  |    NAME    | ID  |   NAME0    |
 +----------+------------+-----+------------+
@@ -55,13 +55,13 @@
 | 21       | Marketing  | 20  | Marketing  |
 | 31       | Accounts   | 30  | Accounts   |
 +----------+------------+-----+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Planner will use a single IteratorToFennelConverter instance for both
-0: jdbc:farrago:> -- references to depts.  Make sure we keep them straight as well.
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . > select t1.deptno, t1.name, t2.deptno as deptno2, t2.name as name2
-. . . . . . . . > from (select deptno + 1 as deptno, name from sales.depts) as t1,
-. . . . . . . . >      (select deptno + 1 as deptno, name from sales.depts) as t2;
+> 
+> -- Planner will use a single IteratorToFennelConverter instance for both
+> -- references to depts.  Make sure we keep them straight as well.
+> explain plan for 
+> select t1.deptno, t1.name, t2.deptno as deptno2, t2.name as name2
+> from (select deptno + 1 as deptno, name from sales.depts) as t1,
+>      (select deptno + 1 as deptno, name from sales.depts) as t2;
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                           column0                                                                           |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -78,12 +78,12 @@
 |             FennelToIteratorConverter                                                                                                                       |
 |               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])  |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Execute to verify output.
-0: jdbc:farrago:> select t1.deptno, t1.name, t2.deptno as deptno2, t2.name as name2
-. . . . . . . . > from (select deptno + 1 as deptno, name from sales.depts) as t1,
-. . . . . . . . >      (select deptno + 1 as deptno, name from sales.depts) as t2
-. . . . . . . . > order by deptno,deptno2;
+> 
+> -- Execute to verify output.
+> select t1.deptno, t1.name, t2.deptno as deptno2, t2.name as name2
+> from (select deptno + 1 as deptno, name from sales.depts) as t1,
+>      (select deptno + 1 as deptno, name from sales.depts) as t2
+> order by deptno,deptno2;
 +---------+------------+----------+------------+
 | DEPTNO  |    NAME    | DEPTNO2  |   NAME2    |
 +---------+------------+----------+------------+
@@ -97,13 +97,13 @@
 | 31      | Accounts   | 21       | Marketing  |
 | 31      | Accounts   | 31       | Accounts   |
 +---------+------------+----------+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Similar to previous, but without any underlying Fennel rels.
-0: jdbc:farrago:> -- Simplified from the query given in FRG-82.
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . > select "View1"."Foo", "View2"."Foo" as "Foo0"
-. . . . . . . . > from (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View1",
-. . . . . . . . >      (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View2";
+> 
+> -- Similar to previous, but without any underlying Fennel rels.
+> -- Simplified from the query given in FRG-82.
+> explain plan for 
+> select "View1"."Foo", "View2"."Foo" as "Foo0"
+> from (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View1",
+>      (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View2";
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                             column0                                                                             |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -118,15 +118,15 @@
 |         FennelToIteratorConverter                                                                                                                               |
 |           FennelValuesRel(tuples=[[{ 0 }]])                                                                                                                     |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Execute to verify output.
-0: jdbc:farrago:> select "View1"."Foo", "View2"."Foo" as "Foo0"
-. . . . . . . . > from (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View1",
-. . . . . . . . >      (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View2";
+> 
+> -- Execute to verify output.
+> select "View1"."Foo", "View2"."Foo" as "Foo0"
+> from (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View1",
+>      (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View2";
 +------+-------+
 | Foo  | Foo0  |
 +------+-------+
 |      |       |
 +------+-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

@@ -1,41 +1,41 @@
-0: jdbc:farrago:> -----------
-0: jdbc:farrago:> -- Setup --
-0: jdbc:farrago:> -----------
-0: jdbc:farrago:> create schema lhx;
-0: jdbc:farrago:> set schema 'lhx';
-0: jdbc:farrago:> set path 'lhx';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Java calc
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- lucidDB feature
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table emps1(
-. . . . . . . . >     ename1 varchar(20))
-. . . . . . . . > server sys_column_store_data_server;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table emps2(
-. . . . . . . . >     ename2 varchar(20))
-. . . . . . . . > server sys_column_store_data_server;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into emps1 values(NULL);
-0: jdbc:farrago:> insert into emps1 values('abc');
-0: jdbc:farrago:> insert into emps1 values('abc');
-0: jdbc:farrago:> insert into emps1 values('def');
-0: jdbc:farrago:> insert into emps1 values('def');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into emps2 values(NULL);
-0: jdbc:farrago:> insert into emps2 values(NULL);
-0: jdbc:farrago:> insert into emps2 values('abc');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------
-0: jdbc:farrago:> -- set op tests --
-0: jdbc:farrago:> ------------------
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 union select * from emps2 order by 1;
+> -----------
+> -- Setup --
+> -----------
+> create schema lhx;
+> set schema 'lhx';
+> set path 'lhx';
+> 
+> -- force usage of Java calc
+> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> 
+> -- lucidDB feature
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> create table emps1(
+>     ename1 varchar(20))
+> server sys_column_store_data_server;
+> 
+> create table emps2(
+>     ename2 varchar(20))
+> server sys_column_store_data_server;
+> 
+> insert into emps1 values(NULL);
+> insert into emps1 values('abc');
+> insert into emps1 values('abc');
+> insert into emps1 values('def');
+> insert into emps1 values('def');
+> 
+> insert into emps2 values(NULL);
+> insert into emps2 values(NULL);
+> insert into emps2 values('abc');
+> 
+> !set outputformat table
+> 
+> ------------------
+> -- set op tests --
+> ------------------
+> explain plan for
+> select * from emps1 union select * from emps2 order by 1;
 +-----------------------------------------------------------------------------------------------------------------------------------+
 |                                                              column0                                                              |
 +-----------------------------------------------------------------------------------------------------------------------------------+
@@ -47,9 +47,9 @@
 |         FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
 |           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
 +-----------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 union all select * from emps2 order by 1;
+> 
+> explain plan for
+> select * from emps1 union all select * from emps2 order by 1;
 +---------------------------------------------------------------------------------------------------------------------------------+
 |                                                             column0                                                             |
 +---------------------------------------------------------------------------------------------------------------------------------+
@@ -60,9 +60,9 @@
 |       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
 |         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
 +---------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 intersect select * from emps2 order by 1;
+> 
+> explain plan for
+> select * from emps1 intersect select * from emps2 order by 1;
 +---------------------------------------------------------------------------------------------------------------------------------+
 |                                                             column0                                                             |
 +---------------------------------------------------------------------------------------------------------------------------------+
@@ -73,13 +73,13 @@
 |       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
 |         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
 +---------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 intersect all select * from emps2 order by 1;
+> 
+> explain plan for
+> select * from emps1 intersect all select * from emps2 order by 1;
 Error: java.lang.AssertionError: Internal error: set operator INTERSECT ALL not suported (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 except select * from emps2 order by 1;
+> 
+> explain plan for
+> select * from emps1 except select * from emps2 order by 1;
 +---------------------------------------------------------------------------------------------------------------------------------+
 |                                                             column0                                                             |
 +---------------------------------------------------------------------------------------------------------------------------------+
@@ -90,12 +90,12 @@ Error: java.lang.AssertionError: Internal error: set operator INTERSECT ALL not 
 |         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
 |       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
 +---------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 except all select * from emps2 order by 1;
+> 
+> explain plan for
+> select * from emps1 except all select * from emps2 order by 1;
 Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not suported (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from emps1 union select * from emps2 order by 1;
+> 
+> select * from emps1 union select * from emps2 order by 1;
 +---------+
 | ENAME1  |
 +---------+
@@ -103,7 +103,7 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 | abc     |
 | def     |
 +---------+
-0: jdbc:farrago:> select * from emps1 union all select * from emps2 order by 1;
+> select * from emps1 union all select * from emps2 order by 1;
 +---------+
 | ENAME1  |
 +---------+
@@ -116,24 +116,24 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 | def     |
 | def     |
 +---------+
-0: jdbc:farrago:> select * from emps1 intersect select * from emps2 order by 1;
+> select * from emps1 intersect select * from emps2 order by 1;
 +---------+
 | ENAME1  |
 +---------+
 |         |
 | abc     |
 +---------+
-0: jdbc:farrago:> select * from emps1 except select * from emps2 order by 1;
+> select * from emps1 except select * from emps2 order by 1;
 +---------+
 | ENAME1  |
 +---------+
 | def     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set op tree
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 intersect select * from emps2 intersect select * from emps1
-. . . . . . . . > order by 1;
+> 
+> -- set op tree
+> explain plan for
+> select * from emps1 intersect select * from emps2 intersect select * from emps1
+> order by 1;
 +-----------------------------------------------------------------------------------------------------------------------------------+
 |                                                              column0                                                              |
 +-----------------------------------------------------------------------------------------------------------------------------------+
@@ -146,19 +146,19 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
 |       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])        |
 +-----------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from emps1 intersect select * from emps2 intersect select * from emps1
-. . . . . . . . > order by 1;
+> 
+> select * from emps1 intersect select * from emps2 intersect select * from emps1
+> order by 1;
 +---------+
 | ENAME1  |
 +---------+
 |         |
 | abc     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 intersect select * from emps2 intersect select * from emps2
-. . . . . . . . > order by 1;
+> 
+> explain plan for
+> select * from emps1 intersect select * from emps2 intersect select * from emps2
+> order by 1;
 +-----------------------------------------------------------------------------------------------------------------------------------+
 |                                                              column0                                                              |
 +-----------------------------------------------------------------------------------------------------------------------------------+
@@ -172,19 +172,19 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |       FennelRenameRel(fieldNames=[[ENAME1]])                                                                                      |
 |         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])    |
 +-----------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from emps1 intersect select * from emps2 intersect select * from emps2
-. . . . . . . . > order by 1;
+> 
+> select * from emps1 intersect select * from emps2 intersect select * from emps2
+> order by 1;
 +---------+
 | ENAME1  |
 +---------+
 |         |
 | abc     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 except select * from emps2 except select * from emps1
-. . . . . . . . > order by 1;
+> 
+> explain plan for
+> select * from emps1 except select * from emps2 except select * from emps1
+> order by 1;
 +-----------------------------------------------------------------------------------------------------------------------------------+
 |                                                              column0                                                              |
 +-----------------------------------------------------------------------------------------------------------------------------------+
@@ -197,17 +197,17 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
 |         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
 +-----------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from emps1 except select * from emps2 except select * from emps1
-. . . . . . . . > order by 1;
+> 
+> select * from emps1 except select * from emps2 except select * from emps1
+> order by 1;
 +---------+
 | ENAME1  |
 +---------+
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 except select * from emps2 except select * from emps2
-. . . . . . . . > order by 1;
+> 
+> explain plan for
+> select * from emps1 except select * from emps2 except select * from emps2
+> order by 1;
 +-----------------------------------------------------------------------------------------------------------------------------------+
 |                                                              column0                                                              |
 +-----------------------------------------------------------------------------------------------------------------------------------+
@@ -221,19 +221,19 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
 |         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
 +-----------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from emps1 except select * from emps2 except select * from emps2
-. . . . . . . . > order by 1;
+> 
+> select * from emps1 except select * from emps2 except select * from emps2
+> order by 1;
 +---------+
 | ENAME1  |
 +---------+
 | def     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- some tests for set op precedence rules
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 intersect select * from emps1 except select * from emps2
-. . . . . . . . > order by 1;
+> 
+> -- some tests for set op precedence rules
+> explain plan for
+> select * from emps1 intersect select * from emps1 except select * from emps2
+> order by 1;
 +---------------------------------------------------------------------------------------------------------------------------------+
 |                                                             column0                                                             |
 +---------------------------------------------------------------------------------------------------------------------------------+
@@ -246,18 +246,18 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])    |
 |         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])    |
 +---------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from emps1 intersect select * from emps1 except select * from emps2
-. . . . . . . . > order by 1;
+> 
+> select * from emps1 intersect select * from emps1 except select * from emps2
+> order by 1;
 +---------+
 | ENAME1  |
 +---------+
 | def     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 except select * from emps2 intersect select * from emps1
-. . . . . . . . > order by 1;
+> 
+> explain plan for
+> select * from emps1 except select * from emps2 intersect select * from emps1
+> order by 1;
 +-------------------------------------------------------------------------------------------------------------------------------------+
 |                                                               column0                                                               |
 +-------------------------------------------------------------------------------------------------------------------------------------+
@@ -271,18 +271,18 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |             LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])  |
 |       LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])          |
 +-------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from emps1 except select * from emps2 intersect select * from emps1
-. . . . . . . . > order by 1;
+> 
+> select * from emps1 except select * from emps2 intersect select * from emps1
+> order by 1;
 +---------+
 | ENAME1  |
 +---------+
 | def     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 union select * from emps2 intersect select * from emps1
-. . . . . . . . > order by 1;
+> 
+> explain plan for
+> select * from emps1 union select * from emps2 intersect select * from emps1
+> order by 1;
 +---------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                column0                                                                |
 +---------------------------------------------------------------------------------------------------------------------------------------+
@@ -297,9 +297,9 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |             FennelRenameRel(fieldNames=[[ENAME2]])                                                                                    |
 |               LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])  |
 +---------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from emps1 union select * from emps2 intersect select * from emps1
-. . . . . . . . > order by 1;
+> 
+> select * from emps1 union select * from emps2 intersect select * from emps1
+> order by 1;
 +---------+
 | ENAME1  |
 +---------+
@@ -307,10 +307,10 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 | abc     |
 | def     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 except select * from emps2 union select * from emps1
-. . . . . . . . > order by 1;
+> 
+> explain plan for
+> select * from emps1 except select * from emps2 union select * from emps1
+> order by 1;
 +-------------------------------------------------------------------------------------------------------------------------------------+
 |                                                               column0                                                               |
 +-------------------------------------------------------------------------------------------------------------------------------------+
@@ -324,9 +324,9 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])      |
 |         LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])        |
 +-------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from emps1 except select * from emps2 union select * from emps1
-. . . . . . . . > order by 1;
+> 
+> select * from emps1 except select * from emps2 union select * from emps1
+> order by 1;
 +---------+
 | ENAME1  |
 +---------+
@@ -334,10 +334,10 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 | abc     |
 | def     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from emps1 union select * from emps2 except select * from emps2
-. . . . . . . . > order by 1;
+> 
+> explain plan for
+> select * from emps1 union select * from emps2 except select * from emps2
+> order by 1;
 +-------------------------------------------------------------------------------------------------------------------------------------+
 |                                                               column0                                                               |
 +-------------------------------------------------------------------------------------------------------------------------------------+
@@ -352,19 +352,19 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |           FennelRenameRel(fieldNames=[[ENAME1]])                                                                                    |
 |             LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])  |
 +-------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from emps1 union select * from emps2 except select * from emps2
-. . . . . . . . > order by 1;
+> 
+> select * from emps1 union select * from emps2 except select * from emps2
+> order by 1;
 +---------+
 | ENAME1  |
 +---------+
 | def     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- multi-key
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select ename1, ename1 from emps1 except select ename2, ename2 from emps2
-. . . . . . . . > intersect select ename1, ename1 from emps1 order by 1;
+> 
+> -- multi-key
+> explain plan for
+> select ename1, ename1 from emps1 except select ename2, ename2 from emps2
+> intersect select ename1, ename1 from emps1 order by 1;
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                                                                       column0                                                                                                                        |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -382,23 +382,23 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |         FennelRenameRel(fieldNames=[[ENAME1, ENAME10]])                                                                                                                                                                                              |
 |           LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])                                                                                                                  |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select ename1, ename1 from emps1 except select ename2, ename2 from emps2
-. . . . . . . . > intersect select ename1, ename1 from emps1 order by 1;
+> 
+> select ename1, ename1 from emps1 except select ename2, ename2 from emps2
+> intersect select ename1, ename1 from emps1 order by 1;
 +---------+----------+
 | ENAME1  | ENAME10  |
 +---------+----------+
 | def     | def      |
 +---------+----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -------------------------------------------------------
-0: jdbc:farrago:> -- http://jirahost.eigenbase.org:8081/browse/FRG-182 --
-0: jdbc:farrago:> -------------------------------------------------------
-0: jdbc:farrago:> create table s1 (a int, b int);
-0: jdbc:farrago:> create table s2 (a int, bb int);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan without implementation for
-. . . . . . . . > select * from s1 union all (select * from s2 where a = 1);
+> 
+> -------------------------------------------------------
+> -- http://jirahost.eigenbase.org:8081/browse/FRG-182 --
+> -------------------------------------------------------
+> create table s1 (a int, b int);
+> create table s2 (a int, bb int);
+> 
+> explain plan without implementation for
+> select * from s1 union all (select * from s2 where a = 1);
 +---------------------------------------------------+
 |                      column0                      |
 +---------------------------------------------------+
@@ -409,9 +409,9 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |     FilterRel(condition=[=($0, 1)])               |
 |       TableAccessRel(table=[[LOCALDB, LHX, S2]])  |
 +---------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- make sure this does not fail during physical plan generation
-0: jdbc:farrago:> explain plan for select * from s1 union all (select * from s2 where a = 1);
+> 
+> -- make sure this does not fail during physical plan generation
+> explain plan for select * from s1 union all (select * from s2 where a = 1);
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                                 column0                                                                                  |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -422,12 +422,12 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 |       LcsRowScanRel(table=[[LOCALDB, LHX, S2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$S2$A, SYS$CLUSTERED_INDEX$S2$BB]], residual columns=[[0]])  |
 |         FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])                                                                                                                   |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --------------
-0: jdbc:farrago:> -- Clean up --
-0: jdbc:farrago:> --------------
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> alter session implementation set default;
-0: jdbc:farrago:> drop schema lhx cascade;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> --------------
+> -- Clean up --
+> --------------
+> !set outputformat table
+> alter session implementation set default;
+> drop schema lhx cascade;
+> 
+> !quit

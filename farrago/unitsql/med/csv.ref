@@ -1,15 +1,15 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test SQL/MED data access to CSV files
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create server csv_server
-. . . . . . . . > foreign data wrapper sys_jdbc
-. . . . . . . . > options(
-. . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver',
-. . . . . . . . >     url 'jdbc:relique:csv:unitsql/med',
-. . . . . . . . >     schema_name 'TESTDATA');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test direct table reference
-0: jdbc:farrago:> select * from csv_server.testdata."example" order by 3;
+> -- $Id$
+> -- Test SQL/MED data access to CSV files
+> 
+> create server csv_server
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.relique.jdbc.csv.CsvDriver',
+>     url 'jdbc:relique:csv:unitsql/med',
+>     schema_name 'TESTDATA');
+> 
+> -- test direct table reference
+> select * from csv_server.testdata."example" order by 3;
 +------+------------------------------------------+--------------+
 |  ID  |                   NAME                   | EXTRA_FIELD  |
 +------+------------------------------------------+--------------+
@@ -20,25 +20,25 @@
 | 123  | "S,"                                     | F            |
 | 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
 +------+------------------------------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create a local schema to hold foreign table definition
-0: jdbc:farrago:> create schema csv_schema;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create a foreign table definition
-0: jdbc:farrago:> create foreign table csv_schema.explicit_example(
-. . . . . . . . >     id int not null,
-. . . . . . . . >     name varchar(50) not null,
-. . . . . . . . >     extra_field char(1) not null)
-. . . . . . . . > server csv_server
-. . . . . . . . > options (table_name 'example');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select 
-. . . . . . . . >     id+1 as idplusone,
-. . . . . . . . >     name,
-. . . . . . . . >     extra_field 
-. . . . . . . . > from 
-. . . . . . . . >     csv_schema.explicit_example 
-. . . . . . . . > order by 3;
+> 
+> -- create a local schema to hold foreign table definition
+> create schema csv_schema;
+> 
+> -- create a foreign table definition
+> create foreign table csv_schema.explicit_example(
+>     id int not null,
+>     name varchar(50) not null,
+>     extra_field char(1) not null)
+> server csv_server
+> options (table_name 'example');
+> 
+> select 
+>     id+1 as idplusone,
+>     name,
+>     extra_field 
+> from 
+>     csv_schema.explicit_example 
+> order by 3;
 +------------+------------------------------------------+--------------+
 | IDPLUSONE  |                   NAME                   | EXTRA_FIELD  |
 +------------+------------------------------------------+--------------+
@@ -49,90 +49,90 @@
 | 124        | "S,"                                     | F            |
 | 235        | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
 +------------+------------------------------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that we can buffer cartesian product inputs instead
-0: jdbc:farrago:> -- of trying to restart them
-0: jdbc:farrago:> select count(*) 
-. . . . . . . . > from csv_schema.explicit_example e1, csv_schema.explicit_example e2;
+> 
+> -- verify that we can buffer cartesian product inputs instead
+> -- of trying to restart them
+> select count(*) 
+> from csv_schema.explicit_example e1, csv_schema.explicit_example e2;
 +---------+
 | EXPR$0  |
 +---------+
 | 36      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  required metadata support not available
-0: jdbc:farrago:> import foreign schema testdata
-. . . . . . . . > from server csv_server
-. . . . . . . . > into csv_schema;
+> 
+> -- should fail:  required metadata support not available
+> import foreign schema testdata
+> from server csv_server
+> into csv_schema;
 Error: Support for foreign schema import not available in data server "SYS_BOOT"."CSV_SERVER" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that missing/conflicting properties yield a meaningful 
-0: jdbc:farrago:> -- user-level excn (http://issues.eigenbase.org/browse/LDB-28)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail due to missing url
-0: jdbc:farrago:> create server csv_server_missing_url
-. . . . . . . . > foreign data wrapper sys_jdbc
-. . . . . . . . > options(
-. . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver');
+> 
+> -- verify that missing/conflicting properties yield a meaningful 
+> -- user-level excn (http://issues.eigenbase.org/browse/LDB-28)
+> 
+> -- should fail due to missing url
+> create server csv_server_missing_url
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.relique.jdbc.csv.CsvDriver');
 Error: Value required for property URL (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create server csv_server_missing_schema
-. . . . . . . . > foreign data wrapper sys_jdbc
-. . . . . . . . > options(
-. . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver',
-. . . . . . . . >     url 'jdbc:relique:csv:unitsql/med');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail due to missing schema name
-0: jdbc:farrago:> create foreign table csv_schema.missing_schema
-. . . . . . . . > server csv_server_missing_schema;
+> 
+> create server csv_server_missing_schema
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.relique.jdbc.csv.CsvDriver',
+>     url 'jdbc:relique:csv:unitsql/med');
+> 
+> -- should fail due to missing schema name
+> create foreign table csv_schema.missing_schema
+> server csv_server_missing_schema;
 Error: Value required for property SCHEMA_NAME (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail due to missing table name
-0: jdbc:farrago:> create foreign table csv_schema.missing_table
-. . . . . . . . > server csv_server;
+> 
+> -- should fail due to missing table name
+> create foreign table csv_schema.missing_table
+> server csv_server;
 Error: Value required for property TABLE_NAME (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail due to conflicting schema name
-0: jdbc:farrago:> create foreign table csv_schema.explicit_example(
-. . . . . . . . >     id int not null,
-. . . . . . . . >     name varchar(50) not null,
-. . . . . . . . >     extra_field char(1) not null)
-. . . . . . . . > server csv_server
-. . . . . . . . > options (table_name 'example', schema_name 'grub');
+> 
+> -- should fail due to conflicting schema name
+> create foreign table csv_schema.explicit_example(
+>     id int not null,
+>     name varchar(50) not null,
+>     extra_field char(1) not null)
+> server csv_server
+> options (table_name 'example', schema_name 'grub');
 Error: Values ('TESTDATA', 'grub') for property SCHEMA_NAME do not match (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test an extended option
-0: jdbc:farrago:> create server csv_server_with_extended_option
-. . . . . . . . > foreign data wrapper sys_jdbc
-. . . . . . . . > options(
-. . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver',
-. . . . . . . . >     url 'jdbc:relique:csv:unitsql/med',
-. . . . . . . . >     extended_options 'TRUE',
-. . . . . . . . >     schema_name 'TESTDATA',
-. . . . . . . . >     "suppressHeaders" 'true');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(*) from csv_server_with_extended_option.testdata."example";
+> 
+> -- test an extended option
+> create server csv_server_with_extended_option
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.relique.jdbc.csv.CsvDriver',
+>     url 'jdbc:relique:csv:unitsql/med',
+>     extended_options 'TRUE',
+>     schema_name 'TESTDATA',
+>     "suppressHeaders" 'true');
+> 
+> select count(*) from csv_server_with_extended_option.testdata."example";
 +---------+
 | EXPR$0  |
 +---------+
 | 7       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify that without extended_option enabled, extra properties are
-0: jdbc:farrago:> -- not passed through
-0: jdbc:farrago:> create server csv_server_without_extended_option
-. . . . . . . . > foreign data wrapper sys_jdbc
-. . . . . . . . > options(
-. . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver',
-. . . . . . . . >     url 'jdbc:relique:csv:unitsql/med',
-. . . . . . . . >     schema_name 'TESTDATA',
-. . . . . . . . >     "suppressHeaders" 'true');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(*) from csv_server_without_extended_option.testdata."example";
+> 
+> -- verify that without extended_option enabled, extra properties are
+> -- not passed through
+> create server csv_server_without_extended_option
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.relique.jdbc.csv.CsvDriver',
+>     url 'jdbc:relique:csv:unitsql/med',
+>     schema_name 'TESTDATA',
+>     "suppressHeaders" 'true');
+> 
+> select count(*) from csv_server_without_extended_option.testdata."example";
 +---------+
 | EXPR$0  |
 +---------+
 | 6       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

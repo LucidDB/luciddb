@@ -1,141 +1,141 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema decimal_ddl_test;
-0: jdbc:farrago:> set schema 'decimal_ddl_test';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test table creation with decimal type
-0: jdbc:farrago:> -- (default precision=19, scale=0)
-0: jdbc:farrago:> create table td(n integer not null primary key, d decimal);
-0: jdbc:farrago:> create table td5(n integer not null primary key, d decimal(5));
-0: jdbc:farrago:> create table td52(n integer not null primary key, d decimal(5, 2));
-0: jdbc:farrago:> create table td52notnull(n integer not null primary key, 
-. . . . . . . . >     d decimal(5, 2) not null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test table creation with numeric type (should be same as decimal)
-0: jdbc:farrago:> create table tn(n integer not null primary key, d numeric);
-0: jdbc:farrago:> create table tn9(n integer not null primary key, d numeric(9));
-0: jdbc:farrago:> create table tn95(n integer not null primary key, d numeric(9, 5));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should give error 'precision exceeds maximum'
-0: jdbc:farrago:> create table tde1(n integer not null primary key, d decimal(40, 2));
+> -- $Id$
+> 
+> create schema decimal_ddl_test;
+> set schema 'decimal_ddl_test';
+> 
+> -- Test table creation with decimal type
+> -- (default precision=19, scale=0)
+> create table td(n integer not null primary key, d decimal);
+> create table td5(n integer not null primary key, d decimal(5));
+> create table td52(n integer not null primary key, d decimal(5, 2));
+> create table td52notnull(n integer not null primary key, 
+>     d decimal(5, 2) not null);
+> 
+> -- Test table creation with numeric type (should be same as decimal)
+> create table tn(n integer not null primary key, d numeric);
+> create table tn9(n integer not null primary key, d numeric(9));
+> create table tn95(n integer not null primary key, d numeric(9, 5));
+> 
+> -- should give error 'precision exceeds maximum'
+> create table tde1(n integer not null primary key, d decimal(40, 2));
 Error: DDL validation error near line 1, column 51: Precision 40 exceeds maximum of 19 in definition of column "D" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should give error 'scale exceeds maximum'
-0: jdbc:farrago:> create table tde2(n integer not null primary key, d decimal(5, 20));
+> 
+> -- should give error 'scale exceeds maximum'
+> create table tde2(n integer not null primary key, d decimal(5, 20));
 Error: DDL validation error near line 1, column 51: Scale 20 exceeds maximum of 19 in definition of column "D" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should give error, negative precision not allowed
-0: jdbc:farrago:> create table tde3(n integer not null primary key, d decimal(-1));
+> 
+> -- should give error, negative precision not allowed
+> create table tde3(n integer not null primary key, d decimal(-1));
 Error: org.eigenbase.sql.parser.SqlParseException: Encountered "-" at line 1, column 61.
 Was expecting:
     <UNSIGNED_INTEGER_LITERAL> ... (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should give error, negative scale not allowed
-0: jdbc:farrago:> create table tde4(n integer not null primary key, d decimal(5, -2));
+> 
+> -- should give error, negative scale not allowed
+> create table tde4(n integer not null primary key, d decimal(5, -2));
 Error: org.eigenbase.sql.parser.SqlParseException: Encountered "-" at line 1, column 64.
 Was expecting:
     <UNSIGNED_INTEGER_LITERAL> ... (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should give error, precision cannot be 0
-0: jdbc:farrago:> create table tde5(n integer not null primary key, d decimal(0));
+> 
+> -- should give error, precision cannot be 0
+> create table tde5(n integer not null primary key, d decimal(0));
 Error: DDL validation error near line 1, column 51: Precision must be positive in definition of column "D" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test insert into table (decimal)
-0: jdbc:farrago:> insert into td values(1, 2);
-0: jdbc:farrago:> insert into td5 values(1, 3);
-0: jdbc:farrago:> insert into td52 values(1, 2.69);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- rounding
-0: jdbc:farrago:> insert into td values(2, 2.7);
-0: jdbc:farrago:> insert into td values(3, 2.5);
-0: jdbc:farrago:> insert into td values(4, 2.1);
-0: jdbc:farrago:> insert into td5 values(2, -2.7);
-0: jdbc:farrago:> insert into td5 values(3, -2.5);
-0: jdbc:farrago:> insert into td5 values(4, -2.1);
-0: jdbc:farrago:> insert into td52 values(2, 2.699);
-0: jdbc:farrago:> insert into td52 values(3, 2.695);
-0: jdbc:farrago:> insert into td52 values(4, 2.691);
-0: jdbc:farrago:> insert into td52 values(5, -2.699);
-0: jdbc:farrago:> insert into td52 values(6, -2.695);
-0: jdbc:farrago:> insert into td52 values(7, -2.691);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- in range rounding
-0: jdbc:farrago:> insert into td5 values(10, 99999.1411312);
-0: jdbc:farrago:> insert into td5 values(11, -99999.123123); 
-0: jdbc:farrago:> insert into td52 values(10, 999.99452324);
-0: jdbc:farrago:> insert into td52 values(11, -999.99452142); 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- out of range
-0: jdbc:farrago:> insert into td values(20, 9223372036854775808);
+> 
+> -- Test insert into table (decimal)
+> insert into td values(1, 2);
+> insert into td5 values(1, 3);
+> insert into td52 values(1, 2.69);
+> 
+> -- rounding
+> insert into td values(2, 2.7);
+> insert into td values(3, 2.5);
+> insert into td values(4, 2.1);
+> insert into td5 values(2, -2.7);
+> insert into td5 values(3, -2.5);
+> insert into td5 values(4, -2.1);
+> insert into td52 values(2, 2.699);
+> insert into td52 values(3, 2.695);
+> insert into td52 values(4, 2.691);
+> insert into td52 values(5, -2.699);
+> insert into td52 values(6, -2.695);
+> insert into td52 values(7, -2.691);
+> 
+> -- in range rounding
+> insert into td5 values(10, 99999.1411312);
+> insert into td5 values(11, -99999.123123); 
+> insert into td52 values(10, 999.99452324);
+> insert into td52 values(11, -999.99452142); 
+> 
+> -- out of range
+> insert into td values(20, 9223372036854775808);
 Error: From line 1, column 27 to line 1, column 45: Numeric literal '9223372036854775808' out of range (state=,code=0)
-0: jdbc:farrago:> insert into td values(21, 9223372036854775807.5);
+> insert into td values(21, 9223372036854775807.5);
 Error: From line 1, column 27 to line 1, column 47: Numeric literal '9223372036854775807.5' out of range (state=,code=0)
-0: jdbc:farrago:> insert into td values(22, -9223372036854775809);
+> insert into td values(22, -9223372036854775809);
 Error: From line 1, column 28 to line 1, column 46: Numeric literal '-9223372036854775809' out of range (state=,code=0)
-0: jdbc:farrago:> insert into td values(23, -9223372036854775808.5);
+> insert into td values(23, -9223372036854775808.5);
 Error: From line 1, column 28 to line 1, column 48: Numeric literal '-9223372036854775808.5' out of range (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Numeric literal is out of range
-0: jdbc:farrago:> insert into td values(24, 9223372036854775807.13213);
+> 
+> -- Numeric literal is out of range
+> insert into td values(24, 9223372036854775807.13213);
 Error: From line 1, column 27 to line 1, column 51: Numeric literal '9223372036854775807.13213' out of range (state=,code=0)
-0: jdbc:farrago:> insert into td values(25, -9223372036854775808.12321);
+> insert into td values(25, -9223372036854775808.12321);
 Error: From line 1, column 28 to line 1, column 52: Numeric literal '-9223372036854775808.12321' out of range (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should give error
-0: jdbc:farrago:> insert into td5 values(20, 100000);
+> 
+> -- should give error
+> insert into td5 values(20, 100000);
 Error: could not calculate results for the following row:
 [ 20, 100000 ]
 Messages:
 [0]:PC=5 Code=22003 (state=,code=0)
-0: jdbc:farrago:> insert into td5 values(21, 99999.5); 
+> insert into td5 values(21, 99999.5); 
 Error: could not calculate results for the following row:
 [ 21, 999995 ]
 Messages:
 [0]:PC=13 Code=22003 (state=,code=0)
-0: jdbc:farrago:> insert into td5 values(22, -100000);
+> insert into td5 values(22, -100000);
 Error: could not calculate results for the following row:
 [ 22, -100000 ]
 Messages:
 [0]:PC=5 Code=22003 (state=,code=0)
-0: jdbc:farrago:> insert into td5 values(23, -99999.5); 
+> insert into td5 values(23, -99999.5); 
 Error: could not calculate results for the following row:
 [ 23, -999995 ]
 Messages:
 [0]:PC=13 Code=22003 (state=,code=0)
-0: jdbc:farrago:> insert into td52 values(20, 1000.00);
+> insert into td52 values(20, 1000.00);
 Error: could not calculate results for the following row:
 [ 20, 100000 ]
 Messages:
 [0]:PC=4 Code=22003 (state=,code=0)
-0: jdbc:farrago:> insert into td52 values(21, 999.995);
+> insert into td52 values(21, 999.995);
 Error: could not calculate results for the following row:
 [ 21, 999995 ]
 Messages:
 [0]:PC=13 Code=22003 (state=,code=0)
-0: jdbc:farrago:> insert into td52 values(22, -1000.00);
+> insert into td52 values(22, -1000.00);
 Error: could not calculate results for the following row:
 [ 22, -100000 ]
 Messages:
 [0]:PC=4 Code=22003 (state=,code=0)
-0: jdbc:farrago:> insert into td52 values(23, -999.995); 
+> insert into td52 values(23, -999.995); 
 Error: could not calculate results for the following row:
 [ 23, -999995 ]
 Messages:
 [0]:PC=13 Code=22003 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- null
-0: jdbc:farrago:> insert into td values(30, null);
-0: jdbc:farrago:> insert into td5 values(30, null);
-0: jdbc:farrago:> insert into td52 values(30, null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should give error
-0: jdbc:farrago:> insert into td52notnull values(30, null);
+> 
+> -- null
+> insert into td values(30, null);
+> insert into td5 values(30, null);
+> insert into td52 values(30, null);
+> 
+> -- should give error
+> insert into td52notnull values(30, null);
 Error: could not calculate results for the following row:
 [ 30, NULL ]
 Messages:
 [0]:PC=7 Code=22004 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from td;
+> 
+> select * from td;
 +-----+----+
 |  N  | D  |
 +-----+----+
@@ -145,7 +145,7 @@ Messages:
 | 4   | 2  |
 | 30  |    |
 +-----+----+
-0: jdbc:farrago:> select * from td5;
+> select * from td5;
 +-----+---------+
 |  N  |    D    |
 +-----+---------+
@@ -157,7 +157,7 @@ Messages:
 | 11  | -99999  |
 | 30  |         |
 +-----+---------+
-0: jdbc:farrago:> select * from td52;
+> select * from td52;
 +-----+----------+
 |  N  |    D     |
 +-----+----------+
@@ -172,46 +172,46 @@ Messages:
 | 11  | -999.99  |
 | 30  |          |
 +-----+----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test insert into table (numerics)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into tn values(1, 2.5);
-0: jdbc:farrago:> insert into tn9 values(1, 1234.456);
-0: jdbc:farrago:> insert into tn95 values(1, 9999.99999123);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into tn values(2, null);
-0: jdbc:farrago:> insert into tn9 values(2, null);
-0: jdbc:farrago:> insert into tn95 values(2, null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from tn;
+> 
+> -- Test insert into table (numerics)
+> 
+> insert into tn values(1, 2.5);
+> insert into tn9 values(1, 1234.456);
+> insert into tn95 values(1, 9999.99999123);
+> 
+> insert into tn values(2, null);
+> insert into tn9 values(2, null);
+> insert into tn95 values(2, null);
+> 
+> select * from tn;
 +----+----+
 | N  | D  |
 +----+----+
 | 1  | 3  |
 | 2  |    |
 +----+----+
-0: jdbc:farrago:> select * from tn9;
+> select * from tn9;
 +----+-------+
 | N  |   D   |
 +----+-------+
 | 1  | 1234  |
 | 2  |       |
 +----+-------+
-0: jdbc:farrago:> select * from tn95;
+> select * from tn95;
 +----+-------------+
 | N  |      D      |
 +----+-------------+
 | 1  | 9999.99999  |
 | 2  |             |
 +----+-------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test views (decimals)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view vd as select * from td;
-0: jdbc:farrago:> create view vd5 as select * from td5;
-0: jdbc:farrago:> create view vd52 as select * from td52;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from vd;
+> 
+> -- Test views (decimals)
+> 
+> create view vd as select * from td;
+> create view vd5 as select * from td5;
+> create view vd52 as select * from td52;
+> 
+> select * from vd;
 +-----+----+
 |  N  | D  |
 +-----+----+
@@ -221,7 +221,7 @@ Messages:
 | 4   | 2  |
 | 30  |    |
 +-----+----+
-0: jdbc:farrago:> select * from vd5;
+> select * from vd5;
 +-----+---------+
 |  N  |    D    |
 +-----+---------+
@@ -233,7 +233,7 @@ Messages:
 | 11  | -99999  |
 | 30  |         |
 +-----+---------+
-0: jdbc:farrago:> select * from vd52;
+> select * from vd52;
 +-----+----------+
 |  N  |    D     |
 +-----+----------+
@@ -248,14 +248,14 @@ Messages:
 | 11  | -999.99  |
 | 30  |          |
 +-----+----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test views (numerics)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view vn as select * from td;
-0: jdbc:farrago:> create view vn9 as select * from td5;
-0: jdbc:farrago:> create view vn95 as select * from td52;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from vn;
+> 
+> -- Test views (numerics)
+> 
+> create view vn as select * from td;
+> create view vn9 as select * from td5;
+> create view vn95 as select * from td52;
+> 
+> select * from vn;
 +-----+----+
 |  N  | D  |
 +-----+----+
@@ -265,7 +265,7 @@ Messages:
 | 4   | 2  |
 | 30  |    |
 +-----+----+
-0: jdbc:farrago:> select * from vn9;
+> select * from vn9;
 +-----+---------+
 |  N  |    D    |
 +-----+---------+
@@ -277,7 +277,7 @@ Messages:
 | 11  | -99999  |
 | 30  |         |
 +-----+---------+
-0: jdbc:farrago:> select * from vn95;
+> select * from vn95;
 +-----+----------+
 |  N  |    D     |
 +-----+----------+
@@ -292,7 +292,7 @@ Messages:
 | 11  | -999.99  |
 | 30  |          |
 +-----+----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- End decimal.sql
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> -- End decimal.sql
+> 
+> !quit

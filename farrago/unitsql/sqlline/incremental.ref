@@ -1,37 +1,37 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test sqlline incremental result handling
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema d;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table d.t(
-. . . . . . . . >     i int not null primary key,
-. . . . . . . . >     long_label varchar(3),
-. . . . . . . . >     short_label varchar(40));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into d.t values (1,'a','a');
-0: jdbc:farrago:> insert into d.t values (20,'bcd','bcdefghijklmnopqrstuvwxyz');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- without incremental
-0: jdbc:farrago:> select * from d.t order by 1;
+> -- $Id$
+> -- Test sqlline incremental result handling
+> 
+> create schema d;
+> 
+> create table d.t(
+>     i int not null primary key,
+>     long_label varchar(3),
+>     short_label varchar(40));
+> 
+> insert into d.t values (1,'a','a');
+> insert into d.t values (20,'bcd','bcdefghijklmnopqrstuvwxyz');
+> 
+> -- without incremental
+> select * from d.t order by 1;
 +-----+-------------+----------------------------+
 |  I  | LONG_LABEL  |        SHORT_LABEL         |
 +-----+-------------+----------------------------+
 | 1   | a           | a                          |
 | 20  | bcd         | bcdefghijklmnopqrstuvwxyz  |
 +-----+-------------+----------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- with incremental
-0: jdbc:farrago:> !set incremental on
-0: jdbc:farrago:> select * from d.t order by 1;
+> 
+> -- with incremental
+> !set incremental on
+> select * from d.t order by 1;
 +------------+------------+------------------------------------------+
 |     I      | LONG_LABEL |               SHORT_LABEL                |
 +------------+------------+------------------------------------------+
 | 1          | a          | a                                        |
 | 20         | bcd        | bcdefghijklmnopqrstuvwxyz                |
 +------------+------------+------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify boolean display size
-0: jdbc:farrago:> select slacker as s from sales.emps order by 1;
+> 
+> -- verify boolean display size
+> select slacker as s from sales.emps order by 1;
 +-------+
 |   S   |
 +-------+
@@ -40,5 +40,5 @@
 | false |
 | true  |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

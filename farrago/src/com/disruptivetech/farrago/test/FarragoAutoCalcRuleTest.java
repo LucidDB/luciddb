@@ -146,8 +146,10 @@ public class FarragoAutoCalcRuleTest
     public void testFarragoAutoCalcRuleByDiff()
         throws Exception
     {
-        // mask out source control Id
-        addDiffMask("\\$Id.*\\$");
+        // mask out source control Id and other data sections that are not
+        // pertinent to the test being performed.
+        setRefFileDiffMasks();
+
         runSqlLineTest("testcases/autoCalcRule.sql");
     }
 

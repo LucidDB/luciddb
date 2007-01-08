@@ -1,82 +1,82 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Tests for ConvertMultiJoinRule and OptimizeJoinRule
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema jo;
-0: jdbc:farrago:> set schema 'jo';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set session personality to LucidDB so all tables
-0: jdbc:farrago:> -- will be column-store by default and LucidDB-specific optimization rules
-0: jdbc:farrago:> -- are picked up
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table f(f int, f_d1 int, f_d2 int, f_d3 int);
-0: jdbc:farrago:> create table d1(d1 int, d1_f int, d1_d2 int, d1_d3 int);
-0: jdbc:farrago:> create table d2(d2 int, d2_f int, d2_d1 int, d2_d3 int);
-0: jdbc:farrago:> create table d3(d3 int, d3_f int, d3_d1 int, d3_d2 int);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index if_d1 on f(f_d1);
-0: jdbc:farrago:> create index if_d2 on f(f_d2);
-0: jdbc:farrago:> create index if_d3 on f(f_d3);
-0: jdbc:farrago:> create index id1_f on d1(d1_f);
-0: jdbc:farrago:> create index id1_d2 on d1(d1_d2);
-0: jdbc:farrago:> create index id1_d3 on d1(d1_d3);
-0: jdbc:farrago:> create index id2_f on d2(d2_f);
-0: jdbc:farrago:> create index id2_d1 on d2(d2_d1);
-0: jdbc:farrago:> create index id2_d3 on d2(d2_d3);
-0: jdbc:farrago:> create index id3_f on d3(d3_f);
-0: jdbc:farrago:> create index id3_d1 on d3(d3_d1);
-0: jdbc:farrago:> create index id3_d2 on d3(d3_d2);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into f values(0, 0, 0, 0);
-0: jdbc:farrago:> insert into d1 values(1, 0, 1, 1);
-0: jdbc:farrago:> insert into d2 values(2, 0, 1, 2);
-0: jdbc:farrago:> insert into d3 values(3, 0, 1, 2);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- fake stats
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'F', 10000000);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D1', 100000);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D2', 1000);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D3', 10);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'F', 'F_D1', 100000, 100, 100000, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'F', 'F_D2', 1000, 100, 1000, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'F', 'F_D3', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D1', 'D1_F', 100000, 100, 100000, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D1', 'D1_D2', 1000, 100, 1000, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D1', 'D1_D3', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D2', 'D2_F', 1000, 100, 1000, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D2', 'D2_D1', 1000, 100, 1000, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D2', 'D2_D3', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D3', 'D3_F', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D3', 'D3_D1', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D3', 'D3_D2', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --------------------------------------------------------------------
-0: jdbc:farrago:> -- Test different combinations of patterns into ConvertMultiJoinRule
-0: jdbc:farrago:> --------------------------------------------------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- MJ/MJ
-0: jdbc:farrago:> explain plan for select f, d1, d2, d3
-. . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j1,
-. . . . . . . . >         (select * from d2, d3 where d2.d2_d3 = d3.d3_d2 and d3.d3 >= 0) j2
-. . . . . . . . >     where j1.f_d2 = j2.d2_f and j2.d2 >= 0;
+> -- $Id$
+> -- Tests for ConvertMultiJoinRule and OptimizeJoinRule
+> 
+> create schema jo;
+> set schema 'jo';
+> 
+> -- set session personality to LucidDB so all tables
+> -- will be column-store by default and LucidDB-specific optimization rules
+> -- are picked up
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> create table f(f int, f_d1 int, f_d2 int, f_d3 int);
+> create table d1(d1 int, d1_f int, d1_d2 int, d1_d3 int);
+> create table d2(d2 int, d2_f int, d2_d1 int, d2_d3 int);
+> create table d3(d3 int, d3_f int, d3_d1 int, d3_d2 int);
+> 
+> create index if_d1 on f(f_d1);
+> create index if_d2 on f(f_d2);
+> create index if_d3 on f(f_d3);
+> create index id1_f on d1(d1_f);
+> create index id1_d2 on d1(d1_d2);
+> create index id1_d3 on d1(d1_d3);
+> create index id2_f on d2(d2_f);
+> create index id2_d1 on d2(d2_d1);
+> create index id2_d3 on d2(d2_d3);
+> create index id3_f on d3(d3_f);
+> create index id3_d1 on d3(d3_d1);
+> create index id3_d2 on d3(d3_d2);
+> 
+> insert into f values(0, 0, 0, 0);
+> insert into d1 values(1, 0, 1, 1);
+> insert into d2 values(2, 0, 1, 2);
+> insert into d3 values(3, 0, 1, 2);
+> 
+> -- fake stats
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'F', 10000000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D1', 100000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D2', 1000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D3', 10);
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'F', 'F_D1', 100000, 100, 100000, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'F', 'F_D2', 1000, 100, 1000, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'F', 'F_D3', 10, 100, 10, 0, '0123456789');
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D1', 'D1_F', 100000, 100, 100000, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D1', 'D1_D2', 1000, 100, 1000, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D1', 'D1_D3', 10, 100, 10, 0, '0123456789');
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D2', 'D2_F', 1000, 100, 1000, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D2', 'D2_D1', 1000, 100, 1000, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D2', 'D2_D3', 10, 100, 10, 0, '0123456789');
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D3', 'D3_F', 10, 100, 10, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D3', 'D3_D1', 10, 100, 10, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D3', 'D3_D2', 10, 100, 10, 0, '0123456789');
+> 
+> !set outputformat csv
+> 
+> --------------------------------------------------------------------
+> -- Test different combinations of patterns into ConvertMultiJoinRule
+> --------------------------------------------------------------------
+> 
+> -- MJ/MJ
+> explain plan for select f, d1, d2, d3
+>     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j1,
+>         (select * from d2, d3 where d2.d2_d3 = d3.d3_d2 and d3.d3 >= 0) j2
+>     where j1.f_d2 = j2.d2_f and j2.d2 >= 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 0, 2, 4]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2, INTEGER D3) NOT NULL])'
@@ -121,11 +121,11 @@
 '                FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$D3$D3, SYS$CLUSTERED_INDEX$D3$D3_D2]], residual columns=[[0]])'
 '        FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- MJ/RS
-0: jdbc:farrago:> explain plan for select f, d1, d2
-. . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
-. . . . . . . . >     where j.f_d2 = d2.d2_f and d2.d2 >= 0;
+> 
+> -- MJ/RS
+> explain plan for select f, d1, d2
+>     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
+>     where j.f_d2 = d2.d2_f and d2.d2 >= 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 0, 3]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2) NOT NULL])'
@@ -152,11 +152,11 @@
 '                          FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]], residual columns=[[0]])'
 '        FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- MJ/FRS
-0: jdbc:farrago:> explain plan for select f, d1, d2
-. . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
-. . . . . . . . >     where j.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
+> 
+> -- MJ/FRS
+> explain plan for select f, d1, d2
+>     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
+>     where j.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 0, 3]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2) NOT NULL])'
@@ -182,11 +182,11 @@
 '                          FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
 '      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[+($t0, $t2)], expr#4=[2], expr#5=[=($t3, $t4)], proj#0..1=[{exprs}], $condition=[$t5])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- RS/MJ
-0: jdbc:farrago:> explain plan for select f, d1, d2
-. . . . . . . . >     from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1 and d2.d2 >= 0) j
-. . . . . . . . >     where f.f_d1 = j.d1_f and j.d1 >= 0;
+> 
+> -- RS/MJ
+> explain plan for select f, d1, d2
+>     from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1 and d2.d2 >= 0) j
+>     where f.f_d1 = j.d1_f and j.d1 >= 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2, 4]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2) NOT NULL])'
@@ -219,9 +219,9 @@
 '            FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_D1]], residual columns=[[0]])'
 '            FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- RS/RS
-0: jdbc:farrago:> explain plan for select f, d1 from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0;
+> 
+> -- RS/RS
+> explain plan for select f, d1 from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D1) NOT NULL])'
@@ -236,10 +236,10 @@
 '                    FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]], residual columns=[[0]])'
 '        FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- RS/FRS
-0: jdbc:farrago:> explain plan for select f, d2 from f, d2
-. . . . . . . . >     where f.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
+> 
+> -- RS/FRS
+> explain plan for select f, d2 from f, d2
+>     where f.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D2) NOT NULL])'
@@ -253,11 +253,11 @@
 '                  LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]])'
 '      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[+($t0, $t2)], expr#4=[2], expr#5=[=($t3, $t4)], proj#0..1=[{exprs}], $condition=[$t5])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FRS/MJ
-0: jdbc:farrago:> explain plan for select f, d1, d3
-. . . . . . . . >     from f, (select * from d1, d3 where d1.d1_d3 = d3.d3_d1 and d3.d3 >= 0) j
-. . . . . . . . >     where f.f_d1 = j.d1_f and j.d1 + 0 = 1;
+> 
+> -- FRS/MJ
+> explain plan for select f, d1, d3
+>     from f, (select * from d1, d3 where d1.d1_d3 = d3.d3_d1 and d3.d3 >= 0) j
+>     where f.f_d1 = j.d1_f and j.d1 + 0 = 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2, 4]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D3) NOT NULL])'
@@ -289,10 +289,10 @@
 '                          FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$D3$D3, SYS$CLUSTERED_INDEX$D3$D3_D1]], residual columns=[[0]])'
 '            FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FRS/RS
-0: jdbc:farrago:> explain plan for select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 >= 0;
+> 
+> -- FRS/RS
+> explain plan for select f, d1 from f, d1
+>     where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 >= 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D1) NOT NULL])'
@@ -308,10 +308,10 @@
 '                      FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]], residual columns=[[0]])'
 '        FennelValuesRel(tuples=[[{ '[', 0, '+', null }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FRS/FRS
-0: jdbc:farrago:> explain plan for select f, d2 from f, d2
-. . . . . . . . >     where f.f_d2 = d2.d2_f and f.f + 0 = 0 and d2.d2 + 0 = 2;
+> 
+> -- FRS/FRS
+> explain plan for select f, d2 from f, d2
+>     where f.f_d2 = d2.d2_f and f.f + 0 = 0 and d2.d2 + 0 = 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D2) NOT NULL])'
@@ -326,13 +326,13 @@
 '                    LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]])'
 '      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[+($t0, $t2)], expr#4=[2], expr#5=[=($t3, $t4)], proj#0..1=[{exprs}], $condition=[$t5])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------------------------------------------
-0: jdbc:farrago:> -- different join combinations, including corner cases
-0: jdbc:farrago:> ------------------------------------------------------
-0: jdbc:farrago:> -- no join filters
-0: jdbc:farrago:> explain plan for select f, d1, d2, d3 
-. . . . . . . . >     from f, d1, d2, d3;
+> 
+> ------------------------------------------------------
+> -- different join combinations, including corner cases
+> ------------------------------------------------------
+> -- no join filters
+> explain plan for select f, d1, d2, d3 
+>     from f, d1, d2, d3;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 3, 2, 1]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2, INTEGER D3) NOT NULL])'
@@ -347,20 +347,20 @@
 '                FennelCartesianProductRel(leftouterjoin=[false])'
 '                  LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F]])'
 '                  LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$D3$D3]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- non-comparsion expression
-0: jdbc:farrago:> explain plan for select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 = d1.d1_f or f.f_d2 = d1.d1_f;
+> 
+> -- non-comparsion expression
+> explain plan for select f, d1 from f, d1
+>     where f.f_d1 = d1.d1_f or f.f_d2 = d1.d1_f;
 'column0'
 'IterCalcRel(expr#0..4=[{inputs}], expr#5=[=($t1, $t4)], expr#6=[=($t2, $t4)], expr#7=[OR($t5, $t6)], F=[$t0], D1=[$t3], $condition=[$t7])'
 '  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1, SYS$CLUSTERED_INDEX$F$F_D2]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter involving > 2 tables
-0: jdbc:farrago:> explain plan for select f, d1, d2 from f, d1, d2
-. . . . . . . . >     where f.f_d1 + d1.d1_f = d2.d2_f;
+> 
+> -- filter involving > 2 tables
+> explain plan for select f, d1, d2 from f, d1, d2
+>     where f.f_d1 + d1.d1_f = d2.d2_f;
 'column0'
 'IterCalcRel(expr#0..5=[{inputs}], expr#6=[+($t3, $t1)], expr#7=[=($t6, $t5)], F=[$t2], D1=[$t0], D2=[$t4], $condition=[$t7])'
 '  FennelToIteratorConverter'
@@ -370,35 +370,35 @@
 '        FennelCartesianProductRel(leftouterjoin=[false])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter with 2 tables but both on one side of the comparison operator
-0: jdbc:farrago:> explain plan for select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 + d1.d1_f = 0;
+> 
+> -- filter with 2 tables but both on one side of the comparison operator
+> explain plan for select f, d1 from f, d1
+>     where f.f_d1 + d1.d1_f = 0;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[+($t1, $t3)], expr#5=[0], expr#6=[=($t4, $t5)], F=[$t0], D1=[$t2], $condition=[$t6])'
 '  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- non-equality operator
-0: jdbc:farrago:> explain plan for select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 >= d1.d1_f;
+> 
+> -- non-equality operator
+> explain plan for select f, d1 from f, d1
+>     where f.f_d1 >= d1.d1_f;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[>=($t1, $t3)], F=[$t0], D1=[$t2], $condition=[$t4])'
 '  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- all possible join combinations
-0: jdbc:farrago:> explain plan for select f, d1, d2, d3
-. . . . . . . . >     from d3, d1, d2, f
-. . . . . . . . >     where
-. . . . . . . . >         d1.d1_f = 1 and d2.d2_f = 2 and d3.d3_f = 3 and
-. . . . . . . . >         f.f_d1 = d1.d1_f and f.f_d2 = d2.d2_f and f.f_d3 = d3.d3_f and
-. . . . . . . . >         d1.d1_d2 = d2.d2_d1 and d1.d1_d3 = d3.d3_d1 and
-. . . . . . . . >         d2.d2_d3 = d3.d3_d2;
+> 
+> -- all possible join combinations
+> explain plan for select f, d1, d2, d3
+>     from d3, d1, d2, f
+>     where
+>         d1.d1_f = 1 and d2.d2_f = 2 and d3.d3_f = 3 and
+>         f.f_d1 = d1.d1_f and f.f_d2 = d2.d2_f and f.f_d3 = d3.d3_f and
+>         d1.d1_d2 = d2.d2_d1 and d1.d1_d3 = d3.d3_d1 and
+>         d2.d2_d3 = d3.d3_d2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[6, 2, 4, 0]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2, INTEGER D3) NOT NULL])'
@@ -512,179 +512,179 @@
 '                                                LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[3]], clustered indexes=[[SYS$CLUSTERED_INDEX$D3$D3_D2]])'
 '                                                  LcsIndexSearchRel(table=[[LOCALDB, JO, D3]], index=[ID3_F], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '                                                    FennelValuesRel(tuples=[[{ '[', 3, ']', 3 }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------------
-0: jdbc:farrago:> -- run the queries above
-0: jdbc:farrago:> ------------------------
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2, d3
-. . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j1,
-. . . . . . . . >         (select * from d2, d3 where d2.d2_d3 = d3.d3_d2 and d3.d3 >= 0) j2
-. . . . . . . . >     where j1.f_d2 = j2.d2_f and j2.d2 >= 0;
+> 
+> ------------------------
+> -- run the queries above
+> ------------------------
+> !set outputformat table
+> 
+> select f, d1, d2, d3
+>     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j1,
+>         (select * from d2, d3 where d2.d2_d3 = d3.d3_d2 and d3.d3 >= 0) j2
+>     where j1.f_d2 = j2.d2_f and j2.d2 >= 0;
 +----+-----+-----+-----+
 | F  | D1  | D2  | D3  |
 +----+-----+-----+-----+
 | 0  | 1   | 2   | 3   |
 +----+-----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2
-. . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
-. . . . . . . . >     where j.f_d2 = d2.d2_f and d2.d2 >= 0;
+> 
+> select f, d1, d2
+>     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
+>     where j.f_d2 = d2.d2_f and d2.d2 >= 0;
 +----+-----+-----+
 | F  | D1  | D2  |
 +----+-----+-----+
 | 0  | 1   | 2   |
 +----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2
-. . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
-. . . . . . . . >     where j.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
+> 
+> select f, d1, d2
+>     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
+>     where j.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 +----+-----+-----+
 | F  | D1  | D2  |
 +----+-----+-----+
 | 0  | 1   | 2   |
 +----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2
-. . . . . . . . >     from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1 and d2.d2 >= 0) j
-. . . . . . . . >     where f.f_d1 = j.d1_f and j.d1 >= 0;
+> 
+> select f, d1, d2
+>     from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1 and d2.d2 >= 0) j
+>     where f.f_d1 = j.d1_f and j.d1 >= 0;
 +----+-----+-----+
 | F  | D1  | D2  |
 +----+-----+-----+
 | 0  | 1   | 2   |
 +----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1 from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0;
+> 
+> select f, d1 from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0;
 +----+-----+
 | F  | D1  |
 +----+-----+
 | 0  | 1   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d2 from f, d2
-. . . . . . . . >     where f.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
+> 
+> select f, d2 from f, d2
+>     where f.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 +----+-----+
 | F  | D2  |
 +----+-----+
 | 0  | 2   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d3
-. . . . . . . . >     from f, (select * from d1, d3 where d1.d1_d3 = d3.d3_d1 and d3.d3 >= 0) j
-. . . . . . . . >     where f.f_d1 = j.d1_f and j.d1 + 0 = 1;
+> 
+> select f, d1, d3
+>     from f, (select * from d1, d3 where d1.d1_d3 = d3.d3_d1 and d3.d3 >= 0) j
+>     where f.f_d1 = j.d1_f and j.d1 + 0 = 1;
 +----+-----+-----+
 | F  | D1  | D3  |
 +----+-----+-----+
 | 0  | 1   | 3   |
 +----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 >= 0;
+> 
+> select f, d1 from f, d1
+>     where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 >= 0;
 +----+-----+
 | F  | D1  |
 +----+-----+
 | 0  | 1   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d2 from f, d2
-. . . . . . . . >     where f.f_d2 = d2.d2_f and f.f + 0 = 0 and d2.d2 + 0 = 2;
+> 
+> select f, d2 from f, d2
+>     where f.f_d2 = d2.d2_f and f.f + 0 = 0 and d2.d2 + 0 = 2;
 +----+-----+
 | F  | D2  |
 +----+-----+
 | 0  | 2   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2, d3 
-. . . . . . . . >     from f, d1, d2, d3;
+> 
+> select f, d1, d2, d3 
+>     from f, d1, d2, d3;
 +----+-----+-----+-----+
 | F  | D1  | D2  | D3  |
 +----+-----+-----+-----+
 | 0  | 1   | 2   | 3   |
 +----+-----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 = d1.d1_f or f.f_d2 = d1.d1_f;
+> 
+> select f, d1 from f, d1
+>     where f.f_d1 = d1.d1_f or f.f_d2 = d1.d1_f;
 +----+-----+
 | F  | D1  |
 +----+-----+
 | 0  | 1   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2 from f, d1, d2
-. . . . . . . . >     where f.f_d1 + d1.d1_f = d2.d2_f;
+> 
+> select f, d1, d2 from f, d1, d2
+>     where f.f_d1 + d1.d1_f = d2.d2_f;
 +----+-----+-----+
 | F  | D1  | D2  |
 +----+-----+-----+
 | 0  | 1   | 2   |
 +----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 + d1.d1_f = 0;
+> 
+> select f, d1 from f, d1
+>     where f.f_d1 + d1.d1_f = 0;
 +----+-----+
 | F  | D1  |
 +----+-----+
 | 0  | 1   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 >= d1.d1_f;
+> 
+> select f, d1 from f, d1
+>     where f.f_d1 >= d1.d1_f;
 +----+-----+
 | F  | D1  |
 +----+-----+
 | 0  | 1   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2, d3
-. . . . . . . . >     from f, d1, d2, d3
-. . . . . . . . >     where
-. . . . . . . . >         f.f_d1 = d1.d1_f and f.f_d2 = d2.d2_f and f.f_d3 = d3.d3_f and
-. . . . . . . . >         d1.d1_d2 = d2.d2_d1 and d1.d1_d3 = d3.d3_d1 and
-. . . . . . . . >         d2.d2_d3 = d3.d3_d2;
+> 
+> select f, d1, d2, d3
+>     from f, d1, d2, d3
+>     where
+>         f.f_d1 = d1.d1_f and f.f_d2 = d2.d2_f and f.f_d3 = d3.d3_f and
+>         d1.d1_d2 = d2.d2_d1 and d1.d1_d3 = d3.d3_d1 and
+>         d2.d2_d3 = d3.d3_d2;
 +----+-----+-----+-----+
 | F  | D1  | D2  | D3  |
 +----+-----+-----+-----+
 | 0  | 1   | 2   | 3   |
 +----+-----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------
-0: jdbc:farrago:> -- Misc Bugs
-0: jdbc:farrago:> ------------
-0: jdbc:farrago:> -- LDB-65 -- need to handle self-joins
-0: jdbc:farrago:> -- no need for any actual data, as the bug appears during optimization time
-0: jdbc:farrago:> create table EMP (
-. . . . . . . . >   EMPNO numeric(5,0),
-. . . . . . . . >   FNAME varchar(20),
-. . . . . . . . >   LNAME varchar(20),
-. . . . . . . . >   SEX char(1),
-. . . . . . . . >   DEPTNO integer,
-. . . . . . . . >   MANAGER numeric(5,0),
-. . . . . . . . >   LOCID CHAR(2),
-. . . . . . . . >   SAL integer,
-. . . . . . . . >   COMMISSION integer,
-. . . . . . . . >   HOBBY varchar(20)
-. . . . . . . . > );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table DEPT (
-. . . . . . . . >   DEPTNO integer,
-. . . . . . . . >   DNAME varchar(20),
-. . . . . . . . >   LOCID CHAR(2)
-. . . . . . . . > );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table LOCATION(
-. . . . . . . . >   LOCID char(2),
-. . . . . . . . >   STREET varchar(50),
-. . . . . . . . >   CITY varchar(20),
-. . . . . . . . >   STATE char(2),
-. . . . . . . . >   ZIP numeric(5,0)
-. . . . . . . . > );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select EMP.LNAME, DEPT.DNAME
-. . . . . . . . >     from EMP, DEPT, LOCATION EL
-. . . . . . . . >     where EL.LOCID = EMP.LOCID and EL.LOCID=DEPT.LOCID;
+> 
+> ------------
+> -- Misc Bugs
+> ------------
+> -- LDB-65 -- need to handle self-joins
+> -- no need for any actual data, as the bug appears during optimization time
+> create table EMP (
+>   EMPNO numeric(5,0),
+>   FNAME varchar(20),
+>   LNAME varchar(20),
+>   SEX char(1),
+>   DEPTNO integer,
+>   MANAGER numeric(5,0),
+>   LOCID CHAR(2),
+>   SAL integer,
+>   COMMISSION integer,
+>   HOBBY varchar(20)
+> );
+> 
+> create table DEPT (
+>   DEPTNO integer,
+>   DNAME varchar(20),
+>   LOCID CHAR(2)
+> );
+> 
+> create table LOCATION(
+>   LOCID char(2),
+>   STREET varchar(50),
+>   CITY varchar(20),
+>   STATE char(2),
+>   ZIP numeric(5,0)
+> );
+> 
+> !set outputformat csv
+> 
+> explain plan for
+> select EMP.LNAME, DEPT.DNAME
+>     from EMP, DEPT, LOCATION EL
+>     where EL.LOCID = EMP.LOCID and EL.LOCID=DEPT.LOCID;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" LNAME, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" DNAME) NOT NULL])'
@@ -694,11 +694,11 @@
 '          LcsRowScanRel(table=[[LOCALDB, JO, EMP]], projection=[[2, 6]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMP$LNAME, SYS$CLUSTERED_INDEX$EMP$LOCID]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, LOCATION]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LOCATION$LOCID]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, DEPT]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$DEPT$DNAME, SYS$CLUSTERED_INDEX$DEPT$LOCID]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select EMP.LNAME, DEPT.DNAME
-. . . . . . . . >     from EMP, DEPT, LOCATION EL, LOCATION DL
-. . . . . . . . >     where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID;
+> 
+> explain plan for
+> select EMP.LNAME, DEPT.DNAME
+>     from EMP, DEPT, LOCATION EL, LOCATION DL
+>     where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" LNAME, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" DNAME) NOT NULL])'
@@ -711,121 +711,121 @@
 '              LcsRowScanRel(table=[[LOCALDB, JO, LOCATION]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LOCATION$LOCID]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, DEPT]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$DEPT$DNAME, SYS$CLUSTERED_INDEX$DEPT$LOCID]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, LOCATION]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LOCATION$LOCID]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- tables needed for complex select below; taken from pge query 1
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table CUST_SERV_ACCT(CUST_SERV_ACCT_KEY DECIMAL(10,0),
-. . . . . . . . >  CU_ID DECIMAL(10,0),
-. . . . . . . . >  CU_TYP_IND CHAR(1),
-. . . . . . . . >  CUOR_CUST_NM VARCHAR(50),
-. . . . . . . . >  ORGDTL_STR_ID_TXT VARCHAR(10),
-. . . . . . . . >  ORGDTL_NM VARCHAR(50),
-. . . . . . . . >  ORGDTL_DBA_NM VARCHAR(18),
-. . . . . . . . >  CUIN_LST_NM VARCHAR(25),
-. . . . . . . . >  CUIN_FST_NM VARCHAR(25),
-. . . . . . . . >  CUIN_MID_INIT_TXT CHAR(1),
-. . . . . . . . >  CA_ID DECIMAL(10,0),
-. . . . . . . . >  MAIL_ADDR_ID DECIMAL(10,0),
-. . . . . . . . >  SITE_ID DECIMAL(10,0),
-. . . . . . . . >  SERV_ADDR VARCHAR(40),
-. . . . . . . . >  MNCPLT_NM VARCHAR(25),
-. . . . . . . . >  ST_CD CHAR(2),
-. . . . . . . . >  ZIP_CD_NUM CHAR(5),
-. . . . . . . . >  CO_CD CHAR(3),
-. . . . . . . . >  GEOG_KEY DECIMAL(10,0),
-. . . . . . . . >  SITUSE_CD CHAR(2),
-. . . . . . . . >  SAA_ID DECIMAL(10,0),
-. . . . . . . . >  SAA_SEQ_NUM DECIMAL(5,0),
-. . . . . . . . >  SRVPLN_KEY DECIMAL(10,0),
-. . . . . . . . >  CYC_FREQY_CD CHAR(2),
-. . . . . . . . >  ACYC_NUM CHAR(2),
-. . . . . . . . >  CNTLUT_NUM DECIMAL(10,0),
-. . . . . . . . >  IS_DWLGS_VAL DECIMAL(5,0),
-. . . . . . . . >  SERV_SIC_CD CHAR(4),
-. . . . . . . . >  BU_CD CHAR(3),
-. . . . . . . . >  UTIL_TYP_CD CHAR(2),
-. . . . . . . . >  SAA_SPLINSTL_INDCR CHAR(1),
-. . . . . . . . >  SAA_CLRG_ACCT_ID DECIMAL(10,0),
-. . . . . . . . >  SAA_ST_TX_EXM_INDC CHAR(1),
-. . . . . . . . >  IS_SERV_INSTLD_DT TIMESTAMP,
-. . . . . . . . >  RCD_EFF_DT TIMESTAMP,
-. . . . . . . . >  RCD_END_DT TIMESTAMP,
-. . . . . . . . >  PROC_BAT_ID DECIMAL(10,0)) 
-. . . . . . . . > ;
-0: jdbc:farrago:> create table GEOG(GEOG_KEY DECIMAL(10,0),
-. . . . . . . . >  DPT_CD CHAR(3),
-. . . . . . . . >  RVTWN_CD CHAR(3),
-. . . . . . . . >  RVTWN_DESC VARCHAR(30),
-. . . . . . . . >  GEOG_CNTY_CD CHAR(2),
-. . . . . . . . >  GEOG_CNTY_DESC VARCHAR(30),
-. . . . . . . . >  ST_CD CHAR(2),
-. . . . . . . . >  ST_DESC VARCHAR(30),
-. . . . . . . . >  PROC_BATCH_ID VARCHAR(10)) 
-. . . . . . . . > ;
-0: jdbc:farrago:> create table REVN_DTL_RAND(CUST_SERV_ACCT_KEY DECIMAL(10,0),
-. . . . . . . . >  GEOG_KEY DECIMAL(10,0),
-. . . . . . . . >  SRVPLN_KEY DECIMAL(10,0),
-. . . . . . . . >  REVN_YR_MO DECIMAL(6,0),
-. . . . . . . . >  USG_VAL DOUBLE,
-. . . . . . . . >  USG_BILL_THERM DOUBLE,
-. . . . . . . . >  USG_BILL_KWH DOUBLE,
-. . . . . . . . >  USGC_BILL_KW_VAL DOUBLE,
-. . . . . . . . >  RSD_SVC_BILG_AMT DOUBLE,
-. . . . . . . . >  RSD_ST_SLSTX_AMT DOUBLE,
-. . . . . . . . >  RSD_TRSPT_CHRG_AMT DOUBLE,
-. . . . . . . . >  RSD_BALG_CHRG_AMT DOUBLE,
-. . . . . . . . >  RSD_TOP_SRCHRG_AMT DOUBLE,
-. . . . . . . . >  RSD_CCOGA_AMT DOUBLE,
-. . . . . . . . >  RSD_CCOGC_AMT DOUBLE,
-. . . . . . . . >  RSD_CUST_CHRG_AMT DOUBLE,
-. . . . . . . . >  RSD_DMND_CHRG_AMT DOUBLE,
-. . . . . . . . >  RSD_CU_CNT DECIMAL(5,0),
-. . . . . . . . >  SAS_FNL_BIL_INDCR CHAR(1),
-. . . . . . . . >  SAS_TYP_CD CHAR(1),
-. . . . . . . . >  USG_DAYS_NUM DECIMAL(5,0),
-. . . . . . . . >  USG_STRT_DT TIMESTAMP,
-. . . . . . . . >  USG_END_DT TIMESTAMP,
-. . . . . . . . >  CISPD_DT TIMESTAMP,
-. . . . . . . . >  PROC_BAT_ID DECIMAL(10,0)) 
-. . . . . . . . > ;
-0: jdbc:farrago:> create table REVN_PRD(REVN_YR_MO DECIMAL(6,0),
-. . . . . . . . >  REVN_YR_MO_DESC VARCHAR(14),
-. . . . . . . . >  REVN_MO DECIMAL(2,0),
-. . . . . . . . >  REVN_MO_DESC VARCHAR(9),
-. . . . . . . . >  REVN_YR DECIMAL(4,0),
-. . . . . . . . >  REVN_QTR CHAR(1),
-. . . . . . . . >  REVN_QTR_YR CHAR(7),
-. . . . . . . . >  REVN_QTR_YR_DESC VARCHAR(20),
-. . . . . . . . >  USER_ID CHAR(4)) 
-. . . . . . . . > ;
-0: jdbc:farrago:> create table SERV_PLAN(SRVPLN_KEY DECIMAL(10,0),
-. . . . . . . . >  SRVPLN_ID DECIMAL(10,0),
-. . . . . . . . >  SRVPLN_NM VARCHAR(25),
-. . . . . . . . >  SPO_ID DECIMAL(10,0),
-. . . . . . . . >  SPO_NM VARCHAR(25),
-. . . . . . . . >  BU_CD CHAR(3),
-. . . . . . . . >  BU_DESC VARCHAR(30),
-. . . . . . . . >  RC_CD CHAR(2),
-. . . . . . . . >  RC_DESC VARCHAR(30),
-. . . . . . . . >  PROC_BAT_ID DECIMAL(10,0)) 
-. . . . . . . . > ;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- this query exercises the case where merge projections are required as
-0: jdbc:farrago:> -- joins are being converted to MultiJoinRels and projections are pulled up;
-0: jdbc:farrago:> -- the resulting query plan should NOT contain cartesian product joins
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > SELECT DISTINCT AL1.CUST_SERV_ACCT_KEY
-. . . . . . . . >    FROM
-. . . . . . . . >     CUST_SERV_ACCT AL1,
-. . . . . . . . >     GEOG AL2,
-. . . . . . . . >     SERV_PLAN AL3,
-. . . . . . . . >     REVN_PRD AL4,
-. . . . . . . . >     REVN_DTL_RAND AL5
-. . . . . . . . >    WHERE AL5.REVN_YR_MO=AL4.REVN_YR_MO
-. . . . . . . . >     AND AL2.GEOG_KEY=AL5.GEOG_KEY
-. . . . . . . . >     AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
-. . . . . . . . >     AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY
-. . . . . . . . >     AND AL5.SAS_FNL_BIL_INDCR='Y' AND AL4.REVN_YR=1995;
+> 
+> -- tables needed for complex select below; taken from pge query 1
+> 
+> create table CUST_SERV_ACCT(CUST_SERV_ACCT_KEY DECIMAL(10,0),
+>  CU_ID DECIMAL(10,0),
+>  CU_TYP_IND CHAR(1),
+>  CUOR_CUST_NM VARCHAR(50),
+>  ORGDTL_STR_ID_TXT VARCHAR(10),
+>  ORGDTL_NM VARCHAR(50),
+>  ORGDTL_DBA_NM VARCHAR(18),
+>  CUIN_LST_NM VARCHAR(25),
+>  CUIN_FST_NM VARCHAR(25),
+>  CUIN_MID_INIT_TXT CHAR(1),
+>  CA_ID DECIMAL(10,0),
+>  MAIL_ADDR_ID DECIMAL(10,0),
+>  SITE_ID DECIMAL(10,0),
+>  SERV_ADDR VARCHAR(40),
+>  MNCPLT_NM VARCHAR(25),
+>  ST_CD CHAR(2),
+>  ZIP_CD_NUM CHAR(5),
+>  CO_CD CHAR(3),
+>  GEOG_KEY DECIMAL(10,0),
+>  SITUSE_CD CHAR(2),
+>  SAA_ID DECIMAL(10,0),
+>  SAA_SEQ_NUM DECIMAL(5,0),
+>  SRVPLN_KEY DECIMAL(10,0),
+>  CYC_FREQY_CD CHAR(2),
+>  ACYC_NUM CHAR(2),
+>  CNTLUT_NUM DECIMAL(10,0),
+>  IS_DWLGS_VAL DECIMAL(5,0),
+>  SERV_SIC_CD CHAR(4),
+>  BU_CD CHAR(3),
+>  UTIL_TYP_CD CHAR(2),
+>  SAA_SPLINSTL_INDCR CHAR(1),
+>  SAA_CLRG_ACCT_ID DECIMAL(10,0),
+>  SAA_ST_TX_EXM_INDC CHAR(1),
+>  IS_SERV_INSTLD_DT TIMESTAMP,
+>  RCD_EFF_DT TIMESTAMP,
+>  RCD_END_DT TIMESTAMP,
+>  PROC_BAT_ID DECIMAL(10,0)) 
+> ;
+> create table GEOG(GEOG_KEY DECIMAL(10,0),
+>  DPT_CD CHAR(3),
+>  RVTWN_CD CHAR(3),
+>  RVTWN_DESC VARCHAR(30),
+>  GEOG_CNTY_CD CHAR(2),
+>  GEOG_CNTY_DESC VARCHAR(30),
+>  ST_CD CHAR(2),
+>  ST_DESC VARCHAR(30),
+>  PROC_BATCH_ID VARCHAR(10)) 
+> ;
+> create table REVN_DTL_RAND(CUST_SERV_ACCT_KEY DECIMAL(10,0),
+>  GEOG_KEY DECIMAL(10,0),
+>  SRVPLN_KEY DECIMAL(10,0),
+>  REVN_YR_MO DECIMAL(6,0),
+>  USG_VAL DOUBLE,
+>  USG_BILL_THERM DOUBLE,
+>  USG_BILL_KWH DOUBLE,
+>  USGC_BILL_KW_VAL DOUBLE,
+>  RSD_SVC_BILG_AMT DOUBLE,
+>  RSD_ST_SLSTX_AMT DOUBLE,
+>  RSD_TRSPT_CHRG_AMT DOUBLE,
+>  RSD_BALG_CHRG_AMT DOUBLE,
+>  RSD_TOP_SRCHRG_AMT DOUBLE,
+>  RSD_CCOGA_AMT DOUBLE,
+>  RSD_CCOGC_AMT DOUBLE,
+>  RSD_CUST_CHRG_AMT DOUBLE,
+>  RSD_DMND_CHRG_AMT DOUBLE,
+>  RSD_CU_CNT DECIMAL(5,0),
+>  SAS_FNL_BIL_INDCR CHAR(1),
+>  SAS_TYP_CD CHAR(1),
+>  USG_DAYS_NUM DECIMAL(5,0),
+>  USG_STRT_DT TIMESTAMP,
+>  USG_END_DT TIMESTAMP,
+>  CISPD_DT TIMESTAMP,
+>  PROC_BAT_ID DECIMAL(10,0)) 
+> ;
+> create table REVN_PRD(REVN_YR_MO DECIMAL(6,0),
+>  REVN_YR_MO_DESC VARCHAR(14),
+>  REVN_MO DECIMAL(2,0),
+>  REVN_MO_DESC VARCHAR(9),
+>  REVN_YR DECIMAL(4,0),
+>  REVN_QTR CHAR(1),
+>  REVN_QTR_YR CHAR(7),
+>  REVN_QTR_YR_DESC VARCHAR(20),
+>  USER_ID CHAR(4)) 
+> ;
+> create table SERV_PLAN(SRVPLN_KEY DECIMAL(10,0),
+>  SRVPLN_ID DECIMAL(10,0),
+>  SRVPLN_NM VARCHAR(25),
+>  SPO_ID DECIMAL(10,0),
+>  SPO_NM VARCHAR(25),
+>  BU_CD CHAR(3),
+>  BU_DESC VARCHAR(30),
+>  RC_CD CHAR(2),
+>  RC_DESC VARCHAR(30),
+>  PROC_BAT_ID DECIMAL(10,0)) 
+> ;
+> 
+> -- this query exercises the case where merge projections are required as
+> -- joins are being converted to MultiJoinRels and projections are pulled up;
+> -- the resulting query plan should NOT contain cartesian product joins
+> explain plan for
+> SELECT DISTINCT AL1.CUST_SERV_ACCT_KEY
+>    FROM
+>     CUST_SERV_ACCT AL1,
+>     GEOG AL2,
+>     SERV_PLAN AL3,
+>     REVN_PRD AL4,
+>     REVN_DTL_RAND AL5
+>    WHERE AL5.REVN_YR_MO=AL4.REVN_YR_MO
+>     AND AL2.GEOG_KEY=AL5.GEOG_KEY
+>     AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+>     AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY
+>     AND AL5.SAS_FNL_BIL_INDCR='Y' AND AL4.REVN_YR=1995;
 'column0'
 'FennelToIteratorConverter'
 '  LhxAggRel(groupCount=[1])'
@@ -844,28 +844,28 @@
 '            LcsRowScanRel(table=[[LOCALDB, JO, SERV_PLAN]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SERV_PLAN$SRVPLN_KEY]])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, REVN_PRD]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$REVN_PRD$REVN_YR, SYS$CLUSTERED_INDEX$REVN_PRD$REVN_YR_MO]], residual columns=[[4]])'
 '          FennelValuesRel(tuples=[[{ '[', 1995, ']', 1995 }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- this query exercises ensuring that all projections are merged before
-0: jdbc:farrago:> -- converting joins to MultiJoinRels; the resulting query plan
-0: jdbc:farrago:> -- should NOT contain cartesian product joins
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > SELECT AL1.CU_ID, AL4.REVN_YR_MO, SUM(AL5.USG_VAL),
-. . . . . . . . >  SUM(AL5.USG_BILL_THERM), SUM(AL5.USGC_BILL_KW_VAL),
-. . . . . . . . >  SUM(AL5.RSD_SVC_BILG_AMT), AL5.RSD_CU_CNT
-. . . . . . . . > FROM
-. . . . . . . . >  CUST_SERV_ACCT AL1,
-. . . . . . . . >  GEOG AL2,
-. . . . . . . . >  SERV_PLAN AL3,
-. . . . . . . . >  REVN_PRD AL4,
-. . . . . . . . >  REVN_DTL_RAND AL5
-. . . . . . . . > WHERE (AL5.REVN_YR_MO=AL4.REVN_YR_MO
-. . . . . . . . >  AND AL2.GEOG_KEY=AL5.GEOG_KEY AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
-. . . . . . . . >  AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY)
-. . . . . . . . >  AND (AL2.ST_CD='IN' AND AL2.GEOG_CNTY_DESC='LAPORTE'
-. . . . . . . . >  AND AL4.REVN_YR=1995 AND AL3.SRVPLN_NM LIKE '%DUSK%'
-. . . . . . . . >  AND AL3.SPO_NM LIKE '%SODIUM%'
-. . . . . . . . >  AND AL3.RC_DESC='RESIDENTIAL - GENERAL SERVICE')
-. . . . . . . . > GROUP BY AL1.CU_ID, AL4.REVN_YR_MO, AL5.RSD_CU_CNT;
+> 
+> -- this query exercises ensuring that all projections are merged before
+> -- converting joins to MultiJoinRels; the resulting query plan
+> -- should NOT contain cartesian product joins
+> explain plan for
+> SELECT AL1.CU_ID, AL4.REVN_YR_MO, SUM(AL5.USG_VAL),
+>  SUM(AL5.USG_BILL_THERM), SUM(AL5.USGC_BILL_KW_VAL),
+>  SUM(AL5.RSD_SVC_BILG_AMT), AL5.RSD_CU_CNT
+> FROM
+>  CUST_SERV_ACCT AL1,
+>  GEOG AL2,
+>  SERV_PLAN AL3,
+>  REVN_PRD AL4,
+>  REVN_DTL_RAND AL5
+> WHERE (AL5.REVN_YR_MO=AL4.REVN_YR_MO
+>  AND AL2.GEOG_KEY=AL5.GEOG_KEY AND AL3.SRVPLN_KEY=AL5.SRVPLN_KEY
+>  AND AL1.CUST_SERV_ACCT_KEY=AL5.CUST_SERV_ACCT_KEY)
+>  AND (AL2.ST_CD='IN' AND AL2.GEOG_CNTY_DESC='LAPORTE'
+>  AND AL4.REVN_YR=1995 AND AL3.SRVPLN_NM LIKE '%DUSK%'
+>  AND AL3.SPO_NM LIKE '%SODIUM%'
+>  AND AL3.RC_DESC='RESIDENTIAL - GENERAL SERVICE')
+> GROUP BY AL1.CU_ID, AL4.REVN_YR_MO, AL5.RSD_CU_CNT;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 3, 4, 5, 6, 2]], outputRowType=[RecordType(DECIMAL(10, 0) CU_ID, DECIMAL(6, 0) REVN_YR_MO, DOUBLE EXPR$2, DOUBLE EXPR$3, DOUBLE EXPR$4, DOUBLE EXPR$5, DECIMAL(5, 0) RSD_CU_CNT) NOT NULL])'
@@ -888,20 +888,20 @@
 '                  FennelValuesRel(tuples=[[{ '[', 'RESIDENTIAL - GENERAL SERVICE', ']', 'RESIDENTIAL - GENERAL SERVICE' }]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, REVN_PRD]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$REVN_PRD$REVN_YR, SYS$CLUSTERED_INDEX$REVN_PRD$REVN_YR_MO]], residual columns=[[4]])'
 '            FennelValuesRel(tuples=[[{ '[', 1995, ']', 1995 }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- LER-3639 -- Projects should not be pulled up in this case because the
-0: jdbc:farrago:> -- projection expression is used as a join key.  If this query is not properly
-0: jdbc:farrago:> -- optimized, a cartesian join is incorrectly chosen.
-0: jdbc:farrago:> create table t1(t1a char(10));
-0: jdbc:farrago:> create table t2(t2a char(10));
-0: jdbc:farrago:> create table t3(t3a char(10));
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T1', 4841);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T2', 25199);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T3', 25199);
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from (select t1a||t2a as a from t1, t2 where t1a = t2a) as x, t3
-. . . . . . . . > where t3a = a;
+> 
+> 
+> -- LER-3639 -- Projects should not be pulled up in this case because the
+> -- projection expression is used as a join key.  If this query is not properly
+> -- optimized, a cartesian join is incorrectly chosen.
+> create table t1(t1a char(10));
+> create table t2(t2a char(10));
+> create table t3(t3a char(10));
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T1', 4841);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T2', 25199);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'T3', 25199);
+> explain plan for
+> select * from (select t1a||t2a as a from t1, t2 where t1a = t2a) as x, t3
+> where t3a = a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" A, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T3A) NOT NULL])'
@@ -912,10 +912,10 @@
 '          LcsRowScanRel(table=[[LOCALDB, JO, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
 '      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T3A, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$T3A]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- same query as above except without the subquery in the from clause
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from t1, t2, t3 where t1a = t2a and t1a||t2a = t3a;
+> 
+> -- same query as above except without the subquery in the from clause
+> explain plan for
+> select * from t1, t2, t3 where t1a = t2a and t1a||t2a = t3a;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 0, 3]], outputRowType=[RecordType(CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1A, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T3A) NOT NULL])'
@@ -926,5 +926,5 @@
 '          LcsRowScanRel(table=[[LOCALDB, JO, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
 '      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T3A, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$T3A]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

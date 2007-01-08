@@ -68,7 +68,9 @@ public class FarragoSqlRegressionTest
     protected void runTest()
         throws Exception
     {
-        addDiffMask("\\$Id.*\\$");
+        // mask out source control Id and other data sections that are not
+        // pertinent to the test being performed.
+        setRefFileDiffMasks();
 
         // Need to have a specific pair comparison.
         // only both matches then it passes.
