@@ -1,11 +1,11 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test DDL on schemas
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema s description 'a schema';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table s.t(i int not null primary key);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !metadata getSchemas
+> -- $Id$
+> -- Test DDL on schemas
+> 
+> create schema s description 'a schema';
+> 
+> create table s.t(i int not null primary key);
+> 
+> !metadata getSchemas
 +---------------------+----------------+
 |     TABLE_SCHEM     | TABLE_CATALOG  |
 +---------------------+----------------+
@@ -17,12 +17,12 @@
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> drop schema s restrict;
+> 
+> -- should fail
+> drop schema s restrict;
 Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects still reference it (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !metadata getSchemas
+> 
+> !metadata getSchemas
 +---------------------+----------------+
 |     TABLE_SCHEM     | TABLE_CATALOG  |
 +---------------------+----------------+
@@ -34,12 +34,12 @@ Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects stil
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> drop schema s;
+> 
+> -- should fail
+> drop schema s;
 Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects still reference it (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !metadata getSchemas
+> 
+> !metadata getSchemas
 +---------------------+----------------+
 |     TABLE_SCHEM     | TABLE_CATALOG  |
 +---------------------+----------------+
@@ -51,11 +51,11 @@ Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects stil
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should succeed
-0: jdbc:farrago:> drop schema s cascade;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !metadata getSchemas
+> 
+> -- should succeed
+> drop schema s cascade;
+> 
+> !metadata getSchemas
 +---------------------+----------------+
 |     TABLE_SCHEM     | TABLE_CATALOG  |
 +---------------------+----------------+
@@ -66,100 +66,100 @@ Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects stil
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail with duplicate name
-0: jdbc:farrago:> create schema sales;
+> 
+> -- should fail with duplicate name
+> create schema sales;
 Error: DDL validation error near line 1, column 15: Target catalog "LOCALDB" already contains schema "SALES" with same name (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set a nonexistent schema:  should succeed
-0: jdbc:farrago:> set schema 'erehwon';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- but all table references should fail
-0: jdbc:farrago:> select * from t;
+> 
+> -- set a nonexistent schema:  should succeed
+> set schema 'erehwon';
+> 
+> -- but all table references should fail
+> select * from t;
 Error: At line 1, column 15: Table 'T' not found (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set a numeric constant schema name:  should fail
-0: jdbc:farrago:> set schema 1;
+> 
+> -- set a numeric constant schema name:  should fail
+> set schema 1;
 Error: SET statement requires character string value expression (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set an identifier as schema name:  should fail (surprise!)
-0: jdbc:farrago:> set schema sales;
+> 
+> -- set an identifier as schema name:  should fail (surprise!)
+> set schema sales;
 Error: From line 1, column 8 to line 1, column 14: Unknown identifier 'SALES' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set a schema name which evaluates to a non-identifier:  should fail
-0: jdbc:farrago:> set schema '1';
+> 
+> -- set a schema name which evaluates to a non-identifier:  should fail
+> set schema '1';
 Error: Invalid schema name "1" in SET SCHEMA statement (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set a schema list:  should fail
-0: jdbc:farrago:> set schema 'sales, marketing';
+> 
+> -- set a schema list:  should fail
+> set schema 'sales, marketing';
 Error: Invalid schema name "sales, marketing" in SET SCHEMA statement (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set a qualifed schema name:  should succeed
-0: jdbc:farrago:> set schema 'localdb.sales';
-0: jdbc:farrago:> select * from depts where 1=0;
+> 
+> -- set a qualifed schema name:  should succeed
+> set schema 'localdb.sales';
+> select * from depts where 1=0;
 +---------+-------+
 | DEPTNO  | NAME  |
 +---------+-------+
 +---------+-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set a quoted schema name:  should succeed
-0: jdbc:farrago:> set schema '"SALES"';
-0: jdbc:farrago:> select * from depts where 1=0;
+> 
+> -- set a quoted schema name:  should succeed
+> set schema '"SALES"';
+> select * from depts where 1=0;
 +---------+-------+
 | DEPTNO  | NAME  |
 +---------+-------+
 +---------+-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set a non-existent quoted schema name:  should succeed
-0: jdbc:farrago:> set schema '"sales"';
-0: jdbc:farrago:> -- but lookup should fail
-0: jdbc:farrago:> select * from depts where 1=0;
+> 
+> -- set a non-existent quoted schema name:  should succeed
+> set schema '"sales"';
+> -- but lookup should fail
+> select * from depts where 1=0;
 Error: From line 1, column 15 to line 1, column 19: Table 'DEPTS' not found (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- see what happens when we drop the current schema
-0: jdbc:farrago:> create schema n;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'n';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table nt(i int not null primary key);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop schema n cascade;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from nt;
+> 
+> -- see what happens when we drop the current schema
+> create schema n;
+> 
+> set schema 'n';
+> 
+> create table nt(i int not null primary key);
+> 
+> drop schema n cascade;
+> 
+> select * from nt;
 Error: From line 1, column 15 to line 1, column 16: Table 'NT' not found (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table nt2(i int not null primary key);
+> 
+> create table nt2(i int not null primary key);
 Error: DDL validation error near line 1, column 14: Reference to unknown schema "LOCALDB"."N" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test an easy compound schema definition
-0: jdbc:farrago:> create schema nice
-. . . . . . . . >     create table t(i int not null primary key)
-. . . . . . . . >     create view v as select * from t
-. . . . . . . . > ;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test a difficult compound schema definition
-0: jdbc:farrago:> create schema nasty
-. . . . . . . . >     create view v as select * from t
-. . . . . . . . >     create table t(i int not null primary key)
-. . . . . . . . > ;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test an impossible compound schema definition
-0: jdbc:farrago:> create schema wicked
-. . . . . . . . >     create view v1 as select * from v2
-. . . . . . . . >     create view v2 as select * from v1
-. . . . . . . . > ;
+> 
+> -- test an easy compound schema definition
+> create schema nice
+>     create table t(i int not null primary key)
+>     create view v as select * from t
+> ;
+> 
+> -- test a difficult compound schema definition
+> create schema nasty
+>     create view v as select * from t
+>     create table t(i int not null primary key)
+> ;
+> 
+> -- test an impossible compound schema definition
+> create schema wicked
+>     create view v1 as select * from v2
+>     create view v2 as select * from v1
+> ;
 Error: Object definition contains recursive cycle (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test usage of a non-reserved keyword (DATA) as an identifier
-0: jdbc:farrago:> create table nice.strange(data int not null primary key);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into nice.strange(data) values (5);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select data from nice.strange;
+> 
+> -- test usage of a non-reserved keyword (DATA) as an identifier
+> create table nice.strange(data int not null primary key);
+> 
+> insert into nice.strange(data) values (5);
+> 
+> select data from nice.strange;
 +-------+
 | DATA  |
 +-------+
 | 5     |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

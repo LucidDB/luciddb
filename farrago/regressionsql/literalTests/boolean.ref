@@ -1,78 +1,78 @@
-0: jdbc:farrago:> -- $Id$ 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test boolean literal
-0: jdbc:farrago:> values true;
+> -- $Id$ 
+> 
+> -- test boolean literal
+> values true;
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values TRUE;
+> values TRUE;
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values false;
+> values false;
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> values FALSE;
+> values FALSE;
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> values tRUe;
+> values tRUe;
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values unknown;
+> values unknown;
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test datatype
-0: jdbc:farrago:> create schema test;
-0: jdbc:farrago:> set schema 'test';
-0: jdbc:farrago:> create table t_boolean(n int not null primary key, boolean_col boolean);
-0: jdbc:farrago:> create table t_boolean2(n int not null primary key, boolean_col boolean not null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- negative test
-0: jdbc:farrago:> insert into t_boolean values(1,'not bool');
+> 
+> -- test datatype
+> create schema test;
+> set schema 'test';
+> create table t_boolean(n int not null primary key, boolean_col boolean);
+> create table t_boolean2(n int not null primary key, boolean_col boolean not null);
+> 
+> -- negative test
+> insert into t_boolean values(1,'not bool');
 Error: At line 0, column 0: Cannot assign to target field 'BOOLEAN_COL' of type BOOLEAN from source field 'EXPR$1' of type CHAR(8) (state=,code=0)
-0: jdbc:farrago:> insert into t_boolean values(2, 1234);
+> insert into t_boolean values(2, 1234);
 Error: At line 0, column 0: Cannot assign to target field 'BOOLEAN_COL' of type BOOLEAN from source field 'EXPR$1' of type INTEGER (state=,code=0)
-0: jdbc:farrago:> insert into t_boolean values(3, -1234.03);
+> insert into t_boolean values(3, -1234.03);
 Error: At line 0, column 0: Cannot assign to target field 'BOOLEAN_COL' of type BOOLEAN from source field 'EXPR$1' of type DECIMAL(6, 2) (state=,code=0)
-0: jdbc:farrago:> insert into t_boolean values(4, 1e400);
+> insert into t_boolean values(4, 1e400);
 Error: From line 1, column 33 to line 1, column 37: Numeric literal '1E400' out of range (state=,code=0)
-0: jdbc:farrago:> insert into t_boolean values(5, -1.2345678901234e-200);
+> insert into t_boolean values(5, -1.2345678901234e-200);
 Error: At line 0, column 0: Cannot assign to target field 'BOOLEAN_COL' of type BOOLEAN from source field 'EXPR$1' of type DOUBLE (state=,code=0)
-0: jdbc:farrago:> insert into t_boolean values(6, x'ff');
+> insert into t_boolean values(6, x'ff');
 Error: At line 0, column 0: Cannot assign to target field 'BOOLEAN_COL' of type BOOLEAN from source field 'EXPR$1' of type BINARY(1) (state=,code=0)
-0: jdbc:farrago:> insert into t_boolean values(7, date '1999-01-08');
+> insert into t_boolean values(7, date '1999-01-08');
 Error: At line 0, column 0: Cannot assign to target field 'BOOLEAN_COL' of type BOOLEAN from source field 'EXPR$1' of type DATE (state=,code=0)
-0: jdbc:farrago:> insert into t_boolean values(8, time '12:01:01');
+> insert into t_boolean values(8, time '12:01:01');
 Error: At line 0, column 0: Cannot assign to target field 'BOOLEAN_COL' of type BOOLEAN from source field 'EXPR$1' of type TIME(0) (state=,code=0)
-0: jdbc:farrago:> insert into t_boolean values(9, timestamp '2004-12-01 12:01:01');
+> insert into t_boolean values(9, timestamp '2004-12-01 12:01:01');
 Error: At line 0, column 0: Cannot assign to target field 'BOOLEAN_COL' of type BOOLEAN from source field 'EXPR$1' of type TIMESTAMP(0) (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- insert the right value
-0: jdbc:farrago:> insert into t_boolean values(101, true);
-0: jdbc:farrago:> insert into t_boolean values(102, TRUE);
-0: jdbc:farrago:> insert into t_boolean values(103, false);
-0: jdbc:farrago:> insert into t_boolean values(104, FALSE);
-0: jdbc:farrago:> insert into t_boolean values(105, null);
-0: jdbc:farrago:> insert into t_boolean values(106, unknown);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t_boolean;
+> 
+> -- insert the right value
+> insert into t_boolean values(101, true);
+> insert into t_boolean values(102, TRUE);
+> insert into t_boolean values(103, false);
+> insert into t_boolean values(104, FALSE);
+> insert into t_boolean values(105, null);
+> insert into t_boolean values(106, unknown);
+> 
+> select * from t_boolean;
 +------+--------------+
 |  N   | BOOLEAN_COL  |
 +------+--------------+
@@ -83,35 +83,35 @@ Error: At line 0, column 0: Cannot assign to target field 'BOOLEAN_COL' of type 
 | 105  |              |
 | 106  |              |
 +------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table t_boolean;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- null value test, should fail with error state 22, code 004
-0: jdbc:farrago:> insert into t_boolean2 values(1, null); 
+> 
+> drop table t_boolean;
+> 
+> -- null value test, should fail with error state 22, code 004
+> insert into t_boolean2 values(1, null); 
 Error: could not calculate results for the following row:
 [ 1, NULL ]
 Messages:
 [0]:PC=7 Code=22004 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- These tests are okay
-0: jdbc:farrago:> insert into t_boolean2 values(2, unknown); 
+> 
+> -- These tests are okay
+> insert into t_boolean2 values(2, unknown); 
 Error: could not calculate results for the following row:
 [ 2, NULL ]
 Messages:
 [0]:PC=7 Code=22004 (state=,code=0)
-0: jdbc:farrago:> insert into t_boolean2 values(3, true);
-0: jdbc:farrago:> insert into t_boolean2 values(4, false);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t_boolean2;
+> insert into t_boolean2 values(3, true);
+> insert into t_boolean2 values(4, false);
+> 
+> select * from t_boolean2;
 +----+--------------+
 | N  | BOOLEAN_COL  |
 +----+--------------+
 | 3  | true         |
 | 4  | false        |
 +----+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table t_boolean2;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop schema test;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> drop table t_boolean2;
+> 
+> drop schema test;
+> 
+> !quit

@@ -1,6 +1,11 @@
 
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
 
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+oj_var1.assignFrom( connection.getContextVariable_CURRENT_DATE() );
+oj_var0.setCurrentDate( oj_var1 );
 oj_var0.assignFrom( connection.getContextVariable_CURRENT_TIMESTAMP() );
 
 return oj_var0;

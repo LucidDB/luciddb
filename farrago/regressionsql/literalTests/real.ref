@@ -1,161 +1,161 @@
-0: jdbc:farrago:> -- $Id$ 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test real literal
-0: jdbc:farrago:> values 0.0;
+> -- $Id$ 
+> 
+> -- test real literal
+> values 0.0;
 +---------+
 | EXPR$0  |
 +---------+
 | 0.0     |
 +---------+
-0: jdbc:farrago:> values 1.;
+> values 1.;
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
-0: jdbc:farrago:> values .1;
+> values .1;
 +---------+
 | EXPR$0  |
 +---------+
 | 0.1     |
 +---------+
-0: jdbc:farrago:> values 1004.30;
+> values 1004.30;
 +----------+
 |  EXPR$0  |
 +----------+
 | 1004.30  |
 +----------+
-0: jdbc:farrago:> values -34.84;
+> values -34.84;
 +---------+
 | EXPR$0  |
 +---------+
 | -34.84  |
 +---------+
-0: jdbc:farrago:> values 1.2345678901234e+20;
+> values 1.2345678901234e+20;
 +---------------------+
 |       EXPR$0        |
 +---------------------+
 | 1.2345678901234E20  |
 +---------------------+
-0: jdbc:farrago:> values 1.2345678901234e-20;
+> values 1.2345678901234e-20;
 +----------------------+
 |        EXPR$0        |
 +----------------------+
 | 1.2345678901234E-20  |
 +----------------------+
-0: jdbc:farrago:> values 10e40;
+> values 10e40;
 +---------+
 | EXPR$0  |
 +---------+
 | 1.0E41  |
 +---------+
-0: jdbc:farrago:> values -10e40;
+> values -10e40;
 +----------+
 |  EXPR$0  |
 +----------+
 | -1.0E41  |
 +----------+
-0: jdbc:farrago:> values 10e-40;
+> values 10e-40;
 +----------+
 |  EXPR$0  |
 +----------+
 | 1.0E-39  |
 +----------+
-0: jdbc:farrago:> values -10e-40;
+> values -10e-40;
 +-----------+
 |  EXPR$0   |
 +-----------+
 | -1.0E-39  |
 +-----------+
-0: jdbc:farrago:> values 0.0;
+> values 0.0;
 +---------+
 | EXPR$0  |
 +---------+
 | 0.0     |
 +---------+
-0: jdbc:farrago:> values 1004.30;
+> values 1004.30;
 +----------+
 |  EXPR$0  |
 +----------+
 | 1004.30  |
 +----------+
-0: jdbc:farrago:> values -34.84;
+> values -34.84;
 +---------+
 | EXPR$0  |
 +---------+
 | -34.84  |
 +---------+
-0: jdbc:farrago:> values 1.2345678901234e+200;
+> values 1.2345678901234e+200;
 +----------------------+
 |        EXPR$0        |
 +----------------------+
 | 1.2345678901234E200  |
 +----------------------+
-0: jdbc:farrago:> values 1.2345678901234e-200;
+> values 1.2345678901234e-200;
 +-----------------------+
 |        EXPR$0         |
 +-----------------------+
 | 1.2345678901234E-200  |
 +-----------------------+
-0: jdbc:farrago:> values 1e400;
+> values 1e400;
 Error: From line 1, column 8 to line 1, column 12: Numeric literal '1E400' out of range (state=,code=0)
-0: jdbc:farrago:> values -1e400;
+> values -1e400;
 Error: From line 1, column 9 to line 1, column 13: Numeric literal '-1E400' out of range (state=,code=0)
-0: jdbc:farrago:> values -34.84;
+> values -34.84;
 +---------+
 | EXPR$0  |
 +---------+
 | -34.84  |
 +---------+
-0: jdbc:farrago:> values -1004.30;
+> values -1004.30;
 +-----------+
 |  EXPR$0   |
 +-----------+
 | -1004.30  |
 +-----------+
-0: jdbc:farrago:> values -1.2345678901234e+200;
+> values -1.2345678901234e+200;
 +-----------------------+
 |        EXPR$0         |
 +-----------------------+
 | -1.2345678901234E200  |
 +-----------------------+
-0: jdbc:farrago:> values -1.2345678901234e-200;
+> values -1.2345678901234e-200;
 +------------------------+
 |         EXPR$0         |
 +------------------------+
 | -1.2345678901234E-200  |
 +------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test datatype
-0: jdbc:farrago:> create schema test;
-0: jdbc:farrago:> set schema 'test';
-0: jdbc:farrago:> create table t_real(real_col real not null primary key,
-. . . . . . . . >         real_col2 int);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- negative test
-0: jdbc:farrago:> --insert into t_real values('true',null);
-0: jdbc:farrago:> insert into t_real values(TRUE,null);
+> 
+> -- test datatype
+> create schema test;
+> set schema 'test';
+> create table t_real(real_col real not null primary key,
+>         real_col2 int);
+> 
+> -- negative test
+> --insert into t_real values('true',null);
+> insert into t_real values(TRUE,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'REAL' (state=,code=0)
-0: jdbc:farrago:> insert into t_real values(x'ff',null);
+> insert into t_real values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'REAL' (state=,code=0)
-0: jdbc:farrago:> insert into t_real values(date '1999-01-08',null);
+> insert into t_real values(date '1999-01-08',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DATE' to 'REAL' (state=,code=0)
-0: jdbc:farrago:> insert into t_real values(time '12:01:01',null);
+> insert into t_real values(time '12:01:01',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIME(0)' to 'REAL' (state=,code=0)
-0: jdbc:farrago:> insert into t_real values(timestamp '2004-12-01 12:01:01',null);
+> insert into t_real values(timestamp '2004-12-01 12:01:01',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP(0)' to 'REAL' (state=,code=0)
-0: jdbc:farrago:> insert into t_real values(1e400,null);
+> insert into t_real values(1e400,null);
 Error: From line 1, column 27 to line 1, column 31: Numeric literal '1E400' out of range (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- insert the right value
-0: jdbc:farrago:> insert into t_real values(1234.999,null);
-0: jdbc:farrago:> insert into t_real values(-4567890123456789.9,null);
-0: jdbc:farrago:> insert into t_real values(-1.2345678901234e-200,null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- null value test
-0: jdbc:farrago:> --insert into t_real values(null, null); 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t_real;
+> 
+> -- insert the right value
+> insert into t_real values(1234.999,null);
+> insert into t_real values(-4567890123456789.9,null);
+> insert into t_real values(-1.2345678901234e-200,null);
+> 
+> -- null value test
+> --insert into t_real values(null, null); 
+> 
+> select * from t_real;
 +----------------+------------+
 |    REAL_COL    | REAL_COL2  |
 +----------------+------------+
@@ -163,22 +163,22 @@ Error: From line 1, column 27 to line 1, column 31: Numeric literal '1E400' out 
 | -0.0           |            |
 | 1234.999       |            |
 +----------------+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table t_real;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Underflow, value goes to 0
-0: jdbc:farrago:> values 1e-400;
+> 
+> drop table t_real;
+> 
+> -- Underflow, value goes to 0
+> values 1e-400;
 +---------+
 | EXPR$0  |
 +---------+
 | 0.0     |
 +---------+
-0: jdbc:farrago:> values -1e-400;
+> values -1e-400;
 +---------+
 | EXPR$0  |
 +---------+
 | 0.0     |
 +---------+
-0: jdbc:farrago:> drop schema test;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> drop schema test;
+> 
+> !quit

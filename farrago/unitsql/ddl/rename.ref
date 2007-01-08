@@ -1,16 +1,16 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test create or replace rename to DDL
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- View
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create schema foo1;
-0: jdbc:farrago:> set schema 'foo1';
-0: jdbc:farrago:> create view orange as select * from sales.depts;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should succeed
-0: jdbc:farrago:> create or replace rename to apple view orange as select * from sales.depts;
-0: jdbc:farrago:> select * from apple;
+> -- $Id$
+> -- Test create or replace rename to DDL
+> 
+> --
+> -- View
+> --
+> create schema foo1;
+> set schema 'foo1';
+> create view orange as select * from sales.depts;
+> 
+> -- should succeed
+> create or replace rename to apple view orange as select * from sales.depts;
+> select * from apple;
 +---------+------------+
 | DEPTNO  |    NAME    |
 +---------+------------+
@@ -18,61 +18,61 @@
 | 20      | Marketing  |
 | 30      | Accounts   |
 +---------+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail 'cause orange is now apple 
-0: jdbc:farrago:> select * from orange;
+> 
+> -- should fail 'cause orange is now apple 
+> select * from orange;
 Error: From line 1, column 15 to line 1, column 20: Table 'ORANGE' not found (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should succeed, usage of rename is redundant 
-0: jdbc:farrago:> create or replace rename to apple view apple as select * from sales.depts;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view plum as select * from sales.emps;
-0: jdbc:farrago:> -- should fail, duplicate name
-0: jdbc:farrago:> create or replace rename to plum view apple as select * from sales.depts;
+> 
+> -- should succeed, usage of rename is redundant 
+> create or replace rename to apple view apple as select * from sales.depts;
+> 
+> create view plum as select * from sales.emps;
+> -- should fail, duplicate name
+> create or replace rename to plum view apple as select * from sales.depts;
 Error: DDL validation error near line 1, column 39: Target schema "LOCALDB"."FOO1" already contains view "PLUM" with same name (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- Schema
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create schema foo2;
-0: jdbc:farrago:> set schema 'foo2';
-0: jdbc:farrago:> create view pineapple as select * from foo1.apple;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail 'cause foo2.pineapple depends on foo1.apple
-0: jdbc:farrago:> create or replace rename to foo3 schema foo1;
+> 
+> --
+> -- Schema
+> --
+> create schema foo2;
+> set schema 'foo2';
+> create view pineapple as select * from foo1.apple;
+> 
+> -- should fail 'cause foo2.pineapple depends on foo1.apple
+> create or replace rename to foo3 schema foo1;
 Error: From line 2, column 6 to line 2, column 29: Table 'LOCALDB.FOO1.APPLE' not found (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail, same error as above
-0: jdbc:farrago:> create or replace rename to lemon view foo1.apple as select * from sales.depts;
+> 
+> -- should fail, same error as above
+> create or replace rename to lemon view foo1.apple as select * from sales.depts;
 Error: From line 2, column 6 to line 2, column 29: Table 'LOCALDB.FOO1.APPLE' not found (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- Server
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create foreign data wrapper foo_wrapper
-. . . . . . . . >  library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
-. . . . . . . . >  language java;
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> create server foo_server
-. . . . . . . . >  foreign data wrapper foo_wrapper;
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> create foreign table foo_table(
-. . . . . . . . >     id int not null)
-. . . . . . . . > server foo_server
-. . . . . . . . > options (executor_impl 'JAVA', row_count '3');
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> create or replace rename to foo_server_new server foo_server
-. . . . . . . . >  foreign data wrapper foo_wrapper
-. . . . . . . . >  description 'blah';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select "description" from sys_fem.med."DataServer" where "name" = 'FOO_SERVER_NEW';
+> 
+> --
+> -- Server
+> --
+> create foreign data wrapper foo_wrapper
+>  library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+>  language java;
+>                                                                                 
+> create server foo_server
+>  foreign data wrapper foo_wrapper;
+>                                                                                 
+> create foreign table foo_table(
+>     id int not null)
+> server foo_server
+> options (executor_impl 'JAVA', row_count '3');
+>                                                                                 
+> create or replace rename to foo_server_new server foo_server
+>  foreign data wrapper foo_wrapper
+>  description 'blah';
+> 
+> select "description" from sys_fem.med."DataServer" where "name" = 'FOO_SERVER_NEW';
 +--------------+
 | description  |
 +--------------+
 | blah         |
 +--------------+
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> select * from foo_table;
+>                                                                                 
+> select * from foo_table;
 +-----+
 | ID  |
 +-----+
@@ -80,23 +80,23 @@ Error: From line 2, column 6 to line 2, column 29: Table 'LOCALDB.FOO1.APPLE' no
 | 0   |
 | 0   |
 +-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- 
-0: jdbc:farrago:> -- Wrapper
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create or replace rename to foo_wrapper_new foreign data wrapper foo_wrapper
-. . . . . . . . >  library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
-. . . . . . . . >  language java
-. . . . . . . . >  description 'blah2';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select "description" from sys_fem.med."DataWrapper" where "name" = 'FOO_WRAPPER_NEW';
+> 
+> -- 
+> -- Wrapper
+> --
+> create or replace rename to foo_wrapper_new foreign data wrapper foo_wrapper
+>  library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+>  language java
+>  description 'blah2';
+> 
+> select "description" from sys_fem.med."DataWrapper" where "name" = 'FOO_WRAPPER_NEW';
 +--------------+
 | description  |
 +--------------+
 | blah2        |
 +--------------+
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> select * from foo_table;
+>                                                                                 
+> select * from foo_table;
 +-----+
 | ID  |
 +-----+
@@ -104,6 +104,6 @@ Error: From line 2, column 6 to line 2, column 29: Table 'LOCALDB.FOO1.APPLE' no
 | 0   |
 | 0   |
 +-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> 
+> !quit

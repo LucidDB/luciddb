@@ -1,13 +1,13 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test queries with DISTINCT
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Fennel calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- simple key
-0: jdbc:farrago:> select distinct gender from emps order by 1;
+> -- $Id$
+> -- Test queries with DISTINCT
+> 
+> set schema 'sales';
+> 
+> -- force usage of Fennel calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> 
+> -- simple key
+> select distinct gender from emps order by 1;
 +---------+
 | GENDER  |
 +---------+
@@ -15,13 +15,13 @@
 | F       |
 | M       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO:  if the select list is reversed, the next query can't be
-0: jdbc:farrago:> -- entirely pushed down to Fennel; need to deal with reordering
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- compound key
-0: jdbc:farrago:> select distinct empno,gender from emps order by 1;
+> 
+> 
+> -- TODO:  if the select list is reversed, the next query can't be
+> -- entirely pushed down to Fennel; need to deal with reordering
+> 
+> -- compound key
+> select distinct empno,gender from emps order by 1;
 +--------+---------+
 | EMPNO  | GENDER  |
 +--------+---------+
@@ -29,9 +29,9 @@
 | 110    | M       |
 | 120    | F       |
 +--------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- redundant distinct
-0: jdbc:farrago:> select distinct * from (select distinct gender from emps) order by 1;
+> 
+> -- redundant distinct
+> select distinct * from (select distinct gender from emps) order by 1;
 +---------+
 | GENDER  |
 +---------+
@@ -39,47 +39,47 @@
 | F       |
 | M       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select distinct gender from emps;
+> 
+> 
+> -- verify plans
+> !set outputformat csv
+> 
+> explain plan for
+> select distinct gender from emps;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select distinct gender from emps order by 1;
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select distinct gender from emps order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select distinct empno,gender from emps;
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select distinct empno,gender from emps;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select distinct empno,gender from emps order by 1;
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select distinct empno,gender from emps order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select distinct * from (select distinct gender from emps) order by 1;
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select distinct * from (select distinct gender from emps) order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> !quit

@@ -1,73 +1,73 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Full vertical system testing of non function statements
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
-0: jdbc:farrago:> -- and another time to use java. The caller of this script is setting the flag so no need
-0: jdbc:farrago:> -- to do it directly unless you need to do acrobatics.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 'w'='w';
+> -- $Id$
+> -- Full vertical system testing of non function statements
+> 
+> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
+> -- and another time to use java. The caller of this script is setting the flag so no need
+> -- to do it directly unless you need to do acrobatics.
+> 
+> values 'w'='w';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values 'w'>'w';
+> values 'w'>'w';
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> values 'W'>'w';
+> values 'W'>'w';
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> values 'w'>'W';
+> values 'w'>'W';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values 'w'>='w';
+> values 'w'>='w';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values 'a'<'b';
+> values 'a'<'b';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values 'a'<>'b';
+> values 'a'<>'b';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values 'a'<='b';
+> values 'a'<='b';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 'A' < 'AAA';
+> 
+> values 'A' < 'AAA';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values 'BB' < 'AAA';
+> values 'BB' < 'AAA';
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select substring(name from 1 for 2) from sales.emps order by 1;
+> 
+> select substring(name from 1 for 2) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -76,7 +76,7 @@
 | Jo      |
 | Wi      |
 +---------+
-0: jdbc:farrago:> select substring(name from 2) from sales.emps order by 1;
+> select substring(name from 2) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -85,7 +85,7 @@
 | red     |
 | ric     |
 +---------+
-0: jdbc:farrago:> select substring(name from 1) from sales.emps order by 1;
+> select substring(name from 1) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -94,7 +94,7 @@
 | John    |
 | Wilma   |
 +---------+
-0: jdbc:farrago:> select city, age, substring(city, 2, age/10) from sales.emps order by 1;
+> select city, age, substring(city, 2, age/10) from sales.emps order by 1;
 +----------------+------+-----------+
 |      CITY      | AGE  |  EXPR$2   |
 +----------------+------+-----------+
@@ -103,7 +103,7 @@
 | San Francisco  | 80   | an Franc  |
 | Vancouver      |      |           |
 +----------------+------+-----------+
-0: jdbc:farrago:> select city, age, substring(city,  age/20, empid) from sales.emps order by 1;
+> select city, age, substring(city,  age/20, empid) from sales.emps order by 1;
 +----------------+------+---------+
 |      CITY      | AGE  | EXPR$2  |
 +----------------+------+---------+
@@ -112,7 +112,7 @@
 | San Francisco  | 80   |  Fr     |
 | Vancouver      |      |         |
 +----------------+------+---------+
-0: jdbc:farrago:> select city, substring(city, 3) from sales.emps order by 1;
+> select city, substring(city, 3) from sales.emps order by 1;
 +----------------+--------------+
 |      CITY      |    EXPR$1    |
 +----------------+--------------+
@@ -121,7 +121,7 @@
 | San Francisco  | n Francisco  |
 | Vancouver      | ncouver      |
 +----------------+--------------+
-0: jdbc:farrago:> select city, substring(city, -1, 4) from sales.emps order by 1;
+> select city, substring(city, -1, 4) from sales.emps order by 1;
 +----------------+---------+
 |      CITY      | EXPR$1  |
 +----------------+---------+
@@ -130,7 +130,7 @@
 | San Francisco  | Sa      |
 | Vancouver      | Va      |
 +----------------+---------+
-0: jdbc:farrago:> select city, substring(city, 0, 4) from sales.emps order by 1;
+> select city, substring(city, 0, 4) from sales.emps order by 1;
 +----------------+---------+
 |      CITY      | EXPR$1  |
 +----------------+---------+
@@ -139,7 +139,7 @@
 | San Francisco  | San     |
 | Vancouver      | Van     |
 +----------------+---------+
-0: jdbc:farrago:> select name, empid, substring(name, 2, empid) from sales.emps order by 1;
+> select name, empid, substring(name, 2, empid) from sales.emps order by 1;
 +--------+--------+---------+
 |  NAME  | EMPID  | EXPR$2  |
 +--------+--------+---------+
@@ -148,8 +148,8 @@
 | John   | 2      | oh      |
 | Wilma  | 1      | i       |
 +--------+--------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select lower(city) from sales.emps order by 1;
+> 
+> select lower(city) from sales.emps order by 1;
 +----------------+
 |     EXPR$0     |
 +----------------+
@@ -158,7 +158,7 @@
 | san francisco  |
 | vancouver      |
 +----------------+
-0: jdbc:farrago:> select upper(city) from sales.emps order by 1;
+> select upper(city) from sales.emps order by 1;
 +----------------+
 |     EXPR$0     |
 +----------------+
@@ -167,8 +167,8 @@
 | SAN FRANCISCO  |
 | VANCOUVER      |
 +----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select overlay(name placing '??' from 1) from sales.emps order by 1;
+> 
+> select overlay(name placing '??' from 1) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -177,7 +177,7 @@
 | ??ic    |
 | ??lma   |
 +---------+
-0: jdbc:farrago:> select overlay(name placing '??' from 2 for 1) from sales.emps order by 1;
+> select overlay(name placing '??' from 2 for 1) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -186,7 +186,7 @@
 | J??hn   |
 | W??lma  |
 +---------+
-0: jdbc:farrago:> select overlay(name placing '??' from 2 for 2) from sales.emps order by 1;
+> select overlay(name placing '??' from 2 for 2) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -195,7 +195,7 @@
 | J??n    |
 | W??ma   |
 +---------+
-0: jdbc:farrago:> select overlay(city placing '??' from 2 for 3) from sales.emps order by 1;
+> select overlay(city placing '??' from 2 for 3) from sales.emps order by 1;
 +---------------+
 |    EXPR$0     |
 +---------------+
@@ -204,7 +204,7 @@
 | S??Francisco  |
 | V??ouver      |
 +---------------+
-0: jdbc:farrago:> select overlay(name placing '??' from 2 for 4) from sales.emps order by 1;
+> select overlay(name placing '??' from 2 for 4) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -213,38 +213,38 @@
 | J??     |
 | W??     |
 +---------+
-0: jdbc:farrago:> values overlay('ABCdef' placing '12' from 2 for 1);
+> values overlay('ABCdef' placing '12' from 2 for 1);
 +----------+
 |  EXPR$0  |
 +----------+
 | A12Cdef  |
 +----------+
-0: jdbc:farrago:> values overlay('ABCdef' placing '12' from 2 for 2);
+> values overlay('ABCdef' placing '12' from 2 for 2);
 +---------+
 | EXPR$0  |
 +---------+
 | A12def  |
 +---------+
-0: jdbc:farrago:> values overlay('ABCdef' placing '12' from 2 for 3);
+> values overlay('ABCdef' placing '12' from 2 for 3);
 +---------+
 | EXPR$0  |
 +---------+
 | A12ef   |
 +---------+
-0: jdbc:farrago:> values overlay('ABCdef' placing '12' from 2 for 9);
+> values overlay('ABCdef' placing '12' from 2 for 9);
 +---------+
 | EXPR$0  |
 +---------+
 | A12     |
 +---------+
-0: jdbc:farrago:> values overlay('ABCdef' placing '12' from 999 for 1);
+> values overlay('ABCdef' placing '12' from 999 for 1);
 +-----------+
 |  EXPR$0   |
 +-----------+
 | ABCdef12  |
 +-----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select position('wi' in name) from sales.emps order by 1;
+> 
+> select position('wi' in name) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -253,7 +253,7 @@
 | 0       |
 | 0       |
 +---------+
-0: jdbc:farrago:> select position('Fran' in city) from sales.emps order by 1;
+> select position('Fran' in city) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -262,8 +262,8 @@
 | 0       |
 | 5       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select name like '%ma' from sales.emps order by 1;
+> 
+> select name like '%ma' from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -272,7 +272,7 @@
 | false   |
 | true    |
 +---------+
-0: jdbc:farrago:> select name like 'ma' from sales.emps;
+> select name like 'ma' from sales.emps;
 +---------+
 | EXPR$0  |
 +---------+
@@ -281,7 +281,7 @@
 | false   |
 | false   |
 +---------+
-0: jdbc:farrago:> select name like '_ma' from sales.emps;
+> select name like '_ma' from sales.emps;
 +---------+
 | EXPR$0  |
 +---------+
@@ -290,7 +290,7 @@
 | false   |
 | false   |
 +---------+
-0: jdbc:farrago:> select name like '___ma' from sales.emps order by 1;
+> select name like '___ma' from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -299,7 +299,7 @@
 | false   |
 | true    |
 +---------+
-0: jdbc:farrago:> select name like '' from sales.emps;
+> select name like '' from sales.emps;
 +---------+
 | EXPR$0  |
 +---------+
@@ -308,7 +308,7 @@
 | false   |
 | false   |
 +---------+
-0: jdbc:farrago:> select city like 'san%' from sales.emps order by 1;
+> select city like 'san%' from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -317,7 +317,7 @@
 | false   |
 | false   |
 +---------+
-0: jdbc:farrago:> select city like 'San%' from sales.emps order by 1;
+> select city like 'San%' from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -326,7 +326,7 @@
 | false   |
 | true    |
 +---------+
-0: jdbc:farrago:> select name, name similar to 'Fr(ed|ank)+' from sales.emps order by 1;
+> select name, name similar to 'Fr(ed|ank)+' from sales.emps order by 1;
 +--------+---------+
 |  NAME  | EXPR$1  |
 +--------+---------+
@@ -335,7 +335,7 @@
 | John   | false   |
 | Wilma  | false   |
 +--------+---------+
-0: jdbc:farrago:> select city, city similar to '(%an)+cr*isco' from sales.emps order by 1;
+> select city, city similar to '(%an)+cr*isco' from sales.emps order by 1;
 +----------------+---------+
 |      CITY      | EXPR$1  |
 +----------------+---------+
@@ -344,21 +344,21 @@
 | San Francisco  | true    |
 | Vancouver      | false   |
 +----------------+---------+
-0: jdbc:farrago:> values '_a%' like 'a_aaa%' escape 'a';
+> values '_a%' like 'a_aaa%' escape 'a';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> values '_a%' similar to 'a_aaa%' escape 'a';
+> values '_a%' similar to 'a_aaa%' escape 'a';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select char_length(city) from sales.emps order by 1;
+> 
+> 
+> select char_length(city) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -367,38 +367,38 @@
 | 9       |
 | 13      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 'a'||'b';
+> 
+> values 'a'||'b';
 +---------+
 | EXPR$0  |
 +---------+
 | ab      |
 +---------+
-0: jdbc:farrago:> values 'a '||'b';
+> values 'a '||'b';
 +---------+
 | EXPR$0  |
 +---------+
 | a b     |
 +---------+
-0: jdbc:farrago:> values 'a'||'b'||'c';
+> values 'a'||'b'||'c';
 +---------+
 | EXPR$0  |
 +---------+
 | abc     |
 +---------+
-0: jdbc:farrago:> values 'a'||cast(null as varchar(1));
+> values 'a'||cast(null as varchar(1));
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as varchar(1))||'b';
+> values cast(null as varchar(1))||'b';
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> select name||' is from city '||city from sales.emps order by 1;
+> select name||' is from city '||city from sales.emps order by 1;
 +----------------------------------+
 |              EXPR$0              |
 +----------------------------------+
@@ -407,7 +407,7 @@
 | Eric is from city San Francisco  |
 | John is from city Vancouver      |
 +----------------------------------+
-0: jdbc:farrago:> select name||' is from city '||city||'.' from sales.emps order by 1;
+> select name||' is from city '||city||'.' from sales.emps order by 1;
 +-----------------------------------+
 |              EXPR$0               |
 +-----------------------------------+
@@ -416,25 +416,25 @@
 | Eric is from city San Francisco.  |
 | John is from city Vancouver.      |
 +-----------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- From bug FRG-35
-0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema test;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table test.CUSTOMERS(
-. . . . . . . . > CUSTID integer primary key,
-. . . . . . . . > LNAME varchar(30) not null);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into test.customers values (0,'Locicero');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select 1
-. . . . . . . . > FROM test.CUSTOMERS M, test.CUSTOMERS F
-. . . . . . . . > WHERE M.LNAME = F.LNAME;
+> 
+> -- From bug FRG-35
+> alter system set "calcVirtualMachine"='CALCVM_FENNEL';
+> 
+> create schema test;
+> 
+> create table test.CUSTOMERS(
+> CUSTID integer primary key,
+> LNAME varchar(30) not null);
+> 
+> insert into test.customers values (0,'Locicero');
+> 
+> select 1
+> FROM test.CUSTOMERS M, test.CUSTOMERS F
+> WHERE M.LNAME = F.LNAME;
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

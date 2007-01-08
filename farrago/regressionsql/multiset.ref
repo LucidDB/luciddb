@@ -1,36 +1,36 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Multiset related regression tests
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --FIXME: reenable the following five queries once 
-0: jdbc:farrago:> --       multisets work again
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --select*from unnest(multiset[1,2,3]);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --select*from unnest(multiset[1.34,1.563,2.0]);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --select*from unnest(multiset[1.23e1, -23.e0]);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --select*from unnest(multiset[1+2,3-4,5*6,7/8,9+10*11*log10(13)]);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --select*from unnest(multiset['a','b'||'c']);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select*from unnest(multiset[row(1,2,3,4), row(11,22,33,44)]);
+> -- $Id$
+> -- Multiset related regression tests
+> 
+> --FIXME: reenable the following five queries once 
+> --       multisets work again
+> 
+> --select*from unnest(multiset[1,2,3]);
+> 
+> --select*from unnest(multiset[1.34,1.563,2.0]);
+> 
+> --select*from unnest(multiset[1.23e1, -23.e0]);
+> 
+> --select*from unnest(multiset[1+2,3-4,5*6,7/8,9+10*11*log10(13)]);
+> 
+> --select*from unnest(multiset['a','b'||'c']);
+> 
+> select*from unnest(multiset[row(1,2,3,4), row(11,22,33,44)]);
 +---------+---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  |
 +---------+---------+---------+---------+
 | 1       | 2       | 3       | 4       |
 | 11      | 22      | 33      | 44      |
 +---------+---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select*from unnest(multiset[row(43.2, 421e-2), row(32.22, 43e-1)]);
+> 
+> select*from unnest(multiset[row(43.2, 421e-2), row(32.22, 43e-1)]);
 +---------+---------+
 | EXPR$0  | EXPR$1  |
 +---------+---------+
 | 43.20   | 4.21    |
 | 32.22   | 4.3     |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select*from unnest(multiset(select*from sales.depts));
+> 
+> select*from unnest(multiset(select*from sales.depts));
 +---------+------------+
 | DEPTNO  |    NAME    |
 +---------+------------+
@@ -38,19 +38,19 @@
 | 20      | Marketing  |
 | 30      | Accounts   |
 +---------+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --FIXME: reenable the following four queries once
-0: jdbc:farrago:> --       multisets work again
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --select*from unnest(values(multiset[1]));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --select*from unnest(values(multiset[43e-1]));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --select*from unnest(values(multiset[32.342]));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --select*from unnest(values(multiset[43, 32.2, 34e-2]));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select*from unnest(values(multiset(select*from sales.emps)));
+> 
+> --FIXME: reenable the following four queries once
+> --       multisets work again
+> 
+> --select*from unnest(values(multiset[1]));
+> 
+> --select*from unnest(values(multiset[43e-1]));
+> 
+> --select*from unnest(values(multiset[32.342]));
+> 
+> --select*from unnest(values(multiset[43, 32.2, 34e-2]));
+> 
+> select*from unnest(values(multiset(select*from sales.emps)));
 +--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
 | EMPNO  |  NAME  | DEPTNO  | GENDER  |      CITY      | EMPID  | AGE  | PUBLIC_KEY  | SLACKER  | MANAGER  |
 +--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
@@ -59,112 +59,112 @@
 | 120    | Wilma  | 20      | F       |                | 1      | 50   |             |          | true     |
 | 110    | John   | 40      | M       | Vancouver      | 2      |      | 58797A      | false    | true     |
 +--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --- TODO: Enable tests when multiset support is more complete
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME: Need to implement RelStructuredTypeFlattener.visit(RexFieldAccess)
-0: jdbc:farrago:> --        for RexCorrelVariable
-0: jdbc:farrago:> -- select*from unnest(select multiset[empno] from sales.emps);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME: Need to implement RelStructuredTypeFlattener.visit(RexFieldAccess)
-0: jdbc:farrago:> --        for RexCorrelVariable
-0: jdbc:farrago:> -- select*from unnest(select multiset[(empno, name)] from sales.emps);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test values
-0: jdbc:farrago:> -- values(multiset[]);
-0: jdbc:farrago:> -- values(multiset[1]);
-0: jdbc:farrago:> -- values(multiset[multiset[1]]);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test Union
-0: jdbc:farrago:> -- values(multiset[1]) union values(multiset[2]);
-0: jdbc:farrago:> -- values(multiset[1]) union all values(multiset[1]);
-0: jdbc:farrago:> -- values(multiset[1]) union distinct values(multiset[1]);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select * from unnest(values(multiset[1]) union values(multiset[2]));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- values(multiset[1] multiset union multiset[1,2]);
-0: jdbc:farrago:> -- values(multiset[1] multiset union all multiset[1,2]);
-0: jdbc:farrago:> -- values(multiset[1] multiset union distinct multiset[1,2]);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select * from unnest((multiset[1] multiset union multiset[1,2]));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test Intersect
-0: jdbc:farrago:> -- values(multiset[1]) intersect values(multiset[1]);
-0: jdbc:farrago:> -- values(multiset[1]) intersect all values(multiset[1]);
-0: jdbc:farrago:> -- values(multiset[1]) intersect distinct values(multiset[1]);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- values(multiset[1,3,5] multiset intersect multiset[1,2]);
-0: jdbc:farrago:> -- values(multiset[1,3,5] multiset intersect all multiset[1,2]);
-0: jdbc:farrago:> -- values(multiset[1,3,5] multiset intersect distinct multiset[1,2]);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test Except
-0: jdbc:farrago:> -- values(multiset[1]) except values(multiset[1]);
-0: jdbc:farrago:> -- values(multiset[1]) except all values(multiset[1]);
-0: jdbc:farrago:> -- values(multiset[1]) except distinct values(multiset[1]);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- values(multiset[1,1,2,3,5] multiset except multiset[1,5]);
-0: jdbc:farrago:> -- values(multiset[1,1,2,3,5] multiset except all multiset[1,5]);
-0: jdbc:farrago:> -- values(multiset[1,1,2,3,5] multiset except distinct multiset[1,5]);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test Element
-0: jdbc:farrago:> -- values(element(multiset[1]));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Should give error, multiset has more than one elements
-0: jdbc:farrago:> -- values(element(multiset[1,2]));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Should give error, multiset has 0 elements
-0: jdbc:farrago:> -- (at least when intersect works)
-0: jdbc:farrago:> -- values(element(multiset[1] multiset intersect multiset[2]));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test Cardinality
-0: jdbc:farrago:> -- values(cardinality(multiset[1]));
-0: jdbc:farrago:> -- values(cardinality(multiset[(1,2,3,4)]));
-0: jdbc:farrago:> -- values(cardinality(multiset[1,2,3,4]));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test other multiset operators
-0: jdbc:farrago:> -- values(multiset[1] is a set);
-0: jdbc:farrago:> -- values(1 member of multiset[1]);
-0: jdbc:farrago:> -- values(2 member of multiset[1]);
-0: jdbc:farrago:> -- values(fusion(multiset[1]));
-0: jdbc:farrago:> -- select collect(empno) from sales.emps;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: Test Lateral, submultiset, cast
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test tables with multisets
-0: jdbc:farrago:> -- create schema multiset_test;
-0: jdbc:farrago:> -- set schema 'multiset_test';
-0: jdbc:farrago:> -- set path 'multiset_test';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Simple table with multiset
-0: jdbc:farrago:> -- create table multiset_table1(
-0: jdbc:farrago:> --     id integer primary key,
-0: jdbc:farrago:> --     items integer multiset);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- insert into multiset_table1 values(1, multiset[1,2,3]);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select * from multiset_table1;
-0: jdbc:farrago:> -- select * from unnest(multiset_table1.items);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select * from multiset_table1 as t, unnest(t.items);
-0: jdbc:farrago:> -- select * from unnest(t.items), multiset_table1 as t;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select * from unnest(t1.x) as t2, unnest(t2.y) as t1;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test table with nested multiset
-0: jdbc:farrago:> -- create type nested_row AS (
-0: jdbc:farrago:> --    i integer,
-0: jdbc:farrago:> --    names varchar(10) multiset ) final;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create table multiset_table2(
-0: jdbc:farrago:> --    id integer primary key,
-0: jdbc:farrago:> --    nested_items nested_row  multiset);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- insert into multiset_table2 
-0: jdbc:farrago:> --    values(1, 
-0: jdbc:farrago:> --           multiset[ ( 2, multiset['a', 'b'] ) ] );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select * from multiset_table2;
-0: jdbc:farrago:> -- select * from unnest(multiset_table2.nested_items);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> --- TODO: Enable tests when multiset support is more complete
+> 
+> -- FIXME: Need to implement RelStructuredTypeFlattener.visit(RexFieldAccess)
+> --        for RexCorrelVariable
+> -- select*from unnest(select multiset[empno] from sales.emps);
+> 
+> -- FIXME: Need to implement RelStructuredTypeFlattener.visit(RexFieldAccess)
+> --        for RexCorrelVariable
+> -- select*from unnest(select multiset[(empno, name)] from sales.emps);
+> 
+> -- Test values
+> -- values(multiset[]);
+> -- values(multiset[1]);
+> -- values(multiset[multiset[1]]);
+> 
+> -- Test Union
+> -- values(multiset[1]) union values(multiset[2]);
+> -- values(multiset[1]) union all values(multiset[1]);
+> -- values(multiset[1]) union distinct values(multiset[1]);
+> 
+> -- select * from unnest(values(multiset[1]) union values(multiset[2]));
+> 
+> -- values(multiset[1] multiset union multiset[1,2]);
+> -- values(multiset[1] multiset union all multiset[1,2]);
+> -- values(multiset[1] multiset union distinct multiset[1,2]);
+> 
+> -- select * from unnest((multiset[1] multiset union multiset[1,2]));
+> 
+> -- Test Intersect
+> -- values(multiset[1]) intersect values(multiset[1]);
+> -- values(multiset[1]) intersect all values(multiset[1]);
+> -- values(multiset[1]) intersect distinct values(multiset[1]);
+> 
+> -- values(multiset[1,3,5] multiset intersect multiset[1,2]);
+> -- values(multiset[1,3,5] multiset intersect all multiset[1,2]);
+> -- values(multiset[1,3,5] multiset intersect distinct multiset[1,2]);
+> 
+> -- Test Except
+> -- values(multiset[1]) except values(multiset[1]);
+> -- values(multiset[1]) except all values(multiset[1]);
+> -- values(multiset[1]) except distinct values(multiset[1]);
+> 
+> -- values(multiset[1,1,2,3,5] multiset except multiset[1,5]);
+> -- values(multiset[1,1,2,3,5] multiset except all multiset[1,5]);
+> -- values(multiset[1,1,2,3,5] multiset except distinct multiset[1,5]);
+> 
+> -- Test Element
+> -- values(element(multiset[1]));
+> 
+> -- Should give error, multiset has more than one elements
+> -- values(element(multiset[1,2]));
+> 
+> -- Should give error, multiset has 0 elements
+> -- (at least when intersect works)
+> -- values(element(multiset[1] multiset intersect multiset[2]));
+> 
+> -- Test Cardinality
+> -- values(cardinality(multiset[1]));
+> -- values(cardinality(multiset[(1,2,3,4)]));
+> -- values(cardinality(multiset[1,2,3,4]));
+> 
+> -- Test other multiset operators
+> -- values(multiset[1] is a set);
+> -- values(1 member of multiset[1]);
+> -- values(2 member of multiset[1]);
+> -- values(fusion(multiset[1]));
+> -- select collect(empno) from sales.emps;
+> 
+> -- TODO: Test Lateral, submultiset, cast
+> 
+> -- Test tables with multisets
+> -- create schema multiset_test;
+> -- set schema 'multiset_test';
+> -- set path 'multiset_test';
+> 
+> -- Simple table with multiset
+> -- create table multiset_table1(
+> --     id integer primary key,
+> --     items integer multiset);
+> 
+> -- insert into multiset_table1 values(1, multiset[1,2,3]);
+> 
+> -- select * from multiset_table1;
+> -- select * from unnest(multiset_table1.items);
+> 
+> -- select * from multiset_table1 as t, unnest(t.items);
+> -- select * from unnest(t.items), multiset_table1 as t;
+> 
+> -- select * from unnest(t1.x) as t2, unnest(t2.y) as t1;
+> 
+> -- Test table with nested multiset
+> -- create type nested_row AS (
+> --    i integer,
+> --    names varchar(10) multiset ) final;
+> 
+> -- create table multiset_table2(
+> --    id integer primary key,
+> --    nested_items nested_row  multiset);
+> 
+> -- insert into multiset_table2 
+> --    values(1, 
+> --           multiset[ ( 2, multiset['a', 'b'] ) ] );
+> 
+> -- select * from multiset_table2;
+> -- select * from unnest(multiset_table2.nested_items);
+> 
+> 
+> !quit

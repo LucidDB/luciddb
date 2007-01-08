@@ -1,15 +1,15 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test queries against views
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !autocommit off
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Fennel calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select from view on permanent table
-0: jdbc:farrago:> select * from empsview order by name;
+> -- $Id$
+> -- Test queries against views
+> 
+> !autocommit off
+> 
+> -- force usage of Fennel calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> 
+> set schema 'sales';
+> 
+> -- select from view on permanent table
+> select * from empsview order by name;
 +--------+--------+
 | EMPNO  |  NAME  |
 +--------+--------+
@@ -18,10 +18,10 @@
 | 110    | John   |
 | 120    | Wilma  |
 +--------+--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select from view on temporary table
-0: jdbc:farrago:> insert into temps select * from emps;
-0: jdbc:farrago:> select * from tempsview order by name;
+> 
+> -- select from view on temporary table
+> insert into temps select * from emps;
+> select * from tempsview order by name;
 +--------+--------+
 | EMPNO  |  NAME  |
 +--------+--------+
@@ -30,10 +30,10 @@
 | 110    | John   |
 | 120    | Wilma  |
 +--------+--------+
-0: jdbc:farrago:> rollback;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select from view of join
-0: jdbc:farrago:> select * from joinview order by dname,ename;
+> rollback;
+> 
+> -- select from view of join
+> select * from joinview order by dname,ename;
 +------------+--------+
 |   DNAME    | ENAME  |
 +------------+--------+
@@ -41,26 +41,26 @@
 | Marketing  | Wilma  |
 | Sales      | Fred   |
 +------------+--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from empsview order by name;
+> 
+> -- verify plans
+> !set outputformat csv
+> 
+> explain plan for
+> select * from empsview order by name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1]], discardDuplicates=[false])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select * from joinview order by dname,ename;
+> 
+> explain plan for
+> select * from joinview order by dname,ename;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[11, 1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL DNAME, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ENAME) NOT NULL])'
-'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> rollback;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> rollback;
+> 
+> !quit

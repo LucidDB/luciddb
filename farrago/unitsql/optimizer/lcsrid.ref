@@ -1,32 +1,32 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test internal rid function
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema rid;
-0: jdbc:farrago:> set schema 'rid';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table tencols(c0 int, c1 int, c2 int, c3 int, c4 int, c5 int, c6 int,
-. . . . . . . . >             c7 int, c8 int, c9 int)
-. . . . . . . . >     server sys_column_store_data_server
-. . . . . . . . >     create clustered index i_c6_c7_c8_c9 on tencols(c6, c7, c8, c9)
-. . . . . . . . >     create clustered index i_c3_c4_c5 on tencols(c3, c4, c5)
-. . . . . . . . >     create clustered index i_c1_c2 on tencols(c1, c2)
-. . . . . . . . >     create clustered index i_c0 on tencols(c0);
-0: jdbc:farrago:> create index itencols on tencols(c9);
-0: jdbc:farrago:> insert into tencols values(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-0: jdbc:farrago:> insert into tencols values(10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
-0: jdbc:farrago:> insert into tencols values(20, 21, 22, 23, 24, 25, 26, 27, 28, 29);
-0: jdbc:farrago:> insert into tencols values(30, 31, 32, 33, 34, 35, 36, 37, 38, 39);
-0: jdbc:farrago:> insert into tencols values(40, 41, 42, 43, 44, 45, 46, 47, 48, 49);
-0: jdbc:farrago:> analyze table tencols compute statistics for all columns;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- lcs_rid not available outside of LucidDb personality
-0: jdbc:farrago:> select lcs_rid(c0) from tencols;
+> -- $Id$
+> -- Test internal rid function
+> 
+> create schema rid;
+> set schema 'rid';
+> 
+> create table tencols(c0 int, c1 int, c2 int, c3 int, c4 int, c5 int, c6 int,
+>             c7 int, c8 int, c9 int)
+>     server sys_column_store_data_server
+>     create clustered index i_c6_c7_c8_c9 on tencols(c6, c7, c8, c9)
+>     create clustered index i_c3_c4_c5 on tencols(c3, c4, c5)
+>     create clustered index i_c1_c2 on tencols(c1, c2)
+>     create clustered index i_c0 on tencols(c0);
+> create index itencols on tencols(c9);
+> insert into tencols values(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+> insert into tencols values(10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
+> insert into tencols values(20, 21, 22, 23, 24, 25, 26, 27, 28, 29);
+> insert into tencols values(30, 31, 32, 33, 34, 35, 36, 37, 38, 39);
+> insert into tencols values(40, 41, 42, 43, 44, 45, 46, 47, 48, 49);
+> analyze table tencols compute statistics for all columns;
+> 
+> -- lcs_rid not available outside of LucidDb personality
+> select lcs_rid(c0) from tencols;
 Error: From line 1, column 8 to line 1, column 18: No match found for function signature LCS_RID(<NUMERIC>) (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- basic selects
-0: jdbc:farrago:> select * from tencols order by c0;
+> 
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> -- basic selects
+> select * from tencols order by c0;
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 | C0  | C1  | C2  | C3  | C4  | C5  | C6  | C7  | C8  | C9  |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -36,13 +36,13 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 30  | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  |
 | 40  | 41  | 42  | 43  | 44  | 45  | 46  | 47  | 48  | 49  |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-0: jdbc:farrago:> select count(*) from tencols;
+> select count(*) from tencols;
 +---------+
 | EXPR$0  |
 +---------+
 | 5       |
 +---------+
-0: jdbc:farrago:> select lcs_rid(c0) from tencols order by 1;
+> select lcs_rid(c0) from tencols order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -52,7 +52,7 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 3       |
 | 4       |
 +---------+
-0: jdbc:farrago:> select *, lcs_rid(c5) from tencols order by 10;
+> select *, lcs_rid(c5) from tencols order by 10;
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+----------+
 | C0  | C1  | C2  | C3  | C4  | C5  | C6  | C7  | C8  | C9  | EXPR$10  |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+----------+
@@ -62,7 +62,7 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 30  | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  | 3        |
 | 40  | 41  | 42  | 43  | 44  | 45  | 46  | 47  | 48  | 49  | 4        |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+----------+
-0: jdbc:farrago:> select c3, c2, lcs_rid(c8), c9, c0 from tencols order by 3;
+> select c3, c2, lcs_rid(c8), c9, c0 from tencols order by 3;
 +-----+-----+---------+-----+-----+
 | C3  | C2  | EXPR$2  | C9  | C0  |
 +-----+-----+---------+-----+-----+
@@ -72,7 +72,7 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 33  | 32  | 3       | 39  | 30  |
 | 43  | 42  | 4       | 49  | 40  |
 +-----+-----+---------+-----+-----+
-0: jdbc:farrago:> select lcs_rid(c0 + c1) from tencols order by 1;
+> select lcs_rid(c0 + c1) from tencols order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -82,7 +82,7 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 3       |
 | 4       |
 +---------+
-0: jdbc:farrago:> select 2 * lcs_rid(c0) from tencols;
+> select 2 * lcs_rid(c0) from tencols;
 +---------+
 | EXPR$0  |
 +---------+
@@ -92,7 +92,7 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 6       |
 | 8       |
 +---------+
-0: jdbc:farrago:> select abs(c0 - c9), lcs_rid(c1) from tencols order by 2;
+> select abs(c0 - c9), lcs_rid(c1) from tencols order by 2;
 +---------+---------+
 | EXPR$0  | EXPR$1  |
 +---------+---------+
@@ -102,9 +102,9 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 9       | 3       |
 | 9       | 4       |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select rid multiple times
-0: jdbc:farrago:> select lcs_rid(c0), lcs_rid(c1), lcs_rid(c2) from tencols order by 1;
+> 
+> -- select rid multiple times
+> select lcs_rid(c0), lcs_rid(c1), lcs_rid(c2) from tencols order by 1;
 +---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  |
 +---------+---------+---------+
@@ -114,69 +114,69 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 3       | 3       | 3       |
 | 4       | 4       | 4       |
 +---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select with where clause
-0: jdbc:farrago:> select c9, c5, lcs_rid(c1), c2 from tencols where c0 = 0;
+> 
+> -- select with where clause
+> select c9, c5, lcs_rid(c1), c2 from tencols where c0 = 0;
 +-----+-----+---------+-----+
 | C9  | C5  | EXPR$2  | C2  |
 +-----+-----+---------+-----+
 | 9   | 5   | 0       | 2   |
 +-----+-----+---------+-----+
-0: jdbc:farrago:> select *, lcs_rid(c0) from tencols where c1 = 11;
+> select *, lcs_rid(c0) from tencols where c1 = 11;
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+----------+
 | C0  | C1  | C2  | C3  | C4  | C5  | C6  | C7  | C8  | C9  | EXPR$10  |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+----------+
 | 10  | 11  | 12  | 13  | 14  | 15  | 16  | 17  | 18  | 19  | 1        |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter on rid
-0: jdbc:farrago:> select c0 from tencols where lcs_rid(c1) > 2 order by c0;
+> 
+> -- filter on rid
+> select c0 from tencols where lcs_rid(c1) > 2 order by c0;
 +-----+
 | C0  |
 +-----+
 | 30  |
 | 40  |
 +-----+
-0: jdbc:farrago:> select c0, c9, lcs_rid(c3) from tencols where c9 > 9 and lcs_rid(c1) = 3;
+> select c0, c9, lcs_rid(c3) from tencols where c9 > 9 and lcs_rid(c1) = 3;
 +-----+-----+---------+
 | C0  | C9  | EXPR$2  |
 +-----+-----+---------+
 | 30  | 39  | 3       |
 +-----+-----+---------+
-0: jdbc:farrago:> select c0, c6, lcs_rid(c7) from tencols where c6 = 26 and lcs_rid(c8) = 2;
+> select c0, c6, lcs_rid(c7) from tencols where c6 = 26 and lcs_rid(c8) = 2;
 +-----+-----+---------+
 | C0  | C6  | EXPR$2  |
 +-----+-----+---------+
 | 20  | 26  | 2       |
 +-----+-----+---------+
-0: jdbc:farrago:> select * from tencols where lcs_rid(c0) = 0;
+> select * from tencols where lcs_rid(c0) = 0;
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 | C0  | C1  | C2  | C3  | C4  | C5  | C6  | C7  | C8  | C9  |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 | 0   | 1   | 2   | 3   | 4   | 5   | 6   | 7   | 8   | 9   |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-0: jdbc:farrago:> select count(*) from tencols where lcs_rid(c0) < 3;
+> select count(*) from tencols where lcs_rid(c0) < 3;
 +---------+
 | EXPR$0  |
 +---------+
 | 3       |
 +---------+
-0: jdbc:farrago:> -- these return no rows
-0: jdbc:farrago:> select c0, c6, lcs_rid(c7) from tencols where c6 = 26 and lcs_rid(c8) = 3;
+> -- these return no rows
+> select c0, c6, lcs_rid(c7) from tencols where c6 = 26 and lcs_rid(c8) = 3;
 +-----+-----+---------+
 | C0  | C6  | EXPR$2  |
 +-----+-----+---------+
 +-----+-----+---------+
-0: jdbc:farrago:> select c0, c6, lcs_rid(c7) from tencols where c9 = 49 and lcs_rid(c8) = 3;
+> select c0, c6, lcs_rid(c7) from tencols where c9 = 49 and lcs_rid(c8) = 3;
 +-----+-----+---------+
 | C0  | C6  | EXPR$2  |
 +-----+-----+---------+
 +-----+-----+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- join
-0: jdbc:farrago:> select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
-. . . . . . . . >     from tencols t1, tencols t2 where t1.c0 = t2.c0
-. . . . . . . . >     order by 3;
+> 
+> -- join
+> select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
+>     from tencols t1, tencols t2 where t1.c0 = t2.c0
+>     order by 3;
 +-----+-----+---------+-----+---------+
 | C8  | C5  | EXPR$2  | C2  | EXPR$4  |
 +-----+-----+---------+-----+---------+
@@ -186,9 +186,9 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 38  | 35  | 3       | 32  | 3       |
 | 48  | 45  | 4       | 42  | 4       |
 +-----+-----+---------+-----+---------+
-0: jdbc:farrago:> select *, lcs_rid(t1.c0), lcs_rid(t2.c0)
-. . . . . . . . >     from tencols t1, tencols t2 where t1.c0 = t2.c0
-. . . . . . . . >     order by 1;
+> select *, lcs_rid(t1.c0), lcs_rid(t2.c0)
+>     from tencols t1, tencols t2 where t1.c0 = t2.c0
+>     order by 1;
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+------+------+------+------+------+------+------+------+------+------+----------+----------+
 | C0  | C1  | C2  | C3  | C4  | C5  | C6  | C7  | C8  | C9  | C00  | C10  | C20  | C30  | C40  | C50  | C60  | C70  | C80  | C90  | EXPR$20  | EXPR$21  |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+------+------+------+------+------+------+------+------+------+------+----------+----------+
@@ -198,9 +198,9 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 30  | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  | 30   | 31   | 32   | 33   | 34   | 35   | 36   | 37   | 38   | 39   | 3        | 3        |
 | 40  | 41  | 42  | 43  | 44  | 45  | 46  | 47  | 48  | 49  | 40   | 41   | 42   | 43   | 44   | 45   | 46   | 47   | 48   | 49   | 4        | 4        |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+------+------+------+------+------+------+------+------+------+------+----------+----------+
-0: jdbc:farrago:> select *, lcs_rid(t1.c0), lcs_rid(t2.c0) 
-. . . . . . . . >     from tencols t1 left outer join tencols t2 on t1.c0 = t2.c0
-. . . . . . . . >     order by 1;
+> select *, lcs_rid(t1.c0), lcs_rid(t2.c0) 
+>     from tencols t1 left outer join tencols t2 on t1.c0 = t2.c0
+>     order by 1;
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+------+------+------+------+------+------+------+------+------+------+----------+----------+
 | C0  | C1  | C2  | C3  | C4  | C5  | C6  | C7  | C8  | C9  | C00  | C10  | C20  | C30  | C40  | C50  | C60  | C70  | C80  | C90  | EXPR$20  | EXPR$21  |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+------+------+------+------+------+------+------+------+------+------+----------+----------+
@@ -210,9 +210,9 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 30  | 31  | 32  | 33  | 34  | 35  | 36  | 37  | 38  | 39  | 30   | 31   | 32   | 33   | 34   | 35   | 36   | 37   | 38   | 39   | 3        | 3        |
 | 40  | 41  | 42  | 43  | 44  | 45  | 46  | 47  | 48  | 49  | 40   | 41   | 42   | 43   | 44   | 45   | 46   | 47   | 48   | 49   | 4        | 4        |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+------+------+------+------+------+------+------+------+------+------+----------+----------+
-0: jdbc:farrago:> select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
-. . . . . . . . >     from tencols t1, tencols t2 where lcs_rid(t1.c0) = lcs_rid(t2.c0)
-. . . . . . . . >     order by 3;
+> select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
+>     from tencols t1, tencols t2 where lcs_rid(t1.c0) = lcs_rid(t2.c0)
+>     order by 3;
 +-----+-----+---------+-----+---------+
 | C8  | C5  | EXPR$2  | C2  | EXPR$4  |
 +-----+-----+---------+-----+---------+
@@ -222,7 +222,7 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 38  | 35  | 3       | 32  | 3       |
 | 48  | 45  | 4       | 42  | 4       |
 +-----+-----+---------+-----+---------+
-0: jdbc:farrago:> select lcs_rid(t1.c0) from tencols t1, tencols t2 order by 1;
+> select lcs_rid(t1.c0) from tencols t1, tencols t2 order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -252,9 +252,9 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 4       |
 | 4       |
 +---------+
-0: jdbc:farrago:> -- use rids in a join where nothing is projected from one side of the join
-0: jdbc:farrago:> -- and that input into the join has only 1 field
-0: jdbc:farrago:> select lcs_rid(t.c0), c0 from tencols t, (values(1)) order by 2; 
+> -- use rids in a join where nothing is projected from one side of the join
+> -- and that input into the join has only 1 field
+> select lcs_rid(t.c0), c0 from tencols t, (values(1)) order by 2; 
 +---------+-----+
 | EXPR$0  | C0  |
 +---------+-----+
@@ -264,7 +264,7 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 3       | 30  |
 | 4       | 40  |
 +---------+-----+
-0: jdbc:farrago:> select lcs_rid(t.c0), c0 from (values(1)), tencols t order by 2; 
+> select lcs_rid(t.c0), c0 from (values(1)), tencols t order by 2; 
 +---------+-----+
 | EXPR$0  | C0  |
 +---------+-----+
@@ -274,126 +274,128 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 3       | 30  |
 | 4       | 40  |
 +---------+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --------------
-0: jdbc:farrago:> -- Error cases
-0: jdbc:farrago:> --------------
-0: jdbc:farrago:> -- no argument
-0: jdbc:farrago:> select lcs_rid() from tencols;
+> 
+> --------------
+> -- Error cases
+> --------------
+> -- no argument
+> select lcs_rid() from tencols;
 Error: From line 1, column 8 to line 1, column 16: Invalid number of arguments to function 'LCS_RID'. Was expecting 1 arguments (state=,code=0)
-0: jdbc:farrago:> -- non-column argument
-0: jdbc:farrago:> select lcs_rid(0) from tencols;
+> -- non-column argument
+> select lcs_rid(0) from tencols;
 Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (state=,code=0)
-0: jdbc:farrago:> -- non-existent column
-0: jdbc:farrago:> select lcs_rid(c10) from tencols;
+> -- non-existent column
+> select lcs_rid(c10) from tencols;
 Error: From line 1, column 16 to line 1, column 18: Column 'C10' not found in any table (state=,code=0)
-0: jdbc:farrago:> -- reference > 1 table
-0: jdbc:farrago:> select lcs_rid(t1.c0 + t2.c1) from tencols t1, tencols t2;
+> -- reference > 1 table
+> select lcs_rid(t1.c0 + t2.c1) from tencols t1, tencols t2;
 Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t2) (state=,code=0)
-0: jdbc:farrago:> -- non-column argument in where clause
-0: jdbc:farrago:> select c0 from tencols where lcs_rid(0) = 0;
+> -- non-column argument in where clause
+> select c0 from tencols where lcs_rid(0) = 0;
 Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -----------------
-0: jdbc:farrago:> -- explain output
-0: jdbc:farrago:> -----------------
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> explain plan for select count(*) from tencols;
+> 
+> -----------------
+> -- explain output
+> -----------------
+> !set outputformat csv
+> explain plan for select count(*) from tencols;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
 '      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[LCS_RID]], clustered indexes=[[I_C0]])'
-0: jdbc:farrago:> explain plan for select lcs_rid(c0) from tencols order by 1;
+> explain plan for select lcs_rid(c0) from tencols order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelRenameRel(fieldNames=[[EXPR$0]])'
 '      LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[LCS_RID]], clustered indexes=[[I_C0]])'
-0: jdbc:farrago:> explain plan for select *, lcs_rid(c5) from tencols order by 10;
+> explain plan for select *, lcs_rid(c5) from tencols order by 10;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[9]], discardDuplicates=[false])'
 '    FennelRenameRel(fieldNames=[[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, EXPR$10]])'
 '      LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, LCS_RID]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
-0: jdbc:farrago:> explain plan for select c3, c2, lcs_rid(c8), c9, c0 from tencols order by 3;
+> explain plan for select c3, c2, lcs_rid(c8), c9, c0 from tencols order by 3;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[2]], discardDuplicates=[false])'
 '    FennelRenameRel(fieldNames=[[C3, C2, EXPR$2, C9, C0]])'
 '      LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[3, 2, LCS_RID, 9, 0]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
-0: jdbc:farrago:> explain plan for select lcs_rid(c0 + c1) from tencols order by 1;
+> explain plan for select lcs_rid(c0 + c1) from tencols order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelRenameRel(fieldNames=[[EXPR$0]])'
 '      LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[LCS_RID]], clustered indexes=[[I_C0]])'
-0: jdbc:farrago:> explain plan for select 2 * lcs_rid(c0) from tencols;
+> explain plan for select 2 * lcs_rid(c0) from tencols;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[*($t1, $t0)], EXPR$0=[$t2])'
 '  FennelToIteratorConverter'
 '    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[LCS_RID]], clustered indexes=[[I_C0]])'
-0: jdbc:farrago:> explain plan for select abs(c0 - c9), lcs_rid(c1) from tencols order by 2;
+> explain plan for select abs(c0 - c9), lcs_rid(c1) from tencols order by 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..2=[{inputs}], expr#3=[-($t0, $t1)], expr#4=[ABS($t3)], EXPR$0=[$t4], EXPR$1=[$t2])'
 '      LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 9, LCS_RID]], clustered indexes=[[I_C0, I_C6_C7_C8_C9]])'
-0: jdbc:farrago:> explain plan for select lcs_rid(c0), lcs_rid(c1), lcs_rid(c2) from tencols
-. . . . . . . . >     order by 1;
+> explain plan for select lcs_rid(c0), lcs_rid(c1), lcs_rid(c2) from tencols
+>     order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelRenameRel(fieldNames=[[EXPR$0, EXPR$1, EXPR$2]])'
 '      LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[LCS_RID, LCS_RID, LCS_RID]], clustered indexes=[[I_C0]])'
-0: jdbc:farrago:> explain plan for select c9, c5, lcs_rid(c1), c2 from tencols where c0 = 0;
+> explain plan for select c9, c5, lcs_rid(c1), c2 from tencols where c0 = 0;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[3, 2, 4, 1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER C9, INTEGER C5, BIGINT EXPR$2, INTEGER C2) NOT NULL])'
-'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 2, 5, 9, LCS_RID]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
-0: jdbc:farrago:> explain plan for select *, lcs_rid(c0) from tencols where c1 = 11;
+'  FennelRenameRel(fieldNames=[[C9, C5, EXPR$2, C2]])'
+'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[9, 5, LCS_RID, 2]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]], residual columns=[[0]])'
+'      FennelValuesRel(tuples=[[{ '[', 0, ']', 0 }]])'
+> explain plan for select *, lcs_rid(c0) from tencols where c1 = 11;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, EXPR$10]])'
-'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[11]], outputRowType=[RecordType(INTEGER C0, INTEGER C1, INTEGER C2, INTEGER C3, INTEGER C4, INTEGER C5, INTEGER C6, INTEGER C7, INTEGER C8, INTEGER C9, BIGINT LCS_RID) NOT NULL])'
-'      LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, LCS_RID]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
-0: jdbc:farrago:> explain plan for select c0 from tencols where lcs_rid(c1) > 2 order by c0;
+'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, LCS_RID]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]], residual columns=[[1]])'
+'      FennelValuesRel(tuples=[[{ '[', 11, ']', 11 }]])'
+> explain plan for select c0 from tencols where lcs_rid(c1) > 2 order by c0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[[2]], outputRowType=[RecordType(INTEGER C0) NOT NULL])'
 '      LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, LCS_RID]], clustered indexes=[[I_C0]])'
-0: jdbc:farrago:> explain plan for select c0, c9, lcs_rid(c3) from tencols
-. . . . . . . . >     where c9 > 9 and lcs_rid(c1) = 3;
+> explain plan for select c0, c9, lcs_rid(c3) from tencols
+>     where c9 > 9 and lcs_rid(c1) = 3;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[3]], outputRowType=[RecordType(INTEGER C0, INTEGER C9, BIGINT EXPR$2) NOT NULL])'
 '    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 9, LCS_RID, LCS_RID]], clustered indexes=[[I_C0, I_C6_C7_C8_C9]])'
 '      LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '        LcsIndexSearchRel(table=[[LOCALDB, RID, TENCOLS]], index=[ITENCOLS], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'          FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 9, _ISO-8859-1'+', null }]])'
-0: jdbc:farrago:> explain plan for select c0, c6, lcs_rid(c7) from tencols
-. . . . . . . . >     where c6 = 26 and lcs_rid(c8) = 2;
+'          FennelValuesRel(tuples=[[{ '(', 9, '+', null }]])'
+> explain plan for select c0, c6, lcs_rid(c7) from tencols
+>     where c6 = 26 and lcs_rid(c8) = 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[1, 3]], filterTuple=[[26, 2]], outputRowType=[RecordType(INTEGER C0, INTEGER C6, BIGINT EXPR$2) NOT NULL])'
-'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 6, LCS_RID, LCS_RID]], clustered indexes=[[I_C0, I_C6_C7_C8_C9]])'
-0: jdbc:farrago:> explain plan for select * from tencols where lcs_rid(c0) = 0;
+'  FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[2]], outputRowType=[RecordType(INTEGER C0, INTEGER C6, BIGINT EXPR$2) NOT NULL])'
+'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 6, LCS_RID, LCS_RID]], clustered indexes=[[I_C0, I_C6_C7_C8_C9]], residual columns=[[6]])'
+'      FennelValuesRel(tuples=[[{ '[', 26, ']', 26 }]])'
+> explain plan for select * from tencols where lcs_rid(c0) = 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], filterOp=[COMP_EQ], filterOrdinals=[[10]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER C0, INTEGER C1, INTEGER C2, INTEGER C3, INTEGER C4, INTEGER C5, INTEGER C6, INTEGER C7, INTEGER C8, INTEGER C9) NOT NULL])'
 '    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, LCS_RID]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
-0: jdbc:farrago:> explain plan for select count(*) from tencols where lcs_rid(c0) < 3;
+> explain plan for select count(*) from tencols where lcs_rid(c0) < 3;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
 '      FennelCalcRel(expr#0=[{inputs}], expr#1=[3], expr#2=[<($t0, $t1)], expr#3=[true], $f0=[$t3], $condition=[$t2])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[LCS_RID]], clustered indexes=[[I_C0]])'
-0: jdbc:farrago:> explain plan for select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
-. . . . . . . . >     from tencols t1, tencols t2 where t1.c0 = t2.c0
-. . . . . . . . >     order by 3;
+> explain plan for select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
+>     from tencols t1, tencols t2 where t1.c0 = t2.c0
+>     order by 3;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[2]], discardDuplicates=[false])'
@@ -401,9 +403,9 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 2, 5, LCS_RID]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5]])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 8, LCS_RID]], clustered indexes=[[I_C0, I_C6_C7_C8_C9]])'
-0: jdbc:farrago:> explain plan for select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
-. . . . . . . . >     from tencols t1, tencols t2 where lcs_rid(t1.c0) = lcs_rid(t2.c0)
-. . . . . . . . >     order by 3;
+> explain plan for select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
+>     from tencols t1, tencols t2 where lcs_rid(t1.c0) = lcs_rid(t2.c0)
+>     order by 3;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[2]], discardDuplicates=[false])'
@@ -411,7 +413,7 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 '      LhxJoinRel(leftKeys=[[2]], rightKeys=[[2]], joinType=[INNER])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[2, 5, LCS_RID]], clustered indexes=[[I_C1_C2, I_C3_C4_C5]])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[8, LCS_RID, LCS_RID]], clustered indexes=[[I_C6_C7_C8_C9]])'
-0: jdbc:farrago:> explain plan for select lcs_rid(t1.c0) from tencols t1, tencols t2 order by 1;
+> explain plan for select lcs_rid(t1.c0) from tencols t1, tencols t2 order by 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -419,25 +421,23 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[LCS_RID]], clustered indexes=[[I_C0]])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0]], clustered indexes=[[I_C0]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select lcs_rid(t.c0), c0 from tencols t, (values(1)) order by 2;
+> explain plan for
+>     select lcs_rid(t.c0), c0 from tencols t, (values(1)) order by 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(BIGINT EXPR$0, INTEGER C0) NOT NULL])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, LCS_RID]], clustered indexes=[[I_C0]])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
-'          FennelValuesRel(tuples=[[{ 0 }]])'
-0: jdbc:farrago:> explain plan for
-. . . . . . . . >     select lcs_rid(t.c0), c0 from (values(1)), tencols t order by 2;
+'        FennelValuesRel(tuples=[[{ 1 }]])'
+> explain plan for
+>     select lcs_rid(t.c0), c0 from (values(1)), tencols t order by 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(BIGINT EXPR$0, INTEGER C0) NOT NULL])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, LCS_RID]], clustered indexes=[[I_C0]])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
-'          FennelValuesRel(tuples=[[{ 0 }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+'        FennelValuesRel(tuples=[[{ 1 }]])'
+> 
+> !quit

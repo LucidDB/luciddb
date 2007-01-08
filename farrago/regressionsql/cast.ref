@@ -1,214 +1,214 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Full vertical system testing of the cast function
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
-0: jdbc:farrago:> -- and another time to use java. The caller of this script is setting the flag so no need
-0: jdbc:farrago:> -- to do it directly unless you need to do acrobatics.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast(null as tinyint);
+> -- $Id$
+> -- Full vertical system testing of the cast function
+> 
+> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
+> -- and another time to use java. The caller of this script is setting the flag so no need
+> -- to do it directly unless you need to do acrobatics.
+> 
+> values cast(null as tinyint);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as smallint);
+> values cast(null as smallint);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as integer);
+> values cast(null as integer);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as bigint);
+> values cast(null as bigint);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as real);
+> values cast(null as real);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as double);
+> values cast(null as double);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as boolean);
+> values cast(null as boolean);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as char(1));
+> values cast(null as char(1));
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as varchar(1));
+> values cast(null as varchar(1));
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as binary(1));
+> values cast(null as binary(1));
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as date);
+> values cast(null as date);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as time);
+> values cast(null as time);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as timestamp);
+> values cast(null as timestamp);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as varbinary(1));
+> values cast(null as varbinary(1));
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as float);
+> values cast(null as float);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as decimal);
+> values cast(null as decimal);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast(1.8 as integer);
+> 
+> 
+> values cast(1.8 as integer);
 +---------+
 | EXPR$0  |
 +---------+
 | 2       |
 +---------+
-0: jdbc:farrago:> values cast(-1.8 as tinyint);
+> values cast(-1.8 as tinyint);
 +---------+
 | EXPR$0  |
 +---------+
 | -2      |
 +---------+
-0: jdbc:farrago:> values cast(-1.1 as smallint);
+> values cast(-1.1 as smallint);
 +---------+
 | EXPR$0  |
 +---------+
 | -1      |
 +---------+
-0: jdbc:farrago:> values cast(1e-4 as integer);
+> values cast(1e-4 as integer);
 +---------+
 | EXPR$0  |
 +---------+
 | 0       |
 +---------+
-0: jdbc:farrago:> values cast(1e2 as integer);
+> values cast(1e2 as integer);
 +---------+
 | EXPR$0  |
 +---------+
 | 100     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast(1 as double);
+> 
+> values cast(1 as double);
 +---------+
 | EXPR$0  |
 +---------+
 | 1.0     |
 +---------+
-0: jdbc:farrago:> values cast(cast(1 as real) as double);
+> values cast(cast(1 as real) as double);
 +---------+
 | EXPR$0  |
 +---------+
 | 1.0     |
 +---------+
-0: jdbc:farrago:> values cast(1.1 as double);
+> values cast(1.1 as double);
 +---------+
 | EXPR$0  |
 +---------+
 | 1.1     |
 +---------+
-0: jdbc:farrago:> values cast(cast(1.0 as double) as real);
+> values cast(cast(1.0 as double) as real);
 +---------+
 | EXPR$0  |
 +---------+
 | 1.0     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast(127 as tinyint);
+> 
+> values cast(127 as tinyint);
 +---------+
 | EXPR$0  |
 +---------+
 | 127     |
 +---------+
-0: jdbc:farrago:> values cast(128 as tinyint);
+> values cast(128 as tinyint);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22003 (state=,code=0)
-0: jdbc:farrago:> values cast(255 as tinyint);
+> values cast(255 as tinyint);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22003 (state=,code=0)
-0: jdbc:farrago:> values cast(256 as tinyint);
+> values cast(256 as tinyint);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22003 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- data type validation error cases
-0: jdbc:farrago:> values cast(12 as integer(0));
+> 
+> -- data type validation error cases
+> values cast(12 as integer(0));
 Error: From line 1, column 19 to line 1, column 25: Precision specification not allowed on datatype "INTEGER" (state=,code=0)
-0: jdbc:farrago:> values cast(12 as boolean(0,2));
+> values cast(12 as boolean(0,2));
 Error: From line 1, column 19 to line 1, column 25: Precision specification not allowed on datatype "BOOLEAN" (state=,code=0)
-0: jdbc:farrago:> values cast(12 as decimal(20,0));
+> values cast(12 as decimal(20,0));
 Error: From line 1, column 19 to line 1, column 25: Precision 20 exceeds maximum of 19 (state=,code=0)
-0: jdbc:farrago:> values cast(12 as decimal(1,20));
+> values cast(12 as decimal(1,20));
 Error: From line 1, column 19 to line 1, column 25: Scale 20 exceeds maximum of 19 (state=,code=0)
-0: jdbc:farrago:> values cast(12 as decimal(0,2));
+> values cast(12 as decimal(0,2));
 Error: From line 1, column 19 to line 1, column 25: Precision must be positive (state=,code=0)
-0: jdbc:farrago:> values cast(12 as char(1,2));
+> values cast(12 as char(1,2));
 Error: From line 1, column 19 to line 1, column 22: Scale specification not allowed on datatype "CHAR" (state=,code=0)
-0: jdbc:farrago:> values cast(12 as varchar(1,2));
+> values cast(12 as varchar(1,2));
 Error: From line 1, column 19 to line 1, column 25: Scale specification not allowed on datatype "VARCHAR" (state=,code=0)
-0: jdbc:farrago:> values cast(12 as binary(1,2));
+> values cast(12 as binary(1,2));
 Error: From line 1, column 19 to line 1, column 24: Scale specification not allowed on datatype "BINARY" (state=,code=0)
-0: jdbc:farrago:> values cast(12 as varbinary(1,2));
+> values cast(12 as varbinary(1,2));
 Error: From line 1, column 19 to line 1, column 27: Scale specification not allowed on datatype "VARBINARY" (state=,code=0)
-0: jdbc:farrago:> values cast(12 as badtype);
+> values cast(12 as badtype);
 Error: DDL validation error: Reference to unknown datatype "BADTYPE" (state=,code=0)
-0: jdbc:farrago:> values cast(12 as udt.badtype);
+> values cast(12 as udt.badtype);
 Error: DDL validation error: Reference to unknown user-defined type "BADTYPE" (state=,code=0)
-0: jdbc:farrago:> values cast('12' as time(100));
+> values cast('12' as time(100));
 Error: From line 1, column 21 to line 1, column 24: Precision 100 exceeds maximum of 0 (state=,code=0)
-0: jdbc:farrago:> values cast('12' as timestamp(100));
+> values cast('12' as timestamp(100));
 Error: From line 1, column 21 to line 1, column 29: Precision 100 exceeds maximum of 0 (state=,code=0)
-0: jdbc:farrago:> values cast('12' as date(1));
+> values cast('12' as date(1));
 Error: From line 1, column 21 to line 1, column 24: Precision specification not allowed on datatype "DATE" (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

@@ -1,8 +1,8 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test JDBC metadata calls
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test getCatalogs
-0: jdbc:farrago:> !metadata getCatalogs
+> -- $Id$
+> -- Test JDBC metadata calls
+> 
+> -- test getCatalogs
+> !metadata getCatalogs
 +-------------------------------+
 |           TABLE_CAT           |
 +-------------------------------+
@@ -17,9 +17,9 @@
 | SYS_MOCK_FOREIGN_DATA_SERVER  |
 | SYS_MOF                       |
 +-------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test getSchemas
-0: jdbc:farrago:> !metadata getSchemas
+> 
+> -- test getSchemas
+> !metadata getSchemas
 +---------------------+----------------+
 |     TABLE_SCHEM     | TABLE_CATALOG  |
 +---------------------+----------------+
@@ -30,9 +30,9 @@
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test getTableTypes
-0: jdbc:farrago:> !metadata getTableTypes
+> 
+> -- test getTableTypes
+> !metadata getTableTypes
 +----------------+
 |   TABLE_TYPE   |
 +----------------+
@@ -40,9 +40,9 @@
 | TABLE          |
 | VIEW           |
 +----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test getTables (default catalog)
-0: jdbc:farrago:> !tables
+> 
+> -- test getTables (default catalog)
+> !tables
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
@@ -53,19 +53,19 @@
 | LOCALDB    | SALES        | JOINVIEW    | VIEW        |          |           |             |            |                            |                 |
 | LOCALDB    | SALES        | TEMPSVIEW   | VIEW        |          |           |             |            |                            |                 |
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test getTables with pattern
-0: jdbc:farrago:> !metadata getTables LOCALDB SALES %EMPS null
+> 
+> -- test getTables with pattern
+> !metadata getTables LOCALDB SALES %EMPS null
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | LOCALDB    | SALES        | EMPS        | TABLE       |          |           |             |            |                            |                 |
 | LOCALDB    | SALES        | TEMPS       | TABLE       |          |           |             |            |                            |                 |
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test getTables (system catalog)
-0: jdbc:farrago:> set catalog 'sys_boot';
-0: jdbc:farrago:> !tables
+> 
+> -- test getTables (system catalog)
+> set catalog 'sys_boot';
+> !tables
 +------------+----------------+-----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  |  TABLE_SCHEM   |            TABLE_NAME             | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+----------------+-----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
@@ -126,10 +126,10 @@
 | SYS_BOOT   | MGMT           | SESSION_PARAMETERS_VIEW           | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | STATEMENTS_VIEW                   | VIEW        |          |           |             |            |                            |                 |
 +------------+----------------+-----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test getColumns
-0: jdbc:farrago:> set catalog 'localdb';
-0: jdbc:farrago:> !columns EMPS
+> 
+> -- test getColumns
+> set catalog 'localdb';
+> !columns EMPS
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
@@ -144,7 +144,7 @@
 | LOCALDB    | SALES        | EMPS        | SLACKER      | 16         | BOOLEAN    |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 9                 | YES          |                |               |              |                   |
 | LOCALDB    | SALES        | EMPS        | MANAGER      | 16         | BOOLEAN    |              | 0           |             |                 | 0         |          |             | 0              | 0                 |                    | 10                | NO           |                |               |              |                   |
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-0: jdbc:farrago:> !describe EMPS
+> !describe EMPS
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
@@ -159,10 +159,10 @@
 | LOCALDB    | SALES        | EMPS        | SLACKER      | 16         | BOOLEAN    |              | 0           |             |                 | 1         |          |             | 0              | 0                 |                    | 9                 | YES          |                |               |              |                   |
 | LOCALDB    | SALES        | EMPS        | MANAGER      | 16         | BOOLEAN    |              | 0           |             |                 | 0         |          |             | 0              | 0                 |                    | 10                | NO           |                |               |              |                   |
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test adding a table and the metadata updating correctly
-0: jdbc:farrago:> create schema metadata_test_schema;
-0: jdbc:farrago:> !metadata getSchemas
+> 
+> -- test adding a table and the metadata updating correctly
+> create schema metadata_test_schema;
+> !metadata getSchemas
 +-----------------------+----------------+
 |      TABLE_SCHEM      | TABLE_CATALOG  |
 +-----------------------+----------------+
@@ -174,13 +174,13 @@
 | SQLJ                  | LOCALDB        |
 | SYS_BOOT              | SYS_BOOT       |
 +-----------------------+----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table metadata_test_schema.new_table (
-. . . . . . . . >     tid integer primary key,
-. . . . . . . . >     address varchar(256),
-. . . . . . . . >     amount decimal(5,2) );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !tables
+> 
+> create table metadata_test_schema.new_table (
+>     tid integer primary key,
+>     address varchar(256),
+>     amount decimal(5,2) );
+> 
+> !tables
 +------------+-----------------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  |      TABLE_SCHEM      | TABLE_NAME  | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+-----------------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
@@ -192,7 +192,7 @@
 | LOCALDB    | SALES                 | JOINVIEW    | VIEW        |          |           |             |            |                            |                 |
 | LOCALDB    | SALES                 | TEMPSVIEW   | VIEW        |          |           |             |            |                            |                 |
 +------------+-----------------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-0: jdbc:farrago:> !columns NEW_TABLE
+> !columns NEW_TABLE
 +------------+-----------------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | TABLE_CAT  |      TABLE_SCHEM      | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
 +------------+-----------------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
@@ -200,12 +200,12 @@
 | LOCALDB    | METADATA_TEST_SCHEMA  | NEW_TABLE   | ADDRESS      | 12         | VARCHAR    | 256          | 0           |             |                 | 1         |          |             | 0              | 0                 | 256                | 2                 | YES          |                |               |              |                   |
 | LOCALDB    | METADATA_TEST_SCHEMA  | NEW_TABLE   | AMOUNT       | 3          | DECIMAL    | 5            | 0           | 2           |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
 +------------+-----------------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: Try adding and dropping columns from the table and check metadata
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test dropping the table and the metadata updating correctly
-0: jdbc:farrago:> drop table metadata_test_schema.new_table;
-0: jdbc:farrago:> !tables
+> 
+> -- TODO: Try adding and dropping columns from the table and check metadata
+> 
+> -- test dropping the table and the metadata updating correctly
+> drop table metadata_test_schema.new_table;
+> !tables
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
@@ -216,65 +216,65 @@
 | LOCALDB    | SALES        | JOINVIEW    | VIEW        |          |           |             |            |                            |                 |
 | LOCALDB    | SALES        | TEMPSVIEW   | VIEW        |          |           |             |            |                            |                 |
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-0: jdbc:farrago:> !columns NEW_TABLE
+> !columns NEW_TABLE
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create type metadata_test_schema.dollar_currency as double;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create type metadata_test_schema.rectilinear_coord as (
-. . . . . . . . >     x double,
-. . . . . . . . >     y double
-. . . . . . . . > ) final;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !metadata getProcedures LOCALDB SALES %
+> 
+> create type metadata_test_schema.dollar_currency as double;
+> 
+> create type metadata_test_schema.rectilinear_coord as (
+>     x double,
+>     y double
+> ) final;
+> 
+> !metadata getProcedures LOCALDB SALES %
 +----------------+------------------+---------------------+------------+------------+------------+----------+-----------------+
 | PROCEDURE_CAT  | PROCEDURE_SCHEM  |   PROCEDURE_NAME    | RESERVED1  | RESERVED2  | RESERVED3  | REMARKS  | PROCEDURE_TYPE  |
 +----------------+------------------+---------------------+------------+------------+------------+----------+-----------------+
 | LOCALDB        | SALES            | DECRYPT_PUBLIC_KEY  |            |            |            |          | 1               |
 | LOCALDB        | SALES            | MAYBE_FEMALE        |            |            |            |          | 1               |
 +----------------+------------------+---------------------+------------+------------+------------+----------+-----------------+
-0: jdbc:farrago:> !metadata getProcedureColumns LOCALDB SALES MAYBE_FEMALE %
+> !metadata getProcedureColumns LOCALDB SALES MAYBE_FEMALE %
 +----------------+------------------+-----------------+--------------+--------------+------------+------------+------------+---------+--------+--------+-----------+----------+-----------------+
 | PROCEDURE_CAT  | PROCEDURE_SCHEM  | PROCEDURE_NAME  | COLUMN_NAME  | COLUMN_TYPE  | DATA_TYPE  | TYPE_NAME  | PRECISION  | LENGTH  | SCALE  | RADIX  | NULLABLE  | REMARKS  | COLUMN_ORDINAL  |
 +----------------+------------------+-----------------+--------------+--------------+------------+------------+------------+---------+--------+--------+-----------+----------+-----------------+
 | LOCALDB        | SALES            | MAYBE_FEMALE    | RETURN       | 5            | 16         | BOOLEAN    |            |         |        |        | 1         |          | 0               |
 | LOCALDB        | SALES            | MAYBE_FEMALE    | GENDER       | 1            | 1          | CHAR       |            | 1       |        |        | 1         |          | 1               |
 +----------------+------------------+-----------------+--------------+--------------+------------+------------+------------+---------+--------+--------+-----------+----------+-----------------+
-0: jdbc:farrago:> !metadata getUDTs LOCALDB METADATA_TEST_SCHEMA % %
+> !metadata getUDTs LOCALDB METADATA_TEST_SCHEMA % %
 +-----------+-----------------------+--------------------+-------------+------------+----------+------------+
 | TYPE_CAT  |      TYPE_SCHEM       |     TYPE_NAME      | CLASS_NAME  | DATA_TYPE  | REMARKS  | BASE_TYPE  |
 +-----------+-----------------------+--------------------+-------------+------------+----------+------------+
 | LOCALDB   | METADATA_TEST_SCHEMA  | DOLLAR_CURRENCY    |             | 2001       |          |            |
 | LOCALDB   | METADATA_TEST_SCHEMA  | RECTILINEAR_COORD  |             | 2002       |          |            |
 +-----------+-----------------------+--------------------+-------------+------------+----------+------------+
-0: jdbc:farrago:> !metadata getAttributes LOCALDB METADATA_TEST_SCHEMA % %
+> !metadata getAttributes LOCALDB METADATA_TEST_SCHEMA % %
 +-----------+-----------------------+--------------------+------------+------------+-----------------+------------+-----------------+-----------------+-----------+----------+-----------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | TYPE_CAT  |      TYPE_SCHEM       |     TYPE_NAME      | ATTR_NAME  | DATA_TYPE  | ATTR_TYPE_NAME  | ATTR_SIZE  | DECIMAL_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | ATTR_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
 +-----------+-----------------------+--------------------+------------+------------+-----------------+------------+-----------------+-----------------+-----------+----------+-----------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | LOCALDB   | METADATA_TEST_SCHEMA  | RECTILINEAR_COORD  | X          | 8          | DOUBLE          |            |                 |                 | 1         |          |           | 0              | 0                 |                    | 1                 | YES          |                |               |              |                   |
 | LOCALDB   | METADATA_TEST_SCHEMA  | RECTILINEAR_COORD  | Y          | 8          | DOUBLE          |            |                 |                 | 1         |          |           | 0              | 0                 |                    | 2                 | YES          |                |               |              |                   |
 +-----------+-----------------------+--------------------+------------+------------+-----------------+------------+-----------------+-----------------+-----------+----------+-----------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-0: jdbc:farrago:> !primarykeys EMPS
-+------------+--------------+-------------+--------------+----------+------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | KEY_SEQ  |     PK_NAME      |
-+------------+--------------+-------------+--------------+----------+------------------+
-| LOCALDB    | SALES        | EMPS        | DEPTNO       | 1        | SYS$PRIMARY_KEY  |
-| LOCALDB    | SALES        | EMPS        | EMPNO        | 2        | SYS$PRIMARY_KEY  |
-+------------+--------------+-------------+--------------+----------+------------------+
-0: jdbc:farrago:> !indexes EMPS
+> !primarykeys EMPS
++------------+--------------+-------------+--------------+----------+-----------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | KEY_SEQ  |        PK_NAME        |
++------------+--------------+-------------+--------------+----------+-----------------------+
+| LOCALDB    | SALES        | EMPS        | DEPTNO       | 1        | SYS$PRIMARY_KEY$EMPS  |
+| LOCALDB    | SALES        | EMPS        | EMPNO        | 2        | SYS$PRIMARY_KEY$EMPS  |
++------------+--------------+-------------+--------------+----------+-----------------------+
+> !indexes EMPS
 +------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |                   INDEX_NAME                    | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
 +------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 | LOCALDB    | SALES        | EMPS        | false       |                  |                                                 | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1     | 1                 | DEPTNO       | A             | 0            | 0      |                   |
-| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1     | 2                 | EMPNO        | A             | 0            | 0      |                   |
-| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 3     | 1                 | EMPID        | A             | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1     | 1                 | DEPTNO       | A             | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1     | 2                 | EMPNO        | A             | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID  | 3     | 1                 | EMPID        | A             | 0            | 0      |                   |
 | LOCALDB    | SALES        | EMPS        | true        | LOCALDB          | EMPS_UX                                         | 3     | 1                 | NAME         | A             | 0            | 0      |                   |
 +------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-0: jdbc:farrago:> !procedures
+> !procedures
 +----------------+------------------+---------------------+------------+------------+------------+----------+-----------------+
 | PROCEDURE_CAT  | PROCEDURE_SCHEM  |   PROCEDURE_NAME    | RESERVED1  | RESERVED2  | RESERVED3  | REMARKS  | PROCEDURE_TYPE  |
 +----------------+------------------+---------------------+------------+------------+------------+----------+-----------------+
@@ -285,9 +285,9 @@
 | LOCALDB        | SQLJ             | REMOVE_JAR          |            |            |            |          | 1               |
 | LOCALDB        | SQLJ             | REPLACE_JAR         |            |            |            |          | 1               |
 +----------------+------------------+---------------------+------------+------------+------------+----------+-----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop schema metadata_test_schema cascade;
-0: jdbc:farrago:> !metadata getSchemas
+> 
+> drop schema metadata_test_schema cascade;
+> !metadata getSchemas
 +---------------------+----------------+
 |     TABLE_SCHEM     | TABLE_CATALOG  |
 +---------------------+----------------+
@@ -298,9 +298,9 @@
 | SQLJ                | LOCALDB        |
 | SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test misc calls
-0: jdbc:farrago:> !dbinfo
+> 
+> -- test misc calls
+> !dbinfo
 allProceduresAreCallable                          true
 allTablesAreSelectable                            true
 dataDefinitionCausesTransactionCommit             true
@@ -418,7 +418,7 @@ supportsUnion                                     true
 supportsUnionAll                                  true
 usesLocalFilePerTable                             false
 usesLocalFiles                                    false
-0: jdbc:farrago:> !typeinfo
+> !typeinfo
 +------------+------------+------------+-----------------+-----------------+----------------+-----------+-----------------+-------------+---------------------+-------------------+-----------------+------------------+----------------+----------------+----------------+-------------------+-----------------+
 | TYPE_NAME  | DATA_TYPE  | PRECISION  | LITERAL_PREFIX  | LITERAL_SUFFIX  | CREATE_PARAMS  | NULLABLE  | CASE_SENSITIVE  | SEARCHABLE  | UNSIGNED_ATTRIBUTE  | FIXED_PREC_SCALE  | AUTO_INCREMENT  | LOCAL_TYPE_NAME  | MINIMUM_SCALE  | MAXIMUM_SCALE  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | NUM_PREC_RADIX  |
 +------------+------------+------------+-----------------+-----------------+----------------+-----------+-----------------+-------------+---------------------+-------------------+-----------------+------------------+----------------+----------------+----------------+-------------------+-----------------+
@@ -438,76 +438,76 @@ usesLocalFiles                                    false
 | TIME       | 92         | 0          | TIME '          | '               |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   |                 |
 | TIMESTAMP  | 93         | 0          | TIMESTAMP '     | '               |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   |                 |
 +------------+------------+------------+-----------------+-----------------+----------------+-----------+-----------------+-------------+---------------------+-------------------+-----------------+------------------+----------------+----------------+----------------+-------------------+-----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test calls not tested by !dbinfo
-0: jdbc:farrago:> !metadata getResultSetHoldability
+> 
+> -- test calls not tested by !dbinfo
+> !metadata getResultSetHoldability
 2
-0: jdbc:farrago:> !metadata getJDBCMajorVersion
+> !metadata getJDBCMajorVersion
 3
-0: jdbc:farrago:> !metadata getJDBCMinorVersion
+> !metadata getJDBCMinorVersion
 0
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test direct queries
-0: jdbc:farrago:> select "name", "fennelDisabled", "userCatalogEnabled",
-. . . . . . . . >        "codeCacheMaxBytes", "checkpointInterval",
-. . . . . . . . >        "serverRmiRegistryPort", "serverSingleListenerPort",
-. . . . . . . . >        "calcVirtualMachine", "javaCompilerClassName"
-. . . . . . . . >      from sys_fem."Config"."FarragoConfig";
+> 
+> -- test direct queries
+> select "name", "fennelDisabled", "userCatalogEnabled",
+>        "codeCacheMaxBytes", "checkpointInterval",
+>        "serverRmiRegistryPort", "serverSingleListenerPort",
+>        "calcVirtualMachine", "javaCompilerClassName"
+>      from sys_fem."Config"."FarragoConfig";
 +----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
 |   name   | fennelDisabled  | userCatalogEnabled  | codeCacheMaxBytes  | checkpointInterval  | serverRmiRegistryPort  | serverSingleListenerPort  | calcVirtualMachine  |        javaCompilerClassName        |
 +----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
-| Current  | false           | false               | -1                 | 300                 | -1                     | -1                        | CALCVM_AUTO         | org.eigenbase.javac.JaninoCompiler  |
+| Current  | false           | false               | 2000000            | 300                 | -1                     | -1                        | CALCVM_AUTO         | org.eigenbase.javac.JaninoCompiler  |
 +----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select "databaseInitSize", "databaseIncrementSize", "databaseMaxSize",
-. . . . . . . . >        "tempInitSize", "tempIncrementSize", "tempMaxSize",
-. . . . . . . . >        "databaseShadowLogInitSize", "databaseTxnLogInitSize",
-. . . . . . . . >        "cachePagesMax", "cachePagesInit", "cachePageSize"
-. . . . . . . . >     from sys_fem."Config"."FennelConfig";
+> 
+> select "databaseInitSize", "databaseIncrementSize", "databaseMaxSize",
+>        "tempInitSize", "tempIncrementSize", "tempMaxSize",
+>        "databaseShadowLogInitSize", "databaseTxnLogInitSize",
+>        "cachePagesMax", "cachePagesInit", "cachePageSize"
+>     from sys_fem."Config"."FennelConfig";
 +-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+----------------+-----------------+----------------+
 | databaseInitSize  | databaseIncrementSize  | databaseMaxSize  | tempInitSize  | tempIncrementSize  | tempMaxSize  | databaseShadowLogInitSize  | databaseTxnLogInitSize  | cachePagesMax  | cachePagesInit  | cachePageSize  |
 +-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+----------------+-----------------+----------------+
 | 1000              | 1000                   | 0                | 1000          | 1000               | 0            | 2000                       | 2000                    | 1000           | 1000            | 4096           |
 +-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+----------------+-----------------+----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify unique lineage ID assignment
-0: jdbc:farrago:> select count(distinct "lineageId") from sys_fem."SQL2003"."LocalSchema";
+> 
+> -- verify unique lineage ID assignment
+> select count(distinct "lineageId") from sys_fem."SQL2003"."LocalSchema";
 +---------+
 | EXPR$0  |
 +---------+
 | 6       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO jvs 7-Aug-2004:  find out why the attribute order on this
-0: jdbc:farrago:> -- changes with every model edit
-0: jdbc:farrago:> -- select * from sys_fem."Security"."Privilege";
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- We don't actually support these features, but JDBC says we should
-0: jdbc:farrago:> -- still return empty results instead of throwing an exception
-0: jdbc:farrago:> !metadata getSuperTypes LOCALDB % %
+> 
+> -- TODO jvs 7-Aug-2004:  find out why the attribute order on this
+> -- changes with every model edit
+> -- select * from sys_fem."Security"."Privilege";
+> 
+> -- We don't actually support these features, but JDBC says we should
+> -- still return empty results instead of throwing an exception
+> !metadata getSuperTypes LOCALDB % %
 +-----------+-------------+------------+----------------+------------------+-----------------+
 | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SUPERTYPE_CAT  | SUPERTYPE_SCHEM  | SUPERTYPE_NAME  |
 +-----------+-------------+------------+----------------+------------------+-----------------+
 +-----------+-------------+------------+----------------+------------------+-----------------+
-0: jdbc:farrago:> !metadata getSuperTables LOCALDB % %
+> !metadata getSuperTables LOCALDB % %
 +------------+--------------+-------------+------------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | SUPERTABLE_NAME  |
 +------------+--------------+-------------+------------------+
 +------------+--------------+-------------+------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Implemented but not included since result depends on connection
-0: jdbc:farrago:> -- !metadata getConnection
-0: jdbc:farrago:> -- !metadata hashCode
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Not supported
-0: jdbc:farrago:> -- !metadata getImportKeys
-0: jdbc:farrago:> -- !metadata getExportKeys
-0: jdbc:farrago:> -- !metadata getColumnPrivileges
-0: jdbc:farrago:> -- !metadata getTablePrivileges
-0: jdbc:farrago:> -- !metadata getBestRowIdentifier
-0: jdbc:farrago:> -- !metadata getVersionColumns
-0: jdbc:farrago:> -- !metadata getCrossReference
-0: jdbc:farrago:> -- !importedkeys
-0: jdbc:farrago:> -- !exportedkeys
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> -- Implemented but not included since result depends on connection
+> -- !metadata getConnection
+> -- !metadata hashCode
+> 
+> -- Not supported
+> -- !metadata getImportKeys
+> -- !metadata getExportKeys
+> -- !metadata getColumnPrivileges
+> -- !metadata getTablePrivileges
+> -- !metadata getBestRowIdentifier
+> -- !metadata getVersionColumns
+> -- !metadata getCrossReference
+> -- !importedkeys
+> -- !exportedkeys
+> 
+> !quit

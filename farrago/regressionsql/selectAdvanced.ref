@@ -1,11 +1,11 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Full vertical system testing of advanced select statements
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
-0: jdbc:farrago:> -- and another time to use java. The caller of this script is setting the flag so no need
-0: jdbc:farrago:> -- to do it directly unless you need to do acrobatics.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select empno*2 from sales.emps where empno/2>53-3 order by 1;
+> -- $Id$
+> -- Full vertical system testing of advanced select statements
+> 
+> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
+> -- and another time to use java. The caller of this script is setting the flag so no need
+> -- to do it directly unless you need to do acrobatics.
+> 
+> select empno*2 from sales.emps where empno/2>53-3 order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -13,19 +13,19 @@
 | 220     |
 | 240     |
 +---------+
-0: jdbc:farrago:> select empno*2 from sales.emps where empno+1>111 order by 1;
+> select empno*2 from sales.emps where empno+1>111 order by 1;
 +---------+
 | EXPR$0  |
 +---------+
 | 240     |
 +---------+
-0: jdbc:farrago:> select empno+99900 as res from sales.emps where empno=100;
+> select empno+99900 as res from sales.emps where empno=100;
 +---------+
 |   RES   |
 +---------+
 | 100000  |
 +---------+
-0: jdbc:farrago:> select age+empno from sales.emps where deptno*age>age-deptno order by 1;
+> select age+empno from sales.emps where deptno*age>age-deptno order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -33,32 +33,32 @@
 | 170     |
 | 190     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select age+1 from sales.emps where age between 40 and 50;
+> 
+> select age+1 from sales.emps where age between 40 and 50;
 +---------+
 | EXPR$0  |
 +---------+
 | 51      |
 +---------+
-0: jdbc:farrago:> select age+1 from sales.emps where age between 50 and 40;
+> select age+1 from sales.emps where age between 50 and 40;
 +---------+
 | EXPR$0  |
 +---------+
 +---------+
-0: jdbc:farrago:> select age+1 from sales.emps where age between symmetRic 50 and 40;
+> select age+1 from sales.emps where age between symmetRic 50 and 40;
 +---------+
 | EXPR$0  |
 +---------+
 | 51      |
 +---------+
-0: jdbc:farrago:> select age+1 from sales.emps where age not between 40 and 50 order by 1;
+> select age+1 from sales.emps where age not between 40 and 50 order by 1;
 +---------+
 | EXPR$0  |
 +---------+
 | 26      |
 | 81      |
 +---------+
-0: jdbc:farrago:> select name,name between 'WILMA' AND 'wilma' from sales.emps order by 1;
+> select name,name between 'WILMA' AND 'wilma' from sales.emps order by 1;
 +--------+---------+
 |  NAME  | EXPR$1  |
 +--------+---------+
@@ -67,13 +67,13 @@
 | John   | false   |
 | Wilma  | true    |
 +--------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --These tests are failing but shouldnt
-0: jdbc:farrago:> --select age from sales.emps having age>30;
-0: jdbc:farrago:> --select * from sales.emps where deptno in (10, 20);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select name from sales.emps order by 1;
+> 
+> 
+> --These tests are failing but shouldnt
+> --select age from sales.emps having age>30;
+> --select * from sales.emps where deptno in (10, 20);
+> 
+> select name from sales.emps order by 1;
 +--------+
 |  NAME  |
 +--------+
@@ -82,7 +82,7 @@
 | John   |
 | Wilma  |
 +--------+
-0: jdbc:farrago:> (select name from sales.emps) union all (select name from sales.emps) order by 1;
+> (select name from sales.emps) union all (select name from sales.emps) order by 1;
 +--------+
 |  NAME  |
 +--------+
@@ -95,111 +95,111 @@
 | Wilma  |
 | Wilma  |
 +--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- function in function
-0: jdbc:farrago:> values pow(pow(2.0+1.0,pow(2.0,2.0)-1.0)+3.0,2.0);
+> 
+> -- function in function
+> values pow(pow(2.0+1.0,pow(2.0,2.0)-1.0)+3.0,2.0);
 +---------+
 | EXPR$0  |
 +---------+
 | 900.0   |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values -(1+2);
+> 
+> values -(1+2);
 +---------+
 | EXPR$0  |
 +---------+
 | -3      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- multiple line spanning using the neg operator
-0: jdbc:farrago:> ------------------------------------------------
-0: jdbc:farrago:> select - -1,-      -2,
-. . . . . . . . > -
-. . . . . . . . > -
-. . . . . . . . > 3
-. . . . . . . . > from (values(1));
+> 
+> -- multiple line spanning using the neg operator
+> ------------------------------------------------
+> select - -1,-      -2,
+> -
+> -
+> 3
+> from (values(1));
 +---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  |
 +---------+---------+---------+
 | 1       | 2       | 3       |
 +---------+---------+---------+
-0: jdbc:farrago:> -- This one is failing but shouldnt. Its basically the same query as above but with a comment in the middle
-0: jdbc:farrago:> --select - -1,-      -2,
-0: jdbc:farrago:> ---- this is a comment in the middle of a statement
-0: jdbc:farrago:> ---
-0: jdbc:farrago:> ---
-0: jdbc:farrago:> --3
-0: jdbc:farrago:> --from (values(1));
-0: jdbc:farrago:> ------------------------------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values (cast(null as boolean), cast(null as integer));
+> -- This one is failing but shouldnt. Its basically the same query as above but with a comment in the middle
+> --select - -1,-      -2,
+> ---- this is a comment in the middle of a statement
+> ---
+> ---
+> --3
+> --from (values(1));
+> ------------------------------------------------
+> 
+> values (cast(null as boolean), cast(null as integer));
 +---------+---------+
 | EXPR$0  | EXPR$1  |
 +---------+---------+
 |         |         |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- fails
-0: jdbc:farrago:> values cast(null as boolean) + cast(null as integer);
+> 
+> -- fails
+> values cast(null as boolean) + cast(null as integer);
 Error: From line 1, column 13 to line 1, column 52: Cannot apply '+' to arguments of type '<BOOLEAN> + <INTEGER>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
 '<DATETIME_INTERVAL> + <DATETIME_INTERVAL>'
 '<DATETIME> + <DATETIME_INTERVAL>'
 '<DATETIME_INTERVAL> + <DATETIME>' (state=,code=0)
-0: jdbc:farrago:> -- fails
-0: jdbc:farrago:> values cast(null as boolean) and 1;
+> -- fails
+> values cast(null as boolean) and 1;
 Error: From line 1, column 13 to line 1, column 34: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- OK - some of these test fail due to cast issues but shouldnt
-0: jdbc:farrago:> --values cast(null as tinyint)+1;
-0: jdbc:farrago:> --values cast(null as smallint)=1;
-0: jdbc:farrago:> --values cast(null as bigint)<>1;
-0: jdbc:farrago:> values cast(null as float)>1.0;
+> 
+> -- OK - some of these test fail due to cast issues but shouldnt
+> --values cast(null as tinyint)+1;
+> --values cast(null as smallint)=1;
+> --values cast(null as bigint)<>1;
+> values cast(null as float)>1.0;
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> --values cast(null as float)>1;
-0: jdbc:farrago:> values cast(null as integer)<=1;
+> --values cast(null as float)>1;
+> values cast(null as integer)<=1;
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> --values cast(null as real)>=1;
-0: jdbc:farrago:> --values cast(null as double)/1;
-0: jdbc:farrago:> --values cast(null as tinyint)*1;
-0: jdbc:farrago:> --values cast(null as tinyint)-1;
-0: jdbc:farrago:> --values cast(null as char)='yo wasup?';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values 3*+-2;
+> --values cast(null as real)>=1;
+> --values cast(null as double)/1;
+> --values cast(null as tinyint)*1;
+> --values cast(null as tinyint)-1;
+> --values cast(null as char)='yo wasup?';
+> 
+> values 3*+-2;
 +---------+
 | EXPR$0  |
 +---------+
 | -6      |
 +---------+
-0: jdbc:farrago:> values cast(1 as varbinary(1))+x'ff';
+> values cast(1 as varbinary(1))+x'ff';
 Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (state=,code=0)
-0: jdbc:farrago:> values x'ff'=x'ff';
+> values x'ff'=x'ff';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> --values x'ff'=cast(255 as varbinary(1));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --select * from sales.emps group by empno order by 1;
-0: jdbc:farrago:> --select *from sales.emps group by empno having empno>22 order by 1;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select manager from sales.emps union select manager from sales.emps order by 1;
+> --values x'ff'=cast(255 as varbinary(1));
+> 
+> 
+> --select * from sales.emps group by empno order by 1;
+> --select *from sales.emps group by empno having empno>22 order by 1;
+> 
+> select manager from sales.emps union select manager from sales.emps order by 1;
 +----------+
 | MANAGER  |
 +----------+
 | false    |
 | true     |
 +----------+
-0: jdbc:farrago:> select manager from sales.emps union all select manager from sales.emps order by 1;
+> select manager from sales.emps union all select manager from sales.emps order by 1;
 +----------+
 | MANAGER  |
 +----------+
@@ -212,12 +212,12 @@ Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (
 | true     |
 | true     |
 +----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --select*from sales.emps where deptno in (select* from sales.depts);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --join tests
-0: jdbc:farrago:> select emps.name,depts.name from sales.emps,sales.depts where depts.deptno=emps.deptno order by 1;
+> 
+> --select*from sales.emps where deptno in (select* from sales.depts);
+> 
+> 
+> --join tests
+> select emps.name,depts.name from sales.emps,sales.depts where depts.deptno=emps.deptno order by 1;
 +--------+------------+
 |  NAME  |    NAME    |
 +--------+------------+
@@ -225,13 +225,13 @@ Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (
 | Fred   | Sales      |
 | Wilma  | Marketing  |
 +--------+------------+
-0: jdbc:farrago:> select emps.name,depts.name from sales.emps,sales.depts where depts.deptno=emps.deptno and age=80;
+> select emps.name,depts.name from sales.emps,sales.depts where depts.deptno=emps.deptno and age=80;
 +-------+------------+
 | NAME  |    NAME    |
 +-------+------------+
 | Eric  | Marketing  |
 +-------+------------+
-0: jdbc:farrago:> select emps.name,depts.name from sales.emps INNER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
+> select emps.name,depts.name from sales.emps INNER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
 +--------+------------+
 |  NAME  |    NAME    |
 +--------+------------+
@@ -239,22 +239,22 @@ Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (
 | Fred   | Sales      |
 | Wilma  | Marketing  |
 +--------+------------+
-0: jdbc:farrago:> --select emps.name,depts.name from sales.emps LEFT JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
-0: jdbc:farrago:> --select emps.name,depts.name from sales.emps RIGHT JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --select emps.name,depts.name from sales.emps RIGHT OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
-0: jdbc:farrago:> --select emps.name,depts.name from sales.emps LEFT OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
-0: jdbc:farrago:> --select emps.name,depts.name from sales.emps FULL OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> values (1) union values (2) order by 1;
+> --select emps.name,depts.name from sales.emps LEFT JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
+> --select emps.name,depts.name from sales.emps RIGHT JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
+> 
+> --select emps.name,depts.name from sales.emps RIGHT OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
+> --select emps.name,depts.name from sales.emps LEFT OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
+> --select emps.name,depts.name from sales.emps FULL OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
+> 
+> values (1) union values (2) order by 1;
 +---------+
 | EXPR$0  |
 +---------+
 | 1       |
 | 2       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sales.depts union all values (40,'Foodfights') order by 1;
+> 
+> select * from sales.depts union all values (40,'Foodfights') order by 1;
 +---------+-------------+
 | DEPTNO  |    NAME     |
 +---------+-------------+
@@ -263,103 +263,103 @@ Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (
 | 30      | Accounts    |
 | 40      | Foodfights  |
 +---------+-------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- from dtbug 263:  test with identical table+column name
-0: jdbc:farrago:> create schema s;
-0: jdbc:farrago:> create table s.b (b boolean, i int primary key);
-0: jdbc:farrago:> insert into s.b values (true, 1);
-0: jdbc:farrago:> select not b from s.b;
+> 
+> -- from dtbug 263:  test with identical table+column name
+> create schema s;
+> create table s.b (b boolean, i int primary key);
+> insert into s.b values (true, 1);
+> select not b from s.b;
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> select b or true from s.b;
+> select b or true from s.b;
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select b and true from s.b;
+> select b and true from s.b;
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- a few decimal tests
-0: jdbc:farrago:> create table s.nulldecimal(c decimal(4,2) primary key, d decimal(6,0));
-0: jdbc:farrago:> insert into s.nulldecimal values (19, null);
-0: jdbc:farrago:> insert into s.nulldecimal values (20, 20);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> insert into s.nulldecimal values (null, 20);
+> 
+> -- a few decimal tests
+> create table s.nulldecimal(c decimal(4,2) primary key, d decimal(6,0));
+> insert into s.nulldecimal values (19, null);
+> insert into s.nulldecimal values (20, 20);
+> 
+> -- should fail
+> insert into s.nulldecimal values (null, 20);
 Error: could not calculate results for the following row:
 [ NULL, 20 ]
 Messages:
 [0]:PC=8 Code=22004 (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test whether nullability flags are read correctly
-0: jdbc:farrago:> -- the first column should be detected as not nullable
-0: jdbc:farrago:> -- while the second column should be detected as nullable
-0: jdbc:farrago:> select d from s.nulldecimal;
+> 
+> -- test whether nullability flags are read correctly
+> -- the first column should be detected as not nullable
+> -- while the second column should be detected as nullable
+> select d from s.nulldecimal;
 +-----+
 |  D  |
 +-----+
 |     |
 | 20  |
 +-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- the type of (d*1.0) is decimal(7,1)
-0: jdbc:farrago:> -- casting to decimal(6,1) requires an overflow check
-0: jdbc:farrago:> -- this tests whether the overflow check works with null values
-0: jdbc:farrago:> select cast((d * 1.0) as decimal(6,1)) from s.nulldecimal;
+> 
+> -- the type of (d*1.0) is decimal(7,1)
+> -- casting to decimal(6,1) requires an overflow check
+> -- this tests whether the overflow check works with null values
+> select cast((d * 1.0) as decimal(6,1)) from s.nulldecimal;
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 | 20.0    |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- this tests whether a non-nullable value can be inserted into 
-0: jdbc:farrago:> -- a nullable column. the values are the exact same type except 
-0: jdbc:farrago:> -- nullability to try to fool decimal cast reduction
-0: jdbc:farrago:> create table s.nullabledecimal(i int primary key, coldec decimal(2,1));
-0: jdbc:farrago:> insert into s.nullabledecimal values (1, 1.2);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop schema s cascade;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- restart required for distinct (FNL-19)
-0: jdbc:farrago:> select sum(c) 
-. . . . . . . . > from sales.depts, 
-. . . . . . . . > (select count(distinct deptno) as c from sales.emps);
+> 
+> -- this tests whether a non-nullable value can be inserted into 
+> -- a nullable column. the values are the exact same type except 
+> -- nullability to try to fool decimal cast reduction
+> create table s.nullabledecimal(i int primary key, coldec decimal(2,1));
+> insert into s.nullabledecimal values (1, 1.2);
+> 
+> drop schema s cascade;
+> 
+> -- restart required for distinct (FNL-19)
+> select sum(c) 
+> from sales.depts, 
+> (select count(distinct deptno) as c from sales.emps);
 +---------+
 | EXPR$0  |
 +---------+
 | 9       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plan for previous query
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select sum(c) 
-. . . . . . . . > from sales.depts, 
-. . . . . . . . > (select count(distinct deptno) as c from sales.emps);
+> 
+> -- verify plan for previous query
+> !set outputformat csv
+> 
+> explain plan for
+> select sum(c) 
+> from sales.depts, 
+> (select count(distinct deptno) as c from sales.emps);
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
 '      FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL $f0) NOT NULL])'
 '        FennelCartesianProductRel(leftouterjoin=[false])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 '          FennelBufferRel(inMemory=[false], multiPass=[true])'
 '            FennelRenameRel(fieldNames=[[C]])'
 '              FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
 '                FennelSortRel(key=[[0]], discardDuplicates=[true])'
 '                  FennelRenameRel(fieldNames=[[$f0]])'
 '                    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !set outputformat table
+> 
+> !quit

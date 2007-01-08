@@ -1,35 +1,35 @@
 
-static final ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
-static {
-    oj_var0.assignFrom( "Yes" );
-}
+private ExecutableStmt.Oj_inner_0 oj_var0;
 
 
-static final ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
-static {
-    oj_var1.assignFrom( "No" );
-}
+private ExecutableStmt.Oj_inner_1 oj_var1;
 
 
-static final ExecutableStmt.Oj_inner_2 oj_var2 = new ExecutableStmt.Oj_inner_2();
-
-static {
-    oj_var2.assignFrom( "Other" );
-}
+private ExecutableStmt.Oj_inner_2 oj_var2;
 
 
 ExecutableStmt.Oj_inner_2 oj_var3 = new ExecutableStmt.Oj_inner_2();
 
 if (ID$0$MANAGER == true) {
+    if (oj_var0 == null) {
+        oj_var0 = new ExecutableStmt.Oj_inner_0();
+        oj_var0.assignFrom( "Yes" );
+    }
     oj_var3.assignFrom( oj_var0 );
     oj_var3.enforceBytePrecision( 5, true, (byte) ' ' );
 } else {
     if (ID$0$MANAGER == false) {
+        if (oj_var1 == null) {
+            oj_var1 = new ExecutableStmt.Oj_inner_1();
+            oj_var1.assignFrom( "No" );
+        }
         oj_var3.assignFrom( oj_var1 );
         oj_var3.enforceBytePrecision( 5, true, (byte) ' ' );
     } else {
+        if (oj_var2 == null) {
+            oj_var2 = new ExecutableStmt.Oj_inner_2();
+            oj_var2.assignFrom( "Other" );
+        }
         oj_var3.assignFrom( oj_var2 );
     }
 }

@@ -1,13 +1,13 @@
 
-static final ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
-static {
-    oj_var0.assignFrom( "MIDDLE" );
-}
+private ExecutableStmt.Oj_inner_0 oj_var0;
 
 
 ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
 
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "MIDDLE" );
+}
 oj_var1.overlay( ID$0$NAME, oj_var0, 2, 3, true );
 
 return oj_var1;
