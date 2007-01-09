@@ -1,82 +1,82 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Tests for ConvertMultiJoinRule and OptimizeJoinRule
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema jo;
-0: jdbc:farrago:> set schema 'jo';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- set session personality to LucidDB so all tables
-0: jdbc:farrago:> -- will be column-store by default and LucidDB-specific optimization rules
-0: jdbc:farrago:> -- are picked up
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table f(f int, f_d1 int, f_d2 int, f_d3 int);
-0: jdbc:farrago:> create table d1(d1 int, d1_f int, d1_d2 int, d1_d3 int);
-0: jdbc:farrago:> create table d2(d2 int, d2_f int, d2_d1 int, d2_d3 int);
-0: jdbc:farrago:> create table d3(d3 int, d3_f int, d3_d1 int, d3_d2 int);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index if_d1 on f(f_d1);
-0: jdbc:farrago:> create index if_d2 on f(f_d2);
-0: jdbc:farrago:> create index if_d3 on f(f_d3);
-0: jdbc:farrago:> create index id1_f on d1(d1_f);
-0: jdbc:farrago:> create index id1_d2 on d1(d1_d2);
-0: jdbc:farrago:> create index id1_d3 on d1(d1_d3);
-0: jdbc:farrago:> create index id2_f on d2(d2_f);
-0: jdbc:farrago:> create index id2_d1 on d2(d2_d1);
-0: jdbc:farrago:> create index id2_d3 on d2(d2_d3);
-0: jdbc:farrago:> create index id3_f on d3(d3_f);
-0: jdbc:farrago:> create index id3_d1 on d3(d3_d1);
-0: jdbc:farrago:> create index id3_d2 on d3(d3_d2);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> insert into f values(0, 0, 0, 0);
-0: jdbc:farrago:> insert into d1 values(1, 0, 1, 1);
-0: jdbc:farrago:> insert into d2 values(2, 0, 1, 2);
-0: jdbc:farrago:> insert into d3 values(3, 0, 1, 2);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- fake stats
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'F', 10000000);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D1', 100000);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D2', 1000);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D3', 10);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'F', 'F_D1', 100000, 100, 100000, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'F', 'F_D2', 1000, 100, 1000, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'F', 'F_D3', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D1', 'D1_F', 100000, 100, 100000, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D1', 'D1_D2', 1000, 100, 1000, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D1', 'D1_D3', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D2', 'D2_F', 1000, 100, 1000, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D2', 'D2_D1', 1000, 100, 1000, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D2', 'D2_D3', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D3', 'D3_F', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D3', 'D3_D1', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB', 'JO', 'D3', 'D3_D2', 10, 100, 10, 0, '0123456789');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --------------------------------------------------------------------
-0: jdbc:farrago:> -- Test different combinations of patterns into ConvertMultiJoinRule
-0: jdbc:farrago:> --------------------------------------------------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- MJ/MJ
-0: jdbc:farrago:> explain plan for select f, d1, d2, d3
-. . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j1,
-. . . . . . . . >         (select * from d2, d3 where d2.d2_d3 = d3.d3_d2 and d3.d3 >= 0) j2
-. . . . . . . . >     where j1.f_d2 = j2.d2_f and j2.d2 >= 0;
+> -- $Id$
+> -- Tests for ConvertMultiJoinRule and OptimizeJoinRule
+> 
+> create schema jo;
+> set schema 'jo';
+> 
+> -- set session personality to LucidDB so all tables
+> -- will be column-store by default and LucidDB-specific optimization rules
+> -- are picked up
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> create table f(f int, f_d1 int, f_d2 int, f_d3 int);
+> create table d1(d1 int, d1_f int, d1_d2 int, d1_d3 int);
+> create table d2(d2 int, d2_f int, d2_d1 int, d2_d3 int);
+> create table d3(d3 int, d3_f int, d3_d1 int, d3_d2 int);
+> 
+> create index if_d1 on f(f_d1);
+> create index if_d2 on f(f_d2);
+> create index if_d3 on f(f_d3);
+> create index id1_f on d1(d1_f);
+> create index id1_d2 on d1(d1_d2);
+> create index id1_d3 on d1(d1_d3);
+> create index id2_f on d2(d2_f);
+> create index id2_d1 on d2(d2_d1);
+> create index id2_d3 on d2(d2_d3);
+> create index id3_f on d3(d3_f);
+> create index id3_d1 on d3(d3_d1);
+> create index id3_d2 on d3(d3_d2);
+> 
+> insert into f values(0, 0, 0, 0);
+> insert into d1 values(1, 0, 1, 1);
+> insert into d2 values(2, 0, 1, 2);
+> insert into d3 values(3, 0, 1, 2);
+> 
+> -- fake stats
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'F', 10000000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D1', 100000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D2', 1000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'JO', 'D3', 10);
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'F', 'F_D1', 100000, 100, 100000, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'F', 'F_D2', 1000, 100, 1000, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'F', 'F_D3', 10, 100, 10, 0, '0123456789');
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D1', 'D1_F', 100000, 100, 100000, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D1', 'D1_D2', 1000, 100, 1000, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D1', 'D1_D3', 10, 100, 10, 0, '0123456789');
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D2', 'D2_F', 1000, 100, 1000, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D2', 'D2_D1', 1000, 100, 1000, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D2', 'D2_D3', 10, 100, 10, 0, '0123456789');
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D3', 'D3_F', 10, 100, 10, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D3', 'D3_D1', 10, 100, 10, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'JO', 'D3', 'D3_D2', 10, 100, 10, 0, '0123456789');
+> 
+> !set outputformat csv
+> 
+> --------------------------------------------------------------------
+> -- Test different combinations of patterns into ConvertMultiJoinRule
+> --------------------------------------------------------------------
+> 
+> -- MJ/MJ
+> explain plan for select f, d1, d2, d3
+>     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j1,
+>         (select * from d2, d3 where d2.d2_d3 = d3.d3_d2 and d3.d3 >= 0) j2
+>     where j1.f_d2 = j2.d2_f and j2.d2 >= 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 0, 3, 5]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2, INTEGER D3) NOT NULL])'
@@ -117,11 +117,11 @@
 '                        LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3, SYS$CLUSTERED_INDEX$JO$D3$D3_D2]])'
 '          FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D3, INTEGER D3_D2) NOT NULL])'
 '            LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3, SYS$CLUSTERED_INDEX$JO$D3$D3_D2]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- MJ/RS
-0: jdbc:farrago:> explain plan for select f, d1, d2
-. . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
-. . . . . . . . >     where j.f_d2 = d2.d2_f and d2.d2 >= 0;
+> 
+> -- MJ/RS
+> explain plan for select f, d1, d2
+>     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
+>     where j.f_d2 = d2.d2_f and d2.d2 >= 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2, 3]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2) NOT NULL])'
@@ -146,11 +146,11 @@
 '            LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
 '      FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D2, INTEGER D2_F) NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- MJ/FRS
-0: jdbc:farrago:> explain plan for select f, d1, d2
-. . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
-. . . . . . . . >     where j.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
+> 
+> -- MJ/FRS
+> explain plan for select f, d1, d2
+>     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
+>     where j.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2, 3]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2) NOT NULL])'
@@ -175,11 +175,11 @@
 '            LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
 '      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[+($t0, $t2)], expr#4=[2], expr#5=[=($t3, $t4)], proj#0..1=[{exprs}], $condition=[$t5])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- RS/MJ
-0: jdbc:farrago:> explain plan for select f, d1, d2
-. . . . . . . . >     from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1 and d2.d2 >= 0) j
-. . . . . . . . >     where f.f_d1 = j.d1_f and j.d1 >= 0;
+> 
+> -- RS/MJ
+> explain plan for select f, d1, d2
+>     from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1 and d2.d2 >= 0) j
+>     where f.f_d1 = j.d1_f and j.d1 >= 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2, 4]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2) NOT NULL])'
@@ -209,9 +209,9 @@
 '                        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_D1]])'
 '          FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D2, INTEGER D2_D1) NOT NULL])'
 '            LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_D1]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- RS/RS
-0: jdbc:farrago:> explain plan for select f, d1 from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0;
+> 
+> -- RS/RS
+> explain plan for select f, d1 from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D1) NOT NULL])'
@@ -225,10 +225,10 @@
 '                  LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
 '      FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F) NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- RS/FRS
-0: jdbc:farrago:> explain plan for select f, d2 from f, d2
-. . . . . . . . >     where f.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
+> 
+> -- RS/FRS
+> explain plan for select f, d2 from f, d2
+>     where f.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D2) NOT NULL])'
@@ -242,11 +242,11 @@
 '                  LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_F]])'
 '      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[+($t0, $t2)], expr#4=[2], expr#5=[=($t3, $t4)], proj#0..1=[{exprs}], $condition=[$t5])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FRS/MJ
-0: jdbc:farrago:> explain plan for select f, d1, d3
-. . . . . . . . >     from f, (select * from d1, d3 where d1.d1_d3 = d3.d3_d1 and d3.d3 >= 0) j
-. . . . . . . . >     where f.f_d1 = j.d1_f and j.d1 + 0 = 1;
+> 
+> -- FRS/MJ
+> explain plan for select f, d1, d3
+>     from f, (select * from d1, d3 where d1.d1_d3 = d3.d3_d1 and d3.d3 >= 0) j
+>     where f.f_d1 = j.d1_f and j.d1 + 0 = 1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2, 4]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D3) NOT NULL])'
@@ -276,10 +276,10 @@
 '                        LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3, SYS$CLUSTERED_INDEX$JO$D3$D3_D1]])'
 '          FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D3, INTEGER D3_D1) NOT NULL])'
 '            LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3, SYS$CLUSTERED_INDEX$JO$D3$D3_D1]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FRS/RS
-0: jdbc:farrago:> explain plan for select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 >= 0;
+> 
+> -- FRS/RS
+> explain plan for select f, d1 from f, d1
+>     where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 >= 0;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D1) NOT NULL])'
@@ -294,10 +294,10 @@
 '                    LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
 '      FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F) NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FRS/FRS
-0: jdbc:farrago:> explain plan for select f, d2 from f, d2
-. . . . . . . . >     where f.f_d2 = d2.d2_f and f.f + 0 = 0 and d2.d2 + 0 = 2;
+> 
+> -- FRS/FRS
+> explain plan for select f, d2 from f, d2
+>     where f.f_d2 = d2.d2_f and f.f + 0 = 0 and d2.d2 + 0 = 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D2) NOT NULL])'
@@ -312,13 +312,13 @@
 '                    LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_F]])'
 '      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[+($t0, $t2)], expr#4=[2], expr#5=[=($t3, $t4)], proj#0..1=[{exprs}], $condition=[$t5])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------------------------------------------
-0: jdbc:farrago:> -- different join combinations, including corner cases
-0: jdbc:farrago:> ------------------------------------------------------
-0: jdbc:farrago:> -- no join filters
-0: jdbc:farrago:> explain plan for select f, d1, d2, d3 
-. . . . . . . . >     from f, d1, d2, d3;
+> 
+> ------------------------------------------------------
+> -- different join combinations, including corner cases
+> ------------------------------------------------------
+> -- no join filters
+> explain plan for select f, d1, d2, d3 
+>     from f, d1, d2, d3;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 3, 2, 1]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2, INTEGER D3) NOT NULL])'
@@ -329,20 +329,20 @@
 '          LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3]])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- non-comparsion expression
-0: jdbc:farrago:> explain plan for select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 = d1.d1_f or f.f_d2 = d1.d1_f;
+> 
+> -- non-comparsion expression
+> explain plan for select f, d1 from f, d1
+>     where f.f_d1 = d1.d1_f or f.f_d2 = d1.d1_f;
 'column0'
 'IterCalcRel(expr#0..4=[{inputs}], expr#5=[=($t1, $t4)], expr#6=[=($t2, $t4)], expr#7=[OR($t5, $t6)], F=[$t0], D1=[$t3], $condition=[$t7])'
 '  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D1, SYS$CLUSTERED_INDEX$JO$F$F_D2]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter involving > 2 tables
-0: jdbc:farrago:> explain plan for select f, d1, d2 from f, d1, d2
-. . . . . . . . >     where f.f_d1 + d1.d1_f = d2.d2_f;
+> 
+> -- filter involving > 2 tables
+> explain plan for select f, d1, d2 from f, d1, d2
+>     where f.f_d1 + d1.d1_f = d2.d2_f;
 'column0'
 'IterCalcRel(expr#0..5=[{inputs}], expr#6=[+($t1, $t5)], expr#7=[=($t6, $t3)], F=[$t0], D1=[$t4], D2=[$t2], $condition=[$t7])'
 '  FennelToIteratorConverter'
@@ -351,35 +351,35 @@
 '        LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D1]])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_F]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter with 2 tables but both on one side of the comparison operator
-0: jdbc:farrago:> explain plan for select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 + d1.d1_f = 0;
+> 
+> -- filter with 2 tables but both on one side of the comparison operator
+> explain plan for select f, d1 from f, d1
+>     where f.f_d1 + d1.d1_f = 0;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[+($t1, $t3)], expr#5=[0], expr#6=[=($t4, $t5)], F=[$t0], D1=[$t2], $condition=[$t6])'
 '  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D1]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- non-equality operator
-0: jdbc:farrago:> explain plan for select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 >= d1.d1_f;
+> 
+> -- non-equality operator
+> explain plan for select f, d1 from f, d1
+>     where f.f_d1 >= d1.d1_f;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[>=($t1, $t3)], F=[$t0], D1=[$t2], $condition=[$t4])'
 '  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D1]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- all possible join combinations
-0: jdbc:farrago:> explain plan for select f, d1, d2, d3
-. . . . . . . . >     from d3, d1, d2, f
-. . . . . . . . >     where
-. . . . . . . . >         d1.d1_f = 1 and d2.d2_f = 2 and d3.d3_f = 3 and
-. . . . . . . . >         f.f_d1 = d1.d1_f and f.f_d2 = d2.d2_f and f.f_d3 = d3.d3_f and
-. . . . . . . . >         d1.d1_d2 = d2.d2_d1 and d1.d1_d3 = d3.d3_d1 and
-. . . . . . . . >         d2.d2_d3 = d3.d3_d2;
+> 
+> -- all possible join combinations
+> explain plan for select f, d1, d2, d3
+>     from d3, d1, d2, f
+>     where
+>         d1.d1_f = 1 and d2.d2_f = 2 and d3.d3_f = 3 and
+>         f.f_d1 = d1.d1_f and f.f_d2 = d2.d2_f and f.f_d3 = d3.d3_f and
+>         d1.d1_d2 = d2.d2_d1 and d1.d1_d3 = d3.d3_d1 and
+>         d2.d2_d3 = d3.d3_d2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[8, 0, 4, 6]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2, INTEGER D3) NOT NULL])'
@@ -493,179 +493,179 @@
 '                                                        LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[3]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3_D2]])'
 '                                                          LcsIndexSearchRel(table=[[LOCALDB, JO, D3]], index=[ID3_F], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '                                                            FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 3, _ISO-8859-1']', 3 }]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------------------
-0: jdbc:farrago:> -- run the queries above
-0: jdbc:farrago:> ------------------------
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2, d3
-. . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j1,
-. . . . . . . . >         (select * from d2, d3 where d2.d2_d3 = d3.d3_d2 and d3.d3 >= 0) j2
-. . . . . . . . >     where j1.f_d2 = j2.d2_f and j2.d2 >= 0;
+> 
+> ------------------------
+> -- run the queries above
+> ------------------------
+> !set outputformat table
+> 
+> select f, d1, d2, d3
+>     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j1,
+>         (select * from d2, d3 where d2.d2_d3 = d3.d3_d2 and d3.d3 >= 0) j2
+>     where j1.f_d2 = j2.d2_f and j2.d2 >= 0;
 +----+-----+-----+-----+
 | F  | D1  | D2  | D3  |
 +----+-----+-----+-----+
 | 0  | 1   | 2   | 3   |
 +----+-----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2
-. . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
-. . . . . . . . >     where j.f_d2 = d2.d2_f and d2.d2 >= 0;
+> 
+> select f, d1, d2
+>     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
+>     where j.f_d2 = d2.d2_f and d2.d2 >= 0;
 +----+-----+-----+
 | F  | D1  | D2  |
 +----+-----+-----+
 | 0  | 1   | 2   |
 +----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2
-. . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
-. . . . . . . . >     where j.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
+> 
+> select f, d1, d2
+>     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
+>     where j.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 +----+-----+-----+
 | F  | D1  | D2  |
 +----+-----+-----+
 | 0  | 1   | 2   |
 +----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2
-. . . . . . . . >     from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1 and d2.d2 >= 0) j
-. . . . . . . . >     where f.f_d1 = j.d1_f and j.d1 >= 0;
+> 
+> select f, d1, d2
+>     from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1 and d2.d2 >= 0) j
+>     where f.f_d1 = j.d1_f and j.d1 >= 0;
 +----+-----+-----+
 | F  | D1  | D2  |
 +----+-----+-----+
 | 0  | 1   | 2   |
 +----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1 from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0;
+> 
+> select f, d1 from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0;
 +----+-----+
 | F  | D1  |
 +----+-----+
 | 0  | 1   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d2 from f, d2
-. . . . . . . . >     where f.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
+> 
+> select f, d2 from f, d2
+>     where f.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 +----+-----+
 | F  | D2  |
 +----+-----+
 | 0  | 2   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d3
-. . . . . . . . >     from f, (select * from d1, d3 where d1.d1_d3 = d3.d3_d1 and d3.d3 >= 0) j
-. . . . . . . . >     where f.f_d1 = j.d1_f and j.d1 + 0 = 1;
+> 
+> select f, d1, d3
+>     from f, (select * from d1, d3 where d1.d1_d3 = d3.d3_d1 and d3.d3 >= 0) j
+>     where f.f_d1 = j.d1_f and j.d1 + 0 = 1;
 +----+-----+-----+
 | F  | D1  | D3  |
 +----+-----+-----+
 | 0  | 1   | 3   |
 +----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 >= 0;
+> 
+> select f, d1 from f, d1
+>     where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 >= 0;
 +----+-----+
 | F  | D1  |
 +----+-----+
 | 0  | 1   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d2 from f, d2
-. . . . . . . . >     where f.f_d2 = d2.d2_f and f.f + 0 = 0 and d2.d2 + 0 = 2;
+> 
+> select f, d2 from f, d2
+>     where f.f_d2 = d2.d2_f and f.f + 0 = 0 and d2.d2 + 0 = 2;
 +----+-----+
 | F  | D2  |
 +----+-----+
 | 0  | 2   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2, d3 
-. . . . . . . . >     from f, d1, d2, d3;
+> 
+> select f, d1, d2, d3 
+>     from f, d1, d2, d3;
 +----+-----+-----+-----+
 | F  | D1  | D2  | D3  |
 +----+-----+-----+-----+
 | 0  | 1   | 2   | 3   |
 +----+-----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 = d1.d1_f or f.f_d2 = d1.d1_f;
+> 
+> select f, d1 from f, d1
+>     where f.f_d1 = d1.d1_f or f.f_d2 = d1.d1_f;
 +----+-----+
 | F  | D1  |
 +----+-----+
 | 0  | 1   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2 from f, d1, d2
-. . . . . . . . >     where f.f_d1 + d1.d1_f = d2.d2_f;
+> 
+> select f, d1, d2 from f, d1, d2
+>     where f.f_d1 + d1.d1_f = d2.d2_f;
 +----+-----+-----+
 | F  | D1  | D2  |
 +----+-----+-----+
 | 0  | 1   | 2   |
 +----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 + d1.d1_f = 0;
+> 
+> select f, d1 from f, d1
+>     where f.f_d1 + d1.d1_f = 0;
 +----+-----+
 | F  | D1  |
 +----+-----+
 | 0  | 1   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1 from f, d1
-. . . . . . . . >     where f.f_d1 >= d1.d1_f;
+> 
+> select f, d1 from f, d1
+>     where f.f_d1 >= d1.d1_f;
 +----+-----+
 | F  | D1  |
 +----+-----+
 | 0  | 1   |
 +----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select f, d1, d2, d3
-. . . . . . . . >     from f, d1, d2, d3
-. . . . . . . . >     where
-. . . . . . . . >         f.f_d1 = d1.d1_f and f.f_d2 = d2.d2_f and f.f_d3 = d3.d3_f and
-. . . . . . . . >         d1.d1_d2 = d2.d2_d1 and d1.d1_d3 = d3.d3_d1 and
-. . . . . . . . >         d2.d2_d3 = d3.d3_d2;
+> 
+> select f, d1, d2, d3
+>     from f, d1, d2, d3
+>     where
+>         f.f_d1 = d1.d1_f and f.f_d2 = d2.d2_f and f.f_d3 = d3.d3_f and
+>         d1.d1_d2 = d2.d2_d1 and d1.d1_d3 = d3.d3_d1 and
+>         d2.d2_d3 = d3.d3_d2;
 +----+-----+-----+-----+
 | F  | D1  | D2  | D3  |
 +----+-----+-----+-----+
 | 0  | 1   | 2   | 3   |
 +----+-----+-----+-----+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------
-0: jdbc:farrago:> -- Misc Bugs
-0: jdbc:farrago:> ------------
-0: jdbc:farrago:> -- LDB-65 -- need to handle self-joins
-0: jdbc:farrago:> -- no need for any actual data, as the bug appears during optimization time
-0: jdbc:farrago:> create table EMP (
-. . . . . . . . >   EMPNO numeric(5,0),
-. . . . . . . . >   FNAME varchar(20),
-. . . . . . . . >   LNAME varchar(20),
-. . . . . . . . >   SEX char(1),
-. . . . . . . . >   DEPTNO integer,
-. . . . . . . . >   MANAGER numeric(5,0),
-. . . . . . . . >   LOCID CHAR(2),
-. . . . . . . . >   SAL integer,
-. . . . . . . . >   COMMISSION integer,
-. . . . . . . . >   HOBBY varchar(20)
-. . . . . . . . > );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table DEPT (
-. . . . . . . . >   DEPTNO integer,
-. . . . . . . . >   DNAME varchar(20),
-. . . . . . . . >   LOCID CHAR(2)
-. . . . . . . . > );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table LOCATION(
-. . . . . . . . >   LOCID char(2),
-. . . . . . . . >   STREET varchar(50),
-. . . . . . . . >   CITY varchar(20),
-. . . . . . . . >   STATE char(2),
-. . . . . . . . >   ZIP numeric(5,0)
-. . . . . . . . > );
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select EMP.LNAME, DEPT.DNAME
-. . . . . . . . >     from EMP, DEPT, LOCATION EL
-. . . . . . . . >     where EL.LOCID = EMP.LOCID and EL.LOCID=DEPT.LOCID;
+> 
+> ------------
+> -- Misc Bugs
+> ------------
+> -- LDB-65 -- need to handle self-joins
+> -- no need for any actual data, as the bug appears during optimization time
+> create table EMP (
+>   EMPNO numeric(5,0),
+>   FNAME varchar(20),
+>   LNAME varchar(20),
+>   SEX char(1),
+>   DEPTNO integer,
+>   MANAGER numeric(5,0),
+>   LOCID CHAR(2),
+>   SAL integer,
+>   COMMISSION integer,
+>   HOBBY varchar(20)
+> );
+> 
+> create table DEPT (
+>   DEPTNO integer,
+>   DNAME varchar(20),
+>   LOCID CHAR(2)
+> );
+> 
+> create table LOCATION(
+>   LOCID char(2),
+>   STREET varchar(50),
+>   CITY varchar(20),
+>   STATE char(2),
+>   ZIP numeric(5,0)
+> );
+> 
+> !set outputformat csv
+> 
+> explain plan for
+> select EMP.LNAME, DEPT.DNAME
+>     from EMP, DEPT, LOCATION EL
+>     where EL.LOCID = EMP.LOCID and EL.LOCID=DEPT.LOCID;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" LNAME, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" DNAME) NOT NULL])'
@@ -675,11 +675,11 @@
 '          LcsRowScanRel(table=[[LOCALDB, JO, EMP]], projection=[[2, 6]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$EMP$LNAME, SYS$CLUSTERED_INDEX$JO$EMP$LOCID]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, LOCATION]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$LOCATION$LOCID]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, DEPT]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$DEPT$DNAME, SYS$CLUSTERED_INDEX$JO$DEPT$LOCID]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select EMP.LNAME, DEPT.DNAME
-. . . . . . . . >     from EMP, DEPT, LOCATION EL, LOCATION DL
-. . . . . . . . >     where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID;
+> 
+> explain plan for
+> select EMP.LNAME, DEPT.DNAME
+>     from EMP, DEPT, LOCATION EL, LOCATION DL
+>     where EL.LOCID = EMP.LOCID and DL.LOCID=DEPT.LOCID;
 'column0'
 'FennelToIteratorConverter'
 '  FennelCartesianProductRel(leftouterjoin=[false])'
@@ -692,5 +692,5 @@
 '        LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, DEPT]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$DEPT$DNAME, SYS$CLUSTERED_INDEX$JO$DEPT$LOCID]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, LOCATION]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$LOCATION$LOCID]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

@@ -1,30 +1,30 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test queries which execute row-by-row filters
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Fennel calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter which returns one row
-0: jdbc:farrago:> select name from emps where empno = 120;
+> -- $Id$
+> -- Test queries which execute row-by-row filters
+> 
+> set schema 'sales';
+> 
+> -- force usage of Fennel calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> 
+> -- filter which returns one row
+> select name from emps where empno = 120;
 +--------+
 |  NAME  |
 +--------+
 | Wilma  |
 +--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- filter which returns two rows
-0: jdbc:farrago:> select name from emps where empno = 110 order by name;
+> 
+> -- filter which returns two rows
+> select name from emps where empno = 110 order by name;
 +-------+
 | NAME  |
 +-------+
 | Eric  |
 | John  |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- IN filter implemented as OR
-0: jdbc:farrago:> select name from emps where empno in (110, 120) order by name;
+> 
+> -- IN filter implemented as OR
+> select name from emps where empno in (110, 120) order by name;
 +--------+
 |  NAME  |
 +--------+
@@ -32,40 +32,40 @@
 | John   |
 | Wilma  |
 +--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- IN filter implemented as join; have to go over
-0: jdbc:farrago:> -- the default threshold of 20 list items for this to kick in;
-0: jdbc:farrago:> -- throw in some duplicates just for fun
-0: jdbc:farrago:> select name from emps where empno in 
-. . . . . . . . > (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-. . . . . . . . > order by name;
+> 
+> -- IN filter implemented as join; have to go over
+> -- the default threshold of 20 list items for this to kick in;
+> -- throw in some duplicates just for fun
+> select name from emps where empno in 
+> (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+> order by name;
 +-------+
 | NAME  |
 +-------+
 | Eric  |
 | John  |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select name from emps where empno = 120;
+> 
+> -- verify plans
+> !set outputformat csv
+> 
+> explain plan for
+> select name from emps where empno = 120;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[120]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select name from emps where empno in (110, 120);
+> 
+> explain plan for
+> select name from emps where empno in (110, 120);
 'column0'
 'FennelToIteratorConverter'
 '  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[110], expr#3=[=($t0, $t2)], expr#4=[120], expr#5=[=($t0, $t4)], expr#6=[OR($t3, $t5)], NAME=[$t1], $condition=[$t6])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select name from emps where empno
-. . . . . . . . > in (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+> 
+> explain plan for
+> select name from emps where empno
+> in (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 'column0'
 'FennelToIteratorConverter'
 '  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[=($t0, $t2)], NAME=[$t1], $condition=[$t3])'
@@ -75,5 +75,5 @@
 '          FennelValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

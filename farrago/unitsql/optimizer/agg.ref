@@ -1,79 +1,79 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test aggregate queries
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- force usage of Fennel calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --------------------------
-0: jdbc:farrago:> -- Test Sort Aggreagtes --
-0: jdbc:farrago:> --------------------------
-0: jdbc:farrago:> alter system set "codeCacheMaxBytes"=min;
-0: jdbc:farrago:> alter session implementation set default;
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(*) from depts;
+> -- $Id$
+> -- Test aggregate queries
+> 
+> set schema 'sales';
+> 
+> -- force usage of Fennel calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> 
+> --------------------------
+> -- Test Sort Aggreagtes --
+> --------------------------
+> alter system set "codeCacheMaxBytes"=min;
+> alter session implementation set default;
+> !set outputformat table
+> 
+> select count(*) from depts;
 +---------+
 | EXPR$0  |
 +---------+
 | 3       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(city) from emps;
+> 
+> select count(city) from emps;
 +---------+
 | EXPR$0  |
 +---------+
 | 2       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select count(city) from emps where empno > 100000;
+> 
+> select count(city) from emps where empno > 100000;
 +---------+
 | EXPR$0  |
 +---------+
 | 0       |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sum(deptno) from depts;
+> 
+> select sum(deptno) from depts;
 +---------+
 | EXPR$0  |
 +---------+
 | 60      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sum(deptno) from depts where deptno > 100000;
+> 
+> select sum(deptno) from depts where deptno > 100000;
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select max(deptno) from depts;
+> 
+> select max(deptno) from depts;
 +---------+
 | EXPR$0  |
 +---------+
 | 30      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select min(deptno) from depts;
+> 
+> select min(deptno) from depts;
 +---------+
 | EXPR$0  |
 +---------+
 | 10      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select avg(deptno) from depts;
+> 
+> select avg(deptno) from depts;
 +---------+
 | EXPR$0  |
 +---------+
 | 20      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------
-0: jdbc:farrago:> -- group bys
-0: jdbc:farrago:> ------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno, count(*) from emps group by deptno;
+> 
+> ------------
+> -- group bys
+> ------------
+> 
+> select deptno, count(*) from emps group by deptno;
 +---------+---------+
 | DEPTNO  | EXPR$1  |
 +---------+---------+
@@ -81,10 +81,10 @@
 | 20      | 2       |
 | 40      | 1       |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Issue the same statement again to make sure SortedAggStream
-0: jdbc:farrago:> -- is in good state when reopened
-0: jdbc:farrago:> select deptno, count(*) from emps group by deptno;
+> 
+> -- Issue the same statement again to make sure SortedAggStream
+> -- is in good state when reopened
+> select deptno, count(*) from emps group by deptno;
 +---------+---------+
 | DEPTNO  | EXPR$1  |
 +---------+---------+
@@ -92,19 +92,19 @@
 | 20      | 2       |
 | 40      | 1       |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select d.name, count(*) from emps e, depts d
-. . . . . . . . >     where d.deptno = e.deptno group by d.name;
+> 
+> select d.name, count(*) from emps e, depts d
+>     where d.deptno = e.deptno group by d.name;
 +------------+---------+
 |    NAME    | EXPR$1  |
 +------------+---------+
 | Marketing  | 2       |
 | Sales      | 1       |
 +------------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test group by key where key value could be NULL
-0: jdbc:farrago:> select deptno, gender, min(age), max(age) from emps
-. . . . . . . . >     group by deptno, gender;
+> 
+> -- Test group by key where key value could be NULL
+> select deptno, gender, min(age), max(age) from emps
+>     group by deptno, gender;
 +---------+---------+---------+---------+
 | DEPTNO  | GENDER  | EXPR$2  | EXPR$3  |
 +---------+---------+---------+---------+
@@ -113,8 +113,8 @@
 | 20      | M       | 80      | 80      |
 | 40      | M       |         |         |
 +---------+---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sum(age) from emps group by deptno;
+> 
+> select sum(age) from emps group by deptno;
 +---------+
 | EXPR$0  |
 +---------+
@@ -122,65 +122,65 @@
 | 130     |
 |         |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test where input stream is empty
-0: jdbc:farrago:> select deptno, count(*) from emps where deptno < 0 group by deptno;
+> 
+> -- Test where input stream is empty
+> select deptno, count(*) from emps where deptno < 0 group by deptno;
 +---------+---------+
 | DEPTNO  | EXPR$1  |
 +---------+---------+
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(*) from depts;
+> 
+> 
+> -- verify plans
+> !set outputformat csv
+> 
+> explain plan for
+> select count(*) from depts;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
 '      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select count(city) from emps;
+> 
+> explain plan for
+> select count(city) from emps;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
 '      FennelRenameRel(fieldNames=[[$f0]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select sum(deptno) from depts;
+> 
+> explain plan for
+> select sum(deptno) from depts;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
 '      FennelRenameRel(fieldNames=[[$f0]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select max(deptno) from depts;
+> 
+> explain plan for
+> select max(deptno) from depts;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[MAX(0)])'
 '      FennelRenameRel(fieldNames=[[$f0]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select min(deptno) from depts;
+> 
+> explain plan for
+> select min(deptno) from depts;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
 '      FennelRenameRel(fieldNames=[[$f0]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select avg(deptno) from depts;
+> 
+> explain plan for
+> select avg(deptno) from depts;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
@@ -188,21 +188,21 @@
 '      FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])'
 '        FennelRenameRel(fieldNames=[[$f0]])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan without implementation for
-. . . . . . . . > select deptno,max(name) from sales.emps group by deptno;
+> 
+> explain plan without implementation for
+> select deptno,max(name) from sales.emps group by deptno;
 'column0'
 'ProjectRel(DEPTNO=[$0], EXPR$1=[$1])'
 '  AggregateRel(groupCount=[1], agg#0=[MAX(1)])'
 '    ProjectRel($f0=[$2], $f1=[$1])'
 '      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -----------------------------
-0: jdbc:farrago:> -- verify plans for group bys
-0: jdbc:farrago:> -----------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . > select deptno, count(*) from emps group by deptno;
+> 
+> -----------------------------
+> -- verify plans for group bys
+> -----------------------------
+> 
+> explain plan for 
+> select deptno, count(*) from emps group by deptno;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[DEPTNO, EXPR$1]])'
@@ -210,10 +210,10 @@
 '      FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '        FennelRenameRel(fieldNames=[[$f0]])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select d.name, count(*) from emps e, depts d
-. . . . . . . . >     where d.deptno = e.deptno group by d.name;
+> 
+> explain plan for
+> select d.name, count(*) from emps e, depts d
+>     where d.deptno = e.deptno group by d.name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[NAME, EXPR$1]])'
@@ -224,10 +224,10 @@
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 '            FennelBufferRel(inMemory=[false], multiPass=[true])'
 '              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select deptno, gender, min(age), max(age) from emps
-. . . . . . . . >     group by deptno, gender;
+> 
+> explain plan for
+> select deptno, gender, min(age), max(age) from emps
+>     group by deptno, gender;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[DEPTNO, GENDER, EXPR$2, EXPR$3]])'
@@ -235,9 +235,9 @@
 '      FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '        FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select sum(age) from emps group by deptno;
+> 
+> explain plan for
+> select sum(age) from emps group by deptno;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])'
@@ -245,19 +245,19 @@
 '      FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '        FennelRenameRel(fieldNames=[[$f0, $f1]])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --------------------------
-0: jdbc:farrago:> -- Test Hash Aggreagtes --
-0: jdbc:farrago:> --------------------------
-0: jdbc:farrago:> alter system set "codeCacheMaxBytes"=max;
-0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
-0: jdbc:farrago:> !set outputformat table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ------------
-0: jdbc:farrago:> -- group bys
-0: jdbc:farrago:> ------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno, count(*) from emps group by deptno order by 1;
+> 
+> --------------------------
+> -- Test Hash Aggreagtes --
+> --------------------------
+> alter system set "codeCacheMaxBytes"=max;
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> !set outputformat table
+> 
+> ------------
+> -- group bys
+> ------------
+> 
+> select deptno, count(*) from emps group by deptno order by 1;
 +---------+---------+
 | DEPTNO  | EXPR$1  |
 +---------+---------+
@@ -265,10 +265,10 @@
 | 20      | 2       |
 | 40      | 1       |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Issue the same statement again to make sure SortedAggStream
-0: jdbc:farrago:> -- is in good state when reopened
-0: jdbc:farrago:> select deptno, count(*) from emps group by deptno order by 1;
+> 
+> -- Issue the same statement again to make sure SortedAggStream
+> -- is in good state when reopened
+> select deptno, count(*) from emps group by deptno order by 1;
 +---------+---------+
 | DEPTNO  | EXPR$1  |
 +---------+---------+
@@ -276,19 +276,19 @@
 | 20      | 2       |
 | 40      | 1       |
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select d.name, count(*) from emps e, depts d
-. . . . . . . . >     where d.deptno = e.deptno group by d.name order by 1;
+> 
+> select d.name, count(*) from emps e, depts d
+>     where d.deptno = e.deptno group by d.name order by 1;
 +------------+---------+
 |    NAME    | EXPR$1  |
 +------------+---------+
 | Marketing  | 2       |
 | Sales      | 1       |
 +------------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test group by key where key value could be NULL
-0: jdbc:farrago:> select deptno, gender, min(age), max(age) from emps
-. . . . . . . . >     group by deptno, gender order by 1,2;
+> 
+> -- Test group by key where key value could be NULL
+> select deptno, gender, min(age), max(age) from emps
+>     group by deptno, gender order by 1,2;
 +---------+---------+---------+---------+
 | DEPTNO  | GENDER  | EXPR$2  | EXPR$3  |
 +---------+---------+---------+---------+
@@ -297,8 +297,8 @@
 | 20      | M       | 80      | 80      |
 | 40      | M       |         |         |
 +---------+---------+---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select sum(age) from emps group by deptno order by 1;
+> 
+> select sum(age) from emps group by deptno order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -306,65 +306,65 @@
 | 25      |
 | 130     |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Test where input stream is empty
-0: jdbc:farrago:> select deptno, count(*) from emps where deptno < 0 group by deptno
-. . . . . . . . > order by 1;
+> 
+> -- Test where input stream is empty
+> select deptno, count(*) from emps where deptno < 0 group by deptno
+> order by 1;
 +---------+---------+
 | DEPTNO  | EXPR$1  |
 +---------+---------+
 +---------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- LDB-135 - exercise the case where the buffer space for the aggregate 
-0: jdbc:farrago:> -- result increases, requiring a new slot to be created for an existing tuple
-0: jdbc:farrago:> create table test(num integer, name varchar(20));
-0: jdbc:farrago:> insert into test values(0,'B');
-0: jdbc:farrago:> insert into test values(1,'D');
-0: jdbc:farrago:> insert into test values(0,'AAA');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table test2(dname varchar(20), num integer);
-0: jdbc:farrago:> insert into test2 values('dept1', 0);
-0: jdbc:farrago:> insert into test2 values('dept2', 1);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select test2.dname, min(test.name) from test,test2
-. . . . . . . . >     where test.num = test2.num group by dname;
+> 
+> -- LDB-135 - exercise the case where the buffer space for the aggregate 
+> -- result increases, requiring a new slot to be created for an existing tuple
+> create table test(num integer, name varchar(20));
+> insert into test values(0,'B');
+> insert into test values(1,'D');
+> insert into test values(0,'AAA');
+> 
+> create table test2(dname varchar(20), num integer);
+> insert into test2 values('dept1', 0);
+> insert into test2 values('dept2', 1);
+> 
+> select test2.dname, min(test.name) from test,test2
+>     where test.num = test2.num group by dname;
 +--------+---------+
 | DNAME  | EXPR$1  |
 +--------+---------+
 | dept1  | AAA     |
 | dept2  | D       |
 +--------+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table test;
-0: jdbc:farrago:> drop table test2;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify plans
-0: jdbc:farrago:> !set outputformat csv
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan without implementation for
-. . . . . . . . > select deptno,max(name) from sales.emps group by deptno;
+> 
+> drop table test;
+> drop table test2;
+> 
+> -- verify plans
+> !set outputformat csv
+> 
+> explain plan without implementation for
+> select deptno,max(name) from sales.emps group by deptno;
 'column0'
 'ProjectRel(DEPTNO=[$0], EXPR$1=[$1])'
 '  AggregateRel(groupCount=[1], agg#0=[MAX(1)])'
 '    ProjectRel($f0=[$2], $f1=[$1])'
 '      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -----------------------------
-0: jdbc:farrago:> -- verify plans for group bys
-0: jdbc:farrago:> -----------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for 
-. . . . . . . . > select deptno, count(*) from emps group by deptno;
+> 
+> -----------------------------
+> -- verify plans for group bys
+> -----------------------------
+> 
+> explain plan for 
+> select deptno, count(*) from emps group by deptno;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[DEPTNO, EXPR$1]])'
 '    LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
 '      FennelRenameRel(fieldNames=[[$f0]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select d.name, count(*) from emps e, depts d
-. . . . . . . . >     where d.deptno = e.deptno group by d.name;
+> 
+> explain plan for
+> select d.name, count(*) from emps e, depts d
+>     where d.deptno = e.deptno group by d.name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[NAME, EXPR$1]])'
@@ -373,26 +373,26 @@
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select deptno, gender, min(age), max(age) from emps
-. . . . . . . . >     group by deptno, gender;
+> 
+> explain plan for
+> select deptno, gender, min(age), max(age) from emps
+>     group by deptno, gender;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[DEPTNO, GENDER, EXPR$2, EXPR$3]])'
 '    LhxAggRel(groupCount=[2], agg#0=[MIN(2)], agg#1=[MAX(2)])'
 '      FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for
-. . . . . . . . > select sum(age) from emps group by deptno;
+> 
+> explain plan for
+> select sum(age) from emps group by deptno;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])'
 '    LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
 '      FennelRenameRel(fieldNames=[[$f0, $f1]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- End agg.sql
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> -- End agg.sql
+> 
+> !quit

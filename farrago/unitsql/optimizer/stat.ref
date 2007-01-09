@@ -1,51 +1,51 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- This script tests statistics generation procedures
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !set verbose true
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- Setup a link to an empty tpcd schema
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create schema tpcd;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'tpcd';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create server tpcd_server
-. . . . . . . . > foreign data wrapper sys_file_wrapper
-. . . . . . . . > options (
-. . . . . . . . >     directory 'unitsql/optimizer/data/tpcd',
-. . . . . . . . >     file_extension 'tbl',
-. . . . . . . . >     with_header 'no', 
-. . . . . . . . >     log_directory 'testlog');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> import foreign schema bcp 
-. . . . . . . . > limit to (
-. . . . . . . . >     "CUSTOMER","LINEITEM","NATION","ORDERS",
-. . . . . . . . >     "PART","PARTSUPP","REGION","SUPPLIER")
-. . . . . . . . > from server tpcd_server
-. . . . . . . . > into tpcd;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---------------------------------------------------------------------------
-0: jdbc:farrago:> -- 1. Fake statistics generation                                         --
-0: jdbc:farrago:> --                                                                       --
-0: jdbc:farrago:> -- Here we just generate a few data; would need some adjustment          --
-0: jdbc:farrago:> -- for usage with actual tpcd queries (column names, generated values)   --
-0: jdbc:farrago:> ---------------------------------------------------------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 1.1 Row counts, fine for foreign tables
-0: jdbc:farrago:> --
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','CUSTOMER',15000);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','LINEITEM',600572);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','NATION',25);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','ORDERS',150000);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','PART',20000);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','PARTSUPP',80000);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','REGION',5);
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','SUPPLIER',1000);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+> -- $Id$
+> -- This script tests statistics generation procedures
+> 
+> !set verbose true
+> 
+> --
+> -- Setup a link to an empty tpcd schema
+> --
+> create schema tpcd;
+> 
+> set schema 'tpcd';
+> 
+> create server tpcd_server
+> foreign data wrapper sys_file_wrapper
+> options (
+>     directory 'unitsql/optimizer/data/tpcd',
+>     file_extension 'tbl',
+>     with_header 'no', 
+>     log_directory 'testlog');
+> 
+> import foreign schema bcp 
+> limit to (
+>     "CUSTOMER","LINEITEM","NATION","ORDERS",
+>     "PART","PARTSUPP","REGION","SUPPLIER")
+> from server tpcd_server
+> into tpcd;
+> 
+> 
+> ---------------------------------------------------------------------------
+> -- 1. Fake statistics generation                                         --
+> --                                                                       --
+> -- Here we just generate a few data; would need some adjustment          --
+> -- for usage with actual tpcd queries (column names, generated values)   --
+> ---------------------------------------------------------------------------
+> 
+> --
+> -- 1.1 Row counts, fine for foreign tables
+> --
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','CUSTOMER',15000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','LINEITEM',600572);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','NATION',25);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','ORDERS',150000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','PART',20000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','PARTSUPP',80000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','REGION',5);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','TPCD','SUPPLIER',1000);
+> 
+> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
 +------------+--------------+-------------+------------+
@@ -58,46 +58,46 @@
 | LOCALDB    | TPCD         | REGION      | 5          |
 | LOCALDB    | TPCD         | SUPPLIER    | 1000       |
 +------------+--------------+-------------+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 1.2 Page counts. We can neither index foreign tables or retrieve the 
-0: jdbc:farrago:> --     page counts of foreign indexes, so make a dummy table
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create table dummy_region (
-. . . . . . . . >     R_REGIONKEY  INTEGER PRIMARY KEY,
-. . . . . . . . >     R_NAME       VARCHAR(25) NOT NULL,
-. . . . . . . . >     R_COMMENT    VARCHAR(152));
-0: jdbc:farrago:> 
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_page_count(
-. . . . . . . . >     'LOCALDB','TPCD','SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY',1);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+> 
+> --
+> -- 1.2 Page counts. We can neither index foreign tables or retrieve the 
+> --     page counts of foreign indexes, so make a dummy table
+> --
+> create table dummy_region (
+>     R_REGIONKEY  INTEGER PRIMARY KEY,
+>     R_NAME       VARCHAR(25) NOT NULL,
+>     R_COMMENT    VARCHAR(152));
+> 
+> call sys_boot.mgmt.stat_set_page_count(
+>     'LOCALDB','TPCD','SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY',1);
+> 
+> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 +------------+--------------+---------------+----------------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  |  TABLE_NAME   |                     INDEX_NAME                     | PAGES  |
 +------------+--------------+---------------+----------------------------------------------------+--------+
 | LOCALDB    | TPCD         | DUMMY_REGION  | SYS$CONSTRAINT_INDEX$DUMMY_REGION$SYS$PRIMARY_KEY  | 1      |
 +------------+--------------+---------------+----------------------------------------------------+--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 1.3 Column histograms, also fine for foreign tables
-0: jdbc:farrago:> --
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- C_CUSTKEY
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB','TPCD','CUSTOMER','F1',15000,10,1500,0,'0123456789');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- C_NATIONKEY
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB','TPCD','CUSTOMER','F4',25,10,25,0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+> 
+> --
+> -- 1.3 Column histograms, also fine for foreign tables
+> --
+> 
+> -- C_CUSTKEY
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB','TPCD','CUSTOMER','F1',15000,10,1500,0,'0123456789');
+> 
+> -- C_NATIONKEY
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB','TPCD','CUSTOMER','F4',25,10,25,0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> 
+> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
 | LOCALDB    | TPCD         | CUSTOMER    | F1           | 15000        | 10               | 100        | 15            | 15             |
 | LOCALDB    | TPCD         | CUSTOMER    | F4           | 25           | 10               | 100        | 15            | 15             |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
+> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
@@ -308,21 +308,21 @@
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | LOCALDB    | TPCD         | CUSTOMER    | F4           | 99       | ZC           | 0            |
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 1.4 Update a histogram with more data
-0: jdbc:farrago:> --
-0: jdbc:farrago:> call sys_boot.mgmt.stat_set_column_histogram(
-. . . . . . . . >     'LOCALDB','TPCD','CUSTOMER','F1',15000,100,15000,0,'0123456789');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+> 
+> --
+> -- 1.4 Update a histogram with more data
+> --
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB','TPCD','CUSTOMER','F1',15000,100,15000,0,'0123456789');
+> 
+> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
 | LOCALDB    | TPCD         | CUSTOMER    | F1           | 15000        | 100              | 100        | 150           | 150            |
 | LOCALDB    | TPCD         | CUSTOMER    | F4           | 25           | 10               | 100        | 15            | 15             |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
+> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
@@ -533,49 +533,49 @@
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | LOCALDB    | TPCD         | CUSTOMER    | F4           | 99       | ZC           | 0            |
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop schema tpcd cascade;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> ---------------------------------------------------------------------------
-0: jdbc:farrago:> -- 2. Compute statistics                                                 --
-0: jdbc:farrago:> ---------------------------------------------------------------------------
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema stat;
-0: jdbc:farrago:> set schema 'stat';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create a few tables
-0: jdbc:farrago:> create table depts(
-. . . . . . . . >     deptno integer not null primary key,
-. . . . . . . . >     name varchar(128) not null constraint depts_unique_name unique);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table emps(
-. . . . . . . . >     empno integer not null,
-. . . . . . . . >     name varchar(128) not null,
-. . . . . . . . >     deptno integer not null,
-. . . . . . . . >     gender char(1) default 'M',
-. . . . . . . . >     city varchar(128),
-. . . . . . . . >     empid integer not null unique,
-. . . . . . . . >     age integer,
-. . . . . . . . >     public_key varbinary(50),
-. . . . . . . . >     slacker boolean,
-. . . . . . . . >     manager boolean not null,
-. . . . . . . . >     primary key(deptno,empno))
-. . . . . . . . >     create index emps_ux on emps(name);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 2.1 bad catalog name
-0: jdbc:farrago:> -- 
-0: jdbc:farrago:> -- NOTE: this throws a Java exception, with line numbers apt to change
-0: jdbc:farrago:> -- analyze table silly.sales.emps compute statistics for all columns;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 2.2 empty tables
-0: jdbc:farrago:> --
-0: jdbc:farrago:> analyze table depts compute statistics for all columns;
-0: jdbc:farrago:> analyze table emps compute statistics for columns (empno, name);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+> 
+> drop schema tpcd cascade;
+> 
+> 
+> ---------------------------------------------------------------------------
+> -- 2. Compute statistics                                                 --
+> ---------------------------------------------------------------------------
+> 
+> create schema stat;
+> set schema 'stat';
+> 
+> -- create a few tables
+> create table depts(
+>     deptno integer not null primary key,
+>     name varchar(128) not null constraint depts_unique_name unique);
+> 
+> create table emps(
+>     empno integer not null,
+>     name varchar(128) not null,
+>     deptno integer not null,
+>     gender char(1) default 'M',
+>     city varchar(128),
+>     empid integer not null unique,
+>     age integer,
+>     public_key varbinary(50),
+>     slacker boolean,
+>     manager boolean not null,
+>     primary key(deptno,empno))
+>     create index emps_ux on emps(name);
+> 
+> --
+> -- 2.1 bad catalog name
+> -- 
+> -- NOTE: this throws a Java exception, with line numbers apt to change
+> -- analyze table silly.sales.emps compute statistics for all columns;
+> 
+> --
+> -- 2.2 empty tables
+> --
+> analyze table depts compute statistics for all columns;
+> analyze table emps compute statistics for columns (empno, name);
+> 
+> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+-------------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
 +------------+--------------+-------------+-------------------------------------------------+--------+
@@ -585,14 +585,14 @@
 | LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1      |
 | LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 1      |
 +------------+--------------+-------------+-------------------------------------------------+--------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
 +------------+--------------+-------------+------------+
 | LOCALDB    | STAT         | DEPTS       | 0          |
 | LOCALDB    | STAT         | EMPS        | 0          |
 +------------+--------------+-------------+------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
@@ -601,22 +601,22 @@
 | LOCALDB    | STAT         | EMPS        | EMPNO        | 0            | 100              | 0          | 1             | 1              |
 | LOCALDB    | STAT         | EMPS        | NAME         | 0            | 100              | 0          | 1             | 1              |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
+> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 2.3 loaded tables
-0: jdbc:farrago:> --
-0: jdbc:farrago:> insert into depts select * from sales.depts;
-0: jdbc:farrago:> insert into emps select * from sales.emps;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> analyze table depts compute statistics for all columns;
-0: jdbc:farrago:> analyze table emps compute statistics for columns (empno, name);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+> 
+> --
+> -- 2.3 loaded tables
+> --
+> insert into depts select * from sales.depts;
+> insert into emps select * from sales.emps;
+> 
+> analyze table depts compute statistics for all columns;
+> analyze table emps compute statistics for columns (empno, name);
+> 
+> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+-------------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
 +------------+--------------+-------------+-------------------------------------------------+--------+
@@ -626,14 +626,14 @@
 | LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1      |
 | LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 1      |
 +------------+--------------+-------------+-------------------------------------------------+--------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
 +------------+--------------+-------------+------------+
 | LOCALDB    | STAT         | DEPTS       | 3          |
 | LOCALDB    | STAT         | EMPS        | 4          |
 +------------+--------------+-------------+------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
@@ -642,7 +642,7 @@
 | LOCALDB    | STAT         | EMPS        | EMPNO        | 3            | 100              | 4          | 1             | 1              |
 | LOCALDB    | STAT         | EMPS        | NAME         | 4            | 100              | 4          | 1             | 1              |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
+> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
@@ -661,16 +661,16 @@
 | LOCALDB    | STAT         | EMPS        | NAME         | 2        | John         | 1            |
 | LOCALDB    | STAT         | EMPS        | NAME         | 3        | Wilma        | 1            |
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 2.4 reanalyze
-0: jdbc:farrago:> --
-0: jdbc:farrago:> insert into emps values
-. . . . . . . . >     (130,'Barney',10,'M',null,11,55,null,true,true);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> analyze table emps compute statistics for columns (empno, name);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+> 
+> --
+> -- 2.4 reanalyze
+> --
+> insert into emps values
+>     (130,'Barney',10,'M',null,11,55,null,true,true);
+> 
+> analyze table emps compute statistics for columns (empno, name);
+> 
+> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+-------------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
 +------------+--------------+-------------+-------------------------------------------------+--------+
@@ -680,14 +680,14 @@
 | LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1      |
 | LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 1      |
 +------------+--------------+-------------+-------------------------------------------------+--------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
 +------------+--------------+-------------+------------+
 | LOCALDB    | STAT         | DEPTS       | 3          |
 | LOCALDB    | STAT         | EMPS        | 5          |
 +------------+--------------+-------------+------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
@@ -696,7 +696,7 @@
 | LOCALDB    | STAT         | EMPS        | EMPNO        | 4            | 100              | 5          | 1             | 1              |
 | LOCALDB    | STAT         | EMPS        | NAME         | 5            | 100              | 5          | 1             | 1              |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
+> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
@@ -717,13 +717,13 @@
 | LOCALDB    | STAT         | EMPS        | NAME         | 3        | John         | 1            |
 | LOCALDB    | STAT         | EMPS        | NAME         | 4        | Wilma        | 1            |
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 2.5 more types
-0: jdbc:farrago:> --
-0: jdbc:farrago:> analyze table emps compute statistics for all columns;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+> 
+> --
+> -- 2.5 more types
+> --
+> analyze table emps compute statistics for all columns;
+> 
+> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+-------------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
 +------------+--------------+-------------+-------------------------------------------------+--------+
@@ -733,14 +733,14 @@
 | LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1      |
 | LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 1      |
 +------------+--------------+-------------+-------------------------------------------------+--------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
 +------------+--------------+-------------+------------+
 | LOCALDB    | STAT         | DEPTS       | 3          |
 | LOCALDB    | STAT         | EMPS        | 5          |
 +------------+--------------+-------------+------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
@@ -757,7 +757,7 @@
 | LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 4            | 100              | 5          | 1             | 1              |
 | LOCALDB    | STAT         | EMPS        | SLACKER      | 3            | 100              | 5          | 1             | 1              |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
+> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+----------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  |  START_VALUE   | VALUE_COUNT  |
 +------------+--------------+-------------+--------------+----------+----------------+--------------+
@@ -818,48 +818,48 @@
 | LOCALDB    | STAT         | EMPS        | SLACKER      | 3        | true           | 1            |
 | LOCALDB    | STAT         | EMPS        | SLACKER      | 4        | true           | 0            |
 +------------+--------------+-------------+--------------+----------+----------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 2.6 note: sampling has not been implemented, only test syntax
-0: jdbc:farrago:> --
-0: jdbc:farrago:> analyze table depts estimate statistics for all columns sample 10 percent;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 2.7 analyze a foreign table
-0: jdbc:farrago:> --
-0: jdbc:farrago:> drop schema stat cascade;
-0: jdbc:farrago:> create schema stat;
-0: jdbc:farrago:> set schema 'stat';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create server stat_server
-. . . . . . . . > foreign data wrapper sys_file_wrapper
-. . . . . . . . > options (
-. . . . . . . . >     directory 'unitsql/med/flatfiles',
-. . . . . . . . >     file_extension 'csv',
-. . . . . . . . >     with_header 'yes', 
-. . . . . . . . >     log_directory 'testlog');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create foreign table stat_file(
-. . . . . . . . >     id int not null,
-. . . . . . . . >     name varchar(50) not null,
-. . . . . . . . >     extra_field char(1) not null)
-. . . . . . . . > server stat_server
-. . . . . . . . > options (filename 'example');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> analyze table stat_file compute statistics for all columns;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+> 
+> --
+> -- 2.6 note: sampling has not been implemented, only test syntax
+> --
+> analyze table depts estimate statistics for all columns sample 10 percent;
+> 
+> --
+> -- 2.7 analyze a foreign table
+> --
+> drop schema stat cascade;
+> create schema stat;
+> set schema 'stat';
+> 
+> create server stat_server
+> foreign data wrapper sys_file_wrapper
+> options (
+>     directory 'unitsql/med/flatfiles',
+>     file_extension 'csv',
+>     with_header 'yes', 
+>     log_directory 'testlog');
+> 
+> create foreign table stat_file(
+>     id int not null,
+>     name varchar(50) not null,
+>     extra_field char(1) not null)
+> server stat_server
+> options (filename 'example');
+> 
+> analyze table stat_file compute statistics for all columns;
+> 
+> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+-------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | INDEX_NAME  | PAGES  |
 +------------+--------------+-------------+-------------+--------+
 +------------+--------------+-------------+-------------+--------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
 +------------+--------------+-------------+------------+
 | LOCALDB    | STAT         | STAT_FILE   | 6          |
 +------------+--------------+-------------+------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
@@ -867,7 +867,7 @@
 | LOCALDB    | STAT         | STAT_FILE   | ID           | 4            | 100              | 6          | 1             | 1              |
 | LOCALDB    | STAT         | STAT_FILE   | NAME         | 6            | 100              | 6          | 1             | 1              |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
+> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  |               START_VALUE                | VALUE_COUNT  |
 +------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
@@ -890,22 +890,22 @@
 | LOCALDB    | STAT         | STAT_FILE   | NAME         | 4        | Peter "peg leg", Jimmy & Samantha "Sam"  | 1            |
 | LOCALDB    | STAT         | STAT_FILE   | NAME         | 5        | Susan, Peter and Dave                    | 1            |
 +------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- 2.8 A few more rows than histogram bars
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create table ten(i int primary key)
-. . . . . . . . > server sys_column_store_data_server;
-0: jdbc:farrago:> insert into ten values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table hundred (i int primary key)
-. . . . . . . . > server sys_column_store_data_server;
-0: jdbc:farrago:> insert into hundred (select a.i*10 + b.i from ten a, ten b);
-0: jdbc:farrago:> insert into hundred values (100), (101);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> analyze table hundred compute statistics for all columns;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+> 
+> --
+> -- 2.8 A few more rows than histogram bars
+> --
+> create table ten(i int primary key)
+> server sys_column_store_data_server;
+> insert into ten values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
+> 
+> create table hundred (i int primary key)
+> server sys_column_store_data_server;
+> insert into hundred (select a.i*10 + b.i from ten a, ten b);
+> insert into hundred values (100), (101);
+> 
+> analyze table hundred compute statistics for all columns;
+> 
+> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+-----------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                  INDEX_NAME                   | PAGES  |
 +------------+--------------+-------------+-----------------------------------------------+--------+
@@ -913,14 +913,14 @@
 | LOCALDB    | STAT         | HUNDRED     | SYS$CONSTRAINT_INDEX$HUNDRED$SYS$PRIMARY_KEY  | 1      |
 | LOCALDB    | STAT         | HUNDRED     | SYS$DELETION_INDEX$STAT$HUNDRED               | 1      |
 +------------+--------------+-------------+-----------------------------------------------+--------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
 +------------+--------------+-------------+------------+
 | LOCALDB    | STAT         | HUNDRED     | 102        |
 | LOCALDB    | STAT         | STAT_FILE   | 6          |
 +------------+--------------+-------------+------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
@@ -929,7 +929,7 @@
 | LOCALDB    | STAT         | STAT_FILE   | ID           | 4            | 100              | 6          | 1             | 1              |
 | LOCALDB    | STAT         | STAT_FILE   | NAME         | 6            | 100              | 6          | 1             | 1              |
 +------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-0: jdbc:farrago:> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
+> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  |               START_VALUE                | VALUE_COUNT  |
 +------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
@@ -1003,5 +1003,5 @@
 | LOCALDB    | STAT         | STAT_FILE   | NAME         | 4        | Peter "peg leg", Jimmy & Samantha "Sam"  | 1            |
 | LOCALDB    | STAT         | STAT_FILE   | NAME         | 5        | Susan, Peter and Dave                    | 1            |
 +------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> !quit

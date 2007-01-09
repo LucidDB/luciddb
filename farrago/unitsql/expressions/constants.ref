@@ -1,31 +1,22 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- test constants in operands.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- first test with Java calc
-0: jdbc:farrago:> alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where false;
+> -- $Id$
+> -- test constants in operands.
+> 
+> -- first test with Java calc
+> alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
+> 
+> select deptno from sales.depts where false;
 +---------+
 | DEPTNO  |
 +---------+
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where 0 > 1;
+> 
+> select deptno from sales.depts where 0 > 1;
 +---------+
 | DEPTNO  |
 +---------+
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where true;
-+---------+
-| DEPTNO  |
-+---------+
-| 10      |
-| 20      |
-| 30      |
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where 1 > 0;
+> 
+> select deptno from sales.depts where true;
 +---------+
 | DEPTNO  |
 +---------+
@@ -33,23 +24,8 @@
 | 20      |
 | 30      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- now test with Fennel calc
-0: jdbc:farrago:> alter system set "calcVirtualMachine"  = 'CALCVM_FENNEL';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where false;
-+---------+
-| DEPTNO  |
-+---------+
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where 0 > 1;
-+---------+
-| DEPTNO  |
-+---------+
-+---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where true;
+> 
+> select deptno from sales.depts where 1 > 0;
 +---------+
 | DEPTNO  |
 +---------+
@@ -57,8 +33,23 @@
 | 20      |
 | 30      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select deptno from sales.depts where 1 > 0;
+> 
+> -- now test with Fennel calc
+> alter system set "calcVirtualMachine"  = 'CALCVM_FENNEL';
+> 
+> select deptno from sales.depts where false;
++---------+
+| DEPTNO  |
++---------+
++---------+
+> 
+> select deptno from sales.depts where 0 > 1;
++---------+
+| DEPTNO  |
++---------+
++---------+
+> 
+> select deptno from sales.depts where true;
 +---------+
 | DEPTNO  |
 +---------+
@@ -66,6 +57,15 @@
 | 20      |
 | 30      |
 +---------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+> 
+> select deptno from sales.depts where 1 > 0;
++---------+
+| DEPTNO  |
++---------+
+| 10      |
+| 20      |
+| 30      |
++---------+
+> 
+> 
+> !quit

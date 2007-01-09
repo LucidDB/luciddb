@@ -1,109 +1,109 @@
-0: jdbc:farrago:> -- $Id$
-0: jdbc:farrago:> -- Test create or replace DDL 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema createorreplace;
-0: jdbc:farrago:> set schema 'createorreplace';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table foo (bar integer primary key);
-0: jdbc:farrago:> insert into foo (bar) values (128);
-0: jdbc:farrago:> create table foo2 (bar2 integer primary key);
-0: jdbc:farrago:> insert into foo2 (bar2) values (256);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- Table (disallowed)
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create or replace table foo (bar2 integer primary key);
+> -- $Id$
+> -- Test create or replace DDL 
+> 
+> create schema createorreplace;
+> set schema 'createorreplace';
+> 
+> create table foo (bar integer primary key);
+> insert into foo (bar) values (128);
+> create table foo2 (bar2 integer primary key);
+> insert into foo2 (bar2) values (256);
+> 
+> --
+> -- Table (disallowed)
+> --
+> create or replace table foo (bar2 integer primary key);
 Error: Cannot replace table "FOO" because it does not support replacement (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- View
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create view fooview as select * from foo;
-0: jdbc:farrago:> select * from fooview;
+> 
+> --
+> -- View
+> --
+> create view fooview as select * from foo;
+> select * from fooview;
 +------+
 | BAR  |
 +------+
 | 128  |
 +------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- simple case:  replace view, no dependencies
-0: jdbc:farrago:> create or replace view fooview as select * from foo2;
-0: jdbc:farrago:> select * from fooview;
+> 
+> -- simple case:  replace view, no dependencies
+> create or replace view fooview as select * from foo2;
+> select * from fooview;
 +-------+
 | BAR2  |
 +-------+
 | 256   |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create view fooview2 as select * from fooview;
-0: jdbc:farrago:> select * from fooview2;
+> 
+> create view fooview2 as select * from fooview;
+> select * from fooview2;
 +-------+
 | BAR2  |
 +-------+
 | 256   |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should succeed since dependency FOOVIEW2 remains valid
-0: jdbc:farrago:> create or replace view fooview as select * from foo2;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail, cannot replace object if dependencies are invalidated
-0: jdbc:farrago:> create or replace view fooview as select * from foo;
+> 
+> -- should succeed since dependency FOOVIEW2 remains valid
+> create or replace view fooview as select * from foo2;
+> 
+> -- should fail, cannot replace object if dependencies are invalidated
+> create or replace view fooview as select * from foo;
 Error: From line 1, column 17 to line 1, column 22: Column 'BAR2' not found in table 'FOOVIEW' (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- make sure fooview2 didn't get nuked from above
-0: jdbc:farrago:> select * from fooview2;
+> 
+> -- make sure fooview2 didn't get nuked from above
+> select * from fooview2;
 +-------+
 | BAR2  |
 +-------+
 | 256   |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table foo3 (bar integer primary key, bar2 integer, bar3 varchar(25));
-0: jdbc:farrago:> insert into foo3 (bar, bar2, bar3) values (512, 1024, 'FOOBAR');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should succeed because dependent view FOOVIEW2 is still valid (column BAR2 exists)
-0: jdbc:farrago:> create or replace view fooview as select * from foo3;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from fooview;
+> 
+> create table foo3 (bar integer primary key, bar2 integer, bar3 varchar(25));
+> insert into foo3 (bar, bar2, bar3) values (512, 1024, 'FOOBAR');
+> 
+> -- should succeed because dependent view FOOVIEW2 is still valid (column BAR2 exists)
+> create or replace view fooview as select * from foo3;
+> 
+> select * from fooview;
 +------+-------+---------+
 | BAR  | BAR2  |  BAR3   |
 +------+-------+---------+
 | 512  | 1024  | FOOBAR  |
 +------+-------+---------+
-0: jdbc:farrago:> select * from fooview2;
+> select * from fooview2;
 +-------+
 | BAR2  |
 +-------+
 | 1024  |
 +-------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- try to create a loop
-0: jdbc:farrago:> create view loop1 as select * from foo;
-0: jdbc:farrago:> create view loop2 as select * from loop1;
-0: jdbc:farrago:> -- this should fail
-0: jdbc:farrago:> create or replace view loop1 as select * from loop2;
+> 
+> -- try to create a loop
+> create view loop1 as select * from foo;
+> create view loop2 as select * from loop1;
+> -- this should fail
+> create or replace view loop1 as select * from loop2;
 Error: Object definition contains recursive cycle (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- Index (disallowed)
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create index idx on foo(bar);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  duplicate index
-0: jdbc:farrago:> create index idx on foo(bar);
+> 
+> --
+> -- Index (disallowed)
+> --
+> create index idx on foo(bar);
+> 
+> -- should fail:  duplicate index
+> create index idx on foo(bar);
 Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."CREATEORREPLACE" already contains index "IDX" with same name (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create or replace index idx on foo(bar);
+> 
+> create or replace index idx on foo(bar);
 Error: Cannot replace index "IDX" because it does not support replacement (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- Schema
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create schema foo;
-0: jdbc:farrago:> set schema 'foo';
-0: jdbc:farrago:> create view v1 as select * from sales.depts;
-0: jdbc:farrago:> create table bar (col integer primary key);
-0: jdbc:farrago:> select * from v1;
+> 
+> --
+> -- Schema
+> --
+> create schema foo;
+> set schema 'foo';
+> create view v1 as select * from sales.depts;
+> create table bar (col integer primary key);
+> select * from v1;
 +---------+------------+
 | DEPTNO  |    NAME    |
 +---------+------------+
@@ -111,23 +111,23 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 | 20      | Marketing  |
 | 30      | Accounts   |
 +---------+------------+
-0: jdbc:farrago:> select * from bar;
+> select * from bar;
 +------+
 | COL  |
 +------+
 +------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create or replace schema foo description 'blah';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select "description" from sys_fem."SQL2003"."LocalSchema"
-. . . . . . . . >  where "name" = 'FOO';
+> 
+> create or replace schema foo description 'blah';
+> 
+> select "description" from sys_fem."SQL2003"."LocalSchema"
+>  where "name" = 'FOO';
 +--------------+
 | description  |
 +--------------+
 | blah         |
 +--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from foo.v1;
+> 
+> select * from foo.v1;
 +---------+------------+
 | DEPTNO  |    NAME    |
 +---------+------------+
@@ -135,15 +135,15 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 | 20      | Marketing  |
 | 30      | Accounts   |
 +---------+------------+
-0: jdbc:farrago:> select * from foo.bar;
+> select * from foo.bar;
 +------+
 | COL  |
 +------+
 +------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'foo';
-0: jdbc:farrago:> create view v2 as select * from sales.depts;
-0: jdbc:farrago:> select * from v2;
+> 
+> set schema 'foo';
+> create view v2 as select * from sales.depts;
+> select * from v2;
 +---------+------------+
 | DEPTNO  |    NAME    |
 +---------+------------+
@@ -151,9 +151,9 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 | 20      | Marketing  |
 | 30      | Accounts   |
 +---------+------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create or replace view v2 as select * from sales.emps;
-0: jdbc:farrago:> select * from v2;
+> 
+> create or replace view v2 as select * from sales.emps;
+> select * from v2;
 +--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
 | EMPNO  |  NAME  | DEPTNO  | GENDER  |      CITY      | EMPID  | AGE  | PUBLIC_KEY  | SLACKER  | MANAGER  |
 +--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
@@ -162,23 +162,23 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 | 120    | Wilma  | 20      | F       |                | 1      | 50   |             |          | true     |
 | 110    | John   | 40      | M       | Vancouver      | 2      |      | 58797A      | false    | true     |
 +--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- Server
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create foreign data wrapper foo_wrapper
-. . . . . . . . >  library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
-. . . . . . . . >  language java;
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> create server foo_server
-. . . . . . . . >  foreign data wrapper foo_wrapper;
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> create foreign table foo_table(
-. . . . . . . . >     id int not null)
-. . . . . . . . > server foo_server
-. . . . . . . . > options (executor_impl 'JAVA', row_count '3');
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> select * from foo_table;
+> 
+> --
+> -- Server
+> --
+> create foreign data wrapper foo_wrapper
+>  library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+>  language java;
+>                                                                                 
+> create server foo_server
+>  foreign data wrapper foo_wrapper;
+>                                                                                 
+> create foreign table foo_table(
+>     id int not null)
+> server foo_server
+> options (executor_impl 'JAVA', row_count '3');
+>                                                                                 
+> select * from foo_table;
 +-----+
 | ID  |
 +-----+
@@ -186,19 +186,19 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 | 0   |
 | 0   |
 +-----+
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> create or replace server foo_server
-. . . . . . . . >  foreign data wrapper foo_wrapper
-. . . . . . . . >  description 'blah';
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> select "description" from sys_fem.med."DataServer" where "name" = 'FOO_SERVER';
+>                                                                                 
+> create or replace server foo_server
+>  foreign data wrapper foo_wrapper
+>  description 'blah';
+>                                                                                 
+> select "description" from sys_fem.med."DataServer" where "name" = 'FOO_SERVER';
 +--------------+
 | description  |
 +--------------+
 | blah         |
 +--------------+
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> select * from foo_table;
+>                                                                                 
+> select * from foo_table;
 +-----+
 | ID  |
 +-----+
@@ -206,23 +206,23 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 | 0   |
 | 0   |
 +-----+
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- Wrapper
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create or replace foreign data wrapper foo_wrapper
-. . . . . . . . >   library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
-. . . . . . . . >   language java
-. . . . . . . . >   description 'blah';
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> select "description" from sys_fem.med."DataWrapper" where "name" = 'FOO_WRAPPER';
+>                                                                                 
+> --
+> -- Wrapper
+> --
+> create or replace foreign data wrapper foo_wrapper
+>   library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+>   language java
+>   description 'blah';
+>                                                                                 
+> select "description" from sys_fem.med."DataWrapper" where "name" = 'FOO_WRAPPER';
 +--------------+
 | description  |
 +--------------+
 | blah         |
 +--------------+
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> select * from foo_table;
+>                                                                                 
+> select * from foo_table;
 +-----+
 | ID  |
 +-----+
@@ -230,16 +230,16 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 | 0   |
 | 0   |
 +-----+
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> -- Bugs!
-0: jdbc:farrago:> --
-0: jdbc:farrago:> create schema bug453;
-0: jdbc:farrago:> set schema 'bug453';
-0: jdbc:farrago:>                                                                                 
-0: jdbc:farrago:> CREATE VIEW V1 AS SELECT name FROM SALES.EMPS;
-0: jdbc:farrago:> CREATE VIEW V2 AS SELECT name FROM V1;
-0: jdbc:farrago:> CREATE OR REPLACE VIEW V1 AS SELECT name FROM SALES.EMPS;
-0: jdbc:farrago:>  
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+>                                                                                 
+> --
+> -- Bugs!
+> --
+> create schema bug453;
+> set schema 'bug453';
+>                                                                                 
+> CREATE VIEW V1 AS SELECT name FROM SALES.EMPS;
+> CREATE VIEW V2 AS SELECT name FROM V1;
+> CREATE OR REPLACE VIEW V1 AS SELECT name FROM SALES.EMPS;
+>  
+> 
+> !quit
