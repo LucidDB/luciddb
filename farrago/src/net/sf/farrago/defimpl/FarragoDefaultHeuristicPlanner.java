@@ -155,7 +155,7 @@ public class FarragoDefaultHeuristicPlanner
 
         // Remove trivial projects so tables referenced in selects in the
         // from clause can be optimized with the rest of the query
-        builder.addRuleInstance(new RemoveTrivialProjectRule());
+        builder.addRuleInstance(RemoveTrivialProjectRule.instance);
 
         // Push filters down past joins.
         builder.addRuleInstance(new PushFilterPastJoinRule());
@@ -174,7 +174,7 @@ public class FarragoDefaultHeuristicPlanner
         // Push projections down.  Do this after index joins, because
         // index joins don't like projections underneath the join.
         builder.addGroupBegin();
-        builder.addRuleInstance(new RemoveTrivialProjectRule());
+        builder.addRuleInstance(RemoveTrivialProjectRule.instance);
         builder.addRuleInstance(new PushProjectPastJoinRule());
         builder.addRuleInstance(new PushProjectPastFilterRule());
         builder.addRuleInstance(new MergeProjectRule());
@@ -187,7 +187,7 @@ public class FarragoDefaultHeuristicPlanner
         // Run any SQL/MED plugin rules.  Note that
         // some of these may rely on CoerceInputsRule above.
         builder.addRuleCollection(medPluginRules);
-        builder.addRuleInstance(new RemoveTrivialProjectRule());
+        builder.addRuleInstance(RemoveTrivialProjectRule.instance);
 
         // Use hash join where possible. Make sure this rule is called before
         // any physical conversions have been done

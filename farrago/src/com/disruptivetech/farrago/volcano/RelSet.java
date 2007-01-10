@@ -200,10 +200,18 @@ class RelSet
     }
 
     /**
-     * Merges <code>otherSet</code> into this one. You generally call this
-     * method after you discover that two relational expressions are equivalent,
-     * and hence their sets are equivalent also. After you have called this
-     * method, <code>otherSet</code> is obsolete, this otherSet is still alive.
+     * Merges <code>otherSet</code> into this RelSet.
+     *
+     * <p>One generally calls this method after discovering that two relational
+     * expressions are equivalent, and hence the <code>RelSet</code>s they
+     * belong to are equivalent also.
+     *
+     * <p>After this method completes, <code>otherSet</code> is obsolete, its
+     * {@link #equivalentSet} member points to this RelSet, and this RelSet is
+     * still alive.
+     *
+     * @param planner Planner
+     * @param otherSet RelSet which is equivalent to this one
      */
     void mergeWith(
         VolcanoPlanner planner,

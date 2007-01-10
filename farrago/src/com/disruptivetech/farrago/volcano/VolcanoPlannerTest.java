@@ -164,7 +164,7 @@ public class VolcanoPlannerTest
         planner.addRelTraitDef(CallingConventionTraitDef.instance);
 
         if (useRule) {
-            planner.addRule(new RemoveTrivialProjectRule());
+            planner.addRule(RemoveTrivialProjectRule.instance);
         }
 
         planner.addRule(new PhysLeafRule());

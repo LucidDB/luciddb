@@ -30,8 +30,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Permutation;
-import org.eigenbase.util.mapping.IntPair;
-
 
 /**
  * A collection of expressions which read inputs, compute output expressions,
@@ -185,8 +183,8 @@ public class RexProgram
      * @param projectExprs Project expressions
      * @param conditionExpr Condition on which to filter rows, or null if rows
      * are not to be filtered
-     * @param outputRowType
-     * @param rexBuilder
+     * @param outputRowType Output row type
+     * @param rexBuilder Builder of rex expressions
      *
      * @return A program
      */
@@ -400,11 +398,21 @@ public class RexProgram
         return new RexProgram(rowType, refs, projectRefs, null, rowType);
     }
 
+    /**
+     * Returns the type of the input row to the program.
+     *
+     * @return input row type
+     */
     public RelDataType getInputRowType()
     {
         return inputRowType;
     }
 
+    /**
+     * Returns whether this program contains windowed aggregate functions
+     *
+     * @return
+     */
     public boolean containsAggs()
     {
         return aggs || RexOver.containsOver(this);
@@ -415,6 +423,11 @@ public class RexProgram
         this.aggs = aggs;
     }
 
+    /**
+     * Returns the type of the output row from this program.
+     *
+     * @return output row type
+     */
     public RelDataType getOutputRowType()
     {
         return outputRowType;
@@ -635,6 +648,28 @@ loop:
                 assert !fail : "program " + toString()
                     + "' does not project identity for input row type '"
                     + inputRowType + "', field #" + i;
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Returns whether this program returns its input exactly.
+     *
+     * <p>This is a stronger condition than {@link #projectsIdentity(boolean)}.
+     */
+    public boolean isTrivial()
+    {
+        if (getCondition() != null) {
+            return false;
+        }
+        if (projects.length != inputRowType.getFieldCount()) {
+            return false;
+        }
+        for (int i = 0; i < projects.length; i++) {
+            RexLocalRef project = projects[i];
+            if (project.index != i) {
                 return false;
             }
         }

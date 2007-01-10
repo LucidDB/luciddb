@@ -225,7 +225,7 @@ public class LucidDbSessionPersonality
         
         // Remove trivial projects so tables referenced in selects in the
         // from clause can be optimized with the rest of the query
-        builder.addRuleInstance(new RemoveTrivialProjectRule());
+        builder.addRuleInstance(RemoveTrivialProjectRule.instance);
 
         // Push filters down.
         builder.addRuleInstance(
@@ -291,7 +291,7 @@ public class LucidDbSessionPersonality
         // Apply PushProjectPastJoinRule while there are no physical joinrels
         // since the rule only matches on JoinRel.
         builder.addGroupBegin();
-        builder.addRuleInstance(new RemoveTrivialProjectRule());
+        builder.addRuleInstance(RemoveTrivialProjectRule.instance);
         builder.addRuleInstance(
             new PushProjectPastJoinRule(
                 LucidDbOperatorTable.ldbInstance().getSpecialOperators()));

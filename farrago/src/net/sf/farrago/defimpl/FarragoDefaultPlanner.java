@@ -122,7 +122,8 @@ public class FarragoDefaultPlanner
         planner.addRule(
             new CoerceInputsRule(TableModificationRel.class, false));
         planner.addRule(new SwapJoinRule());
-        planner.addRule(new RemoveTrivialProjectRule());
+        planner.addRule(RemoveTrivialProjectRule.instance);
+        planner.addRule(RemoveTrivialCalcRule.instance);
         planner.addRule(new FarragoMultisetSplitterRule());
         planner.addRule(FarragoJavaUdxRule.instance);
 
