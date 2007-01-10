@@ -88,8 +88,6 @@ public abstract class Bug
 
     public static final boolean Dt466Fixed = false;
 
-    public static final boolean Dt471Fixed = false;
-
     public static final boolean Dt591Fixed = false;
 
     // -----------------------------------------------------------------------
