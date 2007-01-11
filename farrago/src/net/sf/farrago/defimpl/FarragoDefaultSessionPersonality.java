@@ -375,6 +375,13 @@ public class FarragoDefaultSessionPersonality
     }
 
     // implement FarragoSessionPersonality
+    public FarragoSessionVariables createInheritedSessionVariables(
+        FarragoSessionVariables variables)
+    {
+        return variables.cloneVariables();
+    }
+    
+    // implement FarragoSessionPersonality
     public void validateSessionVariable(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSessionVariables variables,

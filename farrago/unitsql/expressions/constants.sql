@@ -28,3 +28,13 @@ select deptno from sales.depts where true;
 
 select deptno from sales.depts where 1 > 0;
 
+-- test a bug (LER-3372) with the combination of constant reduction and
+-- LucidDB error recovery:  we don't want errors encountered when
+-- evaluating the reentrant statement used by constant reduction
+-- to be treated as recoverable
+alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
+
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+alter session set "errorMax" = 25;
+
+select cast('xyz' as int)+2 from (values(0));

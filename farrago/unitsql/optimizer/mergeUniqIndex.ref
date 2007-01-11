@@ -11,6 +11,7 @@
 > set schema 'm';
 > alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 > alter session set "errorMax" = 5;
+> alter session set "logDir" = 'testlog';
 > 
 > create table emps(
 >     empno int not null unique, name varchar(20) not null, deptno int,
@@ -423,7 +424,7 @@
 >     when not matched then
 >         insert (empno, name, age, gender, salary, city)
 >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
-Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0 (state=,code=0)
+Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > select * from emps order by empno, name;
 +--------+---------+---------+---------+---------------------------------+------+------------+
 | EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
@@ -466,7 +467,7 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 >     when not matched then
 >         insert (empno, name, age, gender, salary, city)
 >         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
-Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0 (state=,code=0)
+Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > select * from emps order by empno, name;
 +--------+---------+---------+---------+---------------------------------+------+------------+
 | EMPNO  |  NAME   | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
@@ -1425,7 +1426,7 @@ Messages:
 >     when not matched then
 >         insert (empid, name)
 >         values (src.empid, src.name);
-Warning: Statement execution encountered recoverable exceptions; errors: 2; warnings: 0 (state=,code=0)
+Warning: Statement execution encountered recoverable exceptions; errors: 2; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > select * from comic;
 +--------+-----------------+
 | EMPID  |      NAME       |
@@ -1461,7 +1462,7 @@ Warning: Statement execution encountered recoverable exceptions; errors: 2; warn
 >     when not matched then
 >         insert (empid, name, info)
 >         values (src.empid, src.name, src.info);
-Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0 (state=,code=0)
+Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > select * from villians;
 +--------+---------------+--------------------------+
 | EMPID  |     NAME      |           INFO           |
@@ -1499,7 +1500,7 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 >     when not matched then
 >         insert (empid, name, alias, info)
 >         values (src.empid, src.name, src.alias, src.info);
-Warning: Statement execution encountered recoverable exceptions; errors: 6; warnings: 0 (state=,code=0)
+Warning: Statement execution encountered recoverable exceptions; errors: 6; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > select * from villians2;
 +--------+-------------------+-----------------+------------+
 | EMPID  |       NAME        |      ALIAS      |    INFO    |
@@ -1528,7 +1529,7 @@ Warning: Statement execution encountered recoverable exceptions; errors: 6; warn
 >     when not matched then
 >         insert (empid, name, alias, info)
 >         values (src.empid, src.name, src.alias, src.info);
-Warning: Statement execution encountered recoverable exceptions; errors: 3; warnings: 0 (state=,code=0)
+Warning: Statement execution encountered recoverable exceptions; errors: 3; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > select * from villians2;
 +--------+-------------------+-----------------+------------+
 | EMPID  |       NAME        |      ALIAS      |    INFO    |

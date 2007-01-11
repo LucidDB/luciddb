@@ -432,7 +432,8 @@ public class FarragoDbSession
             if (inheritedVariables == null) {
                 inheritedVariables = sessionVariables;
             }
-            clone.sessionVariables = inheritedVariables.cloneVariables();
+            clone.sessionVariables =
+                personality.createInheritedSessionVariables(inheritedVariables);
             return clone;
         } catch (CloneNotSupportedException ex) {
             throw Util.newInternal(ex);

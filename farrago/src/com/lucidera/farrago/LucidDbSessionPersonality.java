@@ -650,6 +650,21 @@ public class LucidDbSessionPersonality
             LAST_UPSERT_ROWS_INSERTED_DEFAULT);
     }
 
+    // implement FarragoSessionPersonality
+    public FarragoSessionVariables createInheritedSessionVariables(
+        FarragoSessionVariables variables)
+    {
+        // for reentrant sessions, don't inherit the "errorMax" setting because
+        // it may cause misbehavior in internal SQL for something like ANALYZE
+        // or constant reduction
+        FarragoSessionVariables clone =
+            super.createInheritedSessionVariables(variables);
+        clone.set(
+            LucidDbSessionPersonality.ERROR_MAX,
+            LucidDbSessionPersonality.ERROR_MAX_DEFAULT);
+        return clone;
+    }
+    
     // override FarragoDefaultSessionPersonality
     public FarragoSessionRuntimeContext newRuntimeContext(
         FarragoSessionRuntimeParams params)

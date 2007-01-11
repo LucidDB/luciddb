@@ -492,8 +492,11 @@ options (
 -- from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
 
 -- we can also view the error log summaries
+-- (filter by process_id since other tests such as mergeUniqIndex.sql pollute)
 select process_id, action_id, error_count, "SQL"
-from log_server.bcp."Summary";
+from log_server.bcp."Summary"
+where cast(process_id as varchar(100))='101'
+order by error_count;
 
 -- make sure we receive a warning for DML
 create table surrey(
