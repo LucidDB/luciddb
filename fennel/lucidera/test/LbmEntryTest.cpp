@@ -146,6 +146,7 @@ public:
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitLeft2);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitRight1);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitRight2);
+        FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitRight3);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitLast);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonZeros1);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonZeros2);
@@ -184,6 +185,7 @@ public:
     void testMergeSingletonSplitLeft2();
     void testMergeSingletonSplitRight1();
     void testMergeSingletonSplitRight2();
+    void testMergeSingletonSplitRight3();
     void testMergeSingletonSplitLast();
     void testMergeSingletonZeros1();
     void testMergeSingletonZeros2();
@@ -1084,6 +1086,22 @@ void LbmEntryTest::testMergeSingletonSplitRight2()
     // of the split entry
     ridValues.push_back(LcsRid(48));
     testMergeSingleton(19, ridValues, 1, true);
+}
+
+void LbmEntryTest::testMergeSingletonSplitRight3()
+{
+    std::vector<LcsRid> ridValues;
+
+    ridValues.push_back(LcsRid(544));
+    ridValues.push_back(LcsRid(560));
+    ridValues.push_back(LcsRid(576));
+    ridValues.push_back(LcsRid(1088));
+
+    // singleton rid goes to the right side of the split entry -- ensure
+    // entry is split at the appropriate boundary; otherwise, there won't
+    // be space in the split entry
+    ridValues.push_back(LcsRid(832));
+    testMergeSingleton(20, ridValues, 1, true);
 }
 
 void LbmEntryTest::testMergeSingletonSplitLast()
