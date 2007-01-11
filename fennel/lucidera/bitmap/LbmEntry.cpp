@@ -1325,7 +1325,7 @@ void LbmEntry::splitEntry(TupleData &inputTuple)
     // entry covers
     uint rowCount = getRowCount();
     LcsRid endRID = startRID + rowCount - 1;
-    LcsRid midRID = endRID / 2;
+    LcsRid midRID = startRID + (endRID - startRID) / 2;
 
     // determine which segment and descriptor contain the midpoint rid
     PBuffer segDesc = pSegDescStart;
