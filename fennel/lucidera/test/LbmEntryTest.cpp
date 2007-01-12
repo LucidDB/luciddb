@@ -146,7 +146,7 @@ public:
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitLeft2);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitRight1);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitRight2);
-        FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitRight3);
+        FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitHalf);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitLast);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonZeros1);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonZeros2);
@@ -185,7 +185,7 @@ public:
     void testMergeSingletonSplitLeft2();
     void testMergeSingletonSplitRight1();
     void testMergeSingletonSplitRight2();
-    void testMergeSingletonSplitRight3();
+    void testMergeSingletonSplitHalf();
     void testMergeSingletonSplitLast();
     void testMergeSingletonZeros1();
     void testMergeSingletonZeros2();
@@ -1050,8 +1050,9 @@ void LbmEntryTest::testMergeSingletonSplitLeft2()
     ridValues.push_back(LcsRid(60));
     ridValues.push_back(LcsRid(77));
 
-    // singleton rid goes to the left side of the split entry -- in the middle
-    // the new split entry
+    // singleton rid goes to the left side of the split entry -- move a
+    // segment from the left to the right to minimize the space in the entry
+    // that the new rid will be inserted into
     ridValues.push_back(LcsRid(18));
     testMergeSingleton(19, ridValues, 1, true);
 }
@@ -1076,22 +1077,6 @@ void LbmEntryTest::testMergeSingletonSplitRight2()
 {
     std::vector<LcsRid> ridValues;
 
-    ridValues.push_back(LcsRid(9));
-    ridValues.push_back(LcsRid(18));
-    ridValues.push_back(LcsRid(27));
-    ridValues.push_back(LcsRid(60));
-    ridValues.push_back(LcsRid(85));
-
-    // singleton rid goes to the right side of the split entry -- in front
-    // of the split entry
-    ridValues.push_back(LcsRid(48));
-    testMergeSingleton(19, ridValues, 1, true);
-}
-
-void LbmEntryTest::testMergeSingletonSplitRight3()
-{
-    std::vector<LcsRid> ridValues;
-
     ridValues.push_back(LcsRid(544));
     ridValues.push_back(LcsRid(560));
     ridValues.push_back(LcsRid(576));
@@ -1102,6 +1087,21 @@ void LbmEntryTest::testMergeSingletonSplitRight3()
     // be space in the split entry
     ridValues.push_back(LcsRid(832));
     testMergeSingleton(20, ridValues, 1, true);
+}
+
+void LbmEntryTest::testMergeSingletonSplitHalf()
+{
+    std::vector<LcsRid> ridValues;
+
+    ridValues.push_back(LcsRid(9));
+    ridValues.push_back(LcsRid(18));
+    ridValues.push_back(LcsRid(27));
+    ridValues.push_back(LcsRid(539));
+
+    // only 2 segments with the left segment being bigger; ensure that the new
+    // rid fits when merged into the left entry
+    ridValues.push_back(LcsRid(283));
+    testMergeSingleton(18, ridValues, 1, true);
 }
 
 void LbmEntryTest::testMergeSingletonSplitLast()
@@ -1119,7 +1119,7 @@ void LbmEntryTest::testMergeSingletonSplitLast()
     ridValues.push_back(LcsRid(95));
     ridValues.push_back(LcsRid(96));
 
-    // singleton rid goes to the right side of the split entry; only the last
+    // singleton rid goes to the left side of the split entry; only the last
     // segment in the original is split to the right
     ridValues.push_back(LcsRid(47));
     testMergeSingleton(23, ridValues, 1, true);
@@ -1221,11 +1221,11 @@ void LbmEntryTest::testMergeSingletonAfterSplit()
     ridValues.push_back(LcsRid(95));
     ridValues.push_back(LcsRid(96));
 
-    // singleton rid goes to the right side of the split entry; only the last
+    // singleton rid goes to the left side of the split entry; only the last
     // segment in the original is split to the right; add another singleton
     // after the split
+    ridValues.push_back(LcsRid(33));
     ridValues.push_back(LcsRid(47));
-    ridValues.push_back(LcsRid(105));
     testMergeSingleton(23, ridValues, 2, true);
 }
 
