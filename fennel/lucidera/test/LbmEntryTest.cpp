@@ -148,6 +148,7 @@ public:
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitRight2);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitHalf);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitLast);
+        FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonSplitMaxSegments);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonZeros1);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonZeros2);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonZeros3);
@@ -187,6 +188,7 @@ public:
     void testMergeSingletonSplitRight2();
     void testMergeSingletonSplitHalf();
     void testMergeSingletonSplitLast();
+    void testMergeSingletonSplitMaxSegments();
     void testMergeSingletonZeros1();
     void testMergeSingletonZeros2();
     void testMergeSingletonZeros3();
@@ -1123,6 +1125,23 @@ void LbmEntryTest::testMergeSingletonSplitLast()
     // segment in the original is split to the right
     ridValues.push_back(LcsRid(47));
     testMergeSingleton(23, ridValues, 1, true);
+}
+
+void LbmEntryTest::testMergeSingletonSplitMaxSegments()
+{
+    std::vector<LcsRid> ridValues;
+
+    ridValues.push_back(LcsRid(0));
+    // create several segments that max out at 16 bytes
+    for (int i = 250; i < 600; i += 8) {
+        ridValues.push_back(LcsRid(i));
+    }
+    ridValues.push_back(LcsRid(617));
+
+    // inserting a new rid requires spltting in between two of the 16-byte
+    // segments
+    ridValues.push_back(LcsRid(125));
+    testMergeSingleton(63, ridValues, 1, true);
 }
 
 void LbmEntryTest::testMergeSingletonZeros1()
