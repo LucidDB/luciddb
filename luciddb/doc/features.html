@@ -11,7 +11,7 @@ Here are some of the main features which set LucidDB apart:
 
 <p>
 
-<table border=2 style="clsStd; border-collapse:collapse">
+<table border=1 style="clsStd; border-collapse:collapse">
 
 <tr>
 <td><b>Category</b></td>
@@ -30,9 +30,10 @@ greater cache effectiveness</td>
 <tr>
 <td>Intelligent indexing</td> <td>Automatically adapts to either
 bitmap or btree representation depending on data distribution (even
-using both in the same index for different portions of the table),
-yielding optimal data compression, reduced I/O, and fast evaluation
-of boolean expressions</td>
+using both in the same index for different portions of the same
+table), yielding optimal data compression, reduced I/O, and fast
+evaluation of boolean expressions, without the need for a DBA to
+choose index type</td>
 </tr>
 
 <tr>
@@ -53,9 +54,10 @@ RAM via skew-resistant disk-based partitioning</td>
 </tr>
 
 <tr>
-<td>Intelligent prefetch</td> <td>High performance and greater cache and
-disk effectiveness because LucidDB can almost always predict exactly
-which disk blocks are needed to satisfy a query</td>
+<td><em>Coming soon:</em> Intelligent prefetch</td> <td>High
+performance and greater cache and disk effectiveness because LucidDB
+can almost always predict exactly which disk blocks are needed to
+satisfy a query</td>
 </tr>
 
 <tr>
