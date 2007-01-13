@@ -13,11 +13,12 @@
 
 <h3>First Release</h3>
 
-We are currently wrapping up the very first open-source release (0.6).
-Following the "release early, release often" open-source motto, the
-focus is on showcasing the core technology even though there are many
-gaps and rough edges; also, not much tuning has been done yet.  Here
-are some of the major limitations you should be aware of:
+The very first open-source release (0.6) of LucidDB is available for
+download.  Following the "release early, release often" open-source
+motto, the focus is on showcasing the core technology even though
+there are many gaps and rough edges; also, not much tuning has been
+done yet.  Here are some of the major limitations you should be aware
+of:
 
 <ul>
 
@@ -30,14 +31,13 @@ time; writer blocks readers on the same table
 
 <li>all transactions are autocommit
 
-<li>unions, aggregates, and most forms of outer join work but are not
-yet optimized
+<li>outer join support is limited to equijoins
 
 <li>one single database-wide auto-extend tablespace
 
 <li>FOREIGN KEY and CHECK constraints are not supported
 
-<li>system views and management procedures are minimal
+<li>a limited number of system views and management procedures are available
 
 <li>only single-byte character sets are supported; collation is always
 case-sensitive
@@ -47,8 +47,6 @@ case-sensitive
 <li>no ODBC driver is provided (JDBC must be used to connect to LucidDB)
 
 <li>external user-defined routines must be written in Java
-
-<li>UNIQUE and PRIMARY KEY constraints can be declared but are not enforced
 
 </ul>
 
@@ -61,12 +59,12 @@ listed here or items of your own.)
 
 <ul>
 
-<li>UNIQUE and PRIMARY KEY constraint enforcement
-
 <li>complete subquery support</li>
 
-<li>tablespaces and block-level versioning for better concurrency control
-and storage management</li>
+<li>support for more outer join conditions</li>
+
+<li>tablespaces, hot backup, and block-level versioning for better
+concurrency control and storage management</li>
 
 <li>robust security</li>
 
@@ -85,7 +83,8 @@ including parallelism</li>
 
 <li>tighter Mondrian and J2EE integration</li>
 
-<li>more connectors (e.g. XLS via POI) and ETL functions</li>
+<li>more connectors (e.g. XLS via <a
+href="http://jakarta.apache.org/poi">POI</a>) and ETL functions</li>
 
 </ul>
 
@@ -104,6 +103,8 @@ including parallelism</li>
 <li>ODBC driver</li>
 
 <li>fully cost-based optimization</li>
+
+<li>point-in-time queries</li>
 
 <li>user-defined types</li>
 

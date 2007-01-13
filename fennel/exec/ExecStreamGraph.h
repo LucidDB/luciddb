@@ -165,10 +165,15 @@ public:
      * @param producerId ID of producer stream in this graph
      *
      * @param consumerId ID of consumer stream in this graph
+     *
+     * @param isImplicit false (the default) if the edge represents
+     * direct dataflow; true if the edge represents an implicit
+     * dataflow dependency
      */
     virtual void addDataflow(
         ExecStreamId producerId,
-        ExecStreamId consumerId) = 0;
+        ExecStreamId consumerId,
+        bool isImplicit = false) = 0;
 
     /**
      * Defines a dataflow representing external output produced by this graph.
@@ -266,9 +271,8 @@ public:
      */
     virtual SharedExecStream getStream(ExecStreamId id) = 0;
 
-     
     /**
-     * Determines number of input flows consumed by a stream.
+     * Determines number of explicit input flows consumed by a stream.
      *
      * @param streamId ID of stream
      *
@@ -278,7 +282,7 @@ public:
         ExecStreamId streamId) = 0;
     
     /**
-     * Determines number of output flows produced by a stream.
+     * Determines number of explicit output flows produced by a stream.
      *
      * @param streamId ID of stream
      *
@@ -292,7 +296,7 @@ public:
      *
      * @param streamId ID of stream
      *
-     * @param iInput 0-based input flow ordinal
+     * @param iInput 0-based input explicit flow ordinal
      *
      * @return upstream producer
      */
@@ -305,7 +309,7 @@ public:
      *
      * @param streamId ID of stream
      *
-     * @param iInput 0-based input flow ordinal
+     * @param iInput 0-based input explicit flow ordinal
      *
      * @return accessor used by upstream producer
      */
@@ -318,7 +322,7 @@ public:
      *
      * @param streamId ID of stream
      *
-     * @param iOutput 0-based output flow ordinal
+     * @param iOutput 0-based output explicit flow ordinal
      *
      * @return downstream consumer
      */
@@ -331,7 +335,7 @@ public:
      *
      * @param streamId ID of stream
      *
-     * @param iOutput 0-based output flow ordinal
+     * @param iOutput 0-based output explicit flow ordinal
      *
      * @return accessor used by downstream consumer
      */

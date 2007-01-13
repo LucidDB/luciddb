@@ -78,5 +78,18 @@
 | 30      |
 +---------+
 > 
+> -- test a bug (LER-3372) with the combination of constant reduction and
+> -- LucidDB error recovery:  we don't want errors encountered when
+> -- evaluating the reentrant statement used by constant reduction
+> -- to be treated as recoverable
+> alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
+> 
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> alter session set "errorMax" = 25;
+> 
+> select cast('xyz' as int)+2 from (values(0));
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: java.lang.NumberFormatException: For input string: "xyz" (state=,code=0)
 > 
 > !quit

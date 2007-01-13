@@ -161,10 +161,15 @@ public:
      * @param source name of source stream
      *
      * @param target name of target stream
+     *
+     * @param isImplicit false (the default) if the edge represents
+     * direct dataflow; true if the edge represents an implicit
+     * dataflow dependency
      */
     void addDataflow(
         const std::string &source,
-        const std::string &target);
+        const std::string &target,
+        bool isImplicit = false);
 
     /**
      * Prepares graph and all of its streams.

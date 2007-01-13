@@ -27,6 +27,22 @@ package net.sf.farrago.catalog;
  * transaction. A context may be inactive, meaning it has no current
  * transaction.
  *
+ *<p>
+ *
+ * Always use the following exception-safe transaction pattern:
+ *
+ *<pre><code>
+ *   FarragoReposTxnContext txn = repos.newTxnContext();
+ *   try {
+ *       txn.beginWriteTxn();
+ *       ... do stuff which accesses repository ...
+ *       txn.commit();
+ *   } finally {
+ *       // no effect if already committed or beginWriteTxn failed
+ *       txn.rollback();
+ *   }
+ *</code></pre>
+ *
  * @author John V. Sichi
  * @version $Id$
  */
@@ -36,8 +52,17 @@ public class FarragoReposTxnContext
     //~ Instance fields --------------------------------------------------------
 
     private FarragoRepos repos;
-    private boolean isTxnInProgress;
-    private boolean isReadTxnInProgress;
+
+    private enum State
+    {
+        NO_TXN,
+
+        READ_TXN,
+
+        WRITE_TXN
+    };
+
+    private State state;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -49,6 +74,7 @@ public class FarragoReposTxnContext
     public FarragoReposTxnContext(FarragoRepos repos)
     {
         this.repos = repos;
+        state = State.NO_TXN;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -58,7 +84,7 @@ public class FarragoReposTxnContext
      */
     public boolean isTxnInProgress()
     {
-        return isTxnInProgress;
+        return state != State.NO_TXN;
     }
 
     /**
@@ -66,7 +92,7 @@ public class FarragoReposTxnContext
      */
     public boolean isReadTxnInProgress()
     {
-        return isTxnInProgress && isReadTxnInProgress;
+        return state == State.READ_TXN;
     }
     
     /**
@@ -74,9 +100,9 @@ public class FarragoReposTxnContext
      */
     public void beginReadTxn()
     {
-        assert (!isTxnInProgress);
+        assert (!isTxnInProgress());
         repos.beginReposTxn(false);
-        isTxnInProgress = isReadTxnInProgress = true;
+        state = State.READ_TXN;
     }
 
     /**
@@ -84,10 +110,14 @@ public class FarragoReposTxnContext
      */
     public void beginWriteTxn()
     {
-        assert (!isTxnInProgress);
+        assert (!isTxnInProgress());
+
+        // NOTE jvs 12-Jan-2007:  don't change state until AFTER successfully
+        // beginning a transaction; if beginReposTxn throws an excn,
+        // we want to stay in State.NO_TXN
+        
         repos.beginReposTxn(true);
-        isTxnInProgress = true;
-        isReadTxnInProgress = false;
+        state = State.WRITE_TXN;
     }
 
     /**
@@ -95,12 +125,18 @@ public class FarragoReposTxnContext
      */
     public void commit()
     {
-        if (!isTxnInProgress) {
+        if (!isTxnInProgress()) {
             return;
         }
-        repos.endReposTxn(false);
-        isTxnInProgress = isReadTxnInProgress = false;
         
+        // NOTE jvs 12-Jan-2007:  change state BEFORE attempting
+        // to end transaction; if endReposTxn throws an excn,
+        // we're in an unknown state, but further calls could just
+        // mask the original excn, so pretend we're back to
+        // State.NO_TXN regardless.
+        
+        state = State.NO_TXN;
+        repos.endReposTxn(false);
     }
 
     /**
@@ -108,11 +144,14 @@ public class FarragoReposTxnContext
      */
     public void rollback()
     {
-        if (!isTxnInProgress) {
+        if (!isTxnInProgress()) {
             return;
         }
+
+        // NOTE jvs 12-Jan-2007:  see comment in commit() for ordering rationale
+        
+        state = State.NO_TXN;
         repos.endReposTxn(true);
-        isTxnInProgress = false;
     }
 }
 

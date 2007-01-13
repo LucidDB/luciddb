@@ -110,17 +110,12 @@ public class FennelTxnContext
             return -1;
         }
 
-        fennelDbHandle.getTransientTxnContext().beginTransientTxn();
-        try {
-            FemCmdBeginTxn cmd = metadataFactory.newFemCmdBeginTxn();
-            cmd.setReadOnly(readOnly);
-            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(metadataFactory));
-            fennelDbHandle.executeCmd(cmd);
-            hTxn = cmd.getResultHandle().getLongHandle();
-            return hTxn;
-        } finally {
-            fennelDbHandle.getTransientTxnContext().endTransientTxn();
-        }
+        FemCmdBeginTxn cmd = metadataFactory.newFemCmdBeginTxn();
+        cmd.setReadOnly(readOnly);
+        cmd.setDbHandle(fennelDbHandle.getFemDbHandle(metadataFactory));
+        fennelDbHandle.executeCmd(cmd);
+        hTxn = cmd.getResultHandle().getLongHandle();
+        return hTxn;
     }
 
     private FemTxnHandle getTxnHandle()
@@ -145,14 +140,9 @@ public class FennelTxnContext
     public void commit()
     {
         if (isTxnInProgress()) {
-            fennelDbHandle.getTransientTxnContext().beginTransientTxn();
-            try {
-                FemCmdCommit cmd = metadataFactory.newFemCmdCommit();
-                cmd.setTxnHandle(getTxnHandle());
-                fennelDbHandle.executeCmd(cmd);
-            } finally {
-                fennelDbHandle.getTransientTxnContext().endTransientTxn();
-            }
+            FemCmdCommit cmd = metadataFactory.newFemCmdCommit();
+            cmd.setTxnHandle(getTxnHandle());
+            fennelDbHandle.executeCmd(cmd);
         }
 
         // TODO:  determine whether txn is still in progress if excn is thrown
@@ -165,14 +155,9 @@ public class FennelTxnContext
     public void rollback()
     {
         if (isTxnInProgress()) {
-            fennelDbHandle.getTransientTxnContext().beginTransientTxn();
-            try {
-                FemCmdRollback cmd = metadataFactory.newFemCmdRollback();
-                cmd.setTxnHandle(getTxnHandle());
-                fennelDbHandle.executeCmd(cmd);
-            } finally {
-                fennelDbHandle.getTransientTxnContext().endTransientTxn();
-            }
+            FemCmdRollback cmd = metadataFactory.newFemCmdRollback();
+            cmd.setTxnHandle(getTxnHandle());
+            fennelDbHandle.executeCmd(cmd);
         }
 
         // TODO:  determine whether txn is still in progress if excn is thrown
@@ -197,15 +182,11 @@ public class FennelTxnContext
         if (fennelDbHandle == null) {
             return null;
         }
-        fennelDbHandle.getTransientTxnContext().beginTransientTxn();
-        try {
-            FemCmdSavepoint cmd = metadataFactory.newFemCmdSavepoint();
-            cmd.setTxnHandle(getTxnHandle());
-            fennelDbHandle.executeCmd(cmd);
-            return new FennelSvptHandle(cmd.getResultHandle().getLongHandle());
-        } finally {
-            fennelDbHandle.getTransientTxnContext().endTransientTxn();
-        }
+        
+        FemCmdSavepoint cmd = metadataFactory.newFemCmdSavepoint();
+        cmd.setTxnHandle(getTxnHandle());
+        fennelDbHandle.executeCmd(cmd);
+        return new FennelSvptHandle(cmd.getResultHandle().getLongHandle());
     }
 
     /**
@@ -217,15 +198,10 @@ public class FennelTxnContext
     {
         assert (isTxnInProgress());
 
-        fennelDbHandle.getTransientTxnContext().beginTransientTxn();
-        try {
-            FemCmdRollback cmd = metadataFactory.newFemCmdRollback();
-            cmd.setTxnHandle(getTxnHandle());
-            cmd.setSvptHandle(getFemSvptHandle(fennelSvptHandle));
-            fennelDbHandle.executeCmd(cmd);
-        } finally {
-            fennelDbHandle.getTransientTxnContext().endTransientTxn();
-        }
+        FemCmdRollback cmd = metadataFactory.newFemCmdRollback();
+        cmd.setTxnHandle(getTxnHandle());
+        cmd.setSvptHandle(getFemSvptHandle(fennelSvptHandle));
+        fennelDbHandle.executeCmd(cmd);
     }
 
     private FemSvptHandle getFemSvptHandle(FennelSvptHandle fennelSvptHandle)
@@ -249,21 +225,16 @@ public class FennelTxnContext
     {
         assert (fennelDbHandle != null);
 
-        fennelDbHandle.getTransientTxnContext().beginTransientTxn();
-        try {
-            FemCmdCreateExecutionStreamGraph cmdCreate =
-                metadataFactory.newFemCmdCreateExecutionStreamGraph();
-            cmdCreate.setTxnHandle(getTxnHandle());
-            fennelDbHandle.executeCmd(cmdCreate);
-            FennelStreamGraph streamGraph =
-                new FennelStreamGraph(
-                    fennelDbHandle,
-                    cmdCreate.getResultHandle());
-            owner.addAllocation(streamGraph);
-            return streamGraph;
-        } finally {
-            fennelDbHandle.getTransientTxnContext().endTransientTxn();
-        }
+        FemCmdCreateExecutionStreamGraph cmdCreate =
+            metadataFactory.newFemCmdCreateExecutionStreamGraph();
+        cmdCreate.setTxnHandle(getTxnHandle());
+        fennelDbHandle.executeCmd(cmdCreate);
+        FennelStreamGraph streamGraph =
+            new FennelStreamGraph(
+                fennelDbHandle,
+                cmdCreate.getResultHandle());
+        owner.addAllocation(streamGraph);
+        return streamGraph;
     }
 }
 

@@ -11,6 +11,7 @@ create schema m;
 set schema 'm';
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 alter session set "errorMax" = 5;
+alter session set "logDir" = 'testlog';
 
 create table emps(
     empno int not null unique, name varchar(20) not null, deptno int,

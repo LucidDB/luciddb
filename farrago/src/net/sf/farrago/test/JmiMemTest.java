@@ -30,10 +30,7 @@ import javax.jmi.reflect.*;
 import junit.framework.*;
 
 import net.sf.farrago.*;
-import net.sf.farrago.catalog.FarragoModelLoader;
-import net.sf.farrago.catalog.FarragoRepos;
-import net.sf.farrago.catalog.FarragoReposIntegrityErr;
-import net.sf.farrago.catalog.FarragoSequenceAccessor;
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.CwmModelElement;
 import net.sf.farrago.cwm.core.CwmTaggedValue;
 import net.sf.farrago.cwm.relational.CwmCatalog;
@@ -298,19 +295,15 @@ public class JmiMemTest
         XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
 
-        // While exporting, hide FemFennelConfig, because JmiMemFactory
-        // can't currently handle the 1-to-1 association
-        // FarragoConfiguresFennel.
-        repos.beginReposTxn(true);
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
-//            repos.getCurrentConfig().getFennelConfig().refDelete();
+            txn.beginReadTxn();
             xmiWriter.write(
                 outStream,
                 repos.getFarragoPackage(),
                 "1.2");
         } finally {
-            // rollback
-            repos.endReposTxn(true);
+            txn.commit();
         }
         String xmi1 = outStream.toString();
         
@@ -561,13 +554,11 @@ public class JmiMemTest
         public void closeAllocation()
         {
         }
-
-        public void beginTransientTxn()
+    
+        // implement FarragoRepos
+        public FarragoReposTxnContext newTxnContext()
         {
-        }
-
-        public void endTransientTxn()
-        {
+            return new FarragoReposTxnContext(this);
         }
     }
     

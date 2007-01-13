@@ -456,6 +456,8 @@ public class FennelToIteratorConverter
                 memberDeclList);
 
         if (!useTransformer) {
+            registerChildWithAncestor(implementor, rootStream, true);
+            
             // Pass tuple reader to FarragoRuntimeContext.newFennelTupleIter to
             // produce a FennelTupleIter, which will invoke our generated
             // FennelTupleReader to unmarshal
@@ -501,7 +503,7 @@ public class FennelToIteratorConverter
             // IteratorToFennelConverter.  Note that this converter instance
             // might appear in several branches of the planner's tree (e.g.,
             // it can have different ancestors at different times)
-            registerChildWithAncestor(implementor, rootStream);
+            registerChildWithAncestor(implementor, rootStream, false);
 
             ExpressionList argList = new ExpressionList();
             argList.add(newTupleReaderExp);
@@ -570,7 +572,8 @@ public class FennelToIteratorConverter
 
     private void registerChildWithAncestor(
         JavaRelImplementor implementor,
-        FemExecutionStreamDef streamDef)
+        FemExecutionStreamDef streamDef,
+        boolean implicit)
     {
         List ancestors = implementor.getAncestorRels(this);
         for (Object temp : ancestors) {
@@ -578,12 +581,13 @@ public class FennelToIteratorConverter
 
             if (ancestor instanceof IteratorToFennelConverter) {
                 ((IteratorToFennelConverter) ancestor).registerChildStreamDef(
-                    streamDef);
+                    streamDef, implicit);
                 return;
             }
         }
 
-        assert (false) : "Ancestor IteratorToFennelConverter not found";
+        assert (implicit)
+            : "Ancestor IteratorToFennelConverter not found";
     }
 
     /**

@@ -171,6 +171,9 @@ public class FarragoSessionVariables
         return buf.toString();
     }
 
+    // REVIEW jvs 9-Jan-2007:  copyVariables is not used anywhere.
+    // Does it have a purpose?
+
     /**
      * Copy the values in <code>baseVariables</code> to this instance. Allows
      * extensions projects to provide extend FarragoSessionVariables and those

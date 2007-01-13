@@ -650,6 +650,21 @@ public class LucidDbSessionPersonality
             LAST_UPSERT_ROWS_INSERTED_DEFAULT);
     }
 
+    // implement FarragoSessionPersonality
+    public FarragoSessionVariables createInheritedSessionVariables(
+        FarragoSessionVariables variables)
+    {
+        // for reentrant sessions, don't inherit the "errorMax" setting because
+        // it may cause misbehavior in internal SQL for something like ANALYZE
+        // or constant reduction
+        FarragoSessionVariables clone =
+            super.createInheritedSessionVariables(variables);
+        clone.set(
+            LucidDbSessionPersonality.ERROR_MAX,
+            LucidDbSessionPersonality.ERROR_MAX_DEFAULT);
+        return clone;
+    }
+    
     // override FarragoDefaultSessionPersonality
     public FarragoSessionRuntimeContext newRuntimeContext(
         FarragoSessionRuntimeParams params)
@@ -712,11 +727,11 @@ public class LucidDbSessionPersonality
     {      
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         FarragoRepos repos = session.getRepos();
-        boolean rollback = false;
         long affectedRowCount = 0;
+        FarragoReposTxnContext txn = repos.newTxnContext();
+        
         try {
-            repos.beginReposTxn(true);
-            rollback = true;
+            txn.beginWriteTxn();
         
             // get the current rowcounts
             assert(tableName.size() == 3);
@@ -788,13 +803,10 @@ public class LucidDbSessionPersonality
             columnSet.setRowCount(currRowCount);
             assert(currDeletedRowCount >= 0);
             columnSet.setDeletedRowCount(currDeletedRowCount);
-            
-            rollback = false;
-            repos.endReposTxn(false);
+
+            txn.commit();
         } finally {
-            if (rollback) {
-                repos.endReposTxn(true);
-            }
+            txn.rollback();
             stmtValidator.closeAllocation();
         }
         

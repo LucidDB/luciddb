@@ -84,7 +84,7 @@ public class IteratorToFennelConverter
 
     private Map<Integer, String> farragoTransformClassNameMap;
 
-    private Map<Integer, List<FemExecutionStreamDef>> childStreamDefsMap;
+    private Map<Integer, List<ChildStream>> childStreamDefsMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -108,7 +108,7 @@ public class IteratorToFennelConverter
         javaImplInvocationCount = 0;
         fennelImplInvocationCount = 0;
         childStreamDefsMap =
-            new HashMap<Integer, List<FemExecutionStreamDef>>();
+            new HashMap<Integer, List<ChildStream>>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -403,7 +403,7 @@ public class IteratorToFennelConverter
         // init child stream defs for this invocation
         childStreamDefsMap.put(
             javaImplInvocationCount,
-            new ArrayList<FemExecutionStreamDef>());
+            new ArrayList<ChildStream>());
     }
 
     protected void initFennelInvocation()
@@ -468,18 +468,25 @@ public class IteratorToFennelConverter
     }
 
     /**
-     * Registers the FemExecutionStreamDef(s) that form the inputs to this
-     * converter's FemExecutionStreamDef.
+     * Registers the FemExecutionStreamDef(s) that provide input to
+     * this converter's FemExecutionStreamDef (either explicitly
+     * or implicitly).
      *
      * @param childStreamDef child stream def to register
+     *
+     * @param implicit true if dataflow is implicit via a UDX reading from a
+     * cursor; false if explicit as an input into this
+     * converter's FemExecutionStreamDef
      */
-    void registerChildStreamDef(FemExecutionStreamDef childStreamDef)
+    void registerChildStreamDef(
+        FemExecutionStreamDef childStreamDef,
+        boolean implicit)
     {
         assert (childStreamDefsMap.containsKey(javaImplInvocationCount));
 
-        List<FemExecutionStreamDef> childStreamDefs =
+        List<ChildStream> childStreamDefs =
             childStreamDefsMap.get(javaImplInvocationCount);
-        childStreamDefs.add(childStreamDef);
+        childStreamDefs.add(new ChildStream(childStreamDef, implicit));
     }
 
     protected void setFarragoTransformClassName(String className)
@@ -507,18 +514,19 @@ public class IteratorToFennelConverter
         String farragoTransformClassName =
             farragoTransformClassNameMap.get(fennelImplInvocationCount);
 
-        List<FemExecutionStreamDef> childStreamDefs =
+        List<ChildStream> childStreams =
             childStreamDefsMap.get(fennelImplInvocationCount);
 
         FemJavaTransformStreamDef streamDef = 
             newJavaTransformStreamDef(implementor);
 
-        for (FemExecutionStreamDef childStreamDef : childStreamDefs) {
+        for (ChildStream childStream : childStreams) {
             implementor.addDataFlowFromProducerToConsumer(
-                childStreamDef,
-                streamDef);
+                childStream.streamDef,
+                streamDef,
+                childStream.implicit);
         }
-        childStreamDefs.clear();
+        childStreams.clear();
 
         streamDef.setStreamId(getId());
         streamDef.setJavaClassName(farragoTransformClassName);
@@ -581,6 +589,18 @@ public class IteratorToFennelConverter
         public boolean isGuaranteed()
         {
             return true;
+        }
+    }
+
+    private static class ChildStream
+    {
+        FemExecutionStreamDef streamDef;
+        boolean implicit;
+
+        ChildStream(FemExecutionStreamDef streamDef, boolean implicit)
+        {
+            this.streamDef = streamDef;
+            this.implicit = implicit;
         }
     }
 }

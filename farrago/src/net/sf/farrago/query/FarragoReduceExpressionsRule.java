@@ -296,7 +296,14 @@ public class FarragoReduceExpressionsRule
                 getPreparingStmt());
             getStmtContext().execute();
             ResultSet resultSet = getStmtContext().getResultSet();
-            resultSet.next();
+            if (!resultSet.next()) {
+                // This shouldn't happen, but strange things such as
+                // error recovery session settings (LER-3372)
+                // can surprise us.
+                failed = true;
+                resultSet.close();
+                return;
+            }
             for (int i = 0; i < exprs.size(); ++i) {
                 RexNode expr = exprs.get(i);
                 SqlTypeName typeName = expr.getType().getSqlTypeName();

@@ -69,14 +69,9 @@ public abstract class MedAbstractFennelDataServer
     // implement FarragoMedLocalDataServer
     public long createIndex(FemLocalIndex index)
     {
-        repos.beginTransientTxn();
-        try {
-            FemCmdCreateIndex cmd = repos.newFemCmdCreateIndex();
-            initIndexCmd(cmd, index);
-            return getFennelDbHandle().executeCmd(cmd);
-        } finally {
-            repos.endTransientTxn();
-        }
+        FemCmdCreateIndex cmd = repos.newFemCmdCreateIndex();
+        initIndexCmd(cmd, index);
+        return getFennelDbHandle().executeCmd(cmd);
     }
 
     // implement FarragoMedLocalDataServer
@@ -85,20 +80,15 @@ public abstract class MedAbstractFennelDataServer
         long rootPageId,
         boolean truncate)
     {
-        repos.beginTransientTxn();
-        try {
-            FemCmdDropIndex cmd;
-            if (truncate) {
-                cmd = repos.newFemCmdTruncateIndex();
-            } else {
-                cmd = repos.newFemCmdDropIndex();
-            }
-            initIndexCmd(cmd, index);
-            cmd.setRootPageId(rootPageId);
-            getFennelDbHandle().executeCmd(cmd);
-        } finally {
-            repos.endTransientTxn();
+        FemCmdDropIndex cmd;
+        if (truncate) {
+            cmd = repos.newFemCmdTruncateIndex();
+        } else {
+            cmd = repos.newFemCmdDropIndex();
         }
+        initIndexCmd(cmd, index);
+        cmd.setRootPageId(rootPageId);
+        getFennelDbHandle().executeCmd(cmd);
     }
 
     // implement FarragoMedLocalDataServer
@@ -107,18 +97,13 @@ public abstract class MedAbstractFennelDataServer
         long rootPageId,
         boolean estimate)
     {
-        repos.beginTransientTxn();
-        try {
-            FemCmdVerifyIndex cmd = repos.newFemCmdVerifyIndex();
-            initIndexCmd(cmd, index);
-            cmd.setRootPageId(rootPageId);
-            cmd.setEstimate(estimate);
-            cmd.setIncludeTuples(getIncludeTuples(index));
-            long pageCount = getFennelDbHandle().executeCmd(cmd);
-            FarragoCatalogUtil.updatePageCount(index, pageCount);
-        } finally {
-            repos.endTransientTxn();
-        }
+        FemCmdVerifyIndex cmd = repos.newFemCmdVerifyIndex();
+        initIndexCmd(cmd, index);
+        cmd.setRootPageId(rootPageId);
+        cmd.setEstimate(estimate);
+        cmd.setIncludeTuples(getIncludeTuples(index));
+        long pageCount = getFennelDbHandle().executeCmd(cmd);
+        FarragoCatalogUtil.updatePageCount(index, pageCount);
     }
 
     private void initIndexCmd(

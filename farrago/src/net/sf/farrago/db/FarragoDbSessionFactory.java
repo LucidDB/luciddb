@@ -57,6 +57,8 @@ public class FarragoDbSessionFactory
     // implement FarragoSessionFactory
     public FarragoSession newReentrantSession(FarragoSession session)
     {
+        // REVIEW jvs 9-Jan-2007:  Seems like this is redundant,
+        // since cloneSession is going to clone the variables again.
         FarragoSessionVariables sessionVars =
             session.getSessionVariables().cloneVariables();
 

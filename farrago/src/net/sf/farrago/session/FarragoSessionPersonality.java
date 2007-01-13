@@ -223,14 +223,27 @@ public interface FarragoSessionPersonality
      * <p>
      * 
      * This method should be called when initializing a new session or when 
-     * loading a new session personality for an existing session. The method 
-     * is fairly harmful. It has the side effect of permanently updating the 
+     * loading a new session personality for an existing session. This method 
+     * "leaves a mark", as it has the side effect of permanently updating the 
      * session variables. Even if the session personality is swapped out, 
      * the changes will remain.
      * 
      * @param variables the session variables object
      */
     public void loadDefaultSessionVariables(
+        FarragoSessionVariables variables);
+
+    /**
+     * Creates a set of session variables for use in a cloned session.
+     * Default implementation is to just return variables.cloneVariables(),
+     * but personalities may override, e.g. to reset some variables
+     * which should never be inherited.
+     *
+     * @param variables set of variables to be inherited
+     *
+     * @return result of variable inheritance
+     */
+    public FarragoSessionVariables createInheritedSessionVariables(
         FarragoSessionVariables variables);
 
     /**

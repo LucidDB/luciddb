@@ -1052,7 +1052,7 @@ bool LbmEntry::spliceSingleton(TupleData &inputTuple)
         }
         // should never go past the end of the entry, as we would not have
         // entered this method otherwise
-        assert(false);
+        permAssert(false);
         return true;
     }
 }
@@ -1321,42 +1321,47 @@ void LbmEntry::splitEntry(TupleData &inputTuple)
     // very end of an entry are handled by the regular mergeEntry()
     assert(countSegments() > 1);
 
-    // split the current entry in half based on the rid range the current
-    // entry covers
-    uint rowCount = getRowCount();
-    LcsRid endRID = startRID + rowCount - 1;
-    LcsRid midRID = endRID / 2;
+    // split the current entry in half based on the current entry size,
+    // excluding the keysize
+    uint targetSplitSize = (currentEntrySize - keySize) / 2;
 
-    // determine which segment and descriptor contain the midpoint rid
+    // divide up the segments until we reach the target splitSize
     PBuffer segDesc = pSegDescStart;
-    PBuffer prevprevSegDesc = NULL;
+    PBuffer prevPrevSegDesc = NULL;
     PBuffer prevSegDesc = NULL;
     PBuffer seg = pSegStart;
     LcsRid srid = startRID;
+    LcsRid prevSrid = srid;
     uint segBytes;
     uint zeroBytes;
     while (segDesc < pSegDescEnd) {
-        prevprevSegDesc = prevSegDesc;
+        prevPrevSegDesc = prevSegDesc;
         prevSegDesc = segDesc;
         readSegDescAndAdvance(segDesc, segBytes, zeroBytes);
         seg -= segBytes;
+        prevSrid = srid;
         srid += (segBytes + zeroBytes) * LbmOneByteSize;
-        if (midRID < srid) {
+        if ((segDesc - pSegDescStart) + (pSegStart - seg) >= targetSplitSize) {
             break;
         }
     }
-    // if the midpoint rid is in the last segment, then bump the cutoff point
-    // back by one
-    if (segDesc >= pSegDescEnd) {
+
+    // if we effectively haven't split anything, bump the cutoff point back
+    // by one so the split entry has at least 1 segment; also bump back the
+    // cutoff point if the new rid will be inserted before the new last
+    // segment in the current entry; this way, we minimize the size of the
+    // entry that the new rid will be inserted into
+    LcsRid &inputStartRID = *((LcsRid*)inputTuple[inputTuple.size() - 3].pData);
+    if (segDesc >= pSegDescEnd || inputStartRID < prevSrid) {
         segDesc = prevSegDesc;
-        assert(prevprevSegDesc != NULL);
-        prevSegDesc = prevprevSegDesc;
+        permAssert(prevPrevSegDesc != NULL);
+        prevSegDesc = prevPrevSegDesc;
         seg += segBytes;
-        srid -= (segBytes + zeroBytes) * LbmOneByteSize;
+        srid = prevSrid;
     }
 
     // copy the segments and descriptors (starting at the one that follows
-    // the one containing the midpoint) into the secondary scratch buffer
+    // the one where the split was made) into the secondary scratch buffer
     TupleData newEntry;
     copyToMergeBuffer(newEntry, srid, seg, segDesc);
 
@@ -1374,12 +1379,11 @@ void LbmEntry::splitEntry(TupleData &inputTuple)
 
     // if the input rid is in the new current entry, merge it in and then
     // move the newly split off entry into inputTuple
-    LcsRid &inputStartRID = *((LcsRid*)inputTuple[inputTuple.size() - 3].pData);
     if (inputStartRID < srid) {
         bool rc = mergeEntry(inputTuple);
         // there has to be enough space to merge in the input singleton since
         // we've done a split to free up space
-        assert(rc);
+        permAssert(rc);
         for (int i = 0; i < newEntry.size(); i++) {
             inputTuple[i] = newEntry[i];
         }
@@ -1425,7 +1429,7 @@ void LbmEntry::mergeIntoSplitEntry(
     // splice the input into the split entry that now occupies the current
     // entry
     bool rc = mergeEntry(inputTuple);
-    assert(rc);
+    permAssert(rc);
 
     // copy the split entry into inputTuple
     copyToMergeBuffer(inputTuple, splitStartRid, pSegStart, pSegDescStart);

@@ -776,8 +776,11 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 > -- from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
 > 
 > -- we can also view the error log summaries
+> -- (filter by process_id since other tests such as mergeUniqIndex.sql pollute)
 > select process_id, action_id, error_count, "SQL"
-> from log_server.bcp."Summary";
+> from log_server.bcp."Summary"
+> where cast(process_id as varchar(100))='101'
+> order by error_count;
 +-------------+--------------+--------------+---------------------------------+
 | PROCESS_ID  |  ACTION_ID   | ERROR_COUNT  |               SQL               |
 +-------------+--------------+--------------+---------------------------------+
@@ -791,7 +794,7 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 >     title varchar(45) not null,
 >     cost decimal(10,2));
 > insert into surrey select * from buggy;
-Warning: Statement execution encountered recoverable exceptions; errors: 2; warnings: 0 (state=,code=0)
+Warning: Statement execution encountered recoverable exceptions; errors: 2; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > 
 > -- we can limit the number of errors
 > alter session set "errorMax" = 1;

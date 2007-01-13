@@ -58,10 +58,10 @@ public class FarragoStatsUtil
     {
         FarragoRepos repos = session.getRepos();
 
-        boolean rollback = false;
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
-            repos.beginReposTxn(true);
-            rollback = true;
+            txn.beginWriteTxn();
+            
             FemAbstractColumnSet columnSet =
                 lookupColumnSet(
                     session,
@@ -71,12 +71,9 @@ public class FarragoStatsUtil
                     tableName);
             FarragoCatalogUtil.updateRowCount(columnSet, rowCount);
 
-            rollback = false;
-            repos.endReposTxn(false);
+            txn.commit();
         } finally {
-            if (rollback) {
-                repos.endReposTxn(true);
-            }
+            txn.rollback();
         }
     }
     
@@ -172,22 +169,18 @@ public class FarragoStatsUtil
     {
         FarragoRepos repos = session.getRepos();
 
-        boolean rollback = false;
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
-            repos.beginReposTxn(true);
-            rollback = true;
+            txn.beginWriteTxn();
 
             CwmCatalog catalog = lookupCatalog(session, repos, catalogName);
             FemLocalSchema schema = lookupSchema(session, catalog, schemaName);
             FemLocalIndex index = lookupIndex(schema, indexName);
             FarragoCatalogUtil.updatePageCount(index, pageCount);
 
-            rollback = false;
-            repos.endReposTxn(false);
+            txn.commit();
         } finally {
-            if (rollback) {
-                repos.endReposTxn(true);
-            }
+            txn.rollback();
         }
     }
 
@@ -209,10 +202,9 @@ public class FarragoStatsUtil
     {
         FarragoRepos repos = session.getRepos();
 
-        boolean rollback = false;
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
-            repos.beginReposTxn(true);
-            rollback = true;
+            txn.beginWriteTxn();
 
             FemAbstractColumnSet columnSet =
                 lookupColumnSet(
@@ -265,12 +257,9 @@ public class FarragoStatsUtil
                 rowsLastBar,
                 bars);
 
-            rollback = false;
-            repos.endReposTxn(false);
+            txn.commit();
         } finally {
-            if (rollback) {
-                repos.endReposTxn(true);
-            }
+            txn.rollback();
         }
     }
 

@@ -768,7 +768,7 @@ Messages: {1}</text>
 
 <exception id="450170" name="RecoverableErrorWarning"
     className="java.sql.SQLWarning">
-<text>Statement execution encountered recoverable exceptions; errors: {0,number,#}; warnings: {1,number,#}
+<text>Statement execution encountered recoverable exceptions; errors: {0,number,#}; warnings: {1,number,#}; see {2} for details
 </text>
 </exception>
 

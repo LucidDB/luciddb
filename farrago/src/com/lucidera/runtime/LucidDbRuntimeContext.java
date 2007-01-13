@@ -118,6 +118,13 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
     {
         // Print a summary message if there were any errors or warnings
         if (quota.errorCount > 0 || quota.warningCount > 0) {
+            // NOTE jvs 9-Jan-2007: Intentionally avoid conversion to absolute
+            // path in error message so that unit tests can avoid spurious
+            // diffs via a relative path.  Real users should always set an
+            // absolute path for properties such as logDir to ensure that error
+            // messages and warnings have the full location.
+            File summaryFile = getSummaryFile();
+            String summaryFilename = summaryFile.getAbsolutePath();
             if (quota.errorCount <= quota.errorMax) {
                 // Also post a warning (since we did not hit the limit,
                 // which would have caused an excn to be thrown already,
@@ -126,9 +133,9 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                     FarragoResource.instance().
                     RecoverableErrorWarning.ex(
                         quota.errorCount,
-                        quota.warningCount));
+                        quota.warningCount,
+                        summaryFile.toString()));
             }
-            String summaryFilename = getSummaryFilename();
             SummaryLogger summary = null;
             try {
                 summary = getSummaryInstance(summaryFilename);
@@ -269,20 +276,14 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
     /**
      * Builds a filename for the summary logger.
      */
-    private String getSummaryFilename()
+    private File getSummaryFile()
     {
         String dirName = vars.get(LucidDbSessionPersonality.LOG_DIR);
         Util.permAssert(dirName != null, "log directory was null");
 
         File summaryFile = 
             new File(dirName, SUMMARY_FILENAME + LOG_FILENAME_EXTENSION);
-        try {
-            return summaryFile.getCanonicalPath();
-        } catch (IOException ex) {
-            tracer.severe("Failed to get canonical path "
-                + "for summary trace file: " + ex.toString());
-            return summaryFile.getPath();
-        }
+        return summaryFile;
     }
 
     /**

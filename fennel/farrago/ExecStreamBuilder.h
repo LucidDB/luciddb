@@ -98,9 +98,9 @@ class ExecStreamBuilder : public boost::noncopyable
         ProxyExecutionStreamDef &streamDef);
 
     /**
-     * @return true if a stream has multiple outputs
+     * @return number of explicit dataflow outputs from a stream
      */
-    bool hasMultipleOutputs(
+    int getExplicitOutputCount(
         ProxyExecutionStreamDef &streamDef);
 
     /**
