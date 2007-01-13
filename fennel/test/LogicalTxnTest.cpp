@@ -65,6 +65,7 @@ public:
     {
         onlineUuid.generateInvalid();
         
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testTxnIdSequence);
         FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackEmpty);
         FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackShort);
         FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackLong);
@@ -92,6 +93,7 @@ public:
     void testRollback(
         int nActions,
         bool checkpoint = false);
+    void testTxnIdSequence();
     void testRollbackEmpty();
     void testRollbackShort();
     void testRollbackLong();
@@ -180,6 +182,19 @@ void LogicalTxnTest::redoLogicalAction(
     if (range.first > range.second) {
         expected.erase(expected.begin());
     }
+}
+
+void LogicalTxnTest::testTxnIdSequence()
+{
+    testTxn(1);
+    TxnId id1 = getLogicalTxn()->getTxnId();
+    SharedLogicalTxn pTxn2 = pTxnLog->newLogicalTxn(pCache);
+    TxnId id2 = pTxn2->getTxnId();
+    pTxn2->commit();
+    pTxn2.reset();
+    commit();
+    // TxnId reflects start order, not commit order
+    BOOST_CHECK(id2 > id1);
 }
 
 void LogicalTxnTest::testRollbackEmpty()

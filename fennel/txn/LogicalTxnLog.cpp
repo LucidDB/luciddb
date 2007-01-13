@@ -97,7 +97,6 @@ SharedLogicalTxn LogicalTxnLog::newLogicalTxn(
     // Set up cache accessor so that all page locks will be taken out
     // with the new TxnId.  Just for sanity-checking, set up a quota to make
     // sure logging never locks more than two pages at a time.
-    nextTxnId = FIRST_TXN_ID;
     pCacheAccessor = SharedCacheAccessor(
         new QuotaCacheAccessor(
             SharedQuotaCacheAccessor(),
