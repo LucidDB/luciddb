@@ -78,10 +78,6 @@
               isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
               <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
             </UML:Stereotype>
-            <UML:Stereotype xmi.id = '.:0000000000000959' name = 'enumeration' isSpecification = 'false'
-              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
-              <UML:Stereotype.baseClass>DataType</UML:Stereotype.baseClass>
-            </UML:Stereotype>
             <UML:Package xmi.id = '.:0000000000000960' name = 'PrimitiveTypes' isSpecification = 'false'
               isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
               <UML:Namespace.ownedElement>
