@@ -77,7 +77,7 @@ public abstract class FarragoSqlToRelTestBase
 
         // guarantee release of any resources we allocate on the way
         FarragoCompoundAllocation allocations = new FarragoCompoundAllocation();
-        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
+        FarragoReposTxnContext reposTxn = repos.newTxnContext();
         try {
             reposTxn.beginReadTxn();
 

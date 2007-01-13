@@ -46,7 +46,6 @@ import org.netbeans.api.mdr.*;
  */
 public interface FarragoRepos
     extends FarragoAllocation,
-        FarragoTransientTxnContext,
         FarragoMetadataFactory
 {
 
@@ -263,7 +262,15 @@ public interface FarragoRepos
     public void addResourceBundles(List bundles);
 
     /**
-     * Begins a metadata transaction on the repository.
+     * @return an instance of FarragoReposTxnContext for use in
+     * executing transactions against this repository
+     */
+    public FarragoReposTxnContext newTxnContext();
+
+    /**
+     * Begins a metadata transaction on the repository.  In most cases, this
+     * should be done by creating and manipulating an instance of {@link
+     * FarragoReposTxnContext} instead.
      *
      * @param writable true for read/write; false for read-only
      */

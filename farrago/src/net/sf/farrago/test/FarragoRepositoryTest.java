@@ -119,8 +119,10 @@ public class FarragoRepositoryTest
 
     public void testObjIntegrityVerificationFail()
     {
-        repos.beginReposTxn(true);
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
+            txn.beginWriteTxn();
+            
             CwmTable tbl = repos.newCwmTable();
             tbl.setName("BOOFAR");
 
@@ -176,7 +178,7 @@ public class FarragoRepositoryTest
                     + "AssociationEnd$Impl = type, Column = SNEE"));
         } finally {
             // Always rollback to clean up repo
-            repos.endReposTxn(true);
+            txn.rollback();
         }
     }
 }

@@ -157,14 +157,16 @@ public class FarragoSequenceAccessor
         RelDataType dataType)
     {
         unreserve();
-        repos.beginReposTxn(true);
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
+            txn.beginWriteTxn();
             FemSequenceGenerator sequence = getSequence();
             assert (sequence != null) : "sequence was null";
             options.alter(sequence, dataType);
             loadSequence(sequence);
+            txn.commit();
         } finally {
-            repos.endReposTxn(false);
+            txn.rollback();
         }
     }
 
@@ -183,11 +185,15 @@ public class FarragoSequenceAccessor
             return;
         }
 
-        repos.beginReposTxn(true);
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
+            txn.beginWriteTxn();
             reserveInternal();
+            txn.commit();
         } finally {
-            repos.endReposTxn(false);
+            // REVIEW jvs 12-Jan-2007:  need to revert transient state
+            // in this class too?
+            txn.rollback();
         }
     }
 
@@ -235,8 +241,9 @@ public class FarragoSequenceAccessor
         if (!reserved) {
             return;
         }
-        repos.beginReposTxn(true);
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
+            txn.beginWriteTxn();
             FemSequenceGenerator sequence = getSequence();
             if (sequence == null) {
                 // NOTE: sequence was deleted
@@ -248,8 +255,9 @@ public class FarragoSequenceAccessor
                 sequence.setExpired(false);
             }
             reserved = false;
+            txn.commit();
         } finally {
-            repos.endReposTxn(false);
+            txn.rollback();
         }
     }
 

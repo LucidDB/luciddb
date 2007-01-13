@@ -59,7 +59,6 @@ public class FennelDbHandle
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoMetadataFactory metadataFactory;
-    private final FarragoTransientTxnContext transientTxnContext;
     private final FennelCmdExecutor cmdExecutor;
     private Map<RefPackage, Collection<RefBaseObject>> handleAssociationsMap;
     private long dbHandle;
@@ -70,7 +69,6 @@ public class FennelDbHandle
      * Opens a Fennel database.
      *
      * @param metadataFactory FarragoMetadataFactory for creating Fem instances
-     * @param transientTxnContext context for transient metadata transactions
      * @param owner the object which will be made responsible for this
      * database's allocation
      * @param cmdExecutor FennelCmdExecutor to use for executing all commands on
@@ -79,13 +77,11 @@ public class FennelDbHandle
      */
     public FennelDbHandle(
         FarragoMetadataFactory metadataFactory,
-        FarragoTransientTxnContext transientTxnContext,
         FarragoAllocationOwner owner,
         FennelCmdExecutor cmdExecutor,
         FemCmdOpenDatabase cmd)
     {
         this.metadataFactory = metadataFactory;
-        this.transientTxnContext = transientTxnContext;
         this.cmdExecutor = cmdExecutor;
 
         handleAssociationsMap =
@@ -101,11 +97,6 @@ public class FennelDbHandle
     FarragoMetadataFactory getMetadataFactory()
     {
         return metadataFactory;
-    }
-
-    FarragoTransientTxnContext getTransientTxnContext()
-    {
-        return transientTxnContext;
     }
 
     private synchronized Collection getHandleAssociations(
@@ -311,15 +302,11 @@ public class FennelDbHandle
         if (dbHandle == 0) {
             return;
         }
-        transientTxnContext.beginTransientTxn();
-        try {
-            FemCmdCloseDatabase cmd = metadataFactory.newFemCmdCloseDatabase();
-            cmd.setDbHandle(getFemDbHandle(metadataFactory));
-            dbHandle = 0;
-            executeCmd(cmd);
-        } finally {
-            transientTxnContext.endTransientTxn();
-        }
+        
+        FemCmdCloseDatabase cmd = metadataFactory.newFemCmdCloseDatabase();
+        cmd.setDbHandle(getFemDbHandle(metadataFactory));
+        dbHandle = 0;
+        executeCmd(cmd);
     }
 
     public EigenbaseException handleNativeException(SQLException ex)

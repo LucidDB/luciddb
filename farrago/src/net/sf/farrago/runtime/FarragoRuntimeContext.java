@@ -465,15 +465,7 @@ public class FarragoRuntimeContext
                 (FarragoObjectCache.Entry) txnCodeCache.get(xmiFennelPlan);
         }
         if (cacheEntry == null) {
-            // NOTE jvs 15-July-2004:  to avoid deadlock, grab the catalog
-            // lock BEFORE we pin the cache entry (this matches the
-            // order used by statement preparation)
-            repos.beginTransientTxn();
-            try {
-                cacheEntry = codeCache.pin(xmiFennelPlan, streamFactory, true);
-            } finally {
-                repos.endTransientTxn();
-            }
+            cacheEntry = codeCache.pin(xmiFennelPlan, streamFactory, true);
         }
 
         if (txnCodeCache == null) {
@@ -591,12 +583,7 @@ public class FarragoRuntimeContext
     public FennelStreamHandle getStreamHandle(String globalStreamName,
         boolean isInput)
     {
-        repos.beginTransientTxn();
-        try {
-            return streamGraph.findStream(repos, globalStreamName, isInput);
-        } finally {
-            repos.endTransientTxn();
-        }
+        return streamGraph.findStream(repos, globalStreamName, isInput);
     }
 
     protected FennelStreamGraph prepareStreamGraph(String xmiFennelPlan)

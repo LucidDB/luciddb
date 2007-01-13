@@ -727,11 +727,11 @@ public class LucidDbSessionPersonality
     {      
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         FarragoRepos repos = session.getRepos();
-        boolean rollback = false;
         long affectedRowCount = 0;
+        FarragoReposTxnContext txn = repos.newTxnContext();
+        
         try {
-            repos.beginReposTxn(true);
-            rollback = true;
+            txn.beginWriteTxn();
         
             // get the current rowcounts
             assert(tableName.size() == 3);
@@ -803,13 +803,10 @@ public class LucidDbSessionPersonality
             columnSet.setRowCount(currRowCount);
             assert(currDeletedRowCount >= 0);
             columnSet.setDeletedRowCount(currDeletedRowCount);
-            
-            rollback = false;
-            repos.endReposTxn(false);
+
+            txn.commit();
         } finally {
-            if (rollback) {
-                repos.endReposTxn(true);
-            }
+            txn.rollback();
             stmtValidator.closeAllocation();
         }
         

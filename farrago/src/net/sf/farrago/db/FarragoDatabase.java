@@ -180,14 +180,16 @@ public class FarragoDatabase
                 + System.getProperty("java.library.path"));
 
             if (systemRepos.isFennelEnabled()) {
-                systemRepos.beginReposTxn(true);
+                FarragoReposTxnContext txn = systemRepos.newTxnContext();
                 try {
+                    txn.beginWriteTxn();
                     loadFennel(
                         startOfWorldAllocation,
                         sessionFactory.newFennelCmdExecutor(),
                         init);
+                    txn.commit();
                 } finally {
-                    systemRepos.endReposTxn(false);
+                    txn.rollback();
                 }
             } else {
                 tracer.config("Fennel support disabled");
@@ -483,7 +485,6 @@ public class FarragoDatabase
 
         fennelDbHandle =
             new FennelDbHandle(systemRepos,
-                systemRepos,
                 this,
                 cmdExecutor,
                 cmd);
@@ -951,18 +952,13 @@ public class FarragoDatabase
             return;
         }
 
-        systemRepos.beginTransientTxn();
-        try {
-            FemCmdSetParam cmd = systemRepos.newFemCmdSetParam();
-            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
-            FemDatabaseParam param = systemRepos.newFemDatabaseParam();
-            param.setName(paramName);
-            param.setValue(paramValue.toString());
-            cmd.setParam(param);
-            fennelDbHandle.executeCmd(cmd);
-        } finally {
-            systemRepos.endTransientTxn();
-        }
+        FemCmdSetParam cmd = systemRepos.newFemCmdSetParam();
+        cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
+        FemDatabaseParam param = systemRepos.newFemDatabaseParam();
+        param.setName(paramName);
+        param.setValue(paramValue.toString());
+        cmd.setParam(param);
+        fennelDbHandle.executeCmd(cmd);
     }
 
     public void requestCheckpoint(
@@ -973,16 +969,11 @@ public class FarragoDatabase
             return;
         }
 
-        systemRepos.beginTransientTxn();
-        try {
-            FemCmdCheckpoint cmd = systemRepos.newFemCmdCheckpoint();
-            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
-            cmd.setFuzzy(fuzzy);
-            cmd.setAsync(async);
-            fennelDbHandle.executeCmd(cmd);
-        } finally {
-            systemRepos.endTransientTxn();
-        }
+        FemCmdCheckpoint cmd = systemRepos.newFemCmdCheckpoint();
+        cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
+        cmd.setFuzzy(fuzzy);
+        cmd.setAsync(async);
+        fennelDbHandle.executeCmd(cmd);
     }
 
     /**

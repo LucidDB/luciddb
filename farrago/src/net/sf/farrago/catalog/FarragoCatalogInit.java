@@ -76,22 +76,20 @@ public class FarragoCatalogInit extends FarragoAbstractCatalogInit
     public static void createSystemObjects(FarragoRepos repos)
     {
         tracer.info("Creating system-owned catalog objects");
-        boolean rollback = false;
         FarragoCatalogInit init = null;
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
-            repos.beginReposTxn(true);
-            rollback = true;
+            txn.beginWriteTxn();
             init = new FarragoCatalogInit(repos);
             init.initCatalog();
-            rollback = false;
-            repos.endReposTxn(false);
+            txn.commit();
         } finally {
             if (init != null) {
-                init.publishObjects(rollback);
+                // if txn is still in progress, it means we're handling
+                // an exception, so pass rollback=true
+                init.publishObjects(txn.isTxnInProgress());
             }
-            if (rollback) {
-                repos.endReposTxn(true);
-            }
+            txn.rollback();
         }
         tracer.info("Creation of system-owned catalog objects committed");
     }

@@ -331,27 +331,33 @@ public abstract class FarragoTestCase
 
     protected static void saveParameters(FarragoRepos repos)
     {
-        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
-        reposTxn.beginReadTxn();
-        savedFarragoConfig =
-            JmiUtil.getAttributeValues(repos.getCurrentConfig());
-        savedFennelConfig =
-            JmiUtil.getAttributeValues(
-                repos.getCurrentConfig().getFennelConfig());
-        reposTxn.commit();
+        FarragoReposTxnContext reposTxn = repos.newTxnContext();
+        try {
+            reposTxn.beginReadTxn();
+            savedFarragoConfig =
+                JmiUtil.getAttributeValues(repos.getCurrentConfig());
+            savedFennelConfig =
+                JmiUtil.getAttributeValues(
+                    repos.getCurrentConfig().getFennelConfig());
+        } finally {
+            reposTxn.commit();
+        }
     }
 
     protected static void restoreParameters(FarragoRepos repos)
     {
-        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
-        reposTxn.beginWriteTxn();
-        JmiUtil.setAttributeValues(
-            repos.getCurrentConfig(),
-            savedFarragoConfig);
-        JmiUtil.setAttributeValues(
-            repos.getCurrentConfig().getFennelConfig(),
-            savedFennelConfig);
-        reposTxn.commit();
+        FarragoReposTxnContext reposTxn = repos.newTxnContext();
+        try {
+            reposTxn.beginWriteTxn();
+            JmiUtil.setAttributeValues(
+                repos.getCurrentConfig(),
+                savedFarragoConfig);
+            JmiUtil.setAttributeValues(
+                repos.getCurrentConfig().getFennelConfig(),
+                savedFennelConfig);
+        } finally {
+            reposTxn.commit();
+        }
     }
 
     // NOTE: Repos open/close is slow and causes sporadic problems when done

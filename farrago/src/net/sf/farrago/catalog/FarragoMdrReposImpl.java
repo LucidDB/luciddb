@@ -201,18 +201,6 @@ public class FarragoMdrReposImpl
         tracer.info("Catalog successfully closed");
     }
 
-    // implement FarragoTransientTxnContext
-    public void beginTransientTxn()
-    {
-        tracer.fine("Begin transient repository transaction");
-    }
-
-    // implement FarragoTransientTxnContext
-    public void endTransientTxn()
-    {
-        tracer.fine("End transient repository transaction");
-    }
-
     // implement FarragoRepos
     public void beginReposTxn(boolean writable)
     {

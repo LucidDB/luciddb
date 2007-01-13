@@ -566,6 +566,12 @@ public abstract class FarragoReposImpl
     {
         return null;
     }
+    
+    // implement FarragoRepos
+    public FarragoReposTxnContext newTxnContext()
+    {
+        return new FarragoReposTxnContext(this);
+    }
 }
 
 // End FarragoReposImpl.java

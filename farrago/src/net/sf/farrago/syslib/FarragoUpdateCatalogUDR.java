@@ -57,22 +57,20 @@ public class FarragoUpdateCatalogUDR extends FarragoAbstractCatalogInit
         FarragoSession session = FarragoUdrRuntime.getSession();
         FarragoRepos repos = session.getRepos();
         
-        boolean rollback = false;
         FarragoUpdateCatalogUDR init = null;
+        FarragoReposTxnContext txn = repos.newTxnContext();
         try {
-            repos.beginReposTxn(true);
-            rollback = true;
+            txn.beginWriteTxn();
             init = new FarragoUpdateCatalogUDR(repos);
             init.updateSystemTypes();
-            rollback = false;
-            repos.endReposTxn(false);
+            txn.commit();
         } finally {
             if (init != null) {
-                init.publishObjects(rollback);
+                // if txn is still in progress, it means we're handling
+                // an exception, so pass rollback=true
+                init.publishObjects(txn.isTxnInProgress());
             }
-            if (rollback) {
-                repos.endReposTxn(true);
-            }
+            txn.rollback();
         }
         tracer.info("Update of system-owned catalog objects committed");
     }

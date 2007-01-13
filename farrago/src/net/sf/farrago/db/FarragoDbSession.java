@@ -874,8 +874,7 @@ public class FarragoDbSession
         // same as that due to the TODO below since the MDR write lock is
         // exclusive.
         synchronized (database.DDL_LOCK) {
-            FarragoReposTxnContext reposTxnContext =
-                new FarragoReposTxnContext(repos);
+            FarragoReposTxnContext reposTxnContext = repos.newTxnContext();
 
             boolean [] pRollback = new boolean[1];
             pRollback[0] = true;
