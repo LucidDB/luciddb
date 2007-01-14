@@ -109,7 +109,6 @@ class LcsColumnReader : public boost::noncopyable
      */
     const PBuffer getVariableValue();
 
-    // REVIEW jvs 5-Sept-2006:  need doxygen for bStrict
     /**
      * Locates the smallest value in the compressed batch
      * that's greater or equal to a filter predicate's bound.
@@ -117,6 +116,9 @@ class LcsColumnReader : public boost::noncopyable
      * @param filterPos index into filters.filterData
      *
      * @param highBound true iff called for upper bound data
+     *
+     * @param bStrict if true, find the entry greater than the filter
+     * predicate's bound
      *
      * @param readerKeyData TupleData used for comparison
      *

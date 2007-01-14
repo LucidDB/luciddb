@@ -529,9 +529,9 @@ public:
      * Remove quoting and escape characters from a row result, saving the
      * results into the row result.
      *
-     * @param[in, out] the row result to be stripped
+     * @param[in, out] rowResult the row result to be stripped
      *
-     * @param trim[in] whether to trim columns before processing them
+     * @param[in] trim whether to trim columns before processing them
      */
     void stripQuoting(
         FlatFileRowParseResult &rowResult,
