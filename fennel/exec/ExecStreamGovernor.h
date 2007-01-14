@@ -204,7 +204,7 @@ public:
     virtual void returnResources(ExecStreamGraph &graph) = 0;
 
     // implement StatsSource
-    void writeStats(StatsTarget &);
+    void writeStats(StatsTarget &target);
 };
 
 FENNEL_END_NAMESPACE

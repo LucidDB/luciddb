@@ -357,7 +357,7 @@ public:
     /**
      * Set pointer to the first data node.
      *
-     * @param [in] inputFirstData
+     * @param [in] nextSlot
      */
     inline void setNextSlot(PBuffer *nextSlot);
 
@@ -827,7 +827,7 @@ public:
     void calculateNumSlots(
         RecordNum cndKeys,
         uint usablePageSize,
-        uint numBlocks);
+        BlockNum numBlocks);
     
     /**
      * Find key node based on key cols.
@@ -1009,7 +1009,7 @@ public:
     /**
      * Get the next outputTuple.
      *
-     * @param [out] outputTupleb
+     * @param [out] outputTuple
      *
      * @return false if no more tuples to output.
      */

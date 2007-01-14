@@ -373,7 +373,7 @@ public:
         LcsHashTable *hashTableInit,
         TupleDescriptor const &colTupleDescInit,
         uint columnIdInit,
-        UnalignedAttributeAccessor const &attrAccessor);
+        UnalignedAttributeAccessor const &attrAccessorInit);
 
     ~LcsCompareColKeyUsingOffsetIndex() {}
 
