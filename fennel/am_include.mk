@@ -21,6 +21,7 @@ $(ICU_LD_FLAGS) \
 -Wl,-l$(BOOST_FILESYSTEMLIB) \
 -Wl,-l$(STLPORT_LIB) \
 -Wl,-E \
+-avoid-version \
 $(EXTRA_LDFLAGS)
 
 AM_ETAGSFLAGS = --c++ --declarations --members
