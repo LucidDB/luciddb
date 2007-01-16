@@ -98,7 +98,7 @@ public:
     inline PageId allocatePage(PageOwnerId ownerId = ANON_PAGE_OWNER_ID)
     {
         PageId pageId = tryAllocatePage(ownerId);
-        assert(pageId != NULL_PAGE_ID);
+        permAssert(pageId != NULL_PAGE_ID);
         return pageId;
     }
     
