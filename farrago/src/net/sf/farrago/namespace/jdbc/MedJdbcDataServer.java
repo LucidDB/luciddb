@@ -53,7 +53,7 @@ import org.eigenbase.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedJdbcDataServer
+public class MedJdbcDataServer
     extends MedAbstractDataServer
 {
 
@@ -81,18 +81,18 @@ class MedJdbcDataServer
 
     // TODO:  add a parameter for JNDI lookup of a DataSource so we can support
     // app servers and distributed txns
-    Connection connection;
-    String url;
-    String catalogName;
-    String schemaName;
-    String [] tableTypes;
-    String loginTimeout;
-    boolean supportsMetaData;
-    DatabaseMetaData databaseMetaData;
+    protected Connection connection;
+    protected String url;
+    protected String catalogName;
+    protected String schemaName;
+    protected String [] tableTypes;
+    protected String loginTimeout;
+    protected boolean supportsMetaData;
+    protected DatabaseMetaData databaseMetaData;
 
     //~ Constructors -----------------------------------------------------------
 
-    MedJdbcDataServer(
+    protected MedJdbcDataServer(
         String serverMofId,
         Properties props)
     {
@@ -101,7 +101,7 @@ class MedJdbcDataServer
 
     //~ Methods ----------------------------------------------------------------
 
-    void initialize()
+    public void initialize()
         throws SQLException
     {
         Properties props = getProperties();
@@ -163,7 +163,7 @@ class MedJdbcDataServer
         }
     }
 
-    static void removeNonDriverProps(Properties props)
+    protected static void removeNonDriverProps(Properties props)
     {
         // TODO jvs 19-June-2006:  Make this metadata-driven.
         props.remove(PROP_URL);
@@ -189,7 +189,7 @@ class MedJdbcDataServer
         return getSchemaNameDirectory();
     }
 
-    private MedJdbcNameDirectory getSchemaNameDirectory()
+    protected MedJdbcNameDirectory getSchemaNameDirectory()
     {
         return new MedJdbcNameDirectory(this);
     }
