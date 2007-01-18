@@ -219,6 +219,10 @@ public class FarragoDefaultHeuristicPlanner
         // because they rely on the join condition being part of the join.
         builder.addRuleInstance(ExtractJoinFilterRule.instance);
 
+        // Change "is not distinct from" condition to a case expression
+        // which can be evaluated by CalcRel.
+        builder.addRuleInstance(RemoveIsNotDistinctFromRule.instance);
+
         // Replace AVG with SUM/COUNT (need to do this BEFORE calc conversion
         // and decimal reduction).
         builder.addRuleInstance(ReduceAggregatesRule.instance);

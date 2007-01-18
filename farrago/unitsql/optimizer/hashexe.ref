@@ -3,7 +3,7 @@
 > -------------------------------------------------
 > 
 > ------------------------------------------------
-> -- non LDB personality uses cartesian product --
+> -- default personality uses cartesian product --
 > ------------------------------------------------
 > create schema lhx;
 > set schema 'lhx';
@@ -11,6 +11,8 @@
 > 
 > -- force usage of Java calculator
 > alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+> 
+> alter session implementation set default;
 > 
 > create table lhxemps(
 >     empno integer not null,
@@ -75,6 +77,19 @@
 '120','Wilma','20','20'
 '120','Wilma','20','20'
 '120','Wilma','20','20'
+> 
+> ---------------------------------------------------
+> -- test "is not distinct from" as join condition --
+> ---------------------------------------------------
+> explain plan for
+> select * from lhxemps, lhxdepts
+> where lhxemps.deptno is not distinct from lhxdepts.deptnoA;
+'column0'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=[IS NULL($t2)], expr#5=[IS NULL($t3)], expr#6=[=($t2, $t3)], expr#7=[CASE($t4, $t5, $t5, $t4, $t6)], expr#8=[CAST($t7):BOOLEAN NOT NULL], proj#0..3=[{exprs}], $condition=[$t8])'
+'  FennelToIteratorConverter'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA]])'
 > 
 > -- Clean up
 > !set outputformat table
@@ -1125,6 +1140,19 @@
 '      TableAccessRel(table=[[LOCALDB, LHX, LHXEMPS5]])'
 '      TableAccessRel(table=[[LOCALDB, LHX, LHXEMPS6]])'
 > 
+> ---------------------------------------------------
+> -- test "is not distinct from" as join condition --
+> ---------------------------------------------------
+> explain plan for
+> select * from lhxemps, lhxdepts
+> where lhxemps.deptno is not distinct from lhxdepts.deptnoA;
+'column0'
+'IterCalcRel(expr#0..4=[{inputs}], expr#5=[IS NULL($t2)], expr#6=[IS NULL($t3)], expr#7=[=($t2, $t3)], expr#8=[CASE($t5, $t6, $t6, $t5, $t7)], expr#9=[CAST($t8):BOOLEAN NOT NULL], proj#0..4=[{exprs}], $condition=[$t9])'
+'  FennelToIteratorConverter'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOB]])'
+> 
 > --------------------
 > -- hash aggregate --
 > --------------------
@@ -1478,10 +1506,11 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 '            FennelToIteratorConverter'
 '              LcsRowScanRel(table=[[LOCALDB, LHX, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$ENAME2]])'
 > 
-> ------------------------------------------------------
+> -----------------------------------------------------
 > -- LDB-144
-> -- http://jirahost.eigenbase.org:8081/browse/LDB-144
-> ------------------------------------------------------
+> -- removed an incorrect assert in LhxHashGenerator --
+> -- check that the following query no longer fails  --
+> -----------------------------------------------------
 > create table A(a int not null);
 > create table B(b int not null);
 > create table C(c int not null);

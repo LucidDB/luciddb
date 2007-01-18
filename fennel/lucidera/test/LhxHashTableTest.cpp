@@ -229,6 +229,9 @@ void LhxHashTableTest::testInsert(
         hashInfo.dataProj.push_back(dataProj);
         hashInfo.useJoinFilter.push_back(false);
         hashInfo.filterNull.push_back(false);
+        // empty projection : do not filter nulls
+        TupleProjection filterNullKeyProj;
+        hashInfo.filterNullKeyProj.push_back(filterNullKeyProj);
         hashInfo.removeDuplicate.push_back(false);
         hashInfo.numRows.push_back(numRows);
         hashInfo.cndKeys.push_back(cndKeys);

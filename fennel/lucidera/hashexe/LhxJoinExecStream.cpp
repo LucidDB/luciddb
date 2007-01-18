@@ -434,7 +434,10 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 uint buildTupleSize = inputTupleSize[curPlan->getBuildInput()];
                 bool removeDuplicateProbe =
                     hashInfo.removeDuplicate[curPlan->getProbeInput()];
+                TupleProjection &filterNullProbeKeyProj  = (TupleProjection &)
+                    hashInfo.filterNullKeyProj[curPlan->getProbeInput()];
                 bool filterNullProbe = regularJoin;
+
                 uint probeFieldOffset =
                     returnBuild(curPlan) ?
                     buildTupleSize * curPlan->getProbeInput() : 0;
@@ -509,7 +512,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                      * will not join so hash table lookup is not needed.
                      */
                     if (!filterNullProbe ||
-                        !probeTuple.containsNull(probeKeyProj)) {
+                        !probeTuple.containsNull(filterNullProbeKeyProj)) {
                         keyBuf =
                             hashTable.findKey(probeTuple, probeKeyProj, 
                                 removeDuplicateProbe);
@@ -801,6 +804,20 @@ void LhxJoinExecStream::setHashInfo(
 
     hashInfo.keyProj.push_back(params.leftKeyProj);
     hashInfo.keyProj.push_back(params.rightKeyProj);
+
+    TupleProjection filterNullLeftKeyProj;
+    TupleProjection filterNullRightKeyProj;
+
+    // only filter null on join sides from which non-joining tuples will not
+    // need to be returned
+    filterNullLeftKeyProj.projectFrom(
+        params.leftKeyProj, params.filterNullKeyProj);
+
+    filterNullRightKeyProj.projectFrom(
+        params.rightKeyProj, params.filterNullKeyProj);
+
+    hashInfo.filterNullKeyProj.push_back(filterNullLeftKeyProj);
+    hashInfo.filterNullKeyProj.push_back(filterNullRightKeyProj);
 
     hashInfo.useJoinFilter.push_back(
         params.enableJoinFilter && !returnProbeOuter());

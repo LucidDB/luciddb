@@ -265,6 +265,8 @@ void LhxHashTable::init(
      * special hash table properties.
      */
     filterNull = hashInfo.filterNull[buildInputIndex];
+
+    filterNullKeyProj = hashInfo.filterNullKeyProj[buildInputIndex];
     removeDuplicate = hashInfo.removeDuplicate[buildInputIndex];
 
     blockAccessor.init(usablePageSize);
@@ -881,7 +883,7 @@ bool LhxHashTable::aggData(PBuffer destKeyLoc, TupleData const &inputTuple)
 
 bool LhxHashTable::addTuple(TupleData const &inputTuple)
 {
-    if (filterNull && inputTuple.containsNull(keyColsProj)) {
+    if (filterNull && inputTuple.containsNull(filterNullKeyProj)) {
         /*
          * When null values are filtered, and this tuple does
          * contain null in its key columns, do not add to hash

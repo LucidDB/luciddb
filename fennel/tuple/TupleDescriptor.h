@@ -67,6 +67,10 @@ public:
     
     void readPersistent(
         ByteInputStream &);
+
+    void projectFrom(
+        TupleProjection const &sourceProjection,
+        TupleProjection const &tupleProjection);
 };
 
 /**

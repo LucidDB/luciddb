@@ -377,6 +377,9 @@ class ExecStreamSubFactory_lu
         CmdInterpreter::readTupleProjection(
             params.rightKeyProj, streamDef.getRightKeyProj());
 
+        CmdInterpreter::readTupleProjection(
+            params.filterNullKeyProj, streamDef.getFilterNullProj());
+
         /*
          * The optimizer currently estimates these two values.
          */

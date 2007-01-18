@@ -79,6 +79,10 @@ public class LhxMinusRule
         List<Integer> leftKeys = new ArrayList<Integer>();
         List<Integer> rightKeys = new ArrayList<Integer>();
 
+        // an empty array means no filtering of null values
+        // i.e. a null value is considered to match another null value
+        List<Integer> filterNulls = new ArrayList<Integer>();
+
         for (int i = 0; i < leftRel.getRowType().getFieldCount(); i++) {
             leftKeys.add(i);
             rightKeys.add(i);
@@ -144,6 +148,7 @@ public class LhxMinusRule
                     isSetop,
                     rightKeys,
                     leftKeys,
+                    filterNulls,
                     newJoinOutputNames,
                     numBuildRows.longValue(),
                     cndBuildKey.longValue());

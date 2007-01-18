@@ -103,6 +103,11 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
     TupleProjection rightKeyProj;
   
     /**
+     * Join keys from the right input.
+     */
+    TupleProjection filterNullKeyProj;
+
+    /**
      * Projection from the join. If empty then produce all input
      * columns from both join sides.
      */

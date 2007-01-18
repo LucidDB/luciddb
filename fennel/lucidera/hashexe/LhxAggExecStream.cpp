@@ -540,9 +540,15 @@ void LhxAggExecStream::setHashInfo(
     hashInfo.streamBufAccessor.push_back(pInAccessor);
 
     hashInfo.cndKeys.push_back(params.cndGroupByKeys);
+
     hashInfo.numRows.push_back(params.numRows);
 
     hashInfo.filterNull.push_back(false);
+
+    // empty projection : do not filter nulls
+    TupleProjection filterNullKeyProj;
+    hashInfo.filterNullKeyProj.push_back(filterNullKeyProj);
+
     hashInfo.removeDuplicate.push_back(false);
     hashInfo.useJoinFilter.push_back(false);
 

@@ -3,7 +3,7 @@
 -------------------------------------------------
 
 ------------------------------------------------
--- non LDB personality uses cartesian product --
+-- default personality uses cartesian product --
 ------------------------------------------------
 create schema lhx;
 set schema 'lhx';
@@ -11,6 +11,8 @@ set path 'lhx';
 
 -- force usage of Java calculator
 alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+
+alter session implementation set default;
 
 create table lhxemps(
     empno integer not null,
@@ -39,6 +41,13 @@ order by empno, ename;
 select * from lhxemps, lhxdepts
 where lhxemps.deptno = lhxdepts.deptnoA
 order by empno, ename;
+
+---------------------------------------------------
+-- test "is not distinct from" as join condition --
+---------------------------------------------------
+explain plan for
+select * from lhxemps, lhxdepts
+where lhxemps.deptno is not distinct from lhxdepts.deptnoA;
 
 -- Clean up
 !set outputformat table
@@ -497,6 +506,13 @@ on lhxemps5.empnoA = lhxemps6.empnoB and
    lhxemps5.empnoA > lhxemps6.empnoB
 order by 1, 2;
 
+---------------------------------------------------
+-- test "is not distinct from" as join condition --
+---------------------------------------------------
+explain plan for
+select * from lhxemps, lhxdepts
+where lhxemps.deptno is not distinct from lhxdepts.deptnoA;
+
 --------------------
 -- hash aggregate --
 --------------------
@@ -650,10 +666,11 @@ select ename1 from emps1
 where upper(ename1) in (select upper(ename2) from emps2)
 order by 1;
 
-------------------------------------------------------
+-----------------------------------------------------
 -- LDB-144
--- http://jirahost.eigenbase.org:8081/browse/LDB-144
-------------------------------------------------------
+-- removed an incorrect assert in LhxHashGenerator --
+-- check that the following query no longer fails  --
+-----------------------------------------------------
 create table A(a int not null);
 create table B(b int not null);
 create table C(c int not null);

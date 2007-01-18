@@ -342,4 +342,22 @@ select e.name, d.deptno, sum(e.age), count(distinct d.name)
 from emps e, depts d where e.deptno = d.deptno
 group by e.name, d.deptno;
 
+----------------------------------------
+-- test agg distinct with null values --
+----------------------------------------
+create table test(i int, j int, k int);
+
+insert into test values (1, 2, 3);
+insert into test values (null, 4, 5);
+
+explain plan without implementation for
+select i, count(distinct j), sum(k) from test group by i order by i;
+
+explain plan for
+select i, count(distinct j), sum(k) from test group by i order by i;
+
+select i, count(distinct j), sum(k) from test group by i order by i;
+
+drop table test;
+
 -- End aggDistinct.sql
