@@ -28,7 +28,7 @@ import javax.jmi.reflect.*;
 
 /**
  * JmiMofIdComparator implements the {@link Comparator} interface by comparing
- * pairs of {@link RefBaseObject} instances.
+ * pairs of {@link RefBaseObject} instances according to their MOFID attribute.
  *
  * @author John V. Sichi
  * @version $Id$

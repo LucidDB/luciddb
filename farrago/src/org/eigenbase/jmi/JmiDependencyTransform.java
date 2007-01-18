@@ -61,11 +61,11 @@ public interface JmiDependencyTransform
     public boolean shouldProduceSelfLoops();
 
     /**
-     * @return true if MOFID should be used to break ties in ordering; this
-     * provides stability during diff-based testing, but adds processing
-     * overhead
+     * @return a comparator which can be used for breaking ties in ordering, or
+     * null if no tie-breaking is desired (tie-breaking provides stability
+     * during diff-based testing, but adds processing overhead)
      */
-    public boolean shouldSortByMofId();
+    public Comparator<RefBaseObject> getTieBreaker();
 }
 
 // End JmiDependencyTransform.java
