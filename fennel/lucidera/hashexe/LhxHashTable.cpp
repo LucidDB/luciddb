@@ -540,17 +540,11 @@ void LhxHashTable::calculateSize(
         (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize()
         - sizeof(PBuffer);
 
-    // REVIEW jvs 25-Aug-2006:  Why is it necessary to cast
-    // away const here?  You should be able to just declare const references.
-    
-    TupleDescriptor &inputDesc  =
-        (TupleDescriptor &)hashInfo.inputDesc[inputIndex];
+    TupleDescriptor const &inputDesc  = hashInfo.inputDesc[inputIndex];
 
-    TupleProjection &keyProj  =
-        (TupleProjection &)hashInfo.keyProj[inputIndex];
+    TupleProjection const &keyProj  = hashInfo.keyProj[inputIndex];
 
-    TupleProjection &dataProj  =
-        (TupleProjection &)hashInfo.dataProj[inputIndex];
+    TupleProjection const &dataProj  = hashInfo.dataProj[inputIndex];
 
     RecordNum cndKeys = hashInfo.cndKeys[inputIndex];
     RecordNum numRows = hashInfo.numRows[inputIndex];

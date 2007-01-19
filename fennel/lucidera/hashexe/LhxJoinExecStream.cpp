@@ -429,12 +429,12 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
             {
                 TupleData &probeTuple = inputTuple[curPlan->getProbeInput()];
                 uint probeTupleSize = inputTupleSize[curPlan->getProbeInput()];
-                TupleProjection &probeKeyProj  = (TupleProjection &)
+                TupleProjection &probeKeyProj  =
                     hashInfo.keyProj[curPlan->getProbeInput()];
                 uint buildTupleSize = inputTupleSize[curPlan->getBuildInput()];
                 bool removeDuplicateProbe =
                     hashInfo.removeDuplicate[curPlan->getProbeInput()];
-                TupleProjection &filterNullProbeKeyProj  = (TupleProjection &)
+                TupleProjection &filterNullProbeKeyProj  =
                     hashInfo.filterNullKeyProj[curPlan->getProbeInput()];
                 bool filterNullProbe = regularJoin;
 
@@ -830,10 +830,8 @@ void LhxJoinExecStream::setHashInfo(
 
     for (int inputIndex = 0; inputIndex < numInputs; inputIndex ++ ) {
 
-        TupleProjection &keyProj  =
-            (TupleProjection &)hashInfo.keyProj[inputIndex];
-        TupleDescriptor &inputDesc  =
-            (TupleDescriptor &)hashInfo.inputDesc[inputIndex];
+        TupleProjection &keyProj  = hashInfo.keyProj[inputIndex];
+        TupleDescriptor &inputDesc  = hashInfo.inputDesc[inputIndex];
 
         vector<bool> isKeyVarChar;
         TupleProjection dataProj;
