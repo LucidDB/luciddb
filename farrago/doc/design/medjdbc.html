@@ -163,13 +163,18 @@ before TYPE_SUBSTITUTION and does not depend on TYPE_SUBSTITUTION.
 <tr>
 <td>LOGIN_TIMEOUT</td>
 <td>
-The maximum time in seconds to wait while attempting to connect to foreign server.
+The maximum time in seconds to wait while attempting to connect to
+foreign server.
 </td>
 </tr>
 <tr>
 <td>VALIDATION_QUERY</td>
 <td>
-The SQL query to use to validate connections in the JDBC wrapper cache. If not specified, no connection validation will be done.
+The SQL query to use to validate connections in the JDBC wrapper
+cache. If not specified, no connection validation will be done.  If
+specified, must be a query (in a dialect understood by the foreign
+JDBC driver being used) which will return at least one row without
+error.
 </td>
 </tr>
 </table>
