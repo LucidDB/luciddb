@@ -26,7 +26,6 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 
-
 /**
  * A relational expression which collapses multiple rows into one.
  *
@@ -34,8 +33,9 @@ import org.eigenbase.sql.type.*;
  *
  * <ul>
  * <li>{@link com.disruptivetech.farrago.rel.FarragoMultisetSplitterRule}
- * creates a CollectRel from a call to {@link SqlMultisetValueConstructor} or to
- * {@link SqlMultisetQueryConstructor}.</li>
+ * creates a CollectRel from a call to
+ * {@link org.eigenbase.sql.fun.SqlMultisetValueConstructor} or to
+ * {@link org.eigenbase.sql.fun.SqlMultisetQueryConstructor}.</li>
  * </ul>
  * </p>
  *
@@ -53,6 +53,13 @@ public final class CollectRel
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a CollectRel.
+     *
+     * @param cluster Cluster
+     * @param child Child relational expression
+     * @param fieldName Name of the sole output field
+     */
     public CollectRel(
         RelOptCluster cluster,
         RelNode child,
@@ -79,6 +86,11 @@ public final class CollectRel
         return clone;
     }
 
+    /**
+     * Returns the name of the sole output field.
+     *
+     * @return name of the sole output field
+     */
     public String getFieldName()
     {
         return fieldName;
@@ -89,6 +101,13 @@ public final class CollectRel
         return deriveCollectRowType(this, fieldName);
     }
 
+    /**
+     * Derives the output type of a collect relational expression.
+     *
+     * @param rel relational expression
+     * @param fieldName name of sole output field
+     * @return output type of a collect relational expression
+     */
     public static RelDataType deriveCollectRowType(
         SingleRel rel,
         String fieldName)
