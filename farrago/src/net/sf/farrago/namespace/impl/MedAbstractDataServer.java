@@ -122,6 +122,11 @@ public abstract class MedAbstractDataServer
     public void closeAllocation()
     {
     }
+
+    // implement FarragoMedDataServer
+    public void releaseResources()
+    {
+    }
 }
 
 // End MedAbstractDataServer.java

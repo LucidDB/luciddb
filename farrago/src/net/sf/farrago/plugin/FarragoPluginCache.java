@@ -96,6 +96,14 @@ public abstract class FarragoPluginCache
     }
 
     /**
+     * @return mapMofIdToPlugin
+     */
+    public Map getMapMofIdToPlugin()
+    {
+        return mapMofIdToPlugin;
+    }
+
+    /**
      * Searches this cache for a plugin object identified by its catalog MofId.
      *
      * @param mofId MofId of plugin object being loaded

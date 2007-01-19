@@ -135,7 +135,7 @@ class MedJdbcColumnSet
         if (schemaQualifiedName.length < 2) {
             return null;
         }
-        Connection loopbackConnection = directory.server.connection;
+        Connection loopbackConnection = directory.server.getConnection();
         if (!(loopbackConnection instanceof FarragoJdbcEngineConnection)) {
             return null;
         }
