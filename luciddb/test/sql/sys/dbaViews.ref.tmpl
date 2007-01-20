@@ -52,10 +52,10 @@
 +--------------------------+-----------------+-------------------+-----------+------------+-------------+
 |  ROUTINE_SPECIFIC_NAME   | PARAMETER_NAME  | ORDINAL_POSITION  | DATATYPE  | PRECISION  | DEC_DIGITS  |
 +--------------------------+-----------------+-------------------+-----------+------------+-------------+
-| ADDING                   | NUMA            | 0                 | INTEGER   |            |             |
-| ADDING                   | DECA            | 1                 | DECIMAL   | 10         | 2           |
-| GRANT_SELECT_FOR_SCHEMA  | SCHEMANAME      | 0                 | VARCHAR   | 255        |             |
-| GRANT_SELECT_FOR_SCHEMA  | USERNAME        | 1                 | VARCHAR   | 255        |             |
+| ADDING                   | NUMA            | 1                 | INTEGER   |            |             |
+| ADDING                   | DECA            | 2                 | DECIMAL   | 10         | 2           |
+| GRANT_SELECT_FOR_SCHEMA  | SCHEMANAME      | 1                 | VARCHAR   | 255        |             |
+| GRANT_SELECT_FOR_SCHEMA  | USERNAME        | 2                 | VARCHAR   | 255        |             |
 +--------------------------+-----------------+-------------------+-----------+------------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(distinct mof_id) 
@@ -88,9 +88,9 @@
 +------------------------+-----------------+-------------------+-----------+------------+-------------+
 | ROUTINE_SPECIFIC_NAME  | PARAMETER_NAME  | ORDINAL_POSITION  | DATATYPE  | PRECISION  | DEC_DIGITS  |
 +------------------------+-----------------+-------------------+-----------+------------+-------------+
-| ADDING                 | NUMA            | 0                 | INTEGER   |            |             |
-| ADDING                 | RETURN          | 0                 | DECIMAL   | 10         | 2           |
-| ADDING                 | DECA            | 1                 | DECIMAL   | 10         | 2           |
+| ADDING                 | NUMA            | 1                 | INTEGER   |            |             |
+| ADDING                 | RETURN          | 1                 | DECIMAL   | 10         | 2           |
+| ADDING                 | DECA            | 2                 | DECIMAL   | 10         | 2           |
 +------------------------+-----------------+-------------------+-----------+------------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_schemas
