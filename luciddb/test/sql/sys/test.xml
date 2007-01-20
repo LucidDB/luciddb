@@ -2,6 +2,10 @@
   <target name="sys">
     <test-suite name="sys">
 
+      <test-metadata>
+        <db>%{foreign.db}</db>
+      </test-metadata>
+
       <init-hook>
         <test-suite name="init">
           <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
@@ -11,24 +15,36 @@
         <ant dir="${open.dir}/luciddb/test/sql/sys" target="copy-csv"/>
       </init-hook>
 
+
       <test name="dbaViews">
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="nondb"/>
         <junit-sql file="${open.dir}/luciddb/test/sql/sys/dbaViews.sql"/>
       </test>
 
       <test name="oracleWrapper">
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="oracle"/>
         <junit-sql file="${open.dir}/luciddb/test/sql/sys/oracleWrapper.sql"/>
       </test>
 
       <test name="sqlserverWrapper">
-        <!-- FRG-162 -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="sqlserver"/>
         <junit-sql file="${open.dir}/luciddb/test/sql/sys/sqlserverWrapper.sql"/>
       </test>
 
       <test name="flatfileWrapper">
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="flatfile"/>
         <junit-sql file="${open.dir}/luciddb/test/sql/sys/flatfileWrapper.sql"/>
+      </test>
+
+      <!-- Tests split out of original files -->
+
+      <test name="FRG-162" requiresRun="sqlserverWrapper">
+        <!-- FRG-162 -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
+        <test-parameter name="foreign.db" value="%{foreign.db}" valid_values="sqlserver"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sys/FRG-162-sqlserverWrapper.sql"/>
       </test>
 
       <cleanup-hook>

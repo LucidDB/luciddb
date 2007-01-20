@@ -3,6 +3,7 @@
 > 
 > !set verbose true
 > 
+> set catalog 'localdb';
 > create or replace schema sqlj;
 > 
 > set schema 'sqlj';

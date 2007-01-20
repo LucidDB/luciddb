@@ -3,16 +3,6 @@
 create schema dbavtest;
 set schema 'dbavtest';
 
--- get_current_time udf gets the current time as a timestamp
-create function dbavtest.get_current_time()
-returns timestamp
-language java
-not deterministic
-specific get_current_time_specific
-parameter style system defined java
-no sql
-external name 'class com.lucidera.luciddb.test.udr.GetCurrentTimeUdf.execute';
-
 -- misc adding udf
 create function adding(numA int, decA decimal(10,2))
 returns decimal(10,2)
@@ -20,26 +10,51 @@ language sql
 contains sql
 return (numA + decA);
 
+-- create procedure in DBAVTEST
+create or replace procedure grant_select_for_schema(
+in schemaname varchar(255), 
+in username varchar(255))
+language java
+parameter style java
+reads sql data
+external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';
+
 -- dba_routines & routine parameters
 select catalog_name, schema_name, invocation_name, specific_name, 
   external_name, routine_type, is_table_function, parameter_style,
   is_deterministic, data_access
 from sys_root.dba_routines
-where schema_name='DBAVTEST';
+where schema_name='DBAVTEST'
+order by 1,2,3,4;
 
-select creation_timestamp < dbavtest.get_current_time(), 
+select creation_timestamp < current_timestamp, 
   creation_timestamp <= last_modified_timestamp
 from sys_root.dba_routines
 where schema_name='DBAVTEST';
 
-select routine_specific_name, parameter_name, ordinal, datatype, "PRECISION",
+select routine_specific_name, parameter_name, ordinal_position, datatype, "PRECISION",
   dec_digits
+from sys_root.dba_routine_parameters
+where schema_name='DBAVTEST'
+order by 1,3,2;
+
+select count(distinct mof_id) 
 from sys_root.dba_routine_parameters
 where schema_name='DBAVTEST';
 
-select count(distinct mofid) 
-from sys_root.dba_routine_parameters
-where schema_name='DBAVTEST';
+-- dba_functions and dba_function parameters
+select catalog_name, schema_name, invocation_name, specific_name, 
+  external_name, routine_type, is_table_function, parameter_style,
+  is_deterministic, data_access
+from sys_root.dba_functions
+where schema_name='DBAVTEST'
+order by 1,2,3,4;
+
+select routine_specific_name, parameter_name, ordinal_position, datatype, "PRECISION",
+  dec_digits
+from sys_root.dba_function_parameters
+where schema_name='DBAVTEST'
+order by 1,3,2;
 
 -- dba_schemas
 create schema tt;
@@ -123,7 +138,7 @@ from sys_root.dba_tables
 where schema_name='DBAVTEST'
 order by table_name;
 
-select count(distinct lineageId)
+select count(distinct lineage_Id)
 from sys_root.dba_tables
 where schema_name='DBAVTEST';
 
@@ -157,3 +172,18 @@ create table dbavtest.lalatable(lolo int);
 select catalog_name, schema_name, table_name, table_type, creator
 from sys_root.dba_tables
 where creator='LALA';
+
+-- just check that these can execute for now 
+select * from sys_root.dba_system_parameters where false;
+select * from sys_root.dba_sessions where false;
+select * from sys_root.dba_sql_statements where false;
+select * from sys_root.dba_repository_properties where false;
+select * from sys_root.dba_repository_integrity_violations where false;
+select * from sys_root.dba_objects_in_use where false;
+select * from sys_root.dba_threads where false;
+select * from sys_root.dba_thread_stack_entries where false;
+select * from sys_root.dba_performance_counters where false;
+select * from sys_root.dba_system_info where false;
+select * from sys_root.user_session_parameters where false;
+
+

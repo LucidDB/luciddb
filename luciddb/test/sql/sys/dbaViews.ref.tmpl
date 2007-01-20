@@ -3,16 +3,6 @@
 0: jdbc:luciddb:> create schema dbavtest;
 0: jdbc:luciddb:> set schema 'dbavtest';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- get_current_time udf gets the current time as a timestamp
-0: jdbc:luciddb:> create function dbavtest.get_current_time()
-. . . . . . . . > returns timestamp
-. . . . . . . . > language java
-. . . . . . . . > not deterministic
-. . . . . . . . > specific get_current_time_specific
-. . . . . . . . > parameter style system defined java
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.GetCurrentTimeUdf.execute';
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- misc adding udf
 0: jdbc:luciddb:> create function adding(numA int, decA decimal(10,2))
 . . . . . . . . > returns decimal(10,2)
@@ -20,20 +10,30 @@
 . . . . . . . . > contains sql
 . . . . . . . . > return (numA + decA);
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create procedure in DBAVTEST
+0: jdbc:luciddb:> create or replace procedure grant_select_for_schema(
+. . . . . . . . > in schemaname varchar(255), 
+. . . . . . . . > in username varchar(255))
+. . . . . . . . > language java
+. . . . . . . . > parameter style java
+. . . . . . . . > reads sql data
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_routines & routine parameters
 0: jdbc:luciddb:> select catalog_name, schema_name, invocation_name, specific_name, 
 . . . . . . . . >   external_name, routine_type, is_table_function, parameter_style,
 . . . . . . . . >   is_deterministic, data_access
 . . . . . . . . > from sys_root.dba_routines
-. . . . . . . . > where schema_name='DBAVTEST';
-+---------------+--------------+-------------------+----------------------------+----------------------------------------------------------------+---------------+--------------------+-------------------+-------------------+-------------------+
-| CATALOG_NAME  | SCHEMA_NAME  |  INVOCATION_NAME  |       SPECIFIC_NAME        |                         EXTERNAL_NAME                          | ROUTINE_TYPE  | IS_TABLE_FUNCTION  |  PARAMETER_STYLE  | IS_DETERMINISTIC  |    DATA_ACCESS    |
-+---------------+--------------+-------------------+----------------------------+----------------------------------------------------------------+---------------+--------------------+-------------------+-------------------+-------------------+
-| LOCALDB       | DBAVTEST     | GET_CURRENT_TIME  | GET_CURRENT_TIME_SPECIFIC  | class com.lucidera.luciddb.test.udr.GetCurrentTimeUdf.execute  | function      | true               | RPS_JAVA_FARRAGO  | false             | RDA_NO_SQL        |
-| LOCALDB       | DBAVTEST     | ADDING            | ADDING                     |                                                                | function      | false              |                   | false             | RDA_CONTAINS_SQL  |
-+---------------+--------------+-------------------+----------------------------+----------------------------------------------------------------+---------------+--------------------+-------------------+-------------------+-------------------+
+. . . . . . . . > where schema_name='DBAVTEST'
+. . . . . . . . > order by 1,2,3,4;
++---------------+--------------+--------------------------+--------------------------+------------------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
+| CATALOG_NAME  | SCHEMA_NAME  |     INVOCATION_NAME      |      SPECIFIC_NAME       |                                            EXTERNAL_NAME                                             | ROUTINE_TYPE  | IS_TABLE_FUNCTION  | PARAMETER_STYLE  | IS_DETERMINISTIC  |     DATA_ACCESS     |
++---------------+--------------+--------------------------+--------------------------+------------------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
+| LOCALDB       | DBAVTEST     | ADDING                   | ADDING                   |                                                                                                      | FUNCTION      | false              |                  | false             | RDA_CONTAINS_SQL    |
+| LOCALDB       | DBAVTEST     | GRANT_SELECT_FOR_SCHEMA  | GRANT_SELECT_FOR_SCHEMA  | "LOCALDB"."APPLIB"."APPLIBJAR":com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute  | PROCEDURE     | false              | RPS_JAVA         | false             | RDA_READS_SQL_DATA  |
++---------------+--------------+--------------------------+--------------------------+------------------------------------------------------------------------------------------------------+---------------+--------------------+------------------+-------------------+---------------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select creation_timestamp < dbavtest.get_current_time(), 
+0: jdbc:luciddb:> select creation_timestamp < current_timestamp, 
 . . . . . . . . >   creation_timestamp <= last_modified_timestamp
 . . . . . . . . > from sys_root.dba_routines
 . . . . . . . . > where schema_name='DBAVTEST';
@@ -44,20 +44,21 @@
 | true    | true    |
 +---------+---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select routine_specific_name, parameter_name, ordinal, datatype, "PRECISION",
+0: jdbc:luciddb:> select routine_specific_name, parameter_name, ordinal_position, datatype, "PRECISION",
 . . . . . . . . >   dec_digits
 . . . . . . . . > from sys_root.dba_routine_parameters
-. . . . . . . . > where schema_name='DBAVTEST';
-+----------------------------+-----------------+----------+-----------+------------+-------------+
-|   ROUTINE_SPECIFIC_NAME    | PARAMETER_NAME  | ORDINAL  | DATATYPE  | PRECISION  | DEC_DIGITS  |
-+----------------------------+-----------------+----------+-----------+------------+-------------+
-| GET_CURRENT_TIME_SPECIFIC  | RETURN          | 0        | TABLE     |            |             |
-| ADDING                     | NUMA            | 0        | INTEGER   |            |             |
-| ADDING                     | DECA            | 1        | DECIMAL   | 10         | 2           |
-| ADDING                     | RETURN          | 0        | DECIMAL   | 10         | 2           |
-+----------------------------+-----------------+----------+-----------+------------+-------------+
+. . . . . . . . > where schema_name='DBAVTEST'
+. . . . . . . . > order by 1,3,2;
++--------------------------+-----------------+-------------------+-----------+------------+-------------+
+|  ROUTINE_SPECIFIC_NAME   | PARAMETER_NAME  | ORDINAL_POSITION  | DATATYPE  | PRECISION  | DEC_DIGITS  |
++--------------------------+-----------------+-------------------+-----------+------------+-------------+
+| ADDING                   | NUMA            | 0                 | INTEGER   |            |             |
+| ADDING                   | DECA            | 1                 | DECIMAL   | 10         | 2           |
+| GRANT_SELECT_FOR_SCHEMA  | SCHEMANAME      | 0                 | VARCHAR   | 255        |             |
+| GRANT_SELECT_FOR_SCHEMA  | USERNAME        | 1                 | VARCHAR   | 255        |             |
++--------------------------+-----------------+-------------------+-----------+------------+-------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select count(distinct mofid) 
+0: jdbc:luciddb:> select count(distinct mof_id) 
 . . . . . . . . > from sys_root.dba_routine_parameters
 . . . . . . . . > where schema_name='DBAVTEST';
 +---------+
@@ -65,6 +66,32 @@
 +---------+
 | 4       |
 +---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- dba_functions and dba_function parameters
+0: jdbc:luciddb:> select catalog_name, schema_name, invocation_name, specific_name, 
+. . . . . . . . >   external_name, routine_type, is_table_function, parameter_style,
+. . . . . . . . >   is_deterministic, data_access
+. . . . . . . . > from sys_root.dba_functions
+. . . . . . . . > where schema_name='DBAVTEST'
+. . . . . . . . > order by 1,2,3,4;
++---------------+--------------+------------------+----------------+----------------+---------------+--------------------+------------------+-------------------+-------------------+
+| CATALOG_NAME  | SCHEMA_NAME  | INVOCATION_NAME  | SPECIFIC_NAME  | EXTERNAL_NAME  | ROUTINE_TYPE  | IS_TABLE_FUNCTION  | PARAMETER_STYLE  | IS_DETERMINISTIC  |    DATA_ACCESS    |
++---------------+--------------+------------------+----------------+----------------+---------------+--------------------+------------------+-------------------+-------------------+
+| LOCALDB       | DBAVTEST     | ADDING           | ADDING         |                | FUNCTION      | false              |                  | false             | RDA_CONTAINS_SQL  |
++---------------+--------------+------------------+----------------+----------------+---------------+--------------------+------------------+-------------------+-------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select routine_specific_name, parameter_name, ordinal_position, datatype, "PRECISION",
+. . . . . . . . >   dec_digits
+. . . . . . . . > from sys_root.dba_function_parameters
+. . . . . . . . > where schema_name='DBAVTEST'
+. . . . . . . . > order by 1,3,2;
++------------------------+-----------------+-------------------+-----------+------------+-------------+
+| ROUTINE_SPECIFIC_NAME  | PARAMETER_NAME  | ORDINAL_POSITION  | DATATYPE  | PRECISION  | DEC_DIGITS  |
++------------------------+-----------------+-------------------+-----------+------------+-------------+
+| ADDING                 | NUMA            | 0                 | INTEGER   |            |             |
+| ADDING                 | RETURN          | 0                 | DECIMAL   | 10         | 2           |
+| ADDING                 | DECA            | 1                 | DECIMAL   | 10         | 2           |
++------------------------+-----------------+-------------------+-----------+------------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_schemas
 0: jdbc:luciddb:> create schema tt;
@@ -194,15 +221,15 @@
 . . . . . . . . > from sys_root.dba_tables
 . . . . . . . . > where schema_name='DBAVTEST'
 . . . . . . . . > order by table_name;
-+---------------+--------------+-------------+---------------+
-| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  |  TABLE_TYPE   |
-+---------------+--------------+-------------+---------------+
-| LOCALDB       | DBAVTEST     | EMPS        | ForeignTable  |
-| LOCALDB       | DBAVTEST     | EMPVIEW     | LocalView     |
-| LOCALDB       | DBAVTEST     | TABLE1      | LocalTable    |
-+---------------+--------------+-------------+---------------+
++---------------+--------------+-------------+----------------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  |   TABLE_TYPE   |
++---------------+--------------+-------------+----------------+
+| LOCALDB       | DBAVTEST     | EMPS        | FOREIGN TABLE  |
+| LOCALDB       | DBAVTEST     | EMPVIEW     | LOCAL VIEW     |
+| LOCALDB       | DBAVTEST     | TABLE1      | LOCAL TABLE    |
++---------------+--------------+-------------+----------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select count(distinct lineageId)
+0: jdbc:luciddb:> select count(distinct lineage_Id)
 . . . . . . . . > from sys_root.dba_tables
 . . . . . . . . > where schema_name='DBAVTEST';
 +---------+
@@ -240,28 +267,28 @@ select * from dbavtest.emps  |
 +---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+
 | CATALOG_NAME  | TABLE_NAME  | COLUMN_NAME  | ORDINAL_POSITION  | DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  |
 +---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+
-| LOCALDB       | EMPS        | EMPNO        | 1                 | INTEGER   |            |             | YES          |
-| LOCALDB       | EMPS        | FNAME        | 2                 | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | EMPS        | LNAME        | 3                 | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | EMPS        | SEX          | 4                 | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | EMPS        | DEPTNO       | 5                 | INTEGER   |            |             | YES          |
-| LOCALDB       | EMPS        | MANAGER      | 6                 | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | EMPS        | LOCID        | 7                 | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | EMPS        | SAL          | 8                 | INTEGER   |            |             | YES          |
-| LOCALDB       | EMPS        | COMMISSION   | 9                 | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | EMPS        | HOBBY        | 10                | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | TABLE1      | COL1         | 1                 | INTEGER   |            |             | YES          |
-| LOCALDB       | TABLE1      | COL2         | 2                 | INTEGER   |            |             | YES          |
-| LOCALDB       | EMPVIEW     | EMPNO        | 1                 | INTEGER   |            |             | YES          |
-| LOCALDB       | EMPVIEW     | FNAME        | 2                 | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | EMPVIEW     | LNAME        | 3                 | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | EMPVIEW     | SEX          | 4                 | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | EMPVIEW     | DEPTNO       | 5                 | INTEGER   |            |             | YES          |
-| LOCALDB       | EMPVIEW     | MANAGER      | 6                 | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | EMPVIEW     | LOCID        | 7                 | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | EMPVIEW     | SAL          | 8                 | INTEGER   |            |             | YES          |
-| LOCALDB       | EMPVIEW     | COMMISSION   | 9                 | VARCHAR   | 256        |             | YES          |
-| LOCALDB       | EMPVIEW     | HOBBY        | 10                | VARCHAR   | 256        |             | YES          |
+| LOCALDB       | EMPS        | EMPNO        | 1                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPS        | FNAME        | 2                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPS        | LNAME        | 3                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPS        | SEX          | 4                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPS        | DEPTNO       | 5                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPS        | MANAGER      | 6                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPS        | LOCID        | 7                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPS        | SAL          | 8                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPS        | COMMISSION   | 9                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPS        | HOBBY        | 10                | VARCHAR   | 256        |             | true         |
+| LOCALDB       | TABLE1      | COL1         | 1                 | INTEGER   |            |             | true         |
+| LOCALDB       | TABLE1      | COL2         | 2                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPVIEW     | EMPNO        | 1                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPVIEW     | FNAME        | 2                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | LNAME        | 3                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | SEX          | 4                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | DEPTNO       | 5                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPVIEW     | MANAGER      | 6                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | LOCID        | 7                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | SAL          | 8                 | INTEGER   |            |             | true         |
+| LOCALDB       | EMPVIEW     | COMMISSION   | 9                 | VARCHAR   | 256        |             | true         |
+| LOCALDB       | EMPVIEW     | HOBBY        | 10                | VARCHAR   | 256        |             | true         |
 +---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
@@ -279,9 +306,69 @@ sqlline> !connect jdbc:luciddb: sa ""
 0: jdbc:luciddb:> select catalog_name, schema_name, table_name, table_type, creator
 . . . . . . . . > from sys_root.dba_tables
 . . . . . . . . > where creator='LALA';
-+---------------+--------------+-------------+-------------+----------+
-| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  | TABLE_TYPE  | CREATOR  |
-+---------------+--------------+-------------+-------------+----------+
-| LOCALDB       | DBAVTEST     | LALATABLE   | LocalTable  | LALA     |
-+---------------+--------------+-------------+-------------+----------+
++---------------+--------------+-------------+--------------+----------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  |  TABLE_TYPE  | CREATOR  |
++---------------+--------------+-------------+--------------+----------+
+| LOCALDB       | DBAVTEST     | LALATABLE   | LOCAL TABLE  | LALA     |
++---------------+--------------+-------------+--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- just check that these can execute for now 
+0: jdbc:luciddb:> select * from sys_root.dba_system_parameters where false;
++-------------+--------------+
+| PARAM_NAME  | PARAM_VALUE  |
++-------------+--------------+
++-------------+--------------+
+0: jdbc:luciddb:> select * from sys_root.dba_sessions where false;
++-------------+--------------+--------------------+--------------------+--------------------+-------------------+-----------------------+---------------+----------------------+--------------------+-----------------------+----------------------+------------+-----------------+---------------------+
+| SESSION_ID  | CONNECT_URL  | CURRENT_USER_NAME  | CURRENT_ROLE_NAME  | SESSION_USER_NAME  | SYSTEM_USER_NAME  | SYSTEM_USER_FULLNAME  | SESSION_NAME  | CLIENT_PROGRAM_NAME  | CLIENT_PROCESS_ID  | CURRENT_CATALOG_NAME  | CURRENT_SCHEMA_NAME  | IS_CLOSED  | IS_AUTO_COMMIT  | IS_TXN_IN_PROGRESS  |
++-------------+--------------+--------------------+--------------------+--------------------+-------------------+-----------------------+---------------+----------------------+--------------------+-----------------------+----------------------+------------+-----------------+---------------------+
++-------------+--------------+--------------------+--------------------+--------------------+-------------------+-----------------------+---------------+----------------------+--------------------+-----------------------+----------------------+------------+-----------------+---------------------+
+0: jdbc:luciddb:> select * from sys_root.dba_sql_statements where false;
++----------+-------------+-----------+---------------------+-------------------+
+| STMT_ID  | SESSION_ID  | SQL_TEXT  | CREATION_TIMESTAMP  | PARAMETER_VALUES  |
++----------+-------------+-----------+---------------------+-------------------+
++----------+-------------+-----------+---------------------+-------------------+
+0: jdbc:luciddb:> select * from sys_root.dba_repository_properties where false;
++----------------+-----------------+
+| PROPERTY_NAME  | PROPERTY_VALUE  |
++----------------+-----------------+
++----------------+-----------------+
+0: jdbc:luciddb:> select * from sys_root.dba_repository_integrity_violations where false;
++--------------+---------+
+| DESCRIPTION  | MOF_ID  |
++--------------+---------+
++--------------+---------+
+0: jdbc:luciddb:> select * from sys_root.dba_objects_in_use where false;
++-------------+----------+---------+
+| SESSION_ID  | STMT_ID  | MOF_ID  |
++-------------+----------+---------+
++-------------+----------+---------+
+0: jdbc:luciddb:> select * from sys_root.dba_threads where false;
++------------+--------------------+--------------+------------------+---------------+-----------+------------+-----------------+
+| THREAD_ID  | THREAD_GROUP_NAME  | THREAD_NAME  | THREAD_PRIORITY  | THREAD_STATE  | IS_ALIVE  | IS_DAEMON  | IS_INTERRUPTED  |
++------------+--------------------+--------------+------------------+---------------+-----------+------------+-----------------+
++------------+--------------------+--------------+------------------+---------------+-----------+------------+-----------------+
+0: jdbc:luciddb:> select * from sys_root.dba_thread_stack_entries where false;
++------------+--------------+---------------+-------------+--------------+------------+-----------+------------+
+| THREAD_ID  | STACK_LEVEL  | ENTRY_STRING  | CLASS_NAME  | METHOD_NAME  | FILE_NAME  | LINE_NUM  | IS_NATIVE  |
++------------+--------------+---------------+-------------+--------------+------------+-----------+------------+
++------------+--------------+---------------+-------------+--------------+------------+-----------+------------+
+0: jdbc:luciddb:> select * from sys_root.dba_performance_counters where false;
++--------------+---------------+----------------+----------------+
+| SOURCE_NAME  | COUNTER_NAME  | COUNTER_UNITS  | COUNTER_VALUE  |
++--------------+---------------+----------------+----------------+
++--------------+---------------+----------------+----------------+
+0: jdbc:luciddb:> select * from sys_root.dba_system_info where false;
++--------------+------------+-------------+-------------+
+| SOURCE_NAME  | ITEM_NAME  | ITEM_UNITS  | ITEM_VALUE  |
++--------------+------------+-------------+-------------+
++--------------+------------+-------------+-------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters where false;
++-------------+--------------+
+| PARAM_NAME  | PARAM_VALUE  |
++-------------+--------------+
++-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

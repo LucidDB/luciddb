@@ -1,0 +1,35 @@
+0: jdbc:luciddb:> -- Test split out from sqlserverWrapper for FRG-162
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create sqlserver server with qualifying catalog
+0: jdbc:luciddb:> create server my_mssql
+. . . . . . . . > foreign data wrapper "SQL SERVER"
+. . . . . . . . > options(
+. . . . . . . . >   url 'jdbc:jtds:sqlserver://akela.lucidera.com:1433',
+. . . . . . . . >   user_name 'ldbtest',
+. . . . . . . . >   password 'ldbtest',
+. . . . . . . . >   qualifying_catalog_name 'BENCHMARK',
+. . . . . . . . >   table_types 'TABLE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: FRG-162 incorrectly returns no schemas, qualifying_catalog_name
+0: jdbc:luciddb:> -- doesn't match any schemas since catalog info isn't returned
+0: jdbc:luciddb:> -- browse foreign schemas should show schemas for BENCHMARK catalog/database
+0: jdbc:luciddb:> select * from table( sys_boot.mgmt.browse_foreign_schemas('MY_MSSQL'))
+. . . . . . . . > order by schema_name;
++--------------+--------------+
+| SCHEMA_NAME  | DESCRIPTION  |
++--------------+--------------+
+| BBAdmin      |              |
+| BBTEST       |              |
+| BB_TEST      |              |
+| brio         |              |
+| dbo          |              |
+| guest        |              |
+| ldbtest      |              |
+| TBB_BENCH    |              |
++--------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop server my_mssql cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
