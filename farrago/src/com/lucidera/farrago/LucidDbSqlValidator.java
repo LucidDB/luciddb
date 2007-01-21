@@ -46,6 +46,21 @@ import java.util.*;
 public class LucidDbSqlValidator extends FarragoSqlValidator
 {
     public LucidDbSqlValidator(
+        SqlOperatorTable opTab,
+        SqlValidatorCatalogReader catalogReader,
+        RelDataTypeFactory typeFactory,
+        Compatible compatible,
+        FarragoPreparingStmt preparingStmt)
+    {
+        super(
+            opTab,
+            catalogReader,
+            typeFactory,
+            compatible,
+            preparingStmt);
+    }
+
+    public LucidDbSqlValidator(
         FarragoPreparingStmt preparingStmt,
         Compatible compatible)
     {
