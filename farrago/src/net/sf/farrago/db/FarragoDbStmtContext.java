@@ -44,6 +44,11 @@ import org.eigenbase.util.*;
  * net.sf.farrago.session.FarragoSessionStmtContext} interface in terms of a
  * {@link FarragoDbSession}.
  *
+ * <p>Most non-trivial public methods on this class must be synchronized, since
+ * closeAllocation may be called from a thread shutting down the database.  The
+ * exception is cancel, which must NOT be synchronized, since it needs to
+ * return immediately.
+ *
  * @author John V. Sichi
  * @version $Id$
  */
@@ -99,7 +104,7 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public void prepare(
+    public synchronized void prepare(
         String sql,
         boolean isExecDirect)
     {
@@ -130,7 +135,7 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public void prepare(
+    public synchronized void prepare(
         RelNode plan,
         SqlKind kind,
         boolean logical,
@@ -154,14 +159,14 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public RelDataType getPreparedRowType()
+    public synchronized RelDataType getPreparedRowType()
     {
         assert (isPrepared());
         return executableStmt.getRowType();
     }
 
     // implement FarragoSessionStmtContext
-    public RelDataType getPreparedParamType()
+    public synchronized RelDataType getPreparedParamType()
     {
         assert (isPrepared());
         return executableStmt.getDynamicParamRowType();
@@ -180,7 +185,7 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public void execute()
+    public synchronized void execute()
     {
         assert (isPrepared());
         warningQueue.clearWarnings();
@@ -298,7 +303,7 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public long getUpdateCount()
+    public synchronized long getUpdateCount()
     {
         long count = updateCount;
         updateCount = -1;
@@ -308,18 +313,30 @@ public class FarragoDbStmtContext
     // implement FarragoSessionStmtContext
     public void cancel()
     {
+        // request cancel, but don't wait for it to take effect
+        cancel(false);
+    }
+
+    private void cancel(boolean wait)
+    {
         tracer.info("cancel");
         FarragoSessionRuntimeContext contextToCancel = runningContext;
-        if (contextToCancel != null) {
-            contextToCancel.cancel();
+        if (contextToCancel == null) {
+            return;
         }
-        // NOTE jvs 10-Apr-2006:  Don't call clearExecutingStmtInfo here,
-        // because the cancel doesn't take effect immediately.  We
-        // could set a flag to indicate that cancel is pending.
+        contextToCancel.cancel();
+        if (wait) {
+            // if the cursor was executing when the cancel request was
+            // received, this will wait for it to finish and return;
+            // after that, it's safe to proceed with cleanup, since
+            // any further fetch requests will see the cancel flag
+            // already set and fail immediately
+            contextToCancel.waitForCursor();
+        }
     }
 
     // implement FarragoSessionStmtContext
-    public void closeResultSet()
+    public synchronized void closeResultSet()
     {
         if (resultSet == null) {
             return;
@@ -330,13 +347,22 @@ public class FarragoDbStmtContext
             throw Util.newInternal(ex);
         }
         resultSet = null;
+        FarragoSessionRuntimeContext contextToClose = runningContext;
+        if (contextToClose != null) {
+            contextToClose.closeAllocation();
+        }
         runningContext = null;
         clearExecutingStmtInfo();
     }
 
     // implement FarragoSessionStmtContext
-    public void unprepare()
+    public synchronized void unprepare()
     {
+        // request cancel, and wait until it takes effect before
+        // proceeding with cleanup, otherwise we may yank stuff
+        // out from under executing threads in a bad way
+        cancel(true);
+        
         closeResultSet();
         if (allocations != null) {
             allocations.closeAllocation();

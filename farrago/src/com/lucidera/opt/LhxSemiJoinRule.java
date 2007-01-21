@@ -87,11 +87,15 @@ public class LhxSemiJoinRule
         List<RexNode> leftJoinKeys = new ArrayList<RexNode>();
         List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
 
+        // splitJoinCondition does not need to be concerned about null
+        // filtering property of a join key position: null values will not
+        // match for any key pos.
         residualCondition =
             RelOptUtil.splitJoinCondition(
                 joinRel,
                 leftJoinKeys,
-                rightJoinKeys);
+                rightJoinKeys,
+                null);
 
         // valid join keys should only reference input fields directly, i.e. no residualCondition
         if ((leftJoinKeys.size() == 0) || (rightJoinKeys.size() == 0) ||
@@ -189,6 +193,7 @@ public class LhxSemiJoinRule
         
         List<Integer> newLeftJoinKeyPos = new ArrayList<Integer>();
         List<Integer> newRightJoinKeyPos = new ArrayList<Integer>();
+        List<Integer> filterNulls = new ArrayList<Integer>();
 
         RelOptUtil.projectJoinInputs(inputRels,
             leftJoinKeys,
@@ -230,6 +235,8 @@ public class LhxSemiJoinRule
         
         for (int i = 0; i < newRightJoinKeyPos.size(); i++) {
             joinKeyMap.set(newRightJoinKeyPos.get(i));
+            // null values will not match for any join key pos
+            filterNulls.add(i);
         }
 
         cndBuildKey =
@@ -264,6 +271,7 @@ public class LhxSemiJoinRule
                 isSetop,
                 newLeftJoinKeyPos,
                 newRightJoinKeyPos,
+                filterNulls,
                 newJoinOutputNames,
                 numBuildRows.longValue(),
                 cndBuildKey.longValue());

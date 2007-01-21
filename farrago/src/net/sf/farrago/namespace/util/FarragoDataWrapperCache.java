@@ -320,6 +320,18 @@ public class FarragoDataWrapperCache
         return props;
     }
 
+    // implement FarragoAllocation
+    public void closeAllocation()
+    {
+        super.closeAllocation();
+        Map mapMofIdToPlugin = getMapMofIdToPlugin();
+        for (Object plugin : mapMofIdToPlugin.values()) {
+            if (plugin instanceof FarragoMedDataServer) {
+                ((FarragoMedDataServer)plugin).releaseResources();
+            }
+        }
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     private class WrapperFactory

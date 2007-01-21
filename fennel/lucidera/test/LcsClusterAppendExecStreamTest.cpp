@@ -310,6 +310,10 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
     }
     lcsAppendParams.pRootMap = 0;
     
+    // Set up BTreeExecStreamParams using default values from BTreeDescriptor.
+    lcsAppendParams.segmentId = btreeDescriptor.segmentId;
+    lcsAppendParams.pageOwnerId = btreeDescriptor.pageOwnerId;
+    
     // setup temporary btree descriptor to get an empty page to start the btree
 
     btreeDescriptor.segmentAccessor.pSegment = lcsAppendParams.pSegment;
@@ -317,8 +321,6 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
     btreeDescriptor.tupleDescriptor = lcsAppendParams.tupleDesc;
     btreeDescriptor.keyProjection = lcsAppendParams.keyProj;
     btreeDescriptor.rootPageId = newRoot ? NULL_PAGE_ID : savedRootPageId;
-    btreeDescriptor.segmentId = lcsAppendParams.segmentId;
-    btreeDescriptor.pageOwnerId = lcsAppendParams.pageOwnerId;
     
     BTreeBuilder builder(btreeDescriptor, pRandomSegment);
 

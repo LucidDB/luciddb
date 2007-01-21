@@ -150,7 +150,7 @@ class MedJdbcNameDirectory
 
             PreparedStatement ps = null;
             try {
-                ps = server.connection.prepareStatement(sql);
+                ps = server.getConnection().prepareStatement(sql);
             } catch (Exception ex) {
                 // Some drivers don't support prepareStatement
             }
@@ -170,7 +170,7 @@ class MedJdbcNameDirectory
                     if (ps != null) {
                         rs = ps.executeQuery();
                     } else {
-                        stmt = server.connection.createStatement();
+                        stmt = server.getConnection().createStatement();
                         rs = stmt.executeQuery(sql);
                     }
                     md = rs.getMetaData();

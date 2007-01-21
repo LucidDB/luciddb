@@ -156,6 +156,11 @@ public interface FarragoMedDataServer
      * @param chain receives wrappers's custom providers, if any
      */
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain);
+
+    /**
+     * Gives this wrapper a chance to release any resources.
+     */
+    public void releaseResources();
 }
 
 // End FarragoMedDataServer.java

@@ -112,7 +112,11 @@ public class FarragoTupleIterResultSet
                 tracer.fine(toString());
             }
             if (runtimeContext != null) {
-                runtimeContext.checkCancel();
+                // Inform context that cursor is becoming active, so any
+                // subsequent cancel request has to wait until the
+                // corresponding call in the finally block before cleaning up
+                // the cursor.  This also checks for any pending cancel.
+                runtimeContext.setCursorState(true);
             }
             boolean rc = super.next();
             if (!rc) {
@@ -123,6 +127,7 @@ public class FarragoTupleIterResultSet
                         // Connection.setAutoCommit, returning the last
                         // row of a cursor in autocommit mode ends
                         // the transaction.
+                        runtimeContext.setCursorState(false);
                         close();
                     }
                 }
@@ -131,6 +136,12 @@ public class FarragoTupleIterResultSet
         } catch (Throwable ex) {
             // trace exceptions as part of JDBC API
             throw FarragoJdbcUtil.newSqlException(ex, jdbcTracer);
+        } finally {
+            if (runtimeContext != null) {
+                // Inform context that we're done with cursor processing until
+                // next fetch call.
+                runtimeContext.setCursorState(false);
+            }
         }
     }
 

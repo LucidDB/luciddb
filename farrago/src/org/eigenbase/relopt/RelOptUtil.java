@@ -925,13 +925,16 @@ public abstract class RelOptUtil
      * keys
      * @param rightJoinKeys The join keys from the right input which are
      * equi-join keys
+     * @param filterNulls The join key positions for which null values will not
+     * match. null values only match for the "is not distinct from" condition.
      *
      * @return What's left
      */
     public static RexNode splitJoinCondition(
         JoinRelBase joinRel,
         List<RexNode> leftJoinKeys,
-        List<RexNode> rightJoinKeys)
+        List<RexNode> rightJoinKeys,
+        List<Integer> filterNulls)
     {
         List<RexNode> nonEquiList = new ArrayList<RexNode>();
 
@@ -940,6 +943,7 @@ public abstract class RelOptUtil
             joinRel.getCondition(),
             leftJoinKeys,
             rightJoinKeys,
+            filterNulls,
             nonEquiList);
 
         // Convert the remainders into a list that are AND'ed together.
@@ -1019,6 +1023,7 @@ public abstract class RelOptUtil
         RexNode condition,
         List<RexNode> leftJoinKeys,
         List<RexNode> rightJoinKeys,
+        List<Integer> filterNulls,
         List<RexNode> nonEquiList)
     {
         int leftFieldCount =
@@ -1050,6 +1055,7 @@ public abstract class RelOptUtil
                         operand,
                         leftJoinKeys,
                         rightJoinKeys,
+                        filterNulls,
                         nonEquiList);
                 }
                 return;
@@ -1058,7 +1064,11 @@ public abstract class RelOptUtil
             RexNode leftKey = null;
             RexNode rightKey = null;
 
-            if (call.getOperator() == SqlStdOperatorTable.equalsOperator) {
+            SqlOperator operator = call.getOperator();
+            
+            if (operator == SqlStdOperatorTable.equalsOperator ||
+                (filterNulls != null &&
+                 operator == SqlStdOperatorTable.isNotDistinctFromOperator)) {
                 final RexNode [] operands = call.getOperands();
                 RexNode op0 = operands[0];
                 RexNode op1 = operands[1];
@@ -1113,46 +1123,59 @@ public abstract class RelOptUtil
                                 rexBuilder.makeCast(targetKeyType, rightKey);
                         }
                     }
-
-                    leftJoinKeys.add(leftKey);
-                    rightJoinKeys.add(rightKey);
-                    return;
                 }
             }
+            
+            if ((leftKey == null) || (rightKey == null)) {
+                // no equality join keys found yet: 
+                // try tranforming the condition to 
+                // equality "join" conditions, e.g.
+                //     f(LHS) > 0 ===> ( f(LHS) > 0 ) = TRUE,
+                // and make the RHS produce TRUE
+                BitSet projRefs = new BitSet(totalFieldCount);
+                RelOptUtil.InputFinder inputFinder =
+                    new RelOptUtil.InputFinder(projRefs);
+                
+                condition.accept(inputFinder);
+                leftKey = null;
+                rightKey = null;
+                
+                if (projRefs.nextSetBit(leftFieldCount) < 0) {
+                    leftKey = condition;
+                    rightKey = rexBuilder.makeLiteral(true);
 
-            // all other cases: try tranforming the condition to 
-            // equality "join" conditions, e.g.
-            //     f(LHS) > 0 ===> ( f(LHS) > 0 ) = TRUE,
-            // and make the RHS produce TRUE
-            BitSet projRefs = new BitSet(totalFieldCount);
-            RelOptUtil.InputFinder inputFinder =
-                new RelOptUtil.InputFinder(projRefs);
+                    // effectively performing an equality comparison
+                    operator = SqlStdOperatorTable.equalsOperator;                 
+                } else if (projRefs.nextSetBit(0) >= leftFieldCount) {
+                    leftKey = rexBuilder.makeLiteral(true);
+                    
+                    // replace right Key input ref
+                    rightKey =
+                        condition.accept(
+                            new RelOptUtil.RexInputConverter(
+                                rexBuilder,
+                                rightFields,
+                                rightFields,
+                                adjustments));
 
-            condition.accept(inputFinder);
-            leftKey = null;
-            rightKey = null;
-
-            if (projRefs.nextSetBit(leftFieldCount) < 0) {
-                leftKey = condition;
-                rightKey = rexBuilder.makeLiteral(true);
-            } else if (projRefs.nextSetBit(0) >= leftFieldCount) {
-                leftKey = rexBuilder.makeLiteral(true);
-
-                // replace right Key input ref
-                rightKey =
-                    condition.accept(
-                        new RelOptUtil.RexInputConverter(
-                            rexBuilder,
-                            rightFields,
-                            rightFields,
-                            adjustments));
+                    // effectively performing an equality comparison
+                    operator = SqlStdOperatorTable.equalsOperator;                 
+                }
             }
-
+            
             if ((leftKey != null) && (rightKey != null)) {
+                // found equality join keys
+                // add them to key list and mark the null filtering property
                 leftJoinKeys.add(leftKey);
                 rightJoinKeys.add(rightKey);
+                if (filterNulls != null &&
+                    operator == SqlStdOperatorTable.equalsOperator) {
+                    // nulls are considered not matching for equality comparison
+                    // add the position of the most recently inserted key
+                    filterNulls.add(leftJoinKeys.size()-1);
+                }
                 return;
-            }
+            } // else fall through and add this condition as nonEqui condition
         }
 
         // The operator is not of RexCall type

@@ -80,11 +80,11 @@
 > 
 > select table_name, table_type from sys_boot.mgmt.dba_tables_internal2
 > where schema_name='MTEST';
-+-------------+-------------+
-| TABLE_NAME  | TABLE_TYPE  |
-+-------------+-------------+
-| T           | LocalTable  |
-+-------------+-------------+
++-------------+--------------+
+| TABLE_NAME  |  TABLE_TYPE  |
++-------------+--------------+
+| T           | LOCAL TABLE  |
++-------------+--------------+
 > 
 > analyze table mtest.t estimate statistics for all columns sample 66 percent;
 > 

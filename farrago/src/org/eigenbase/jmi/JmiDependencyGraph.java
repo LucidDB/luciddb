@@ -87,10 +87,10 @@ public class JmiDependencyGraph
         super(mutableGraph);
         this.mutableGraph = mutableGraph;
         this.transform = transform;
+        Comparator<RefBaseObject> tieBreaker = transform.getTieBreaker();
         vertexMap =
-            transform.shouldSortByMofId()
-            ? new TreeMap<RefObject, JmiDependencyVertex>(
-                JmiMofIdComparator.instance)
+            (tieBreaker != null)
+            ? new TreeMap<RefObject, JmiDependencyVertex>(tieBreaker)
             : new HashMap<RefObject, JmiDependencyVertex>();
         addElements(elements);
         vertexMap = Collections.unmodifiableMap(vertexMap);
@@ -112,9 +112,10 @@ public class JmiDependencyGraph
 
     private void addElements(Collection<RefObject> elements)
     {
-        if (transform.shouldSortByMofId()) {
+        Comparator<RefBaseObject> tieBreaker = transform.getTieBreaker();
+        if (tieBreaker != null) {
             List<RefObject> list = new ArrayList<RefObject>(elements);
-            Collections.sort(list, JmiMofIdComparator.instance);
+            Collections.sort(list, tieBreaker);
             elements = list;
         }
 

@@ -29,9 +29,6 @@ import java.util.*;
  * RestartableIterator extends the Iterator interface with a method for
  * restarting to the beginning of the collection.
  *
- * <p>TODO jvs 21-Mar-2006: This interface is no longer used except by Saffron,
- * so we should move it to Saffron.
- *
  * @author John V. Sichi
  * @version $Id$
  */

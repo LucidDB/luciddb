@@ -7,7 +7,8 @@ options(
   driver_class 'oracle.jdbc.driver.OracleDriver',
   url 'jdbc:oracle:thin:@machineName:port:SID',
   type_mapping 'DATE:TIMESTAMP;DECIMAL(22,0):DOUBLE;BINARY:CHAR;VARBINARY:VARCHAR',
-  login_timeout '10'
+  login_timeout '10',
+  validation_query 'select 1 from dual'
 );
 
 -- create sql server jdbc wrapper with browse_connect
@@ -18,7 +19,8 @@ options(
   browse_connect_description 'SQL Server Database Connection',
   driver_class 'net.sourceforge.jtds.jdbc.Driver',
   url 'jdbc:jtds:sqlserver://server:port',
-  login_timeout '10'
+  login_timeout '10',
+  validation_query 'select 1'
 );
 
 -- create flat file wrapper with browse_connect

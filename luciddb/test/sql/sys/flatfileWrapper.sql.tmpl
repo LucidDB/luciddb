@@ -8,15 +8,6 @@ select * from table(
       from sys_boot.jdbc_metadata.empty_view)))
 order by option_ordinal, option_choice_ordinal;
 
--- see options available
-select * from table(
-  sys_boot.mgmt.browse_connect_foreign_server(
-    'FLAT FILE', 
-    cursor(
-      values('URL', 'jdbc:jtds:sqlserver://akela.lucidera.com:1443'),
-            ('EXTENDED_OPTIONS', 'TRUE'))))
-order by option_ordinal, option_choice_ordinal;
-
 -- create flatfile server
 create server my_flatfile
 foreign data wrapper "FLAT FILE"

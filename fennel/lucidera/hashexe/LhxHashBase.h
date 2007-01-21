@@ -123,13 +123,15 @@ struct LhxHashInfo
      *
      * filterNull: do not add null keys to hash table
      * In join sementics, nulls do not match; however, in set matching
-     * sementics, nulls are considered equal.
+     * sementics and special comparison semantics("is not distinct from"),
+     * nulls are considered equal.
      *
      * removeDuplicate: do not add duplicatekeys to hash table
      * removeDuplicate is only used in set matching joins where
      * inputDesc and keyProj have the same size for both inputs.
      */
     vector<bool> filterNull;
+    vector<TupleProjection> filterNullKeyProj;
     vector<bool> removeDuplicate;
 };
 

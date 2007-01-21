@@ -71,11 +71,11 @@ public abstract class DoForEntireSchemaUdp {
         if (objTypeStr.equals("TABLES")) {
             ps = conn.prepareStatement("select SCHEMA_NAME, TABLE_NAME " 
                 + "from SYS_ROOT.DBA_TABLES "
-                + "where SCHEMA_NAME = ? and TABLE_TYPE = 'LocalTable'");
+                + "where SCHEMA_NAME = ? and TABLE_TYPE = 'LOCAL TABLE'");
         } else if (objTypeStr.equals("VIEWS")) {
             ps = conn.prepareStatement("select SCHEMA_NAME, TABLE_NAME " 
                 + "from SYS_ROOT.DBA_TABLES "
-                + "where SCHEMA_NAME = ? and TABLE_TYPE = 'LocalView'");
+                + "where SCHEMA_NAME = ? and TABLE_TYPE = 'LOCAL VIEW'");
         } else {
             ps = conn.prepareStatement("select SCHEMA_NAME, TABLE_NAME " 
                 + "from SYS_ROOT.DBA_TABLES where SCHEMA_NAME = ?");

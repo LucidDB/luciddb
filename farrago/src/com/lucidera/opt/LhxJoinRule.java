@@ -73,12 +73,14 @@ public class LhxJoinRule
 
         List<RexNode> leftJoinKeys = new ArrayList<RexNode>();
         List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
+        List<Integer> filterNulls = new ArrayList<Integer>();
 
         nonEquiCondition =
             RelOptUtil.splitJoinCondition(
                 joinRel,
                 leftJoinKeys,
-                rightJoinKeys);
+                rightJoinKeys,
+                filterNulls);
 
         if ((nonEquiCondition != null)
             && (joinRel.getJoinType() != JoinRelType.INNER)) {
@@ -172,6 +174,7 @@ public class LhxJoinRule
                 isSetop,
                 leftKeys,
                 rightKeys,
+                filterNulls,
                 null,
                 numBuildRows.longValue(),
                 cndBuildKey.longValue());

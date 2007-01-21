@@ -647,6 +647,18 @@ parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateCrcUdx.execute';
 
+-- Generate CRC UDX with specified column set used to calculate CRC
+create or replace function generate_crc(
+  c cursor,
+  r select from c,
+  exclude boolean)
+returns table(c.*, crc_value bigint)
+language java
+parameter style system defined java
+no sql
+specific generate_crc_for_column_subset
+external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateCrcUdx.execute';
+
 -- Pivot columns to rows
 create or replace function pivot_columns_to_rows(c cursor)
 returns table(col_name varchar(65535), col_value varchar(65535))

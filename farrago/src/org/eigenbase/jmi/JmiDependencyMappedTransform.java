@@ -46,7 +46,7 @@ public class JmiDependencyMappedTransform
 
     private final boolean produceSelfLoops;
 
-    private boolean sortByMofId;
+    private Comparator<RefBaseObject> tieBreaker;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -66,24 +66,26 @@ public class JmiDependencyMappedTransform
         this.modelView = modelView;
         this.produceSelfLoops = produceSelfLoops;
         map = new HashMap<JmiAssocEdge, List<AssocRule>>();
-        sortByMofId = true;
+        tieBreaker = JmiMofIdComparator.instance;
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * Disables sorting by MofId (which is enabled by default), causing {@link
-     * #shouldSortByMofId} to return false.
-     */
-    public void disableSortByMofId()
-    {
-        sortByMofId = false;
-    }
-
     // implement JmiDependencyTransform
-    public boolean shouldSortByMofId()
+    public Comparator<RefBaseObject> getTieBreaker()
     {
-        return sortByMofId;
+        return tieBreaker;
+    }
+    
+    /**
+     * Sets a new tie-breaker.  (Default after construction is
+     * {@link JmiMofIdComparator#instance}.)
+     *
+     * @param tieBreaker new tie-breaker, or null to disable tie-breaking
+     */
+    public void setTieBreaker(Comparator<RefBaseObject> tieBreaker)
+    {
+        this.tieBreaker = tieBreaker;
     }
 
     // implement JmiDependencyTransform
@@ -143,8 +145,8 @@ public class JmiDependencyMappedTransform
             }
         }
         collection.retainAll(candidates);
-        if (sortByMofId) {
-            Collections.sort(collection, JmiMofIdComparator.instance);
+        if (tieBreaker != null) {
+            Collections.sort(collection, tieBreaker);
         }
         return collection;
     }

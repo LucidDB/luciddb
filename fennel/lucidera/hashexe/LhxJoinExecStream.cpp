@@ -429,12 +429,15 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
             {
                 TupleData &probeTuple = inputTuple[curPlan->getProbeInput()];
                 uint probeTupleSize = inputTupleSize[curPlan->getProbeInput()];
-                TupleProjection &probeKeyProj  = (TupleProjection &)
+                TupleProjection &probeKeyProj  =
                     hashInfo.keyProj[curPlan->getProbeInput()];
                 uint buildTupleSize = inputTupleSize[curPlan->getBuildInput()];
                 bool removeDuplicateProbe =
                     hashInfo.removeDuplicate[curPlan->getProbeInput()];
+                TupleProjection &filterNullProbeKeyProj  =
+                    hashInfo.filterNullKeyProj[curPlan->getProbeInput()];
                 bool filterNullProbe = regularJoin;
+
                 uint probeFieldOffset =
                     returnBuild(curPlan) ?
                     buildTupleSize * curPlan->getProbeInput() : 0;
@@ -509,7 +512,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                      * will not join so hash table lookup is not needed.
                      */
                     if (!filterNullProbe ||
-                        !probeTuple.containsNull(probeKeyProj)) {
+                        !probeTuple.containsNull(filterNullProbeKeyProj)) {
                         keyBuf =
                             hashTable.findKey(probeTuple, probeKeyProj, 
                                 removeDuplicateProbe);
@@ -802,6 +805,20 @@ void LhxJoinExecStream::setHashInfo(
     hashInfo.keyProj.push_back(params.leftKeyProj);
     hashInfo.keyProj.push_back(params.rightKeyProj);
 
+    TupleProjection filterNullLeftKeyProj;
+    TupleProjection filterNullRightKeyProj;
+
+    // only filter null on join sides from which non-joining tuples will not
+    // need to be returned
+    filterNullLeftKeyProj.projectFrom(
+        params.leftKeyProj, params.filterNullKeyProj);
+
+    filterNullRightKeyProj.projectFrom(
+        params.rightKeyProj, params.filterNullKeyProj);
+
+    hashInfo.filterNullKeyProj.push_back(filterNullLeftKeyProj);
+    hashInfo.filterNullKeyProj.push_back(filterNullRightKeyProj);
+
     hashInfo.useJoinFilter.push_back(
         params.enableJoinFilter && !returnProbeOuter());
     hashInfo.useJoinFilter.push_back(
@@ -813,10 +830,8 @@ void LhxJoinExecStream::setHashInfo(
 
     for (int inputIndex = 0; inputIndex < numInputs; inputIndex ++ ) {
 
-        TupleProjection &keyProj  =
-            (TupleProjection &)hashInfo.keyProj[inputIndex];
-        TupleDescriptor &inputDesc  =
-            (TupleDescriptor &)hashInfo.inputDesc[inputIndex];
+        TupleProjection &keyProj  = hashInfo.keyProj[inputIndex];
+        TupleDescriptor &inputDesc  = hashInfo.inputDesc[inputIndex];
 
         vector<bool> isKeyVarChar;
         TupleProjection dataProj;

@@ -42,7 +42,7 @@ RandomAllocationSegment::RandomAllocationSegment(
     SharedSegment delegateSegment)
     : DelegatingSegment(delegateSegment)
 {
-    assert(DelegatingSegment::getAllocationOrder() == LINEAR_ALLOCATION);
+    permAssert(DelegatingSegment::getAllocationOrder() == LINEAR_ALLOCATION);
 
     // calculate immutable segment parameters based on page size
 
@@ -92,7 +92,7 @@ void RandomAllocationSegment::format()
     // make sure underlying segment is big enough
     bool bigEnough = DelegatingSegment::ensureAllocatedSize(
         nExtents*nPagesPerExtent + nSegAllocPages);
-    assert(bigEnough);
+    permAssert(bigEnough);
     
     // format each SegAllocNode
     
@@ -133,7 +133,7 @@ void RandomAllocationSegment::format()
         }
     }
 
-    assert(!nExtents);
+    permAssert(!nExtents);
 }
 
 uint RandomAllocationSegment::inferSegAllocCount()
@@ -274,7 +274,7 @@ void RandomAllocationSegment::splitPageId(
 PageId RandomAllocationSegment::allocateFromExtent(
     ExtentNum extentNum, PageOwnerId ownerId)
 {
-    assert(ownerId != UNALLOCATED_PAGE_OWNER_ID);
+    permAssert(ownerId != UNALLOCATED_PAGE_OWNER_ID);
     
     SegmentAccessor selfAccessor(shared_from_this(),pCache);
     ExtentAllocLock extentAllocLock(selfAccessor);
@@ -302,7 +302,7 @@ PageId RandomAllocationSegment::allocateFromLockedExtent(
 void RandomAllocationSegment::deallocatePageRange(
     PageId startPageId,PageId endPageId)
 {
-    assert(startPageId == endPageId);
+    permAssert(startPageId == endPageId);
     if (startPageId != NULL_PAGE_ID) {
         deallocatePageId(startPageId);
     } else {
@@ -312,14 +312,14 @@ void RandomAllocationSegment::deallocatePageRange(
 
 void RandomAllocationSegment::deallocatePageId(PageId pageId)
 {
-    assert(pageId != NULL_PAGE_ID);
+    permAssert(pageId != NULL_PAGE_ID);
     assert(isPageIdAllocated(pageId));
     
     ExtentNum extentNum;
     BlockNum iPageInExtent;
     uint iSegAlloc;
     splitPageId(pageId,iSegAlloc,extentNum,iPageInExtent);
-    assert(iPageInExtent);
+    permAssert(iPageInExtent);
 
     // note that we mark the free PageId on the extent page BEFORE
     // increasing the corresponding free page count on the segment page;
@@ -331,7 +331,7 @@ void RandomAllocationSegment::deallocatePageId(PageId pageId)
     ExtentAllocationNode &extentNode = extentAllocLock.getNodeForWrite();
     ExtentAllocationNode::PageEntry &pageEntry =
         extentNode.getPageEntry(iPageInExtent);
-    assert(pageEntry.ownerId != UNALLOCATED_PAGE_OWNER_ID);
+    permAssert(pageEntry.ownerId != UNALLOCATED_PAGE_OWNER_ID);
     pageEntry.ownerId = UNALLOCATED_PAGE_OWNER_ID;
     pageEntry.successorId = NULL_PAGE_ID;
     
@@ -343,7 +343,7 @@ void RandomAllocationSegment::deallocatePageId(PageId pageId)
     segAllocLock.lockExclusive(getSegAllocPageId(iSegAlloc));
     SegmentAllocationNode &segAllocNode = segAllocLock.getNodeForWrite();
     segAllocNode.getExtentEntry(extentNum).nUnallocatedPages++;
-    assert(
+    permAssert(
         segAllocNode.getExtentEntry(extentNum).nUnallocatedPages
         <= nPagesPerExtent);
 }
@@ -356,7 +356,7 @@ PageId RandomAllocationSegment::getPageSuccessor(PageId pageId)
     ExtentNum extentNum;
     BlockNum iPageInExtent;
     splitPageId(pageId,iSegAlloc,extentNum,iPageInExtent);
-    assert(iPageInExtent);
+    permAssert(iPageInExtent);
     SegmentAccessor selfAccessor(shared_from_this(),pCache);
     ExtentAllocLock extentAllocLock(selfAccessor);
     extentAllocLock.lockShared(getExtentAllocPageId(extentNum));

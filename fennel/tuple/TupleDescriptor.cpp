@@ -260,6 +260,16 @@ void TupleProjection::readPersistent(
     }
 }
 
+void TupleProjection::projectFrom(
+    TupleProjection const &sourceProjection,
+    TupleProjection const &tupleProjection)
+{
+    clear();
+    for (uint i = 0; i < tupleProjection.size(); ++i) {
+        push_back(sourceProjection[tupleProjection[i]]);
+    }
+}
+
 bool TupleDescriptor::containsNullable() const
 {
     for (uint i = 0; i < size(); ++i) {

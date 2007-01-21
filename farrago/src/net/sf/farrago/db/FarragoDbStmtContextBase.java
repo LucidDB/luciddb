@@ -46,6 +46,11 @@ import org.eigenbase.resource.*;
  * <p>See individual methods for assistance in determining when they may be
  * called.
  *
+ * <p>Most non-trivial public methods on this class must be synchronized, since
+ * closeAllocation may be called from a thread shutting down the database.  The
+ * exception is cancel, which must NOT be synchronized, since it needs to
+ * return immediately.
+ *
  * @author Stephan Zuercher
  */
 public abstract class FarragoDbStmtContextBase
@@ -108,7 +113,7 @@ public abstract class FarragoDbStmtContextBase
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionStmtContext
-    public void closeAllocation()
+    public synchronized void closeAllocation()
     {
         unprepare();
 
@@ -135,7 +140,7 @@ public abstract class FarragoDbStmtContextBase
     }
 
     // implement FarragoSessionStmtContext
-    public void unprepare()
+    public synchronized void unprepare()
     {
         sql = null;
         dynamicParamValues = null;
@@ -145,7 +150,8 @@ public abstract class FarragoDbStmtContextBase
     }
 
     // implement FarragoSessionStmtContext
-    public void setDynamicParam(int parameterIndex, Object x)
+    public synchronized void setDynamicParam(
+        int parameterIndex, Object x)
     {
         assert (isPrepared());
         Object y = dynamicParamDefs[parameterIndex].scrubValue(x);
@@ -154,7 +160,8 @@ public abstract class FarragoDbStmtContextBase
     }
 
     // implement FarragoSessionStmtContext
-    public void setDynamicParam(int parameterIndex, Object x, Calendar cal)
+    public synchronized void setDynamicParam(
+        int parameterIndex, Object x, Calendar cal)
     {
         assert (isPrepared());
         Object y = dynamicParamDefs[parameterIndex].scrubValue(x, cal);
@@ -163,7 +170,7 @@ public abstract class FarragoDbStmtContextBase
     }
 
     // implement FarragoSessionStmtContext
-    public void clearParameters()
+    public synchronized void clearParameters()
     {
         assert (isPrepared());
         Arrays.fill(dynamicParamValuesSet, false);

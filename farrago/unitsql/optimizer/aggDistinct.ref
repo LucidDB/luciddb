@@ -300,7 +300,7 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[DEPTNO, EXPR$1, EXPR$2]])'
-'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t2)], $f0=[$t0], $f1=[$t3], $f2=[$t1], $condition=[$t4])'
+'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[IS NULL($t0)], expr#5=[IS NULL($t2)], expr#6=[=($t0, $t2)], expr#7=[CASE($t4, $t5, $t5, $t4, $t6)], expr#8=[CAST($t7):BOOLEAN NOT NULL], $f0=[$t0], $f1=[$t3], $f2=[$t1], $condition=[$t8])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        FennelAggRel(groupCount=[1], agg#0=[COUNT()])'
 '          FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -332,9 +332,9 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[DEPTNO, EXPR$1, EXPR$2]])'
-'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t2)], proj#0..1=[{exprs}], $f2=[$t3], $condition=[$t4])'
+'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[IS NULL($t0)], expr#5=[IS NULL($t2)], expr#6=[=($t0, $t2)], expr#7=[CASE($t4, $t5, $t5, $t4, $t6)], expr#8=[CAST($t7):BOOLEAN NOT NULL], proj#0..1=[{exprs}], $f2=[$t3], $condition=[$t8])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[=($t0, $t1)], $f0=[$t0], $f1=[$t2], $condition=[$t3])'
+'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t0)], expr#4=[IS NULL($t1)], expr#5=[=($t0, $t1)], expr#6=[CASE($t3, $t4, $t4, $t3, $t5)], expr#7=[CAST($t6):BOOLEAN NOT NULL], $f0=[$t0], $f1=[$t2], $condition=[$t7])'
 '          FennelCartesianProductRel(leftouterjoin=[false])'
 '            FennelAggRel(groupCount=[1])'
 '              FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -404,9 +404,9 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[NAME, EXPR$1, EXPR$2]])'
-'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t2)], proj#0..1=[{exprs}], $f2=[$t3], $condition=[$t4])'
+'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[IS NULL($t0)], expr#5=[IS NULL($t2)], expr#6=[=($t0, $t2)], expr#7=[CASE($t4, $t5, $t5, $t4, $t6)], expr#8=[CAST($t7):BOOLEAN NOT NULL], proj#0..1=[{exprs}], $f2=[$t3], $condition=[$t8])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[=($t0, $t1)], $f0=[$t0], $f1=[$t2], $condition=[$t3])'
+'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t0)], expr#4=[IS NULL($t1)], expr#5=[=($t0, $t1)], expr#6=[CASE($t3, $t4, $t4, $t3, $t5)], expr#7=[CAST($t6):BOOLEAN NOT NULL], $f0=[$t0], $f1=[$t2], $condition=[$t7])'
 '          FennelCartesianProductRel(leftouterjoin=[false])'
 '            FennelAggRel(groupCount=[1])'
 '              FennelSortRel(key=[[0]], discardDuplicates=[false])'
@@ -759,7 +759,7 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 3, 1]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, BIGINT NOT NULL EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
-'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
 '      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
 '        FennelReshapeRel(projection=[[1, 0]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL $f1) NOT NULL])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])'
@@ -785,9 +785,9 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
-'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
 '      FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER $f1) NOT NULL])'
-'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
 '          LhxAggRel(groupCount=[1])'
 '            FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
 '              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
@@ -847,9 +847,9 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, BIGINT NOT NULL EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
-'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
 '      FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0, BIGINT NOT NULL $f1) NOT NULL])'
-'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
 '          LhxAggRel(groupCount=[1])'
 '            FennelCalcRel(expr#0..5=[{inputs}], expr#6=[OR($t2, $t3)], $f0=[$t5], $f1=[$t0], $f2=[$t6])'
 '              FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1, 2, 3]], inputDirectiveProj=[[]])'
@@ -872,7 +872,7 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 5]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL DEPTNO, INTEGER EXPR$2, BIGINT NOT NULL EXPR$3) NOT NULL])'
-'    LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[INNER])'
+'    LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], filterNulls=[[]], joinType=[INNER])'
 '      LhxAggRel(groupCount=[2], agg#0=[SUM(2)])'
 '        FennelReshapeRel(projection=[[0, 3, 2, 4]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0, INTEGER NOT NULL $f1, INTEGER $f2, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f3) NOT NULL])'
 '          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1, 2]], inputDirectiveProj=[[]])'
@@ -882,6 +882,45 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 '          FennelReshapeRel(projection=[[0, 2, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0, INTEGER NOT NULL $f1, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f3) NOT NULL])'
 '            FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> ----------------------------------------
+> -- test agg distinct with null values --
+> ----------------------------------------
+> create table test(i int, j int, k int);
+> 
+> insert into test values (1, 2, 3);
+> insert into test values (null, 4, 5);
+> 
+> explain plan without implementation for
+> select i, count(distinct j), sum(k) from test group by i order by i;
+'column0'
+'SortRel(sort0=[$0], dir0=[Ascending])'
+'  ProjectRel(I=[$0], EXPR$1=[$1], EXPR$2=[$2])'
+'    AggregateRel(groupCount=[1], agg#0=[COUNT(DISTINCT 1)], agg#1=[SUM(2)])'
+'      ProjectRel($f0=[$0], $f1=[$1], $f2=[$2])'
+'        TableAccessRel(table=[[LOCALDB, SALES, TEST]])'
+> 
+> explain plan for
+> select i, count(distinct j), sum(k) from test group by i order by i;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelReshapeRel(projection=[[0, 3, 1]], outputRowType=[RecordType(INTEGER I, BIGINT NOT NULL EXPR$1, INTEGER EXPR$2) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'        LhxAggRel(groupCount=[1], agg#0=[SUM(2)])'
+'          FennelRenameRel(fieldNames=[[$f0, $f1, $f2]])'
+'            LcsRowScanRel(table=[[LOCALDB, SALES, TEST]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST$I, SYS$CLUSTERED_INDEX$TEST$J, SYS$CLUSTERED_INDEX$TEST$K]])'
+'        LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
+'          LhxAggRel(groupCount=[2])'
+'            FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'              LcsRowScanRel(table=[[LOCALDB, SALES, TEST]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST$I, SYS$CLUSTERED_INDEX$TEST$J]])'
+> 
+> select i, count(distinct j), sum(k) from test group by i order by i;
+'I','EXPR$1','EXPR$2'
+'','1','5'
+'1','1','3'
+> 
+> drop table test;
 > 
 > -- End aggDistinct.sql
 > 

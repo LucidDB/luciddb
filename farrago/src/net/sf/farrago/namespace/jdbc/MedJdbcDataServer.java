@@ -53,7 +53,7 @@ import org.eigenbase.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedJdbcDataServer
+public class MedJdbcDataServer
     extends MedAbstractDataServer
 {
 
@@ -71,6 +71,7 @@ class MedJdbcDataServer
     public static final String PROP_TYPE_SUBSTITUTION = "TYPE_SUBSTITUTION";
     public static final String PROP_TYPE_MAPPING = "TYPE_MAPPING";
     public static final String PROP_LOGIN_TIMEOUT = "LOGIN_TIMEOUT";
+    public static final String PROP_VALIDATION_QUERY = "VALIDATION_QUERY";
 
     // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
@@ -81,18 +82,23 @@ class MedJdbcDataServer
 
     // TODO:  add a parameter for JNDI lookup of a DataSource so we can support
     // app servers and distributed txns
-    Connection connection;
-    String url;
-    String catalogName;
-    String schemaName;
-    String [] tableTypes;
-    String loginTimeout;
-    boolean supportsMetaData;
-    DatabaseMetaData databaseMetaData;
+    protected Connection connection;
+    protected Properties connectProps;
+    protected String userName;
+    protected String password;
+    protected String url;
+    protected String catalogName;
+    protected String schemaName;
+    protected String [] tableTypes;
+    protected String loginTimeout;
+    protected boolean supportsMetaData;
+    protected DatabaseMetaData databaseMetaData;
+    protected boolean validateConnection = false;
+    protected String validationQuery;
 
     //~ Constructors -----------------------------------------------------------
 
-    MedJdbcDataServer(
+    protected MedJdbcDataServer(
         String serverMofId,
         Properties props)
     {
@@ -101,18 +107,19 @@ class MedJdbcDataServer
 
     //~ Methods ----------------------------------------------------------------
 
-    void initialize()
+    public void initialize()
         throws SQLException
     {
         Properties props = getProperties();
-        Properties connectProps = null;
+        connectProps = null;
         requireProperty(props, PROP_URL);
         url = props.getProperty(PROP_URL);
-        String userName = props.getProperty(PROP_USER_NAME);
-        String password = props.getProperty(PROP_PASSWORD);
+        userName = props.getProperty(PROP_USER_NAME);
+        password = props.getProperty(PROP_PASSWORD);
         schemaName = props.getProperty(PROP_SCHEMA_NAME);
         catalogName = props.getProperty(PROP_CATALOG_NAME);
         loginTimeout = props.getProperty(PROP_LOGIN_TIMEOUT);
+        validationQuery = props.getProperty(PROP_VALIDATION_QUERY);
 
         if (getBooleanProperty(props, PROP_EXT_OPTIONS, false)) {
             connectProps = (Properties) props.clone();
@@ -131,6 +138,33 @@ class MedJdbcDataServer
                 DriverManager.setLoginTimeout(Integer.parseInt(loginTimeout));
             } catch (NumberFormatException ne) {
                 // ignore the timeout
+            }
+        }
+
+        createConnection();
+    }
+
+    protected void createConnection()
+        throws SQLException
+    {
+        if (connection != null && !connection.isClosed()) {
+            if (validateConnection && validationQuery != null) {
+                Statement testConnection = connection.createStatement();
+                try {
+                    testConnection.executeQuery(validationQuery);
+                } catch (Exception ex) {
+                    // need to re-create connection
+                    closeAllocation();
+                    connection = null;
+                    validateConnection = false;
+                }
+            } else {
+                return;
+            }
+
+            if (validateConnection) { // validation query successful
+                validateConnection = false;
+                return;
             }
         }
 
@@ -163,7 +197,14 @@ class MedJdbcDataServer
         }
     }
 
-    static void removeNonDriverProps(Properties props)
+    public Connection getConnection()
+        throws SQLException
+    {
+        createConnection();
+        return connection;
+    }
+
+    protected static void removeNonDriverProps(Properties props)
     {
         // TODO jvs 19-June-2006:  Make this metadata-driven.
         props.remove(PROP_URL);
@@ -189,7 +230,7 @@ class MedJdbcDataServer
         return getSchemaNameDirectory();
     }
 
-    private MedJdbcNameDirectory getSchemaNameDirectory()
+    protected MedJdbcNameDirectory getSchemaNameDirectory()
     {
         return new MedJdbcNameDirectory(this);
     }
@@ -237,7 +278,7 @@ class MedJdbcDataServer
         assert (connection != null);
 
         String sql = (String) param;
-        Statement stmt = connection.createStatement();
+        Statement stmt = getConnection().createStatement();
         FarragoStatementAllocation stmtAlloc =
             new FarragoStatementAllocation(stmt);
         try {
@@ -250,7 +291,7 @@ class MedJdbcDataServer
             }
         }
     }
-    
+
     // implement FarragoMedDataServer
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
     {
@@ -317,6 +358,12 @@ class MedJdbcDataServer
                 // TODO:  trace?
             }
         }
+    }
+
+    // implement FarragoMedDataServer
+    public void releaseResources()
+    {
+        validateConnection = true;
     }
 }
 

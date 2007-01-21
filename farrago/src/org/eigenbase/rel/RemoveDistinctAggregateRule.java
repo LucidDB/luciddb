@@ -334,9 +334,12 @@ public final class RemoveDistinctAggregateRule
         for (int i = 0; i < groupCount; ++i) {
             final int leftOrdinal = i;
             final int rightOrdinal = sourceOf.get(i);
+            // null values form its own group
+            // use "is not distinct from" so that the join condition
+            // allows null values to match.
             RexNode equi =
                 rexBuilder.makeCall(
-                    SqlStdOperatorTable.equalsOperator,
+                    SqlStdOperatorTable.isNotDistinctFromOperator,
                     new RexInputRef(
                         leftOrdinal,
                         leftFields[leftOrdinal].getType()),

@@ -133,6 +133,13 @@ create or replace procedure kill_session(in id bigint)
   no sql
   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
 
+create or replace procedure kill_session(in id bigint, in cancel_only boolean)
+  language java
+  parameter style java
+  no sql
+  specific kill_session_cancel
+  external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
+
 -- lets an administrator kill an executing statement
 -- (like unix "kill -KILL")
 -- param ID: globally-unique statement id
@@ -143,15 +150,30 @@ create or replace procedure kill_statement(in id bigint)
   no sql
   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
 
+create or replace procedure kill_statement(in id bigint, in cancel_only boolean)
+  language java
+  parameter style java
+  no sql
+  specific kill_statement_cancel
+  external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
+
 -- kills all statements with SQL matching a given string
 -- (like unix pkill)
--- Works around lack of scalar subqueries, whuch makes kill_statement(id) hard to use
+-- Works around lack of scalar subqueries, which makes kill_statement(id) hard to use
 -- param SQL: a string
 -- TODO: grant this only to a privileged user
 create or replace procedure kill_statement_match(in s varchar(256))
   language java
   parameter style java
   no sql
+  external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
+
+create or replace procedure kill_statement_match(
+    in s varchar(256), in cancel_only boolean )
+  language java
+  parameter style java
+  no sql
+  specific kill_statement_match_cancel
   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
 
 -- exports the catalog to an XMI file
@@ -345,16 +367,28 @@ create or replace view sequences_view as
 ;
 
 --
--- Database admin internal views
+-- Database admin internal views and functions
 --
+
+create or replace function get_table_type_by_mof_class_name(
+    mofclassname varchar(128))
+returns varchar(128)
+contains sql
+deterministic
+return case
+  when mofclassname='LocalView' then 'LOCAL VIEW'
+  when mofclassname='LocalTable' then 'LOCAL TABLE'
+  when mofclassname='ForeignTable' then 'FOREIGN TABLE'
+  else cast(mofclassname as varchar(128)) 
+end;
 
 create or replace view dba_schemas_internal1 as
   select
-    c."name" as catalog_name,
-    s."name" as schema_name,
+    cast(c."name" as varchar(128)) as catalog_name,
+    cast(s."name" as varchar(128)) as schema_name,
     cast(s."creationTimestamp" as timestamp) as creation_timestamp,
     cast(s."modificationTimestamp" as timestamp) as last_modified_timestamp,
-    s."description" as remarks,
+    cast(s."description" as varchar(65535)) as remarks,
     s."mofId",
     s."lineageId"
   from
@@ -387,13 +421,15 @@ create or replace view dba_schemas_internal2 as
 
 create or replace view dba_tables_internal1 as
   select 
-    table_cat as catalog_name,
-    table_schem as schema_name,
-    table_name as table_name,
-    t."mofClassName" as table_type,
+    cast(table_cat as varchar(128)) as catalog_name,
+    cast(table_schem as varchar(128)) as schema_name,
+    cast(table_name as varchar(128)) as table_name,
+    sys_boot.mgmt.get_table_type_by_mof_class_name(t."mofClassName")
+        as table_type,
     cast(ae."creationTimestamp" as timestamp) as creation_timestamp,
-    cast(ae."modificationTimestamp" as timestamp) as last_modification_timestamp,
-    "description" as remarks,
+    cast(ae."modificationTimestamp" as timestamp) 
+        as last_modification_timestamp,
+    cast("description" as varchar(128)) as remarks,
     ae."mofId",
     ae."lineageId"
   from
@@ -428,13 +464,13 @@ create or replace view dba_tables_internal2 as
 
 create or replace view dba_views_internal1 as
   select
-    object_catalog as catalog_name,
-    object_schema as schema_name,
-    v."name" as view_name,
+    cast(object_catalog as varchar(128)) as catalog_name,
+    cast(object_schema as varchar(128)) as schema_name,
+    cast(v."name" as varchar(128)) as view_name,
     cast("creationTimestamp" as timestamp) as creation_timestamp,
     cast("modificationTimestamp" as timestamp) as last_modification_timestamp,
-    "originalDefinition" as original_text,
-    "description" as remarks,
+    cast("originalDefinition" as varchar(65535)) as original_text,
+    cast("description" as varchar(65535)) as remarks,
     v."mofId",
     v."lineageId"
   from
@@ -470,17 +506,17 @@ create or replace view dba_views_internal2 as
 
 create or replace view dba_stored_tables_internal1 as
   select
-    object_catalog as catalog_name,
-    object_schema as schema_name,
-    t."name" as table_name,
+    cast(object_catalog as varchar(128)) as catalog_name,
+    cast(object_schema as varchar(128)) as schema_name,
+    cast(t."name" as varchar(128)) as table_name,
     cast(t."creationTimestamp" as timestamp) as creation_timestamp,
     cast(t."modificationTimestamp" as timestamp) 
-      as last_modification_timestamp,
+        as last_modification_timestamp,
     t."lastAnalyzeRowCount" as last_analyze_row_count,
     cast(t."analyzeTime" as timestamp) as last_analyze_timestamp,
     t."rowCount" as current_row_count,
     t."deletedRowCount" as deleted_row_count,
-    t."description" as remarks,
+    cast(t."description" as varchar(65535))as remarks,
     t."lineageId",
     t."mofId"
   from
@@ -518,19 +554,19 @@ create or replace view dba_stored_tables_internal2 as
 
 create or replace view dba_routines_internal1 as
   select
-    s.object_catalog as catalog_name,
-    s.object_schema as schema_name,
-    r."invocationName" as invocation_name,
-    r."name" as specific_name,
-    r."externalName" as external_name,
-    r."type" as routine_type,
+    cast(s.object_catalog as varchar(128)) as catalog_name,
+    cast(s.object_schema as varchar(128)) as schema_name,
+    cast(r."invocationName" as varchar(128)) as invocation_name,
+    cast(r."name" as varchar(128)) as specific_name,
+    cast(r."externalName" as varchar(65535)) as external_name,
+    upper(r."type") as routine_type,
     cast(r."creationTimestamp" as timestamp) as creation_timestamp,
     cast(r."modificationTimestamp" as timestamp) as last_modified_timestamp,
     r."isUdx" as is_table_function,
-    r."parameterStyle" as parameter_style,
+    cast(r."parameterStyle" as varchar(128)) as parameter_style,
     r."deterministic" as is_deterministic,
-    r."dataAccess" as data_access,
-    r."description" as remarks,
+    cast(r."dataAccess" as varchar(128)) as data_access,
+    cast(r."description" as varchar(65535)) as remarks,
     r."mofId",
     r."lineageId"
   from
@@ -574,15 +610,16 @@ create or replace view dba_routine_parameters_internal1 as
     catalog_name,
     schema_name,
     specific_name as routine_specific_name,
-    rp."name" as parameter_name,
+    cast(rp."name" as varchar(128)) as parameter_name,
     rp."ordinal" as ordinal,
     coalesce(rp."length", rp."precision") as "PRECISION",
     rp."scale" as dec_digits,
-    rp."description" as remarks,
+    cast(rp."description" as varchar(65535)) as remarks,
     rp."mofId",
     rp."lineageId",
     rp."type",
-    ri.is_table_function
+    ri.is_table_function,
+    ri.routine_type
   from
     dba_routines_internal1 ri
   inner join
@@ -593,12 +630,12 @@ create or replace view dba_routine_parameters_internal1 as
 
 create or replace view dba_foreign_wrappers_internal as
   select 
-    dw."name" as foreign_wrapper_name,
-    dw."libraryFile" as library,
-    dw."language" as "LANGUAGE",
+    cast(dw."name" as varchar(128)) as foreign_wrapper_name,
+    cast(dw."libraryFile" as varchar(65535)) as library,
+    cast(dw."language" as varchar(128)) as "LANGUAGE",
     cast(dw."creationTimestamp" as timestamp) as creation_timestamp,
     cast(dw."modificationTimestamp" as timestamp) last_modified_timestamp,
-    dw."description" as remarks,
+    cast(dw."description" as varchar(65535)) as remarks,
     g."Grantee",
     dw."mofId",
     dw."lineageId"
@@ -615,10 +652,10 @@ create or replace view dba_foreign_wrappers_internal as
 create or replace view dba_foreign_servers_internal1 as
   select
     foreign_wrapper_name,
-    ds."name" as foreign_server_name,
+    cast(ds."name" as varchar(128)) as foreign_server_name,
     cast(ds."creationTimestamp" as timestamp) as creation_timestamp,
     cast(ds."modificationTimestamp" as timestamp) as last_modified_timestamp,
-    ds."description" as remarks,
+    cast(ds."description" as varchar(65535)) as remarks,
     ds."mofId",
     ds."lineageId"
   from
@@ -653,12 +690,12 @@ create or replace view dba_foreign_tables_internal1 as
   select
     fs.foreign_wrapper_name,
     fs.foreign_server_name,
-    ft."name" as foreign_table_name,
+    cast(ft."name" as varchar(128))as foreign_table_name,
     cast(ft."creationTimestamp" as timestamp) as creation_timestamp,
     cast(ft."modificationTimestamp" as timestamp) as last_modified_timestamp,
     ft."lastAnalyzeRowCount" as last_analyze_row_count,
     cast(ft."analyzeTime" as timestamp) as last_analyze_timestamp,
-    ft."description" as remarks,
+    cast(ft."description" as varchar(65535)) as remarks,
     ft."mofId",
     ft."lineageId"
   from

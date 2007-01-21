@@ -32,7 +32,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 BTreeVerifier::BTreeVerifier(BTreeDescriptor const &descriptor)
     : BTreeAccessBase(descriptor)
 {
-    assert(getRootPageId() != NULL_PAGE_ID);
+    permAssert(getRootPageId() != NULL_PAGE_ID);
     keyData.compute(keyDescriptor);
     keyData2 = keyData;
 }
@@ -74,19 +74,23 @@ PageId BTreeVerifier::verifyNode(
     pageLock.lockShared(pageId);
     BTreeNode const &node = pageLock.getNodeForRead();
     PageId returnPageId = NULL_PAGE_ID;
+
+    // for optimized build, we don't check node magic numbers implicitly,
+    // so do it explicitly here
+    permAssert(node.magicNumber == BTreeNode::MAGIC_NUMBER);
     
     if (isMAXU(expectedHeight)) {
         stats.nLevels = node.height + 1;
     } else {
-        assert(node.height == expectedHeight);
+        permAssert(node.height == expectedHeight);
     }
 
     if (strict) {
-        assert(node.rightSibling == getRightSibling(pageId));
-        assert(node.rightSibling == expectedRightSibling);
+        permAssert(node.rightSibling == getRightSibling(pageId));
+        permAssert(node.rightSibling == expectedRightSibling);
     } else {
         if (node.rightSibling != expectedRightSibling) {
-            assert(node.rightSibling != NULL_PAGE_ID);
+            permAssert(node.rightSibling != NULL_PAGE_ID);
             returnPageId = node.rightSibling;
         }
     }
@@ -109,7 +113,7 @@ PageId BTreeVerifier::verifyNode(
                 if (c > 0) {
                     nodeAccessor.dumpNode(std::cerr,node,pageId);
                 }
-                assert(c <= 0);
+                permAssert(c <= 0);
                 // TODO:  for unique, assert(c == 0)
             }
             keyData = keyData2;
@@ -120,7 +124,7 @@ PageId BTreeVerifier::verifyNode(
     if (keyData.size() && upperBoundKey.size()) {
         keyData2 = upperBoundKey;
         int c = keyDescriptor.compareTuples(keyData,keyData2);
-        assert(c <= 0);
+        permAssert(c <= 0);
     }
     if (node.height) {
         stats.nNonLeafNodes++;

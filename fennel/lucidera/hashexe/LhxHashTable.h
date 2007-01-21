@@ -602,6 +602,7 @@ class LhxHashTable
      * special hash table properties: hash table filtered null keys.
      */
     bool filterNull;
+    TupleProjection filterNullKeyProj;
 
     /**
      * special hash table properties: hash table should remove duplicates.

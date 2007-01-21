@@ -66,20 +66,11 @@
 |  SCHEMA_NAME  | DESCRIPTION  |
 +---------------+--------------+
 | ANONYMOUS     |              |
-| APPLSYS       |              |
-| APPS          |              |
-| AR            |              |
 | CTXSYS        |              |
 | DBSNMP        |              |
 | DIP           |              |
 | FLOWS_020100  |              |
 | FLOWS_FILES   |              |
-| HR            |              |
-| INV           |              |
-| JTF           |              |
-| LUCIDWH       |              |
-| ONT           |              |
-| ORABKP        |              |
 | OUTLN         |              |
 | SCHOI         |              |
 | SCOTT         |              |
