@@ -48,7 +48,7 @@ import org.eigenbase.util.*;
  */
 public abstract class FarragoJavaUdxIterator
     extends ThreadIterator
-    implements RestartableIterator
+    implements RestartableIterator, ClosableAllocation
 {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -65,7 +65,7 @@ public abstract class FarragoJavaUdxIterator
 
     private int iRow;
 
-    private boolean restart;
+    private boolean stopThread;
 
     private CountDownLatch latch;
 
@@ -80,6 +80,7 @@ public abstract class FarragoJavaUdxIterator
     {
         super(new ArrayBlockingQueue(QUEUE_ARRAY_SIZE));
         this.runtimeContext = runtimeContext;
+        runtimeContext.addAllocation(this);
 
         parameterMetaData = new FarragoParameterMetaData(rowType);
 
@@ -141,19 +142,7 @@ public abstract class FarragoJavaUdxIterator
     // implement RestartableIterator
     public void restart()
     {
-        // Tell the running thread to buzz off.
-        if (latch != null) {
-            restart = true;
-
-            // Wait for it to die.  (TODO:  If we ever get ThreadIterator
-            // to stop using daemons, change this to use thread.join instead.)
-            try {
-                latch.await();
-            } catch (InterruptedException ex) {
-                throw Util.newInternal(ex);
-            }
-            restart = false;
-        }
+        stopWithLatch();
 
         reset(1);
 
@@ -167,6 +156,30 @@ public abstract class FarragoJavaUdxIterator
         startWithLatch();
     }
 
+    // implement ClosableAllocation
+    public void closeAllocation()
+    {
+        stopWithLatch();
+    }
+
+    private void stopWithLatch()
+    {
+        if (latch == null) {
+            // thread never ran
+            return;
+        }
+        // Tell the running thread to buzz off.
+        stopThread = true;
+        try {
+            // Wait for it to die.  (TODO:  If we ever get ThreadIterator
+            // to stop using daemons, change this to use thread.join instead.)
+            latch.await();
+        } catch (InterruptedException ex) {
+            throw Util.newInternal(ex);
+        }
+        stopThread = false;
+    }
+
     private void startWithLatch()
     {
         latch = new CountDownLatch(1);
@@ -176,8 +189,8 @@ public abstract class FarragoJavaUdxIterator
     private void checkCancel()
     {
         runtimeContext.checkCancel();
-        if (restart) {
-            throw new RuntimeException("UDX thread restart");
+        if (stopThread) {
+            throw new RuntimeException("UDX thread stop requested");
         }
     }
 

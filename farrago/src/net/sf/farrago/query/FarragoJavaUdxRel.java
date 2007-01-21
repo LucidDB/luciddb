@@ -326,9 +326,6 @@ public class FarragoJavaUdxRel
                     typeLookupCall),
                 memberList);
 
-        // TODO jvs 23-Feb-2006:  get rid of adapter and write
-        // a new TupleIter implementation so that we can take
-        // advantage of the closeAllocation call.
         Expression tupleIterExp =
             new AllocationExpression(
                 OJUtil.typeNameForClass(RestartableIteratorTupleIter.class),

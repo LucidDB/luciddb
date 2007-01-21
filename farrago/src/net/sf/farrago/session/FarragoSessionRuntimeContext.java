@@ -68,6 +68,23 @@ public interface FarragoSessionRuntimeContext
     public void checkCancel();
 
     /**
+     * Sets the state of the top-level cursor associated with this context,
+     * (after first calling checkCancel if active=true).  Not called for
+     * internal cursors such as UDX inputs and cursors opened via reentrant SQL
+     * from UDR's.
+     *
+     * @param active true if cursor is beginning a fetch request; false if
+     * cursor is ending a fetch request
+     */
+    public void setCursorState(boolean active);
+
+    /**
+     * Waits for cursor state to be reset to active=false
+     * (returns immediately if cursor is not currently active).
+     */
+    public void waitForCursor();
+
+    /**
      * @return FennelStreamGraph pinned by loadFennelPlan
      */
     public FennelStreamGraph getFennelStreamGraph();

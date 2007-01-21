@@ -446,11 +446,25 @@ parameter style java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
 
+create or replace procedure kill_session(in id bigint, in cancel_only boolean)
+language java
+parameter style java
+no sql
+specific kill_session_cancel
+external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
+
 -- Kill a statement by its ID (see dba_sql_statements)
 create or replace procedure kill_statement(in id bigint)
 language java
 parameter style java
 no sql
+external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
+
+create or replace procedure kill_statement(in id bigint, in cancel_only boolean)
+language java
+parameter style java
+no sql
+specific kill_statement_cancel
 external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
 
 -- Kill all statements whose sql_stmt text contains the input string
@@ -459,6 +473,14 @@ create or replace procedure kill_all_matching_statements(in s varchar(256))
 language java
 parameter style java
 no sql
+external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
+
+create or replace procedure kill_all_matching_statements(
+    in s varchar(256), in cancel_only boolean)
+language java
+parameter style java
+no sql
+specific kill_all_matching_statements_cancel
 external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
 
 -- Exports the complete contents of the catalog to an XMI file

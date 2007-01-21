@@ -565,7 +565,7 @@ public class FarragoDatabase
     }
 
     /**
-     * look up executing statement info by statement id.
+     * Looks up executing statement info by statement id.
      *
      * @param id
      *
@@ -584,11 +584,14 @@ public class FarragoDatabase
     }
 
     /**
-     * Kill a farrago session.
+     * Kills a session.
      *
      * @param id session identifier
+     *
+     * @param cancelOnly if true, just cancel current execution; if false,
+     * destroy session
      */
-    public void killSession(long id)
+    public void killSession(long id, boolean cancelOnly)
         throws Throwable
     {
         tracer.info("killSession " + id);
@@ -601,10 +604,14 @@ public class FarragoDatabase
             tracer.info("killSession " + id + ": already closed");
             return;
         }
-        target.kill();
+        if (cancelOnly) {
+            target.cancel();
+        } else {
+            target.kill();
+        }
     }
 
-    private void kill(FarragoSessionExecutingStmtInfo info)
+    private void kill(FarragoSessionExecutingStmtInfo info, boolean cancelOnly)
         throws Throwable
     {
         FarragoSessionStmtContext stmt = info.getStmtContext();
@@ -620,16 +627,22 @@ public class FarragoDatabase
                 + "), "
                 + stmt.getSql());
         }
-        stmt.cancel();
-        stmt.unprepare();
+        if (cancelOnly) {
+            stmt.cancel();
+        } else {
+            stmt.closeAllocation();
+        }
     }
 
     /**
      * Kill an executing statement: cancel it and deallocate it.
      *
      * @param id statement id
+     *
+     * @param cancelOnly if true, just cancel current execution; if false,
+     * destroy statement
      */
-    public void killExecutingStmt(long id)
+    public void killExecutingStmt(long id, boolean cancelOnly)
         throws Throwable
     {
         tracer.info("killExecutingStmt " + id);
@@ -638,7 +651,7 @@ public class FarragoDatabase
             tracer.info("killExecutingStmt " + id + ": statement not found");
             throw new Throwable("executing statement not found: " + id); // i18n
         }
-        kill(info);
+        kill(info, cancelOnly);
     }
 
     /**
@@ -647,10 +660,13 @@ public class FarragoDatabase
      *
      * @param match pattern to match. Null string matches nothing, to be safe.
      * @param nomatch pattern not to match
+     * @param cancelOnly if true, just cancel current execution; if false,
+     * destroy statement
      *
      * @return count of killed statements.
      */
-    public int killExecutingStmtMatching(String match, String nomatch)
+    public int killExecutingStmtMatching(
+        String match, String nomatch, boolean cancelOnly)
         throws Throwable
     {
         int ct = 0;
@@ -668,7 +684,7 @@ public class FarragoDatabase
                         continue;
                     }
                     if (info.getSql().contains(match)) {
-                        kill(info);
+                        kill(info, cancelOnly);
                         ct++;
                     }
                 }

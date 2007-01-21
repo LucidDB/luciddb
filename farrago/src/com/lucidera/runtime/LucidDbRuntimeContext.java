@@ -114,8 +114,11 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
     //~ Methods ----------------------------------------------------------------
 
     // override FarragoRuntimeContext
-    public void closeAllocation()
+    public synchronized void closeAllocation()
     {
+        if (isClosed) {
+            return;
+        }
         // Print a summary message if there were any errors or warnings
         if (quota.errorCount > 0 || quota.warningCount > 0) {
             // NOTE jvs 9-Jan-2007: Intentionally avoid conversion to absolute

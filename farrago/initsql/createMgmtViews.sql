@@ -133,6 +133,13 @@ create or replace procedure kill_session(in id bigint)
   no sql
   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
 
+create or replace procedure kill_session(in id bigint, in cancel_only boolean)
+  language java
+  parameter style java
+  no sql
+  specific kill_session_cancel
+  external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
+
 -- lets an administrator kill an executing statement
 -- (like unix "kill -KILL")
 -- param ID: globally-unique statement id
@@ -143,15 +150,30 @@ create or replace procedure kill_statement(in id bigint)
   no sql
   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
 
+create or replace procedure kill_statement(in id bigint, in cancel_only boolean)
+  language java
+  parameter style java
+  no sql
+  specific kill_statement_cancel
+  external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
+
 -- kills all statements with SQL matching a given string
 -- (like unix pkill)
--- Works around lack of scalar subqueries, whuch makes kill_statement(id) hard to use
+-- Works around lack of scalar subqueries, which makes kill_statement(id) hard to use
 -- param SQL: a string
 -- TODO: grant this only to a privileged user
 create or replace procedure kill_statement_match(in s varchar(256))
   language java
   parameter style java
   no sql
+  external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
+
+create or replace procedure kill_statement_match(
+    in s varchar(256), in cancel_only boolean )
+  language java
+  parameter style java
+  no sql
+  specific kill_statement_match_cancel
   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
 
 -- exports the catalog to an XMI file

@@ -138,6 +138,12 @@ public interface FarragoSession
      * return true.
      */
     public void kill();
+    
+    /**
+     * Cancels execution of any statements on this session (but does
+     * not kill it or them).
+     */
+    public void cancel();
 
     /**
      * @return whether this session currently has a transaction in progress

@@ -81,6 +81,8 @@ public class FarragoRuntimeContext
     private final Map txnCodeCache;
     private final FennelTxnContext fennelTxnContext;
     private final FarragoWarningQueue warningQueue;
+    private final Object cursorMonitor;
+    private boolean cursorActive;
 
     /**
      * Maps stream id ({@link Integer}) to the corresponding java object ({@link
@@ -103,6 +105,7 @@ public class FarragoRuntimeContext
     private final boolean isDml;
     private long currentTime;
     private boolean isCanceled;
+    protected boolean isClosed;
     private ClassLoader statementClassLoader;
     private Map<String, RelDataType> resultSetTypeMap;
     protected long stmtId;
@@ -135,6 +138,8 @@ public class FarragoRuntimeContext
             params.warningQueue = new FarragoWarningQueue();
         }
         this.warningQueue = params.warningQueue;
+
+        cursorMonitor = new Object();
 
         dataWrapperCache =
             new FarragoDataWrapperCache(
@@ -171,8 +176,13 @@ public class FarragoRuntimeContext
     }
 
     // override FarragoCompoundAllocation
-    public void closeAllocation()
+    public synchronized void closeAllocation()
     {
+        if (isClosed) {
+            return;
+        }
+        isClosed = true;
+        
         isCanceled = true;
 
         // make sure all streams get closed BEFORE they are deallocated
@@ -741,6 +751,34 @@ public class FarragoRuntimeContext
         }
     }
 
+    // implement FarragoSessionRuntimeContext
+    public void setCursorState(boolean active)
+    {
+        synchronized (cursorMonitor) {
+            if (active) {
+                checkCancel();
+            }
+            cursorActive = active;
+            if (!cursorActive) {
+                cursorMonitor.notifyAll();
+            }
+        }
+    }
+
+    // implement FarragoSessionRuntimeContext
+    public void waitForCursor()
+    {
+        synchronized (cursorMonitor) {
+            try {
+                while (cursorActive) {
+                    cursorMonitor.wait();
+                }
+            } catch (InterruptedException ex) {
+                throw Util.newInternal(ex);
+            }
+        }
+    }
+    
     // implement FarragoSessionRuntimeContext
     public RuntimeException handleRoutineInvocationException(
         Throwable ex,
