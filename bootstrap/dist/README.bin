@@ -1,4 +1,4 @@
-Eigenbase Binary Release 0.6.0pre1
+Eigenbase Binary Release 0.6.0
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -24,7 +24,7 @@ to query)
 
 A standalone Farrago JDBC client jar is not yet available, so to
 connect to the server from another JDBC client program, the program
-will need to load lib/farrago.jar and (TODO:  VJDBC).  For JDBC
+will need to load lib/farrago.jar and lib/vjdbc.jar.  For JDBC
 driver class name, use
 net.sf.farrago.jdbc.client.FarragoVjdbcClientDriver.  For JDBC URL, use
 jdbc:farrago:rmi://localhost (or actual server name for a remote
@@ -41,7 +41,7 @@ integration with other projects.
 ----------------------------------------------------------------------
 LICENSE
 
-Copyright (C) 1999-2006 The Eigenbase Project and others
+Copyright (C) 1999-2007 The Eigenbase Project and others
 
 This distribution of Eigenbase is licensed under the GNU General Public
 License; see file COPYING for details.  To obtain the source code

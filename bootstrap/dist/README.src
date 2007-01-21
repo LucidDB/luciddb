@@ -1,4 +1,4 @@
-Eigenbase Source Release 0.6.0pre1
+Eigenbase Source Release 0.6.0
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -37,7 +37,7 @@ officially frozen in future releases.
 ----------------------------------------------------------------------
 LICENSE
 
-Copyright (C) 1999-2006 The Eigenbase Project and others
+Copyright (C) 1999-2007 The Eigenbase Project and others
 
 This distribution of Eigenbase is licensed under the GNU General
 Public License; see file COPYING for details.  License terms for
