@@ -557,10 +557,21 @@ public class FarragoDbSession
     // implement FarragoAllocation
     public void closeAllocation()
     {
+        if (isClone) {
+            // avoid synchronization for reentrant sessions; the
+            // reverse ordering can cause deadlock:
+            // top-level session close takes FarragoDbSingleton.class lock,
+            // then statement context lock,
+            // while top-level statement execution holds a lock on the
+            // statement context, and then tries to acquire
+            // FarragoDbSingleton.class lock
+            super.closeAllocation();
+            return;
+        }
         synchronized (FarragoDbSingleton.class) {
             synchronized (this) {
                 super.closeAllocation();
-                if (isClone || isClosed()) {
+                if (isClosed()) {
                     return;
                 }
                 if (isTxnInProgress()) {

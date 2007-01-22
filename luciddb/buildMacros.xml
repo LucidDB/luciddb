@@ -56,9 +56,16 @@ ${farrago.test.jvmargs}
   <filelist dir="${open.dir}/farrago/initsql" id="farrago.filelist.initsql"
     files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql,createMgmtViews.sql"/>
 
+  <condition property="luciddb.createForeignWrappers.sql" 
+    value="createForeignWrappers.sql" else="">
+    <not>
+      <istrue value="${release.gpl}"/>
+    </not>
+  </condition>
+
   <!-- filelist for luciddb init scripts -->
   <filelist dir="${luciddb.initsql.dir}" id="luciddb.filelist.initsql"
-    files="installApplib.sql, createTestHarness.sql, createDbaViews.sql, createForeignWrappers.sql"/>
+    files="installApplib.sql createTestHarness.sql createDbaViews.sql ${luciddb.createForeignWrappers.sql}"/>
 
 
   <!-- Macro to run sql scripts/tests using LucidDbSqlTest -->
