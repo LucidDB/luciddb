@@ -445,8 +445,9 @@ public interface SqlValidator
      * Declares a SELECT expression as a cursor.
      * 
      * @param select select expression associated with the cursor
+     * @param parentScope scope of the parent query associated with the cursor
      */
-    void declareCursor(SqlSelect select);
+    void declareCursor(SqlSelect select, SqlValidatorScope scope);
 
     /**
      * Pushes a new instance of a cursor map on to the cursor map stack.

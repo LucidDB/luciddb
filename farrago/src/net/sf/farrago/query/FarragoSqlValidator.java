@@ -264,14 +264,14 @@ public class FarragoSqlValidator
                         if (p.getName().equals(sourceCursor)) {
                             SqlSelect sourceSelect =
                                 cursorMap.get(cursorPosition);
-                            SqlValidatorScope selectScope =
-                                getSelectScope(sourceSelect);
+                            SqlValidatorScope cursorScope =
+                                getCursorScope(sourceSelect);
                             // save the original node type so we can reset it
                             // after we've validated the column references
                             RelDataType origNodeType =
                                 getValidatedNodeType(operands[i]);
                             removeValidatedNodeType(operands[i]);
-                            deriveType(selectScope, operands[i]);
+                            deriveType(cursorScope, operands[i]);
                             setValidatedNodeType(operands[i], origNodeType);
                             break;
                         }

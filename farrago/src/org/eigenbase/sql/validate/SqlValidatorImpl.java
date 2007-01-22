@@ -98,7 +98,14 @@ public class SqlValidatorImpl
      */
     private final Map<SqlSelect, SqlValidatorScope> orderScopes =
         new HashMap<SqlSelect, SqlValidatorScope>();
-
+    
+    /**
+     * Maps a {@link SqlSelect} node that is the argument to a CURSOR
+     * constructor to the scope of the result of that select node
+     */
+    private final Map<SqlSelect, SqlValidatorScope> cursorScopes =
+        new HashMap<SqlSelect, SqlValidatorScope>();
+    
     /**
      * Maps a {@link SqlNode node} to the {@link SqlValidatorNamespace
      * namespace} which describes what columns they contain.
@@ -232,7 +239,7 @@ public class SqlValidatorImpl
     }
 
     // implement SqlValidator
-    public void declareCursor(SqlSelect select)
+    public void declareCursor(SqlSelect select, SqlValidatorScope parentScope)
     {
         cursorSet.add(select);
         
@@ -241,6 +248,15 @@ public class SqlValidatorImpl
         Map<Integer, SqlSelect> cursorMap = cursorMapStack.peek();
         int numCursors = cursorMap.size();
         cursorMap.put(numCursors, select);
+        
+        // create a namespace associated with the result of the select
+        // that is the argument to the cursor constructor; register it
+        // with a scope corresponding to the cursor
+        SelectScope cursorScope = new SelectScope(parentScope, null, select);
+        cursorScopes.put(select, cursorScope);
+        final SelectNamespace selectNs = createSelectNamespace(select);
+        String alias = deriveAlias(select, nextGeneratedId++);
+        registerNamespace(cursorScope, alias, selectNs, false);
     }
     
     public void pushCursorMap()
@@ -590,6 +606,11 @@ public class SqlValidatorImpl
         setValidatedNodeType(
             namespace.getNode(),
             namespace.getRowType());
+    }
+    
+    public SqlValidatorScope getCursorScope(SqlSelect select)
+    {
+        return cursorScopes.get(select);
     }
 
     public SqlValidatorScope getWhereScope(SqlSelect select)

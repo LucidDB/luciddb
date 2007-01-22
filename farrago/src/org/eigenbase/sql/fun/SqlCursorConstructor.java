@@ -59,7 +59,7 @@ public class SqlCursorConstructor
         SqlCall call)
     {
         SqlSelect subSelect = (SqlSelect) call.operands[0];
-        validator.declareCursor(subSelect);
+        validator.declareCursor(subSelect, scope);
         subSelect.validateExpr(validator, scope);
         RelDataType type = super.deriveType(validator, scope, call);
         return type;
