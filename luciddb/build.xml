@@ -560,18 +560,25 @@ ${farrago.test.jvmargs}
   <!-- FarragoMedJdbc.jar + jtds and oracle jdbc drivers -->
   <target name="buildJdbcPlugin" depends="makePluginDirs">
     <!-- assume farrago jdbc plugin has already been created -->
-    <jar jarfile="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"
-      filesetmanifest="merge">
-      <zipgroupfileset dir="${farrago.plugin.dir}">
-        <include name="FarragoMedJdbc.jar"/>
-      </zipgroupfileset>
-      <zipgroupfileset dir="${open.dir}/thirdparty/jtds">
-        <include name="jtds-1.2.jar"/>
-      </zipgroupfileset>
-      <zipgroupfileset dir="${env.LUCIDERA_PLATFORM_HOME}/thirdparty">
-        <include name="ojdbc14_g.jar"/>
-      </zipgroupfileset>
-    </jar>
+    <if>
+      <not>
+        <istrue value="${release.gpl}"/>
+      </not>
+      <then>
+        <jar jarfile="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"
+          filesetmanifest="merge">
+          <zipgroupfileset dir="${farrago.plugin.dir}">
+            <include name="FarragoMedJdbc.jar"/>
+          </zipgroupfileset>
+          <zipgroupfileset dir="${open.dir}/thirdparty/jtds">
+            <include name="jtds-1.2.jar"/>
+          </zipgroupfileset>
+          <zipgroupfileset dir="${env.LUCIDERA_PLATFORM_HOME}/thirdparty">
+            <include name="ojdbc14_g.jar"/>
+          </zipgroupfileset>
+        </jar>
+      </then>
+    </if>
   </target>
 
   <!-- create applib plugin jar -->
