@@ -91,6 +91,9 @@ if [ ! -e farrago ]; then
     exit -1
 fi
 
+# Create farrago/customBuild.properties to set GPL release flag
+echo 'release.gpl=true' > farrago/customBuild.properties
+
 if [ $cygwin = "false" ]; then
 
 # Build full source release first before projects get polluted by builds
