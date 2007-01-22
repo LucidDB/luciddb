@@ -269,7 +269,8 @@
 >     fsi.remarks,
 >     cast(fsi."mofId" as varchar(128)) as mof_id,
 >     cast(fsi."lineageId" as varchar(128)) as lineage_id,
->     fsi."mofId" as mofid
+>     fsi."mofId" as mofid,
+>     fsi."lineageId" as lineageid
 >   from
 >     sys_boot.mgmt.dba_foreign_servers_internal2 fsi
 >   inner join
@@ -286,7 +287,8 @@
 >     foreign_server_name,
 >     cast(so."name" as varchar(65535)) as option_name,
 >     cast(so."value" as varchar(65535)) as option_value,
->     cast(so."mofId" as varchar(128)) as mof_id
+>     cast(so."mofId" as varchar(128)) as mof_id,
+>     so."mofId" as mofid
 >   from
 >     sys_boot.mgmt.dba_foreign_servers_internal1 fsi
 >   inner join
