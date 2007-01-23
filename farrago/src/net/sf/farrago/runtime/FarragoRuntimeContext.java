@@ -192,6 +192,12 @@ public class FarragoRuntimeContext
             session.endTransactionIfAuto(true);
         }
         statementClassLoader = null;
+        
+        // FRG-253:  nullify this, so that once we release its pinned
+        // entry from the cache, we don't try to abort it after someone
+        // else starts to reuse it!
+        streamGraph = null;
+        
         super.closeAllocation();
     }
 
@@ -737,8 +743,9 @@ public class FarragoRuntimeContext
     // implement FarragoSessionRuntimeContext
     public void cancel()
     {
-        if (streamGraph != null) {
-            streamGraph.abort();
+        FennelStreamGraph streamGraphToAbort = streamGraph;
+        if (streamGraphToAbort != null) {
+            streamGraphToAbort.abort();
         }
         isCanceled = true;
     }
