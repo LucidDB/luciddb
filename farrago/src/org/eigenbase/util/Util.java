@@ -1571,6 +1571,23 @@ public class Util
         return (Map) properties;
     }
 
+
+
+    /**
+     * Returns an exception indicating that we didn't expect to find this
+     * enumeration here.
+     *
+     * @see org.eigenbase.util.Util#unexpected
+     */
+    public static <E extends Enum<E>> Error unexpected(E value)
+    {
+        return
+            new AssertionError(
+                "Was not expecting value '" + value
+                + "' for enumeration '" + value.getDeclaringClass().getName()
+                + "' in this context");
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**

@@ -37,6 +37,7 @@ import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
+import org.eigenbase.reltype.RelDataTypeFactory;
 
 
 /**
@@ -103,7 +104,7 @@ public class FarragoSqlValidator
     }
 
     // override SqlValidator
-    protected boolean shouldExpandIdentifiers()
+    public boolean shouldExpandIdentifiers()
     {
         // Farrago always wants to expand stars and identifiers during
         // validation since we use the validated representation as a canonical
@@ -116,55 +117,6 @@ public class FarragoSqlValidator
     {
         // Farrago follows the SQL standard on this.
         return false;
-    }
-
-    // override SqlValidator
-    public void validateLiteral(SqlLiteral literal)
-    {
-        super.validateLiteral(literal);
-
-        // REVIEW jvs 4-Aug-2004:  This should probably be calling over to the
-        // available calculator implementations to see what they support.  For
-        // now use ESP instead.
-        switch (literal.getTypeName().getOrdinal()) {
-        case SqlTypeName.Decimal_ordinal:
-
-            // decimal and long have the same precision (as 64-bit integers),
-            // so the unscaled value of a decimal must fit into a long.
-            BigDecimal bd = (BigDecimal) literal.getValue();
-            BigInteger unscaled = bd.unscaledValue();
-            long longValue = unscaled.longValue();
-            if (!BigInteger.valueOf(longValue).equals(unscaled)) {
-                // overflow
-                throw newValidationError(
-                    literal,
-                    EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
-                        bd.toString()));
-            }
-            break;
-        case SqlTypeName.Double_ordinal:
-            validateLiteralAsDouble(literal);
-            break;
-        default:
-
-            // no validation needed
-            return;
-        }
-    }
-
-    private void validateLiteralAsDouble(SqlLiteral literal)
-    {
-        BigDecimal bd = (BigDecimal) literal.getValue();
-        double d = bd.doubleValue();
-        if (Double.isInfinite(d) || Double.isNaN(d)) {
-            // overflow
-            throw newValidationError(
-                literal,
-                EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
-                    Util.toScientificNotation(bd)));
-        }
-
-        // REVIEW jvs 4-Aug-2004:  what about underflow?
     }
 
     public void validateDataType(SqlDataTypeSpec dataType)

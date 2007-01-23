@@ -19,9 +19,7 @@ if (!oj_var0.isNull() && oj_var0.getBit()) {
 } else {
     oj_var1.setNull( true );
     oj_var2.isNull = oj_var1.isNull;
-    if (!oj_var2.isNull) {
-        oj_var2.value = (int) oj_var1.value;
-    }
+    oj_var2.value = (int) oj_var1.value;
 }
 
 return oj_var2;

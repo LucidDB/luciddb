@@ -258,20 +258,20 @@
 | LOCALDB   | METADATA_TEST_SCHEMA  | RECTILINEAR_COORD  | Y          | 8          | DOUBLE          |            |                 |                 | 1         |          |           | 0              | 0                 |                    | 2                 | YES          |                |               |              |                   |
 +-----------+-----------------------+--------------------+------------+------------+-----------------+------------+-----------------+-----------------+-----------+----------+-----------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 > !primarykeys EMPS
-+------------+--------------+-------------+--------------+----------+-----------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | KEY_SEQ  |        PK_NAME        |
-+------------+--------------+-------------+--------------+----------+-----------------------+
-| LOCALDB    | SALES        | EMPS        | DEPTNO       | 1        | SYS$PRIMARY_KEY$EMPS  |
-| LOCALDB    | SALES        | EMPS        | EMPNO        | 2        | SYS$PRIMARY_KEY$EMPS  |
-+------------+--------------+-------------+--------------+----------+-----------------------+
++------------+--------------+-------------+--------------+----------+------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | KEY_SEQ  |     PK_NAME      |
++------------+--------------+-------------+--------------+----------+------------------+
+| LOCALDB    | SALES        | EMPS        | DEPTNO       | 1        | SYS$PRIMARY_KEY  |
+| LOCALDB    | SALES        | EMPS        | EMPNO        | 2        | SYS$PRIMARY_KEY  |
++------------+--------------+-------------+--------------+----------+------------------+
 > !indexes EMPS
 +------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |                   INDEX_NAME                    | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
 +------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 | LOCALDB    | SALES        | EMPS        | false       |                  |                                                 | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1     | 1                 | DEPTNO       | A             | 0            | 0      |                   |
-| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1     | 2                 | EMPNO        | A             | 0            | 0      |                   |
-| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID  | 3     | 1                 | EMPID        | A             | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1     | 1                 | DEPTNO       | A             | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1     | 2                 | EMPNO        | A             | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 3     | 1                 | EMPID        | A             | 0            | 0      |                   |
 | LOCALDB    | SALES        | EMPS        | true        | LOCALDB          | EMPS_UX                                         | 3     | 1                 | NAME         | A             | 0            | 0      |                   |
 +------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 > !procedures
@@ -456,7 +456,7 @@ usesLocalFiles                                    false
 +----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
 |   name   | fennelDisabled  | userCatalogEnabled  | codeCacheMaxBytes  | checkpointInterval  | serverRmiRegistryPort  | serverSingleListenerPort  | calcVirtualMachine  |        javaCompilerClassName        |
 +----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
-| Current  | false           | false               | 2000000            | 300                 | -1                     | -1                        | CALCVM_AUTO         | org.eigenbase.javac.JaninoCompiler  |
+| Current  | false           | false               | -1                 | 300                 | -1                     | -1                        | CALCVM_AUTO         | org.eigenbase.javac.JaninoCompiler  |
 +----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
 > 
 > select "databaseInitSize", "databaseIncrementSize", "databaseMaxSize",

@@ -51,27 +51,34 @@ public class FennelPullCollectRel
 
     //~ Instance fields --------------------------------------------------------
 
-    final String name;
+    final String fieldName;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a FennelPullCollectRel.
+     *
+     * @param cluster Cluster
+     * @param child Child relational expression
+     * @param fieldName Name of the sole output field
+     */
     public FennelPullCollectRel(
         RelOptCluster cluster,
         RelNode child,
-        String name)
+        String fieldName)
     {
         super(
             cluster,
             new RelTraitSet(FENNEL_EXEC_CONVENTION),
             child);
-        this.name = name;
+        this.fieldName = fieldName;
     }
 
     //~ Methods ----------------------------------------------------------------
 
     protected RelDataType deriveRowType()
     {
-        return CollectRel.deriveCollectRowType(this, name);
+        return CollectRel.deriveCollectRowType(this, fieldName);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -89,15 +96,13 @@ public class FennelPullCollectRel
             implementor.visitFennelChild((FennelRel) getChild()),
             collectStreamDef);
 
+        // The column containing the packaged multiset is always VARCHAR(4096)
+        // NOT NULL. Even an empty multiset is not represented as NULL.
         FemTupleDescriptor outTupleDesc = repos.newFemTupleDescriptor();
         RelDataType type =
             getCluster().getTypeFactory().createSqlType(
                 SqlTypeName.Varbinary,
                 4096);
-        type =
-            getCluster().getTypeFactory().createTypeWithNullability(
-                type,
-                true);
         FennelRelUtil.addTupleAttrDescriptor(repos, outTupleDesc, type);
         collectStreamDef.setOutputDesc(outTupleDesc);
         return collectStreamDef;
@@ -110,7 +115,7 @@ public class FennelPullCollectRel
             new FennelPullCollectRel(
                 getCluster(),
                 getChild().clone(),
-                name);
+                fieldName);
         clone.inheritTraitsFrom(this);
         return clone;
     }

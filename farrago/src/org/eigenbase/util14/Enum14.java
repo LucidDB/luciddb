@@ -353,6 +353,8 @@ public class Enum14
     /**
      * Returns an exception indicating that we didn't expect to find this value
      * here.
+     *
+     * @see org.eigenbase.util.Util#unexpected
      */
     public Error unexpected(Value value)
     {

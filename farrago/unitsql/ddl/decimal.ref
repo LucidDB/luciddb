@@ -71,15 +71,15 @@ Error: From line 1, column 27 to line 1, column 45: Numeric literal '92233720368
 > insert into td values(21, 9223372036854775807.5);
 Error: From line 1, column 27 to line 1, column 47: Numeric literal '9223372036854775807.5' out of range (state=,code=0)
 > insert into td values(22, -9223372036854775809);
-Error: From line 1, column 28 to line 1, column 46: Numeric literal '-9223372036854775809' out of range (state=,code=0)
+Error: From line 1, column 27 to line 1, column 46: Numeric literal '-9223372036854775809' out of range (state=,code=0)
 > insert into td values(23, -9223372036854775808.5);
-Error: From line 1, column 28 to line 1, column 48: Numeric literal '-9223372036854775808.5' out of range (state=,code=0)
+Error: From line 1, column 27 to line 1, column 48: Numeric literal '-9223372036854775808.5' out of range (state=,code=0)
 > 
 > -- Numeric literal is out of range
 > insert into td values(24, 9223372036854775807.13213);
 Error: From line 1, column 27 to line 1, column 51: Numeric literal '9223372036854775807.13213' out of range (state=,code=0)
 > insert into td values(25, -9223372036854775808.12321);
-Error: From line 1, column 28 to line 1, column 52: Numeric literal '-9223372036854775808.12321' out of range (state=,code=0)
+Error: From line 1, column 27 to line 1, column 52: Numeric literal '-9223372036854775808.12321' out of range (state=,code=0)
 > 
 > -- should give error
 > insert into td5 values(20, 100000);

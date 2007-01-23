@@ -231,26 +231,18 @@ public interface SqlTester
         String [] inputValues, Object result, int delta);
 
     /**
-     * Tests that a scalar SQL expression fails at validate time.
-     *
-     * @param expression SQL scalar expression
-     * @param expectedError Pattern for expected error. Must include an error
-     * location, demarcated by one or two "^" characters.
-     */
-    void checkInvalid(
-        String expression,
-        String expectedError);
-
-    /**
      * Tests that a scalar SQL expression fails at run time.
      *
      * @param expression SQL scalar expression
-     * @param expectedError Pattern for expected error. Unlike {@link
-     * #checkInvalid(String, String)}, does not include an error location.
+     * @param expectedError Pattern for expected error. If !runtime, must
+     *   include an error location.
+     * @param runtime If true, must fail at runtime; if false, must fail at
+     *   validate time
      */
     void checkFails(
         String expression,
-        String expectedError);
+        String expectedError, 
+        boolean runtime);
 
     //~ Inner Interfaces -------------------------------------------------------
 

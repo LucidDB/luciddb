@@ -419,6 +419,8 @@ public class SqlValidatorTestCase
                     || !actualMessage.matches(expectedMsgPattern)) {
                     actualException.printStackTrace();
                     final String actualJavaRegexp =
+                        actualMessage == null ?
+                        "null" :
                         TestUtil.quoteForJava(
                             TestUtil.quotePattern(actualMessage));
                     fail(
@@ -901,31 +903,31 @@ public class SqlValidatorTestCase
             SqlNode rewrittenNode = tester.parseAndValidate(validator, query);
             String actualRewrite =
                 rewrittenNode.toSqlString(SqlUtil.dummyDialect, false);
-            assertEquals(expectedRewrite, actualRewrite);
+            TestUtil.assertEqualsVerbose(expectedRewrite, actualRewrite);
         }
 
-        public void checkInvalid(String expression, String expectedError)
+        public void checkFails(
+            String expression, String expectedError, boolean runtime)
         {
-            // After bug 315 is fixed, take this assert out: the other assert
-            // will be sufficient.
-            if (!Bug.Dt315Fixed) {
-                assertTrue(
-                    "All negative tests must contain an error location",
-                    expression.indexOf('^') >= 0);
+            if (runtime) {
+                // We need to test that the expression fails at runtime.
+                // Ironically, that means that it must succeed at prepare time.
+                SqlValidator validator = getValidator();
+                final String sql = buildQuery(expression);
+                SqlNode n = parseAndValidate(validator, sql);
+                assertNotNull(n);
+            } else {
+                // After bug 315 is fixed, take this assert out: the other
+                // assert will be sufficient.
+                if (!Bug.Dt315Fixed) {
+                    assertTrue(
+                        "All negative tests must contain an error location",
+                        expression.indexOf('^') >= 0);
+                }
+                SqlValidatorTestCase.this.checkFails(
+                    buildQuery(expression),
+                    expectedError);
             }
-            SqlValidatorTestCase.this.checkFails(
-                buildQuery(expression),
-                expectedError);
-        }
-
-        public void checkFails(String expression, String expectedError)
-        {
-            // We need to test that the expression fails at runtime.
-            // Ironically, that means that it must succeed at prepare time.
-            SqlValidator validator = getValidator();
-            final String sql = buildQuery(expression);
-            SqlNode n = parseAndValidate(validator, sql);
-            assertNotNull(n);
         }
     }
 }

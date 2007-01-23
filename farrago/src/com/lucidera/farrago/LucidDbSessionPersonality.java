@@ -258,7 +258,7 @@ public class LucidDbSessionPersonality
         
         // Pull up projects
         builder.addGroupBegin();      
-        builder.addRuleInstance(new RemoveTrivialProjectRule());
+        builder.addRuleInstance(RemoveTrivialProjectRule.instance);
         builder.addRuleInstance(
             PullUpProjectsAboveJoinRule.instanceTwoProjectChildren);
         builder.addRuleInstance(
@@ -540,7 +540,7 @@ public class LucidDbSessionPersonality
     private void applyPushDownProjectRules(HepProgramBuilder builder)
     {
         builder.addGroupBegin();
-        builder.addRuleInstance(new RemoveTrivialProjectRule());
+        builder.addRuleInstance(RemoveTrivialProjectRule.instance);
         builder.addRuleInstance(
             new PushProjectPastSetOpRule(
                 LucidDbOperatorTable.ldbInstance().getSpecialOperators()));

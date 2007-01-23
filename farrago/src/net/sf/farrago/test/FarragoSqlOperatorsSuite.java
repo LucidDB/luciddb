@@ -113,29 +113,14 @@ public class FarragoSqlOperatorsSuite
             this.farragoTest = farragoTest;
         }
 
-        public void checkInvalid(
+        public void checkFails(
             String expression,
-            String expectedError)
+            String expectedError,
+            boolean runtime)
         {
             try {
                 farragoTest.setUp();
-                checkFails(vm, expression, expectedError, false);
-            } catch (Exception e) {
-                throw wrap(e);
-            } finally {
-                try {
-                    farragoTest.tearDown();
-                } catch (Exception e) {
-                    throw wrap(e);
-                }
-            }
-        }
-
-        public void checkFails(String expression, String expectedError)
-        {
-            try {
-                farragoTest.setUp();
-                checkFails(vm, expression, expectedError, true);
+                checkFails(vm, expression, expectedError, runtime);
             } catch (Exception e) {
                 throw wrap(e);
             } finally {
@@ -404,8 +389,8 @@ public class FarragoSqlOperatorsSuite
         // implement TestCase
         public static Test suite()
         {
-            final Class clazz = FarragoJavaVmOperatorTest.class;
-            return FarragoTestCase.wrappedSuite(new TestSuite(clazz));
+            return FarragoTestCase.wrappedSuite(
+                new TestSuite(FarragoJavaVmOperatorTest.class));
         }
     }
 
@@ -425,8 +410,8 @@ public class FarragoSqlOperatorsSuite
         // implement TestCase
         public static Test suite()
         {
-            final Class clazz = FarragoAutoVmOperatorTest.class;
-            return FarragoTestCase.wrappedSuite(new TestSuite(clazz));
+            return FarragoTestCase.wrappedSuite(
+                new TestSuite(FarragoAutoVmOperatorTest.class));
         }
     }
 
@@ -446,8 +431,8 @@ public class FarragoSqlOperatorsSuite
         // implement TestCase
         public static Test suite()
         {
-            final Class clazz = FarragoFennelVmOperatorTest.class;
-            return FarragoTestCase.wrappedSuite(new TestSuite(clazz));
+            return FarragoTestCase.wrappedSuite(
+                new TestSuite(FarragoFennelVmOperatorTest.class));
         }
     }
 

@@ -460,7 +460,7 @@ public class FarragoOptRulesTest
         
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
-        programBuilder.addRuleInstance(new RemoveTrivialProjectRule());
+        programBuilder.addRuleInstance(RemoveTrivialProjectRule.instance);
         programBuilder.addRuleInstance(new ConvertMultiJoinRule());
         check(
             programBuilder.createProgram(),

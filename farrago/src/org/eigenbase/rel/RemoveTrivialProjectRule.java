@@ -33,14 +33,18 @@ import org.eigenbase.rex.*;
  *
  * <p>For example, <code>ProjectRel(ArrayReader(a), {$input0})</code> becomes
  * <code>ArrayReader(a)</code>.</p>
+ *
+ * @see org.eigenbase.rel.rules.RemoveTrivialCalcRule
  */
 public class RemoveTrivialProjectRule
     extends RelOptRule
 {
+    public static final RemoveTrivialProjectRule instance =
+        new RemoveTrivialProjectRule();
 
     //~ Constructors -----------------------------------------------------------
 
-    public RemoveTrivialProjectRule()
+    private RemoveTrivialProjectRule()
     {
         super(new RelOptRuleOperand(ProjectRel.class, null));
     }

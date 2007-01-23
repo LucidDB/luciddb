@@ -593,9 +593,7 @@ public class SqlLiteral
         case SqlTypeName.Binary_ordinal:
             bitString = (BitString) value;
             int bitCount = bitString.getBitCount();
-            Util.permAssert((bitCount % 8) == 0, "incomplete octet");
-            return typeFactory.createSqlType(SqlTypeName.Binary,
-                    bitCount / 8);
+            return typeFactory.createSqlType(SqlTypeName.Binary, bitCount / 8);
         case SqlTypeName.Char_ordinal:
             NlsString string = (NlsString) value;
             Charset charset = string.getCharset();
@@ -669,7 +667,8 @@ public class SqlLiteral
      * @param intervalQualifier describes the interval type and precision
      * @param pos Parser position
      */
-    public static SqlIntervalLiteral createInterval(int sign,
+    public static SqlIntervalLiteral createInterval(
+        int sign,
         String intervalStr,
         SqlIntervalQualifier intervalQualifier,
         SqlParserPos pos)
@@ -685,7 +684,8 @@ public class SqlLiteral
                 pos);
     }
 
-    public static SqlNumericLiteral createNegative(SqlNumericLiteral num)
+    public static SqlNumericLiteral createNegative(
+        SqlNumericLiteral num, SqlParserPos pos)
     {
         return
             new SqlNumericLiteral(
@@ -693,7 +693,7 @@ public class SqlLiteral
                 num.getPrec(),
                 num.getScale(),
                 num.isExact(),
-                num.getParserPosition());
+                pos);
     }
 
     public static SqlNumericLiteral createExactNumeric(
@@ -748,6 +748,28 @@ public class SqlLiteral
         BitString bits;
         try {
             bits = BitString.createFromHexString(s);
+        } catch (NumberFormatException e) {
+            throw SqlUtil.newContextException(
+                pos,
+                EigenbaseResource.instance().BinaryLiteralInvalid.ex());
+        }
+        return new SqlBinaryStringLiteral(bits, pos);
+    }
+
+    /**
+     * Creates a literal like X'ABAB' from an array of bytes.
+     *
+     * @param bytes Contents of binary literal
+     * @param pos Parser position
+     * @return Binary string literal
+     */
+    public static SqlBinaryStringLiteral createBinaryString(
+        byte[] bytes,
+        SqlParserPos pos)
+    {
+        BitString bits;
+        try {
+            bits = BitString.createFromBytes(bytes);
         } catch (NumberFormatException e) {
             throw SqlUtil.newContextException(
                 pos,

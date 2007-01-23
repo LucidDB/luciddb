@@ -1,13 +1,13 @@
 
-private ExecutableStmt.Oj_inner_0 oj_var0;
+static final ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+static {
+    oj_var0.assignFrom( "Fran" );
+}
 
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
 
-if (oj_var0 == null) {
-    oj_var0 = new ExecutableStmt.Oj_inner_0();
-    oj_var0.assignFrom( "Fran" );
-}
 if (ID$0$CITY.isNull()) {
     oj_var1.setNull( true );
 } else {

@@ -80,6 +80,9 @@ public class SqlIdentifier
         this.names = names;
         this.collation = collation;
         this.componentPositions = componentPositions;
+        for (String name : names) {
+            assert name != null;
+        }
     }
 
     public SqlIdentifier(
