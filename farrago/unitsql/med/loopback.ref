@@ -64,6 +64,47 @@
 Error: From line 1, column 15 to line 1, column 29: Table 'SALES.FUDGE' not found (state=,code=0)
 > 
 > 
+> -- LER-3846:  use loopback to test what happens to views on foreign
+> -- tables when the foreign server (faked here via loopback) changes
+> -- column types behind our backs
+> 
+> create schema x;
+> 
+> -- simulate foreign table
+> create view x.foo as select 100 from (values(0));
+> 
+> -- create a local view which references the foreign table
+> create view x.bar as
+> select * from loopback_localdb.x.foo;
+> 
+> -- change the foreign table to produce a new cast-compatible type and value
+> create or replace view x.foo as select '  500  ' from (values(0));
+> 
+> -- should not fail, but should cast to original type type frozen when
+> -- bar was created
+> select * from x.bar;
++---------+
+| EXPR$0  |
++---------+
+| 500     |
++---------+
+> 
+> -- now force a cast failure to see what happens
+> create or replace view x.foo as select 'foofah' from (values(0));
+> 
+> call sys_boot.mgmt.flush_code_cache();
+> select * from x.bar;
+Error: java.lang.NumberFormatException: For input string: "foofah" (state=,code=0)
+> 
+> -- finally, simulate a change to a non-CAST-compatible type
+> -- (TODO:  need a better error message; see comments in
+> --  FarragoOJRexCastImplementor.java)
+> create or replace view x.foo as select true from (values(0));
+> 
+> call sys_boot.mgmt.flush_code_cache();
+> select * from x.bar;
+Error: Overflow during calculation or cast. (state=,code=0)
+> 
 > -- verify loopback via EXPLAIN PLAN
 > !set outputformat csv
 > 
