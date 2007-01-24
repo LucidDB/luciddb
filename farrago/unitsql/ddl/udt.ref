@@ -1073,7 +1073,7 @@ Error: DDL validation error near line 1, column 34: Must define distinct datatyp
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[PAIR_ID, Y, X]])'
-'    FtrsIndexScanRel(table=[[LOCALDB, UDTTEST, STORED_COORD_LIST]], projection=[[6, 2, 4]], index=[SYS$CONSTRAINT_INDEX$STORED_COORD_LIST$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, UDTTEST, STORED_COORD_LIST]], projection=[[6, 2, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$STORED_COORD_LIST], preserveOrder=[false])'
 > 
 > explain plan for
 > select v.pair_id, v.coord1.x, v.coord1.y, v.y as y2 
@@ -1081,6 +1081,6 @@ Error: DDL validation error near line 1, column 34: Must define distinct datatyp
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[PAIR_ID, X, Y, Y2]])'
-'    FtrsIndexScanRel(table=[[LOCALDB, UDTTEST, STORED_COORD_LIST]], projection=[[6, 1, 2, 5]], index=[SYS$CONSTRAINT_INDEX$STORED_COORD_LIST$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, UDTTEST, STORED_COORD_LIST]], projection=[[6, 1, 2, 5]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$STORED_COORD_LIST], preserveOrder=[false])'
 > 
 > !quit

@@ -48,22 +48,22 @@
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[2, 1, 0, 3]], outputRowType=[RecordType(VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B) NOT NULL])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
-'      FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > 
 > -- projections with simple casts
 > explain plan for select cast(t2id as integer) from t2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > explain plan for 
 >     select cast(t2b as varchar(10)), cast(t2a as varchar(5)) from t2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$1) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > 
 > -- casting in an insert-select that will truncate the data
 > explain plan for
@@ -73,7 +73,7 @@
 '  FtrsTableModificationRel(table=[[LOCALDB, RESHAPE, TRUNC]], operation=[INSERT], updateColumnList=[[]], flattened=[true])'
 '    FennelReshapeRel(projection=[[0, 1, 2, 3]], outputRowType=[RecordType(INTEGER ID, VARCHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" A, VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, INTEGER NOT NULL PK) NOT NULL])'
 '      FennelRenameRel(fieldNames=[[ID, A, B, PK]])'
-'        FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0, 1, 2, 3]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0, 1, 2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > 
 > -- filters that are supported
 > -- ='s
@@ -81,87 +81,87 @@
 >     select * from t1 where t1id = 1 and t1b = 't1b1';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[0, 2]], filterTuple=[[1, _ISO-8859-1't1b1']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[0, 2]], filterTuple=[[1, 't1b1']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for
 >     select * from t1 where t1b = 't1b1' and t1id = 1;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[2, 0]], filterTuple=[[_ISO-8859-1't1b1', 1]], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[2, 0]], filterTuple=[['t1b1', 1]], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for
 >     select * from t2 where 't2a2' = t2a and 2 = t2id;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[1, 0]], filterTuple=[[_ISO-8859-1't2a2', 2]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[1, 0]], filterTuple=[['t2a2', 2]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > -- range operators
 > explain plan for
 >     select * from t2 where t2id >= 3;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[3]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > explain plan for
 >     select * from t1 where t1a > 't1a2';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1't1a2 ']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[['t1a2 ']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for
 >     select * from t1 where t1b <= 't1b3';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LE], filterOrdinals=[[2]], filterTuple=[[_ISO-8859-1't1b3']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LE], filterOrdinals=[[2]], filterTuple=[['t1b3']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for
 >     select * from t2 where t2a < 't2a4';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1't2a4']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[['t2a4']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > explain plan for
 >     select * from t2 where 't2b3' >= t2b;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LE], filterOrdinals=[[2]], filterTuple=[[_ISO-8859-1't2b3                ']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LE], filterOrdinals=[[2]], filterTuple=[['t2b3                ']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > explain plan for
 >     select * from t1 where 't1a3' > t1a;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1't1a3 ']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[['t1a3 ']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for
 >     select * from t1 where 't1b4' <= t1b;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[2]], filterTuple=[[_ISO-8859-1't1b4']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[2]], filterTuple=[['t1b4']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for
 >     select * from t2 where 't2a4' < t2a;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1't2a4']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[['t2a4']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > 
 > -- range used with an equal
 > explain plan for select * from t1 where t1id = 3 and t1b >= 't1b1';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[0, 2]], filterTuple=[[3, _ISO-8859-1't1b1']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[0, 2]], filterTuple=[[3, 't1b1']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for select * from t2 where t2id = 5 and t2b < 't3';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[0, 2]], filterTuple=[[5, _ISO-8859-1't3                  ']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[0, 2]], filterTuple=[[5, 't3                  ']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > 
 > explain plan for select * from t2 where t2a is null;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[null]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > 
 > -- both project and filter
 > explain plan for
@@ -172,16 +172,16 @@
 '  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$1) NOT NULL])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[1]], outputRowType=[RecordType(VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B) NOT NULL])'
-'        FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0, 2]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
 '        FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[1]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B) NOT NULL])'
-'          FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[0, 2]], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[0, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > explain plan for
 >     select cast(t1b as varchar(5)) from t1 where t1id = 3;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[3]], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0) NOT NULL])'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0, 2]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > 
 > -----------------------------------
 > -- the following aren't reshapeable
@@ -191,113 +191,112 @@
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for select t1id + 10 from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[10], expr#2=[+($t0, $t1)], EXPR$0=[$t2])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > -- cast on an expression
 > explain plan for select cast(upper(t1a) as varchar(10)) from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[UPPER($t0)], expr#2=[CAST($t1):VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$0=[$t2])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > 
 > -- casts that aren't supported
 > explain plan for select cast(t1id as integer) from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):INTEGER NOT NULL], EXPR$0=[$t1])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for select cast(t1a as char(10)) from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$0=[$t1])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for select cast(t1a as char(5)) from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$0=[$t1])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for select cast(t1id as smallint) from t1;
 'column0'
 'IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):SMALLINT NOT NULL], EXPR$0=[$t1])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > 
 > -- non-AND expression
 > explain plan for select * from t1 where t1id = 1 or t1a = 't1a2';
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[=($t0, $t4)], expr#6=[_ISO-8859-1't1a2'], expr#7=[=($t1, $t6)], expr#8=[OR($t5, $t7)], proj#0..3=[{exprs}], $condition=[$t8])'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[=($t0, $t4)], expr#6=['t1a2'], expr#7=[=($t1, $t6)], expr#8=[OR($t5, $t7)], proj#0..3=[{exprs}], $condition=[$t8])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > 
 > -- invalid comparison operators
 > explain plan for select * from t1 where t1b = 't1b1' and t1id in (1, 2);
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1't1b1'], expr#5=[=($t2, $t4)], expr#6=[1], expr#7=[=($t0, $t6)], expr#8=[2], expr#9=[=($t0, $t8)], expr#10=[OR($t7, $t9)], expr#11=[AND($t5, $t10)], proj#0..3=[{exprs}], $condition=[$t11])'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=['t1b1'], expr#5=[=($t2, $t4)], expr#6=[1], expr#7=[=($t0, $t6)], expr#8=[2], expr#9=[=($t0, $t8)], expr#10=[OR($t7, $t9)], expr#11=[AND($t5, $t10)], proj#0..3=[{exprs}], $condition=[$t11])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for select * from t2 where true;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[true], proj#0..3=[{exprs}], $condition=[$t4])'
-'  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'FennelToIteratorConverter'
+'  FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > create table b(a int primary key, b boolean, c int);
 > explain plan for select * from b where c = 1 and b;
 'column0'
 'IterCalcRel(expr#0..2=[{inputs}], expr#3=[1], expr#4=[=($t2, $t3)], expr#5=[AND($t4, $t1)], proj#0..2=[{exprs}], $condition=[$t5])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, B]], projection=[*], index=[SYS$CONSTRAINT_INDEX$B$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, B]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$B], preserveOrder=[false])'
 > explain plan for select * from t2 where t2a <> 't2a3';
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1't2a3'], expr#5=[<>($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=['t2a3'], expr#5=[<>($t1, $t4)], proj#0..3=[{exprs}], $condition=[$t5])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > 
 > -- not comparing to a literal
 > explain plan for select * from t1 where t1a = t1b;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t1, $t2)], proj#0..3=[{exprs}], $condition=[$t4])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for select * from t1 where t1a > t1b;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[>($t1, $t2)], proj#0..3=[{exprs}], $condition=[$t4])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > 
 > -- multiple range predicates
 > explain plan for select * from t1 where t1a > 't1a1' and t1a < 't1a4';
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1't1a1'], expr#5=[>($t1, $t4)], expr#6=[_ISO-8859-1't1a4'], expr#7=[<($t1, $t6)], expr#8=[AND($t5, $t7)], proj#0..3=[{exprs}], $condition=[$t8])'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=['t1a1'], expr#5=[>($t1, $t4)], expr#6=['t1a4'], expr#7=[<($t1, $t6)], expr#8=[AND($t5, $t7)], proj#0..3=[{exprs}], $condition=[$t8])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > 
 > -- not comparing against an input reference
 > explain plan for select * from t1 where lower(t1b) = 't1b1';
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[LOWER($t2)], expr#5=[_ISO-8859-1't1b1'], expr#6=[=($t4, $t5)], proj#0..3=[{exprs}], $condition=[$t6])'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=[LOWER($t2)], expr#5=['t1b1'], expr#6=[=($t4, $t5)], proj#0..3=[{exprs}], $condition=[$t6])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > 
 > -- comparing against the same column twice
 > explain plan for select * from t1 where t1id = 1 and t1id = 2;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[=($t0, $t4)], expr#6=[2], expr#7=[=($t0, $t6)], expr#8=[AND($t5, $t7)], proj#0..3=[{exprs}], $condition=[$t8])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for select * from t1 where t1id = 1 and t1id > 2;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[=($t0, $t4)], expr#6=[2], expr#7=[>($t0, $t6)], expr#8=[AND($t5, $t7)], proj#0..3=[{exprs}], $condition=[$t8])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > explain plan for select * from t1 where t1id > 1 and t1id = 2;
 'column0'
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[>($t0, $t4)], expr#6=[2], expr#7=[=($t0, $t6)], expr#8=[AND($t5, $t7)], proj#0..3=[{exprs}], $condition=[$t8])'
 '  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 > 
 > ------------------------------------
 > -- run the ones that are reshapeable
@@ -510,24 +509,24 @@
 > explain plan for select * from d1, d2 where d1.a = d2.a;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 1) NOT NULL A) NOT NULL])'
+'  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 1) NOT NULL A0) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])'
-'      LcsRowScanRel(table=[[LOCALDB, RESHAPE, D1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RESHAPE$D1$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, RESHAPE, D1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$A]])'
 '      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(DECIMAL(10, 1) NOT NULL A, DECIMAL(10, 1) CAST($0):DECIMAL(10, 1)) NOT NULL])'
-'        LcsRowScanRel(table=[[LOCALDB, RESHAPE, D2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RESHAPE$D2$A]])'
+'        LcsRowScanRel(table=[[LOCALDB, RESHAPE, D2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$A]])'
 > explain plan for select * from d1, d3 where d1.a = d3.a;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 2) NOT NULL A) NOT NULL])'
+'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 2) NOT NULL A0) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[Reinterpret($t0)], expr#2=[10], expr#3=[*($t1, $t2)], expr#4=[Reinterpret($t3)], A=[$t0], CAST($0):DECIMAL(11, 2)=[$t4])'
 '          FennelToIteratorConverter'
-'            LcsRowScanRel(table=[[LOCALDB, RESHAPE, D1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RESHAPE$D1$A]])'
+'            LcsRowScanRel(table=[[LOCALDB, RESHAPE, D1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$A]])'
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[Reinterpret($t0)], expr#2=[Reinterpret($t1)], A=[$t0], CAST($0):DECIMAL(11, 2)=[$t2])'
 '          FennelToIteratorConverter'
-'            LcsRowScanRel(table=[[LOCALDB, RESHAPE, D3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RESHAPE$D3$A]])'
+'            LcsRowScanRel(table=[[LOCALDB, RESHAPE, D3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$D3$A]])'
 > 
 > !set outputformat table
 > select * from d1, d2 where d1.a = d2.a;
