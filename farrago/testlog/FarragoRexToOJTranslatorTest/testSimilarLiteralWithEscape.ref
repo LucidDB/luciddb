@@ -1,16 +1,8 @@
 
-static final ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
-
-static {
-    oj_var0.assignFrom( "San%" );
-}
+private ExecutableStmt.Oj_inner_0 oj_var0;
 
 
-static final ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
-
-static {
-    oj_var1.assignFrom( "n" );
-}
+private ExecutableStmt.Oj_inner_1 oj_var1;
 
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
@@ -21,6 +13,14 @@ java.util.regex.Pattern oj_var3 = null;
 
 java.util.regex.Matcher oj_var4 = null;
 
+if (oj_var0 == null) {
+    oj_var0 = new ExecutableStmt.Oj_inner_0();
+    oj_var0.assignFrom( "San%" );
+}
+if (oj_var1 == null) {
+    oj_var1 = new ExecutableStmt.Oj_inner_1();
+    oj_var1.assignFrom( "n" );
+}
 java.lang.String oj_var5;
 if (ID$0$CITY.isNull()) {
     oj_var2.setNull( true );

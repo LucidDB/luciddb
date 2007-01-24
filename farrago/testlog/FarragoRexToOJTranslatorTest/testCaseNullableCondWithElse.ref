@@ -2,21 +2,13 @@
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
 
 
-static final ExecutableStmt.Oj_inner_0 oj_var1 = new ExecutableStmt.Oj_inner_0();
-
-static {
-    oj_var1.assignFrom( "fifty" );
-}
+private ExecutableStmt.Oj_inner_0 oj_var1;
 
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
 
 
-static final ExecutableStmt.Oj_inner_1 oj_var3 = new ExecutableStmt.Oj_inner_1();
-
-static {
-    oj_var3.assignFrom( "twenty-five" );
-}
+private ExecutableStmt.Oj_inner_1 oj_var3;
 
 
 ExecutableStmt.Oj_inner_2 oj_var4 = new ExecutableStmt.Oj_inner_2();
@@ -31,6 +23,10 @@ if (ID$0$AGE.isNull()) {
     oj_var0.value = ID$0$AGE.value == 50;
 }
 if (!oj_var0.isNull() && oj_var0.getBit()) {
+    if (oj_var1 == null) {
+        oj_var1 = new ExecutableStmt.Oj_inner_0();
+        oj_var1.assignFrom( "fifty" );
+    }
     oj_var5.assignFrom( oj_var1 );
     oj_var5.enforceBytePrecision( 11, true, (byte) ' ' );
 } else {
@@ -41,6 +37,10 @@ if (!oj_var0.isNull() && oj_var0.getBit()) {
         oj_var2.value = ID$0$AGE.value == 25;
     }
     if (!oj_var2.isNull() && oj_var2.getBit()) {
+        if (oj_var3 == null) {
+            oj_var3 = new ExecutableStmt.Oj_inner_1();
+            oj_var3.assignFrom( "twenty-five" );
+        }
         oj_var5.assignFrom( oj_var3 );
     } else {
         oj_var4.setNull( true );
