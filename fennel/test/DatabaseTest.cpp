@@ -131,6 +131,8 @@ public:
     void testRecoverDataWithoutFlush();
     void testForceTxns();
     
+    void executeForceTxn();
+    
     // implement LogicalTxnParticipant
     virtual LogicalTxnClassId getParticipantClassId() const;
     virtual void describeParticipant(ByteOutputStream &logStream);
@@ -276,7 +278,17 @@ void DatabaseTest::testForceTxns()
     SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
     TestPageLock pageLock(segmentAccessor);
     pageLock.lockShared(extraPageId);
+
+    executeForceTxn();
+    executeForceTxn();
+
+    pageLock.unlock();
     
+    pDatabase.reset();
+}
+
+void DatabaseTest::executeForceTxn()
+{
     SharedLogicalTxn pTxn = pDatabase->getTxnLog()->newLogicalTxn(pCache);
     addTxnParticipant(pTxn);
     executeIncrementAction(10, ACTION_INCREMENT_FORCE);
@@ -287,10 +299,6 @@ void DatabaseTest::testForceTxns()
     snooze(3);
     pDatabase->recoverOnline();
     verifyData(5);
-
-    pageLock.unlock();
-    
-    pDatabase.reset();
 }
 
 void DatabaseTest::loadDatabase()
