@@ -92,20 +92,6 @@ ${farrago.test.jvmargs}
   <!-- JRE location for test execution -->
   <property name="farrago.jre.dir" location="${javahome.dir}"/>
 
-  <!-- if JRE location doesn't match javahome, assume we should retroweave -->
-  <condition property="farrago.need.retroweave">
-    <not>
-      <equals arg1="${farrago.jre.dir}" arg2="${javahome.dir}"/>
-    </not>
-  </condition>
-
-  <condition property="farrago.jre.14">
-    <or>
-      <isset property="farrago.javasrc.14"/>
-      <isset property="farrago.need.retroweave"/>
-    </or>
-  </condition>
-
   <!-- import thirdparty library settings -->
   <property file="${thirdparty.dir}/build.properties"/>
 
@@ -119,7 +105,6 @@ ${farrago.test.jvmargs}
   <fail unless="sqlline.lib.dir"/>
   <fail unless="mdrlibs.dir"/>
   <fail unless="rmijdbc.dir"/>
-  <fail unless="retroweaver.dir"/>
   <fail unless="emma.dir"/>
   <fail unless="vjdbc.dir"/>
 
@@ -329,12 +314,8 @@ ${farrago.test.jvmargs}
   <!-- classpath for execution -->
   <path id="farrago.run.classpath">
     <pathelement path="${farrago.3p.classpath}"/>
-    <fileset dir="${retroweaver.dir}">
-      <include name="release/retroweaver-rt.jar" if="farrago.need.retroweave"/>
-    </fileset>
     <fileset dir="${jgrapht.dir}">
-      <include name="jgrapht-jdk1.4.jar" if="farrago.jre.14"/>
-      <include name="jgrapht-jdk1.5.jar" unless="farrago.jre.14"/>
+      <include name="jgrapht-jdk1.5.jar"/>
     </fileset>
     <fileset dir="${jgrapht7.dir}">
       <include name="jgrapht7-jdk1.5.jar" />
@@ -344,14 +325,6 @@ ${farrago.test.jvmargs}
     <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="farrago.run.classpath" refid="farrago.run.classpath"/>
-
-  <!-- classpath for retroweaving -->
-  <path id="farrago.retro.classpath">
-    <pathelement location="${java14rt.jar}"/>
-    <pathelement location="${retroweaver.dir}/release/retroweaver-rt.jar"/>
-    <pathelement path="${farrago.run.classpath}"/>
-  </path>
-  <property name="farrago.retro.classpath" refid="farrago.retro.classpath"/>
 
   <!-- classpath for reentrantly invoking ant -->
   <path id="ant.classpath">
@@ -738,14 +711,6 @@ ${farrago.test.jvmargs}
     <taskdef name="mdr" classname="org.netbeans.mdrant.MdrTask"
       classpathref="farrago.3p.classpath"/>
   </target>
-
-  <taskdef name="retroweaver"
-    classname="com.rc.retroweaver.ant.RetroWeaverTask">
-    <classpath>
-      <fileset dir="${retroweaver.dir}/lib" includes="**/*"/>
-      <pathelement location="${retroweaver.dir}/release/retroweaver.jar"/>
-    </classpath>
-  </taskdef>
 
   <!-- Macro for creating a TAGS file suitable for use in Emacs -->
   <macrodef name="farrago.createEmacsTags">

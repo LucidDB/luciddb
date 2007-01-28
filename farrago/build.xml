@@ -907,7 +907,6 @@ require version '${required.ant.version}'."/>
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
     <antcall target="buildJdbcPlugin"/>
-    <antcall target="retroweaveIfRequested"/>
   </target>
 
   <target name="test-only">
@@ -1354,22 +1353,6 @@ please disable it and try again.
       inheritAll="false"/>
   </target>
 
-  <!-- Experimental stuff for JDK 1.5 -->
-  <!-- in customBuild.properties, set farrago.javasrc.version=1.5 -->
-  <!-- to test retroweaver, set farrago.jre.dir=/path/to/jre1.4 -->
-
-  <target name="retroweaveIfRequested" if="farrago.need.retroweave">
-    <antcall target="retroweave"/>
-  </target>
-
-  <target name="retroweave">
-    <retroweaver srcdir="${farrago.classes.dir}" />
-    <retroweaver srcdir="${farrago.catalog.src.dir}" />
-    <retroweaver srcdir="${plugin.classes.dir}" />
-    <!-- rebuild retrowoven plugin jar -->
-    <antcall target="buildJdbcPluginJar"/>
-  </target>
-
   <!-- Below is all experimental stuff for the user repository -->
 
   <property name="JdbcStorage.prefix"
@@ -1531,7 +1514,6 @@ please disable it and try again.
     <antcall target="cleanExamples"/>
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
-    <antcall target="retroweaveIfRequested"/>
     <!-- since some classes get built in here, instrument at the last minute-->
     <antcall target="emmaInstr"/>
     <antcall target="testRngPlugin"/>

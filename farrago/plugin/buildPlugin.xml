@@ -195,7 +195,6 @@
         name="PluginFactoryClassName"
         value="${plugin.factory.class}"/>
     </manifest>
-    <antcall target="plugin.retroweaveIfRequested"/>
     <jar destfile="${plugin.jar.file}" compress="true" 
       manifest="${plugin.classes.dir}/META-INF/MANIFEST.MF">
       <fileset dir="${plugin.classes.dir}">
@@ -222,15 +221,6 @@
         <include name="${plugin.model.prefix}PluginModel.xmi"/>
       </fileset>
     </jar>
-  </target>
-
-  <target name="plugin.retroweaveIfRequested" if="farrago.need.retroweave">
-    <retroweaver srcdir="${plugin.classes.dir}" />
-    <antcall target="plugin.retroweave.catalog"/>
-  </target>
-
-  <target name="plugin.retroweave.catalog" if="plugin.model.prefix">
-    <retroweaver srcdir="${plugin.catalog.src.dir}" />
   </target>
 
   <target name="plugin.clean">

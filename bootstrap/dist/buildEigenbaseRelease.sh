@@ -115,6 +115,15 @@ rm -rf $SRC_RELEASE
 mkdir $SRC_RELEASE
 cp -R $OPEN_DIR/thirdparty $SRC_RELEASE
 rm -f $SRC_RELEASE/thirdparty/icu-2.8.patch.tgz
+rm -f $SRC_RELEASE/thirdparty/xmlbeans-*
+rm -f $SRC_RELEASE/thirdparty/tpch.tar.gz
+rm -f $SRC_RELEASE/thirdparty/retroweaver-all.jar
+rm -f $SRC_RELEASE/thirdparty/postgresql-*
+rm -f $SRC_RELEASE/thirdparty/logging-log4j-*
+rm -f $SRC_RELEASE/thirdparty/jfreechart-*
+rm -f $SRC_RELEASE/thirdparty/jdbcappender.zip
+rm -f $SRC_RELEASE/thirdparty/jcommon-*
+rm -rf $SRC_RELEASE/thirdparty/GroboUtils
 cp -R $OPEN_DIR/fennel $SRC_RELEASE
 cp -R $OPEN_DIR/farrago $SRC_RELEASE
 cp -R $OPEN_DIR/luciddb $SRC_RELEASE
