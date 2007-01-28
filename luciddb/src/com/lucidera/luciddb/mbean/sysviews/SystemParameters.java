@@ -65,9 +65,7 @@ public class SystemParameters implements SystemParametersMBean
         try {
             conn = MBeanUtil.getConnection(conn);
             pstmt = conn.prepareStatement(
-                MBeanQueryObject.get().AlterSystemQuery.str());
-            pstmt.setString(1, name);
-            pstmt.setString(2, value);
+                MBeanQueryObject.get().AlterSystemQuery.str(name, value));
             pstmt.execute();
         } finally {
             try {
