@@ -79,7 +79,7 @@ p4 label -o $LABEL >> $DIST_DIR/VERSION
 
 # Start from a clean sync to requested label
 cd $OPEN_DIR
-rm -rf thirdparty fennel farrago
+rm -rf thirdparty fennel farrago luciddb
 p4 sync -f thirdparty/...@$LABEL
 p4 sync -f fennel/...@$LABEL
 p4 sync -f farrago/...@$LABEL
