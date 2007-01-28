@@ -116,7 +116,6 @@ mkdir $SRC_RELEASE
 cp -R $OPEN_DIR/thirdparty $SRC_RELEASE
 # Delete and stub out irrelevant thirdparty archives
 rm -f $SRC_RELEASE/thirdparty/icu-2.8.patch.tgz
-rm -f $SRC_RELEASE/thirdparty/xmlbeans-*
 rm -f $SRC_RELEASE/thirdparty/tpch.tar.gz
 rm -f $SRC_RELEASE/thirdparty/postgresql-*
 rm -f $SRC_RELEASE/thirdparty/logging-log4j-*
@@ -132,8 +131,6 @@ touch $SRC_RELEASE/thirdparty/jtds-1.2-dist.zip
 touch $SRC_RELEASE/thirdparty/jtds
 touch $SRC_RELEASE/thirdparty/tpch.tar.gz
 touch $SRC_RELEASE/thirdparty/tpch
-touch $SRC_RELEASE/thirdparty/xmlbeans
-touch $SRC_RELEASE/thirdparty/xmlbeans-2.1.0.zip
 cp -R $OPEN_DIR/fennel $SRC_RELEASE
 cp -R $OPEN_DIR/farrago $SRC_RELEASE
 cp -R $OPEN_DIR/luciddb $SRC_RELEASE
