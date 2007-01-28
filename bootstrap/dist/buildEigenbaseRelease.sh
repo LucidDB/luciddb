@@ -132,6 +132,8 @@ touch $SRC_RELEASE/thirdparty/jtds-1.2-dist.zip
 touch $SRC_RELEASE/thirdparty/jtds
 touch $SRC_RELEASE/thirdparty/tpch.tar.gz
 touch $SRC_RELEASE/thirdparty/tpch
+touch $SRC_RELEASE/thirdparty/xmlbeans
+touch $SRC_RELEASE/thirdparty/xmlbeans-2.1.0.zip
 cp -R $OPEN_DIR/fennel $SRC_RELEASE
 cp -R $OPEN_DIR/farrago $SRC_RELEASE
 cp -R $OPEN_DIR/luciddb $SRC_RELEASE

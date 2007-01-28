@@ -9,7 +9,7 @@ BIN_DIR=$(cd `dirname $0`; pwd)
 
 if ${JAVA_EXEC} ${JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
     -u jdbc:farrago: -d net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver \
-    -n guest $*;
+    -n sa $*;
 then
     echo
 else
