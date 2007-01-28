@@ -79,6 +79,7 @@ ${farrago.test.jvmargs}
   <property name="luciddb.test.dir" location="${luciddb.dir}/test" />
   <property name="luciddb.plugin.dir" location="${luciddb.dir}/plugin" />
   <property name="applib.dir" location="${luciddb.plugin.dir}/applib" />
+  <property name="mbean.dir" location="${luciddb.plugin.dir}/mbean" />
 
   <!-- directory in which catalog data is stored -->
   <property name="catalog.dir" location="${luciddb.dir}/catalog" />
@@ -185,6 +186,25 @@ ${farrago.test.jvmargs}
     <pathelement path="${applib.dir}"/>
   </path>
   <property name="applib.run.classpath" refid="applib.run.classpath"/>
+
+  <path id="mbean.build.classpath">
+    <pathelement path="${mbean.dir}"/>
+    <pathelement path="${farrago.classes.dir}"/>
+    <pathelement path="${farrago.catalog.src.dir}"/>
+    <pathelement path="${resgen.dir}/lib/eigenbase-resgen.jar"/>
+    <pathelement path="${resgen.dir}/lib/eigenbase-xom.jar"/>
+    <pathelement path="${mdrlibs.dir}/jmi.jar"/>
+    <fileset dir="${jgrapht7.dir}">
+      <include name="jgrapht7-jdk1.5.jar" />
+    </fileset>
+  </path>
+  <property name="mbean.build.classpath" refid="mbean.build.classpath"/>
+
+  <path id="mbean.run.classpath">
+    <pathelement path="${farrago.run.classpath}"/>
+    <pathelement path="${mbean.dir}"/>
+  </path>
+  <property name="mbean.run.classpath" refid="mbean.run.classpath"/>
 
   <target name="gen-bh-report">
     <xslt basedir="testlog" destdir="testlog" style="bh-html.xsl" includes="**/bh.xml" extension=".html"/>
@@ -397,10 +417,19 @@ ${farrago.test.jvmargs}
       destdir="${classes.dir}"
       classpathref="luciddb.build.classpath">
       <include name="**/*.java" />
+      <exclude name="**/mbean/**/*.java"/>
     </farrago.javaCompile>
     <antcall target="buildApplibPlugin"/>
+    <antcall target="buildMBeanPlugin"/>
     <antcall target="buildJdbcPlugin" />
     <antcall target="buildClientJar"/>
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${luciddb.test.dir}/src"
+      destdir="${classes.dir}"
+      classpath="${luciddb.plugin.dir}/luciddb-mbean.jar">
+      <include name="**/mbean/**/*.java"/>
+    </farrago.javaCompile>
   </target>
 
   <!-- creates catalog and populates with initial metadata -->
@@ -509,11 +538,17 @@ ${farrago.test.jvmargs}
   <target name="makePluginDirs">
     <mkdir dir="${luciddb.plugin.dir}"/>
     <mkdir dir="${luciddb.plugin.dir}/applib"/>
+    <mkdir dir="${luciddb.plugin.dir}/mbean"/>
   </target>
 
   <!-- task for generating resources -->
   <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">
     <classpath refid="applib.run.classpath"/>
+  </taskdef>
+
+  <!-- task for generating resources -->
+  <taskdef name="resgen-mbean" classname="org.eigenbase.resgen.ResourceGenTask">
+    <classpath refid="mbean.run.classpath"/>
   </taskdef>
 
   <target name="runFarragoInitSql">
@@ -629,6 +664,49 @@ ${farrago.test.jvmargs}
     </uptodate>
   </target>
 
+  <!-- create mbean plugin jar -->
+  <target name="buildMBeanPlugin"
+    depends="makePluginDirs,checkMBeanPluginUptodate"
+    unless="plugin.mbean.uptodate">
+    <antcall target="generateMBeanResource"/>
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${luciddb.dir}/src"
+      destdir="${mbean.dir}"
+      classpathref="mbean.build.classpath">
+      <include name="**/mbean/**/*.java"/>
+    </farrago.javaCompile>
+    <jar jarfile="${luciddb.plugin.dir}/luciddb-mbean.jar">
+      <fileset dir="${mbean.dir}">
+        <include name="**/mbean/**/*"/>
+      </fileset>
+      <fileset dir="${farrago.classes.dir}">
+        <include name="com/lucidera/jdbc/LucidDbRmiDriver.class"/>
+      </fileset>
+    </jar>
+  </target>
+
+  <target name="generateMBeanResource">
+    <resgen
+      srcdir="${luciddb.dir}/src"
+      destdir="${luciddb.dir}/src"
+      resdir="${mbean.dir}"
+      style="functor"
+      locales="en_US">
+      <include name="com/lucidera/luciddb/mbean/resource/MBeanQuery.xml"/>
+    </resgen>
+  </target>
+
+  <target name="checkMBeanPluginUptodate">
+    <uptodate property="plugin.mbean.uptodate"
+      targetfile="${luciddb.plugin.dir}/luciddb-mbean.jar">
+      <srcfiles dir="${luciddb.dir}/src">
+        <include name="**/mbean/**/*.java"/>
+        <include name="**/mbean/**/*.xml"/>
+      </srcfiles>
+    </uptodate>
+  </target>
+
   <target name="runLuciddbInitSql">
     <pathconvert property="luciddb.initsql.prop"
       refid="luciddb.filelist.initsql" pathsep="${line.separator}"
@@ -641,6 +719,7 @@ ${farrago.test.jvmargs}
   <target name="cleanJars">
     <antcall target="cleanClientJar"/>
     <antcall target="cleanApplib"/>
+    <antcall target="cleanMBean"/>
     <antcall target="cleanJdbcPlugins"/>
   </target>
 
@@ -662,6 +741,17 @@ ${farrago.test.jvmargs}
       </fileset>
     </delete>
     <delete file="${luciddb.plugin.dir}/applib.jar" quiet="true"/>
+  </target>
+
+  <target name="cleanMBean">
+    <delete dir="${mbean.dir}" quiet="true"/>
+    <delete quiet="true">
+      <fileset dir="${luciddb.dir}/src">
+        <include name="**/MBeanQuery.java"/>
+        <include name="**/MBeanQuery_en_US.java"/>
+      </fileset>
+    </delete>
+    <delete file="${luciddb.plugin.dir}/luciddb-mbean.jar" quiet="true"/>
   </target>
 
   <target name="shortreg" depends="compile" >
@@ -921,6 +1011,7 @@ ${farrago.test.jvmargs}
     <copy todir="${release.plugin.dir}">
       <fileset dir="${luciddb.plugin.dir}">
         <exclude name="applib/**"/>
+        <exclude name="mbean/**"/>
       </fileset>
     </copy>
     <copy todir="${dist.dir}/${lucidera.release.spec}/examples">

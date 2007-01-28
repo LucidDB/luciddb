@@ -688,6 +688,9 @@ void Database::recoverOnline()
 
     // after recovery, flush recovered data pages; no need to discard them
     recoverPhysical(CHECKPOINT_FLUSH_ALL);
+
+    // this will bump up version number to be used by further page writes
+    checkpointImpl(CHECKPOINT_FLUSH_ALL);
 }
 
 void Database::recover(

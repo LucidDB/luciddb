@@ -418,17 +418,8 @@ public abstract class SqlUtil
         SqlFunctionCategory category)
     {
         // start with all routines matching by name
-        List<SqlOperator> operators =
-            opTab.lookupOperatorOverloads(
-                funcName,
-                category,
-                SqlSyntax.Function);
-        List<SqlFunction> routines = new ArrayList<SqlFunction>();
-        for (SqlOperator operator : operators) {
-            if (operator instanceof SqlFunction) {
-                routines.add((SqlFunction) operator);
-            }
-        }
+        List<SqlFunction> routines =
+            lookupSubjectRoutinesByName(opTab, funcName, category);
 
         // first pass:  eliminate routines which don't accept the given
         // number of arguments
@@ -455,6 +446,53 @@ public abstract class SqlUtil
         // the given arguments
         filterRoutinesByTypePrecedence(routines, argTypes);
 
+        return routines;
+    }
+    
+    /**
+     * Determine if there is a routine matching the given name and number of
+     * arguments.
+     *
+     * @param opTab operator table to search
+     * @param funcName name of function being invoked
+     * @param argTypes argument types
+     * @param category category of routine to look up
+     *
+     * @return true if match found
+     */
+    public static boolean matchRoutinesByParameterCount(
+        SqlOperatorTable opTab,
+        SqlIdentifier funcName,
+        RelDataType [] argTypes,
+        SqlFunctionCategory category)
+    {
+        // start with all routines matching by name
+        List<SqlFunction> routines =
+            lookupSubjectRoutinesByName(opTab, funcName, category);
+
+        // first pass:  eliminate routines which don't accept the given
+        // number of arguments
+        filterRoutinesByParameterCount(routines, argTypes);
+        
+        return (routines.size() > 0);
+    }
+    
+    private static List<SqlFunction> lookupSubjectRoutinesByName(
+        SqlOperatorTable opTab,
+        SqlIdentifier funcName,
+        SqlFunctionCategory category)
+    {
+        List<SqlOperator> operators =
+            opTab.lookupOperatorOverloads(
+                funcName,
+                category,
+                SqlSyntax.Function);
+        List<SqlFunction> routines = new ArrayList<SqlFunction>();
+        for (SqlOperator operator : operators) {
+            if (operator instanceof SqlFunction) {
+                routines.add((SqlFunction) operator);
+            }
+        }
         return routines;
     }
 

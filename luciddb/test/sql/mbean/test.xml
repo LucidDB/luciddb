@@ -1,0 +1,58 @@
+<project name="bh" default="mbean">
+  <target name="mbean">
+    <test-suite name="mbean">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="mbean"/>
+          </test-suite-call>
+        </test-suite>
+      </init-hook>
+
+      <test name="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testPingServer"/>
+      </test>
+
+      <test name="testForeignSources" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testForeignSources"/>
+      </test>
+
+      <test name="testObjectsInUse" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testObjectsInUse"/>
+      </test>
+
+      <test name="testPerfCounters" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testPerfCounters"/>
+      </test>
+
+      <test name="testSessions" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testSessions"/>
+      </test>
+
+      <test name="testSqlStatements" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testSqlStatements"/>
+      </test>
+
+      <test name="testSystemParameters" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testSystemParameters"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="mbean"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

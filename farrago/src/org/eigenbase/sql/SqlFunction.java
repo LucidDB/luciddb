@@ -272,13 +272,20 @@ public class SqlFunction
                 argTypes,
                 getFunctionType());
         
-        // if we couldn't find a function with  a COLUMN_LIST type, retry, but
-        // this time, don't convert the row argument to a COLUMN_LIST type;
-        // otherwise, go back and revalidate the row operands (corresponding to
+        // if we have a match on function name and parameter count, but couldn't
+        // find a function with  a COLUMN_LIST type, retry, but this time, don't
+        // convert the row argument to a COLUMN_LIST type; if we did find a
+        // match, go back and revalidate the row operands (corresponding to
         // column references), now that we can set the scope to that of the
         // source cursor referenced by that ColumnList type
         if (containsRowArg) {
-            if (function == null) {
+            if (function == null &&
+                SqlUtil.matchRoutinesByParameterCount(
+                    validator.getOperatorTable(),
+                    getNameAsId(),
+                    argTypes,
+                    getFunctionType()))
+            {
                 // remove the already validated node types corresponding to
                 // row arguments before revalidating
                 for (int i = 0; i < operands.length; ++i) {
@@ -288,7 +295,7 @@ public class SqlFunction
                 }
                 validator.popCursorMap();
                 return deriveType(validator, scope, call, false);
-            } else {
+            } else if (function != null) {
                 validator.validateColumnListParams(
                     function,
                     argTypes,

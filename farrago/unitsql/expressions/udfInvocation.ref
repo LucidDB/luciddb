@@ -306,6 +306,21 @@ Error: Object definition contains recursive cycle (state=,code=0)
 >     '|'));
 Error: From line 4, column 15 to line 4, column 19: Column 'EMPNO' not found in any table (state=,code=0)
 > 
+> -- should fail : should reference column by its alias
+> select *
+> from table(stringifyColumns(
+>     cursor(select name as n from sales.depts where deptno=20 order by 1),
+>     row(name),
+>     '|'));
+Error: From line 4, column 9 to line 4, column 12: Column 'NAME' not found in any table (state=,code=0)
+> 
+> -- should fail : wrong number of arguments
+> select * 
+> from table(stringifyColumns(
+>     cursor(select * from sales.emps where deptno=20 order by 1),
+>     row(name, empno, gender)));
+Error: From line 2, column 12 to line 4, column 29: No match found for function signature STRINGIFYCOLUMNS(<CURSOR>, <COLUMN_LIST>) (state=,code=0)
+> 
 > -- should fail:  we don't allow mutual recursion either
 > create schema crypto
 > create function alice(x double)
@@ -722,6 +737,19 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 > from table(stringifyColumns(
 >     cursor(select * from sales.depts order by 1),
 >     row(name),
+>     '|'))
+> order by 1;
++------------+
+|   EXPR$0   |
++------------+
+| ACCOUNTS   |
+| MARKETING  |
+| SALES      |
++------------+
+> select upper(v)
+> from table(stringifyColumns(
+>     cursor(select name as n from sales.depts order by 1),
+>     row(n),
 >     '|'))
 > order by 1;
 +------------+

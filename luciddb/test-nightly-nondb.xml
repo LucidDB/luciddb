@@ -28,6 +28,7 @@
       <test-suite-call testfile="test/sql/tpch/test.xml">
         <property name="datasize" value="100M"/>
       </test-suite-call>
+      <test-suite-call testfile="test/sql/mbean/test.xml"/>
 
       <!-- non-db dependent tests which rely on cvs files on raksha -->
       <test-suite-call testfile="test/sql/sqbm/test.xml"/>

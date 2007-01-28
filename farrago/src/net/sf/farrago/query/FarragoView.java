@@ -105,7 +105,18 @@ class FarragoView
                 getPreparingStmt().expandView(
                     getRowType(),
                     queryString);
-            rel = RelOptUtil.createRenameRel(rowType, rel);
+
+            // NOTE jvs 22-Jan-2007:  It would be nice if we could
+            // state that we only need a rename here (not a cast)
+            // since the view column types should have been updated
+            // as part of doing CREATE OR REPLACE on any objects
+            // the view depends on.  However, this is not the case
+            // for direct SQL/MED references without an
+            // explicit CREATE FOREIGN TABLE or IMPORT FOREIGN SCHEMA,
+            // since there the external system can change at
+            // any time.
+            
+            rel = RelOptUtil.createCastRel(rel, rowType, true);
             rel = getPreparingStmt().flattenTypes(rel, false);
             return rel;
         } catch (Throwable e) {

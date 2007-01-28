@@ -303,6 +303,19 @@ from table(stringifyColumns(
     row(name, empno),
     '|'));
 
+-- should fail : should reference column by its alias
+select *
+from table(stringifyColumns(
+    cursor(select name as n from sales.depts where deptno=20 order by 1),
+    row(name),
+    '|'));
+
+-- should fail : wrong number of arguments
+select * 
+from table(stringifyColumns(
+    cursor(select * from sales.emps where deptno=20 order by 1),
+    row(name, empno, gender)));
+
 -- should fail:  we don't allow mutual recursion either
 create schema crypto
 create function alice(x double)
@@ -478,6 +491,12 @@ select upper(v)
 from table(stringifyColumns(
     cursor(select * from sales.depts order by 1),
     row(name),
+    '|'))
+order by 1;
+select upper(v)
+from table(stringifyColumns(
+    cursor(select name as n from sales.depts order by 1),
+    row(n),
     '|'))
 order by 1;
 select upper(v)

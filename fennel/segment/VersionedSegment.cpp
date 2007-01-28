@@ -269,9 +269,6 @@ void VersionedSegment::prepareOnlineRecovery()
     
     dataToLogMap.clear();
     oldestLogPageId = NULL_PAGE_ID;
-
-    // REVIEW jvs 8-Aug-2006:  This is probably superfluous.
-    ++versionNumber;
 }
 
 void VersionedSegment::recover(
