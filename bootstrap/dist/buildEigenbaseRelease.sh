@@ -172,13 +172,17 @@ jdbc.driver.version.minor=$MINOR
 jdbc.url.base=jdbc:farrago:
 jdbc.url.port.default=5433
 EOF
-cd $OPEN_DIR/luciddb
-./initBuild.sh --with-optimization --without-debug
+
+cd $OPEN_DIR/farrago
+./initBuild.sh --with-fennel --with-optimization --without-debug
 ./distBuild.sh --skip-init-build
-mv dist/luciddb.$ARCHIVE_SUFFIX \
-    $DIST_DIR/$LUCIDDB_BINARY_RELEASE.$ARCHIVE_SUFFIX
 mv ../farrago/dist/farrago.$ARCHIVE_SUFFIX \
     $DIST_DIR/$BINARY_RELEASE.$ARCHIVE_SUFFIX
+
+cd $OPEN_DIR/luciddb
+./initBuild.sh --without-farrago-build --with-optimization --without-debug
+mv dist/luciddb.$ARCHIVE_SUFFIX \
+    $DIST_DIR/$LUCIDDB_BINARY_RELEASE.$ARCHIVE_SUFFIX
 
 if [ $cygwin = "false" ]; then
 
