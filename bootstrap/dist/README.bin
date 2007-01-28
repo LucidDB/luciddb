@@ -10,7 +10,12 @@ http://www.eigenbase.org
 ----------------------------------------------------------------------
 INSTALLATION
 
-From the install directory, run install.sh on Linux or install.bat on Windows.
+From the install directory, run install.sh on Linux or install.bat on
+Windows.
+
+Source releases are also available.
+
+http://www.eigenbase.org/download.html
 
 ----------------------------------------------------------------------
 RUNNING
@@ -37,6 +42,10 @@ This binary release is intended for use by anyone who wants to test
 out the Eigenbase platform or one of its sub-projects without having
 to build anything.  We encourage users to explore the platform and
 test out possibilities for integration with other projects.
+
+Please report issues at Eigenbase JIRA:
+
+http://issues.eigenbase.org
 
 ----------------------------------------------------------------------
 LICENSE
