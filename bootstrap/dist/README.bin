@@ -34,9 +34,9 @@ connection).
 RELEASE NOTES
 
 This binary release is intended for use by anyone who wants to test
-out the Eigenbase platform without having to build anything.  We
-encourage users to explore the platform and test out possibilities for
-integration with other projects.
+out the Eigenbase platform or one of its sub-projects without having
+to build anything.  We encourage users to explore the platform and
+test out possibilities for integration with other projects.
 
 ----------------------------------------------------------------------
 LICENSE
