@@ -149,6 +149,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
     <pathelement path="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"/>
+    <pathelement path="${luciddb.plugin.dir}/luciddb-mbean.jar"/>
     <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
