@@ -159,7 +159,11 @@ public class MedJdbcDataServer
                     validateConnection = false;
                 } finally {
                     if (testStatement != null) {
-                        testStatement.close();
+                        try {
+                            testStatement.close();
+                        } catch (SQLException ex) {
+                            // do nothing
+                        }
                     }
                 }
             } else {
