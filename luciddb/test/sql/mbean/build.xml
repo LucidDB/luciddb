@@ -41,6 +41,7 @@
   <path id="test.classpath">
     <pathelement path="${open.dir}/luciddb/classes"/>
     <pathelement path="${open.dir}/luciddb/plugin/luciddb-mbean.jar"/>
+    <pathelement path="${open.dir}/luciddb/plugin/applib.jar"/>
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
