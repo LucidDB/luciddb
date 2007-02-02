@@ -79,7 +79,7 @@
 +--------------+------------+--------------+-----------+
 | LIT1         | CHAR       | 8            | 0         |
 | LIT2         | CHAR       | 3            | 0         |
-| LIT3         | CHAR       | 0            | 0         |
+| LIT3         | CHAR       | 1            | 0         |
 | LIT4         | CHAR       | 2            | 0         |
 +--------------+------------+--------------+-----------+
 > 
@@ -100,17 +100,17 @@
 +--------------+------------+--------------+-----------+
 | LIT1         | CHAR       | 8            | 0         |
 | LIT2         | CHAR       | 3            | 0         |
-| LIT3         | CHAR       | 0            | 0         |
+| LIT3         | CHAR       | 1            | 0         |
 | LIT4         | CHAR       | 2            | 0         |
 +--------------+------------+--------------+-----------+
 > 
 > !set outputformat csv
 > select * from literal_view;
 'LIT1','LIT2','LIT3','LIT4'
-'pumpkin ','pie','','  '
+'pumpkin ','pie',' ','  '
 > select * from literal_view2;
 'LIT1','LIT2','LIT3','LIT4'
-'pumpkin ','pie','','  '
+'pumpkin ','pie',' ','  '
 > !set outputformat table
 > 
 > -- FRG-38:  boundary conditions with index on real datatype
