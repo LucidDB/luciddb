@@ -308,7 +308,12 @@ public abstract class DdlHandler
             || (typeFamily == SqlTypeFamily.Binary)) {
             // convert precision to length
             if (element.getPrecision() != null) {
-                element.setLength(element.getPrecision());
+                // Minimum column length for char and binary is 1
+                if (element.getPrecision().intValue() == 0) {
+                    element.setLength(Integer.valueOf(1));
+                } else {
+                    element.setLength(element.getPrecision());
+                }
                 element.setPrecision(null);
             }
         }
