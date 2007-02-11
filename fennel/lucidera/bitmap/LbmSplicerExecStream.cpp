@@ -254,7 +254,9 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
 
 void LbmSplicerExecStream::closeImpl()
 {
-    bTreeWriter->endSearch();
+    if (bTreeWriter) {
+        bTreeWriter->endSearch();
+    }
     deletionReader.endSearch();
     DiffluenceExecStream::closeImpl();
     bitmapBuffer.reset();

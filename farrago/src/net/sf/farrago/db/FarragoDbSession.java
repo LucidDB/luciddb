@@ -97,9 +97,11 @@ public class FarragoDbSession
     private FennelTxnContext fennelTxnContext;
 
     /**
-     * Current transaction ID, or null if none active.
+     * Reference to current transaction ID, or null if none active.  We
+     * do it this way so that reference is shared across all clones
+     * via shallow-copy.
      */
-    private FarragoSessionTxnId txnId;
+    private TxnIdRef txnIdRef;
 
     /**
      * Qualifiers to assume for unqualified object references
@@ -186,6 +188,7 @@ public class FarragoDbSession
         this.sessionFactory = sessionFactory;
         this.url = url;
         warningQueue = new FarragoWarningQueue();
+        txnIdRef = new TxnIdRef();
 
         database = FarragoDbSingleton.pinReference(sessionFactory);
         FarragoDbSingleton.addSession(database, this);
@@ -465,7 +468,7 @@ public class FarragoDbSession
     public synchronized boolean isTxnInProgress()
     {
         // TODO jvs 9-Mar-2006:  Unify txn state.
-        if (txnId != null) {
+        if (txnIdRef.txnId != null) {
             return true;
         }
         if (fennelTxnContext == null) {
@@ -477,10 +480,10 @@ public class FarragoDbSession
     // implement FarragoSession
     public synchronized FarragoSessionTxnId getTxnId(boolean createIfNeeded)
     {
-        if ((txnId == null) && createIfNeeded) {
-            txnId = getTxnMgr().beginTxn(this);
+        if ((txnIdRef.txnId == null) && createIfNeeded) {
+            txnIdRef.txnId = getTxnMgr().beginTxn(this);
         }
-        return txnId;
+        return txnIdRef.txnId;
     }
 
     // implement FarragoSession
@@ -715,9 +718,9 @@ public class FarragoDbSession
     private void onEndOfTransaction(
         FarragoSessionTxnEnd eot)
     {
-        if (txnId != null) {
-            getTxnMgr().endTxn(txnId, eot);
-            txnId = null;
+        if (txnIdRef.txnId != null) {
+            getTxnMgr().endTxn(txnIdRef.txnId, eot);
+            txnIdRef.txnId = null;
         }
         savepointList.clear();
         Iterator iter = txnCodeCache.values().iterator();
@@ -1190,6 +1193,11 @@ public class FarragoDbSession
             shutDownRequested = true;
             catalogDumpRequested = true;
         }
+    }
+
+    private static class TxnIdRef 
+    {
+        FarragoSessionTxnId txnId;
     }
 }
 

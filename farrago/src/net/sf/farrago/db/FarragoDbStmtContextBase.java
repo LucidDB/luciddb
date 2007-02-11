@@ -46,10 +46,12 @@ import org.eigenbase.resource.*;
  * <p>See individual methods for assistance in determining when they may be
  * called.
  *
- * <p>Most non-trivial public methods on this class must be synchronized, since
- * closeAllocation may be called from a thread shutting down the database.  The
- * exception is cancel, which must NOT be synchronized, since it needs to
- * return immediately.
+ * <p>Most non-trivial public methods on this class must be synchronized on the
+ * parent session, since closeAllocation may be called from a thread shutting
+ * down the database.  The exception is cancel, which must NOT be synchronized,
+ * since it needs to return immediately.  (We synchronize on the parent
+ * session to avoid deadlocks from session/stmt vs. stmt/session lock order;
+ * see http://issues.eigenbase.org/browse/LDB-150 for an example.)
  *
  * @author Stephan Zuercher
  */
@@ -64,7 +66,7 @@ public abstract class FarragoDbStmtContextBase
 
     //~ Instance fields --------------------------------------------------------
 
-    protected FarragoDbSession session;
+    protected final FarragoDbSession session;
     protected final FarragoSessionStmtParamDefFactory paramDefFactory;
 
     /**
@@ -113,12 +115,14 @@ public abstract class FarragoDbStmtContextBase
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionStmtContext
-    public synchronized void closeAllocation()
+    public void closeAllocation()
     {
-        unprepare();
+        synchronized(session) {
+            unprepare();
 
-        // purge self from session's list
-        session.forgetAllocation(this);
+            // purge self from session's list
+            session.forgetAllocation(this);
+        }
     }
 
     // implement FarragoSessionStmtContext
@@ -140,41 +144,49 @@ public abstract class FarragoDbStmtContextBase
     }
 
     // implement FarragoSessionStmtContext
-    public synchronized void unprepare()
+    public void unprepare()
     {
-        sql = null;
-        dynamicParamValues = null;
-        dynamicParamValuesSet = null;
+        synchronized(session) {
+            sql = null;
+            dynamicParamValues = null;
+            dynamicParamValuesSet = null;
 
-        ddlLockManager.removeObjectsInUse(this);
+            ddlLockManager.removeObjectsInUse(this);
+        }
     }
 
     // implement FarragoSessionStmtContext
-    public synchronized void setDynamicParam(
+    public void setDynamicParam(
         int parameterIndex, Object x)
     {
-        assert (isPrepared());
-        Object y = dynamicParamDefs[parameterIndex].scrubValue(x);
-        dynamicParamValues[parameterIndex] = y;
-        dynamicParamValuesSet[parameterIndex] = true;
+        synchronized(session) {
+            assert (isPrepared());
+            Object y = dynamicParamDefs[parameterIndex].scrubValue(x);
+            dynamicParamValues[parameterIndex] = y;
+            dynamicParamValuesSet[parameterIndex] = true;
+        }
     }
 
     // implement FarragoSessionStmtContext
-    public synchronized void setDynamicParam(
+    public void setDynamicParam(
         int parameterIndex, Object x, Calendar cal)
     {
-        assert (isPrepared());
-        Object y = dynamicParamDefs[parameterIndex].scrubValue(x, cal);
-        dynamicParamValues[parameterIndex] = y;
-        dynamicParamValuesSet[parameterIndex] = true;
+        synchronized(session) {
+            assert (isPrepared());
+            Object y = dynamicParamDefs[parameterIndex].scrubValue(x, cal);
+            dynamicParamValues[parameterIndex] = y;
+            dynamicParamValuesSet[parameterIndex] = true;
+        }
     }
 
     // implement FarragoSessionStmtContext
-    public synchronized void clearParameters()
+    public void clearParameters()
     {
-        assert (isPrepared());
-        Arrays.fill(dynamicParamValuesSet, false);
-        Arrays.fill(dynamicParamValues, null);
+        synchronized(session) {
+            assert (isPrepared());
+            Arrays.fill(dynamicParamValuesSet, false);
+            Arrays.fill(dynamicParamValues, null);
+        }
     }
 
     // implement FarragoSessionStmtContext

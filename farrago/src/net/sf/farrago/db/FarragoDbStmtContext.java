@@ -44,10 +44,8 @@ import org.eigenbase.util.*;
  * net.sf.farrago.session.FarragoSessionStmtContext} interface in terms of a
  * {@link FarragoDbSession}.
  *
- * <p>Most non-trivial public methods on this class must be synchronized, since
- * closeAllocation may be called from a thread shutting down the database.  The
- * exception is cancel, which must NOT be synchronized, since it needs to
- * return immediately.
+ * <p>Most non-trivial public methods on this class must be synchronized on the
+ * parent session; see superclass for details.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -104,22 +102,24 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public synchronized void prepare(
+    public void prepare(
         String sql,
         boolean isExecDirect)
     {
-        warningQueue.clearWarnings();
-        unprepare();
-        allocations = new FarragoCompoundAllocation();
-        this.sql = sql;
-        executableStmt =
-            session.prepare(
-                this,
-                sql,
-                allocations,
-                isExecDirect,
-                null);
-        finishPrepare();
+        synchronized(session) {
+            warningQueue.clearWarnings();
+            unprepare();
+            allocations = new FarragoCompoundAllocation();
+            this.sql = sql;
+            executableStmt =
+                session.prepare(
+                    this,
+                    sql,
+                    allocations,
+                    isExecDirect,
+                    null);
+            finishPrepare();
+        }
     }
 
     private void finishPrepare()
@@ -135,41 +135,47 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public synchronized void prepare(
+    public void prepare(
         RelNode plan,
         SqlKind kind,
         boolean logical,
         FarragoSessionPreparingStmt prep)
     {
-        warningQueue.clearWarnings();
-        unprepare();
-        allocations = new FarragoCompoundAllocation();
-        this.sql = ""; // not available
+        synchronized(session) {
+            warningQueue.clearWarnings();
+            unprepare();
+            allocations = new FarragoCompoundAllocation();
+            this.sql = ""; // not available
 
-        executableStmt =
-            session.getDatabase().implementStmt(prep,
-                plan,
-                kind,
-                logical,
-                allocations);
-        if (isPrepared()) {
-            lockObjectsInUse(executableStmt);
+            executableStmt =
+                session.getDatabase().implementStmt(prep,
+                    plan,
+                    kind,
+                    logical,
+                    allocations);
+            if (isPrepared()) {
+                lockObjectsInUse(executableStmt);
+            }
+            finishPrepare();
         }
-        finishPrepare();
     }
 
     // implement FarragoSessionStmtContext
-    public synchronized RelDataType getPreparedRowType()
+    public RelDataType getPreparedRowType()
     {
-        assert (isPrepared());
-        return executableStmt.getRowType();
+        synchronized(session) {
+            assert (isPrepared());
+            return executableStmt.getRowType();
+        }
     }
 
     // implement FarragoSessionStmtContext
-    public synchronized RelDataType getPreparedParamType()
+    public RelDataType getPreparedParamType()
     {
-        assert (isPrepared());
-        return executableStmt.getDynamicParamRowType();
+        synchronized(session) {
+            assert (isPrepared());
+            return executableStmt.getDynamicParamRowType();
+        }
     }
 
     // implement FarragoSessionStmtContext
@@ -185,7 +191,14 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public synchronized void execute()
+    public void execute()
+    {
+        synchronized(session) {
+            executeImpl();
+        }
+    }
+
+    private void executeImpl() 
     {
         assert (isPrepared());
         warningQueue.clearWarnings();
@@ -303,11 +316,13 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public synchronized long getUpdateCount()
+    public long getUpdateCount()
     {
-        long count = updateCount;
-        updateCount = -1;
-        return count;
+        synchronized(session) {
+            long count = updateCount;
+            updateCount = -1;
+            return count;
+        }
     }
 
     // implement FarragoSessionStmtContext
@@ -336,41 +351,45 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public synchronized void closeResultSet()
+    public void closeResultSet()
     {
-        if (resultSet == null) {
-            return;
+        synchronized(session) {
+            if (resultSet == null) {
+                return;
+            }
+            try {
+                resultSet.close();
+            } catch (Throwable ex) {
+                throw Util.newInternal(ex);
+            }
+            resultSet = null;
+            FarragoSessionRuntimeContext contextToClose = runningContext;
+            if (contextToClose != null) {
+                contextToClose.closeAllocation();
+            }
+            runningContext = null;
+            clearExecutingStmtInfo();
         }
-        try {
-            resultSet.close();
-        } catch (Throwable ex) {
-            throw Util.newInternal(ex);
-        }
-        resultSet = null;
-        FarragoSessionRuntimeContext contextToClose = runningContext;
-        if (contextToClose != null) {
-            contextToClose.closeAllocation();
-        }
-        runningContext = null;
-        clearExecutingStmtInfo();
     }
 
     // implement FarragoSessionStmtContext
-    public synchronized void unprepare()
+    public void unprepare()
     {
-        // request cancel, and wait until it takes effect before
-        // proceeding with cleanup, otherwise we may yank stuff
-        // out from under executing threads in a bad way
-        cancel(true);
+        synchronized(session) {
+            // request cancel, and wait until it takes effect before
+            // proceeding with cleanup, otherwise we may yank stuff
+            // out from under executing threads in a bad way
+            cancel(true);
         
-        closeResultSet();
-        if (allocations != null) {
-            allocations.closeAllocation();
-            allocations = null;
-        }
-        executableStmt = null;
+            closeResultSet();
+            if (allocations != null) {
+                allocations.closeAllocation();
+                allocations = null;
+            }
+            executableStmt = null;
 
-        super.unprepare();
+            super.unprepare();
+        }
     }
     
     // implement FarragoSessionStmtContext
