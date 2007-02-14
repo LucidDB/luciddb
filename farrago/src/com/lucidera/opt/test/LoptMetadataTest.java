@@ -989,11 +989,8 @@ public class LoptMetadataTest
         groupKey.set(0);
         groupKey.set(1);
         double expected =
-            RelMdUtil.numDistinctVals(
-                (double) COLSTORE_EMPS_ROWCOUNT * .145
-                * DEFAULT_EQUAL_SELECTIVITY,
-                (double) COLSTORE_EMPS_ROWCOUNT * .145
-                * DEFAULT_EQUAL_SELECTIVITY);
+            (double) COLSTORE_EMPS_ROWCOUNT * .145
+                * DEFAULT_EQUAL_SELECTIVITY;
 
         // selectivity of deptno < 150 is .145
         checkDistinctRowCount(
@@ -1033,14 +1030,10 @@ public class LoptMetadataTest
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         groupKey.set(1);
-        double expected =
-            RelMdUtil.numDistinctVals(
-                100.0,
-                100.0);
         checkDistinctRowCount(
             "select * from tabwithuniqueKey",
             groupKey,
-            expected);
+            100.0);
     }
 
     public void testSelectivityLcsTableNoStats()

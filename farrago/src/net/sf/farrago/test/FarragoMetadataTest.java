@@ -309,10 +309,7 @@ public class FarragoMetadataTest
     {
         BitSet groupKey = new BitSet();
         groupKey.set(0);
-        double expected =
-            RelMdUtil.numDistinctVals(
-                2 * TAB_ROWCOUNT,
-                2 * TAB_ROWCOUNT);
+        double expected = 2 * TAB_ROWCOUNT;
         checkPopulation(
             "select * from (select * from tab union all select * from tab)",
             groupKey,
@@ -325,12 +322,10 @@ public class FarragoMetadataTest
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         groupKey.set(1);
-        double expected = RelMdUtil.numDistinctVals(TAB_ROWCOUNT, TAB_ROWCOUNT);
-        expected = RelMdUtil.numDistinctVals(TAB_ROWCOUNT, expected);
         checkPopulation(
             "select c0, count(*) from tab group by c0",
             groupKey,
-            expected);
+            TAB_ROWCOUNT);
     }
 
     private void checkUniqueKeys(
@@ -789,10 +784,7 @@ public class FarragoMetadataTest
             "select * from tab where c1 = 1");
         BitSet groupKey = new BitSet();
         groupKey.set(0);
-        double expected =
-            RelMdUtil.numDistinctVals(
-                TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY,
-                TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
+        double expected = TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY;
         checkDistinctRowCount(rootRel, groupKey, expected);
     }
 
@@ -805,10 +797,7 @@ public class FarragoMetadataTest
             "select * from tab where c1 = 1 order by c2");
         BitSet groupKey = new BitSet();
         groupKey.set(0);
-        double expected =
-            RelMdUtil.numDistinctVals(
-                TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY,
-                TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
+        double expected = TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY;
         checkDistinctRowCount(rootRel, groupKey, expected);
     }
 
@@ -850,10 +839,7 @@ public class FarragoMetadataTest
         groupKey.set(1);
 
         // number of distinct values from applying the filter
-        double expected =
-            RelMdUtil.numDistinctVals(
-                TAB_ROWCOUNT * DEFAULT_COMP_SELECTIVITY,
-                TAB_ROWCOUNT * DEFAULT_COMP_SELECTIVITY);
+        double expected = TAB_ROWCOUNT * DEFAULT_COMP_SELECTIVITY;
 
         // number of distinct values from applying the having clause
         //
