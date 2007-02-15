@@ -313,7 +313,7 @@ public class LcsRowScanRel
             newInputs = new RelNode[inputs.length + 1];
             System.arraycopy(inputs, 0, newInputs, 1, inputs.length);
             LcsIndexSearchRel delIndexScan =
-                indexGuide.createDeletionIndexScan(
+                getIndexGuide().createDeletionIndexScan(
                     this,
                     lcsTable,
                     null,
@@ -326,14 +326,14 @@ public class LcsRowScanRel
                 System.arraycopy(inputs, 1, newInputs, 1, inputs.length-1);
             }
             newInputs[0] =
-                indexGuide.createMinusOfDeletionIndex(
+                getIndexGuide().createMinusOfDeletionIndex(
                     this,
                     lcsTable,
                     inputs[0]);
         }
 
         FemLcsRowScanStreamDef scanStream =
-            indexGuide.newRowScan(this, projectedColumns, residualColumns);
+            getIndexGuide().newRowScan(this, projectedColumns, residualColumns);
 
         for (int i = 0; i < newInputs.length; i++) {
             FemExecutionStreamDef inputStream =

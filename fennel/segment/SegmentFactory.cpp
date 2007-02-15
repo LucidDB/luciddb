@@ -29,6 +29,8 @@
 #include "fennel/segment/VersionedSegment.h"
 #include "fennel/segment/ScratchSegment.h"
 #include "fennel/segment/RandomAllocationSegment.h"
+#include "fennel/segment/SnapshotRandomAllocationSegment.h"
+#include "fennel/segment/VersionedRandomAllocationSegment.h"
 #include "fennel/segment/CircularSegment.h"
 #include "fennel/segment/SegmentAccessor.h"
 #include "fennel/common/ConfigMap.h"
@@ -89,6 +91,34 @@ SharedSegment SegmentFactory::newRandomAllocationSegment(
         pSegment->deallocatePageRange(NULL_PAGE_ID,NULL_PAGE_ID);
     }
     return newTracingSegment(pSegment,"RandomAllocationSegment");
+}
+
+SharedSegment SegmentFactory::newVersionedRandomAllocationSegment(
+    SharedSegment delegateSegment,
+    SharedSegment pTempSegment,
+    bool bFormat)
+{
+    VersionedRandomAllocationSegment *pVersionedRandomSegment = 
+        new VersionedRandomAllocationSegment(delegateSegment, pTempSegment);
+    SharedSegment pSegment(pVersionedRandomSegment, ClosableObjectDestructor());
+    if (bFormat) {
+        pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
+    }
+    return newTracingSegment(pSegment, "VersionedRandomAllocationSegment");
+}
+
+SharedSegment SegmentFactory::newSnapshotRandomAllocationSegment(
+    SharedSegment delegateSegment,
+    SharedSegment versionedSegment,
+    TxnId snapshotCsn)
+{
+    SnapshotRandomAllocationSegment *pSnapshotSegment =
+        new SnapshotRandomAllocationSegment(
+            delegateSegment,
+            versionedSegment,
+            snapshotCsn);
+    SharedSegment pSegment(pSnapshotSegment, ClosableObjectDestructor());
+    return newTracingSegment(pSegment, "SnapshotRandomAllocationSegment");
 }
 
 SharedSegment SegmentFactory::newWALSegment(

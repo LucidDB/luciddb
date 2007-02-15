@@ -105,13 +105,15 @@ public interface FarragoMedLocalDataServer
         throws SQLException;
 
     /**
-     * Verifies an index and records its page count.
+     * Verifies an index and returns its page count.
      *
      * @param index definition of the index to verify
      * @param rootPageid root PageId of index
      * @param estimate whether to estimate statistics for a quicker result
+     *
+     * @return page count for the specified index
      */
-    public void computeIndexStats(
+    public long computeIndexStats(
         FemLocalIndex index,
         long rootPageId,
         boolean estimate)

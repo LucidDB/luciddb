@@ -249,6 +249,25 @@ public:
     virtual bool isPageIdAllocated(PageId pageId) = 0;
     
     /**
+     * Determines whether a page can be updated in-place.
+     *
+     * @param pageId pageId of the page being modified
+     *
+     * @return NULL_PAGE_ID if the page can be updated in place; otherwise, the
+     * pageId of the page that should be used when updates are made to the page
+     */
+    virtual PageId updatePage(PageId pageId);
+
+    /**
+     * Returns the mapped page listener corresponding to a page
+     *
+     * @param pageId pageId of the page whose page listener we are returning
+     *
+     * @return segment corresponding to mapped page listener
+     */
+    virtual MappedPageListener *getMappedPageListener(PageId pageId);
+
+    /**
      * Constructs a linear PageId based on a linear page number.
      */
     static PageId getLinearPageId(BlockNum iPage);

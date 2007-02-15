@@ -1,0 +1,82 @@
+@nolockstep
+
+@setup
+-- Test attempts to run various queries against a table being analyzed
+
+  set schema 's';
+  select count(*) from bench1m;
+@end
+
+-----------------------------------------------------------
+
+-- Row count should be the same because all DML should have failed
+@thread cleanup
+  @sync
+  @sync
+  set schema 's';
+  select count(*) from bench1m;
+@end
+
+-----------------------------------------------------------
+
+@thread analyze
+  set schema 's';
+
+  @sync
+  analyze table bench1m compute statistics for all columns;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread insert
+  set schema 's';
+
+  @sync
+  @sleep 1000
+  @err insert into bench1m("kseq") values(-1);
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread delete
+  set schema 's';
+
+  @sync
+  @sleep 1000
+  @err delete from bench1m where "kseq" = -1;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+-- Sleep 3 seconds to allow time for the DML queries to complete.  We want
+-- this drop to conflict with the ANALYZE statement, not the DMLs.  Therefore,
+-- the ANALYZE statement needs to run for at least that long.
+@thread drop
+  set schema 's';
+
+  @sync
+  @sleep 3000
+  @err drop table bench1m;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+-- This select should succeed because it's not accessing the table being
+-- analyzed
+@thread select
+  set schema 's';
+
+  @sync
+  @sleep 1000
+  select count(*) from bench100;
+  @sync
+
+@end

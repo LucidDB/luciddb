@@ -41,12 +41,24 @@ public abstract class DdlStmt
     //~ Instance fields --------------------------------------------------------
 
     private final CwmModelElement modelElement;
+    
+    /**
+     * True if the DDL statement is treated as a DML statement with respect to
+     * how locking behaves
+     */
+    private final boolean runsAsDml;
 
     //~ Constructors -----------------------------------------------------------
 
     protected DdlStmt(CwmModelElement modelElement)
     {
+        this(modelElement, false);
+    }
+    
+    protected DdlStmt(CwmModelElement modelElement, boolean runsAsDml)
+    {
         this.modelElement = modelElement;
+        this.runsAsDml = runsAsDml;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -91,6 +103,12 @@ public abstract class DdlStmt
     public boolean requiresCommit()
     {
         return true;
+    }
+    
+    // implement FarragoSessionDdlStmt
+    public boolean runsAsDml()
+    {
+        return runsAsDml;
     }
 
     /**

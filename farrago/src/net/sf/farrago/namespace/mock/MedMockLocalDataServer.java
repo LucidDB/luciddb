@@ -105,13 +105,13 @@ class MedMockLocalDataServer
     }
 
     // implement FarragoMedLocalDataServer
-    public void computeIndexStats(
+    public long computeIndexStats(
         FemLocalIndex index,
         long rootPageId,
         boolean estimate)
         throws SQLException
     {
-        // ignore
+        return 0;
     }
 
     // implement FarragoMedDataServer

@@ -278,6 +278,30 @@ public abstract class FarragoDbStmtContextBase
     protected void accessTables(FarragoSessionExecutableStmt executableStmt)
     {
         TableAccessMap accessMap = executableStmt.getTableAccessMap();
+        lockTable(accessMap);
+    }
+    
+    /**
+     * Acquires locks (or whatever transaction manager wants) on a single
+     * table
+     * 
+     * @param table fully qualified table name, represented as a list
+     * @param mode access mode for the table
+     */
+    protected void accessTable(List<String> table, TableAccessMap.Mode mode)
+    {
+        TableAccessMap accessMap = new TableAccessMap(table, mode);
+        lockTable(accessMap);
+    }
+    
+    /**
+     * Calls the transaction manager to access a set of tables
+     * 
+     * @param accessMap map containing the tables being accessed and their
+     * access modes
+     */
+    private void lockTable(TableAccessMap accessMap)
+    {
         FarragoSessionTxnMgr txnMgr = session.getDatabase().getTxnMgr();
         FarragoSessionTxnId txnId = session.getTxnId(true);
         txnMgr.accessTables(
@@ -302,6 +326,18 @@ public abstract class FarragoDbStmtContextBase
         ddlLockManager.addObjectsInUse(
             this,
             newExecutableStmt.getReferencedObjectIds());
+    }
+    
+    /**
+     * Marks a single object, represented by its mofId, as in-use
+     * 
+     * @param mofId mofId of the object being marked as in-use
+     */
+    protected void lockObjectInUse(String mofId)
+    {
+        Set<String> mofIds = new HashSet<String>();
+        mofIds.add(mofId);
+        ddlLockManager.addObjectsInUse(this, mofIds);
     }
 
     /**

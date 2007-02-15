@@ -42,6 +42,7 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.jmi.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
@@ -901,59 +902,57 @@ public class FarragoDbSession
             new EigenbaseTimingTracer(
                 sqlTimingTracer,
                 "begin prepare");
+        
+        FarragoReposTxnContext reposTxnContext =
+            new FarragoReposTxnContext(repos);
 
-        // TODO jvs 20-Jan-2007: Replace this big mutex with a
-        // readers/writers lock.
-        synchronized (database.DDL_LOCK) {
-            FarragoReposTxnContext reposTxnContext = repos.newTxnContext();
-
-            boolean [] pRollback = new boolean[1];
-            pRollback[0] = true;
-            FarragoSessionStmtValidator stmtValidator = newStmtValidator();
-            stmtValidator.setTimingTracer(timingTracer);
+        boolean [] pRollback = new boolean[1];
+        pRollback[0] = true;
+        FarragoSessionStmtValidator stmtValidator = newStmtValidator();
+        stmtValidator.setTimingTracer(timingTracer);
             
-            // Pass the repos txn context to the statement validator so
-            // the parser can access it and start the appropriate type of
-            // repository transaction (for DDL vs not DDL)
-            stmtValidator.setReposTxnContext(reposTxnContext);
+        // Pass the repos txn context to the statement validator so
+        // the parser can access it and start the appropriate type of
+        // repository transaction (for DDL vs not DDL)
+        stmtValidator.setReposTxnContext(reposTxnContext);
             
-            FarragoSessionExecutableStmt stmt = null;
-            try {
-                stmt =
-                    prepareImpl(sql,
-                        owner,
-                        isExecDirect,
-                        analyzedSql,
-                        stmtContext,
-                        stmtValidator,
-                        reposTxnContext,
-                        pRollback);
+        FarragoSessionExecutableStmt stmt = null;
+        try {
+            stmt =
+                prepareImpl(sql,
+                    owner,
+                    isExecDirect,
+                    analyzedSql,
+                    stmtContext,
+                    stmtValidator,
+                    reposTxnContext,
+                    pRollback);
 
-                // NOTE jvs 17-Mar-2006:  We have to do this here
-                // rather than in FarragoDbStmtContext.finishPrepare
-                // to ensure that's there's no window in between
-                // when we release the mutex and lock the objects;
-                // otherwise a DROP might slip in and yank them out
-                // from under us.
-                if ((stmt != null) && (stmtContext != null)) {
-                    stmtContext.lockObjectsInUse(stmt);
-                }
-            } finally {
-                if (stmtValidator != null) {
-                    stmtValidator.closeAllocation();
-                }
-                
-                // MDR doesn't allow rollback on read-only txns
-                if (pRollback[0] && !reposTxnContext.isReadTxnInProgress()) {
-                    tracer.fine("rolling back DDL");
-                    reposTxnContext.rollback();
-                } else {
-                    reposTxnContext.commit();
-                }
+            // NOTE jvs 17-Mar-2006:  We have to do this here
+            // rather than in FarragoDbStmtContext.finishPrepare
+            // to ensure that's there's no window in between
+            // when we release the catalog lock and lock the objects;
+            // otherwise a DROP might slip in and yank them out
+            // from under us.
+            if ((stmt != null) && (stmtContext != null)) {
+                stmtContext.lockObjectsInUse(stmt);
             }
-            timingTracer.traceTime("end prepare");
-            return stmt;
-        }
+        } finally {
+            if (stmtValidator != null) {
+                stmtValidator.closeAllocation();
+            }
+                
+            // MDR doesn't allow rollback on read-only txns
+            if (pRollback[0] && !reposTxnContext.isReadTxnInProgress()) {
+                tracer.fine("rolling back DDL");
+                reposTxnContext.rollback();
+            } else {
+                reposTxnContext.commit();
+            }
+            reposTxnContext.unlockAfterTxn();
+        }            
+        timingTracer.traceTime("end prepare");
+        return stmt;
     }
 
     private FarragoSessionExecutableStmt prepareImpl(
@@ -961,7 +960,7 @@ public class FarragoDbSession
         FarragoAllocationOwner owner,
         boolean isExecDirect,
         FarragoSessionAnalyzedSql analyzedSql,
-        FarragoSessionStmtContext stmtContext,
+        FarragoDbStmtContextBase stmtContext,
         FarragoSessionStmtValidator stmtValidator,
         FarragoReposTxnContext reposTxnContext,
         boolean [] pRollback)
@@ -1011,8 +1010,12 @@ public class FarragoDbSession
         }
 
         FarragoSessionDdlStmt ddlStmt = (FarragoSessionDdlStmt) parsedObj;
+        
+        if (ddlStmt.runsAsDml()) {
+            markTableInUse(stmtContext, reposTxnContext, ddlStmt);
+        }
 
-        validateDdl(ddlValidator, reposTxnContext, ddlStmt);
+        validateDdl(ddlValidator, stmtContext, reposTxnContext, ddlStmt);
 
         stmtValidator.getTimingTracer().traceTime("end DDL validation");
 
@@ -1030,6 +1033,7 @@ public class FarragoDbSession
 
     private void validateDdl(
         FarragoSessionDdlValidator ddlValidator,
+        FarragoDbStmtContextBase stmtContext,
         FarragoReposTxnContext reposTxnContext,
         FarragoSessionDdlStmt ddlStmt)
     {
@@ -1038,9 +1042,71 @@ public class FarragoDbSession
             commitImpl();
         }
         tracer.fine("validating DDL");
+        if (ddlStmt.runsAsDml()) {
+            accessTargetTable(stmtContext, ddlStmt);
+        }
         ddlValidator.validate(ddlStmt);
     }
 
+    /**
+     * Marks the target table for a DDL statement as in-use so we can release
+     * the MDR repository lock acquired at the start of query preparation.
+     * Since we no longer have the repository locked, marking the table as
+     * in-use prevents it from being dropped.
+     * 
+     * @param stmtContext context of the DDL statement
+     * @param reposTxnContext current repository txn context
+     * @param ddlStmt the DDL statement
+     */
+    private void markTableInUse(
+        FarragoDbStmtContextBase stmtContext,
+        FarragoReposTxnContext reposTxnContext,
+        FarragoSessionDdlStmt ddlStmt)
+    {
+        // Mark the table as in use, then unlock the repository
+        CwmModelElement table = ddlStmt.getModelElement();
+        stmtContext.lockObjectInUse(table.refMofId());      
+        reposTxnContext.commit();
+        reposTxnContext.unlockAfterTxn();
+    }
+    
+    /**
+     * Accesses the target table of a DDL statement for write to prevent
+     * concurrent DML on the same table.
+     * 
+     * @param stmtContext context of the DDL statement
+     * @param ddlStmt the DDL statement
+     */
+    private void accessTargetTable(
+        FarragoDbStmtContextBase stmtContext,
+        FarragoSessionDdlStmt ddlStmt)
+    {
+        // Try to lock the target table
+        List<String> names = new ArrayList<String>(3);
+        CwmModelElement table = ddlStmt.getModelElement();
+        names.add(table.getName());
+        for (CwmNamespace ns = table.getNamespace(); ns != null;
+            ns = ns.getNamespace())
+        {
+            names.add(ns.getName());
+        }
+        Collections.reverse(names);
+
+        boolean success = false;
+        try {
+            stmtContext.accessTable(
+                names,
+                TableAccessMap.Mode.READWRITE_ACCESS);
+            success = true;
+        } finally {
+            if (!success) {
+                // Abort the txn that was implicitly started to acquire the
+                // table lock, if we couldn't acquire the lock
+                stmtContext.getSession().endTransactionIfAuto(false);
+            }
+        }
+    }
+    
     private void executeDdl(
         FarragoSessionDdlValidator ddlValidator,
         FarragoReposTxnContext reposTxnContext,

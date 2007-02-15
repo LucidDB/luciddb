@@ -238,12 +238,12 @@ public class DdlRebuildTableStmt
         }
 
         // implement FarragoSessionIndexMap
-        public void computeIndexStats(
+        public long computeIndexStats(
             FarragoDataWrapperCache wrapperCache,
             FemLocalIndex index,
             boolean estimate)
         {
-            internalMap.computeIndexStats(wrapperCache, index, estimate);
+            return internalMap.computeIndexStats(wrapperCache, index, estimate);
         }
 
         // implement FarragoSessionIndexMap

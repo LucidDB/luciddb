@@ -87,6 +87,7 @@ public:
         OP_WRITE_RAND,
         OP_READ_NOWAIT,
         OP_WRITE_NOWAIT,
+        OP_WRITE_SKIP,
         OP_SCRATCH,
         OP_PREFETCH,
         OP_PREFETCH_BATCH,
@@ -159,6 +160,13 @@ public:
     void testRandomOp(OpType opType);
 
     /**
+     * Carries out an operation on every "n" pages, starting at page 0
+     *
+     * @param n the offset between each page
+     */
+    void testSkipOp(OpType opType, uint n);
+
+    /**
      * Performs nRandomOps scratch operations.  A scratch operation
      * consists of locking a scratch page, filling it with random
      * data, and then unlocking it.
@@ -207,6 +215,13 @@ public:
      * Carries out nRandomOps write operations on pages selected at random.
      */
     void testRandomWrite();
+
+    /**
+     * Carries out write operations every n pages
+     *
+     * @param n offset between pages
+     */
+    void testSkipWrite(uint n);
 
     virtual void testAllocate();
     

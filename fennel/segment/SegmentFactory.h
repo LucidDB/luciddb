@@ -126,6 +126,31 @@ public:
         bool bFormat);
 
     /**
+     * Opens a VersionedRandomAllocationSegment.
+     *
+     * @param delegateSegment the underlying segment providing storage; this
+     * segment must return LINEAR_ALLOCATION from getAllocationOrder(), and
+     * should already be allocated to the desired size
+     *
+     * @param pTempSegment the temporary segment used to store modifications
+     * to allocation node pages
+     *
+     * @param bFormat if true, the VersionedRandomAllocationSegment is
+     * formatted as empty; otherwise, the existing formatting is read
+     *
+     * @return new segment
+     */
+    SharedSegment newVersionedRandomAllocationSegment(
+        SharedSegment delegateSegment,
+        SharedSegment pTempSegment,
+        bool bFormat);
+
+    SharedSegment newSnapshotRandomAllocationSegment(
+        SharedSegment delegateSegment,
+        SharedSegment versionedSegment,
+        TxnId snapshotCsn);
+
+    /**
      * Opens a WALSegment.
      *
      * @param logSegment the Segment in which log pages are stored; this

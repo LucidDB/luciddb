@@ -88,6 +88,11 @@
           file="${open.dir}/luciddb/test/sql/concurrency/delete-insert.mtsql"/>
       </test>
 
+      <test name="insert-analyze" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-analyze.mtsql"/>
+      </test>
+
       <test name="cretdrp-read" requiresSuccess="setup">
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-read.mtsql"/>

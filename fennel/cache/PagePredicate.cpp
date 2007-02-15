@@ -51,6 +51,20 @@ bool MappedPageListenerPredicate::operator()(CachePage const &page)
     return page.getMappedPageListener() == &listener;
 }
 
+MappedUnionPageListenerPredicate::MappedUnionPageListenerPredicate(
+    MappedPageListener &listener1Init,
+    MappedPageListener &listener2Init)
+    : listener1(listener1Init), listener2(listener2Init)
+{
+}
+
+bool MappedUnionPageListenerPredicate::operator()(CachePage const &page)
+{
+    return
+        page.getMappedPageListener() == &listener1 ||
+        page.getMappedPageListener() == &listener2;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End PagePredicate.cpp

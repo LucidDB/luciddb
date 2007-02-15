@@ -455,8 +455,8 @@ public class LoptMetadataProvider
         List<SargBinding> sargBindingList = rexAnalyzer.analyzeAll(predicate);
         Map<CwmColumn, SargIntervalSequence> col2SeqMap = null;
         if (!sargBindingList.isEmpty()) {
-            LcsIndexGuide indexGuide = rel.getIndexGuide();
-            col2SeqMap = indexGuide.getCol2SeqMap(rel, sargBindingList);
+            col2SeqMap = 
+                LcsIndexOptimizer.getCol2SeqMap(rel, sargBindingList);
         }
 
         // TODO jvs 19-Apr-2006:  get LcsIndexGuide to help with
