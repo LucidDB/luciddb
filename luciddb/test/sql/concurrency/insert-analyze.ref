@@ -1,0 +1,61 @@
+-- setup
+> set schema 'concurrency';
+0 rows affected.
+> delete from t1;
+0 rows affected.
+> insert into t1 values (1),(2);
+2 rows affected.
+> delete from t2;
+0 rows affected.
+> insert into t2 values (5);
+1 row affected.
+-- end of setup
+
+-- thread cleanup
+> analyze table concurrency.t1 compute statistics for all columns;
+0 rows affected.
+> analyze table concurrency.t2 compute statistics for all columns;
+0 rows affected.
+> select * from concurrency.t1;
++------------+
+| C          |
++------------+
+| 1          |
+| 2          |
+| 0          |
++------------+
+
+> select * from concurrency.t2;
++------------+
+| C          |
++------------+
+| 5          |
++------------+
+
+> delete from concurrency.t1;
+3 rows affected.
+> delete from concurrency.t2;
+1 row affected.
+-- end of thread cleanup
+
+-- thread writer
+> set schema 'concurrency';
+0 rows affected.
+> insert into t1 values (sys_boot.mgmt.sleep(10000));
+1 row affected.
+-- end of thread writer
+
+-- thread analyze1
+> set schema 'concurrency';
+0 rows affected.
+> analyze table t2 compute statistics for all columns;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread analyze1
+
+-- thread analyze2
+> set schema 'concurrency';
+0 rows affected.
+> analyze table t1 compute statistics for all columns;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread analyze2
+

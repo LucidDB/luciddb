@@ -23,6 +23,7 @@
 package net.sf.farrago.catalog;
 
 import java.util.*;
+import java.util.concurrent.locks.*;
 import java.util.logging.*;
 
 import javax.jmi.reflect.*;
@@ -78,6 +79,9 @@ public abstract class FarragoReposImpl
     private JmiModelView modelView;
 
     private Map<String, FarragoSequenceAccessor> sequenceMap;
+    
+    private final ReentrantReadWriteLock sxLock =
+        new ReentrantReadWriteLock();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -571,6 +575,56 @@ public abstract class FarragoReposImpl
     public FarragoReposTxnContext newTxnContext()
     {
         return new FarragoReposTxnContext(this);
+    }
+
+    /**
+     * Places either a shared or exclusive lock on the repository.  Multiple
+     * shared locks are allowed from different threads when no thread holds an
+     * exclusive lock, but only one thread can hold an exclusive lock at a
+     * time, preventing shared locks from other threads.  If a conflicting lock
+     * is requested, that requester will wait until the requested lock is
+     * available.  Locks are reentrant: a thread can take the same lock more
+     * than once, but must make a matching number of calls to {@link
+     * #unlockRepos} iin order to release the lock.  Upgrade and downgrade are
+     * not supported.
+     *
+     *<p>
+     *
+     * This lock is independent of MDR transaction state (i.e. it can
+     * be held even when no MDR transaction is in progress; an MDR transaction
+     * can be started without taking this lock; and an exclusive lock can be
+     * taken even for a read-only MDR transaction).  Currently,
+     * its only public exposure is via {@link FarragoReposTxnContext},
+     * which matches shared with read and exclusive with write.
+     * 
+     * @param lockLevel 1 for a shared lock, 2 for an exclusive lock
+     */
+    void lockRepos(int lockLevel)
+    {
+        if (lockLevel == 1) {
+            sxLock.readLock().lock();
+        } else if (lockLevel == 2) {
+            sxLock.writeLock().lock();
+        } else {
+            assert(false);
+        }
+    }
+    
+    /**
+     * Releases either a shared or exclusive lock on the repository that
+     * was previously acquired (caller must ensure consistency).
+     * 
+     * @param lockLevel 1 for a shared lock, 2 for an exclusive lock
+     */
+    void unlockRepos(int lockLevel)
+    {
+        if (lockLevel == 1) {
+            sxLock.readLock().unlock();
+        } else if (lockLevel == 2) {
+            sxLock.writeLock().unlock();
+        } else {
+            assert(false);
+        }
     }
 }
 

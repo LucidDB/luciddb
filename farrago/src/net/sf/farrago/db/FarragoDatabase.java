@@ -73,12 +73,6 @@ public class FarragoDatabase
     extends FarragoDbSingleton
 {
 
-    //~ Static fields/initializers ---------------------------------------------
-
-    // TODO jvs 11-Aug-2004:  Get rid of this once corresponding TODO in
-    // FarragoDbSession.prepare is resolved.
-    public static final Integer DDL_LOCK = new Integer(1994);
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoRepos systemRepos;

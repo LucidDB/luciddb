@@ -57,6 +57,12 @@ CachePage *SegmentTestBase::lockPage(OpType opType,uint iPage)
         return &page;
     } else {
         PageId pageId = Segment::getLinearPageId(iPage);
+        // Prepare the page for update before locking it
+        if (opType == OP_WRITE_SEQ || opType == OP_WRITE_RAND ||
+            opType == OP_WRITE_SKIP)
+        {
+            pLinearSegment->updatePage(pageId);
+        }
         pageLock.lockPage(pageId,getLockMode(opType));
         CachePage *pPage = pageLock.isLocked() ? &(pageLock.getPage()) : NULL;
         pageLock.dontUnlock();

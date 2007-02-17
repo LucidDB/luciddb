@@ -134,7 +134,7 @@ Object FarragoSqlStmtEof() :
                     farragoParser.getStmtValidator().getReposTxnContext();
 
                 if (!reposTxnContext.isReadTxnInProgress()) {
-                    reposTxnContext.beginReadTxn();
+                    reposTxnContext.beginLockedTxn(true);
                 }
             }
             obj = SqlStmtEof()
@@ -163,7 +163,7 @@ DdlStmt DdlStmtEof() :
         (
             <CREATE>
             {
-                reposTxnContext.beginWriteTxn();
+                reposTxnContext.beginLockedTxn(false);
             }
             [
                 ( <OR> <REPLACE> )
@@ -202,7 +202,7 @@ DdlStmt DdlStmtEof() :
         (
             <DROP>
             {
-                reposTxnContext.beginWriteTxn();
+                reposTxnContext.beginLockedTxn(false);
 
                 // assume RESTRICT; CascadeOption() may override
                 dropRestrict = true;
@@ -246,7 +246,7 @@ DdlStmt DdlStmtEof() :
         (
             <TRUNCATE>
             {
-                reposTxnContext.beginWriteTxn();
+                reposTxnContext.beginLockedTxn(false);
             }
             (
                 <TABLE> modelElement = TableIdentifier()
@@ -259,7 +259,7 @@ DdlStmt DdlStmtEof() :
         (
             <SET>
             {
-                reposTxnContext.beginWriteTxn();
+                reposTxnContext.beginLockedTxn(false);
             }
             (
                 <CATALOG> expr = Expression(EXPR_ACCEPT_NONQUERY)
@@ -279,7 +279,7 @@ DdlStmt DdlStmtEof() :
         |
         <ALTER>
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
         }
         (
             <SYSTEM>
@@ -305,7 +305,7 @@ DdlStmt DdlStmtEof() :
         |
         <GRANT>
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
         }
         (
             ddlStmt = GrantRoleStmt()
@@ -315,45 +315,48 @@ DdlStmt DdlStmtEof() :
         |
         <CHECKPOINT>
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
 
             ddlStmt = new DdlCheckpointStmt();
         }
         |
         <COMMIT>
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
 
             ddlStmt = new DdlCommitStmt();
         }
         |
         <ROLLBACK> 
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
         }
         ddlStmt = Rollback()
         |
         <SAVEPOINT> 
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
         }
         ddlStmt = Savepoint()
         |
         <RELEASE> <SAVEPOINT> 
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
         }
         ddlStmt = ReleaseSavepoint()
         |
         <IMPORT> 
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
         }
         ddlStmt = ImportForeignSchemaStmt()
         |
         <ANALYZE> 
         {
-            reposTxnContext.beginWriteTxn();
+            // During the initial prepare of an analyze statement, we only
+            // need to acquire shared locks since we're only reading from the
+            // catalogs.  During catalog update, we'll start a new write xact
+            reposTxnContext.beginLockedTxn(true);
         }
         ddlStmt = AnalyzeStmt()
     )
@@ -2855,7 +2858,7 @@ DdlStmt GrantRoleStmt() :
  */
 DdlStmt AnalyzeStmt() :
 {
-    DdlAnalyzeStmt stmt = new DdlAnalyzeStmt();
+    DdlAnalyzeStmt stmt;
     CwmTable table;
     List columnNameList;
     int percent;
@@ -2863,7 +2866,7 @@ DdlStmt AnalyzeStmt() :
 {
     <TABLE> table = TableIdentifier()
     {
-        stmt.setTable(table);
+        stmt = new DdlAnalyzeStmt(table);
     }
     (
         <COMPUTE>

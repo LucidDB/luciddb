@@ -92,7 +92,7 @@ public abstract class MedAbstractFennelDataServer
     }
 
     // implement FarragoMedLocalDataServer
-    public void computeIndexStats(
+    public long computeIndexStats(
         FemLocalIndex index,
         long rootPageId,
         boolean estimate)
@@ -102,8 +102,7 @@ public abstract class MedAbstractFennelDataServer
         cmd.setRootPageId(rootPageId);
         cmd.setEstimate(estimate);
         cmd.setIncludeTuples(getIncludeTuples(index));
-        long pageCount = getFennelDbHandle().executeCmd(cmd);
-        FarragoCatalogUtil.updatePageCount(index, pageCount);
+        return getFennelDbHandle().executeCmd(cmd);
     }
 
     private void initIndexCmd(

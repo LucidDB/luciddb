@@ -149,6 +149,8 @@ ${farrago.test.jvmargs}
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${blackhawk.run.classpath}"/>
     <pathelement path="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"/>
+    <pathelement path="${luciddb.plugin.dir}/luciddb-mbean.jar"/>
+    <pathelement path="${luciddb.plugin.dir}/applib.jar"/>
     <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
@@ -427,7 +429,7 @@ ${farrago.test.jvmargs}
       deprecation="off"
       srcdir="${luciddb.test.dir}/src"
       destdir="${classes.dir}"
-      classpath="${luciddb.plugin.dir}/luciddb-mbean.jar">
+      classpathref="luciddb.build.classpath">
       <include name="**/mbean/**/*.java"/>
     </farrago.javaCompile>
   </target>

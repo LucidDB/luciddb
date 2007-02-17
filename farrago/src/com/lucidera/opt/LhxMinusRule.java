@@ -43,7 +43,7 @@ public class LhxMinusRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new LhxIntersectRule object.
+     * Creates a new LhxMinusRule object.
      */
     public LhxMinusRule()
     {

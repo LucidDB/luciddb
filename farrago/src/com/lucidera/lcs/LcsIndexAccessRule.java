@@ -116,32 +116,41 @@ class LcsIndexAccessRule
         FennelRelParamId startRidParamId = null;
         FennelRelParamId rowLimitParamId = null;
 
-        LcsIndexGuide indexGuide = origRowScan.lcsTable.getIndexGuide();
         RexBuilder rexBuilder = origRowScan.getCluster().getRexBuilder();
 
         Map<CwmColumn, SargIntervalSequence> col2SeqMap =
-            indexGuide.getCol2SeqMap(origRowScan, sargBindingList);
+            LcsIndexOptimizer.getCol2SeqMap(origRowScan, sargBindingList);
 
         List<List<CwmColumn>> colLists =
             getSargColLists(origRowScan, sargBindingList, col2SeqMap);
 
         Map<FemLocalIndex, Integer> index2PosMap =
-            indexGuide.getIndex2PosMap(colLists);
+            LcsIndexOptimizer.getIndex2MatchedPosMap(origRowScan, colLists);
 
+        // TODO(2007-02-06): enable cost based index selection
+        // 
+        // List<List<LcsIndexOptimizer.SargColumnFilter>> colFilterLists =
+        //    getSargColFilterLists(origRowScan, sargBindingList, col2SeqMap);
+        //
+        // Map<FemLocalIndex, Integer> bestIndex2PosMap =
+        //    LcsIndexOptimizer.getBestIndex2MatchedPosMap(origRowScan, colFilterLists);
+        //
+        // if cost based did not fine any assgnment, try rule based
+        // if (bestIndex2PosMap == null) {
+        //    bestIndex2PosMap = index2PosMap;
+        // }
+        
         // Use a tree set here so that the indexes are searched in a fixed
-        // order, to make the plan output stable. Note we could optimize the
-        // order by using a different comparator function. For example, search
-        // the index with the longest matched keys first, or when proper costing
-        // is in place, search the most selective index (wrt to key values)
-        // first.
+        // order, to make the plan output stable.
         TreeSet<FemLocalIndex> indexSet =
             new TreeSet<FemLocalIndex>(
-                new LcsIndexGuide.IndexLengthComparator());
+                new LcsIndexOptimizer.IndexLengthComparator());
 
         indexSet.addAll(index2PosMap.keySet());
-
+        
         List<SargBinding> nonResidualSargBindingList = new 
             ArrayList<SargBinding>();
+        
         List<SargBinding> residualSargBindingList =
             getResidualSargBinding(
                 origRowScan,
@@ -197,10 +206,10 @@ class LcsIndexAccessRule
                 int matchedPos = index2PosMap.get(index);
 
                 List<SargIntervalSequence> sargSeqList =
-                    getIndexSargSeq(indexGuide, index, matchedPos, col2SeqMap);
+                    getIndexSargSeq(index, matchedPos, col2SeqMap);
 
-                CandidateIndex candidate =
-                    new CandidateIndex(
+                LcsIndexOptimizer.CandidateIndex candidate =
+                    new LcsIndexOptimizer.CandidateIndex(
                         index,
                         matchedPos,
                         sargSeqList);
@@ -233,7 +242,7 @@ class LcsIndexAccessRule
         Integer [] resCols = new Integer[residualColumnCount];       
         final RelTraitSet callTraits = call.rels[0].getTraits();
 
-        RelNode [] valueRels = new RelNode[residualSargBindingList.size()];
+        RelNode [] valueRels = new RelNode[residualColumnCount];
 
         buildColumnFilters(
             resCols,        
@@ -278,41 +287,45 @@ class LcsIndexAccessRule
                 RelMetadataQuery.getStatistics(origRowScan);
 
             // sort the column filters based on selectivity first
-            ColumnFilter [] columnFilters =
-                new ColumnFilter[residualColumnCount];
+            TreeSet<LcsIndexOptimizer.SargColumnFilter> filterSet =
+                new TreeSet<LcsIndexOptimizer.SargColumnFilter>(
+                    new LcsIndexOptimizer.SargColumnFilterSelectivityComparator(
+                        tabStats));
+            
             for (int i = 0; i < residualColumnCount; i++) {
                 SargBinding sargBinding = residualSargBindingList.get(i);
                 SargIntervalSequence sargSeq = 
                     FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
                 RexInputRef fieldAccess = sargBinding.getInputRef();
-                columnFilters[i] =
-                    new ColumnFilter(fieldAccess.getIndex(), sargSeq, tabStats);
+                filterSet.add(
+                    new LcsIndexOptimizer.SargColumnFilter(
+                        fieldAccess.getIndex(), sargSeq));
             }
-            Arrays.sort(columnFilters, columnFilters[0]);
-
+            
             FemAbstractAttribute [] searchColumns = new FemAbstractAttribute[1];
 
+            int i = 0;
             // then create the actual column filters in that sort order
-            for (int i = 0; i < residualColumnCount; i++) {
-                residualColumns[i] = columnFilters[i].columnNumber;
+            for (LcsIndexOptimizer.SargColumnFilter filter : filterSet) {
+                residualColumns[i] = filter.columnPos;
                 searchColumns[0] = 
                     origRowScan.getColumnForFieldAccess(residualColumns[i]);
 
                 RelDataType keyRowType =
                     getSearchKeyRowType(
-                        origRowScan.lcsTable.getIndexGuide(),
                         origRowScan, 
                         searchColumns);
 
                 List<SargIntervalSequence> sargSeqList = 
                     new ArrayList<SargIntervalSequence>();
-                sargSeqList.add(columnFilters[i].sargSeq);
+                sargSeqList.add(filter.sargSeq);
 
                 valueRels[i] =  FennelRelUtil.convertSargExpr(callTraits,
                     keyRowType,origRowScan.getCluster(), sargSeqList);
 
                 valueRels[i] = mergeTraitsAndConvert(callTraits, 
                     FennelRel.FENNEL_EXEC_CONVENTION, valueRels[i]);
+                i++;
             }
         }
     }
@@ -331,8 +344,7 @@ class LcsIndexAccessRule
         call.transformTo(rel);
     }
 
-    private List<SargIntervalSequence> getIndexSargSeq(
-        LcsIndexGuide indexGuide,
+    private static List<SargIntervalSequence> getIndexSargSeq(
         FemLocalIndex index,
         int matchedPos,
         Map<CwmColumn, SargIntervalSequence> col2SeqMap)
@@ -341,7 +353,8 @@ class LcsIndexAccessRule
             new ArrayList<SargIntervalSequence>();
 
         for (int pos = 0; pos < matchedPos; pos++) {
-            FemAbstractColumn col = indexGuide.getIndexColumn(index, pos);
+            FemAbstractColumn col =
+                LcsIndexOptimizer.getIndexColumn(index, pos);
             SargIntervalSequence sargSeq = col2SeqMap.get(col);
             seqList.add(sargSeq);
         }
@@ -349,13 +362,12 @@ class LcsIndexAccessRule
         return seqList;
     }
 
-    private List<List<CwmColumn>> getSargColLists(
+    private static List<List<CwmColumn>> getSargColLists(
         LcsRowScanRel origRowScan,
         List<SargBinding> sargBindingList,
         Map<CwmColumn, SargIntervalSequence> col2SeqMap)
     {
         List<List<CwmColumn>> retLists = new ArrayList<List<CwmColumn>>();
-        ;
         List<CwmColumn> pointColumnList = new ArrayList<CwmColumn>();
         List<CwmColumn> rangeColumnList = new ArrayList<CwmColumn>();
 
@@ -380,13 +392,48 @@ class LcsIndexAccessRule
         return retLists;
     }
 
-    private List<SargBinding> getResidualSargBinding(
+    private static List<List<LcsIndexOptimizer.SargColumnFilter>> getSargColFilterLists(
+        LcsRowScanRel origRowScan,
+        List<SargBinding> sargBindingList,
+        Map<CwmColumn, SargIntervalSequence> col2SeqMap)
+    {
+        List<List<LcsIndexOptimizer.SargColumnFilter>> retLists = 
+            new ArrayList<List<LcsIndexOptimizer.SargColumnFilter>>();
+        List<LcsIndexOptimizer.SargColumnFilter> pointFilterList =
+            new ArrayList<LcsIndexOptimizer.SargColumnFilter>();
+        List<LcsIndexOptimizer.SargColumnFilter> intervalFilterList =
+            new ArrayList<LcsIndexOptimizer.SargColumnFilter>();
+
+        for (int i = 0; i < sargBindingList.size(); i++) {
+            SargBinding sargBinding = sargBindingList.get(i);
+            RexInputRef inputRef = sargBinding.getInputRef();
+            int colPos = inputRef.getIndex();
+            FemAbstractColumn filterColumn =
+                origRowScan.getColumnForFieldAccess(inputRef.getIndex());
+            if (filterColumn != null) {
+                SargIntervalSequence sargSeq = col2SeqMap.get(filterColumn);
+
+                if (sargSeq.isPoint()) {
+                    pointFilterList.add(
+                        new LcsIndexOptimizer.SargColumnFilter(colPos, sargSeq));
+                } else {
+                    intervalFilterList.add(
+                        new LcsIndexOptimizer.SargColumnFilter(colPos, sargSeq));
+                }
+            }
+        }
+
+        retLists.add(0, pointFilterList);
+        retLists.add(1, intervalFilterList);
+        return retLists;
+    }
+
+    private static List<SargBinding> getResidualSargBinding(
         LcsRowScanRel origRowScan,
         List<SargBinding> sargBindingList,
         Map<FemLocalIndex, Integer> index2PosMap,
         List<SargBinding> nonResidualList)
     {
-        LcsIndexGuide indexGuide = origRowScan.lcsTable.getIndexGuide();
         List<CwmColumn> sargColList = new ArrayList<CwmColumn>();
         List<SargBinding> retSargBindingList = new ArrayList<SargBinding>();
 
@@ -404,24 +451,27 @@ class LcsIndexAccessRule
             }
         }
 
-        for (FemLocalIndex index : index2PosMap.keySet()) {
-            int maxPos = index2PosMap.get(index);
-            for (int pos = 0; pos < maxPos; pos++) {
-                int i =
-                    sargColList.indexOf(indexGuide.getIndexColumn(index, pos));
-                retSargBindingList.remove(i);
-                sargColList.remove(i);
+        if (index2PosMap != null) {
+            // exclude those columns that are already mapped to index searches
+            for (FemLocalIndex index : index2PosMap.keySet()) {
+                int maxPos = index2PosMap.get(index);
+                for (int pos = 0; pos < maxPos; pos++) {
+                    int i =
+                        sargColList.indexOf(
+                            LcsIndexOptimizer.getIndexColumn(index, pos));
+                    retSargBindingList.remove(i);
+                    sargColList.remove(i);
+                }
             }
         }
-
+        
         return retSargBindingList;
     }
-
 
     private FennelRel newIndexRel(
         RelOptRuleCall call,
         LcsRowScanRel origRowScan,
-        CandidateIndex candidate,
+        LcsIndexOptimizer.CandidateIndex candidate,
         FennelRelParamId startRidParamId,
         FennelRelParamId rowLimitParamId)
     {
@@ -431,7 +481,6 @@ class LcsIndexAccessRule
 
         FennelRelImplementor relImplementor =
             FennelRelUtil.getRelImplementor(origRowScan);
-        LcsIndexGuide indexGuide = origRowScan.lcsTable.getIndexGuide();
         final RelTraitSet callTraits = call.rels[0].getTraits();
 
         assert (sargSeqList.size() == matchedPos);
@@ -439,7 +488,7 @@ class LcsIndexAccessRule
         boolean partialMatch = matchedPos < indexKeyLength;
 
         RelDataType keyRowType =
-            getIndexInputType(indexGuide, origRowScan, index, matchedPos);
+            getIndexInputType(origRowScan, index, matchedPos);
 
         RelNode sargRel;
 
@@ -521,13 +570,11 @@ class LcsIndexAccessRule
      * because we use null for the representation of infinity (rather than
      * domain-specific values).
      *
-     * @param indexGuide index guide
      * @param rel the table scan node that is being optimized
      * @param searchColumns array of column attributes representing the search
      * keys
      */
-    static public RelDataType getSearchKeyRowType(
-        LcsIndexGuide indexGuide,
+    private static RelDataType getSearchKeyRowType(
         FennelRel rel,
         FemAbstractAttribute [] searchColumns)
     {
@@ -579,15 +626,13 @@ class LcsIndexAccessRule
      * because we use null for the representation of infinity (rather than 
      * domain-specific values).
      * 
-     * @param indexGuide index guide
      * @param rel the table scan node that is being optimized
      * @param index the index descriptor
      * @param matchedPos the length of matched prefix in the index key
      * 
      * @return type descriptor for the index search key
      */
-    static public RelDataType getIndexInputType(
-        LcsIndexGuide indexGuide,
+    private static RelDataType getIndexInputType(
         FennelRel rel,
         FemLocalIndex index,
         int matchedPos)
@@ -597,87 +642,12 @@ class LcsIndexAccessRule
 
         for (int pos = 0; pos < matchedPos; pos++) {
             indexColumns[pos] = (FemAbstractAttribute)
-                indexGuide.getIndexColumn(index, pos);
+                LcsIndexOptimizer.getIndexColumn(index, pos);
         }
 
         RelDataType keyRowType =
-            getSearchKeyRowType(indexGuide, rel, indexColumns);
+            getSearchKeyRowType(rel, indexColumns);
         return keyRowType;
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    private static class CandidateIndex
-    {
-        FemLocalIndex index;
-        int matchedPos;
-        List<SargIntervalSequence> sargSeqList;
-
-        CandidateIndex(
-            FemLocalIndex index,
-            int matchedPos,
-            List<SargIntervalSequence> sargSeqList)
-        {
-            this.index = index;
-            this.matchedPos = matchedPos;
-            this.sargSeqList = sargSeqList;
-        }
-    }
-    
-    /**
-     * ColumnFilter is used to sort sargable column filters, based on the
-     * selectivity of the filters.  A ColumnFilter is represented by the
-     * column number and sargable interval sequence associated with the column.
-     */
-    private class ColumnFilter implements Comparator<ColumnFilter>
-    {
-        private int columnNumber;
-        private SargIntervalSequence sargSeq;
-        private RelStatSource tabStats;
-        
-        ColumnFilter(
-            int columnNumber,
-            SargIntervalSequence sargSeq,
-            RelStatSource tabStats)
-        {
-            this.columnNumber = columnNumber;
-            this.sargSeq = sargSeq;
-            this.tabStats = tabStats;
-        }
-        
-        public int compare(ColumnFilter cf1, ColumnFilter cf2)
-        {
-            // sort based on the selectivity if stats are available; otherwise,
-            // just sort on column number to ensure that results are
-            // deterministic
-            Double colSel1 = computeSelectivity(cf1);
-            Double colSel2 = computeSelectivity(cf2);
-            if (colSel1 != null && colSel2 != null) {
-                return
-                    (colSel1 < colSel2) ? -1 :
-                        ((colSel1 == colSel2) ? 0 : 1); 
-            } else {
-                return
-                    (cf1.columnNumber < cf2.columnNumber) ? -1 :
-                        ((cf1.columnNumber == cf2.columnNumber) ? 0 : 1);                  
-            }
-        }
-        
-        private Double computeSelectivity(ColumnFilter columnFilter)
-        {
-            RelStatColumnStatistics colStats = null;
-            if (tabStats != null) {
-                colStats =
-                    tabStats.getColumnStatistics(
-                        columnFilter.columnNumber,
-                        columnFilter.sargSeq);
-            }
-            Double colSel = null;
-            if (colStats != null) {
-                colSel = colStats.getSelectivity();
-            }
-            return colSel;
-        }       
     }
 }
 

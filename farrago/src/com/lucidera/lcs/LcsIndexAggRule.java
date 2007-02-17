@@ -20,6 +20,8 @@
 */
 package com.lucidera.lcs;
 
+import java.util.*;
+
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
 
@@ -130,26 +132,33 @@ public class LcsIndexAggRule
             // Try to convert a row scan into an index only scan. Find the
             // thinnest index that satisfies the row scan projection and
             // the aggregate's required sort order
-            LcsIndexGuide indexGuide = rowScan.lcsTable.getIndexGuide();
+
+            // first sort the indexes in key length
+            TreeSet<FemLocalIndex> indexSet =
+                new TreeSet<FemLocalIndex>(
+                    new LcsIndexOptimizer.IndexLengthComparator());
+
+            indexSet.addAll(LcsIndexOptimizer.getUnclusteredIndexes(rowScan));
+            
             FemLocalIndex bestIndex = null;
             Integer [] bestProj = null;
-            for (FemLocalIndex index : indexGuide.getUnclusteredIndexes()) {
+            
+            for (FemLocalIndex index : indexSet) {
+                
                 Integer [] proj =
-                    indexGuide.findIndexOnlyProjection(rowScan, index);
-                if (projectionSatisfiesGroupBy(
-                        proj,
-                        aggRel.getGroupCount())) {
-                    int indexSize = index.getIndexedFeature().size();
-                    if ((bestIndex == null)
-                        || (bestIndex.getIndexedFeature().size() > indexSize)) {
-                        bestIndex = index;
-                        bestProj = proj;
-                    }
+                    LcsIndexOptimizer.findIndexOnlyProjection(rowScan, index);
+                if (proj != null &&
+                    projectionSatisfiesGroupBy(proj, aggRel.getGroupCount())) {
+                    bestIndex = index;
+                    bestProj = proj;
+                    break;
                 }
             }
+            
             if (bestIndex == null) {
                 return;
             }
+            
             indexOnlyScan =
                 new LcsIndexOnlyScanRel(
                     rowScan,

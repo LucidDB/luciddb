@@ -47,6 +47,9 @@ import org.eigenbase.util.*;
 class LucidDbTxnMgr
     extends FarragoDbNullTxnMgr
 {
+    // TODO jvs 15-Mar-2006:  start a new LucidDbTrace.java file?
+    private static final Logger tracer =
+        Logger.getLogger(LucidDbTxnMgr.class.getName());
 
     //~ Instance fields --------------------------------------------------------
 
@@ -58,10 +61,10 @@ class LucidDbTxnMgr
 
     LucidDbTxnMgr()
     {
-        // TODO jvs 15-Mar-2006:  start a new LucidDbTrace.java file?
-        LoggerFacade loggerFacade =
-            new Jdk14Logger(
-                Logger.getLogger(LucidDbTxnMgr.class.getName()));
+        // NOTE jvs 8-Feb-2007:  This does nothing unless someone
+        // actually enables the corresponding log4j settings AND
+        // java.util.logging settings
+        LoggerFacade loggerFacade = new Jdk14Logger(tracer);
         lockMgr = new GenericLockManager(2, loggerFacade);
 
         // This represents a lock which can be acquired on the entire database.
@@ -114,6 +117,8 @@ class LucidDbTxnMgr
         FarragoSessionTxnEnd endType)
     {
         super.endTxn(txnId, endType);
+        tracer.fine(
+            "Transaction " + txnId + " releasing all table and database locks");
         lockMgr.releaseAll(txnId);
     }
 
@@ -123,7 +128,14 @@ class LucidDbTxnMgr
         String renderedName,
         int lockLevel)
     {
+        tracer.fine(
+            "Transaction " + txnId + " attempting to acquire " +
+            ((lockLevel == 1) ? "shared" : "exclusive")
+            + " lock on "
+            + renderedName);
         if (lockMgr.tryLock(txnId, resourceId, lockLevel, true)) {
+            tracer.fine(
+                "Transaction " + txnId + " acquired lock successfully");
             return;
         }
         throw FarragoResource.instance().LockDenied.ex(

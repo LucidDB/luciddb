@@ -260,7 +260,7 @@ class FarragoDbSessionIndexMap
     }
 
     // implement FarragoSessionIndexMap
-    public void computeIndexStats(
+    public long computeIndexStats(
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index,
         boolean estimate)
@@ -268,7 +268,7 @@ class FarragoDbSessionIndexMap
         FarragoMedLocalDataServer server =
             getIndexDataServer(wrapperCache, index);
         try {
-            server.computeIndexStats(
+            return server.computeIndexStats(
                 index,
                 getIndexRoot(index),
                 estimate);

@@ -48,6 +48,16 @@ protected:
      */
     SharedSegment pRandomSegment;
 
+    /**
+     * (Optional) segment supporting versioned random page allocation.
+     */
+    SharedSegment pVersionedRandomSegment;
+
+    /**
+     * (Optional) segment supporting snapshot random page allocation.
+     */
+    SharedSegment pSnapshotRandomSegment;
+
 public:
     virtual void openStorage(DeviceMode openMode);
 
@@ -60,7 +70,11 @@ public:
     void closeLinearSegment();
 
     void closeRandomSegment();
-    
+
+    void closeVersionedRandomSegment();
+
+    void closeSnapshotRandomSegment();
+
     virtual void closeStorage();
     
     explicit SegStorageTestBase();

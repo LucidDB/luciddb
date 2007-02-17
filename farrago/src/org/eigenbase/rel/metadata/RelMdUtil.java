@@ -251,7 +251,7 @@ public class RelMdUtil
         if ((domainSize == null) || (numSelected == null)) {
             return null;
         }
-        if (domainSize == numSelected) {
+        if (domainSize.equals(numSelected)) {
             return domainSize;
         }
 

@@ -74,6 +74,12 @@ public interface FarragoSessionDdlStmt
      * @return true if this statement implies an auto-commit before and after
      */
     public boolean requiresCommit();
+    
+    /**
+     * @return true if this DDL statement should be treated like a DML statement
+     * with respect to locking
+     */
+    public boolean runsAsDml();
 }
 
 // End FarragoSessionDdlStmt.java

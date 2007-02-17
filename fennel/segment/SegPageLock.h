@@ -299,6 +299,13 @@ public:
     {
     }
     
+    inline bool checkMagicNumber() const
+    {
+        Node const &node =
+            *reinterpret_cast<Node const *>(getPage().getReadableData());
+        return (node.magicNumber == Node::MAGIC_NUMBER);
+    }
+
     inline Node const &getNodeForRead() const
     {
         Node const &node =

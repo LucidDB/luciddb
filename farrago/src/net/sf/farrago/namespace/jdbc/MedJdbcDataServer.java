@@ -149,14 +149,22 @@ public class MedJdbcDataServer
     {
         if (connection != null && !connection.isClosed()) {
             if (validateConnection && validationQuery != null) {
-                Statement testConnection = connection.createStatement();
+                Statement testStatement = connection.createStatement();
                 try {
-                    testConnection.executeQuery(validationQuery);
+                    testStatement.executeQuery(validationQuery);
                 } catch (Exception ex) {
                     // need to re-create connection
                     closeAllocation();
                     connection = null;
                     validateConnection = false;
+                } finally {
+                    if (testStatement != null) {
+                        try {
+                            testStatement.close();
+                        } catch (SQLException ex) {
+                            // do nothing
+                        }
+                    }
                 }
             } else {
                 return;

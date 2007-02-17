@@ -37,6 +37,7 @@ RandomAccessFileDeviceTest \
 CacheTest \
 LinearDeviceSegmentTest \
 LinearViewSegmentTest \
+SnapshotSegmentTest \
 VersionedSegmentTest \
 ExecStreamGovernorTest \
 BTreeTxnTest \
@@ -64,6 +65,8 @@ LinearDeviceSegmentTest_SOURCES=LinearDeviceSegmentTest.cpp
 LinearViewSegmentTest_SOURCES=LinearViewSegmentTest.cpp
 
 VersionedSegmentTest_SOURCES=VersionedSegmentTest.cpp
+
+SnapshotSegmentTest_SOURCES=SnapshotSegmentTest.cpp
 
 SegStreamTest_SOURCES=SegStreamTest.cpp
 

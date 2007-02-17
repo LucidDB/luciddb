@@ -12,7 +12,7 @@ public interface SystemParametersMBean
 {
     public TabularData getSystemParameters() throws Exception;
     public String printSystemParameters() throws Exception;
-//     public void alterSystem(String name, String value) throws Exception;
+    public void alterSystem(String name, String value) throws Exception;
 }
 
 // End SystemParametersMBean.java

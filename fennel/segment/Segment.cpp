@@ -113,6 +113,16 @@ bool Segment::ensureAllocatedSize(BlockNum nPages)
     return true;
 }
 
+PageId Segment::updatePage(PageId pageId)
+{
+    return NULL_PAGE_ID;
+}
+
+MappedPageListener *Segment::getMappedPageListener(PageId pageId)
+{
+    return this;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End Segment.cpp

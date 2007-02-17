@@ -135,6 +135,16 @@ void DelegatingSegment::delegatedCheckpoint(
     pDelegateSegment->delegatedCheckpoint(delegatingSegment,checkpointType);
 }
 
+PageId DelegatingSegment::updatePage(PageId pageId)
+{
+    return pDelegateSegment->updatePage(pageId);
+}
+
+MappedPageListener *DelegatingSegment::getMappedPageListener(PageId pageId)
+{
+    return pDelegateSegment->getMappedPageListener(pageId);
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End DelegatingSegment.cpp

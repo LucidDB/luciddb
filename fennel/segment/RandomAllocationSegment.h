@@ -24,182 +24,49 @@
 #ifndef Fennel_RandomAllocationSegment_Included
 #define Fennel_RandomAllocationSegment_Included
 
-#include "fennel/segment/DelegatingSegment.h"
-
-#include <boost/enable_shared_from_this.hpp>
+#include "fennel/segment/RandomAllocationSegmentBase.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 struct ExtentAllocationNode;
 
 /**
- * RandomAllocationSegment implements RANDOM_ALLOCATION in terms of an
- * underlying segment supporting LINEAR_ALLOCATION.  See <a
- * href="structSegmentDesign.html#RandomAllocationSegment">the design docs</a>
- * for more detail.
+ * RandomAllocationSegment refines RandomAllocationSegmentBase, defining an
+ * ExtentAllocationNode where each page entry within the segment is unversioned.
+ * The ExtentAllocationNodes are stored in the segment itself.
  */
-class RandomAllocationSegment
-    : public DelegatingSegment,
-        public boost::enable_shared_from_this<RandomAllocationSegment>
+class RandomAllocationSegment : public RandomAllocationSegmentBase
 {
-    friend class SegmentFactory;
-
-    /**
-     * Number of pages in one extent, including the ExtentAllocationNode itself
-     * (so actual data capacity per extent is one less).  This is immutable.
-     */
-    BlockNum nPagesPerExtent;
-
-    /**
-     * Number of pages mapped by one SegmentAllocationNode, including the
-     * SegmentAllocationNode itself.  This is immutable.
-     */
-    BlockNum nPagesPerSegAlloc;
-
-    /**
-     * Number of extents mapped by a full SegmentAllocationNode.  This
-     * is immutable.
-     */
-    ExtentNum nExtentsPerSegAlloc;
-    
-    explicit RandomAllocationSegment(
-        SharedSegment delegateSegment);
-
-    /**
-     * Allocates a new page from an extent known to have space.
-     *
-     * @param extentNum absolute 0-based extent number from which to allocate
-     *
-     * @param ownerId PageOwnerId of owning object
-     *
-     * @return allocated PageId
-     */
-    PageId allocateFromExtent(ExtentNum extentNum,PageOwnerId ownerId);
-
-    /**
-     * Allocates a new page from an extent known to have space, with the extent
-     * allocation node already locked.
-     *
-     * @param extentNode locked ExtentAllocationNode corresponding to
-     * extentNum
-     *
-     * @param extentNum absolute extent number from which to allocate
-     *
-     * @param ownerId PageOwnerId of owning object
-     *
-     * @return allocated PageId
-     */
-    PageId allocateFromLockedExtent(
-        ExtentAllocationNode &extentNode,ExtentNum extentNum,
+    // implement RandomAllocationSegmentBase
+    virtual PageId getSegAllocPageIdForWrite(PageId origSegAllocPageId);
+    virtual PageId getExtAllocPageIdForWrite(ExtentNum extentNum);
+    virtual PageId allocateFromExtent(ExtentNum extentNum, PageOwnerId ownerId);
+    virtual void format();
+    virtual void formatPageExtents(
+        SegmentAllocationNode &segAllocNode,
+        ExtentNum &extentNum);
+    virtual PageId allocateFromNewExtent(
+        ExtentNum extentNum,
         PageOwnerId ownerId);
-
-    /**
-     * Calculates the PageId of a particular SegmentAllocationNode.
-     *
-     * @param iSegPage 0-based index of desired SegmentAllocationNode
-     *
-     * @return corresponding PageId
-     */
-    inline PageId getSegAllocPageId(uint iSegPage) const;
-
-    /**
-     * Calculates the PageId of a particular ExtentAllocationNode.
-     *
-     * @param extentNum absolute 0-based extent number
-     *
-     * @return corresponding PageId
-     */
-    inline PageId getExtentAllocPageId(ExtentNum extentNum) const;
-
-    /**
-     * Calculates a linear page number.
-     *
-     * @param extentNum absolute 0-based extent number of extent containing
-     * desired page
-     *
-     * @param iPageInExtent 0-based index of page in extent
-     *
-     * @return BlockNum corresponding to a linear PageId in this segment
-     */
-    inline BlockNum makePageNum(
-        ExtentNum extentNum,BlockNum iPageInExtent) const;
-
-    /**
-     * Maps a linear PageId from this segment into the corresponding
-     * SegmentAllocationNode, ExtentAllocationNode, and extent-relative page
-     * index.
-     *
-     * @param pageId input PageId
-     *
-     * @param iSegAlloc 0-based index of containing SegmentAllocationNode
-     *
-     * @param extentNum absolute 0-based extent number of containing
-     * ExtentAllocationNode
-     *
-     * @param iPageInExtent 0-based index of page in extent
-     */
-    void splitPageId(
-        PageId pageId,uint &iSegAlloc,
-        ExtentNum &extentNum,BlockNum &iPageInExtent) const;
-
-    /**
-     * Tests whether the given PageId has valid contents
-     * (either an allocated data page or an allocation map page).
-     *
-     * @param pageId the PageId to test
-     *
-     * @return true iff pageId is valid
-     */
-    bool isPageIdValid(PageId pageId);
-
-    /**
-     * Common implementation for isPageIdValid and isPageIdAllocated.
-     */
-    bool testPageId(PageId pageId,bool testAllocation);
-
-    /**
-     * Deallocates a single page.
-     *
-     * @param pageId PageId of page to deallocate
-     */
-    void deallocatePageId(PageId pageId);
-
-    /**
-     * @return the PageId of the first SegmentAllocationNode
-     */
-    inline PageId getFirstSegAllocPageId() const;
-
-    /**
-     * Infers the number of SegmentAllocationNodes from the
-     * size of the underlying segment.
-     */
-    uint inferSegAllocCount();
-    
-    /**
-     * Formats allocation pages based on current size of underlying segment,
-     * marking all pages as deallocated.
-     */
-    void format();
-    
-    /**
-     * Formats one extent allocation.
-     *
-     * @param extentNode locked ExtentAllocationNode
-     */
-    void formatExtent(ExtentAllocationNode &extentNode);
+    virtual void freePageEntry(ExtentNum extentNum, BlockNum iPageInExtent);
+    virtual PageOwnerId getPageOwnerId(
+        ExtentNum extentNum,
+        BlockNum iPageInExtent);
+    virtual PageId getSegAllocPageIdForRead(
+        PageId origSegAllocPageId,
+        SharedSegment &allocNodeSegment);
+    virtual PageId getExtAllocPageIdForRead(
+        ExtentNum extentNum,
+        SharedSegment &allocNodeSegment);
 
 public:
-    virtual ~RandomAllocationSegment();
+    explicit RandomAllocationSegment(SharedSegment delegateSegment);
 
     // implementation of Segment interface
-    virtual BlockId translatePageId(PageId);
+    virtual PageId allocatePageId(PageOwnerId ownerId);
     virtual PageId getPageSuccessor(PageId pageId);
     virtual void setPageSuccessor(PageId pageId, PageId successorId);
-    virtual PageId allocatePageId(PageOwnerId ownerId);
-    virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
-    virtual bool isPageIdAllocated(PageId pageId);
-    virtual AllocationOrder getAllocationOrder() const;
-    virtual BlockNum getAllocatedSizeInPages();
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
 };
 
 FENNEL_END_NAMESPACE

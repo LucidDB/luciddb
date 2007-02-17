@@ -34,6 +34,10 @@
 +-------------------------+
 | 0                       |
 +-------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify that no read lock lingered from ANALYZE (FRG-141)
+0: jdbc:luciddb:> insert into T1 values (3, 3);
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop schema TESTSCHEMA cascade;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- try using on a nonexisting schema, should get error (LER-2608)

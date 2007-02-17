@@ -83,10 +83,27 @@ void SegStorageTestBase::closeRandomSegment()
     }
 }
     
+void SegStorageTestBase::closeVersionedRandomSegment()
+{
+    if (pVersionedRandomSegment) {
+        assert(pVersionedRandomSegment.unique());
+        pVersionedRandomSegment.reset();
+    }
+}
+
+void SegStorageTestBase::closeSnapshotRandomSegment()
+{
+    if (pSnapshotRandomSegment) {
+        assert(pSnapshotRandomSegment.unique());
+        pSnapshotRandomSegment.reset();
+    }
+}
+
 void SegStorageTestBase::closeStorage()
 {
     closeLinearSegment();
     closeRandomSegment();
+    closeVersionedRandomSegment();
     // TODO:  assert pSegmentFactory.unique(), but not here
     CacheTestBase::closeStorage();
 }

@@ -64,6 +64,8 @@ public class TimeDimensionInternal extends GregorianCalendar
     private Date lastOfFiscalQuarterDate;
     private Date firstOfFiscalYearDate;
     private Date lastOfFiscalYearDate;
+    private Date firstOfFiscalWeekDate;
+    private Date lastOfFiscalWeekDate;
 
     final int millisInADay = 1000*60*60*24;
 
@@ -217,14 +219,32 @@ public class TimeDimensionInternal extends GregorianCalendar
         set( this.startYear, this.startMonth, this.startDate );
         complete();
 
+        // set first/last dates for week 
         int daysPastFirst = get( Calendar.DAY_OF_WEEK ) - getFirstDayOfWeek();
         if( daysPastFirst < 0 ) {
             daysPastFirst += 7;
         }
         long firstOfWeek = getTimeInMillis() - daysPastFirst * millisInADay;
         this.firstOfWeekDate = new Date( firstOfWeek );
-        this.lastOfWeekDate = new Date(
-            firstOfWeek + 6*millisInADay);
+        if (this.firstOfWeekDate.before(this.firstOfYearDate)) {
+            this.firstOfWeekDate.setTime(this.firstOfYearDate.getTime());
+        }
+        this.lastOfWeekDate = new Date(firstOfWeek + 6*millisInADay);
+        if (this.lastOfWeekDate.after(this.lastOfYearDate)) {
+            this.lastOfWeekDate.setTime(this.lastOfYearDate.getTime());
+        }
+
+        // set first/last fiscal dates of week
+        this.firstOfFiscalWeekDate = new Date( firstOfWeek );
+        if (this.firstOfFiscalWeekDate.before(this.firstOfFiscalYearDate)) {
+            this.firstOfFiscalWeekDate.setTime(
+                this.firstOfFiscalYearDate.getTime());
+        }
+        this.lastOfFiscalWeekDate = new Date( firstOfWeek + 6*millisInADay);
+        if (this.lastOfFiscalWeekDate.after(this.lastOfFiscalYearDate)) {
+            this.lastOfFiscalWeekDate.setTime(
+                this.firstOfFiscalYearDate.getTime());
+        }
 
         this.currentDate = new Date(getTimeInMillis());
     }
@@ -386,6 +406,14 @@ public class TimeDimensionInternal extends GregorianCalendar
         }
     }
 
+    public Date getFirstDayOfFiscalWeekDate() {
+        return this.firstOfFiscalWeekDate;
+    }
+
+    public Date getLastDayOfFiscalWeekDate() {
+        return this.lastOfFiscalWeekDate;
+    }
+
     public Date getFirstDayOfFiscalQuarterDate() {
         return this.firstOfFiscalQuarterDate;
     }
@@ -407,12 +435,10 @@ public class TimeDimensionInternal extends GregorianCalendar
         complete();
 
         long currentTime = getTimeInMillis();
+        boolean isFirstDayOfYear = false;
+        boolean isFiscalFirstDayOfYear = false;
 
-        // update first/last day of week/month/quarter/year
-        if (getFirstDayOfWeek() == get(Calendar.DAY_OF_WEEK)) {
-            this.firstOfWeekDate.setTime(currentTime);
-            this.lastOfWeekDate.setTime(currentTime + 6*millisInADay);
-        }
+        // update first/last day of month/quarter/year
         if (get(Calendar.DAY_OF_MONTH) == 1) {
             int month = get(Calendar.MONTH);
 
@@ -423,6 +449,7 @@ public class TimeDimensionInternal extends GregorianCalendar
 
             if ((month % 3) == 0) {
                 if (month == 0) {
+                    isFirstDayOfYear = true;
                     this.firstOfYearDate.setTime(currentTime);
                     add(Calendar.YEAR, 1);
                     this.lastOfYearDate.setTime(getTimeInMillis() - millisInADay);
@@ -438,6 +465,7 @@ public class TimeDimensionInternal extends GregorianCalendar
             int fMonth = (month - this.fiscalYearStartMonth + 12) % 12;
             if ((fMonth % 3) == 0) {
                 if (fMonth == 0) {
+                    isFiscalFirstDayOfYear = true;
                     this.firstOfFiscalYearDate.setTime(currentTime);
                     this.fiscalYearStartDay = get(Calendar.DAY_OF_YEAR);
                     add(Calendar.YEAR, 1);
@@ -450,6 +478,47 @@ public class TimeDimensionInternal extends GregorianCalendar
                 add(Calendar.MONTH, 3);
                 this.lastOfFiscalQuarterDate.setTime(getTimeInMillis() - millisInADay);
                 add(Calendar.MONTH, -3);
+            }
+        }
+        // update first/last day of week
+        int currentDayOfWeek = get(Calendar.DAY_OF_WEEK);
+        if (isFirstDayOfYear) {
+            this.firstOfWeekDate.setTime(currentTime);
+            int lastDayOfWeek = (((getFirstDayOfWeek()-1)+6)%7)+1;
+            if (lastDayOfWeek >= currentDayOfWeek) {
+                this.lastOfWeekDate.setTime(currentTime + 
+                    (lastDayOfWeek - currentDayOfWeek)*millisInADay);
+            } else {
+                this.lastOfWeekDate.setTime(currentTime +
+                    (lastDayOfWeek - currentDayOfWeek + 7)*millisInADay);
+            }
+        } else if (getFirstDayOfWeek() == currentDayOfWeek) {
+            this.firstOfWeekDate.setTime(currentTime);
+            this.lastOfWeekDate.setTime(currentTime + 6*millisInADay);
+            // if last day of week is into the new year, set it to the last 
+            // day of the year
+            if (this.lastOfWeekDate.after(this.lastOfYearDate)) {
+                this.lastOfWeekDate.setTime(this.lastOfYearDate.getTime());
+            }
+        }
+
+        // update first/last fiscal day of week
+        if (isFiscalFirstDayOfYear) {
+            this.firstOfFiscalWeekDate.setTime(currentTime);
+            int lastDayOfWeek = (((getFirstDayOfWeek()-1)+6)%7)+1;
+            if (lastDayOfWeek >= currentDayOfWeek) {
+                this.lastOfFiscalWeekDate.setTime(currentTime +
+                    (lastDayOfWeek - currentDayOfWeek)*millisInADay);
+            } else {
+                this.lastOfFiscalWeekDate.setTime(currentTime +
+                    (lastDayOfWeek - currentDayOfWeek + 7)*millisInADay);
+            }
+        } else if (getFirstDayOfWeek() == currentDayOfWeek) {
+            this.firstOfFiscalWeekDate.setTime(currentTime);
+            this.lastOfFiscalWeekDate.setTime(currentTime + 6*millisInADay);
+            if (this.lastOfFiscalWeekDate.after(this.lastOfFiscalYearDate)) {
+                this.lastOfFiscalWeekDate.setTime(
+                    this.lastOfFiscalYearDate.getTime());
             }
         }
     }
