@@ -375,13 +375,8 @@ public class SqlToRelTestBase
                     relOptSchema,
                     relOptConnection,
                     typeFactory);
-            final RelNode rel;
-            if (Bug.Dt471Fixed) {
-                final SqlNode validatedQuery = validator.validate(sqlQuery);
-                rel = converter.convertQuery(validatedQuery, false, true);
-            } else {
-                rel = converter.convertQuery(sqlQuery, true, true);
-            }
+            final SqlNode validatedQuery = validator.validate(sqlQuery);
+            final RelNode rel = converter.convertQuery(validatedQuery, false, true);
             Util.post(rel != null, "return != null");
             return rel;
         }
@@ -492,7 +487,7 @@ public class SqlToRelTestBase
         }
 
         // override SqlValidator
-        protected boolean shouldExpandIdentifiers()
+        public boolean shouldExpandIdentifiers()
         {
             return true;
         }

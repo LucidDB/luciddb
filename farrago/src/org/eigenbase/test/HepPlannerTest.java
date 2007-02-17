@@ -145,7 +145,7 @@ public class HepPlannerTest
         // twice by the same parent (the join in this case).
 
         checkPlanning(
-            new RemoveTrivialProjectRule(),
+            RemoveTrivialProjectRule.instance,
             "select d1.deptno from (select * from dept) d1,"
             + " (select * from dept) d2");
     }

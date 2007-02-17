@@ -79,7 +79,7 @@ p4 label -o $LABEL >> $DIST_DIR/VERSION
 
 # Start from a clean sync to requested label
 cd $OPEN_DIR
-rm -rf thirdparty fennel farrago
+rm -rf thirdparty fennel farrago luciddb
 p4 sync -f thirdparty/...@$LABEL
 p4 sync -f fennel/...@$LABEL
 p4 sync -f farrago/...@$LABEL
@@ -114,7 +114,23 @@ rm -f $SRC_RELEASE.$ARCHIVE_SUFFIX
 rm -rf $SRC_RELEASE
 mkdir $SRC_RELEASE
 cp -R $OPEN_DIR/thirdparty $SRC_RELEASE
+# Delete and stub out irrelevant thirdparty archives
 rm -f $SRC_RELEASE/thirdparty/icu-2.8.patch.tgz
+rm -f $SRC_RELEASE/thirdparty/tpch.tar.gz
+rm -f $SRC_RELEASE/thirdparty/postgresql-*
+rm -f $SRC_RELEASE/thirdparty/logging-log4j-*
+rm -f $SRC_RELEASE/thirdparty/jfreechart-*
+rm -f $SRC_RELEASE/thirdparty/jdbcappender.zip
+rm -f $SRC_RELEASE/thirdparty/jcommon-*
+rm -rf $SRC_RELEASE/thirdparty/GroboUtils
+touch $SRC_RELEASE/thirdparty/logging-log4j-1.3alpha-8.tar.gz
+touch $SRC_RELEASE/thirdparty/log4j
+touch $SRC_RELEASE/thirdparty/jdbcappender.zip
+touch $SRC_RELEASE/thirdparty/jdbcappender
+touch $SRC_RELEASE/thirdparty/jtds-1.2-dist.zip
+touch $SRC_RELEASE/thirdparty/jtds
+touch $SRC_RELEASE/thirdparty/tpch.tar.gz
+touch $SRC_RELEASE/thirdparty/tpch
 cp -R $OPEN_DIR/fennel $SRC_RELEASE
 cp -R $OPEN_DIR/farrago $SRC_RELEASE
 cp -R $OPEN_DIR/luciddb $SRC_RELEASE
@@ -153,13 +169,17 @@ jdbc.driver.version.minor=$MINOR
 jdbc.url.base=jdbc:farrago:
 jdbc.url.port.default=5433
 EOF
-cd $OPEN_DIR/luciddb
-./initBuild.sh --with-optimization --without-debug
+
+cd $OPEN_DIR/farrago
+./initBuild.sh --with-fennel --with-optimization --without-debug
 ./distBuild.sh --skip-init-build
-mv dist/luciddb.$ARCHIVE_SUFFIX \
-    $DIST_DIR/$LUCIDDB_BINARY_RELEASE.$ARCHIVE_SUFFIX
 mv ../farrago/dist/farrago.$ARCHIVE_SUFFIX \
     $DIST_DIR/$BINARY_RELEASE.$ARCHIVE_SUFFIX
+
+cd $OPEN_DIR/luciddb
+./initBuild.sh --without-farrago-build --with-optimization --without-debug
+mv dist/luciddb.$ARCHIVE_SUFFIX \
+    $DIST_DIR/$LUCIDDB_BINARY_RELEASE.$ARCHIVE_SUFFIX
 
 if [ $cygwin = "false" ]; then
 

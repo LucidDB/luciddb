@@ -1,0 +1,37 @@
+LucidDB Binary Release 0.6.0
+
+----------------------------------------------------------------------
+HOME PAGE
+
+http://www.luciddb.org
+
+----------------------------------------------------------------------
+INSTALLATION
+
+This page explains how to install and run LucidDB:
+
+http://docs.eigenbase.org/LucidDbGettingStarted
+
+Source releases are also available.
+
+http://docs.eigenbase.org/LucidDbBuildFromSourceDistribution
+
+------------------------------------------------------------
+RELEASE NOTES
+
+This binary release is intended for use by anyone who wants to run
+LucidDB without having to build anything.  
+
+Please report issues at Eigenbase JIRA:
+
+http://issues.eigenbase.org
+
+----------------------------------------------------------------------
+LICENSE
+
+Copyright (C) 1999-2007 The Eigenbase Project and others
+
+This distribution of Eigenbase is licensed under the GNU General Public
+License; see file COPYING for details.  To obtain the source code
+from which this distribution was built, please visit 
+http://www.eigenbase.org/download.html.

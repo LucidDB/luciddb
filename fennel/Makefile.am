@@ -4,7 +4,11 @@ SUBDIRS=common synch device cache segment txn tuple exec btree \
 db ftrs libfennel test @farrago_subdir@ disruptivetech lucidera build
 
 EXTRA_DIST=am_include.mk moodss web test/verboseTest test/dictWords \
-INSTALL.mingw trace/README
+INSTALL.mingw trace/README initBuild.sh build/buildBoostLibs.sh \
+build/buildICULibs.sh build/buildMingwBinaryDist.sh \
+build/buildStlportLibs.sh build/checkPreamble.sh \
+build/checkPreambleFennel.sh build/doxygenLocal.sh \
+build/pushDist.sh build/wshack.cpp
 
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck

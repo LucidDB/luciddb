@@ -11,8 +11,7 @@
 <h1>What's Working Already?</h1>
 
 Here's a laundry list of SQL features which are already working in
-Farrago as of release 0.5.  Restrictions and 0.6 features are noted
-inline as well as in subsequent sections.  If a sub-feature isn't
+Farrago as of release 0.6.  If a sub-feature isn't
 mentioned (e.g. CHECK clause in CREATE TABLE), it isn't available yet.
 Everything is supposed to work according to the SQL standard, so if
 something doesn't, that's either a bug or an incomplete feature.
@@ -25,7 +24,7 @@ incompatibilities.
 <ul>
 
 <li>All identifiers may be up to 128 characters.  Identifiers may be
-quoted (with case-sensitivity) or unquoted (with uppercasing
+quoted (with case-sensitivity) or unquoted (with implicit uppercasing
 before both storage and lookup).  The compound identifier
 "catalog_name"."schema_name"."object_name" fully qualifies a schema
 element.
@@ -53,24 +52,27 @@ and "View").  Likewise for SYS_FEM.
 
 <li>CREATE SCHEMA: a schema can be created by itself, or together with
 all of its contents in the same statement.  The AUTHORIZATION clause
-is currently parsed but ignored since users and roles are not yet
-implemented (under development for 0.6).
+is currently parsed but ignored.  The PATH clause is supported
+for UDR/UDT lookup.
 
 <li>CREATE TABLE: for the default row-store implementation, every
 table must have a primary key.  Supported column datatypes are
-BOOLEAN, TINYINT, SMALLINT, INTEGER, BIGINT, DECIMAL (alias
-NUMERIC) as of 0.6, REAL, DOUBLE (alias DOUBLE PRECISION), VARCHAR (alias
-CHARACTER VARYING), VARBINARY, CHAR (alias CHARACTER), BINARY, DATE,
-TIME, TIMESTAMP, and user-defined type.  Decimal precision is limited
-to 19 digits.  Time precision is currently limited to seconds, but
-will eventually be enhanced to microseconds (which should be the
-default for TIMESTAMP according to the SQL standard).  Timezones are
-not yet supported.  Support for standard <a
+BOOLEAN, TINYINT, SMALLINT, INTEGER, BIGINT, DECIMAL (alias NUMERIC),
+REAL, DOUBLE (alias DOUBLE PRECISION), VARCHAR (alias CHARACTER
+VARYING), VARBINARY, CHAR (alias CHARACTER), BINARY, DATE, TIME,
+TIMESTAMP, and user-defined type.  Decimal precision is limited to 19
+digits.  Time precision is currently limited to seconds, but will
+eventually be enhanced to microseconds (which should be the default
+for TIMESTAMP according to the SQL standard).  Timezones are not yet
+supported.  Support for standard <a
 href="design/CollectionTypes.html">multisets</a> and time intervals is
-currently under development.
+currently under development.  <a
+href="http://wiki.eigenbase.org/AutoincrementColumns">Autoincrement
+columns</a> are supported.
 
-<li>NOT NULL:  can be specified explicitly on any column; is also implied
-for columns which participate in the table's primary key or clustered index.
+<li>NOT NULL: can be specified explicitly on any column; is also
+implied for columns which participate in the table's primary key (or
+clustered index for row-store tables).
 
 <li>DEFAULT: can be specified for any column; otherwise default value
 is NULL.  Currently, default values can only be literals of the appropriate
@@ -111,18 +113,34 @@ temporary tables support the same features as permanent tables
 
 <li><a href="design/sqlmed.html">SQL/MED</a> support.  CREATE/DROP
 FOREIGN DATA WRAPPER, CREATE/DROP SERVER, and CREATE/DROP FOREIGN
-TABLE are working.  Implementations for JDBC and MDR are
-available (the MDR implementation is already being used for exposing
-the catalog contents via SQL).  IMPORT FOREIGN SCHEMA is working
-in version 0.6.
+TABLE are working, along with IMPORT FOREIGN SCHEMA.  Implementations
+for JDBC, flatfiles and MDR are available (the MDR implementation is already
+being used for exposing the catalog contents via SQL).  The system
+starts out with foreign data wrappers SYS_MDR, SYS_MOCK_FOREIGN,
+SYS_JDBC, and SYS_FILE_WRAPPER predefined.  Foreign data server
+SYS_MOCK_FOREIGN_DATA_SERVER and HSQLDB_DEMO can be used for test purposes.
+
+<li><a
+href="http://sourceforge.net/mailarchive/forum.php?thread_id=31121738&forum_id=33354">Pluggable
+storage engine support</a> via CREATE/DROP LOCAL DATA WRAPPER.  The
+system starts out with local data wrappers SYS_FTRS (row-store) and
+SYS_COLUMN_STORE (<a href="http://www.luciddb.org">LucidDB
+column-store)</a>, as well as SYS_MOCK.  A corresponding local data server
+(SYS_FTRS_DATA_SERVER, SYS_COLUMN_STORE_DATA_SERVER, or
+SYS_MOCK_DATA_SERVER) can be specified in the SERVER clause for CREATE
+TABLE when creating a local table (default is SYS_FTRS_DATA_SERVER for
+vanilla Farrago session personality).
 
 <li><a href="design/UserDefinedTypesAndRoutines.html#Routines">CREATE
 FUNCTION/PROCEDURE</a>: supports functions with SQL-defined bodies
 consisting of a single RETURN statement, and Java-defined external
-functions and procedures with IN parameters only.  For external functions,
-parameters must be of builtin type.  Procedure result sets are not supported.
-External routines may call back into JDBC via standard
-<code>jdbc:default:connection</code>.
+functions and procedures with IN parameters only.  For external
+functions, parameters must be of builtin type.  Procedure result sets
+are not supported, but see <a
+href="http://wiki.eigenbase.org/FarragoUdx">the UDX spec</a> for user-defined
+transformation functions which take cursors as input and return
+tables as output.  External routines may call back into JDBC via
+standard <code>jdbc:default:connection</code>.
 </li>
 
 <li><a href="design/UserDefinedTypesAndRoutines.html#Types">CREATE
@@ -152,6 +170,15 @@ type references.</li>
 <li>TRUNCATE TABLE "tbl":  delete all rows from tbl without logging them
 individually.
 
+<li><a href="http://wiki.eigenbase.org/FarragoTableRebuild">ALTER
+TABLE "tbl" REBUILD</a>: physically reorganize table contents, purging
+deleted entries and rebalancing indexes where supported.
+
+<li><a href="http://wiki.eigenbase.org/TableStatistics">ANALYZE TABLE
+"tbl" COMPUTE STATISTICS FOR { ALL COLUMNS | COLUMNS (a, b, c...)
+}</a>: collect statistics on stored data distribution for use by the
+optimizer.
+
 <li>ALTER SYSTEM SET "parameterName" = value; change a system
 parameter (see <a
 href="http://wiki.eigenbase.org/FarragoSystemParameters">documentation
@@ -176,6 +203,27 @@ Farrago-specific mechanisms for system extensibility
 ALTER SYSTEM REPLACE CATALOG:
 Farrago-specific catalog upgrade mechanism
 
+<li>
+CREATE OR REPLACE [ RENAME TO "new-name" ] is supported for all
+objects except local tables and indexes.  This is a Farrago-specific
+extension.  The command succeeds as long as the replacement definition
+does not invalidate any dependencies.
+
+<li>
+CREATE ROLE "role-name" [ WITH ADMIN "admin-auth-id" ]
+
+<li>
+CREATE USER "user-name" [ AUTHORIZATION 'auth-string' ] 
+[ DEFAULT {CATALOG|SCHEMA} "default-qualifier" ]:  this is a
+Farrago-specific extension (SQL:2003 stops at role level.)
+
+<li>
+GRANT role/privilege
+
+<li>
+<a href="http://wiki.eigenbase.org/SampleDatasetSubstitution">Sample
+datasets</a>: This is a Farrago-specific extension.
+
 </ul>
 
 <h2>Queries</h2>
@@ -184,15 +232,16 @@ Farrago-specific catalog upgrade mechanism
 
 <li>SELECT [DISTINCT] ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY
 
-<li>UNION [ALL]
+<li>UNION [ALL], INTERSECT, EXCEPT
 
 <li>FROM clause may contain tables, views, multi-row VALUES,
 LEFT/RIGHT/INNER/CROSS JOIN, old-style comma list, nested queries,
 UDX invocations, and explicit TABLE references.
 
-<li>EXPLAIN PLAN [ { EXCLUDING | INCLUDING [ ALL ] } ATTRIBUTES ]
+<li><a href="http://wiki.eigenbase.org/FarragoExplainPlanExplained">
+EXPLAIN PLAN [ { EXCLUDING | INCLUDING [ ALL ] } ATTRIBUTES ]
 [{WITH|WITHOUT} IMPLEMENTATION] [AS XML] FOR
-<em>query-or-DML-statement</em>; shows optimizer plan.  WITHOUT
+<em>query-or-DML-statement</em></a>; shows optimizer plan.  WITHOUT
 IMPLEMENTATION yields unoptimized abstract relational plan.  Default
 is WITH IMPLEMENTATION, which yields optimized plan with all physical
 operators.  AS XML yields detailed output in element-oriented XML.
@@ -200,7 +249,9 @@ EXCLUDING ATTRIBUTES shows relational operator names only.
 INCLUDING ATTRIBUTES is the default.  INCLUDING ALL ATTRIBUTES provides
 additional attributes such as cost.
 
-<li>row expressions:  (TODO:  list)
+<li>The LucidDB SQL reference has the most up-to-date list of
+<a href="http://docs.eigenbase.org/LucidDbValueExpression">supported row
+expressions</a>
 
 </ul>
 
@@ -227,8 +278,9 @@ additional attributes such as cost.
 <li>prepared statements with dynamic parameters 
 (e.g. <code>select * from emps where name=?</code>)
 
-<li>some DatabaseMetaData:  getCatalogs, getSchemas, getTables, getTableTypes
-(no pattern search support yet)
+<li>DatabaseMetaData:  all except getTablePrivileges, getColumnPrivileges,
+getBestRowIdentifier, getVersionColumns, getImportedKeys, getExportedKeys,
+getCrossReference
 
 <li>savepoint API
 
@@ -242,13 +294,14 @@ additional attributes such as cost.
 
 <ul>
 
+<li>hash join/agg coming soon (already available in LucidDB session personality)
+
 <li>cartesian product join (for inner joins only)
 
 <li>index join (for LEFT, RIGHT, or INNER join;
 single-column equijoin only)
 
-<li>single-column index search (equals predicate only); only one index
-at a time
+<li>single-column index search; only one index at a time
 
 <li>hybrid Java/Fennel plans
 
@@ -260,7 +313,7 @@ at a time
 
 <li>Row expressions are implemented via a mix of Java code generation
 and Fennel calculator programs.  In cases where both implementations
-are available for the same row expression, the optimizer decides
+are available for the same value expression, the optimizer decides
 (currently always in favor of Fennel; eventually this should be
 properly costed).  System parameter "calcVirtualMachine" governs this
 behavior (default setting CALCVM_AUTO uses mixed mode; CALCVM_FENNEL
@@ -268,15 +321,22 @@ forces Fennel only; CALCVM_JAVA forces Java only, used implicitly when
 Fennel support is not available).
 
 <li>Generated Java code is compiled by the Janino compiler (and then
-possibly to native code JIT).  Alternate compilers such as Sun's can
-be selected via the <code>javaCompilerClassName</code> system
-parameter.
+possibly to native code JIT).
 
 <li>All other execution objects are implemented by Fennel, except for
 foreign table access (such as MDR or JDBC).
 
 <li>Each DML statement runs in its own implicit subtransaction as required
 by the standard.
+
+</ul>
+
+<h2>Management API</h2>
+
+<ul>
+
+<li><a href="http://wiki.eigenbase.org/FarragoSystemManagement">
+A variety of management views and procedures</a> are available.
 
 </ul>
 
@@ -288,7 +348,7 @@ by the standard.
 go into the engine directly.
 
 <li>Client/server: implemented using <a
-href="http://rmijdbc.objectweb.org">RmiJdbc</a>.  By default, the
+href="http://vjdbc.sf.net">VJDBC</a>.  By default, the
 server listens for RMI connections on port 5433, and uses multiple
 dynamically assigned ports for individual RMI objects.  This can be
 controlled via configuration parameters;
@@ -308,14 +368,11 @@ features listed above:
 
 <ul>
 
-<li>The validator still has a few rough edges, so in certain cases, an
-invalid request will result in ugly internal errors, printer
-spontaneous combustion, etc.
-
-<li>ORDER BY descending is not supported (but ORDER BY expression is).
-
-<li>Subqueries and IN predicates are parsed and maybe validated but
-don't actually work yet.  Same for INTERSECT and EXCEPT.
+<li>REVOKE is not yet implemented, and authorization checks are limited to
+table access only (authorization checks for DDL statements is not yet
+implemented).  No authentication method is implemented yet.  There are
+a number of known security problems in routine invocation, system
+routine accessibility, and SQL/MED.
 
 <li>Type inference is missing for some dynamic parameter contexts.
 
@@ -325,8 +382,9 @@ only the single-byte character sets known to Java.
 <li>Bulk load for multi-level trees is implemented internally, but not
 yet hooked into CREATE INDEX.
 
-<li>There's no concurrency control at all, so don't try more than a
-single session yet.
+<li>There's no lock manager in the vanilla Farrago session
+personality, so concurrency control defaults to dirty read, with the
+potential for recovery failures due to write-on-write conflicts.
 
 <li>Updates to unique keys are not ordered correctly, so spurious
 uniqueness violations result for a statement like update t set pk=pk+1
@@ -334,9 +392,6 @@ uniqueness violations result for a statement like update t set pk=pk+1
 triggers are implemented.
 
 <li>INSERT/UPDATE do not support the explicit DEFAULT keyword.
-
-<li>The amount of performance tuning which has been done so far is
-exactly zero.
 
 <li>The SET SCHEMA command cannot be used to set a schema in a
 virtual catalog based on a SQL/MED server (including the predefined

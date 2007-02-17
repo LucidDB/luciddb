@@ -86,10 +86,6 @@ public abstract class Bug
 
     public static final boolean Dt294Fixed = false;
 
-    public static final boolean Dt466Fixed = false;
-
-    public static final boolean Dt471Fixed = false;
-
     public static final boolean Dt591Fixed = false;
 
     // -----------------------------------------------------------------------
@@ -166,6 +162,8 @@ public abstract class Bug
      * fixed.
      */
     public static final boolean Frg140Fixed = false;
+
+    public static final boolean FrgIntegrationFixed = false;
 
     // johnk
 

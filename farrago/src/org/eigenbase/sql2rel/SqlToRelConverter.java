@@ -249,17 +249,11 @@ public class SqlToRelConverter
             // SQL statement is something like an INSERT which has no
             // validator type information associated with its result,
             // hence the namespace check above.)
-            RelDataType validatedRowType =
-                validator.getValidatedNodeType(query);
-            validatedRowType = uniquifyFields(validatedRowType);
             RelDataType convertedRowType = result.getRowType();
-            if (shouldAssertRowTypePreserved()
-                && !RelOptUtil.equal(
-                    "validated row type",
-                    validatedRowType,
-                    "converted row type",
-                    convertedRowType,
-                    false)) {
+            if (!checkConvertedRowType(query, convertedRowType)) {
+                RelDataType validatedRowType =
+                    validator.getValidatedNodeType(query);
+                validatedRowType = uniquifyFields(validatedRowType);
                 throw Util.newInternal(
                     "Conversion to relational algebra failed to preserve "
                     + "datatypes:" + Util.lineSeparator
@@ -269,6 +263,7 @@ public class SqlToRelConverter
                     + convertedRowType.getFullTypeString() + Util.lineSeparator
                     + "rel:" + Util.lineSeparator
                     + RelOptUtil.toString(result));
+
             }
         }        
     }
@@ -348,16 +343,23 @@ public class SqlToRelConverter
         return result;
     }
 
-    protected boolean shouldAssertRowTypePreserved()
+    protected boolean checkConvertedRowType(
+        SqlNode query,
+        RelDataType convertedRowType)
     {
-        // NOTE jvs 13-Sept-2006:  Julian, if you want to make this
-        // dependent on Bug.Dt471Fixed, override this method in
-        // a red-zone subclass.  For Farrago, the assert should
-        // always be on to prevent more mistakes from accumulating.
-        return true;
+        RelDataType validatedRowType =
+            validator.getValidatedNodeType(query);
+        validatedRowType = uniquifyFields(validatedRowType);
+
+        return RelOptUtil.equal(
+                "validated row type",
+                validatedRowType,
+                "converted row type",
+                convertedRowType,
+                false);
     }
 
-    private RelDataType uniquifyFields(RelDataType rowType)
+    protected RelDataType uniquifyFields(RelDataType rowType)
     {
         final List<String> fieldNameList = RelOptUtil.getFieldNameList(rowType);
         final List<RelDataType> fieldTypeList =

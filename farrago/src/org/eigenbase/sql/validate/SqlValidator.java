@@ -468,6 +468,11 @@ public interface SqlValidator
     void setIdentifierExpansion(boolean expandIdentifiers);
 
     /**
+     * Returns expansion of identifiers.
+     */
+     boolean shouldExpandIdentifiers();
+
+    /**
      * Enables or disables rewrite of "macro-like" calls such as COALESCE.
      *
      * @param rewriteCalls new setting

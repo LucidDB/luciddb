@@ -28,6 +28,7 @@ import java.util.logging.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
@@ -771,7 +772,8 @@ public class VolcanoPlanner
         addRule(new SwapJoinRule());
         addRule(new RemoveDistinctRule());
         addRule(new UnionToDistinctRule());
-        addRule(new RemoveTrivialProjectRule());
+        addRule(RemoveTrivialProjectRule.instance);
+        addRule(RemoveTrivialCalcRule.instance);
 
         // todo: rule which makes Project({OrdinalRef}) disappear
     }
@@ -1179,14 +1181,41 @@ public class VolcanoPlanner
         RelSet set2)
     {
         assert set != set2 : "pre: set != set2";
+        assert set.equivalentSet == null;
+
+        // Find the root of set2's equivalence tree.
+        if (set2.equivalentSet != null) {
+            Set<RelSet> seen = new HashSet<RelSet>();
+            while (true) {
+                if (!seen.add(set2)) {
+                    throw Util.newInternal("cycle in equivalence tree");
+                }
+                if (set2.equivalentSet == null) {
+                    break;
+                } else {
+                    set2 = set2.equivalentSet;
+                }
+            }
+            // Looks like set2 was already marked as equivalent to set. Nothing
+            // to do.
+            if (set2 == set) {
+                return;
+            }
+        }
+
+        // If necessary, swap the sets, so we're always merging the newer set
+        // into the older.
         if (set.id > set2.id) {
-            // Swap the sets, so we're always merging the newer set into the
-            // older.
             RelSet t = set;
             set = set2;
             set2 = t;
         }
+
+        // Merge.
         set.mergeWith(this, set2);
+
+        // Was the set we merged with the root? If so, the result is the new
+        // root.
         if (set2 == getSet(root)) {
             root = set.getOrCreateSubset(
                     root.getCluster(),

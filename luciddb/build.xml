@@ -995,10 +995,13 @@ ${farrago.test.jvmargs}
     </if>
 
     <ant target="rename-dir-to-luciddb" inheritAll="false">
-	<property name="lu.package.name" value="${package.name}"/>
-	<property name="lu.product.version.major" value="${product.version.major}"/>
-	<property name="lu.product.version.minor" value="${product.version.minor}"/>
-	<property name="lu.product.version.point" value="${product.version.point}"/>
+      <property name="lu.package.name" value="${package.name}"/>
+      <property name="lu.product.version.major" 
+        value="${product.version.major}"/>
+      <property name="lu.product.version.minor" 
+        value="${product.version.minor}"/>
+      <property name="lu.product.version.point" 
+        value="${product.version.point}"/>
     </ant>
 
     <delete dir="${dist.dir}/${lucidera.release.spec}/catalog" quiet="true"/>
@@ -1016,6 +1019,10 @@ ${farrago.test.jvmargs}
     <copy todir="${dist.dir}/${lucidera.release.spec}/examples">
       <fileset dir="${luciddb.dir}/examples"/>
     </copy>
+    <copy 
+      file="${luciddb.dir}/license/README" 
+      todir="${dist.dir}/${lucidera.release.spec}"
+      overwrite="true" />
 
     <copy file="${release.properties.source}"
       todir="${release.lib.dir}" overwrite="true"/>

@@ -24,6 +24,8 @@ package org.eigenbase.sql.validate;
 
 import java.util.*;
 import java.util.logging.*;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -1335,7 +1337,7 @@ public class SqlValidatorImpl
         this.rewriteCalls = rewriteCalls;
     }
 
-    protected boolean shouldExpandIdentifiers()
+    public boolean shouldExpandIdentifiers()
     {
         return expandIdentifiers;
     }
@@ -1386,6 +1388,9 @@ public class SqlValidatorImpl
             case SqlKind.IdentifierORDINAL:
             case SqlKind.OverORDINAL:
                 alias = deriveAlias(node, -1);
+                if (alias == null){
+                    alias = deriveAlias(node, nextGeneratedId++);
+                }
                 if (shouldExpandIdentifiers()) {
                     newNode = SqlValidatorUtil.addAlias(node, alias);
                 }
@@ -2015,6 +2020,32 @@ public class SqlValidatorImpl
     public void validateLiteral(SqlLiteral literal)
     {
         switch (literal.getTypeName().getOrdinal()) {
+        case SqlTypeName.Decimal_ordinal:
+            // Decimal and long have the same precision (as 64-bit integers),
+            // so the unscaled value of a decimal must fit into a long.
+
+            // REVIEW jvs 4-Aug-2004:  This should probably be calling over to
+            // the available calculator implementations to see what they
+            // support.  For now use ESP instead.
+            //
+            // jhyde 2006/12/21: I think the limits should be baked into the
+            // type system, not dependent on the calculator implementation.
+            BigDecimal bd = (BigDecimal) literal.getValue();
+            BigInteger unscaled = bd.unscaledValue();
+            long longValue = unscaled.longValue();
+            if (!BigInteger.valueOf(longValue).equals(unscaled)) {
+                // overflow
+                throw newValidationError(
+                    literal,
+                    EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
+                        bd.toString()));
+            }
+            break;
+
+        case SqlTypeName.Double_ordinal:
+            validateLiteralAsDouble(literal);
+            break;
+
         case SqlTypeName.Binary_ordinal:
             final BitString bitString = (BitString) literal.getValue();
             if ((bitString.getBitCount() % 8) != 0) {
@@ -2023,6 +2054,21 @@ public class SqlValidatorImpl
                     EigenbaseResource.instance().BinaryLiteralOdd.ex());
             }
             break;
+
+        case SqlTypeName.Date_ordinal:
+        case SqlTypeName.Time_ordinal:
+        case SqlTypeName.Timestamp_ordinal:
+            Calendar calendar = (Calendar) literal.getValue();
+            final int year = calendar.get(Calendar.YEAR);
+            final int era = calendar.get(Calendar.ERA);
+            if (year < 1 || era == GregorianCalendar.BC || year > 9999) {
+                throw newValidationError(
+                    literal,
+                    EigenbaseResource.instance().DateLiteralOutOfRange.ex(
+                        literal.toString()));
+            }
+            break;
+        
         case SqlTypeName.IntervalYearMonth_ordinal:
         case SqlTypeName.IntervalDayTime_ordinal:
             if (literal instanceof SqlIntervalLiteral) {
@@ -2044,6 +2090,21 @@ public class SqlValidatorImpl
         default:
             // default is to do nothing
         }
+    }
+
+    private void validateLiteralAsDouble(SqlLiteral literal)
+    {
+        BigDecimal bd = (BigDecimal) literal.getValue();
+        double d = bd.doubleValue();
+        if (Double.isInfinite(d) || Double.isNaN(d)) {
+            // overflow
+            throw newValidationError(
+                literal,
+                EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
+                    Util.toScientificNotation(bd)));
+        }
+
+        // REVIEW jvs 4-Aug-2004:  what about underflow?
     }
 
     public void validateIntervalQualifier(SqlIntervalQualifier qualifier)
@@ -2823,12 +2884,13 @@ public class SqlValidatorImpl
         assert node.isA(SqlKind.Values);
 
         final SqlNode [] operands = node.getOperands();
-        for (int i = 0; i < operands.length; i++) {
-            if (!operands[i].isA(SqlKind.Row)) {
+        for (SqlNode operand : operands) {
+            if (!operand.isA(SqlKind.Row)) {
                 throw Util.needToImplement(
                     "Values function where operands are scalars");
             }
-            SqlCall rowConstructor = (SqlCall) operands[i];
+
+            SqlCall rowConstructor = (SqlCall) operand;
             if (targetRowType.isStruct()
                 && (
                     rowConstructor.getOperands().length

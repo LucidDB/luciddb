@@ -1053,15 +1053,13 @@ public class CalcRexImplementorTableImpl
                             translator.builder.newLocal(regDesc);
                         CalcProgramBuilder.round.add(
                             translator.builder,
-                            new CalcReg[] {
-                                afterRound, beforeRound
-                            });
+                            afterRound,
+                            beforeRound);
                         CalcReg res = createResultRegister(translator, call);
                         CalcProgramBuilder.Cast.add(
                             translator.builder,
-                            new CalcReg[] {
-                                res, afterRound
-                            });
+                            res,
+                            afterRound);
                         return res;
                     }
                 });
@@ -1167,6 +1165,11 @@ public class CalcRexImplementorTableImpl
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA));
 
+            putMM(
+                SqlTypeName.binaryTypes,
+                SqlTypeName.binaryTypes,
+                new UsingInstrImplementor(ExtInstructionDefTable.castA));
+
             putSM(
                 SqlTypeName.Decimal,
                 SqlTypeName.charTypes,
@@ -1243,12 +1246,12 @@ public class CalcRexImplementorTableImpl
             RelDataType toType = call.getType();
             SqlTypeName toTypeName = toType.getSqlTypeName();
 
-            CalcRexImplementor implentor =
+            CalcRexImplementor implementor =
                 doubleKeyMap.get(
                     new Pair<SqlTypeName, SqlTypeName>(
                         fromTypeName, toTypeName));
-            if (null != implentor) {
-                return implentor.implement(call, translator);
+            if (null != implementor) {
+                return implementor.implement(call, translator);
             }
 
             if (SqlTypeUtil.sameNamedType(toType, fromType)) {
@@ -1841,7 +1844,8 @@ public class CalcRexImplementorTableImpl
 
                     ExtInstructionDefTable.castA.add(
                         translator.builder,
-                        new CalcReg[] { newReg, reg });
+                        newReg,
+                        reg);
                     regList.set(i, newReg);
                 }
             }
@@ -2222,7 +2226,8 @@ public class CalcRexImplementorTableImpl
             CalcReg reg0 = translator.implementNode(call.operands[0]);
             ExtInstructionDefTable.histogramInit.add(
                 translator.builder,
-                new CalcReg[] { accumulatorRegister, reg0 });
+                accumulatorRegister,
+                reg0);
         }
 
         public void implementAdd(
@@ -2234,7 +2239,8 @@ public class CalcRexImplementorTableImpl
             final CalcReg reg0 = translator.implementNode(call.operands[0]);
             ExtInstructionDefTable.histogramAdd.add(
                 translator.builder,
-                new CalcReg[] { reg0, accumulatorRegister });
+                reg0,
+                accumulatorRegister);
         }
 
         public void implementDrop(
@@ -2246,7 +2252,8 @@ public class CalcRexImplementorTableImpl
             final CalcReg reg0 = translator.implementNode(call.operands[0]);
             ExtInstructionDefTable.histogramDrop.add(
                 translator.builder,
-                new CalcReg[] { reg0, accumulatorRegister });
+                reg0,
+                accumulatorRegister);
         }
     }
 

@@ -58,7 +58,7 @@ if [ -e "$test" -a ${test:0-5} == ".java" ]; then
 /^package / {
   p = substr($2,0,length($2)-1);
 }
-/ class / {
+/^public.* class / {
   for (i = 1; i <= NF; i++) {
     if ($i == "class") {
       c = $(i+1);
@@ -117,8 +117,8 @@ else
     echo Execution $count started at `date`
 
     while $command; do
-	let count++;
-	echo Execution $count started at `date`
+        let count++;
+        echo Execution $count started at `date`
     done
 
     echo Failed on execution $count

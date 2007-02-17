@@ -10,11 +10,14 @@ below.
 ======================================================================
 DEPENDENCIES
 
+Use either g++ 3.3.x or 4.1.x.  Versions between 3.4 and 4.0 do not
+work well with Fennel.
+
 The Fennel build is based on GNU autotools.  Versions known to work
-are automake-1.8.3; autoconf-2.59; libtool-1.5.6; and make-3.80.
+are automake-1.8.3; autoconf-2.59; libtool-1.5.6; and make-3.8x.
 
 Fennel itself relies on the Boost library from http://www.boost.org
-(at least v1.32), and STLport from http://www.stlport.com (at least
+(at least v1.33), and STLport from http://www.stlport.com (at least
 v4.6.2).  Optionally, Fennel can use the ICU library from
 http://oss.software.ibm.com/icu for i18n support (this doesn't work
 with mingw yet).
@@ -47,7 +50,7 @@ The simplest way to configure and build Fennel is to run:
 This script will execute all of the steps laid out below, assuming
 the presence of the thirdparty directory with the same parent
 directory as fennel.  The initBuild.sh script will change to
-../thirdparty, extract the copies of Boost, STLport, and ICU archived
+../thirdparty, extract the copies of Boost, and STLport archived
 there and build them.
 
 Run with the --help option to get a full list of flags supported

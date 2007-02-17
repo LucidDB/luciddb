@@ -134,6 +134,7 @@ rm -f $LIB_DIR/mdrlibs/mdrant.jar
 cp OpenJava/openjava.jar $LIB_DIR
 cp OpenJava/COPYRIGHT $LIB_DIR/openjava.license.txt
 cp RmiJdbc/dist/lib/*.jar $LIB_DIR
+cp ant/LICENSE $LIB_DIR/commons.license.txt
 cp csvjdbc/csvjdbc.jar $LIB_DIR
 cp csvjdbc/license.txt $LIB_DIR/csvjdbc.license.txt
 cp sqlline.jar $LIB_DIR
@@ -142,9 +143,13 @@ cp jline.jar $LIB_DIR
 cp jgrapht/jgrapht-*.jar $LIB_DIR
 cp jgrapht7/jgrapht7-jdk1.5.jar $LIB_DIR
 cp jgrapht/license-LGPL.txt $LIB_DIR/jgrapht.license.txt
+cp jgrapht/license-LGPL.txt $LIB_DIR/vjdbc.license.txt
+cp jgrapht/license-LGPL.txt $LIB_DIR/RmiJdbc.license.txt
 cp hsqldb/doc/hypersonic_lic.txt $LIB_DIR/hsqldb.license.txt
 cp hsqldb/lib/hsqldb.jar $LIB_DIR
-cp postgresql-8.1-406.jdbc2.jar $LIB_DIR
+if [ -e postgresql-8.1-406.jdbc2.jar ]; then
+    cp postgresql-8.1-406.jdbc2.jar $LIB_DIR
+fi
 cp commons-transaction-1.1.jar $LIB_DIR
 cp vjdbc/lib/vjdbc.jar $LIB_DIR
 cp vjdbc/lib/vjdbc_server.jar $LIB_DIR

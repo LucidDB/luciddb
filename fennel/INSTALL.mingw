@@ -31,9 +31,9 @@ You'll also get errors building the Fennel tests (libtool fails to
 create wrapper executables).  You can prevent these errors by
 configuring with --enable-static --disable-shared, but this is
 inconvenient since it turns off shared libraries.  Instead, after the
-failed build, run `ln -s .libs/*.exe .` in the test and calc
-directories.  This will create symlinks to the test executables,
-allowing `make check` to be used.
+failed build, run `ln -s .libs/*.exe .` in the test directories.  This
+will create symlinks to the test executables, allowing `make check` to
+be used.
 
 ======================================================================
 PACKAGE VERSIONS

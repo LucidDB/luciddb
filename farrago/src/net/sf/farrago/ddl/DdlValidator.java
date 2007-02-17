@@ -46,9 +46,12 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.SqlTypeFamily;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
+import org.eigenbase.reltype.RelDataTypeField;
 
 import org.netbeans.api.mdr.events.*;
 
@@ -1418,7 +1421,57 @@ public class DdlValidator
     public void fixupView(FemLocalView view,
         FarragoSessionAnalyzedSql analyzedSql)
     {
-        // nothing
+            // Add CAST( VAR/CHAR/BINARY(0) to VAR/CHAR/BINARY(1) )
+            List<FemViewColumn> columnList =
+                Util.cast(view.getFeature(), FemViewColumn.class);
+            boolean updateSql = false;
+            if (columnList.size() > 0) {
+                StringBuilder buf = new StringBuilder("SELECT");
+                int k = 0;
+                for (RelDataTypeField field : analyzedSql.resultType.getFields())
+                {
+                    String targetType = null;
+                    SqlTypeName sqlType = field.getType().getSqlTypeName();
+                    SqlTypeFamily typeFamily =
+                        SqlTypeFamily.getFamilyForSqlType(sqlType);
+                    if ((typeFamily == SqlTypeFamily.Character)
+                        || (typeFamily == SqlTypeFamily.Binary)) {
+                        if (field.getType().getPrecision() == 0) {
+                            // Can't have precision of 0
+                            // Add cast so there is precision of 1
+                            targetType = sqlType.getName() + "(1)";
+                            updateSql = true;
+                        }
+                    }
+                    FemViewColumn viewColumn = columnList.get(k);
+                    if (k > 0) {
+                        buf.append(", ");
+                    }
+                    if (targetType == null) {
+                        SqlUtil.eigenbaseDialect.quoteIdentifier(
+                            buf, field.getName());
+                    } else {
+                        buf.append(" CAST(");
+                        SqlUtil.eigenbaseDialect.quoteIdentifier(
+                            buf, field.getName());
+                        buf.append(" AS ");
+                        buf.append(targetType);
+                        buf.append(")" );
+                    }
+                    buf.append(" AS ");
+                    SqlUtil.eigenbaseDialect.quoteIdentifier(
+                        buf, viewColumn.getName());
+                    k++;
+                }
+                buf.append(" FROM (").
+                    append(analyzedSql.canonicalString).
+                    append(")");
+
+                if (updateSql) {
+                    analyzedSql.canonicalString = buf.toString();
+                }
+            }
+
     }
 
     /**

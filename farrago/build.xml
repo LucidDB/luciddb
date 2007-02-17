@@ -907,7 +907,6 @@ require version '${required.ant.version}'."/>
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
     <antcall target="buildJdbcPlugin"/>
-    <antcall target="retroweaveIfRequested"/>
   </target>
 
   <target name="test-only">
@@ -1152,6 +1151,66 @@ please disable it and try again.
       <fileset dir="${javadoc.dir}" includes="*"/>
     </delete>
     <mkdir dir="${javadoc.dir}"/>
+    <antcall target="javadoc-with-or-without-ydoc"/>
+  </target>
+
+  <target name="javadoc-with-or-without-ydoc"
+      depends="javadoc-with-ydoc,javadoc-without-ydoc"/>
+
+
+  <!-- Generate javadoc using the yDoc doclet to generate UML
+       diagrams.  To call this target, set ydoc.home to the root of
+       your installation (e.g. "/usr/local/ydoc-2.2_03-jdk1.5"),
+       obtain a license (free for open-source use) and place the
+       license as ${ydoc.home}/resources/ydoc.license. -->
+  <target name="javadoc-with-ydoc" if="ydoc.home">
+    <property name="ps" value="${path.separator}"/>
+    <javadoc
+      maxmemory="512m"
+      private="true"
+      destdir="${javadoc.dir}"
+      source="${farrago.javasrc.version}"
+      classpathref="farrago.run.classpath">
+      <tag dir="src" includes="customJavadocTags.txt"/>
+      <packageset dir="${farrago.catalog.src.dir}">
+        <include name="**"/>
+      </packageset>
+      <packageset dir="${farrago.src.dir}">
+        <include name="**"/>
+      </packageset>
+      <packageset dir="${farrago.dir}/examples/plannerviz/src">
+        <include name="**"/>
+      </packageset>
+      <packageset dir="${farrago.dir}/examples/rng/src">
+        <include name="**"/>
+      </packageset>
+      <packageset dir="${farrago.dir}/examples/rng/catalog/java">
+        <include name="**"/>
+      </packageset>
+      <link href="http://www.netbeans.org/download/dev/javadoc/org-netbeans-api-mdr"/>
+      <link href="http://java.sun.com/products/jmi/jmi-1_0-fr-doc"/>
+      <link href="http://java.sun.com/j2se/1.5.0/docs/api"/>
+      <link href="http://www.junit.org/junit/javadoc/3.8.1"/>
+      <link href="http://www.janino.net/javadoc"/>
+      <link href="http://www.csg.is.titech.ac.jp/openjava/OpenJava_1.1/htdocs"/>
+      <doclet
+          name="ydoc.doclets.YStandard"
+          path="${ydoc.home}/lib/ydoc.jar${ps}${ydoc.home}/lib/class2svg.jar${ps}${ydoc.home}/resources${ps}${ydoc.home}/doc">
+        <param name="-author"/>
+        <param name="-generic"/>
+        <param name="-umlautogen"/>
+        <param name="-tag" value="y.precondition"/>
+        <param name="-tag" value="y.postcondition"/>
+        <param name="-tag" value="y.complexity"/>
+        <param name="-tag" value="param"/>
+        <param name="-tag" value="return"/>
+        <param name="-tag" value="see"/>
+        <param name="-tag" value="y.uml"/>
+      </doclet>
+    </javadoc>
+  </target>
+
+  <target name="javadoc-without-ydoc" unless="ydoc.home">
     <javadoc
       maxmemory="512m"
       private="true"
@@ -1292,22 +1351,6 @@ please disable it and try again.
       inheritAll="false"/>
     <ant antfile="examples/rng/build.xml" target="clean" 
       inheritAll="false"/>
-  </target>
-
-  <!-- Experimental stuff for JDK 1.5 -->
-  <!-- in customBuild.properties, set farrago.javasrc.version=1.5 -->
-  <!-- to test retroweaver, set farrago.jre.dir=/path/to/jre1.4 -->
-
-  <target name="retroweaveIfRequested" if="farrago.need.retroweave">
-    <antcall target="retroweave"/>
-  </target>
-
-  <target name="retroweave">
-    <retroweaver srcdir="${farrago.classes.dir}" />
-    <retroweaver srcdir="${farrago.catalog.src.dir}" />
-    <retroweaver srcdir="${plugin.classes.dir}" />
-    <!-- rebuild retrowoven plugin jar -->
-    <antcall target="buildJdbcPluginJar"/>
   </target>
 
   <!-- Below is all experimental stuff for the user repository -->
@@ -1471,7 +1514,6 @@ please disable it and try again.
     <antcall target="cleanExamples"/>
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
-    <antcall target="retroweaveIfRequested"/>
     <!-- since some classes get built in here, instrument at the last minute-->
     <antcall target="emmaInstr"/>
     <antcall target="testRngPlugin"/>
