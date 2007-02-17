@@ -42,8 +42,6 @@ struct VersionedExtentAllocationNode : public StoredNode
 {
     static const MagicNumber MAGIC_NUMBER = 0xbfc76ee9882a1be6LL;
 
-    VersionedPageEntry pageEntry;
-
     VersionedPageEntry &getPageEntry(uint i)
     {
         return reinterpret_cast<VersionedPageEntry *>(this+1)[i];

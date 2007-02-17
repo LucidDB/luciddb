@@ -40,11 +40,6 @@ struct ExtentAllocationNode : public StoredNode
 {
     static const MagicNumber MAGIC_NUMBER = 0xb9ca99dced182239LL;
 
-    /**
-     * Allocation status for a single data page in this extent.
-     */
-    struct PageEntry pageEntry;
-    
     PageEntry &getPageEntry(uint i)
     {
         return reinterpret_cast<PageEntry *>(this+1)[i];
