@@ -29,7 +29,7 @@ import javax.jmi.reflect.*;
 
 import junit.framework.*;
 
-import org._3pq.jgrapht.*;
+import org.jgrapht.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;

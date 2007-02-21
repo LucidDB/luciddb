@@ -172,13 +172,7 @@ require version '${required.ant.version}'."/>
     <pathelement path="${farrago.3p.classpath}"/>
     <pathelement location="${sqlline.lib.dir}/sqlline.jar"/>
     <pathelement location="${sqlline.lib.dir}/jline.jar"/>
-    <fileset dir="${jgrapht.dir}">
-      <include name="jgrapht-jdk1.4.jar" if="farrago.javasrc.14"/>
-      <include name="jgrapht-jdk1.5.jar" unless="farrago.javasrc.14"/>
-    </fileset>
-    <fileset dir="${jgrapht7.dir}">
-      <include name="jgrapht7-jdk1.5.jar" />
-    </fileset>
+    <pathelement location="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
   </path>
   <property name="farrago.build.3p.classpath" 
     refid="farrago.build.3p.classpath"/>

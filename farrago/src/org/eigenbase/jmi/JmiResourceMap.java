@@ -25,7 +25,7 @@ import java.util.*;
 
 import javax.jmi.reflect.*;
 
-import org._3pq.jgrapht.traverse.*;
+import org.jgrapht.traverse.*;
 
 
 // TODO jvs 6-Sep-2005:  use this in FarragoReposImpl for class name

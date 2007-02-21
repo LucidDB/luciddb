@@ -23,9 +23,9 @@ package org.eigenbase.jmi;
 
 import java.util.*;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.graph.*;
-import org._3pq.jgrapht.traverse.*;
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
+import org.jgrapht.traverse.*;
 
 
 /**
@@ -185,7 +185,7 @@ public class JmiModelView
 
             // Agglomerate superclasses and their edges
             Iterator superIter =
-                GraphHelper.predecessorListOf(
+                Graphs.predecessorListOf(
                     modelGraph.getInheritanceGraph(),
                     vertex).iterator();
             while (superIter.hasNext()) {
@@ -217,7 +217,7 @@ public class JmiModelView
 
             // Agglomerate subclasses
             Iterator subIter =
-                GraphHelper.successorListOf(
+                Graphs.successorListOf(
                     modelGraph.getInheritanceGraph(),
                     vertex).iterator();
             while (subIter.hasNext()) {
