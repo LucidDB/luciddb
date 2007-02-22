@@ -21,8 +21,9 @@
 */
 package org.eigenbase.jmi;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.traverse.*;
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
+import org.jgrapht.traverse.*;
 
 
 /**
@@ -33,8 +34,7 @@ import org._3pq.jgrapht.traverse.*;
  * @version $Id$
  */
 public class JmiDependencyIterator
-    extends TopologicalOrderIterator<JmiDependencyVertex,
-        Edge<JmiDependencyVertex>, Object>
+    extends TopologicalOrderIterator<JmiDependencyVertex, DefaultEdge>
 {
 
     //~ Constructors -----------------------------------------------------------

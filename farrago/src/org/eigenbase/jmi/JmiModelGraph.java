@@ -26,9 +26,8 @@ import java.util.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.edge.*;
-import org._3pq.jgrapht.graph.*;
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
 
 
 /**
@@ -41,8 +40,7 @@ import org._3pq.jgrapht.graph.*;
  * @version $Id$
  */
 public class JmiModelGraph
-    extends UnmodifiableDirectedGraph<JmiClassVertex,
-        DirectedEdge<JmiClassVertex>>
+    extends UnmodifiableDirectedGraph<JmiClassVertex, DefaultEdge>
 {
 
     //~ Instance fields --------------------------------------------------------
@@ -57,7 +55,7 @@ public class JmiModelGraph
      * The underlying graph structure; we hide it here so that it can only be
      * modified internally.
      */
-    private final DirectedGraph<JmiClassVertex, DirectedEdge<JmiClassVertex>> combinedGraph;
+    private final DirectedGraph<JmiClassVertex, DefaultEdge> combinedGraph;
 
     /**
      * Subgraph with just inheritance edges.
@@ -72,12 +70,12 @@ public class JmiModelGraph
     /**
      * Subgraph with just inheritance edges.
      */
-    private final DirectedGraph<JmiClassVertex, DirectedEdge<JmiClassVertex>> assocGraph;
+    private final DirectedGraph<JmiClassVertex, DefaultEdge> assocGraph;
 
     /**
      * Unmodifiable view of assocGraph.
      */
-    private final DirectedGraph<JmiClassVertex, DirectedEdge<JmiClassVertex>> unmodifiableAssocGraph;
+    private final DirectedGraph<JmiClassVertex, DefaultEdge> unmodifiableAssocGraph;
 
     /**
      * Map from Ref and Mof instances to corresponding graph vertices and edges.
@@ -121,15 +119,15 @@ public class JmiModelGraph
         this(
             refRootPackage,
             classLoader,
-            new DirectedMultigraph<JmiClassVertex,
-            DirectedEdge<JmiClassVertex>>(),
+            new DirectedMultigraph<JmiClassVertex, DefaultEdge>(
+                DefaultEdge.class),
             strict);
     }
 
     private JmiModelGraph(
         RefPackage refRootPackage,
         ClassLoader classLoader,
-        DirectedGraph<JmiClassVertex, DirectedEdge<JmiClassVertex>> combinedGraph,
+        DirectedGraph<JmiClassVertex, DefaultEdge> combinedGraph,
         boolean strict)
     {
         super(combinedGraph);
@@ -141,17 +139,18 @@ public class JmiModelGraph
         this.strict = strict;
 
         inheritanceGraph =
-            new DirectedMultigraph<JmiClassVertex, JmiInheritanceEdge>();
+            new DirectedMultigraph<JmiClassVertex, JmiInheritanceEdge>(
+                JmiInheritanceEdge.class);
         unmodifiableInheritanceGraph =
             new UnmodifiableDirectedGraph<JmiClassVertex, JmiInheritanceEdge>(
                 inheritanceGraph);
 
         assocGraph =
-            new DirectedMultigraph<JmiClassVertex,
-                DirectedEdge<JmiClassVertex>>();
+            new DirectedMultigraph<JmiClassVertex, DefaultEdge>(
+                DefaultEdge.class);
         unmodifiableAssocGraph =
-            new UnmodifiableDirectedGraph<JmiClassVertex,
-                DirectedEdge<JmiClassVertex>>(assocGraph);
+            new UnmodifiableDirectedGraph<JmiClassVertex, DefaultEdge>(
+                assocGraph);
 
         map = new HashMap<Object, Object>();
         addMofPackage((MofPackage) refRootPackage.refMetaObject());
@@ -163,7 +162,8 @@ public class JmiModelGraph
     /**
      * @return the subgraph of only inheritance edges
      */
-    public DirectedGraph<JmiClassVertex, JmiInheritanceEdge> getInheritanceGraph()
+    public DirectedGraph<JmiClassVertex, JmiInheritanceEdge>
+        getInheritanceGraph()
     {
         return unmodifiableInheritanceGraph;
     }
@@ -171,7 +171,7 @@ public class JmiModelGraph
     /**
      * @return the subgraph of only association edges
      */
-    public DirectedGraph<JmiClassVertex, DirectedEdge<JmiClassVertex>> getAssocGraph()
+    public DirectedGraph<JmiClassVertex, DefaultEdge> getAssocGraph()
     {
         return unmodifiableAssocGraph;
     }
@@ -269,7 +269,7 @@ public class JmiModelGraph
      */
     public RefClass getRefClassForVertex(JmiClassVertex vertex)
     {
-        return (vertex).getRefClass();
+        return vertex.getRefClass();
     }
 
     /**
@@ -281,7 +281,7 @@ public class JmiModelGraph
      */
     public MofClass getMofClassForVertex(JmiClassVertex vertex)
     {
-        return (vertex).getMofClass();
+        return vertex.getMofClass();
     }
 
     /**
@@ -293,7 +293,7 @@ public class JmiModelGraph
      */
     public Association getMofAssocForEdge(JmiAssocEdge edge)
     {
-        return (edge).getMofAssoc();
+        return edge.getMofAssoc();
     }
 
     /**
@@ -305,7 +305,7 @@ public class JmiModelGraph
      */
     public RefAssociation getRefAssocForEdge(JmiAssocEdge edge)
     {
-        return (edge).getRefAssoc();
+        return edge.getRefAssoc();
     }
 
     /**
@@ -351,8 +351,8 @@ public class JmiModelGraph
             JmiClassVertex superVertex = addMofClass(superClass);
             JmiInheritanceEdge edge =
                 new JmiInheritanceEdge(superVertex, vertex);
-            combinedGraph.addEdge(edge);
-            inheritanceGraph.addEdge(edge);
+            combinedGraph.addEdge(superVertex, vertex, edge);
+            inheritanceGraph.addEdge(superVertex, vertex, edge);
         }
         return vertex;
     }
@@ -400,11 +400,9 @@ public class JmiModelGraph
         JmiAssocEdge edge =
             new JmiAssocEdge(
                 mofAssoc,
-                sourceVertex,
-                targetVertex,
                 mofAssocEnds);
-        combinedGraph.addEdge(edge);
-        assocGraph.addEdge(edge);
+        combinedGraph.addEdge(sourceVertex, targetVertex, edge);
+        assocGraph.addEdge(sourceVertex, targetVertex, edge);
         map.put(mofAssoc, edge);
         map.put(
             mofAssoc.getName(),

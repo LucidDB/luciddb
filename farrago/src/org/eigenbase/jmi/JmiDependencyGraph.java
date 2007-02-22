@@ -25,8 +25,8 @@ import java.util.*;
 
 import javax.jmi.reflect.*;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.graph.*;
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
 
 
 /**
@@ -44,8 +44,7 @@ import org._3pq.jgrapht.graph.*;
  * @version $Id$
  */
 public class JmiDependencyGraph
-    extends UnmodifiableDirectedGraph<JmiDependencyVertex,
-        Edge<JmiDependencyVertex>>
+    extends UnmodifiableDirectedGraph<JmiDependencyVertex, DefaultEdge>
 {
 
     //~ Instance fields --------------------------------------------------------
@@ -54,7 +53,7 @@ public class JmiDependencyGraph
      * The underlying graph structure; we hide it here so that it can only be
      * modified internally.
      */
-    private final DirectedGraph<JmiDependencyVertex, Edge<JmiDependencyVertex>> mutableGraph;
+    private final DirectedGraph<JmiDependencyVertex, DefaultEdge> mutableGraph;
 
     private final JmiDependencyTransform transform;
 
@@ -77,12 +76,12 @@ public class JmiDependencyGraph
         this(
             elements,
             transform,
-            new DefaultDirectedGraph());
+            new DefaultDirectedGraph(DefaultEdge.class));
     }
 
     private JmiDependencyGraph(Collection<RefObject> elements,
         JmiDependencyTransform transform,
-        DirectedGraph<JmiDependencyVertex, Edge<JmiDependencyVertex>> mutableGraph)
+        DirectedGraph<JmiDependencyVertex, DefaultEdge> mutableGraph)
     {
         super(mutableGraph);
         this.mutableGraph = mutableGraph;
@@ -153,7 +152,7 @@ public class JmiDependencyGraph
 
         // Add only those vertices which survived contraction.
         // (DefaultDirectedGraph will filter out duplicates.)
-        mutableGraph.addAllVertices(vertexMap.values());
+        Graphs.addAllVertices(mutableGraph, vertexMap.values());
 
         // Create dependency edges.
         addDependencyEdges(elements, JmiAssocMapping.COPY);

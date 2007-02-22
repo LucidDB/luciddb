@@ -24,10 +24,10 @@ package org.eigenbase.relopt.hep;
 import java.util.*;
 import java.util.logging.*;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.alg.*;
-import org._3pq.jgrapht.graph.*;
-import org._3pq.jgrapht.traverse.*;
+import org.jgrapht.*;
+import org.jgrapht.alg.*;
+import org.jgrapht.graph.*;
+import org.jgrapht.traverse.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
@@ -74,7 +74,7 @@ public class HepPlanner
      * single-rooted DAG, possibly with additional roots corresponding to
      * discarded plan fragments which remain to be garbage-collected.
      */
-    private DirectedGraph<HepRelVertex, Edge<HepRelVertex>> graph;
+    private DirectedGraph<HepRelVertex, DefaultEdge> graph;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -83,7 +83,7 @@ public class HepPlanner
      *
      * @param program program controlling rule application
      */
-    public HepPlanner(HepProgram program)
+    public HepPlanner(HepProgram program) 
     {
     	this(program, false);
     }
@@ -99,7 +99,8 @@ public class HepPlanner
     	this.mainProgram = program;
     	
     	mapDigestToVertex = new HashMap<String, HepRelVertex>();
-    	graph = new DefaultDirectedGraph<HepRelVertex, Edge<HepRelVertex>>();
+    	graph = new DefaultDirectedGraph<HepRelVertex, DefaultEdge>(
+            DefaultEdge.class);
     	
     	// NOTE jvs 24-Apr-2006:  We use LinkedHashSet here and below
     	// in order to provide deterministic behavior.
@@ -391,8 +392,7 @@ public class HepPlanner
         
         if (currentProgram.matchOrder == HepMatchOrder.ARBITRARY) {
             return
-                new DepthFirstIterator<HepRelVertex,
-                    Edge<HepRelVertex>, Object>(
+                new DepthFirstIterator<HepRelVertex, DefaultEdge>(
                     graph,
                     start);
         }
@@ -404,11 +404,8 @@ public class HepPlanner
         collectGarbage();
         */
 
-        // TODO jvs 4-Apr-2006:  streamline JGraphT generics
-
         Iterator<HepRelVertex> iter =
-            new TopologicalOrderIterator<HepRelVertex,
-                Edge<HepRelVertex>, Object>(graph);
+            new TopologicalOrderIterator<HepRelVertex, DefaultEdge>(graph);
 
         if (currentProgram.matchOrder == HepMatchOrder.TOP_DOWN) {
             return iter;
@@ -478,7 +475,7 @@ public class HepPlanner
     {
         RelTraitSet outTraits = converterRule.getOutTraits();
         List<HepRelVertex> parents =
-            GraphHelper.predecessorListOf(graph, vertex);
+            Graphs.predecessorListOf(graph, vertex);
         for (HepRelVertex parent : parents) {
             RelNode parentRel = parent.getCurrentRel();
             if (parentRel instanceof ConverterRel) {
@@ -575,7 +572,7 @@ public class HepPlanner
         // (otherwise loops can result).  Also take care of filtering
         // out parents by traits in case we're dealing with a converter rule.
         List<HepRelVertex> allParents =
-            GraphHelper.predecessorListOf(graph, vertex);
+            Graphs.predecessorListOf(graph, vertex);
         List<HepRelVertex> parents = new ArrayList<HepRelVertex>();
         for (HepRelVertex parent : allParents) {
             if (parentTraits != null) {
@@ -794,7 +791,7 @@ public class HepPlanner
         // Yer basic mark-and-sweep.
         Set<HepRelVertex> rootSet = new HashSet<HepRelVertex>();
         Iterator<HepRelVertex> iter =
-            new DepthFirstIterator<HepRelVertex, Edge<HepRelVertex>, Object>(
+            new DepthFirstIterator<HepRelVertex, DefaultEdge>(
                 graph,
                 root);
         while (iter.hasNext()) {
@@ -831,8 +828,8 @@ public class HepPlanner
     private void assertNoCycles()
     {
         // Verify that the graph is acyclic.
-        CycleDetector<HepRelVertex, Edge<HepRelVertex>> cycleDetector =
-            new CycleDetector<HepRelVertex, Edge<HepRelVertex>>(graph);
+        CycleDetector<HepRelVertex, DefaultEdge> cycleDetector =
+            new CycleDetector<HepRelVertex, DefaultEdge>(graph);
         Set<HepRelVertex> cyclicVertices = cycleDetector.findCycles();
         if (cyclicVertices.isEmpty()) {
             return;
@@ -852,7 +849,7 @@ public class HepPlanner
         assertNoCycles();
 
         Iterator<HepRelVertex> bfsIter =
-            new BreadthFirstIterator<HepRelVertex, Edge<HepRelVertex>, Object>(
+            new BreadthFirstIterator<HepRelVertex, DefaultEdge>(
                 graph,
                 root);
 

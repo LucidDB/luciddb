@@ -24,10 +24,10 @@ import java.util.*;
 
 import javax.jmi.model.*;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.event.*;
-import org._3pq.jgrapht.graph.*;
-import org._3pq.jgrapht.traverse.*;
+import org.jgrapht.*;
+import org.jgrapht.event.*;
+import org.jgrapht.graph.*;
+import org.jgrapht.traverse.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
@@ -172,18 +172,20 @@ public class LurqlPlanVertex
     DirectedGraph<LurqlPlanVertex, LurqlPlanEdge> createReachableSubgraph(final boolean setRecursive)
     {
         final DirectedGraph<LurqlPlanVertex, LurqlPlanEdge> subgraph =
-            new DirectedMultigraph<LurqlPlanVertex, LurqlPlanEdge>();
+            new DirectedMultigraph<LurqlPlanVertex, LurqlPlanEdge>(
+                LurqlPlanEdge.class);
 
         // TODO jvs 16-May-2005:  submit to JGraphT
-        DepthFirstIterator<LurqlPlanVertex, LurqlPlanEdge, Object> iter =
-            new DepthFirstIterator<LurqlPlanVertex, LurqlPlanEdge, Object>(
+        DepthFirstIterator<LurqlPlanVertex, LurqlPlanEdge> iter =
+            new DepthFirstIterator<LurqlPlanVertex, LurqlPlanEdge>(
                 plan.getGraph(),
                 this);
         iter.addTraversalListener(new TraversalListenerAdapter<LurqlPlanVertex, LurqlPlanEdge>() {
                 public void edgeTraversed(EdgeTraversalEvent<LurqlPlanVertex, LurqlPlanEdge> e)
                 {
-                    GraphHelper.addEdgeWithVertices(
+                    Graphs.addEdgeWithVertices(
                         subgraph,
+                        plan.getGraph(),
                         e.getEdge());
                 }
 

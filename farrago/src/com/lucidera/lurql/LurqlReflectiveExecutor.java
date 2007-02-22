@@ -27,8 +27,8 @@ import java.util.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.traverse.*;
+import org.jgrapht.*;
+import org.jgrapht.traverse.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
@@ -125,8 +125,7 @@ public class LurqlReflectiveExecutor
         Iterator<LurqlPlanVertex> vertexIter = 
             new TopologicalOrderIterator<
                 LurqlPlanVertex,
-                LurqlPlanEdge,
-                Object>(graph);
+                LurqlPlanEdge>(graph);
         while (vertexIter.hasNext()) {
             LurqlPlanVertex planVertex = vertexIter.next();
             Set<RefObject> result = getResultSet(planVertex);
@@ -160,9 +159,8 @@ public class LurqlReflectiveExecutor
             Util.toList(
                 new TopologicalOrderIterator<
                     LurqlPlanVertex,
-                    LurqlPlanEdge,
-                    Object>(
-                    rootVertex.getRecursionSubgraph()));
+                    LurqlPlanEdge>(
+                        rootVertex.getRecursionSubgraph()));
 
         Set<RefObject> recursionResult = getResultSet(rootVertex);
         Set stashResult = getResultSet(vertexToStashMap, rootVertex);

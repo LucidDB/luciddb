@@ -533,7 +533,7 @@ protected:
      * originates from
      */
     template <class ExtentAllocationNodeT, class ExtentAllocLockT>
-    void RandomAllocationSegmentBase::setPageSuccessorTemplate(
+    void setPageSuccessorTemplate(
         PageId pageId,
         PageId successorId,
         SharedSegment allocNodeSegment);

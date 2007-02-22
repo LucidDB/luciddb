@@ -32,7 +32,7 @@ import javax.jmi.reflect.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
-import org._3pq.jgrapht.DirectedGraph;
+import org.jgrapht.DirectedGraph;
 
 /**
  * JmiMemFactory creates objects for use in an in-memory repository
@@ -896,12 +896,12 @@ public abstract class JmiMemFactory
 
             // Traverse up refObject's inheritance chain and see if we find
             // a match.
-            DirectedGraph<JmiClassVertex, JmiInheritanceEdge> inheritanceGraph = 
-                modelGraph.getInheritanceGraph();
+            DirectedGraph<JmiClassVertex, JmiInheritanceEdge>
+                inheritanceGraph = modelGraph.getInheritanceGraph();
             
-            List<JmiInheritanceEdge> edges = 
+            Set<JmiInheritanceEdge> edges = 
                 inheritanceGraph.outgoingEdgesOf(mofClassVertex);
-            for(JmiInheritanceEdge edge: edges) {
+            for (JmiInheritanceEdge edge : edges) {
                 mofClass = edge.getSuperClass().getMofClass();
                 
                 if (isInstanceOf(mofClass, refObject, true)) {

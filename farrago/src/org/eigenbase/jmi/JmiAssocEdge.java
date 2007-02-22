@@ -26,7 +26,7 @@ import java.util.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import org._3pq.jgrapht.edge.*;
+import org.jgrapht.graph.*;
 
 
 /**
@@ -47,7 +47,7 @@ import org._3pq.jgrapht.edge.*;
  * @version $Id$
  */
 public class JmiAssocEdge
-    extends DirectedEdge
+    extends DefaultEdge
 {
 
     //~ Instance fields --------------------------------------------------------
@@ -62,13 +62,8 @@ public class JmiAssocEdge
 
     JmiAssocEdge(
         Association mofAssoc,
-        JmiClassVertex source,
-        JmiClassVertex target,
         AssociationEnd [] mofAssocEnds)
     {
-        super(
-            source,
-            target);
         this.mofAssoc = mofAssoc;
         this.mofAssocEnds = mofAssocEnds;
     }

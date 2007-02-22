@@ -26,8 +26,6 @@ import java.util.*;
 
 import javax.jmi.model.*;
 
-import org._3pq.jgrapht.edge.*;
-
 import org.eigenbase.jmi.*;
 
 

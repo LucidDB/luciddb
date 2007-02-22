@@ -26,8 +26,8 @@ import java.util.*;
 
 import javax.jmi.model.*;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.graph.*;
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
@@ -89,7 +89,8 @@ public class LurqlPlan
         this.query = query;
         aliasToBranchMap = new LinkedHashMap<String, LurqlPathBranch>();
         recVars = new LinkedHashSet();
-        graph = new DirectedMultigraph<LurqlPlanVertex, LurqlPlanEdge>();
+        graph = new DirectedMultigraph<LurqlPlanVertex, LurqlPlanEdge>(
+            LurqlPlanEdge.class);
         idGen = 0;
         paramMap = new LinkedHashMap<String, Class>();
 
@@ -563,7 +564,7 @@ public class LurqlPlan
                     assocEdge,
                     iOriginEnd,
                     destinationTypeFilter);
-            graph.addEdge(edge);
+            graph.addEdge(sourceVertex, targetVertex, edge);
 
             targetVertex.addClassVertex(destinationEndVertex);
         }
@@ -710,7 +711,7 @@ public class LurqlPlan
                 existsRoot,
                 subgraph,
                 projectSet);
-        graph.addEdge(edge);
+        graph.addEdge(planVertex, existsRoot, edge);
     }
 
     private void addParam(LurqlDynamicParam param, Class paramType)

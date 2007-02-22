@@ -29,10 +29,10 @@ import java.awt.geom.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.ext.*;
-import org._3pq.jgrapht.graph.*;
-import org._3pq.jgrapht.edge.*;
+import org.jgrapht.*;
+import org.jgrapht.ext.*;
+import org.jgrapht.graph.*;
+import org.jgrapht.graph.DefaultEdge;
 
 import org.jgraph.*;
 import org.jgraph.util.*;
@@ -54,7 +54,6 @@ import org.eigenbase.relopt.hep.*;
 
 import net.sf.farrago.trace.*;
 
-import org._3pq.jgrapht.Edge;
 import java.util.List;
 
 /**
@@ -640,8 +639,8 @@ public class FarragoPlanVisualizer
     {
         VisualEdge edge = (VisualEdge) graphModel.getEdge(v1, v2);
         if (edge == null) {
-            edge = new VisualEdge(v1, v2, label);
-            graphModel.addEdge(edge);
+            edge = new VisualEdge(label);
+            graphModel.addEdge(v1, v2, edge);
         } else {
             // e.g. self-join
             if (!edge.toString().contains(label)) {
@@ -719,17 +718,14 @@ public class FarragoPlanVisualizer
         }
     }
     
-    private static class VisualEdge extends DirectedEdge 
+    private static class VisualEdge extends DefaultEdge
     {
         private String label;
         int generationNumber;
         
         VisualEdge(
-            Object sourceVertex,
-            Object targetVertex,
             String label)
         {
-            super(sourceVertex, targetVertex);
             this.label = label;
         }
 
@@ -746,12 +742,9 @@ public class FarragoPlanVisualizer
 
     private static class VisualEdgeFactory implements EdgeFactory
     {
-        public Edge createEdge(Object sourceVertex, Object targetVertex)
+        public VisualEdge createEdge(Object sourceVertex, Object targetVertex)
         {
-            return new VisualEdge(
-                sourceVertex,
-                targetVertex,
-                "");
+            return new VisualEdge("");
         }
     }
 }

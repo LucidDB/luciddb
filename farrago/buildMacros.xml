@@ -314,12 +314,7 @@ ${farrago.test.jvmargs}
   <!-- classpath for execution -->
   <path id="farrago.run.classpath">
     <pathelement path="${farrago.3p.classpath}"/>
-    <fileset dir="${jgrapht.dir}">
-      <include name="jgrapht-jdk1.5.jar"/>
-    </fileset>
-    <fileset dir="${jgrapht7.dir}">
-      <include name="jgrapht7-jdk1.5.jar" />
-    </fileset>
+    <pathelement location="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
     <pathelement location="${farrago.classes.dir}"/>
     <pathelement location="${farrago.catalog.src.dir}"/>
     <pathelement path="${test.emma.classpath}" />

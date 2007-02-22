@@ -65,6 +65,17 @@ public class JaninoCompiler
     // implement JavaCompiler
     public void compile()
     {
+        // FIXME jvs 19-Feb-2007:  Should not need this synchronization,
+        // but without it we get compilation problems inside of Janino
+        // when invoked from the codeCache.mtsql concurrency test on
+        // slow machines.  Get a fix for Janino and then remove this.
+        synchronized (JaninoCompiler.class) {
+            compileImpl();
+        }
+    }
+    
+    private void compileImpl()
+    {
         // REVIEW: SWZ: 3/12/2006: When this method is invoked multiple times,
         // it creates a series of AccountingClassLoader objects, each with
         // the previous as its parent ClassLoader.  If we refactored this
