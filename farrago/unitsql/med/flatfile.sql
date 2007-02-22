@@ -532,4 +532,16 @@ select count(*) from test_schema."example";
 -- this should fail
 select * from flatfile_server.""."example";
 
+-- mapped option
+create or replace server mapped_server
+foreign data wrapper sys_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles/',
+    file_extension 'csv',
+    with_header 'yes',
+    mapped 'yes');
+
+select * from mapped_server.bcp."mapped_extra_cols";
+select * from mapped_server.bcp."mapped_fewer_cols";
+
 drop schema test_schema cascade;
