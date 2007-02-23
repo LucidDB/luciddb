@@ -145,6 +145,7 @@ public class SqlPrettyWriter
     private int indentation;
     private boolean clauseStartsLine;
     private boolean selectListItemsOnSeparateLines;
+    private boolean selectListExtraIndentFlag;
     private int currentIndent;
     private boolean windowDeclListNewline;
     private boolean updateSetListNewline;
@@ -232,6 +233,11 @@ public class SqlPrettyWriter
     {
         return selectListItemsOnSeparateLines;
     }
+    
+    public boolean isSelectListExtraIndentFlag()
+    {
+    	return selectListExtraIndentFlag;
+    }
 
     public boolean isKeywordsLowerCase()
     {
@@ -244,6 +250,7 @@ public class SqlPrettyWriter
         indentation = 4;
         clauseStartsLine = true;
         selectListItemsOnSeparateLines = false;
+        selectListExtraIndentFlag = true;
         keywordsLowerCase = false;
         quoteAllIdentifiers = true;
         windowDeclListNewline = true;
@@ -342,6 +349,26 @@ public class SqlPrettyWriter
     public void setSelectListItemsOnSeparateLines(boolean b)
     {
         this.selectListItemsOnSeparateLines = b;
+    }
+    
+    /**
+     * Sets whether to use a fix for SELECT list indentations. 
+     * If set to "false":
+     * SELECT 
+     *     A as A
+     *         B as B
+     *         C as C
+     *     D
+     * If set to "true":
+     * SELECT
+     *     A as A
+     *     B as B
+     *     C as C
+     *     D
+     */
+    public void setSelectListExtraIndentFlag(boolean b)
+    {
+    	this.selectListExtraIndentFlag = b;
     }
 
     /**
@@ -448,6 +475,19 @@ public class SqlPrettyWriter
                     false);
 
         case FrameType.SelectList_ordinal:
+            return
+	            new FrameImpl(
+	                frameType,
+	                keyword,
+	                open,
+	                close,
+	                selectListExtraIndentFlag ? indentation : 0,
+	                selectListItemsOnSeparateLines,
+	                false,
+	                indentation,
+	                selectListItemsOnSeparateLines,
+	                false,
+	                false);
         case FrameType.OrderByList_ordinal:
         case FrameType.GroupByList_ordinal:
             return

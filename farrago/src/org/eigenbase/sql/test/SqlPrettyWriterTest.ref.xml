@@ -3,7 +3,7 @@
     <TestCase name="testDefault">
         <Resource name="desc"/>
         <Resource name="formatted">
-            <![CDATA[SELECT `X` AS `A`, `B`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id`
+            <![CDATA[SELECT `X` AS `A`, `B` AS `B`, `C` AS `C`, `D`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id`
 FROM (SELECT *
         FROM `T`
         WHERE `X` = `Y` AND `A` > 5
@@ -33,7 +33,7 @@ END]]>
             <![CDATA[indentation=8]]>
         </Resource>
         <Resource name="formatted">
-            <![CDATA[SELECT `X` AS `A`, `B`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id`
+            <![CDATA[SELECT `X` AS `A`, `B` AS `B`, `C` AS `C`, `D`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id`
 FROM (SELECT *
                 FROM `T`
                 WHERE `X` = `Y` AND `A` > 5
@@ -46,7 +46,7 @@ ORDER BY `GG`]]>
     <TestCase name="testClausesNotOnNewLine">
         <Resource name="desc"/>
         <Resource name="formatted">
-            <![CDATA[SELECT `X` AS `A`, `B`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id` FROM (SELECT *FROM `T` WHERE `X` = `Y` AND `A` > 5 GROUP BY `Z`, `ZZ` WINDOW `W` AS (PARTITION BY `C`),
+            <![CDATA[SELECT `X` AS `A`, `B` AS `B`, `C` AS `C`, `D`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id` FROM (SELECT *FROM `T` WHERE `X` = `Y` AND `A` > 5 GROUP BY `Z`, `ZZ` WINDOW `W` AS (PARTITION BY `C`),
             `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
 ORDER BY `GG`]]>
         </Resource>
@@ -56,7 +56,33 @@ ORDER BY `GG`]]>
         <Resource name="formatted">
             <![CDATA[SELECT
     `X` AS `A`,
-    `B`,
+        `B` AS `B`,
+        `C` AS `C`,
+    `D`,
+    'mixed-Case string',
+    `UNQUOTEDCAMELCASEID`,
+    `quoted id`
+FROM (SELECT
+            *
+        FROM `T`
+        WHERE `X` = `Y` AND `A` > 5
+        GROUP BY
+            `Z`,
+            `ZZ`
+        WINDOW `W` AS (PARTITION BY `C`),
+            `W1` AS (PARTITION BY `C`, `D` ORDER BY `A`, `B` RANGE BETWEEN INTERVAL '2:2' HOUR TO MINUTE PRECEDING AND INTERVAL '1' DAY FOLLOWING))
+ORDER BY
+`GG`]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSelectListExtraIndentFlag">
+        <Resource name="desc"/>
+        <Resource name="formatted">
+            <![CDATA[SELECT
+    `X` AS `A`,
+    `B` AS `B`,
+    `C` AS `C`,
+    `D`,
     'mixed-Case string',
     `UNQUOTEDCAMELCASEID`,
     `quoted id`
@@ -76,7 +102,7 @@ ORDER BY
     <TestCase name="testKeywordsLowerCase">
         <Resource name="desc"/>
         <Resource name="formatted">
-            <![CDATA[select `X` as `A`, `B`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id`
+            <![CDATA[select `X` as `A`, `B` as `B`, `C` as `C`, `D`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id`
 from (select *
         from `T`
         where `X` = `Y` and `A` > 5
@@ -89,7 +115,7 @@ order by `GG`]]>
     <TestCase name="testParenthesizeAllExprs">
         <Resource name="desc"/>
         <Resource name="formatted">
-            <![CDATA[SELECT `X` AS `A`, `B`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id`
+            <![CDATA[SELECT `X` AS `A`, `B` AS `B`, `C` AS `C`, `D`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id`
 FROM (SELECT *
         FROM `T`
         WHERE ((`X` = `Y`) AND (`A` > 5))
@@ -102,7 +128,7 @@ ORDER BY `GG`]]>
     <TestCase name="testOnlyQuoteIdentifiersWhichNeedIt">
         <Resource name="desc"/>
         <Resource name="formatted">
-            <![CDATA[SELECT X AS A, B, 'mixed-Case string', UNQUOTEDCAMELCASEID, `quoted id`
+            <![CDATA[SELECT X AS A, B AS B, C AS C, D, 'mixed-Case string', UNQUOTEDCAMELCASEID, `quoted id`
 FROM (SELECT *
         FROM T
         WHERE X = Y AND A > 5
@@ -115,7 +141,7 @@ ORDER BY GG]]>
     <TestCase name="testDamiansSubqueryStyle">
         <Resource name="desc"/>
         <Resource name="formatted">
-            <![CDATA[SELECT `X` AS `A`, `B`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id`
+            <![CDATA[SELECT `X` AS `A`, `B` AS `B`, `C` AS `C`, `D`, 'mixed-Case string', `UNQUOTEDCAMELCASEID`, `quoted id`
 FROM (    SELECT *
         FROM `T`
         WHERE `X` = `Y` AND `A` > 5
