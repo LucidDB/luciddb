@@ -1,0 +1,34 @@
+0: jdbc:luciddb:> ----------------------------------------
+0: jdbc:luciddb:> -- Negative tests
+0: jdbc:luciddb:> ----------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- mapped without lenient
+0: jdbc:luciddb:> create server mapwolenient_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >         mapped 'yes',
+. . . . . . . . >         lenient 'no',
+. . . . . . . . >         directory '@DIRECTORY@',
+. . . . . . . . >         file_extension '.csv');
+***************************************************
+LDB-154: server definition should return error here
+***************************************************
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- mapped without header
+0: jdbc:luciddb:> create server mapwoheader_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >         mapped 'yes',
+. . . . . . . . >         with_header 'no',
+. . . . . . . . >         directory '@DIRECTORY@',
+. . . . . . . . >         file_extension '.csv');
+Error: Mapping source columns in data files to target columns specified by control files requires column names to be provided by data file headers. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- mapped with header but actual csv file does not have header
+0: jdbc:luciddb:> -- or all headers are wrong
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."csvnoheader";
+Error: From line 1, column 15 to line 1, column 50: Table 'LENIENTWMAP_SERVER.BCP.csvnoheader' not found (state=,code=0)
+0: jdbc:luciddb:> select * from lenientwmap_server.bcp."allwrongheaders";
+Error: From line 1, column 15 to line 1, column 54: Table 'LENIENTWMAP_SERVER.BCP.allwrongheaders' not found (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
