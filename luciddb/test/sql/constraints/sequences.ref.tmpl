@@ -1,0 +1,243 @@
+0: jdbc:luciddb:> -- basic single key and multiple key constraints
+0: jdbc:luciddb:> create schema uc;
+0: jdbc:luciddb:> set schema 'uc';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- load source table
+0: jdbc:luciddb:> insert into uc_src.bench1m_src select * from ff_bench.bcp."bench1M";
+0: jdbc:luciddb:> analyze table uc_src.bench1m_src compute statistics for all columns;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check duplicate count for multikey k10k,k250k
+0: jdbc:luciddb:> select count(*) as dup_counts, sum(dups) as total_dup_rows from 
+. . . . . . . . >   (select count(*) as dups from uc_src.bench1m_src 
+. . . . . . . . >     group by k10k, k250k
+. . . . . . . . >     having count(*) > 1);
++-------------+-----------------+
+| DUP_COUNTS  | TOTAL_DUP_ROWS  |
++-------------+-----------------+
+| 177         | 354             |
++-------------+-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- set session params
+0: jdbc:luciddb:> alter session set "errorMax" = 500;
+0: jdbc:luciddb:> alter session set "etlProcessId"='sequences_uc';
+0: jdbc:luciddb:> alter session set "logDir"='@ERRLOGDIR@';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create table w/ unique constraints
+0: jdbc:luciddb:> create table bench1m_uc(
+. . . . . . . . >   pkey bigint generated always as identity
+. . . . . . . . >     (minvalue 1 increment by 1) primary key,
+. . . . . . . . >   kseq integer,
+. . . . . . . . >   k2 integer,
+. . . . . . . . >   k4 integer,
+. . . . . . . . >   k5 integer,
+. . . . . . . . >   k10 integer,
+. . . . . . . . >   k25 integer,
+. . . . . . . . >   k100 integer,
+. . . . . . . . >   k1k integer,
+. . . . . . . . >   k10k integer,
+. . . . . . . . >   k40k integer,
+. . . . . . . . >   k100k integer,
+. . . . . . . . >   k250k integer,
+. . . . . . . . >   k500k integer,
+. . . . . . . . >   constraint b1m_kseq_unique UNIQUE(kseq),
+. . . . . . . . >   constraint b1m_k10k_k250k_unique UNIQUE(k10k,k250k)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- insert 
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_bench1m_uc';
+0: jdbc:luciddb:> insert into bench1m_uc (kseq, k2, k4, k5, k25, k100, k10k, k250k)
+. . . . . . . . >   select kseq, k2, k4, k5, k25, k100, k10k, k250k 
+. . . . . . . . >   from uc_src.bench1m_src;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check insertion
+0: jdbc:luciddb:> select * from bench1m_uc where pkey <> kseq;
++-------+-------+-----+-----+-----+------+------+-------+------+-------+-------+--------+--------+--------+
+| PKEY  | KSEQ  | K2  | K4  | K5  | K10  | K25  | K100  | K1K  | K10K  | K40K  | K100K  | K250K  | K500K  |
++-------+-------+-----+-----+-----+------+------+-------+------+-------+-------+--------+--------+--------+
++-------+-------+-----+-----+-----+------+------+-------+------+-------+-------+--------+--------+--------+
+0: jdbc:luciddb:> select max(pkey), count(*) from bench1m_uc;
++----------+---------+
+|  EXPR$0  | EXPR$1  |
++----------+---------+
+| 1000000  | 999823  |
++----------+---------+
+0: jdbc:luciddb:> -- check duplicate count for multikey k10k,k250k
+0: jdbc:luciddb:> select count(*) as dup_counts, sum(dups) as total_dup_rows from 
+. . . . . . . . >   (select count(*) as dups from bench1m_uc 
+. . . . . . . . >     group by k10k, k250k
+. . . . . . . . >     having count(*) > 1);
++-------------+-----------------+
+| DUP_COUNTS  | TOTAL_DUP_ROWS  |
++-------------+-----------------+
+| 0           |                 |
++-------------+-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check rowcounts before merge
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='BENCH1M_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| BENCH1M_UC  | 999823             | 0                  |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  |              |
++-------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- merge on single key
+0: jdbc:luciddb:> alter session set "errorMax" = 500;
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_single_bench1m_uc';
+0: jdbc:luciddb:> merge into bench1m_uc tgt
+. . . . . . . . >   using uc_src.bench1m_src src on src.kseq = tgt.pkey
+. . . . . . . . >   when matched then
+. . . . . . . . >     update set k10 = src.k10, k1k = src.k1k, k40k = src.k40k,
+. . . . . . . . >       k100k = src.k100k, k500k = src.k500k
+. . . . . . . . >   when not matched then
+. . . . . . . . >       insert (kseq, k2, k4, k5, k10, k25, k100, k1k, k10k, k40k, k100k, k250k,
+. . . . . . . . >         k500k) 
+. . . . . . . . >       values(src.kseq, src.k2, src.k4, src.k5, src.k10, src.k25,
+. . . . . . . . >         src.k100, src.k1k, 
+. . . . . . . . >         (case when mod(src.kseq, 2)=0
+. . . . . . . . >           then src.k10k+1000000000 else src.k10k end),
+. . . . . . . . >         src.k40k, src.k100k, src.k250k, src.k500k);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check rowcounts after merge, should insert 10 rows
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='BENCH1M_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| BENCH1M_UC  | 999913             | 999823             |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 90           |
++-------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check merge and duplicates
+0: jdbc:luciddb:> select count(*) from bench1m_uc where pkey <> kseq;
++---------+
+| EXPR$0  |
++---------+
+| 90      |
++---------+
+0: jdbc:luciddb:> select count(*) as dup_counts, sum(dups) as total_dup_rows from 
+. . . . . . . . >   (select count(*) as dups from bench1m_uc 
+. . . . . . . . >     group by k10k, k250k
+. . . . . . . . >     having count(*) > 1);
++-------------+-----------------+
+| DUP_COUNTS  | TOTAL_DUP_ROWS  |
++-------------+-----------------+
+| 0           |                 |
++-------------+-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- merge on multiple key
+0: jdbc:luciddb:> -- increase errorMax, errors are counted per violation
+0: jdbc:luciddb:> alter session set "errorMax"=600;
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_multi_bench1m_uc';
+0: jdbc:luciddb:> merge into bench1m_uc tgt
+. . . . . . . . >   using uc_src.bench1m_src src
+. . . . . . . . >   on tgt.k10k = src.k10k and tgt.k250k = src.k250k
+. . . . . . . . >   when matched then
+. . . . . . . . >     update set k2 = src.k2 + 10, k4= src.k4, k5 = src.k5, k25 = src.k25,
+. . . . . . . . >       k100 = src.k100, k1k = src.k1k, k40k = src.k40k, k100k = src.k100k, 
+. . . . . . . . >       k500k = src.k500k
+. . . . . . . . >   when not matched then
+. . . . . . . . >     insert (kseq) values kseq;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check rowcounts after merge
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='BENCH1M_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| BENCH1M_UC  | 999913             | 1999646            |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 0            |
++-------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check merge and duplicates
+0: jdbc:luciddb:> select count(*) from bench1m_uc where k2 >= 10;
++---------+
+| EXPR$0  |
++---------+
+| 999823  |
++---------+
+0: jdbc:luciddb:> select count(*) as dup_counts, sum(dups) as total_dup_rows from 
+. . . . . . . . >   (select count(*) as dups from bench1m_uc
+. . . . . . . . >     group by k10k, k250k
+. . . . . . . . >     having count(*) > 1);
++-------------+-----------------+
+| DUP_COUNTS  | TOTAL_DUP_ROWS  |
++-------------+-----------------+
+| 0           |                 |
++-------------+-----------------+
+0: jdbc:luciddb:> select count(distinct kseq) from bench1m_uc;
++---------+
+| EXPR$0  |
++---------+
+| 999913  |
++---------+
+0: jdbc:luciddb:> select count(distinct pkey), max(pkey) from bench1m_uc;
++---------+----------+
+| EXPR$0  |  EXPR$1  |
++---------+----------+
+| 999913  | 1000176  |
++---------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check error log count
+0: jdbc:luciddb:> select process_id, action_id, error_count, warning_count, "SQL"
+. . . . . . . . >   from errlogs.bcp."Summary"
+. . . . . . . . >   where process_id='sequences_uc';
++---------------+--------------------------+--------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|  PROCESS_ID   |        ACTION_ID         | ERROR_COUNT  | WARNING_COUNT  |                                                                                                                                SQL                                                                                                                                |
++---------------+--------------------------+--------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| sequences_uc  | insert_bench1m_uc        | 177          | 0              | insert into bench1m_uc (kseq, k2, k4, k5, k25, k100, k10k, k250k)
+  select kseq, k2, k4, k5, k25, k100, k10k, k250k 
+  from uc_src.bench1m_src                                                                                                                    |
+| sequences_uc  | merge_single_bench1m_uc  | 87           | 0              | merge into bench1m_uc tgt
+  using uc_src.bench1m_src src on src.kseq = tgt.pkey
+  when matched then
+    update set k10 = src.k10, k1k = src.k1k, k40k = src.k40k,
+      k100k = src.k100k, k500k = src.k500k
+  when not matched then
+      insert (kseq, k2, k4,  |
+| sequences_uc  | merge_multi_bench1m_uc   | 177          | 0              | merge into bench1m_uc tgt
+  using uc_src.bench1m_src src
+  on tgt.k10k = src.k10k and tgt.k250k = src.k250k
+  when matched then
+    update set k2 = src.k2 + 10, k4= src.k4, k5 = src.k5, k25 = src.k25,
+      k100 = src.k100, k1k = src.k1k, k40k = src.k40k,   |
+| sequences_uc  | merge_multi_bench1m_uc   | 177          | 0              | merge into bench1m_uc tgt
+  using uc_src.bench1m_src src
+  on tgt.k10k = src.k10k and tgt.k250k = src.k250k
+  when matched then
+    update set k2 = src.k2 + 10, k4= src.k4, k5 = src.k5, k25 = src.k25,
+      k100 = src.k100, k1k = src.k1k, k40k = src.k40k,   |
+| sequences_uc  | merge_multi_bench1m_uc   | 177          | 0              | merge into bench1m_uc tgt
+  using uc_src.bench1m_src src
+  on tgt.k10k = src.k10k and tgt.k250k = src.k250k
+  when matched then
+    update set k2 = src.k2 + 10, k4= src.k4, k5 = src.k5, k25 = src.k25,
+      k100 = src.k100, k1k = src.k1k, k40k = src.k40k,   |
++---------------+--------------------------+--------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup 
+0: jdbc:luciddb:> drop schema uc cascade;
+0: jdbc:luciddb:> truncate table uc_src.bench1m_src;
+0: jdbc:luciddb:> !quit

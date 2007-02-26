@@ -1,0 +1,53 @@
+create server ff_tpch
+foreign data wrapper "FLAT FILE"
+options(
+  directory '@FFDIR@',
+  file_extension '.tbl',
+  ctrl_file_extension '.bcp',
+  field_delimiter '|',
+  line_delimiter '\n',
+  quote_char '"',
+  escape_char '',
+  with_header 'no',
+  num_rows_scan '1',
+  log_directory '@LOGDIR@'
+);
+
+select count(*) from ff_tpch.bcp."lineitem";
+select count(*) from ff_tpch.bcp."nation";
+select count(*) from ff_tpch.bcp."region";
+select count(*) from ff_tpch.bcp."part";
+select count(*) from ff_tpch.bcp."supplier";
+select count(*) from ff_tpch.bcp."customer";
+select count(*) from ff_tpch.bcp."orders";
+
+create server ff_bench
+foreign data wrapper "FLAT FILE"
+options(
+  directory '@FFDIR@',
+  file_extension '.csv',
+  ctrl_file_extension '.bcp',
+  field_delimiter ',',
+  line_delimiter '\n',
+  quote_char '"',
+  escape_char '',
+  with_header 'yes',
+  num_rows_scan '3',
+  log_directory '@LOGDIR@'
+);
+
+select count(*) from ff_bench.bcp."bench1M";
+
+create server errlogs
+foreign data wrapper "FLAT FILE"
+options(
+  directory '@ERRLOGDIR@',
+  file_extension '.log',
+  field_delimiter ',',
+  line_delimiter '\n',
+  quote_char '"',
+  escape_char '',
+  with_header 'yes',
+  num_rows_scan '5',
+  log_directory '@LOGDIR@'
+);

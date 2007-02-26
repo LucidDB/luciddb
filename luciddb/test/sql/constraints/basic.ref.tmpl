@@ -1,0 +1,544 @@
+0: jdbc:luciddb:> -- basic single key and multiple key constraints
+0: jdbc:luciddb:> create schema uc;
+0: jdbc:luciddb:> set schema 'uc';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "etlProcessId"='basic_uc';
+0: jdbc:luciddb:> alter session set "logDir"='@ERRLOGDIR@';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table part_uc(
+. . . . . . . . >   partkey integer primary key,
+. . . . . . . . >   name varchar(55),
+. . . . . . . . >   mfgr varchar(25),
+. . . . . . . . >   brand varchar(10),
+. . . . . . . . >   type varchar(25),
+. . . . . . . . >   size integer,
+. . . . . . . . >   container varchar(10),
+. . . . . . . . >   retailprice decimal(15,2),
+. . . . . . . . >   comment varchar(23),
+. . . . . . . . >   constraint p_brand_type_size_unique UNIQUE(brand,type,size)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- successful insert with rows rejected
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_success_rows_rejected';
+0: jdbc:luciddb:> alter session set "errorMax"=1040;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into part_uc select * from ff_tpch.bcp."part";
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check merge
+0: jdbc:luciddb:> select count(*) from part_uc;
++---------+
+| EXPR$0  |
++---------+
+| 18961   |
++---------+
+0: jdbc:luciddb:> select count(*) as dup_counts, sum(dups) as total_dup_rows from
+. . . . . . . . >   (select count(*) as dups from part_uc
+. . . . . . . . >     group by brand, type, size
+. . . . . . . . >     having count(*) > 1);
++-------------+-----------------+
+| DUP_COUNTS  | TOTAL_DUP_ROWS  |
++-------------+-----------------+
+| 0           |                 |
++-------------+-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check error logs
+0: jdbc:luciddb:> select error_count, warning_count, "SQL"
+. . . . . . . . >   from errlogs.bcp."Summary"
+. . . . . . . . >   where process_id='basic_uc'
+. . . . . . . . >     and action_id = 'insert_success_rows_rejected';
++--------------+----------------+-------------------------------------------------------+
+| ERROR_COUNT  | WARNING_COUNT  |                          SQL                          |
++--------------+----------------+-------------------------------------------------------+
+| 1039         | 0              | insert into part_uc select * from ff_tpch.bcp."part"  |
++--------------+----------------+-------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> truncate table part_uc;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- merge where unmatched source rows conflict with each other for a key other
+0: jdbc:luciddb:> -- than the match key
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_unmatched_conflict_within_src';
+0: jdbc:luciddb:> alter session set "errorMax"=1040;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check rowcounts before merge
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='PART_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| PART_UC     | 0                  | 0                  |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  |              |
++-------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into part_uc tgt
+. . . . . . . . >   using ff_tpch.bcp."part" src on F1=partkey
+. . . . . . . . >   when matched then
+. . . . . . . . >     update set name='NEW!'
+. . . . . . . . >   when not matched then
+. . . . . . . . >     insert values (F1,F2,F3,F4,F5,F6,F7,F8,F9);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check merge
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='PART_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| PART_UC     | 18961              | 0                  |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 18961        |
++-------------------------+--------------+
+0: jdbc:luciddb:> select count(*) from part_uc where name='NEW!';
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> select count(*) as dup_counts, sum(dups) as total_dup_rows from
+. . . . . . . . >   (select count(*) as dups from part_uc
+. . . . . . . . >     group by brand, type, size
+. . . . . . . . >     having count(*) > 1);
++-------------+-----------------+
+| DUP_COUNTS  | TOTAL_DUP_ROWS  |
++-------------+-----------------+
+| 0           |                 |
++-------------+-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check error logs
+0: jdbc:luciddb:> select error_count, warning_count, "SQL"
+. . . . . . . . >   from errlogs.bcp."Summary"
+. . . . . . . . >   where process_id='basic_uc'
+. . . . . . . . >     and action_id = 'merge_unmatched_conflict_within_src';
++--------------+----------------+----------------------------------------------+
+| ERROR_COUNT  | WARNING_COUNT  |                     SQL                      |
++--------------+----------------+----------------------------------------------+
+| 1039         | 0              | merge into part_uc tgt
+  using ff_tpch.bcp.  |
++--------------+----------------+----------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- merge where unmatched source rows conflict with each other and existing rows
+0: jdbc:luciddb:> -- for a key other than the match key
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_unmatched_conflicts_in_src_and_tgt';
+0: jdbc:luciddb:> alter session set "errorMax"=1040;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into part_uc tgt
+. . . . . . . . >   using ff_tpch.bcp."part" src on F1=partkey
+. . . . . . . . >   when matched then 
+. . . . . . . . >     update set name='NEW!'
+. . . . . . . . >   when not matched then
+. . . . . . . . >     insert values (F1,F2,F3,F4,F5,F6,F7,F8,F9);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check merge
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='PART_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| PART_UC     | 18961              | 18961              |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 0            |
++-------------------------+--------------+
+0: jdbc:luciddb:> select count(*) from part_uc where name='NEW!';
++---------+
+| EXPR$0  |
++---------+
+| 18961   |
++---------+
+0: jdbc:luciddb:> select count(*) as dup_counts, sum(dups) as total_dup_rows from
+. . . . . . . . >   (select count(*) as dups from part_uc
+. . . . . . . . >     group by brand, type, size
+. . . . . . . . >     having count(*) > 1);
++-------------+-----------------+
+| DUP_COUNTS  | TOTAL_DUP_ROWS  |
++-------------+-----------------+
+| 0           |                 |
++-------------+-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check error logs
+0: jdbc:luciddb:> select error_count, warning_count, "SQL"
+. . . . . . . . >   from errlogs.bcp."Summary"
+. . . . . . . . >   where process_id='basic_uc'
+. . . . . . . . >     and action_id = 'merge_unmatched_conflicts_in_src_and_tgt';
++--------------+----------------+----------------------------------------------+
+| ERROR_COUNT  | WARNING_COUNT  |                     SQL                      |
++--------------+----------------+----------------------------------------------+
+| 1039         | 0              | merge into part_uc tgt
+  using ff_tpch.bcp.  |
++--------------+----------------+----------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- merge where unmatched source rows conflict with existing rows for a key
+0: jdbc:luciddb:> -- other than the match key
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_unmatched_conflict_within_tgt';
+0: jdbc:luciddb:> alter session set "errorMax"=1000;
+0: jdbc:luciddb:> create view part_src_dups as
+. . . . . . . . >   select * from ff_tpch.bcp."part" as b where exists
+. . . . . . . . >     (select F4, F5, F6, count(F4||F5||cast(F6 as varchar(10)))
+. . . . . . . . >       from ff_tpch.bcp."part"
+. . . . . . . . >      where b.F4=F4 and b.F5=F5 and b.F6=F6
+. . . . . . . . >      group by F4, F5, F6
+. . . . . . . . >      having count(F4||F5||cast(F6 as varchar(10))) = 2);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into part_uc tgt
+. . . . . . . . >   using part_src_dups on F1=partkey
+. . . . . . . . >   when matched then 
+. . . . . . . . >     update set name='SUPERNEW!'
+. . . . . . . . >   when not matched then
+. . . . . . . . >     insert values (F1,F2,F3,F4,F5,F6,F7,F8,F9);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check merge
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='PART_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| PART_UC     | 18961              | 19926              |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 0            |
++-------------------------+--------------+
+0: jdbc:luciddb:> select count(*) from part_uc where name='SUPERNEW!';
++---------+
+| EXPR$0  |
++---------+
+| 965     |
++---------+
+0: jdbc:luciddb:> select count(*) as dup_counts, sum(dups) as total_dup_rows from
+. . . . . . . . >   (select count(*) as dups from part_uc
+. . . . . . . . >     group by brand, type, size
+. . . . . . . . >     having count(*) > 1);
++-------------+-----------------+
+| DUP_COUNTS  | TOTAL_DUP_ROWS  |
++-------------+-----------------+
+| 0           |                 |
++-------------+-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check error logs
+0: jdbc:luciddb:> select error_count, warning_count, "SQL"
+. . . . . . . . >   from errlogs.bcp."Summary"
+. . . . . . . . >   where process_id='basic_uc'
+. . . . . . . . >     and action_id = 'merge_unmatched_conflict_within_tgt';
++--------------+----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ERROR_COUNT  | WARNING_COUNT  |                                                                                           SQL                                                                                           |
++--------------+----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| 965          | 0              | merge into part_uc tgt
+  using part_src_dups on F1=partkey
+  when matched then 
+    update set name='SUPERNEW!'
+  when not matched then
+    insert values (F1,F2,F3,F4,F5,F6,F7,F8,F9)  |
++--------------+----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- merge where multiple source rows match a single target row
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_match_multiple_src_per_tgt_setup';
+0: jdbc:luciddb:> alter session set "errorMax"=1800;
+0: jdbc:luciddb:> create view all_part_dups as
+. . . . . . . . >   select * from ff_tpch.bcp."part" as b 
+. . . . . . . . >     where exists 
+. . . . . . . . >       (select F4, F5, F6, count(F4||F5||cast(F6 as varchar(10)))
+. . . . . . . . >         from ff_tpch.bcp."part"
+. . . . . . . . >        where b.F4=F4 and b.F5=F5 and b.F6=F6
+. . . . . . . . >        group by F4, F5, F6
+. . . . . . . . >        having count(F4||F5||cast(F6 as varchar(10))) > 1);
+0: jdbc:luciddb:> insert into uc_src.part_src 
+. . . . . . . . >   select * from ff_tpch.bcp."part" 
+. . . . . . . . >   where F1 not in (select F1 from all_part_dups);
+0: jdbc:luciddb:> insert into uc_src.part_src
+. . . . . . . . >   select * from ff_tpch.bcp."part"
+. . . . . . . . >   where F1 <= 1000 and F1 not in (select F1 from all_part_dups);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_match_multiple_src_per_tgt';
+0: jdbc:luciddb:> merge into part_uc tgt
+. . . . . . . . >   using uc_src.part_src on p_partkey=partkey
+. . . . . . . . >   when matched then
+. . . . . . . . >     update set name='SUPERDELUX!'
+. . . . . . . . >   when not matched then
+. . . . . . . . >     insert values (p_partkey, p_name, p_mfgr, p_brand, p_type,
+. . . . . . . . >       p_size, p_container, p_retailprice, p_comment);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check merge
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='PART_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| PART_UC     | 18961              | 37885              |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 0            |
++-------------------------+--------------+
+0: jdbc:luciddb:> select count(*) from part_uc where name='SUPERDELUX!';
++---------+
+| EXPR$0  |
++---------+
+| 17959   |
++---------+
+0: jdbc:luciddb:> select count(*) as dup_counts, sum(dups) as total_dup_rows from
+. . . . . . . . >   (select count(*) as dups from part_uc
+. . . . . . . . >     group by brand, type, size
+. . . . . . . . >     having count(*) > 1);
++-------------+-----------------+
+| DUP_COUNTS  | TOTAL_DUP_ROWS  |
++-------------+-----------------+
+| 0           |                 |
++-------------+-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check error logs
+0: jdbc:luciddb:> select action_id, error_count, warning_count, "SQL"
+. . . . . . . . >   from errlogs.bcp."Summary"
+. . . . . . . . >   where process_id='basic_uc'
+. . . . . . . . >     and action_id like 'merge_match_multiple_src_per_tgt%';
++-----------------------------------+--------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|             ACTION_ID             | ERROR_COUNT  | WARNING_COUNT  |                                                                                                                                SQL                                                                                                                                |
++-----------------------------------+--------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| merge_match_multiple_src_per_tgt  | 889          | 0              | merge into part_uc tgt
+  using uc_src.part_src on p_partkey=partkey
+  when matched then
+    update set name='SUPERDELUX!'
+  when not matched then
+    insert values (p_partkey, p_name, p_mfgr, p_brand, p_type,
+      p_size, p_container, p_retailprice, p_com  |
+| merge_match_multiple_src_per_tgt  | 889          | 0              | merge into part_uc tgt
+  using uc_src.part_src on p_partkey=partkey
+  when matched then
+    update set name='SUPERDELUX!'
+  when not matched then
+    insert values (p_partkey, p_name, p_mfgr, p_brand, p_type,
+      p_size, p_container, p_retailprice, p_com  |
++-----------------------------------+--------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop table part_uc cascade;
+0: jdbc:luciddb:> drop view part_src_dups;
+0: jdbc:luciddb:> drop view all_part_dups;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- update columns in constraint table row rejection disabled
+0: jdbc:luciddb:> alter session set "etlActionId"=
+. . . . . . . . >   'merge_update_constraint_columns_failfast_setup';
+0: jdbc:luciddb:> alter session set "errorMax"=500;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create constraint table
+0: jdbc:luciddb:> create table part_uc(
+. . . . . . . . >   partkey integer primary key,
+. . . . . . . . >   name varchar(55),
+. . . . . . . . >   mfgr varchar(25),
+. . . . . . . . >   brand varchar(10),
+. . . . . . . . >   type varchar(25),
+. . . . . . . . >   size integer,
+. . . . . . . . >   container varchar(10),
+. . . . . . . . >   retailprice decimal(15,2),
+. . . . . . . . >   comment varchar(23),
+. . . . . . . . >   constraint p_mfgr_name_unique UNIQUE(mfgr,name)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- load constraint table w/20 rows
+0: jdbc:luciddb:> insert into part_uc 
+. . . . . . . . > select * from ff_tpch.bcp."part" where mod(F1,1000)=0;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check rowcounts before merge
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='PART_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| PART_UC     | 20                 | 0                  |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 0            |
++-------------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create view part_10000 as select * from ff_tpch.bcp."part" where F1 <= 10000;
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_update_constraint_columns_failfast';
+0: jdbc:luciddb:> alter session set "errorMax" = 0;
+0: jdbc:luciddb:> merge into part_uc tgt
+. . . . . . . . >   using part_10000 src on partkey = F1
+. . . . . . . . >   when matched then
+. . . . . . . . >     update set mfgr='New'||mfgr, size=size+100 
+. . . . . . . . >   when not matched then
+. . . . . . . . >     insert values(F1,F2,F3,F4,F5,F6,F7,F8,F9);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check merge
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >   from sys_root.dba_stored_tables
+. . . . . . . . >   where table_name='PART_UC';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| PART_UC     | 10010              | 10                 |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters
+. . . . . . . . >   where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 9990         |
++-------------------------+--------------+
+0: jdbc:luciddb:> -- should get the 10 updated rows
+0: jdbc:luciddb:> select tgt.* 
+. . . . . . . . > from 
+. . . . . . . . >   table(applib.generate_crc(cursor(select * from part_uc))) tgt
+. . . . . . . . >   inner join 
+. . . . . . . . >   table(applib.generate_crc(cursor(select * from part_10000))) src
+. . . . . . . . >   on F1 = partkey
+. . . . . . . . > where tgt.crc_value <> src.crc_value;
++----------+-----------------------------------------+--------------------+-----------+--------------------------+-------+------------+--------------+----------------------+-------------+
+| PARTKEY  |                  NAME                   |        MFGR        |   BRAND   |           TYPE           | SIZE  | CONTAINER  | RETAILPRICE  |       COMMENT        |  CRC_VALUE  |
++----------+-----------------------------------------+--------------------+-----------+--------------------------+-------+------------+--------------+----------------------+-------------+
+| 1000     | cream frosted navajo aquamarine black   | NewManufacturer#2  | Brand#24  | ECONOMY BRUSHED NICKEL   | 110   | SM DRUM    | 901.00       | slyly                | 1696409240  |
+| 2000     | drab blue goldenrod powder medium       | NewManufacturer#1  | Brand#12  | PROMO ANODIZED STEEL     | 146   | SM BAG     | 902.00       | furiously express r  | 1197112289  |
+| 3000     | coral hot drab sandy white              | NewManufacturer#3  | Brand#33  | MEDIUM ANODIZED COPPER   | 116   | SM BOX     | 903.00       | slyly furious reque  | 542803384   |
+| 4000     | ghost spring green misty cornsilk       | NewManufacturer#1  | Brand#12  | LARGE BRUSHED STEEL      | 121   | MED JAR    | 904.00       | final asympt         | 1338504517  |
+| 5000     | seashell blush papaya cornflower ghost  | NewManufacturer#3  | Brand#34  | MEDIUM BRUSHED BRASS     | 131   | LG JAR     | 905.00       | busily express p     | 2758153105  |
+| 6000     | chocolate deep hot firebrick moccasin   | NewManufacturer#5  | Brand#52  | MEDIUM BRUSHED TIN       | 101   | MED BOX    | 906.00       | foxes accordin       | 414990977   |
+| 7000     | beige dim sienna khaki blue             | NewManufacturer#4  | Brand#44  | ECONOMY ANODIZED NICKEL  | 137   | WRAP CASE  | 907.00       | fluffily             | 2074853021  |
+| 8000     | brown chartreuse metallic bisque blush  | NewManufacturer#1  | Brand#13  | LARGE PLATED STEEL       | 136   | LG PKG     | 908.00       | doggedly bold p      | 236357171   |
+| 9000     | plum blue khaki lawn lemon              | NewManufacturer#1  | Brand#11  | SMALL BRUSHED STEEL      | 129   | SM BOX     | 909.00       | pendi                | 2802306294  |
+| 10000    | slate deep plum steel black             | NewManufacturer#3  | Brand#35  | LARGE POLISHED NICKEL    | 129   | MED BAG    | 910.00       | careful              | 839401172   |
++----------+-----------------------------------------+--------------------+-----------+--------------------------+-------+------------+--------------+----------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check logs
+0: jdbc:luciddb:> select action_id, error_count, warning_count, "SQL"
+. . . . . . . . >   from errlogs.bcp."Summary"
+. . . . . . . . >   where process_id='basic_uc' 
+. . . . . . . . >     and action_id like 'merge_update_constraint_columns_failfast%';
++------------+--------------+----------------+------+
+| ACTION_ID  | ERROR_COUNT  | WARNING_COUNT  | SQL  |
++------------+--------------+----------------+------+
++------------+--------------+----------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- constraint column ordering
+0: jdbc:luciddb:> alter session set "errorMax" = 1010;
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_constraint_column_ordering_setup';
+0: jdbc:luciddb:> truncate table part_uc;
+0: jdbc:luciddb:> truncate table uc_src.part_src;
+0: jdbc:luciddb:> create table part_uc2(
+. . . . . . . . >   partkey integer primary key,
+. . . . . . . . >   name varchar(55),
+. . . . . . . . >   mfgr varchar(25),
+. . . . . . . . >   brand varchar(10),
+. . . . . . . . >   type varchar(25),
+. . . . . . . . >   size integer,
+. . . . . . . . >   container varchar(10),
+. . . . . . . . >   retailprice decimal(15,2),
+. . . . . . . . >   comment varchar(23),
+. . . . . . . . >   constraint p_name_mfgr_unique UNIQUE(name,mfgr)
+. . . . . . . . > );
+0: jdbc:luciddb:> insert into uc_src.part_src select * from ff_tpch.bcp."part";
+0: jdbc:luciddb:> insert into uc_src.part_src 
+. . . . . . . . >   select F1+1000000, F2, F3, F4, F5, F6, F7, F8, F9 
+. . . . . . . . >   from ff_tpch.bcp."part" where F1 <= 1000;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_constraint_column_ordering_1';
+0: jdbc:luciddb:> insert into part_uc select * from uc_src.part_src;
+0: jdbc:luciddb:> select count(*), count(distinct partkey) from part_uc;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 20000   | 20000   |
++---------+---------+
+0: jdbc:luciddb:> select count(*) as dup_count, sum(dups) as total_dup_rows from
+. . . . . . . . >   (select count(*) as dups from part_uc
+. . . . . . . . >     group by mfgr, name
+. . . . . . . . >     having count(*) > 1);
++------------+-----------------+
+| DUP_COUNT  | TOTAL_DUP_ROWS  |
++------------+-----------------+
+| 0          |                 |
++------------+-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_constraint_column_ordering_2';
+0: jdbc:luciddb:> insert into part_uc2 select * from uc_src.part_src;
+0: jdbc:luciddb:> select count(*), count(distinct partkey) from part_uc2;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 20000   | 20000   |
++---------+---------+
+0: jdbc:luciddb:> select count(*) as dup_count, sum(dups) as total_dup_rows from
+. . . . . . . . >   (select count(*) as dups from part_uc2
+. . . . . . . . >     group by mfgr, name
+. . . . . . . . >     having count(*) > 1);
++------------+-----------------+
+| DUP_COUNT  | TOTAL_DUP_ROWS  |
++------------+-----------------+
+| 0          |                 |
++------------+-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check result is the same
+0: jdbc:luciddb:> select * from table(applib.generate_crc(cursor(select * from part_uc))) as o 
+. . . . . . . . >   inner join table(applib.generate_crc(cursor(select * from part_uc2))) as t
+. . . . . . . . >   on o.partkey = t.partkey
+. . . . . . . . > where o.crc_value <> t.crc_value;
++----------+-------+-------+--------+-------+-------+------------+--------------+----------+------------+-----------+--------+--------+---------+--------+--------+-------------+---------------+-----------+-------------+
+| PARTKEY  | NAME  | MFGR  | BRAND  | TYPE  | SIZE  | CONTAINER  | RETAILPRICE  | COMMENT  | CRC_VALUE  | PARTKEY0  | NAME0  | MFGR0  | BRAND0  | TYPE0  | SIZE0  | CONTAINER0  | RETAILPRICE0  | COMMENT0  | CRC_VALUE0  |
++----------+-------+-------+--------+-------+-------+------------+--------------+----------+------------+-----------+--------+--------+---------+--------+--------+-------------+---------------+-----------+-------------+
++----------+-------+-------+--------+-------+-------+------------+--------------+----------+------------+-----------+--------+--------+---------+--------+--------+-------------+---------------+-----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check error logs
+0: jdbc:luciddb:> select action_id, error_count, warning_count, "SQL"
+. . . . . . . . >   from errlogs.bcp."Summary"
+. . . . . . . . >   where process_id='basic_uc'
+. . . . . . . . >     and action_id like 'insert_constraint_column_ordering%';
++--------------------------------------+--------------+----------------+-----------------------------------------------------+
+|              ACTION_ID               | ERROR_COUNT  | WARNING_COUNT  |                         SQL                         |
++--------------------------------------+--------------+----------------+-----------------------------------------------------+
+| insert_constraint_column_ordering_1  | 1000         | 0              | insert into part_uc select * from uc_src.part_src   |
+| insert_constraint_column_ordering_2  | 1000         | 0              | insert into part_uc2 select * from uc_src.part_src  |
++--------------------------------------+--------------+----------------+-----------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- errors logged less than error limit
+0: jdbc:luciddb:> alter session set "etlActionId"='errLogMax_less_than_errMax';
+0: jdbc:luciddb:> alter session set "errorLogMax"=10;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> truncate table part_uc;
+0: jdbc:luciddb:> insert into part_uc select * from uc_src.part_src;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select error_count, warning_count, "SQL"
+. . . . . . . . >   from errlogs.bcp."Summary"
+. . . . . . . . >   where process_id='basic_uc'
+. . . . . . . . >     and action_id='errLogMax_less_than_errMax';
++--------------+----------------+----------------------------------------------------+
+| ERROR_COUNT  | WARNING_COUNT  |                        SQL                         |
++--------------+----------------+----------------------------------------------------+
+| 1000         | 0              | insert into part_uc select * from uc_src.part_src  |
++--------------+----------------+----------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: find a way to check the logfiles whose names are generated with 
+0: jdbc:luciddb:> -- timestamps, etc.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop schema uc cascade;
+0: jdbc:luciddb:> truncate table uc_src.part_src;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
