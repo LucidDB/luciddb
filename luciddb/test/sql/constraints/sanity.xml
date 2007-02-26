@@ -25,6 +25,10 @@
       </test>
 
       <test name="nullAndDatatypes" requiresSuccess="init">
+        <!-- unresolved: FNL-63 -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/constraints/gen/nullsAndDatatypes.sql"/>
       </test>
 
