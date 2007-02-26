@@ -114,19 +114,23 @@
       <then/>
       <else>
         <condition property="db.created">
-          <isfileselected file="${ffsource.tpch.dir}/datasize">
-            <contains text="100M" casesensitive="no"/>
-          </isfileselected>
+          <and>
+            <available file="${ffsource.tpch.dir}/datasize" type="file"/>
+            <isfileselected file="${ffsource.tpch.dir}/datasize">
+              <contains text="100M" casesensitive="no"/>
+            </isfileselected>
+          </and>
         </condition>
         
         <if>
-          <isfalse value="${db.created}"/>
-          <then>
+          <istrue value="${db.created}"/>
+          <then/>
+          <else>
             <exec executable="${thirdparty.dir}/tpch/createdb"
               dir="${thirdparty.dir}/tpch">
               <arg line="100M"/>
             </exec>
-          </then>
+          </else>
         </if>
 
         <sync todir="${ff.dir}" verbose="true">
