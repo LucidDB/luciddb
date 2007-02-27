@@ -595,6 +595,7 @@
 > (4, 40, 'four', 'forty', 160);
 > 
 > alter session set "errorMax"=5;
+> alter session set "logDir" = 'testlog';
 > 
 > create table null_uc_sk(
 >   pkey int,
@@ -606,7 +607,7 @@
 > );
 > 
 > insert into null_uc_sk select * from null_src;
-Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0; see /home2/zfong/open/farrago/testlog/Summary.log for details (state=,code=0)
+Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > select * from null_uc_sk order by pkey, colbigint, colint;
 +-------+------------+---------+-----------------------+---------+
 | PKEY  | COLBIGINT  | COLVAR  |        COLCHAR        | COLINT  |

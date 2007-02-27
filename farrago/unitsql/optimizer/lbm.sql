@@ -450,6 +450,7 @@ insert into null_src values
 (4, 40, 'four', 'forty', 160);
 
 alter session set "errorMax"=5;
+alter session set "logDir" = 'testlog';
 
 create table null_uc_sk(
   pkey int,
