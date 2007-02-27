@@ -426,6 +426,44 @@ delete from t where a = 10;
 
 select a, count(*) from t group by a having a = 10;
 
+-------------------------------------------------------------
+-- Part 6. Misc tests for bugfixes
+-------------------------------------------------------------
+
+-- FNL-63 -- multiple nulls in a unique constraint column
+create table null_src(
+  pkey int,
+  colbigint bigint,
+  colvar varchar(20),
+  colchar char(20),
+  colint int
+);
+
+insert into null_src values
+(null, null, null, null, null),
+(3, null, 'three2', 'three2', 32),
+(1, 10000, 'one', 'ten-thousand', 10000),
+(2, 30, 'two', 'thirty', 60),
+(3, null, 'three', null, null),
+(2, 30, 'two', 'forty', 80),
+(null, 10, null, 'ten', null),
+(4, 40, 'four', 'forty', 160);
+
+alter session set "errorMax"=5;
+
+create table null_uc_sk(
+  pkey int,
+  colbigint bigint,
+  colvar varchar(20),
+  colchar char(20),
+  colint int,
+  constraint n_pkey_unique UNIQUE(pkey, colbigint)
+);
+
+insert into null_uc_sk select * from null_src;
+select * from null_uc_sk order by pkey, colbigint, colint;
+select * from null_uc_sk where pkey is null order by pkey, colbigint, colint;
+select * from null_uc_sk where pkey = 3 order by pkey, colbigint, colint;
 
 -- cleanup
 drop server test_data cascade;
