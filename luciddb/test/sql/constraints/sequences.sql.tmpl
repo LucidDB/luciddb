@@ -124,8 +124,9 @@ select count(distinct pkey), max(pkey) from bench1m_uc;
 -- check error log count
 select process_id, action_id, error_count, warning_count, "SQL"
   from errlogs.bcp."Summary"
-  where process_id='sequences_uc';
+  where process_id='sequences_uc'
+  order by 1,2,3,4,5;
 
 -- cleanup 
 drop schema uc cascade;
-truncate uc_src.bench1m_src;
+truncate table uc_src.bench1m_src;

@@ -110,7 +110,8 @@ select nationkey, name, regionkey from nation_uc order by 1,2,3;
 -- check error logs
 select action_id, error_count, warning_count, "SQL"
   from errlogs.bcp."Summary"
-  where process_id='errors_uc';
+  where process_id='errors_uc'
+  order by 1,2,3,4;
 
 -- cleanup
 drop schema uc cascade;

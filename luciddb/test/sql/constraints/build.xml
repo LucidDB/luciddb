@@ -95,9 +95,6 @@
         </copy>
       </else>
     </if>
-
-    <!-- create error logging directory -->
-    <mkdir dir="${errlog.dir}"/>
   </target>
 
   <target name="test" depends="gen-all-sql">
@@ -149,7 +146,9 @@
   <target name="clean-tmpfiles">
     <delete dir="${bh.log.basedir}"/>
     <delete file="${ff.dir}/bench1M.bcp"/>
-    <delete dir="${errlog.dir}"/>
+    <delete> 
+      <fileset dir="${errlog.dir}" excludes="Summary.bcp"/>
+    </delete>
     <delete dir="${gensql.dir}"/>
   </target>
 

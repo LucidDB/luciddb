@@ -186,7 +186,8 @@ select count(*) as dup_counts, sum(dups) as total_dup_rows from
 select action_id, error_count, warning_count, "SQL"
   from errlogs.bcp."Summary"
   where process_id='basic_uc'
-    and action_id like 'merge_match_multiple_src_per_tgt%';
+    and action_id like 'merge_match_multiple_src_per_tgt%'
+  order by 1,2,3,4;
 
 -- cleanup
 drop table part_uc cascade;
@@ -246,7 +247,8 @@ from
   inner join 
   table(applib.generate_crc(cursor(select * from part_10000))) src
   on F1 = partkey
-where tgt.crc_value <> src.crc_value;
+where tgt.crc_value <> src.crc_value
+order by partkey;
 
 -- check logs
 select action_id, error_count, warning_count, "SQL"
@@ -302,7 +304,8 @@ where o.crc_value <> t.crc_value;
 select action_id, error_count, warning_count, "SQL"
   from errlogs.bcp."Summary"
   where process_id='basic_uc'
-    and action_id like 'insert_constraint_column_ordering%';
+    and action_id like 'insert_constraint_column_ordering%'
+  order by 1,2,3,4;
 
 -- errors logged less than error limit
 alter session set "etlActionId"='errLogMax_less_than_errMax';
