@@ -108,6 +108,11 @@ class FlatFileDataServer
             throw FarragoResource.instance().FlatFileMappedRequiresWithHeader
                 .ex();
         }
+
+        if (params.getMapped() && params.getLenient() == false) {
+            throw FarragoResource.instance().FlatFileMappedRequiresLenient
+                .ex();
+        }        
     }
 
     // implement FarragoMedDataServer
