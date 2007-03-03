@@ -30,6 +30,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
@@ -366,17 +367,20 @@ class LcsDataServer
     public void dropIndex(
         FemLocalIndex index,
         long rootPageId,
-        boolean truncate)
+        boolean truncate,
+        FennelTxnContext txnContext)
     {
         FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
         // if the truncate is being called for an alter table rebuild on
         // the deletion index, don't reset the rowcounts because this 
         // will wipe out the rowcounts that were just updated for the newly
         // rebuilt table
-        if (truncate && !FarragoCatalogUtil.isDeletionIndex(index)) {
+        if (truncate && !FarragoCatalogUtil.isDeletionIndex(index) &&
+            !FarragoCatalogUtil.isIndexTemporary(index))
+        {
             FarragoCatalogUtil.resetRowCounts((FemAbstractColumnSet) table);
         }
-        super.dropIndex(index, rootPageId, truncate);
+        super.dropIndex(index, rootPageId, truncate, txnContext);
     }
 }
 

@@ -87,7 +87,7 @@ class MedMockLocalDataServer
     }
 
     // implement FarragoMedLocalDataServer
-    public long createIndex(FemLocalIndex index)
+    public long createIndex(FemLocalIndex index, FennelTxnContext txnContext)
         throws SQLException
     {
         // mock roots are meaningless
@@ -98,7 +98,8 @@ class MedMockLocalDataServer
     public void dropIndex(
         FemLocalIndex index,
         long rootPageId,
-        boolean truncate)
+        boolean truncate,
+        FennelTxnContext txnContext)
         throws SQLException
     {
         // ignore
@@ -108,7 +109,8 @@ class MedMockLocalDataServer
     public long computeIndexStats(
         FemLocalIndex index,
         long rootPageId,
-        boolean estimate)
+        boolean estimate,
+        FennelTxnContext txnContext)
         throws SQLException
     {
         return 0;

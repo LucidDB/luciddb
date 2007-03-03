@@ -287,7 +287,7 @@ public class FarragoDbSession
 
         savepointList = new ArrayList();
 
-        sessionIndexMap = new FarragoDbSessionIndexMap(this, database, repos);
+        sessionIndexMap = new FarragoDbSessionIndexMap(this, this, repos);
 
         personality = sessionFactory.newSessionPersonality(this, null);
         defaultPersonality = personality;

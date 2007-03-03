@@ -32,13 +32,11 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.trace.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.stat.*;
-import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 
 import com.lucidera.query.*;
@@ -52,6 +50,7 @@ import com.lucidera.query.*;
  */
 public class LcsIndexOptimizer
 {
+    // Some constants to calculate index access cost.
     private static Double IOCostPerBlock = 1.0;
     private static Double SetOpCostPerBlock = 14.0;
     private static Double FilterEvalCostPerMillionRow = 82.0;
@@ -62,6 +61,12 @@ public class LcsIndexOptimizer
     {
     }
     
+    /**
+     * Get a list of all unclustered indexes on the table scanned by a LcsRowScanRel
+     * 
+     * @param rowScan
+     * @return list of all unclustered indexes
+     */
     public static List<FemLocalIndex> getUnclusteredIndexes(LcsRowScanRel rowScan)
     {
         return 
@@ -70,7 +75,13 @@ public class LcsIndexOptimizer
             rowScan.lcsTable.getCwmColumnSet());
     }
     
-    public static boolean isValid(FemLocalIndex index)
+    /**
+     * Checks if an index is valid
+     * 
+     * @param index
+     * @return if an index is valid
+     */
+    private static boolean isValid(FemLocalIndex index)
     {
         return index.getVisibility() == VisibilityKindEnum.VK_PUBLIC;
     }
@@ -121,6 +132,15 @@ public class LcsIndexOptimizer
         
     }
     
+    /**
+     * From a list of filters on distinct columns, find the one on a given column.
+     * 
+     * @param rowScanRel
+     * @param filterList
+     * @param col
+     * 
+     * @return the filter on the given column
+     */
     private static SargColumnFilter findSargFilterForColumn(
         LcsRowScanRel rowScanRel,
         List<SargColumnFilter> filterList,
@@ -200,19 +220,31 @@ public class LcsIndexOptimizer
      * selection is expressed using a map where all selected indexes and the
      * matched key positions are remembered.
      *
-     * @param colLists two column lists: the first one contains the "point
-     * interval" columns, the secod one contains the "range interval" columns.
+     * @param colfilterLists two SargColumnFilter lists: the first one contains 
+     * the "point" column filters, the second one contains the "interval"
+     * column filters.
      *
      * @return a map from selected index to its associated matched key position.
      */
-    public static Map<FemLocalIndex, Integer> getIndex2MatchedPosMap(
-        LcsRowScanRel rowScan,
-        List<List<CwmColumn>> colLists)
-        {
-        assert (colLists.size() == 2);
+    public static Map<FemLocalIndex, Integer> getIndex2MatchedPos(
+        LcsRowScanRel rowScanRel,
+        List<List<SargColumnFilter>> colFilterLists)
+    {
+        assert (colFilterLists.size() == 2);
         
-        List<CwmColumn> pointColumnList = colLists.get(0);
-        List<CwmColumn> rangeColumnList = colLists.get(1);
+        List<CwmColumn> pointColumnList = new ArrayList<CwmColumn>();
+        List<CwmColumn> intervalColumnList = new ArrayList<CwmColumn>();
+        
+        List<SargColumnFilter> pointList = colFilterLists.get(0);
+        List<SargColumnFilter> intervalList = colFilterLists.get(1);
+
+        for (SargColumnFilter filter : pointList) {
+            pointColumnList.add(rowScanRel.getColumnForFieldAccess(filter.columnPos));
+        }
+
+        for (SargColumnFilter filter : intervalList) {
+            intervalColumnList.add(rowScanRel.getColumnForFieldAccess(filter.columnPos));
+        }
         
         Map<FemLocalIndex, Integer> index2PosMap =
             new HashMap<FemLocalIndex, Integer>();
@@ -224,7 +256,7 @@ public class LcsIndexOptimizer
         TreeSet<FemLocalIndex> indexSet =
             new TreeSet<FemLocalIndex>(new IndexLengthComparator());
         
-        indexSet.addAll(getUnclusteredIndexes(rowScan));
+        indexSet.addAll(getUnclusteredIndexes(rowScanRel));
         
         // First process the columns with point predicates.
         // Objective is to maximize the index key columns matched.
@@ -247,12 +279,12 @@ public class LcsIndexOptimizer
                     
                     // try to match one more column from the interval column
                     // list
-                    if (rangeColumnList.contains(
+                    if (intervalColumnList.contains(
                         getIndexColumn(index, matchedPos))) {
                         matchedPos++;
                     }
                     
-                    // Pick the index with the biggest matchedPos.
+                    // Pick the index with the max matchedPos.
                     if (maxMatchedPos < matchedPos) {
                         maxMatchedPos = matchedPos;
                         maxMatchedIndex = index;
@@ -270,7 +302,7 @@ public class LcsIndexOptimizer
                     // remove matched columns from the set.
                     if (!pointColumnList.remove(matchedCol)) {
                         // last column might come from the interval list.
-                        boolean removed = rangeColumnList.remove(matchedCol);
+                        boolean removed = intervalColumnList.remove(matchedCol);
                         assert (removed);
                     }
                 }
@@ -294,32 +326,38 @@ public class LcsIndexOptimizer
         // Process the columns with range predicates:
         // Simply assign the shortest index with matching first key column
         int maxMatchedPos = 1;
-        while ((rangeColumnList.size() > 0) && iter.hasNext()) {
+        while ((intervalColumnList.size() > 0) && iter.hasNext()) {
             FemLocalIndex index = iter.next();
             CwmColumn firstCol = getIndexColumn(index, maxMatchedPos - 1);
-            if ((firstCol != null) && rangeColumnList.contains(firstCol)) {
+            if ((firstCol != null) && intervalColumnList.contains(firstCol)) {
                 index2PosMap.put(
                     index,
                     maxMatchedPos);
-                rangeColumnList.remove(firstCol);
+                intervalColumnList.remove(firstCol);
                 iter.remove();
             }
         }
         
         return index2PosMap;
-        }
-    
+    }
+
     /**
-     * Find the best filter to index mapping based on cost
+     * Find the best filter to index mapping based on cost. If cost information
+     * is not available, pick indexes with the longest matching keys.
      * 
      * @param rowScan rowScan to consider index access path for
-     * @param colLists list of sarg column filters
-     * @return
+     * @param filterLists two lists of sarg column filters: one for point
+     * filters, and one for interval filters.
+     * 
+     * @return a map which contains the indexes picked for index access path and
+     * the respective leading key postitions for each index.
      */
-    public static Map<FemLocalIndex, Integer> getBestIndex2MatchedPosMap(
+    public static Map<FemLocalIndex, Integer> getIndex2MatchedPosByCost(
         LcsRowScanRel rowScanRel,
         List<List<SargColumnFilter>> filterLists)
-        {
+    {
+        Map<FemLocalIndex, Integer> resultMapping = null;
+        
         final Logger tracer = FarragoTrace.getOptimizerRuleTracer();
         
         assert (filterLists.size() == 2);
@@ -327,56 +365,80 @@ public class LcsIndexOptimizer
         List<SargColumnFilter> pointList = filterLists.get(0);
         List<SargColumnFilter> intervalList = filterLists.get(1);
         
-        Map<SargColumnFilter, FemLocalIndex> filter2IndexMap =
-            new HashMap<SargColumnFilter, FemLocalIndex>();
-        Map<FemLocalIndex, Integer> index2MatchedPosMap =
-            new HashMap<FemLocalIndex, Integer>();
-        
-        Map<SargColumnFilter, FemLocalIndex> bestFilter2IndexMap =
-            new HashMap<SargColumnFilter, FemLocalIndex>();
-        Map<FemLocalIndex, Integer> bestIndex2MatchedPosMap =
-            new HashMap<FemLocalIndex, Integer>();
-        
-        // get residual filter cost and use that as first best cost
-        Double bestCost = null;
+        // prepare return parameters
+        Filter2IndexMapping currentMapping = new Filter2IndexMapping();
+        Filter2IndexMapping bestMapping = new Filter2IndexMapping();
         
         getBestIndex(
             rowScanRel,
             pointList,
             intervalList,
-            filter2IndexMap,
-            index2MatchedPosMap,
-            bestFilter2IndexMap,
-            bestIndex2MatchedPosMap,
-            bestCost);
+            currentMapping,
+            bestMapping);
         
-        if (bestCost != null &&
-            tracer.isLoggable(Level.FINEST)) {
-            tracer.finest("The following mapping has the best cost of " + bestCost);
-            for (SargColumnFilter filter : bestFilter2IndexMap.keySet()) {
-                tracer.finest("Filter Column " + filter.columnPos +
-                    " maps to Index " + bestFilter2IndexMap.get(filter).getStorageId());
+        if (bestMapping.isCostValid()) {        
+            if (tracer.isLoggable(Level.FINEST)) {
+                String nl = System.getProperty("line.separator");
+                
+                if (bestMapping.filter2IndexMap.isEmpty()) {
+                    tracer.finest(
+                        "No index is found for the filters. " + nl
+                        + "Residual filtering has the cost of " + bestMapping.cost + nl);
+                } else {
+                    String msg =
+                        "The following filter->index mapping for table scan ("
+                        + rowScanRel.lcsTable.getName()
+                        + ") has the best cost of " + bestMapping.cost + nl;
+                    for (SargColumnFilter filter : bestMapping.filter2IndexMap.keySet()) {
+                        FemLocalIndex index = bestMapping.filter2IndexMap.get(filter);
+                        msg += "  (" + filter.columnPos + "->" + index.getName()
+                        + " " + bestMapping.index2MatchedPosMap.get(index) + " )" + nl;
+                    }
+                    tracer.finest(msg);                    
+                }
             }
+            resultMapping = bestMapping.index2MatchedPosMap;            
+        } else {
+            // If cost based index selection did not find any index, try rule based.            
+            resultMapping = 
+                getIndex2MatchedPos(rowScanRel, filterLists);
+                        
+            if (tracer.isLoggable(Level.FINEST)) {
+                String nl = System.getProperty("line.separator");
+                
+                String msg = "Couldn't use cost based algorithm to find index path."+ nl +
+                             "Find these indexes(and leading key pos) with the longest matching keys." + nl;
+                
+                for (FemLocalIndex index : resultMapping.keySet()) {
+                    msg += "  (" + index.getName() + "  " 
+                                 + resultMapping.get(index)
+                           + ")" + nl;
+                }
+                
+                tracer.finest(msg);                
+            }            
         }
         
-        return bestIndex2MatchedPosMap;
-        }
-    
+        return resultMapping;
+    }
+      
     /**
+     * Find the best filter to index mapping based on cost.
      * 
-     * @param rowScan
-     * @param colLists
-     * @return
+     * @param rowScanRel row scan to filter
+     * @param pointList list of point filters
+     * @param intervalList list of interval filters
+     * @param currentMapping the current mapping from filter to index
+     * @param bestMapping the mapping from filter to index with the best
+     * cost.
+     * 
      */
-    public static void getBestIndex(
+    private static void getBestIndex(
         LcsRowScanRel rowScanRel,
         List<SargColumnFilter> pointList,
         List<SargColumnFilter> intervalList,
-        Map<SargColumnFilter, FemLocalIndex> filter2IndexMap,
-        Map<FemLocalIndex, Integer> index2MatchedPosMap,
-        Map<SargColumnFilter, FemLocalIndex> bestFilter2IndexMap,
-        Map<FemLocalIndex, Integer> bestIndex2MatchedPosMap,
-        Double bestCost)
+        Filter2IndexMapping currentMapping,
+        Filter2IndexMapping bestMapping)        
     {
         boolean matchedAllPointFilters = true;
         
@@ -384,14 +446,14 @@ public class LcsIndexOptimizer
         HashSet<FemAbstractColumn> mappedPointColumns = 
             new HashSet<FemAbstractColumn> ();
         
-        for (SargColumnFilter filter : filter2IndexMap.keySet()) {
+        for (SargColumnFilter filter : currentMapping.filter2IndexMap.keySet()) {
             mappedPointColumns.add(rowScanRel.getColumnForFieldAccess(
                 filter.columnPos));
         }
         
         // match point ranges
         for (SargColumnFilter pointFilter : pointList) {
-            if (filter2IndexMap.containsKey(pointFilter)) {
+            if (currentMapping.filter2IndexMap.containsKey(pointFilter)) {
                 // if column filter is already mapped
                 continue;
             }
@@ -406,10 +468,10 @@ public class LcsIndexOptimizer
                 if (matchedPos >= 0) {
                     // find all filters mapped to this index
                     mappedPointColumns.clear();
-                    for (SargColumnFilter filter : filter2IndexMap.keySet()) {
+                    for (SargColumnFilter filter : currentMapping.filter2IndexMap.keySet()) {
                         // only add point filters
                         if (pointList.contains(filter) &&
-                            filter2IndexMap.get(filter).equals(index)) {
+                            currentMapping.filter2IndexMap.get(filter).equals(index)) {
                             mappedPointColumns.add(rowScanRel.getColumnForFieldAccess(
                                 filter.columnPos));
                         }
@@ -430,21 +492,20 @@ public class LcsIndexOptimizer
                     if (pos == matchedPos) {
                         // all prior positions matched, keep going
                         matchedAllPointFilters = false;
-                        filter2IndexMap.put(pointFilter, index);
-                        index2MatchedPosMap.put(index, matchedPos + 1);
+                        currentMapping.put(pointFilter, index, matchedPos + 1);
                         getBestIndex(
                             rowScanRel,
                             pointList,
                             intervalList,
-                            filter2IndexMap,
-                            index2MatchedPosMap,
-                            bestFilter2IndexMap,                        
-                            bestIndex2MatchedPosMap,
-                            bestCost);
+                            currentMapping,
+                            bestMapping);
                     }
-                } // else try the next index
+                }
+                
+                // Try the next index
+                // remove any existing filter->index mapping
+                currentMapping.remove(pointFilter);                
             }
-            filter2IndexMap.remove(pointFilter);
         }
         
         // next try to match the rangeFilters if any
@@ -464,25 +525,32 @@ public class LcsIndexOptimizer
                 rowScanRel,
                 pointList,
                 intervalList,
-                filter2IndexMap,
-                index2MatchedPosMap,
-                bestFilter2IndexMap,
-                bestIndex2MatchedPosMap,
-                bestCost);
+                currentMapping,
+                bestMapping);
         }
     }
     
-    public static void getBestIndexWithIntervalFilter(
+    /**
+     * Find the best filter to index mapping based on cost, considering only
+     * interval filters.
+     * 
+     * @param rowScanRel row scan to filter
+     * @param pointList list of point filters
+     * @param intervalList list of interval filters
+     * @param currentMapping the current mapping from filter to index
+     * @param bestMapping the mapping from filter to index with the best
+     * cost.
+     */
+    private static void getBestIndexWithIntervalFilter(
         LcsRowScanRel rowScanRel,
         List<SargColumnFilter> pointList,
         List<SargColumnFilter> intervalList,
-        Map<SargColumnFilter, FemLocalIndex> filter2IndexMap,
-        Map<FemLocalIndex, Integer> index2MatchedPosMap,
-        Map<SargColumnFilter, FemLocalIndex> bestFilter2IndexMap,
-        Map<FemLocalIndex, Integer> bestIndex2MatchedPosMap,
-        Double bestCost)
+        Filter2IndexMapping currentMapping,
+        Filter2IndexMapping bestMapping)        
     {
         final Logger tracer = FarragoTrace.getOptimizerRuleTracer();
+        
+        assert (currentMapping != null);
         
         boolean matchedAllIntervalFilters = true;
         
@@ -492,7 +560,7 @@ public class LcsIndexOptimizer
         
         // match interval filters
         for (SargColumnFilter intervalFilter : intervalList) {
-            if (filter2IndexMap.containsKey(intervalFilter)) {
+            if (currentMapping.filter2IndexMap.containsKey(intervalFilter)) {
                 // if column filter is already mapped
                 continue;
             }
@@ -508,10 +576,10 @@ public class LcsIndexOptimizer
                 if (matchedPos >= 0) {
                     // find all filters mapped to this index
                     mappedPointColumns.clear();
-                    for (SargColumnFilter filter : filter2IndexMap.keySet()) {
+                    for (SargColumnFilter filter : currentMapping.filter2IndexMap.keySet()) {
                         // only add point filters
                         if (pointList.contains(filter) &&
-                            filter2IndexMap.get(filter).equals(index)) {
+                            currentMapping.filter2IndexMap.get(filter).equals(index)) {
                             mappedPointColumns.add(rowScanRel.getColumnForFieldAccess(
                                 filter.columnPos));
                         }
@@ -532,41 +600,62 @@ public class LcsIndexOptimizer
                     if (pos == matchedPos) {
                         // all prior positions matched, keep going
                         matchedAllIntervalFilters = false;
-                        filter2IndexMap.put(intervalFilter, index);
-                        index2MatchedPosMap.put(index, matchedPos + 1);
+                        currentMapping.put(intervalFilter, index, matchedPos + 1);
                         getBestIndexWithIntervalFilter(
                             rowScanRel,
                             pointList,
                             intervalList,
-                            filter2IndexMap,
-                            index2MatchedPosMap,
-                            bestFilter2IndexMap,                        
-                            bestIndex2MatchedPosMap,
-                            bestCost);
+                            currentMapping,
+                            bestMapping);
                     }
-                }// else try the next index
+                }
+                
+                // Try the next index
+                // remove any existing filter->index mapping
+                currentMapping.remove(intervalFilter);                
+                
             }
-            filter2IndexMap.remove(intervalFilter);
+            
+            // try the next filter
         }
         
-        if (matchedAllIntervalFilters) {
-            Double currentCost = 
-                costIndexAccess(rowScanRel, pointList, intervalList,
-                    filter2IndexMap, index2MatchedPosMap);
+        if (matchedAllIntervalFilters) {            
+            costIndexAccess(rowScanRel, pointList, intervalList, currentMapping);
+
+            if (tracer.isLoggable(Level.FINEST)) {
+                String nl = System.getProperty("line.separator");
+                
+                String msg =
+                    "The following filter->index mapping for table scan(" +
+                    rowScanRel.lcsTable.getName() + ") ";
+                
+                if (!currentMapping.isCostValid()) {
+                    msg += "does not have a cost(hint: check if the table is analyzed)" + nl;
+                } else {
+                    msg += "has a cost of " + currentMapping.cost + nl;
+                }
+
+                if (currentMapping.filter2IndexMap.isEmpty()) {
+                    msg +=
+                        "No index is found for the filters. " + nl +
+                        "Cost is calculated from using residual filtering instead" + nl;
+                } else {
+                    for (SargColumnFilter filter : currentMapping.filter2IndexMap.keySet()) {
+                        FemLocalIndex index = currentMapping.filter2IndexMap.get(filter);
+                        msg += "  (" + filter.columnPos + "->" + index.getName()
+                        + " " + currentMapping.index2MatchedPosMap.get(index) + " )" + nl;
+                    }
+                }
+                
+                tracer.finest(msg);
+            }
             
-            if (currentCost != null) {                
-                if (bestCost == null ||
-                    bestCost > currentCost) {
-                    bestCost = currentCost;
-                    
-                    bestFilter2IndexMap.clear();
-                    bestIndex2MatchedPosMap.clear();
-                    
-                    bestFilter2IndexMap.putAll(filter2IndexMap);
-                    bestIndex2MatchedPosMap.putAll(index2MatchedPosMap);
-                    
+            if (currentMapping.isCostValid()) {            
+                if (!bestMapping.isCostValid() ||
+                    bestMapping.cost > currentMapping.cost) {
+                    bestMapping.copyFrom(currentMapping);
                     if (tracer.isLoggable(Level.FINEST)) {
-                        tracer.finest("Current best cost is " + bestCost);
+                        tracer.finest("New best cost is " + bestMapping.cost);
                     }
                 }
             }
@@ -574,31 +663,36 @@ public class LcsIndexOptimizer
         return;
     }
     
-    public static Double costIndexAccess(
+    /**
+     * Calculate the cost of using index access and residual filtering with a row scan.
+     * 
+     * @param rowScanRel row scan to filter
+     * @param pointList list of point filters
+     * @param intervalList list of interval filters
+     * @param candidateMapping the candidate mapping from filter to index anotated
+     * the newly calculated cost.
+     */
+    private static void costIndexAccess(
         LcsRowScanRel rowScanRel,
         List<SargColumnFilter> pointList,
         List<SargColumnFilter> intervalList,
-        Map<SargColumnFilter, FemLocalIndex> filter2IndexMap,
-        Map<FemLocalIndex, Integer> index2MatchedPosMap)
+        Filter2IndexMapping candidateMapping)
     {
-        final Logger tracer = FarragoTrace.getOptimizerRuleTracer();
-        
-        if (tracer.isLoggable(Level.FINEST)) {
-            tracer.finest("Costing the following candidate mapping ");
-            for (SargColumnFilter filter : filter2IndexMap.keySet()) {
-                tracer.finest("Filter Column " + filter.columnPos +
-                    " maps to Index " + filter2IndexMap.get(filter).getStorageId());
-            }
-        }
-        
         Double cost = 0.0;
+        
+        assert (candidateMapping != null);
         
         List<SargColumnFilter> residualFilterList = new ArrayList<SargColumnFilter> ();
         
         // residual list starts out having all the filters in it
         residualFilterList.addAll(pointList);
         residualFilterList.addAll(intervalList);
-        
+
+        Map<SargColumnFilter, FemLocalIndex> filter2IndexMap =
+            candidateMapping.filter2IndexMap;
+        Map<FemLocalIndex, Integer> index2MatchedPosMap =
+            candidateMapping.index2MatchedPosMap;
+
         // cost the index access
         if (!filter2IndexMap.isEmpty()) {
             Map<FemLocalIndex, SargColumnFilter> index2LastFilterMap =
@@ -618,7 +712,8 @@ public class LcsIndexOptimizer
                 getIndexSearchCost(rowScanRel, index2MatchedPosMap, index2LastFilterMap);
             
             if (indexSearchCost == null) {
-                return null;
+                candidateMapping.cost = null;
+                return;
             }
             
             cost += indexSearchCost;
@@ -632,27 +727,95 @@ public class LcsIndexOptimizer
             getTableScanCostWithResidual(rowScanRel, filter2IndexMap.keySet(), residualFilterList);
         
         if (residualScanCost == null) {
-            return null;
+            candidateMapping.cost = null;
+            return;
         }
         
         cost += residualScanCost;
         
-        if (tracer.isLoggable(Level.FINEST)) {
-            tracer.finest("This mapping has a cost of " + cost);
+        candidateMapping.cost = cost;        
+        return;
+    }
+
+    /**
+     * Calculate the cost of using index access, driven by an input rel, on a row scan.
+     *
+     * @param factRowScanRel row scan to filter
+     * @param dimRel input rel that drives the index search
+     * @param factKeyList keys on which the row scan is filtered
+     * @param dimKeyList keys which the input rel produces to drive the index search
+     * @param index index to be used in the index search
+     * @param matchedPos leading key positions of this index
+     * @return the cost of scanning factRowScanRel with the proposed index.
+     */
+    private static Double costIndexAccessWithInputRel(
+        LcsRowScanRel factRowScanRel,
+        RelNode dimRel,
+        List<Integer> factKeyList,
+        List<Integer> dimKeyList,
+        FemLocalIndex index,
+        int matchedPos)
+    {
+        Double cost = 0.0;
+        
+        // cost the index access
+        RelStatSource tabStats =
+            RelMetadataQuery.getStatistics(factRowScanRel);
+                
+        if (tabStats == null) {
+            return null;
+        }
+        
+        Map<FemLocalIndex, Integer> index2MatchedPosMap =
+            new HashMap<FemLocalIndex, Integer> ();
+        
+        index2MatchedPosMap.put(index, matchedPos);
+        
+        Double indexSearchCost =
+            getIndexSearchCost(factRowScanRel, index2MatchedPosMap, null);
+            
+        if (indexSearchCost == null) {
+            return null;
+        }
+            
+        BitSet dimKeys = new BitSet();
+        for (int dimCol : dimKeyList) {
+            dimKeys.set(dimCol);
+        }
+
+        Double dimKeyCND =
+            RelMetadataQuery.getDistinctRowCount(
+                dimRel,
+                dimKeys,
+                null);            
+        
+        // this search is repeated for every distinct keys from the inputRel
+        cost += indexSearchCost * dimKeyCND;
+        
+        Double indexSearchSelectivity =
+            RelMdUtil.computeSemiJoinSelectivity(
+                factRowScanRel, dimRel, factKeyList, dimKeyList);;
+        
+        // cost the residual filter access
+        Double tableScanCost =
+            getTableScanCostWithIndexSearch(factRowScanRel, indexSearchSelectivity);
+        
+        if (tableScanCost == null) {
+            return null;
         }
         
         return cost;
     }
-    
+
     /**
-     * 
-     * @param sargBindingList
-     * @return
+     * Convert a list of SargBidning to a map of column to sarg sequence.
+     * @param sargBindingList list of sarg binding.
+     * @return 
      */
     public static Map<CwmColumn, SargIntervalSequence> getCol2SeqMap(
         LcsRowScanRel rowScan,
         List<SargBinding> sargBindingList)
-        {
+    {
         Map<CwmColumn, SargIntervalSequence> colMap =
             new HashMap<CwmColumn, SargIntervalSequence>();
         
@@ -670,8 +833,110 @@ public class LcsIndexOptimizer
         }
         
         return colMap;
-        }
+    }
     
+    /**
+     * Find the index with the best cost to filter the LHS of a join that originates
+     * from a single LcsRowScanRel. Typical usage is to filter the fact table joining
+     * to a dimension table.
+     * 
+     * @param factRowScanRel LHS of a join, e.g. scanning the fact table.
+     * @param dimRel RHS of a join, e.g. scanning the dimension table.
+     * @param factKeyList LHS join key positions
+     * @param dimKeyList RHS join key positions
+     * @param bestFactKeyOrder join keys that can be filtered by the index
+     * 
+     * @return the best index to filter the join LHS
+     */
+    public static FemLocalIndex findSemiJoinIndexByCost(
+        LcsRowScanRel factRowScanRel,
+        RelNode dimRel,
+        List<Integer> factKeyList,
+        List<Integer> dimKeyList,
+        List<Integer> bestFactKeyOrder)
+    {
+        final Logger tracer = FarragoTrace.getOptimizerRuleTracer();
+        
+        // loop through the indexes and either find the one that has the
+        // longest matching keys, or the first one that matches all the
+        // semijoin keys
+        Integer [] bestKeyOrder = {};
+        FemLocalIndex bestIndex = null;
+        Double bestCost = null;
+        int bestNKeys = 0;
+        
+        for (FemLocalIndex index : getUnclusteredIndexes(factRowScanRel)) {
+            Integer [] keyOrder = new Integer[factKeyList.size()];
+            int nKeys = factRowScanRel.lcsTable.getIndexGuide().matchIndexKeys(
+                index, factKeyList, keyOrder);
+            
+            // Only calculate index access cost if factKeyList matches as least
+            // one index key
+            if (nKeys > 0) {
+                List<Integer> factKeysMatched = new ArrayList<Integer>();
+                List<Integer> dimKeysMatched = new ArrayList<Integer>();
+                
+                // use only the matched join keys to decide selectivity
+                for (int i = 0; i < nKeys; i++) {
+                    factKeysMatched.add(keyOrder[i]);
+                    dimKeysMatched.add(keyOrder[i]);                
+                }
+                
+                Double curCost = costIndexAccessWithInputRel(
+                    factRowScanRel, dimRel, factKeysMatched, dimKeysMatched,
+                    index, nKeys);
+                
+                if (tracer.isLoggable(Level.FINEST)) {
+                    String msg =
+                        "Scanning the fact table " + factRowScanRel.lcsTable.getName() +
+                        ", using the index (" + index.getName() + " " + nKeys + ")";
+                    
+                    if (curCost == null) {
+                        msg += "does not have a cost(hint: check if the table is analyzed)";
+                    } else {
+                        msg += "has a cost of " + curCost;
+                    }
+                    
+                    tracer.finest(msg);
+                }
+                
+                if (curCost != null) {
+                    if (bestCost == null || bestCost > curCost) {
+                        bestCost = curCost;
+                        bestNKeys = nKeys;
+                        bestKeyOrder = keyOrder;
+                        bestIndex = index;
+                        if (tracer.isLoggable(Level.FINEST)) {
+                            tracer.finest("New best cost is " + bestCost);
+                        }                    
+                    }
+                }
+            }
+        }
+        
+        for (int i = 0; i < bestNKeys; i++) {
+            bestFactKeyOrder.add(bestKeyOrder[i]);
+        }
+
+        if (bestIndex == null) {
+            // Try using rule to pick the indexes.
+            LcsTable factTable = factRowScanRel.lcsTable;
+            LcsIndexGuide indexGuide = factTable.getIndexGuide();
+            bestIndex = indexGuide.findSemiJoinIndex(factKeyList, bestFactKeyOrder);            
+        }
+        
+        return bestIndex;
+    }
+    
+    /**
+     * Calculate the cost of an index search.
+     * 
+     * @param rowScanRel
+     * @param index2MatchedPosMap map from index to searched position
+     * @param index2LastFilterMap map from index to last filter satisfied by
+     * this index.
+     * @return the cost of performing index search.
+     */
     private static Double getIndexSearchCost(
         LcsRowScanRel rowScanRel,
         Map<FemLocalIndex, Integer> index2MatchedPosMap,
@@ -679,11 +944,17 @@ public class LcsIndexOptimizer
     {        
         Double cost = 0.0;
         
-        assert (index2MatchedPosMap.size() == index2LastFilterMap.size());
+        if (index2LastFilterMap != null) {
+            assert (index2MatchedPosMap.size() == index2LastFilterMap.size());
+        }
         
         for (FemLocalIndex index : index2MatchedPosMap.keySet()) {
             int mappedPos = index2MatchedPosMap.get(index);
-            SargColumnFilter lastFilter = index2LastFilterMap.get(index);
+            SargColumnFilter lastFilter = null;
+            
+            if (index2LastFilterMap != null) {
+                index2LastFilterMap.get(index);
+            }
             
             Double scanCost = 
                 getIndexBitmapScanCost(rowScanRel, index, mappedPos, lastFilter);
@@ -708,12 +979,7 @@ public class LcsIndexOptimizer
         
         if (deletionIndex != null) {
             Double scanCost =
-                getIndexBitmapScanCost(rowScanRel, deletionIndex, 0, null);
-            
-            if (scanCost == null) {
-                return null;
-            }
-            
+                getIndexBitmapScanCost(rowScanRel, deletionIndex, 0, null);                        
             cost += scanCost;
         }
         
@@ -729,7 +995,16 @@ public class LcsIndexOptimizer
         
         return cost;
     }
-    
+
+    /**
+     * Calculate the cost of scanning an index.
+     * 
+     * @param rowScanRel
+     * @param index index to be scanned.
+     * @param mappedPos key postitions mapped to this index.
+     * @param lastFilter the last filter satisfied by this index
+     * @return the cost of performing index search.
+     */
     private static Double getIndexBitmapScanCost(
         LcsRowScanRel rowScanRel,
         FemLocalIndex index,
@@ -769,6 +1044,16 @@ public class LcsIndexOptimizer
         return cost;
     }
     
+    /**
+     * Calculate the cost of performing bitmap operations for a bitmapped index.
+     * 
+     * @param rowScanRel
+     * @param index index to be scanned.
+     * @param mappedPos key postitions mapped to this index.
+     * @param lastFilter the last filter satisfied by this index
+     * 
+     * @return the cost of performing index search.
+     */
     private static Double getIndexBitmapBitOpCost(
         LcsRowScanRel rowScanRel,
         FemLocalIndex index,
@@ -804,6 +1089,13 @@ public class LcsIndexOptimizer
         return cost;
     }
     
+    /**
+     * Calculate the cost of performing bitmap operations for a bitmapped index.
+     *  
+     * @param rowScanRel
+     * @param indexesUsed number of indexes used in the index access path.
+     * @return cost of AND'ing the bitmaps from difference indexes.
+     */
     private static Double getIndexBitmapBitOpCost(
         LcsRowScanRel rowScanRel,
         int indexesUsed)
@@ -832,6 +1124,12 @@ public class LcsIndexOptimizer
         return cost;
     }
     
+    /**
+     * Calculate the cost of sorting the bitmap entries in an index.
+     * 
+     * @param rowScanRel
+     * @return cost of sorting the bitmap entries.
+     */
     private static Double getIndexBitmapSortCost(
         LcsRowScanRel rowScanRel)
     {
@@ -860,6 +1158,16 @@ public class LcsIndexOptimizer
         return cost;
     }
     
+    /**
+     * Calculate the number of bitmaps(distinct key values) satisfying the index search
+     * keys.
+     * 
+     * @param rowScanRel
+     * @param index index to be scanned.
+     * @param mappedPos key postitions mapped to this index.
+     * @param lastFilter the last filter satisfied by this index
+     * @return number of bitmaps matching the index search keys.
+     */
     private static Double getIndexBitmapCount(
         LcsRowScanRel rowScanRel,
         FemLocalIndex index,
@@ -879,11 +1187,8 @@ public class LcsIndexOptimizer
         // multiple the current bitmap count by the CND of the index column with a
         // discount of correlationFactor.
         if (mappedPos > 0) {
-            FemAbstractColumn lastFilterColumn = 
-                rowScanRel.getColumnForFieldAccess(lastFilter.columnPos);
-            assert (indexedFeatures.get(mappedPos - 1).getFeature() == lastFilterColumn);
             // this is the last filter
-            if (lastFilter.isPoint()) {
+            if (lastFilter == null || lastFilter.isPoint()) {
                 // is point filter
                 bitmapCount = 1.0;
             } else {
@@ -892,6 +1197,10 @@ public class LcsIndexOptimizer
                     return null;
                 }
                 
+                FemAbstractColumn lastFilterColumn = 
+                    rowScanRel.getColumnForFieldAccess(lastFilter.columnPos);
+                assert (indexedFeatures.get(mappedPos - 1).getFeature() == lastFilterColumn);
+
                 RelStatColumnStatistics colStats = null;
                 
                 colStats =
@@ -952,6 +1261,14 @@ public class LcsIndexOptimizer
         return bitmapCount;
     }
     
+    /**
+     * Calculate the cost of scanning a table with residula filters applied.
+     * 
+     * @param rowScanRel
+     * @param indexSearchFilterList index search filters
+     * @param residualFilterList residual column filters
+     * @return the cost of row scan with residuals
+     */
     private static Double getTableScanCostWithResidual(
         LcsRowScanRel rowScanRel,
         Set<SargColumnFilter> indexSearchFilterList,
@@ -1040,6 +1357,41 @@ public class LcsIndexOptimizer
             rowCountWithIndexSearch * residualColCount * (1 + residualFilterSelectivity) / 2;
         
         cost = scanCost + filterEvalCost;
+        
+        return cost;
+    }
+
+    /**
+     * Calculate the cost of scanning a table with index search applied.
+     * 
+     * @param rowScanRel
+     * @param indexSearchSelectivity
+     * @return the cost of row scan with index search.
+     */
+    private static Double getTableScanCostWithIndexSearch(
+        LcsRowScanRel rowScanRel,
+        Double indexSearchSelectivity)
+    {
+        Double cost = 0.0;
+        
+        RelStatSource tabStat = 
+            RelMetadataQuery.getStatistics(rowScanRel);
+        
+        if (tabStat == null) {
+            return null;
+        }
+        
+        // NOTE: lcsTableBlockCount here includes both index leaf blocks as well
+        // as non-leaf blocks. This is fine because the non-leaf blocks contribute
+        // to the scan cost too.
+        Double lcsTableBlockCount = 0.0;
+        for (FemLocalIndex index : rowScanRel.lcsTable.getClusteredIndexes()) {
+            Long pageCount = index.getPageCount();            
+            lcsTableBlockCount += pageCount;
+        }
+        
+        cost =
+            IOCostPerBlock * lcsTableBlockCount * indexSearchSelectivity; 
         
         return cost;
     }
@@ -1154,10 +1506,10 @@ public class LcsIndexOptimizer
         SargColumnFilter(
             int columnPos,
             SargIntervalSequence sargSeq)
-            {
+        {
             this.columnPos = columnPos;
             this.sargSeq = sargSeq;
-            }
+        }
         
         Double getSelectivity(RelStatSource tabStats)
         {
@@ -1226,12 +1578,64 @@ public class LcsIndexOptimizer
             FemLocalIndex index,
             int matchedPos,
             List<SargIntervalSequence> sargSeqList)
-            {
+        {
             this.index = index;
             this.matchedPos = matchedPos;
             this.sargSeqList = sargSeqList;
-            }
-    }    
+        }
+    }
     
+    /*
+     *  Filter2IndexMapping describes the set of indexes that can be used to
+     *  evaluate the filter conditions, as well as the cost of using these
+     *  indexes.
+     */
+    public static class Filter2IndexMapping
+    {
+        Map<SargColumnFilter, FemLocalIndex> filter2IndexMap;
+        Map<FemLocalIndex, Integer> index2MatchedPosMap;
+        Double cost;
+     
+        Filter2IndexMapping()
+        {
+            filter2IndexMap =
+                new HashMap<SargColumnFilter, FemLocalIndex>();
+            index2MatchedPosMap =
+                new HashMap<FemLocalIndex, Integer>();
+            cost = null;
+        }
+        
+        boolean isCostValid()
+        {
+            return (cost != null);
+        }
+        
+        void put(SargColumnFilter filter, FemLocalIndex index, Integer matchedPos)
+        {
+            filter2IndexMap.put(filter, index);
+            index2MatchedPosMap.put(index, matchedPos);
+            cost = null;
+        }
+
+        void remove(SargColumnFilter filter)
+        {
+            FemLocalIndex index = filter2IndexMap.get(filter);
+            
+            filter2IndexMap.remove(filter);
+            index2MatchedPosMap.remove(index);
+            cost = null;
+        }
+        
+        void copyFrom(Filter2IndexMapping srcMapping)
+        {
+            cost = srcMapping.cost;
+            
+            filter2IndexMap.clear();
+            index2MatchedPosMap.clear();
+            
+            filter2IndexMap.putAll(srcMapping.filter2IndexMap);
+            index2MatchedPosMap.putAll(srcMapping.index2MatchedPosMap);
+        }
+    }    
 }
 //End LcsIndexOptimizer.java

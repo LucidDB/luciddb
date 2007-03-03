@@ -1591,7 +1591,7 @@ public class LcsIndexGuide
      *
      * @return number of matching keys
      */
-    private int matchIndexKeys(
+    public int matchIndexKeys(
         FemLocalIndex index,
         List<Integer> keys,
         Integer [] keyOrder)

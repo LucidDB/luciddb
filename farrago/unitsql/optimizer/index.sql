@@ -780,6 +780,174 @@ create index itb on t(b);
 insert into t values(1, 2, 3);
 create view v as select * from t where a = 1 and b = 2;
 select * from v v1, v v2; 
+drop table t cascade;
+
+--------------------------------------
+-- Test for cost based index access --
+--------------------------------------
+!set outputformat csv
+
+-- analyze table
+create table test(a int, b int, c int, d int);
+
+insert into test values(10,20,30,40);
+insert into test values(11,21,31,41);
+insert into test values(12,22,32,42);
+insert into test values(13,23,33,43);
+insert into test values(14,24,34,44);
+insert into test values(15,25,35,45);
+
+-- create index test_ab on test(a, b);
+create index test_cb on test(c, b);
+create index test_b on test(b);
+create index test_ba on test(b, a);
+
+-- plan without analyze
+explain plan for
+select * from test
+where a = 10 and b = 20 and c > 30;
+
+explain plan for
+select * from test
+where b = 20;
+
+select * from test
+where a = 10 and b = 20 and c > 10
+order by a;
+
+select * from test
+where b = 20
+order by a;
+
+-- plan with analyze
+analyze table test compute statistics for all columns;
+
+explain plan for
+select * from test
+where a = 10 and b = 20 and c > 30;
+
+explain plan for
+select * from test
+where b = 20;
+
+select * from test
+where a = 10 and b = 20 and c > 10
+order by a;
+
+select * from test
+where b = 20
+order by a;
+
+drop table test cascade;
+
+-- index costing in semijoin decision
+-- artificial stats
+create table t(b char(20), d varchar(20) not null);
+
+create index it_b on t(b);
+create index it_bd on t(b, d);
+create index it_d on t(d);
+create index it_db on t(d, b);
+
+insert into t values('abcdef', 'this is row 1');
+insert into t values('abcdef', 'this is row 2');
+insert into t values('abcdef', 'this is row 3');
+insert into t values(null, 'this is row 4');
+insert into t values(null, 'no match');
+
+-- although this table has the same number of rows as t, we will force this
+-- to be the dimension table in the semijoin by putting a dummy filter on
+-- the table
+
+create table smalltable(s1 varchar(128) not null, s3 varchar(128) not null);
+
+insert into smalltable values('this is row 1', 'abcdef');
+insert into smalltable values('this is row 2', 'abcdef');
+insert into smalltable values('this is row 3', 'abcdef');
+insert into smalltable values('this is row 4', 'abcdef');
+insert into smalltable values('this is row 5', 'abcdef');
+
+-- plan without stats
+explain plan for
+select *
+    from t inner join smalltable s
+    on t.b = s.s3 and s.s1 = 'this is row 1' 
+    order by d;
+
+explain plan for 
+select *
+    from t inner join smalltable s
+    on t.d = s.s1 where s.s3 = 'abcdef' order by d;
+
+select *
+    from t inner join smalltable s
+    on t.b = s.s3 and s.s1 = 'this is row 1' 
+    order by d;
+
+select *
+    from t inner join smalltable s
+    on t.d = s.s1 where s.s3 = 'abcdef' order by d;
+
+-- Create fake statistics.  The stats do not match the actual data in the
+-- tables and are meant to force the optimizer to choose semijoins
+
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'T', 10000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'SMALLTABLE', 10);
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'T', 'B', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'T', 'D', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'SMALLTABLE', 'S1', 10, 100, 10, 1,
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'SMALLTABLE', 'S3', 10, 100, 10, 1,
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+-- deletion index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$DELETION_INDEX$T', 2);
+
+-- clustered index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$B', 2);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$D', 2);
+
+-- unclustered index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'IT_B', 10);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'IT_BD', 20);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'IT_D', 1);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'IT_DB', 2);
+
+-- deletion index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$DELETION_INDEX$SMALLTABLE', 2);
+
+-- clustered index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$SMALLTABLE$S1', 2);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$SMALLTABLE$S3', 2);
+
+explain plan for
+select *
+    from t inner join smalltable s
+    on t.b = s.s3 and s.s1 = 'this is row 1' 
+    order by d;
+
+explain plan for 
+select *
+    from t inner join smalltable s
+    on t.d = s.s1 where s.s3 = 'abcdef' order by d;
+
+select *
+    from t inner join smalltable s
+    on t.b = s.s3 and s.s1 = 'this is row 1' 
+    order by d;
+
+select *
+    from t inner join smalltable s
+    on t.d = s.s1 where s.s3 = 'abcdef' order by d;
+
+drop table t cascade;
+drop table smalltable cascade;
 
 --------------
 -- Clean up --

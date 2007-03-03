@@ -85,9 +85,11 @@ public interface FarragoMedLocalDataServer
      *
      * @param index definition of the index to create
      *
+     * @param txnContext Fennel txn context
+     * 
      * @return root PageId of index
      */
-    public long createIndex(FemLocalIndex index)
+    public long createIndex(FemLocalIndex index, FennelTxnContext txnContext)
         throws SQLException;
 
     /**
@@ -97,11 +99,13 @@ public interface FarragoMedLocalDataServer
      * @param rootPageid root PageId of index
      * @param truncate if true, only truncate storage; if false, drop storage
      * entirely
+     * @param txnContext Fennel txn context
      */
     public void dropIndex(
         FemLocalIndex index,
         long rootPageId,
-        boolean truncate)
+        boolean truncate,
+        FennelTxnContext txnContext)
         throws SQLException;
 
     /**
@@ -110,13 +114,15 @@ public interface FarragoMedLocalDataServer
      * @param index definition of the index to verify
      * @param rootPageid root PageId of index
      * @param estimate whether to estimate statistics for a quicker result
+     * @param txnContext Fennel txn context
      *
      * @return page count for the specified index
      */
     public long computeIndexStats(
         FemLocalIndex index,
         long rootPageId,
-        boolean estimate)
+        boolean estimate,
+        FennelTxnContext txnContext)
         throws SQLException;
 
     /**
