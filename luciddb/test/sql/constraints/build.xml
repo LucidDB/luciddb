@@ -105,10 +105,29 @@
   </target>
 
   <target name="create-db">
-    <available file="${constraints.dir}/ff" type="dir" property="ff.created"/>
+    <available file="${ff.dir}" type="dir" property="ff.created"/>
+    <available file="${ff.dir}/bench1m.csv" type="file" 
+      property="bench.exists"/>
+    <available file="${ffsource.bench.dir}" type="dir" 
+      property="raksha.available"/>
     <if>
       <isset property="ff.created"/>
-      <then/>
+      <then>
+        <if>
+          <isset property="bench.exists"/>
+          <then/>
+          <else>
+            <!-- copy bench over if raksha is available -->
+            <if> 
+              <isset property="raksha.available"/>
+              <copy todir="${ff.dir}" verbose="true">
+                <fileset dir="${ffsource.bench.dir}" includes="bench1M.*"/>
+              </copy>
+            </if>
+          </else>
+        </if>
+      </then>
+      <!-- else if ff dir not created yet -->
       <else>
         <condition property="db.created">
           <and>
@@ -130,10 +149,21 @@
           </else>
         </if>
 
-        <sync todir="${ff.dir}" verbose="true">
-          <fileset dir="${ffsource.tpch.dir}"/>
-          <fileset dir="${ffsource.bench.dir}" includes="bench1M.*"/>
-        </sync>
+        <!-- sync bench only if raksha is mounted, not needed for sanity -->
+        <if>
+          <isset property="raksha.available"/>
+          <then>
+            <sync todir="${ff.dir}" verbose="true">
+              <fileset dir="${ffsource.tpch.dir}"/>
+              <fileset dir="${ffsource.bench.dir}" includes="bench1M.*"/>
+            </sync>
+          </then>
+          <else>
+            <sync todir="${ff.dir}" overwrite="false" verbose="true">
+              <fileset dir="${ffsource.tpch.dir}"/>
+            </sync>
+          </else>
+        </if>
       </else>
     </if>
   </target>

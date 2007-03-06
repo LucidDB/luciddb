@@ -30,23 +30,3 @@ create table part_src(
   p_retailprice decimal(15,2),
   p_comment varchar(23)
 );
-
-create table bench1m_src(
-  kseq integer,
-  k2 integer,
-  k4 integer,
-  k5 integer,
-  k10 integer,
-  k25 integer,
-  k100 integer,
-  k1k integer,
-  k10k integer,
-  k40k integer,
-  k100k integer,
-  k250k integer,
-  k500k integer
-);
-
--- create indexes
-create index b1m_k100k_idx on bench1m_src(k10k);
-create index b1m_k500k_idx on bench1m_src(k250k);

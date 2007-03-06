@@ -31,23 +31,4 @@
 . . . . . . . . >   p_comment varchar(23)
 . . . . . . . . > );
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create table bench1m_src(
-. . . . . . . . >   kseq integer,
-. . . . . . . . >   k2 integer,
-. . . . . . . . >   k4 integer,
-. . . . . . . . >   k5 integer,
-. . . . . . . . >   k10 integer,
-. . . . . . . . >   k25 integer,
-. . . . . . . . >   k100 integer,
-. . . . . . . . >   k1k integer,
-. . . . . . . . >   k10k integer,
-. . . . . . . . >   k40k integer,
-. . . . . . . . >   k100k integer,
-. . . . . . . . >   k250k integer,
-. . . . . . . . >   k500k integer
-. . . . . . . . > );
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- create indexes
-0: jdbc:luciddb:> create index b1m_k100k_idx on bench1m_src(k10k);
-0: jdbc:luciddb:> create index b1m_k500k_idx on bench1m_src(k250k);
 0: jdbc:luciddb:> !quit

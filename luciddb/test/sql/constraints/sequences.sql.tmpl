@@ -1,3 +1,41 @@
+create server ff_bench
+foreign data wrapper "FLAT FILE"
+options(
+  directory '@FFDIR@',
+  file_extension '.csv',
+  ctrl_file_extension '.bcp',
+  field_delimiter ',',
+  line_delimiter '\n',
+  quote_char '"',
+  escape_char '',
+  with_header 'yes',
+  num_rows_scan '3',
+  log_directory '@LOGDIR@'
+);
+
+select count(*) from ff_bench.bcp."bench1M";
+
+set schema 'uc_src';
+create table bench1m_src(
+  kseq integer,
+  k2 integer,
+  k4 integer,
+  k5 integer,
+  k10 integer,
+  k25 integer,
+  k100 integer,
+  k1k integer,
+  k10k integer,
+  k40k integer,
+  k100k integer,
+  k250k integer,
+  k500k integer
+);
+
+-- create indexes
+create index b1m_k100k_idx on bench1m_src(k10k);
+create index b1m_k500k_idx on bench1m_src(k250k);
+
 -- basic single key and multiple key constraints
 create schema uc;
 set schema 'uc';

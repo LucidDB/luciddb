@@ -56,28 +56,6 @@
 | 150000  |
 +---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create server ff_bench
-. . . . . . . . > foreign data wrapper "FLAT FILE"
-. . . . . . . . > options(
-. . . . . . . . >   directory '@FFDIR@',
-. . . . . . . . >   file_extension '.csv',
-. . . . . . . . >   ctrl_file_extension '.bcp',
-. . . . . . . . >   field_delimiter ',',
-. . . . . . . . >   line_delimiter '\n',
-. . . . . . . . >   quote_char '"',
-. . . . . . . . >   escape_char '',
-. . . . . . . . >   with_header 'yes',
-. . . . . . . . >   num_rows_scan '3',
-. . . . . . . . >   log_directory '@LOGDIR@'
-. . . . . . . . > );
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select count(*) from ff_bench.bcp."bench1M";
-+----------+
-|  EXPR$0  |
-+----------+
-| 1000000  |
-+----------+
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create server errlogs
 . . . . . . . . > foreign data wrapper "FLAT FILE"
 . . . . . . . . > options(
