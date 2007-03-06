@@ -456,6 +456,9 @@ ${farrago.test.jvmargs}
     <ant dir="test/sql/udr/udf" target="clean"/>
     <ant dir="test/sql/udr/udx" target="clean"/>
     <ant dir="test/sql/VI/tbs" target="clean"/>
+    <ant dir="test/sql/calc" target="clean"/>
+    <ant dir="test/sql/flatfile-specific" target="clean"/>
+    <ant dir="test/sql/constraints" target="clean"/>
     <delete file="run.properties"/>
   </target>
 
