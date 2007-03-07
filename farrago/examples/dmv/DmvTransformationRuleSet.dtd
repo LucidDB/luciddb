@@ -1,0 +1,23 @@
+<!--
+     This is the XML model for DMV transformation rulesets.
+     Revision is $Id$
+  -->
+
+<!ENTITY % Mapping "REMOVAL|COPY|REVERSAL|CONTRACTION|HIERARCHY">
+
+<!ELEMENT DmvTransformationRuleSet (SetAllByAggregation|SetByAssoc)*>
+<!ATTLIST DmvTransformationRuleSet>
+
+<!ELEMENT SetAllByAggregation EMPTY>
+<!ATTLIST SetAllByAggregation
+requestedKind (none|composite) #REQUIRED
+mapping (%Mapping;) #REQUIRED
+>
+
+<!ELEMENT SetByAssoc EMPTY>
+<!ATTLIST SetByAssoc
+assoc CDATA #REQUIRED
+mapping (%Mapping;) #REQUIRED
+sourceClass CDATA #IMPLIED
+targetClass CDATA #IMPLIED
+>

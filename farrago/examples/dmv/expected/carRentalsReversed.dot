@@ -1,0 +1,14 @@
+digraph G {
+    graph [bgcolor=gray]
+    node [shape=record, style=filled, fillcolor=white, fontsize=10.0]
+    edge [fontsize=10.0]
+    subgraph cluster9362324 {
+        bgcolor=white;
+        label="LocalSchema:CAR_RENTALS";
+        15859973[label="{LocalTable|CARS}"];
+        2163516[label="{LocalTable|CONTRACTS}"];
+        22775390[label="{LocalView|CUSTOMER_RENTALS}"];
+    }
+    22775390->15859973[];
+    22775390->2163516[];
+}

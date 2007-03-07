@@ -1165,6 +1165,29 @@ public class Util
     }
 
     /**
+     * Reads all remaining contents from a {@link java.io.Reader} and returns
+     * them as a string.
+     *
+     * @param reader reader to read from
+     *
+     * @return reader contents as string
+     */
+    public static String readAllAsString(Reader reader)
+        throws IOException
+    {
+        StringBuilder sb = new StringBuilder();
+        char [] buf = new char[4096];
+        for (;;) {
+            int n = reader.read(buf);
+            if (n == -1) {
+                break;
+            }
+            sb.append(buf, 0, n);
+        }
+        return sb.toString();
+    }
+
+    /**
      * Closes an InputStream, ignoring any I/O exception. This should only be
      * used in finally blocks when it's necessary to avoid throwing an exception
      * which might mask a real exception.

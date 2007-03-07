@@ -49,7 +49,14 @@ public enum JmiAssocMapping {
      * The two ends of the association should be contracted into
      * one vertex in the transformed graph.
      */
-    CONTRACTION
+    CONTRACTION,
+
+    /**
+     * The association edge should be interpreted as a hierarchical structure
+     * to be superimposed on the graph, with the source as parent and the
+     * target as child.
+     */
+    HIERARCHY
 }
 
 // End JmiAssocMapping.java

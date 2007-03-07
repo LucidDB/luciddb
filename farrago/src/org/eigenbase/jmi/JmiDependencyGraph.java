@@ -59,6 +59,8 @@ public class JmiDependencyGraph
 
     private Map<RefObject, JmiDependencyVertex> vertexMap;
 
+    private DirectedGraph<JmiDependencyVertex, DefaultEdge> hierarchyGraph;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -76,7 +78,8 @@ public class JmiDependencyGraph
         this(
             elements,
             transform,
-            new DefaultDirectedGraph(DefaultEdge.class));
+            new DefaultDirectedGraph<JmiDependencyVertex, DefaultEdge>(
+                DefaultEdge.class));
     }
 
     private JmiDependencyGraph(Collection<RefObject> elements,
@@ -85,6 +88,9 @@ public class JmiDependencyGraph
     {
         super(mutableGraph);
         this.mutableGraph = mutableGraph;
+        hierarchyGraph =
+            new DefaultDirectedGraph<JmiDependencyVertex, DefaultEdge>(
+                DefaultEdge.class);
         this.transform = transform;
         Comparator<RefBaseObject> tieBreaker = transform.getTieBreaker();
         vertexMap =
@@ -96,6 +102,9 @@ public class JmiDependencyGraph
         for (JmiDependencyVertex vertex : vertexMap.values()) {
             vertex.makeImmutable();
         }
+        hierarchyGraph = new
+            UnmodifiableDirectedGraph<JmiDependencyVertex, DefaultEdge>(
+                hierarchyGraph);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -107,6 +116,15 @@ public class JmiDependencyGraph
     public Map<RefObject, JmiDependencyVertex> getVertexMap()
     {
         return vertexMap;
+    }
+
+    /**
+     * @return immutable graph of hierarchy relationships imposed
+     * on vertices
+     */
+    public DirectedGraph<JmiDependencyVertex, DefaultEdge> getHierarchyGraph()
+    {
+        return hierarchyGraph;
     }
 
     private void addElements(Collection<RefObject> elements)
@@ -153,15 +171,20 @@ public class JmiDependencyGraph
         // Add only those vertices which survived contraction.
         // (DefaultDirectedGraph will filter out duplicates.)
         Graphs.addAllVertices(mutableGraph, vertexMap.values());
+        Graphs.addAllVertices(hierarchyGraph, vertexMap.values());
 
         // Create dependency edges.
         addDependencyEdges(elements, JmiAssocMapping.COPY);
 
         // Create reverse dependency edges.
         addDependencyEdges(elements, JmiAssocMapping.REVERSAL);
+
+        // Create hierarchy edges.
+        addHierarchyEdges(elements);
     }
 
-    private void addDependencyEdges(Collection<RefObject> elements,
+    private void addDependencyEdges(
+        Collection<RefObject> elements,
         JmiAssocMapping mapping)
     {
         for (RefObject target : elements) {
@@ -187,6 +210,38 @@ public class JmiDependencyGraph
                     assert (mapping == JmiAssocMapping.REVERSAL);
                     mutableGraph.addEdge(targetVertex, sourceVertex);
                 }
+            }
+        }
+    }
+
+    private void addHierarchyEdges(
+        Collection<RefObject> elements)
+    {
+        for (RefObject target : elements) {
+            JmiDependencyVertex targetVertex = vertexMap.get(target);
+            Collection<RefObject> sources =
+                transform.getSourceNeighbors(
+                    target,
+                    elements,
+                    JmiAssocMapping.HIERARCHY);
+            for (RefObject source : sources) {
+                JmiDependencyVertex sourceVertex = vertexMap.get(source);
+                if (sourceVertex == targetVertex) {
+                    // never want loops in hierarchy
+                    continue;
+                }
+
+                // DefaultDirectedGraph will filter out duplicate edges
+                hierarchyGraph.addEdge(sourceVertex, targetVertex);
+            }
+        }
+
+        // Check that we ended up with a forest.
+        for (JmiDependencyVertex v : hierarchyGraph.vertexSet()) {
+            if (hierarchyGraph.inDegreeOf(v) > 1) {
+                throw new AssertionError(
+                    "JmiDependencyGraph hierarchy detected vertex with "
+                    + "multiple parents");
             }
         }
     }

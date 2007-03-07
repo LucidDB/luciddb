@@ -1,0 +1,16 @@
+select *
+from class ColumnSet where name='REGISTRATIONS' then (
+    recursively (
+        follow origin end supplier then (
+            follow destination end client destination class ColumnSet
+        )
+    )
+    union
+    recursively (
+        follow origin end client then (
+            follow destination end supplier destination class ColumnSet
+        )
+    )
+) gather with parent then (
+    follow composite backward destination class LocalSchema
+);

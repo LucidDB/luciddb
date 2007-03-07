@@ -1,0 +1,46 @@
+digraph G {
+    graph [bgcolor=gray]
+    node [shape=record, style=filled, fillcolor=white, fontsize=10.0]
+    edge [fontsize=10.0]
+    subgraph cluster15822478 {
+        bgcolor=white;
+        label="LocalSchema:ACCOUNTS";
+        9527662[label="{LocalTable|CUSTOMERS}"];
+        9681035[label="{LocalTable|ADDRESSES}"];
+        3729784[label="{LocalView|CUSTOMER_ADDRESSES}"];
+    }
+    subgraph cluster6802579 {
+        bgcolor=white;
+        label="LocalSchema:CAR_RENTALS";
+        11003097[label="{LocalTable|CARS}"];
+        10591844[label="{LocalTable|CONTRACTS}"];
+        10868046[label="{LocalView|CUSTOMER_RENTALS}"];
+    }
+    subgraph cluster22485284 {
+        bgcolor=white;
+        label="LocalSchema:LODGING";
+        20171724[label="{LocalTable|HOTELS}"];
+        25744969[label="{LocalTable|CABINS}"];
+        11308250[label="{LocalView|LOCATIONS}"];
+        5465232[label="{LocalView|REGISTRATIONS}"];
+    }
+    subgraph cluster15678347 {
+        bgcolor=white;
+        label="LocalSchema:BILLING";
+        3025756[label="{LocalView|EVENTS}"];
+        18926352[label="{LocalView|ALL_ADDRESSES}"];
+    }
+    9527662->3729784[];
+    9681035->3729784[];
+    9527662->10868046[];
+    11003097->10868046[];
+    10591844->10868046[];
+    20171724->11308250[];
+    25744969->11308250[];
+    9527662->5465232[];
+    11308250->5465232[];
+    10868046->3025756[];
+    5465232->3025756[];
+    9681035->18926352[];
+    11308250->18926352[];
+}

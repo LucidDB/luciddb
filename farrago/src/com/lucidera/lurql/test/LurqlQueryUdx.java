@@ -30,15 +30,7 @@ import java.util.*;
 
 import javax.jmi.reflect.*;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.db.*;
-import net.sf.farrago.fem.med.*;
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.mdr.*;
-import net.sf.farrago.namespace.util.*;
-import net.sf.farrago.runtime.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.util.*;
+import net.sf.farrago.test.*;
 
 import org.eigenbase.jmi.*;
 
@@ -78,48 +70,15 @@ public abstract class LurqlQueryUdx
         PreparedStatement resultInserter)
         throws Exception
     {
-        FarragoSession session = FarragoUdrRuntime.getSession();
-        FarragoDatabase db = ((FarragoDbSession) session).getDatabase();
-        FarragoObjectCache objCache = db.getDataWrapperCache();
-        FarragoAllocationOwner owner = new FarragoCompoundAllocation();
+        FarragoMdrTestContext context = new FarragoMdrTestContext();
         try {
-            FarragoDataWrapperCache wrapperCache =
-                new FarragoDataWrapperCache(
-                    owner,
-                    objCache,
-                    db.getPluginClassLoader(),
-                    session.getRepos(),
-                    db.getFennelDbHandle(),
-                    null);
-            FemDataServer femServer =
-                FarragoCatalogUtil.getModelElementByName(
-                    session.getRepos().allOfType(FemDataServer.class),
-                    foreignServerName);
-            if (femServer == null) {
-                throw new SQLException(
-                    "Unknown foreign server " + foreignServerName);
-            }
-            FarragoMedDataServer dataServer =
-                wrapperCache.loadServerFromCatalog(femServer);
-            assert (dataServer != null);
-            if (!(dataServer instanceof MedMdrDataServer)) {
-                throw new SQLException(
-                    "Foreign server " + foreignServerName
-                    + " is not an MDR server");
-            }
-            MedMdrDataServer mdrServer = (MedMdrDataServer) dataServer;
-            RefPackage refPackage = mdrServer.getRootPackage();
-
-            // NOTE jvs 12-June-2006:  pass strict=false in
-            // case extent references other packages we can't see
-            JmiModelGraph modelGraph =
-                new JmiModelGraph(refPackage, null, false);
-            JmiModelView modelView = new JmiModelView(modelGraph);
+            context.init(foreignServerName);
+            Map<String, String> argMap = new HashMap<String, String>();
             JmiQueryProcessor queryProcessor =
                 new LurqlQueryProcessor(
-                    mdrServer.getMdrRepository());
+                    context.getMdrRepos());
             JmiPreparedQuery query = queryProcessor.prepare(
-                    modelView,
+                    context.getModelView(),
                     lurql);
 
             // TODO jvs 11-June-2006:  Configure loopback connection
@@ -142,7 +101,7 @@ public abstract class LurqlQueryUdx
                 resultInserter.executeUpdate();
             }
         } finally {
-            owner.closeAllocation();
+            context.closeAllocation();
         }
     }
 }
