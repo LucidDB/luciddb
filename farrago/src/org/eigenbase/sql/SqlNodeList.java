@@ -139,6 +139,23 @@ public class SqlNodeList
             node.unparse(writer, 0, 0);
         }
     }
+    
+    void andOrList(SqlWriter writer, SqlKind sepKind)
+    {
+    	int lprec, rprec;
+        for (int i = 0; i < list.size(); i++) {
+            SqlNode node = list.get(i);
+            writer.sep(sepKind.getName(), false);
+            lprec = rprec = 0;
+            if (node instanceof SqlCall && (
+            		((SqlCall)node).getKind().isA(SqlKind.And)
+            		||((SqlCall)node).getKind().isA(SqlKind.Or))) {
+            	lprec = ((SqlCall)node).getOperator().getLeftPrec();
+            	rprec = ((SqlCall)node).getOperator().getRightPrec();
+            }
+            node.unparse(writer,lprec, rprec);
+        }
+    }
 
     public void validate(SqlValidator validator, SqlValidatorScope scope)
     {

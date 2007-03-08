@@ -151,6 +151,7 @@ public class SqlPrettyWriter
     private boolean updateSetListNewline;
     private boolean windowNewline;
     private SubqueryStyle subqueryStyle;
+    private boolean whereListItemsOnSeparateLines;
 
     private boolean caseClausesOnNewLines;
 
@@ -234,6 +235,11 @@ public class SqlPrettyWriter
         return selectListItemsOnSeparateLines;
     }
     
+    public boolean isWhereListItemsOnSeparateLines()
+    {
+    	return whereListItemsOnSeparateLines;
+    }
+    
     public boolean isSelectListExtraIndentFlag()
     {
     	return selectListExtraIndentFlag;
@@ -258,6 +264,7 @@ public class SqlPrettyWriter
         windowNewline = false;
         subqueryStyle = SubqueryStyle.Hyde;
         alwaysUseParentheses = false;
+        whereListItemsOnSeparateLines = false;
     }
 
     public void reset()
@@ -378,6 +385,16 @@ public class SqlPrettyWriter
     public void setKeywordsLowerCase(boolean b)
     {
         this.keywordsLowerCase = b;
+    }
+    
+    /**
+     * Sets whether to print a newline before each AND in WHERE clauses.
+     * NOTE: <i>Ignored when alwaysUseParentheses is set to true.</i>
+     */
+    
+    public void setWhereListItemsOnSeparateLines(boolean b)
+    {
+    	this.whereListItemsOnSeparateLines = b;
     }
 
     public void setAlwaysUseParentheses(boolean b)
@@ -644,6 +661,21 @@ public class SqlPrettyWriter
                     false,
                     false,
                     indentation,
+                    false,
+                    false,
+                    false);
+            
+        case FrameType.WhereList_ordinal:
+            return
+                new FrameImpl(
+                    frameType,
+                    keyword,
+                    open,
+                    close,
+                    indentation,
+                    false,
+                    whereListItemsOnSeparateLines,
+                    0,
                     false,
                     false,
                     false);

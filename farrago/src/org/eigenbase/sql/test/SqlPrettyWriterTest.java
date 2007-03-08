@@ -137,8 +137,8 @@ public class SqlPrettyWriterTest
         String expected)
         throws Exception
     {
-        final SqlNode node =
-            parseQuery(
+    	final SqlNode node = 
+    		parseQuery(
                 "select x as a, b as b, c as c, d,"
                 + " 'mixed-Case string',"
                 + " unquotedCamelCaseId,"
@@ -345,6 +345,34 @@ public class SqlPrettyWriterTest
             true,
             "select * from x inner join y on x.k=y.k",
             "${formatted}");
+    }
+   
+    public void testWhereListItemsOnSeparateLines()
+            throws Exception
+    {
+    	final SqlPrettyWriter prettyWriter =
+    		new SqlPrettyWriter(SqlUtil.dummyDialect);
+    	prettyWriter.setSelectListItemsOnSeparateLines(true);
+    	prettyWriter.setSelectListExtraIndentFlag(false);
+	
+    	final SqlNode node = 
+    		parseQuery(
+                "select x"
+    			+ " from y"
+    			+ " where h is not null and i < j or ((a or b) is true) and d not in (f,g) or x <> z"	);
+        
+        // Describe settings
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
+        prettyWriter.describe(pw, true);
+        pw.flush();
+        String desc = sw.toString();
+        getDiffRepos().assertEquals("desc", "${desc}", desc);
+        prettyWriter.setWhereListItemsOnSeparateLines(true);
+        
+        // Format
+        String actual = prettyWriter.format(node);
+        getDiffRepos().assertEquals("formatted", "${formatted}", actual);
     }
 }
 

@@ -265,6 +265,7 @@ public interface SqlWriter
         public static final int Subquery_ordinal = 12;
         public static final int Setop_ordinal = 13;
         public static final int Identifier_ordinal = 14;
+        public static final int WhereList_ordinal = 15;
 
         /**
          * SELECT query (or UPDATE or DELETE). The items in the list are the
@@ -374,6 +375,12 @@ public interface SqlWriter
          */
         public static final FrameType FromList =
             new FrameType("From", FromList_ordinal);
+        
+        /**
+         * WHERE clause.
+         */
+        public static final FrameType WhereList =
+            new FrameType("Where", WhereList_ordinal);
 
         /**
          * Compound identifier.
@@ -401,6 +408,7 @@ public interface SqlWriter
                 Setop,
                 FromList,
                 Identifier,
+                WhereList,
                 });
 
         private static int nextOrdinal = enumeration.getMax() + 1;
