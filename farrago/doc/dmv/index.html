@@ -32,13 +32,24 @@ metadata model used in the examples here.
 
 <hr>
 
+<h2>Processing Overview</h2>
+
+Here's a diagram for typical DMV processing:
+
+<br>
+<img src="dmv.png">
+<br>
+
+<hr>
+
 <h2>Example Metadata</h2>
 
-The example visualization input is defined by the DDL script below
-(part of <code>farrago/examples/dmv/test.sql</code>), with the domain
-being, um, a travel agency.  The table and view definitions are only
-intended to simulate meaningful dependencies at table-level and
-schema-level; the actual details of the definitions are bogus.
+The example repository used as visualization input is defined by the
+DDL script below (part of <code>farrago/examples/dmv/test.sql</code>),
+with the domain being, um, a travel agency.  The table and view
+definitions are only intended to simulate meaningful dependencies at
+table-level and schema-level; the actual details of the definitions
+are bogus.
 
 <pre><code>
 create schema accounts;
