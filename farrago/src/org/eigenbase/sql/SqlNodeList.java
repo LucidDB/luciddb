@@ -19,7 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 package org.eigenbase.sql;
 
 import java.util.*;
@@ -34,8 +34,8 @@ import org.eigenbase.sql.validate.*;
  * SqlNode}, so may appear in a parse tree.
  */
 public class SqlNodeList
-    extends SqlNode
-    implements Iterable<SqlNode>
+extends SqlNode
+implements Iterable<SqlNode>
 {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -45,11 +45,11 @@ public class SqlNodeList
      */
     public static final SqlNodeList Empty =
         new SqlNodeList(SqlParserPos.ZERO) {
-            public void add(SqlNode node)
-            {
-                throw new UnsupportedOperationException();
-            }
-        };
+        public void add(SqlNode node)
+        {
+            throw new UnsupportedOperationException();
+        }
+    };
 
 
     //~ Instance fields --------------------------------------------------------
@@ -100,8 +100,8 @@ public class SqlNodeList
     public SqlNode clone(SqlParserPos pos)
     {
         return new SqlNodeList(
-                list,
-                pos);
+            list,
+            pos);
     }
 
     public SqlNode get(int n)
@@ -126,9 +126,9 @@ public class SqlNodeList
     {
         final SqlWriter.Frame frame =
             ((leftPrec > 0) || (rightPrec > 0)) ? writer.startList("(", ")")
-            : writer.startList("", "");
-        commaList(writer);
-        writer.endList(frame);
+                : writer.startList("", "");
+            commaList(writer);
+            writer.endList(frame);
     }
 
     void commaList(SqlWriter writer)
@@ -139,19 +139,19 @@ public class SqlNodeList
             node.unparse(writer, 0, 0);
         }
     }
-    
+
     void andOrList(SqlWriter writer, SqlKind sepKind)
     {
-    	int lprec, rprec;
+        int lprec, rprec;
         for (int i = 0; i < list.size(); i++) {
             SqlNode node = list.get(i);
             writer.sep(sepKind.getName(), false);
             lprec = rprec = 0;
             if (node instanceof SqlCall && (
-            		((SqlCall)node).getKind().isA(SqlKind.And)
-            		||((SqlCall)node).getKind().isA(SqlKind.Or))) {
-            	lprec = ((SqlCall)node).getOperator().getLeftPrec();
-            	rprec = ((SqlCall)node).getOperator().getRightPrec();
+                ((SqlCall)node).getKind().isA(SqlKind.And)
+                ||((SqlCall)node).getKind().isA(SqlKind.Or))) {
+                lprec = ((SqlCall)node).getOperator().getLeftPrec();
+                rprec = ((SqlCall)node).getOperator().getRightPrec();
             }
             node.unparse(writer,lprec, rprec);
         }
@@ -173,12 +173,12 @@ public class SqlNodeList
     {
         if (!(node instanceof SqlNodeList)) {
             assert !fail : this + "!=" + node;
-            return false;
+        return false;
         }
         SqlNodeList that = (SqlNodeList) node;
         if (this.size() != that.size()) {
             assert !fail : this + "!=" + node;
-            return false;
+        return false;
         }
         for (int i = 0; i < list.size(); i++) {
             SqlNode thisChild = list.get(i);
@@ -226,4 +226,4 @@ public class SqlNodeList
     }
 }
 
-// End SqlNodeList.java
+//End SqlNodeList.java

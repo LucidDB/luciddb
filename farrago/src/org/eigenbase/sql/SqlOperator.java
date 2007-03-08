@@ -19,7 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 package org.eigenbase.sql;
 
 import org.eigenbase.reltype.*;
@@ -323,20 +323,20 @@ public abstract class SqlOperator
     // for why this method exists.
     protected void unparseListClause(SqlWriter writer, SqlNode clause)
     {
-    	unparseListClause(writer, clause, null);
+        unparseListClause(writer, clause, null);
     }
-    
+
     protected void unparseListClause(SqlWriter writer, SqlNode clause, SqlKind sepKind)
     {
-    	if (clause instanceof SqlNodeList) {
-    		if (sepKind != null) {
-    			((SqlNodeList) clause).andOrList(writer, sepKind);
-    		} else {
-    			((SqlNodeList) clause).commaList(writer);
-    		}
-    	} else {
-    		clause.unparse(writer, 0, 0);
-    	}
+        if (clause instanceof SqlNodeList) {
+            if (sepKind != null) {
+                ((SqlNodeList) clause).andOrList(writer, sepKind);
+            } else {
+                ((SqlNodeList) clause).commaList(writer);
+            }
+        } else {
+            clause.unparse(writer, 0, 0);
+        }
     }
 
     // override Object
@@ -527,11 +527,11 @@ public abstract class SqlOperator
         RelDataType [] operandTypes)
     {
         return
-            inferReturnType(
-                new ExplicitOperatorBinding(
-                    typeFactory,
-                    this,
-                    operandTypes));
+        inferReturnType(
+            new ExplicitOperatorBinding(
+                typeFactory,
+                this,
+                operandTypes));
     }
 
     /**
@@ -557,9 +557,9 @@ public abstract class SqlOperator
         }
 
         return
-            operandTypeChecker.checkOperandTypes(
-                callBinding,
-                throwOnFailure);
+        operandTypeChecker.checkOperandTypes(
+            callBinding,
+            throwOnFailure);
     }
 
     protected void checkOperandCount(
@@ -621,7 +621,7 @@ public abstract class SqlOperator
         assert (operandTypeChecker != null) : "If you see this, assign operandTypeChecker a value "
             + "or override this function";
         return
-            operandTypeChecker.getAllowedSignatures(this, opNameToUse).trim();
+        operandTypeChecker.getAllowedSignatures(this, opNameToUse).trim();
     }
 
     public SqlOperandTypeInference getOperandTypeInference()
@@ -737,4 +737,4 @@ public abstract class SqlOperator
     }
 }
 
-// End SqlOperator.java
+//End SqlOperator.java
