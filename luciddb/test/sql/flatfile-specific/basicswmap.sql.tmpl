@@ -1,0 +1,377 @@
+------------------------------------------------------------
+-- test basic lenient reading from flatfiles with mapping
+------------------------------------------------------------
+create schema flatfile_schema;
+set schema 'flatfile_schema';
+
+create server lenientwmap_server
+foreign data wrapper sys_file_wrapper
+options (
+        directory '@DIRECTORY@',
+        file_extension '@FILE_EXTENSION@',
+        mapped 'yes');
+
+import foreign schema bcp
+from server lenientwmap_server
+into flatfile_schema;
+
+
+----------------------------------------
+-- basic mapping (everything matches, only position switch)
+----------------------------------------
+
+select * from lenientwmap_server.bcp."swappedcols" order by id;
+
+create foreign table basicmap(
+        extra_field     char(1) not null,
+        id              int not null,
+        name            varchar(50) not null)
+server lenientwmap_server
+options (filename 'swappedcols');
+select * from basicmap order by id;
+
+create foreign table basicmap1
+server lenientwmap_server
+options (filename 'swappedcols');
+select * from basicmap1 order by id;
+
+select * from "swappedcols" order by id;
+
+-- all column names in lower case (test case insensitivity)
+
+select * from lenientwmap_server.bcp."lowercase" order by "id";
+
+create foreign table lowercase(
+        "id"            int not null,
+        "name"          varchar(50) not null,
+        "extra_field"   char(1) not null)
+server lenientwmap_server
+options (filename 'lowercase');
+select * from lowercase order by "id";
+
+create foreign table lowercasea
+server lenientwmap_server
+options (filename 'lowercase');
+select * from lowercasea order by "id";
+
+select * from "lowercase" order by "id";
+
+----------------------------------------
+-- csv file has fewer columns
+----------------------------------------
+
+-- all field names match
+
+select * from lenientwmap_server.bcp."mapped" order by id;
+
+create foreign table hasfewercol1(
+        name            varchar(50) not null,
+        extra1          char(1) not null,
+        id              int not null,
+        extra_col2      char(1))
+server lenientwmap_server
+options (filename 'mapped');
+select * from hasfewercol1 order by id;
+
+create foreign table hasfewercol1a
+server lenientwmap_server
+options (filename 'mapped');
+select * from hasfewercol1a order by id;
+
+select * from "mapped" order by id;
+
+-- all field names match, another position mapping
+
+select * from lenientwmap_server.bcp."mapped1" order by id;
+
+create foreign table hasfewercol11(
+        extra_col2      char(50),
+        name            varchar(50) not null,
+        extra1          char(1) not null,
+        id              int not null)
+server lenientwmap_server
+options (filename 'mapped1');
+select * from hasfewercol11 order by id;
+
+create foreign table hasfewercol11a
+server lenientwmap_server
+options (filename 'mapped1');
+select * from hasfewercol11a order by id;
+
+select * from "mapped1" order by id;
+
+-- yet another position mapping
+
+select * from lenientwmap_server.bcp."mapped2" order by id;
+
+create foreign table hasfewercol12(
+        extra1          char(1) not null,
+        extra_col2      char(10),
+        id              int not null,
+        name            varchar(50) not null)
+server lenientwmap_server
+options (filename 'mapped2');
+select * from hasfewercol12 order by id;
+
+create foreign table hasfewercol12a
+server lenientwmap_server
+options (filename 'mapped2');
+select * from hasfewercol12a order by id;
+
+select * from "mapped2" order by id;
+
+-- extra_field1 (in bcp) and extra_field (in csv) is a mismatch
+-- extra_field in csv matches with the column in explicit foreign table definition
+-- that match should override
+
+select * from lenientwmap_server.bcp."colmismatch" order by id;
+
+create foreign table hasfewercol2(
+        name            varchar(50) not null,
+        extra_field     char(1),
+        id              int not null,
+        extra_col2      char(1))
+server lenientwmap_server
+options (filename 'colmismatch');
+select * from hasfewercol2 order by id;
+
+create foreign table hasfewercol2a
+server lenientwmap_server
+options (filename 'colmismatch');
+select * from hasfewercol2a order by id;
+
+select * from "colmismatch" order by id;
+
+----------------------------------------
+-- csv file has more columns (example.csv has 3 cols)
+----------------------------------------
+
+select * from lenientwmap_server.bcp."example2mapped" order by id;
+
+create foreign table hasmorecol1(
+        name    varchar(50) not null,
+        id      int not null)
+server lenientwmap_server
+options (filename 'example2mapped');
+select * from hasmorecol1 order by id;
+
+create foreign table hasmorecol1a
+server lenientwmap_server
+options (filename 'example2mapped');
+select * from hasmorecol1a order by id;
+
+select * from "example2mapped" order by id;
+
+--
+-- csv has various number of columns
+-- 
+
+select * from lenientwmap_server.bcp."mixednumcols1mapped" order by id;
+
+create foreign table mixednumcols1(
+        extra_field     char(1),
+        id              int not null,
+        name            varchar(50) not null,
+        extra_col       char(1))
+server lenientwmap_server
+options (filename 'mixednumcols1mapped');
+select * from mixednumcols1 order by id;
+
+create foreign table mixednumcols1a
+server lenientwmap_server
+options (filename 'mixednumcols1mapped');
+select * from mixednumcols1a order by id;
+
+select * from "mixednumcols1mapped" order by id;
+
+--
+
+select * from lenientwmap_server.bcp."mixednumcols2mapped" order by id;
+
+create foreign table mixednumcols2(
+        extra_field     char(1),
+        id              int,
+        name            varchar(50),
+        extra_col       char(1))
+server lenientwmap_server
+options (filename 'mixednumcols2mapped');
+select * from mixednumcols2 order by id;
+
+create foreign table mixednumcols2a
+server lenientwmap_server
+options (filename 'mixednumcols2mapped');
+select * from mixednumcols2a order by id;
+
+select * from "mixednumcols2mapped" order by id;
+
+--
+-- csv has blank lines
+--
+
+select * from lenientwmap_server.bcp."blanklines1mapped" order by id;
+
+create foreign table blanklines1(
+        extra_field     char(1) not null,
+        name            varchar(50) not null,
+        id              int not null)
+server lenientwmap_server
+options (filename 'blanklines1mapped');
+select * from blanklines1 order by id;
+
+create foreign table blanklines1a
+server lenientwmap_server
+options (filename 'blanklines1mapped');
+select * from blanklines1a order by id;
+
+select * from "blanklines1mapped" order by id;
+
+--
+
+select * from lenientwmap_server.bcp."blanklines2mapped" order by id;
+
+create foreign table blanklines2(
+        extra_field     char(1) not null,
+        name            varchar(50) not null,
+        id              int not null)
+server lenientwmap_server
+options (filename 'blanklines2mapped');
+select * from blanklines2 order by id;
+
+create foreign table blanklines2a
+server lenientwmap_server
+options (filename 'blanklines2mapped');
+select * from blanklines2a order by id;
+
+select * from "blanklines2mapped" order by id;
+
+--
+-- errors in flatfile
+--
+
+-- note extra_field column in foreign table matches with csv
+-- missing quote led to concatenating 2 lines into one
+-- with new line char in the middle
+
+select * from lenientwmap_server.bcp."missingquotes1" order by id;
+
+create foreign table missingquotes1(
+        id      int,
+        name    varchar(50),
+        extra_field  char(1),
+        extra2  char(1))
+server lenientwmap_server
+options (filename 'missingquotes1');
+select * from missingquotes1 order by id;
+
+create foreign table missingquotes1a
+server lenientwmap_server
+options (filename 'missingquotes1');
+select * from missingquotes1a order by id;
+
+select * from "missingquotes1" order by id;
+
+--
+
+select * from lenientwmap_server.bcp."missingquotes2" order by id;
+
+create foreign table missingquotes2(
+        id      int,
+        name    varchar(50),
+        extra1  char(1),
+        extra2  char(1))
+server lenientwmap_server
+options (filename 'missingquotes2');
+select * from missingquotes2 order by id;
+
+create foreign table missingquotes2a
+server lenientwmap_server
+options (filename 'missingquotes2');
+select * from missingquotes2a order by id;
+
+select * from "missingquotes2" order by id;
+
+--
+
+select * from lenientwmap_server.bcp."missingquotes3" order by id;
+
+create foreign table missingquotes3(
+        id      int,
+        name    varchar(50),
+        extra1  char(1),
+        extra2  char(1))
+server lenientwmap_server
+options (filename 'missingquotes3');
+select * from missingquotes3 order by id;
+
+create foreign table missingquotes3a
+server lenientwmap_server
+options (filename 'missingquotes3');
+select * from missingquotes3a order by id;
+
+select * from "missingquotes3" order by id;
+
+--
+
+select * from lenientwmap_server.bcp."missingcommas1" order by id;
+
+create foreign table missingcommas1(
+        id      int,
+        name    varchar(50),
+        extra1  char(1),
+        extra2  char(1))
+server lenientwmap_server
+options (filename 'missingcommas1');
+select * from missingcommas1 order by id;
+
+create foreign table missingcommas1a
+server lenientwmap_server
+options (filename 'missingcommas1');
+select * from missingcommas1a order by id;
+
+select * from "missingcommas1" order by id;
+
+--
+
+select * from lenientwmap_server.bcp."missingcommas2" order by id;
+
+create foreign table missingcommas2(
+        id      int,
+        name    varchar(50),
+        extra1  char(1),
+        extra2  char(1))
+server lenientwmap_server
+options (filename 'missingcommas2');
+select * from missingcommas2 order by id;
+
+create foreign table missingcommas2a
+server lenientwmap_server
+options (filename 'missingcommas2');
+select * from missingcommas2a order by id;
+
+select * from "missingcommas2" order by id;
+
+--
+
+select * from lenientwmap_server.bcp."missingcommas3" order by id;
+
+create foreign table missingcommas3(
+        id      int,
+        name    varchar(50),
+        extra1  char(1),
+        extra2  char(1))
+server lenientwmap_server
+options (filename 'missingcommas3');
+select * from missingcommas3 order by id;
+
+create foreign table missingcommas3a
+server lenientwmap_server
+options (filename 'missingcommas3');
+select * from missingcommas3a order by id;
+
+select * from "missingcommas3" order by id;
+
+----------------------------------------
+-- cleanup
+----------------------------------------
+drop schema flatfile_schema cascade;
+drop server lenientwmap_server cascade;

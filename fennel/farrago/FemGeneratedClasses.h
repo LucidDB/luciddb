@@ -291,10 +291,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getInputFlow();
-static jmethodID meth_getInputFlow;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
+SharedProxyExecStreamDataFlow getInputFlow();
+static jmethodID meth_getInputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -424,7 +424,7 @@ static jmethodID meth_getResultHandle;
 };
 
 class ProxyIndexCmd
-: virtual public JniProxy, virtual public ProxyDatabaseCmd
+: virtual public JniProxy, virtual public ProxyTxnCmd
 {
 public:
 int64_t getSegmentId();
@@ -1123,10 +1123,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowStreamDef getWindowStream();
-static jmethodID meth_getWindowStream;
 SharedProxyWindowPartitionDef getPartition();
 static jmethodID meth_getPartition;
+SharedProxyWindowStreamDef getWindowStream();
+static jmethodID meth_getWindowStream;
 int32_t getOffset();
 static jmethodID meth_getOffset;
 };

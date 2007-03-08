@@ -856,6 +856,33 @@ Error: Mapping source columns in data files to target columns specified by contr
 > select * from flatfile_server.""."example";
 Error: From line 1, column 15 to line 1, column 42: Table 'FLATFILE_SERVER..example' not found (state=,code=0)
 > 
+> -- mapped option
+> create or replace server mapped_server
+> foreign data wrapper sys_file_wrapper
+> options (
+>     directory 'unitsql/med/flatfiles/',
+>     file_extension 'csv',
+>     with_header 'yes',
+>     mapped 'yes');
+> 
+> select * from mapped_server.bcp."mapped_extra_cols";
++--------+--------+--------+
+|  COL1  |  COL2  |  COL3  |
++--------+--------+--------+
+| 3      | 5      | 6      |
+| 8      | 10     | 11     |
+| 13     | 15     | 16     |
+| 18     | 20     | 21     |
++--------+--------+--------+
+> select * from mapped_server.bcp."mapped_fewer_cols";
++--------+-------+--------+
+|  COL1  | COL2  |  COL3  |
++--------+-------+--------+
+| 2      |       | 1      |
+| 4      |       | 3      |
+| 6      |       | 5      |
++--------+-------+--------+
+> 
 > drop schema test_schema cascade;
 > 
 > !quit

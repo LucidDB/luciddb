@@ -111,6 +111,7 @@ void LbmSplicerExecStream::open(bool restart)
 
         bTreeWriter = SharedBTreeWriter(
             new BTreeWriter(writeBTreeDesc, scratchAccessor, false));
+        bTreeWriterMoved = true;
 
         if (opaqueToInt(writeRowCountParamId) > 0) {
             pDynamicParamManager->createParam(
@@ -211,7 +212,12 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
         }
 
         if (uniqueRequired(inputTuple)) {
-
+            if (currEntry) {
+                // Write out the current entry before we insert the unique
+                // key.
+                insertBitmapEntry();
+                currEntry = false;
+            }
             upsertSingleton(inputTuple);
         } else if (!currEntry) {
 

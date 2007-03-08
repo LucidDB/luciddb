@@ -311,11 +311,11 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
 void CmdInterpreter::getBTreeForIndexCmd(
     ProxyIndexCmd &cmd,PageId rootPageId,BTreeDescriptor &treeDescriptor)
 {
-    SharedDatabase pDatabase = getDbHandle(cmd.getDbHandle())->pDb;
+    TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     
     readTupleDescriptor(
         treeDescriptor.tupleDescriptor,
-        *(cmd.getTupleDesc()),pDatabase->getTypeFactory());
+        *(cmd.getTupleDesc()),pTxnHandle->pDb->getTypeFactory());
     
     CmdInterpreter::readTupleProjection(
         treeDescriptor.keyProjection,cmd.getKeyProj());
@@ -323,17 +323,17 @@ void CmdInterpreter::getBTreeForIndexCmd(
     treeDescriptor.pageOwnerId = PageOwnerId(cmd.getIndexId());
     treeDescriptor.segmentId = SegmentId(cmd.getSegmentId());
     treeDescriptor.segmentAccessor.pSegment =
-        pDatabase->getSegmentById(treeDescriptor.segmentId);
-    treeDescriptor.segmentAccessor.pCacheAccessor = pDatabase->getCache();
+        pTxnHandle->pDb->getSegmentById(treeDescriptor.segmentId);
+    treeDescriptor.segmentAccessor.pCacheAccessor = pTxnHandle->pDb->getCache();
     treeDescriptor.rootPageId = rootPageId;
 }
 
 void CmdInterpreter::visit(ProxyCmdCreateIndex &cmd)
 {
     // block checkpoints during this method
-    SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
+    TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SXMutexSharedGuard actionMutexGuard(
-        pDb->getCheckpointThread()->getActionMutex());
+        pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
     
     BTreeDescriptor treeDescriptor;
     getBTreeForIndexCmd(cmd,NULL_PAGE_ID,treeDescriptor);
@@ -355,9 +355,9 @@ void CmdInterpreter::visit(ProxyCmdDropIndex &cmd)
 void CmdInterpreter::visit(ProxyCmdVerifyIndex &cmd)
 {
     // block checkpoints during this method
-    SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
+    TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SXMutexSharedGuard actionMutexGuard(
-        pDb->getCheckpointThread()->getActionMutex());
+        pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
     
     BTreeDescriptor treeDescriptor;
     getBTreeForIndexCmd(cmd,PageId(cmd.getRootPageId()),treeDescriptor);
@@ -384,9 +384,9 @@ void CmdInterpreter::dropOrTruncateIndex(
     ProxyCmdDropIndex &cmd, bool drop)
 {
     // block checkpoints during this method
-    SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
+    TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SXMutexSharedGuard actionMutexGuard(
-        pDb->getCheckpointThread()->getActionMutex());
+        pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
     
     BTreeDescriptor treeDescriptor;
     getBTreeForIndexCmd(cmd,PageId(cmd.getRootPageId()),treeDescriptor);

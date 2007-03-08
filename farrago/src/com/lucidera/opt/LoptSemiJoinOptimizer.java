@@ -24,6 +24,8 @@ import com.lucidera.lcs.*;
 
 import java.util.*;
 
+import net.sf.farrago.fem.med.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
@@ -146,7 +148,7 @@ public class LoptSemiJoinOptimizer
                 List<RexNode> joinFilters = dimFilters.get(dimIdx);
                 if (joinFilters != null) {
                     SemiJoinRel semiJoin =
-                        findSemiJoinIndex(
+                        findSemiJoinIndexByCost(
                             multiJoin,
                             joinFilters,
                             factIdx,
@@ -227,7 +229,7 @@ public class LoptSemiJoinOptimizer
      * @return SemiJoinRel containing information regarding the semijoin that
      * can be used to filter the fact table
      */
-    private SemiJoinRel findSemiJoinIndex(
+    private SemiJoinRel findSemiJoinIndexByCost(
         LoptMultiJoin multiJoin,
         List<RexNode> joinFilters,
         int factIdx,
@@ -243,6 +245,7 @@ public class LoptSemiJoinOptimizer
         for (int i = 0; i < factIdx; i++) {
             leftAdjustment -= multiJoin.getNumFieldsInJoinFactor(i);
         }
+        
         semiJoinCondition =
             adjustSemiJoinCondition(
                 multiJoin,
@@ -277,10 +280,15 @@ public class LoptSemiJoinOptimizer
         }
 
         // find the best index
-        List<Integer> keyOrder = new ArrayList<Integer>();
-        LcsIndexGuide indexGuide = factTable.getIndexGuide();
-        indexGuide.findSemiJoinIndex(actualLeftKeys, keyOrder);
-        if (keyOrder.size() == 0) {
+        List<Integer> bestKeyOrder = new ArrayList<Integer>();
+        LcsRowScanRel tmpFactRel =
+            (LcsRowScanRel)factTable.toRel(factRel.getCluster(), factTable.getPreparingStmt());
+
+        FemLocalIndex bestIndex =
+            LcsIndexOptimizer.findSemiJoinIndexByCost(
+                tmpFactRel, dimRel, actualLeftKeys, rightKeys, bestKeyOrder);
+            
+        if (bestIndex == null) {
             return null;
         }
 
@@ -291,13 +299,13 @@ public class LoptSemiJoinOptimizer
         // be converted
         List<Integer> truncatedLeftKeys;
         List<Integer> truncatedRightKeys;
-        if (actualLeftKeys.size() == keyOrder.size()) {
+        if (actualLeftKeys.size() == bestKeyOrder.size()) {
             truncatedLeftKeys = leftKeys;
             truncatedRightKeys = rightKeys;
         } else {
             truncatedLeftKeys = new ArrayList<Integer>();
             truncatedRightKeys = new ArrayList<Integer>();
-            for (int key : keyOrder) {
+            for (int key : bestKeyOrder) {
                 truncatedLeftKeys.add(leftKeys.get(key));
                 truncatedRightKeys.add(rightKeys.get(key));
             }
@@ -317,7 +325,7 @@ public class LoptSemiJoinOptimizer
                 truncatedRightKeys);
         return semiJoin;
     }
-
+    
     /**
      * Modifies the semijoin condition to reflect the fact that the RHS is now
      * the second factor into a join and the LHS is the first
@@ -439,6 +447,7 @@ public class LoptSemiJoinOptimizer
                     }
                 }              
             }
+            
             if (removeKey) {
                 keyIter.remove();
                 rightKeys.remove(keyIdx);

@@ -116,16 +116,14 @@ public class LcsIndexSemiJoinRule
         }
         RelNode rightRel = semiJoin.getRight();
 
-        // loop through the indexes and either find the one that has the
-        // longest matching keys, or the first one that matches all the
-        // join keys
-        LcsIndexGuide indexGuide = origRowScan.getIndexGuide();
+        // find the best index to filter the LHS of a SemiJoinRel
         List<Integer> bestKeyOrder = new ArrayList<Integer>();
+        
         FemLocalIndex bestIndex =
-            indexGuide.findSemiJoinIndex(
-                semiJoin.getLeftKeys(),
-                bestKeyOrder);
-
+            LcsIndexOptimizer.findSemiJoinIndexByCost(
+                origRowScan, rightRel,
+                semiJoin.getLeftKeys(), semiJoin.getRightKeys(), bestKeyOrder);
+            
         if (bestIndex != null) {
             transformSemiJoin(
                 semiJoin,

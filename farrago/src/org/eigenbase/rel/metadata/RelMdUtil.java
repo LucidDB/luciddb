@@ -117,12 +117,35 @@ public class RelMdUtil
         RelNode dimRel,
         SemiJoinRel rel)
     {
+        return computeSemiJoinSelectivity(
+            factRel, dimRel,
+            rel.getLeftKeys(), rel.getRightKeys());
+    }
+
+    /**
+     * Computes the selectivity of a semijoin filter if it is applied on a fact
+     * table. The computation is based on the selectivity of the dimension
+     * table/columns and the number of distinct values in the fact table
+     * columns.
+     * 
+     * @param factRel fact table participating in the semijoin
+     * @param dimRel dimension table participating in the semijoin
+     * @param factKeyList LHS keys used in the filter
+     * @param dimKeyList RHS keys used in the filter
+     * @return calculated selectivity
+     */
+    public static double computeSemiJoinSelectivity(
+        RelNode factRel,
+        RelNode dimRel,
+        List<Integer> factKeyList,
+        List<Integer> dimKeyList)
+    {
         BitSet factKeys = new BitSet();
-        for (int factCol : rel.getLeftKeys()) {
+        for (int factCol : factKeyList) {
             factKeys.set(factCol);
         }
         BitSet dimKeys = new BitSet();
-        for (int dimCol : rel.getRightKeys()) {
+        for (int dimCol : dimKeyList) {
             dimKeys.set(dimCol);
         }
 

@@ -139,7 +139,7 @@ public class SqlPrettyWriterTest
     {
         final SqlNode node =
             parseQuery(
-                "select x as a, b,"
+                "select x as a, b as b, c as c, d,"
                 + " 'mixed-Case string',"
                 + " unquotedCamelCaseId,"
                 + " \"quoted id\" "
@@ -201,6 +201,16 @@ public class SqlPrettyWriterTest
         prettyWriter.setSelectListItemsOnSeparateLines(true);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
+    
+    public void testSelectListExtraIndentFlag()
+	    throws Exception
+	{
+	    final SqlPrettyWriter prettyWriter =
+	        new SqlPrettyWriter(SqlUtil.dummyDialect);
+	    prettyWriter.setSelectListItemsOnSeparateLines(true);
+	    prettyWriter.setSelectListExtraIndentFlag(false);
+	    checkSimple(prettyWriter, "${desc}", "${formatted}");
+	}
 
     public void testKeywordsLowerCase()
         throws Exception

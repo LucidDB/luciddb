@@ -1,0 +1,15 @@
+<DmvTransformationRuleSet>
+  <SetAllByAggregation 
+    requestedKind="composite" 
+    mapping="HIERARCHY"/>
+  <SetAllByAggregation 
+    requestedKind="none" 
+    mapping="COPY"/>
+  <SetByAssoc
+    assoc="DependencyClient"
+    mapping="CONTRACTION"/>
+  <SetByAssoc
+    assoc="ElementOwnership"
+    targetClass="LocalView"
+    mapping="REMOVAL"/>
+</DmvTransformationRuleSet>

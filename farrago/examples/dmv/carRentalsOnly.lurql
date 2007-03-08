@@ -1,0 +1,7 @@
+select *
+from class LocalSchema
+where name = 'CAR_RENTALS' then (
+    follow composite forward destination class ColumnSet then (
+        follow origin end client
+    )
+);

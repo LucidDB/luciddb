@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2007 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<project name="constraints" basedir="." default="test">
+  <dirname property="constraints.dir" file="${ant.file.constraints}" />
+
+  <property name="open.dir" location="${constraints.dir}/../../../.." />
+  <fail unless="open.dir" />
+
+  <property environment="env" />
+  <property file="run.properties"/>
+
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+
+  <!-- directory where blackhawk output should go -->
+  <property name="bh.log.basedir" value="${constraints.dir}/testlog" />
+
+  <!-- directory where sql is generated -->
+  <property name="gensql.dir" value="${constraints.dir}/gen"/>
+
+  <!-- directory of flat files -->
+  <property name="ffsource.tpch.dir" value="${open.dir}/thirdparty/tpch/data"/>
+  <property name="ffsource.bench.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+  <property name="ff.dir" value="${constraints.dir}/ff" />
+
+  <!-- directory for error logs -->
+  <property name="errlog.dir" value="${constraints.dir}/logs" />
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${open.dir}/luciddb/classes"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
+  <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+
+    <!-- generate sql files -->
+    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
+    <if>
+      <isset property="sql.generated"/>
+      <then/>
+      <else>
+        <copy todir="${gensql.dir}" overwrite="true">
+          <fileset dir="${constraints.dir}" includes="*.tmpl"/>
+          <filterset>
+            <filter token="FFDIR" value="${ff.dir}"/>
+            <filter token="LOGDIR" value="${bh.log.basedir}"/>
+            <filter token="ERRLOGDIR" value="${errlog.dir}"/>
+          </filterset>
+          <globmapper from="*.tmpl" to="*"/>
+        </copy>
+        <copy todir="${gensql.dir}" overwrite="true">
+          <fileset dir="${constraints.dir}">
+            <include name="*.sql"/>
+            <include name="*.ref"/>
+          </fileset>
+        </copy>
+      </else>
+    </if>
+  </target>
+
+  <target name="test" depends="gen-all-sql">
+    <blackhawk.fork
+      basedir="${constraints.dir}"
+      testscript="${testfile}"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="create-db">
+    <available file="${ff.dir}" type="dir" property="ff.created"/>
+    <available file="${ff.dir}/bench1m.csv" type="file" 
+      property="bench.exists"/>
+    <available file="${ffsource.bench.dir}" type="dir" 
+      property="raksha.available"/>
+    <if>
+      <isset property="ff.created"/>
+      <then>
+        <if>
+          <isset property="bench.exists"/>
+          <then/>
+          <else>
+            <!-- copy bench over if raksha is available -->
+            <if> 
+              <isset property="raksha.available"/>
+              <copy todir="${ff.dir}" verbose="true">
+                <fileset dir="${ffsource.bench.dir}" includes="bench1M.*"/>
+              </copy>
+            </if>
+          </else>
+        </if>
+      </then>
+      <!-- else if ff dir not created yet -->
+      <else>
+        <condition property="db.created">
+          <and>
+            <available file="${ffsource.tpch.dir}/datasize" type="file"/>
+            <isfileselected file="${ffsource.tpch.dir}/datasize">
+              <contains text="100M" casesensitive="no"/>
+            </isfileselected>
+          </and>
+        </condition>
+        
+        <if>
+          <istrue value="${db.created}"/>
+          <then/>
+          <else>
+            <exec executable="${thirdparty.dir}/tpch/createdb"
+              dir="${thirdparty.dir}/tpch">
+              <arg line="100M"/>
+            </exec>
+          </else>
+        </if>
+
+        <!-- sync bench only if raksha is mounted, not needed for sanity -->
+        <if>
+          <isset property="raksha.available"/>
+          <then>
+            <sync todir="${ff.dir}" verbose="true">
+              <fileset dir="${ffsource.tpch.dir}"/>
+              <fileset dir="${ffsource.bench.dir}" includes="bench1M.*"/>
+            </sync>
+          </then>
+          <else>
+            <sync todir="${ff.dir}" overwrite="false" verbose="true">
+              <fileset dir="${ffsource.tpch.dir}"/>
+            </sync>
+          </else>
+        </if>
+      </else>
+    </if>
+  </target>
+
+  <target name="clean" depends="clean-tmpfiles">
+    <delete file="${constraints.dir}/run.properties"/>
+    <delete dir="${ff.dir}"/>
+  </target>
+
+  <target name="clean-tmpfiles">
+    <delete dir="${bh.log.basedir}"/>
+    <delete file="${ff.dir}/bench1M.bcp"/>
+    <delete> 
+      <fileset dir="${errlog.dir}" excludes="Summary.bcp"/>
+    </delete>
+    <delete dir="${gensql.dir}"/>
+  </target>
+
+</project>
+    

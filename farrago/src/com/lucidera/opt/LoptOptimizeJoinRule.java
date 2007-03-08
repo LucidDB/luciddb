@@ -246,6 +246,9 @@ public class LoptOptimizeJoinRule
         // transform the selected plans; note that we wait till then the end
         // to transform everything so any intermediate RelNodes we create
         // are not converted to RelSubsets
+        // The HEP planner will choose the join subtree with the best cumulative
+        // cost. Volcano planner keeps the alternative join subtrees and cost the
+        // final plan to pick the best one. 
         for (RelNode plan : plans) {
             call.transformTo(plan);
         }

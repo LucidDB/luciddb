@@ -906,6 +906,7 @@ require version '${required.ant.version}'."/>
   <target name="test-only">
     <antcall target="testRngPlugin"/>
     <antcall target="exportCatalog"/>
+    <antcall target="testDmv"/>
     <antcall target="junit"/>
     <antcall target="regressionWithoutBuild"/>
     <antcall target="testCleanup"/>
@@ -994,6 +995,12 @@ please disable it and try again.
     <!-- this will import pre-upgrade catalog contents -->
     <farrago.runSqlTest
       file="${farrago.dir}/examples/rng/unitsql/verifyReplaceCatalog.sql"/>
+  </target>
+
+  <!-- TODO:  verify actual .dot output -->
+  <target name="testDmv">
+    <farrago.runSqlTest
+      file="${farrago.dir}/examples/dmv/test.sql"/>
   </target>
 
   <target name="testCleanup">

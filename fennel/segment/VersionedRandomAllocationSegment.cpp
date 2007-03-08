@@ -459,27 +459,16 @@ void VersionedRandomAllocationSegment::updateExtentEntry(
     // to update the SegmentAllocationNode
 
     if (allocationCount) {
+        // Initialize the SegmentAllocationNode and
+        // VersionedExtentAllocationNode if it hasn't been allocated yet
+        allocateAllocNodes(iSegAlloc, NULL_PAGE_ID, extentNum);
+
+        // Update the permanent page if we're committing.  Otherwise, update
+        // the temporary page, reverting the allocations/deallocations.
         PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
         NodeMapConstIter iter = allocationNodeMap.find(segAllocPageId);
         permAssert(iter != allocationNodeMap.end());
         SharedModifiedAllocationNode pModNode = iter->second;
-
-        // Initialize the SegmentAllocationNode if it hasn't been allocated
-        // yet
-        SegmentAccessor selfAccessor(shared_from_this(), pCache);
-        SegAllocLock newSegAllocLock(selfAccessor);
-        newSegAllocLock.lockExclusive(segAllocPageId);
-        if (!newSegAllocLock.checkMagicNumber()) {
-            newSegAllocLock.setMagicNumber();
-            SegmentAllocationNode &newNode = newSegAllocLock.getNodeForWrite();
-            newNode.nPagesPerExtent = nPagesPerExtent;
-            newNode.nExtents = 0;
-            newNode.nextSegAllocPageId = NULL_PAGE_ID;
-            newSegAllocLock.unlock();
-        }
-
-        // Update the permanent page if we're committing.  Otherwise, update
-        // the temporary page, reverting the allocations/deallocations.
         SharedSegment allocNodeSegment;
         PageId segPageId;
         if (commit) {
@@ -495,25 +484,7 @@ void VersionedRandomAllocationSegment::updateExtentEntry(
         segAllocLock.lockExclusive(segPageId);
         SegmentAllocationNode &segAllocNode = segAllocLock.getNodeForWrite();
 
-        // Allocate new extents if the one we're going to be updating hasn't
-        // been allocated yet.  Turn off page mapping so the updates will
-        // be made on the permanent pages.
         ExtentNum relativeExtentNum = extentNum % nExtentsPerSegAlloc;
-        if (segAllocNode.nExtents < relativeExtentNum + 1) {
-            ExtentNum startExtentNum =
-                segAllocNode.nExtents + nExtentsPerSegAlloc * iSegAlloc;
-            mapPages = false;
-            segAllocNode.nExtents = relativeExtentNum + 1;
-            formatPageExtentsTemplate<
-                    VersionedExtentAllocationNode,
-                    VersionedExtentAllocLock,
-                    VersionedPageEntry>(
-                segAllocNode,
-                shared_from_this(),
-                startExtentNum);
-            mapPages = true;
-        }
-
         SegmentAllocationNode::ExtentEntry &extentEntry =
             segAllocNode.getExtentEntry(relativeExtentNum);
         if (commit) {
@@ -529,6 +500,75 @@ void VersionedRandomAllocationSegment::updateExtentEntry(
             segAllocLock.unlock();
             freeTempPage(segAllocPageId, pModNode->tempPageId);
         }
+    }
+}
+
+void VersionedRandomAllocationSegment::allocateAllocNodes(
+    uint iSegAlloc,
+    PageId nextPageId,
+    ExtentNum extentNum)
+{
+    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegAllocLock segAllocLock(selfAccessor);
+    PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
+    segAllocLock.lockExclusive(segAllocPageId);
+    if (segAllocLock.checkMagicNumber()) {
+
+        // If the SegmentAllocationNode has already been allocated and this
+        // is the first call to this method, check if we need to allocate
+        // VersionedExtentAllocationNodes.  Otherwise, set the
+        // nextSegAllocPageId.
+
+        SegmentAllocationNode &node = segAllocLock.getNodeForWrite();
+        if (nextPageId == NULL_PAGE_ID) {
+            allocateExtAllocNodes(node, iSegAlloc, extentNum);
+        } else {
+            node.nextSegAllocPageId = nextPageId;
+        }
+    } else {
+
+        // Allocate a new page and then recursively call this method to set
+        // the nextSegAllocPageId on the predecessor SegmentAllocationNode
+        // to the newly allocated page, allocating that SegmentAllocationNode
+        // if it also hasn't been allocated.  If this is the first call to this
+        // method, check if we need to allocate
+        // VersionedExtentAllocationNodes.
+
+        permAssert(iSegAlloc >= 1);
+        segAllocLock.setMagicNumber();
+        SegmentAllocationNode &newNode = segAllocLock.getNodeForWrite();
+        newNode.nPagesPerExtent = nPagesPerExtent;
+        newNode.nExtents = 0;
+        newNode.nextSegAllocPageId = nextPageId;
+        allocateAllocNodes(iSegAlloc - 1, segAllocPageId, extentNum);
+        if (nextPageId == NULL_PAGE_ID) {
+            allocateExtAllocNodes(newNode, iSegAlloc, extentNum);
+        }
+    }
+}
+
+void VersionedRandomAllocationSegment::allocateExtAllocNodes(
+    SegmentAllocationNode &segAllocNode,
+    uint iSegAlloc,
+    ExtentNum extentNum)
+{
+    // Allocate new extents if the one we're going to be updating hasn't
+    // been allocated yet.  Turn off page mapping so the updates will
+    // be made on the permanent pages.
+    ExtentNum relativeExtentNum = extentNum % nExtentsPerSegAlloc;
+    if (segAllocNode.nExtents < relativeExtentNum + 1) {
+        ExtentNum startExtentNum =
+            segAllocNode.nExtents + nExtentsPerSegAlloc * iSegAlloc;
+        mapPages = false;
+        segAllocNode.nExtents = relativeExtentNum + 1;
+        formatPageExtentsTemplate<
+                VersionedExtentAllocationNode,
+                VersionedExtentAllocLock,
+                VersionedPageEntry>(
+            segAllocNode,
+            shared_from_this(),
+            startExtentNum);
+        mapPages = true;
     }
 }
 

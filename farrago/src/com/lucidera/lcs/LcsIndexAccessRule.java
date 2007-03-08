@@ -38,7 +38,6 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.stat.*;
 
-
 /**
  * LcsIndexAccessRule is a rule for converting FilterRel+LcsRowScanRel into
  * LcsIndexAccessRel (when the filter has the appropriate form).
@@ -121,25 +120,15 @@ class LcsIndexAccessRule
         Map<CwmColumn, SargIntervalSequence> col2SeqMap =
             LcsIndexOptimizer.getCol2SeqMap(origRowScan, sargBindingList);
 
-        List<List<CwmColumn>> colLists =
-            getSargColLists(origRowScan, sargBindingList, col2SeqMap);
-
-        Map<FemLocalIndex, Integer> index2PosMap =
-            LcsIndexOptimizer.getIndex2MatchedPosMap(origRowScan, colLists);
-
-        // TODO(2007-02-06): enable cost based index selection
-        // 
-        // List<List<LcsIndexOptimizer.SargColumnFilter>> colFilterLists =
-        //    getSargColFilterLists(origRowScan, sargBindingList, col2SeqMap);
-        //
-        // Map<FemLocalIndex, Integer> bestIndex2PosMap =
-        //    LcsIndexOptimizer.getBestIndex2MatchedPosMap(origRowScan, colFilterLists);
-        //
-        // if cost based did not fine any assgnment, try rule based
-        // if (bestIndex2PosMap == null) {
-        //    bestIndex2PosMap = index2PosMap;
-        // }
+        // Try cost based index selection
+        List<List<LcsIndexOptimizer.SargColumnFilter>> colFilterLists =
+            getSargColFilterLists(origRowScan, sargBindingList, col2SeqMap);
         
+        Map<FemLocalIndex, Integer> index2PosMap =
+            LcsIndexOptimizer.getIndex2MatchedPosByCost(origRowScan, colFilterLists);
+
+        assert (index2PosMap != null);
+
         // Use a tree set here so that the indexes are searched in a fixed
         // order, to make the plan output stable.
         TreeSet<FemLocalIndex> indexSet =
@@ -362,36 +351,6 @@ class LcsIndexAccessRule
         return seqList;
     }
 
-    private static List<List<CwmColumn>> getSargColLists(
-        LcsRowScanRel origRowScan,
-        List<SargBinding> sargBindingList,
-        Map<CwmColumn, SargIntervalSequence> col2SeqMap)
-    {
-        List<List<CwmColumn>> retLists = new ArrayList<List<CwmColumn>>();
-        List<CwmColumn> pointColumnList = new ArrayList<CwmColumn>();
-        List<CwmColumn> rangeColumnList = new ArrayList<CwmColumn>();
-
-        for (int i = 0; i < sargBindingList.size(); i++) {
-            SargBinding sargBinding = sargBindingList.get(i);
-            RexInputRef fieldAccess = sargBinding.getInputRef();
-            FemAbstractColumn filterColumn =
-                origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
-            if (filterColumn != null) {
-                SargIntervalSequence sargSeq = col2SeqMap.get(filterColumn);
-
-                if (sargSeq.isPoint()) {
-                    pointColumnList.add(filterColumn);
-                } else {
-                    rangeColumnList.add(filterColumn);
-                }
-            }
-        }
-
-        retLists.add(0, pointColumnList);
-        retLists.add(1, rangeColumnList);
-        return retLists;
-    }
-
     private static List<List<LcsIndexOptimizer.SargColumnFilter>> getSargColFilterLists(
         LcsRowScanRel origRowScan,
         List<SargBinding> sargBindingList,
@@ -456,9 +415,9 @@ class LcsIndexAccessRule
             for (FemLocalIndex index : index2PosMap.keySet()) {
                 int maxPos = index2PosMap.get(index);
                 for (int pos = 0; pos < maxPos; pos++) {
-                    int i =
-                        sargColList.indexOf(
-                            LcsIndexOptimizer.getIndexColumn(index, pos));
+                    FemAbstractColumn filterColumn =
+                        LcsIndexOptimizer.getIndexColumn(index, pos);
+                    int i = sargColList.indexOf(filterColumn);                    
                     retSargBindingList.remove(i);
                     sargColList.remove(i);
                 }

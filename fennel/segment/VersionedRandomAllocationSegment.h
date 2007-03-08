@@ -162,6 +162,44 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
         bool commit);
 
     /**
+     * Allocates a new SegmentAllocationNode and VersionedExtentAllocationNodes
+     * if they haven't been allocated yet.  Also recursively allocates
+     * predecessor SegmentAllocationNodes, as needed.
+     *
+     * @param iSegAlloc 0-based index corresponding to the SegmentAllocationNode
+     * that needs to be allocated
+     *
+     * @param nextPageId the pageId to be set as the nextSegAllocPageId for
+     * the SegmentAllocationNode being allocated
+     *
+     * @param extentNum absolute 0-based extent number of the extent
+     * allocation node that needs to be allocated
+     */
+    void allocateAllocNodes(
+        uint iSegAlloc,
+        PageId nextPageId,
+        ExtentNum extentNum);
+
+    /**
+     * Allocates a new VersionedExtentAllocationNode if it hasn't been 
+     * allocated yet.  If extent nodes preceeding the one that needs to be
+     * allocated haven't been allocated either, those are allocated as well.
+     *
+     * @param [in] segAllocNode SegmentAllocationNode containing the extent
+     * that needs to be allocated
+     *
+     * @param iSegAlloc 0-based index corresponding to the SegmentAllocationNode
+     * containing the extent that needs to be allocated
+     *
+     * @param extentNum absolute 0-based extent number of the extent
+     * allocation node that needs to be allocated
+     */
+    void allocateExtAllocNodes(
+        SegmentAllocationNode &segAllocNode,
+        uint iSegAlloc,
+        ExtentNum extentNum);
+
+    /**
      * Copies the page entry from the temporary segment to the permanent one
      *
      * @param origPageId pageId of the extent page in the permanent segment

@@ -907,6 +907,10 @@ Messages: {1}</text>
 <text>Mapping source columns in data files to target columns specified by control files requires column names to be provided by data file headers.</text>
 </exception>
 
+<exception id="469110" name="FlatFileMappedRequiresLenient">
+<text>Mapping source columns in data files to target columns specified by control files requires server to be lenient.</text>
+</exception>
+
 <message name="MedFlatFile_DIRECTORY_Description">
 <text>OS directory path containing flat files</text>
 </message>

@@ -28,6 +28,7 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fennel.*;
 import net.sf.farrago.util.*;
 
 
@@ -67,18 +68,36 @@ public abstract class MedAbstractFennelDataServer
     }
 
     // implement FarragoMedLocalDataServer
-    public long createIndex(FemLocalIndex index)
+    public long createIndex(FemLocalIndex index, FennelTxnContext txnContext)
     {
         FemCmdCreateIndex cmd = repos.newFemCmdCreateIndex();
-        initIndexCmd(cmd, index);
-        return getFennelDbHandle().executeCmd(cmd);
+        boolean implicitTxn = false;
+        if (!txnContext.isTxnInProgress()) {
+            // If a xact isn't already in progress, the index creation will
+            // implicitly start one, so we need to commit that implicit
+            // txn after we've created the index.
+            implicitTxn = true;
+        }
+        try {
+            initIndexCmd(cmd, index, txnContext);
+            long rc = getFennelDbHandle().executeCmd(cmd);
+            if (implicitTxn) {
+                txnContext.commit();
+            }
+            return rc;
+        } finally {
+            if (implicitTxn) {
+                txnContext.rollback();
+            }
+        }
     }
 
     // implement FarragoMedLocalDataServer
     public void dropIndex(
         FemLocalIndex index,
         long rootPageId,
-        boolean truncate)
+        boolean truncate,
+        FennelTxnContext txnContext)
     {
         FemCmdDropIndex cmd;
         if (truncate) {
@@ -86,30 +105,65 @@ public abstract class MedAbstractFennelDataServer
         } else {
             cmd = repos.newFemCmdDropIndex();
         }
-        initIndexCmd(cmd, index);
-        cmd.setRootPageId(rootPageId);
-        getFennelDbHandle().executeCmd(cmd);
+        boolean implicitTxn = false;
+        if (!txnContext.isTxnInProgress()) {
+            // If a xact isn't already in progress, the index drop will
+            // implicitly start one, so we need to commit that implicit
+            // txn after we've dropped the index.
+            implicitTxn = true;
+        }
+        try {
+            initIndexCmd(cmd, index, txnContext);
+            cmd.setRootPageId(rootPageId);
+            getFennelDbHandle().executeCmd(cmd);
+            if (implicitTxn) {
+                txnContext.commit();
+            }
+        } finally {
+            if (implicitTxn) {
+                txnContext.rollback();
+            }
+        }
     }
 
     // implement FarragoMedLocalDataServer
     public long computeIndexStats(
         FemLocalIndex index,
         long rootPageId,
-        boolean estimate)
+        boolean estimate,
+        FennelTxnContext txnContext)
     {
         FemCmdVerifyIndex cmd = repos.newFemCmdVerifyIndex();
-        initIndexCmd(cmd, index);
-        cmd.setRootPageId(rootPageId);
-        cmd.setEstimate(estimate);
-        cmd.setIncludeTuples(getIncludeTuples(index));
-        return getFennelDbHandle().executeCmd(cmd);
+        boolean implicitTxn = false;
+        if (!txnContext.isTxnInProgress()) {
+            // If a xact isn't already in progress, the index verification will
+            // implicitly start one, so we need to commit that implicit
+            // txn after we've verified the index.
+            implicitTxn = true;
+        }
+        try {
+            initIndexCmd(cmd, index, txnContext);
+            cmd.setRootPageId(rootPageId);
+            cmd.setEstimate(estimate);
+            cmd.setIncludeTuples(getIncludeTuples(index));
+            long rc = getFennelDbHandle().executeCmd(cmd);
+            if (implicitTxn) {
+                txnContext.commit();
+            }
+            return rc;
+        } finally {
+            if (implicitTxn) {
+                txnContext.rollback();
+            }
+        }   
     }
 
     private void initIndexCmd(
         FemIndexCmd cmd,
-        FemLocalIndex index)
+        FemLocalIndex index,
+        FennelTxnContext txnContext)
     {
-        cmd.setDbHandle(getFennelDbHandle().getFemDbHandle(repos));
+        cmd.setTxnHandle(txnContext.getTxnHandle());
         cmd.setSegmentId(getIndexSegmentId(index));
         cmd.setIndexId(JmiUtil.getObjectId(index));
         prepareIndexCmd(cmd, index);

@@ -50,7 +50,7 @@ class FarragoDbSessionIndexMap
 
     //~ Instance fields --------------------------------------------------------
 
-    private FarragoDatabase database;
+    private FarragoDbSession dbSession;
 
     /**
      * Map from index to root PageId for temporary tables.
@@ -79,15 +79,15 @@ class FarragoDbSessionIndexMap
      *
      * @param owner FarragoAllocationOwner which will own this map; on
      * closeAllocation, any temporary indexes will be deleted automatically
-     * @param database FarragoDatabase context
+     * @param dbSession FarragoDbSession context
      * @param repos the repos for this session
      */
     public FarragoDbSessionIndexMap(
         FarragoAllocationOwner owner,
-        FarragoDatabase database,
+        FarragoDbSession dbSession,
         FarragoRepos repos)
     {
-        this.database = database;
+        this.dbSession = dbSession;
         this.repos = repos;
         tempIndexRootMap = new HashMap<FemLocalIndex, Long>();
         indexIdMap = new HashMap<Long, FemLocalIndex>();
@@ -96,10 +96,10 @@ class FarragoDbSessionIndexMap
         privateDataWrapperCache =
             new FarragoDataWrapperCache(
                 this,
-                database.getDataWrapperCache(),
-                database.getPluginClassLoader(),
+                dbSession.getDatabase().getDataWrapperCache(),
+                dbSession.getDatabase().getPluginClassLoader(),
                 repos,
-                database.getFennelDbHandle(),
+                dbSession.getDatabase().getFennelDbHandle(),
                 null);
     }
 
@@ -182,7 +182,7 @@ class FarragoDbSessionIndexMap
      * DELETE ROWS.
      */
     public void onCommit()
-    {
+    {       
         for (FemLocalIndex index : tempIndexRootMap.keySet()) {
             String temporaryScope =
                 FarragoCatalogUtil.getIndexTable(index).getTemporaryScope();
@@ -212,7 +212,8 @@ class FarragoDbSessionIndexMap
             getIndexDataServer(wrapperCache, index);
         long indexRoot;
         try {
-            indexRoot = server.createIndex(index);
+            indexRoot =
+                server.createIndex(index, dbSession.getFennelTxnContext());
         } catch (SQLException ex) {
             throw FarragoResource.instance().DataServerIndexCreateFailed.ex(
                 repos.getLocalizedObjectName(index),
@@ -246,7 +247,8 @@ class FarragoDbSessionIndexMap
             server.dropIndex(
                 index,
                 getIndexRoot(index),
-                truncate);
+                truncate,
+                dbSession.getFennelTxnContext());
         } catch (SQLException ex) {
             throw FarragoResource.instance().DataServerIndexDropFailed.ex(
                 repos.getLocalizedObjectName(index),
@@ -268,10 +270,11 @@ class FarragoDbSessionIndexMap
         FarragoMedLocalDataServer server =
             getIndexDataServer(wrapperCache, index);
         try {
-            return server.computeIndexStats(
+           return server.computeIndexStats(
                 index,
                 getIndexRoot(index),
-                estimate);
+                estimate,
+                dbSession.getFennelTxnContext());
         } catch (SQLException ex) {
             throw FarragoResource.instance().DataServerIndexVerifyFailed.ex(
                 repos.getLocalizedObjectName(index),
