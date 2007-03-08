@@ -29,6 +29,8 @@ import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
+import org.eigenbase.sql.SqlWriter;
+import org.eigenbase.sql.pretty.SqlPrettyWriter;
 
 import java.util.*;
 
@@ -321,11 +323,20 @@ public abstract class SqlOperator
     // for why this method exists.
     protected void unparseListClause(SqlWriter writer, SqlNode clause)
     {
-        if (clause instanceof SqlNodeList) {
-            ((SqlNodeList) clause).commaList(writer);
-        } else {
-            clause.unparse(writer, 0, 0);
-        }
+    	unparseListClause(writer, clause, null);
+    }
+    
+    protected void unparseListClause(SqlWriter writer, SqlNode clause, SqlKind sepKind)
+    {
+    	if (clause instanceof SqlNodeList) {
+    		if (sepKind != null) {
+    			((SqlNodeList) clause).andOrList(writer, sepKind);
+    		} else {
+    			((SqlNodeList) clause).commaList(writer);
+    		}
+    	} else {
+    		clause.unparse(writer, 0, 0);
+    	}
     }
 
     // override Object
