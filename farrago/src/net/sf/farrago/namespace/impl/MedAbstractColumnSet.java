@@ -207,6 +207,53 @@ public abstract class MedAbstractColumnSet
             args,
             RelNode.emptyArray);
     }
+
+    /**
+     * Converts one RelNode to another RelNode with specified RowType.
+     * New columns are filled with nulls.
+     *
+     * @param cluster same as for toRel
+     * @param child original RelNode
+     * @param targetRowType RowType to map to
+     */
+    protected RelNode toLenientRel(
+        RelOptCluster cluster,
+        RelNode child,
+        RelDataType targetRowType)
+    {
+        RelDataType srcRowType = child.getRowType();
+
+        Vector<RexNode> rexNodeList = new Vector();
+        RexBuilder rexBuilder = cluster.getRexBuilder();
+
+        for (RelDataTypeField targetField : targetRowType.getFieldList()) {
+            int index = 0;
+            for (RelDataTypeField srcField : srcRowType.getFieldList()) {
+                if (targetField.getName().equals(srcField.getName())) {
+                    rexNodeList.add(new RexInputRef(index, srcField.getType()));
+                    break;
+                } else if (index+1 == srcRowType.getFieldCount()) {
+                    RelDataType targetType = targetField.getType();
+                    rexNodeList.add(
+                        rexBuilder.makeCast(
+                            targetType,
+                            rexBuilder.constantNull()));
+                } 
+                index++;
+            }
+        }
+
+        // create a new RelNode.
+        RelNode calcRel = CalcRel.createProject(
+            child,
+            rexNodeList,
+            null);
+
+        return RelOptUtil.createCastRel(
+            calcRel,
+            targetRowType,
+            true);
+    }
 }
 
 // End MedAbstractColumnSet.java
