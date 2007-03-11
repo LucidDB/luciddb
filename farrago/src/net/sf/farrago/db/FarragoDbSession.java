@@ -909,6 +909,9 @@ public class FarragoDbSession
         boolean [] pRollback = new boolean[1];
         pRollback[0] = true;
         FarragoSessionStmtValidator stmtValidator = newStmtValidator();
+        if (stmtContext != null) {
+            stmtValidator.setWarningQueue(stmtContext.getWarningQueue());
+        }
         stmtValidator.setTimingTracer(timingTracer);
             
         // Pass the repos txn context to the statement validator so

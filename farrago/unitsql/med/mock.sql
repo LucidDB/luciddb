@@ -36,6 +36,11 @@ create foreign table mock_java_table(
 server mock_foreign_server
 options (executor_impl 'JAVA', row_count '3');
 
+create foreign table mock_java_table_with_warning(
+    id int not null)
+server mock_foreign_server
+options (executor_impl 'JAVA', row_count '-2');
+
 create function ramp(n int)
 returns table(i int)
 language java
@@ -97,6 +102,8 @@ insert into mock_empty_table values (5);
 select * from mock_fennel_table;
 
 select * from mock_java_table;
+
+select * from mock_java_table_with_warning;
 
 select * from mock_ramp_udx_table;
 
