@@ -236,8 +236,8 @@ public abstract class MedAbstractColumnSet
         }
 
         ArrayList<String> allTargetFields = new ArrayList();
+        int index = 0;
         for (RelDataTypeField targetField : targetRowType.getFieldList()) {
-            int index = 0;
             allTargetFields.add(targetField.getName());
             RelDataType type;
             if ((type = srcMap.get(targetField.getName())) != null) {
