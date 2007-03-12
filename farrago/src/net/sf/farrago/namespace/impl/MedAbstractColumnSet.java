@@ -30,6 +30,7 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.FarragoUdrRuntime;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -198,7 +199,7 @@ public abstract class MedAbstractColumnSet
         // TODO jvs 13-Oct-2006:  phase out these vestigial parameters
         assert(cluster == getPreparingStmt().getRelOptCluster());
         assert(connection == getPreparingStmt());
-        
+
         return FarragoJavaUdxRel.newUdxRel(
             getPreparingStmt(),
             getRowType(),
@@ -215,31 +216,67 @@ public abstract class MedAbstractColumnSet
      * @param cluster same as for toRel
      * @param child original RelNode
      * @param targetRowType RowType to map to
+     * @param srcRowType RowType of external data source
      */
     protected RelNode toLenientRel(
         RelOptCluster cluster,
         RelNode child,
-        RelDataType targetRowType)
+        RelDataType targetRowType,
+        RelDataType srcRowType)
     {
-        RelDataType srcRowType = child.getRowType();
-
-        Vector<RexNode> rexNodeList = new Vector();
+        ArrayList<RexNode> rexNodeList = new ArrayList();
         RexBuilder rexBuilder = cluster.getRexBuilder();
+        FarragoWarningQueue warningQueue =
+            getPreparingStmt().getStmtValidator().getWarningQueue();
+        String objectName = this.localName[this.localName.length-1];
 
+        HashMap<String, RelDataType> srcMap = new HashMap();
+        for (RelDataTypeField srcField : srcRowType.getFieldList()) {
+            srcMap.put(srcField.getName(), srcField.getType());
+        }
+
+        ArrayList<String> allTargetFields = new ArrayList();
         for (RelDataTypeField targetField : targetRowType.getFieldList()) {
             int index = 0;
-            for (RelDataTypeField srcField : srcRowType.getFieldList()) {
-                if (targetField.getName().equals(srcField.getName())) {
-                    rexNodeList.add(new RexInputRef(index, srcField.getType()));
-                    break;
-                } else if (index+1 == srcRowType.getFieldCount()) {
+            allTargetFields.add(targetField.getName());
+            RelDataType type;
+            if ((type = srcMap.get(targetField.getName())) != null) {
+                if (type != targetField.getType()) {
+                    // field type cast
+                    warningQueue.postWarning(
+                        FarragoResource.instance().TypeChangeWarning.ex(
+                            objectName, targetField.getName(), type.toString(),
+                            targetField.getType().toString()));
+                }
+                rexNodeList.add(new RexInputRef(index, targetField.getType()));
+            } else { // field in target not in child
+                // check if type-incompatibility between source and target
+                if ((type = srcMap.get(targetField.getName())) != null) {
+                    warningQueue.postWarning(FarragoResource.instance().
+                        IncompatibleTypeChangeWarning.ex(
+                            objectName, targetField.getName(), type.toString(),
+                            targetField.getType().toString()));
+                } else {
+                    // field in target has been deleted in source
                     RelDataType targetType = targetField.getType();
                     rexNodeList.add(
                         rexBuilder.makeCast(
                             targetType,
                             rexBuilder.constantNull()));
-                } 
-                index++;
+                    warningQueue.postWarning(
+                        FarragoResource.instance().DeletedFieldWarning.ex(
+                            objectName, targetField.getName()));
+                }
+            }
+            index++;
+        }
+
+        // check if data source has added fields
+        for (String srcField : srcMap.keySet()) {
+            if (!allTargetFields.contains(srcField)) {
+                warningQueue.postWarning(
+                    FarragoResource.instance().AddedFieldWarning.ex(
+                        objectName, srcField));
             }
         }
 
