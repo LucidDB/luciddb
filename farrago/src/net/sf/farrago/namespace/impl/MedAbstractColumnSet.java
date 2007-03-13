@@ -240,16 +240,19 @@ public abstract class MedAbstractColumnSet
         for (RelDataTypeField targetField : targetRowType.getFieldList()) {
             allTargetFields.add(targetField.getName());
             RelDataType type;
-            if ((type = srcMap.get(targetField.getName())) != null) {
-                if (type != targetField.getType()) {
-                    // field type cast
+            // target field is in child
+            if ((index = child.getRowType().getFieldOrdinal(
+                     targetField.getName())) != -1) {
+                if ((type = srcMap.get(targetField.getName())) !=
+                    targetField.getType()) {
+                    // field type has been cast
                     warningQueue.postWarning(
                         FarragoResource.instance().TypeChangeWarning.ex(
                             objectName, targetField.getName(), type.toString(),
                             targetField.getType().toString()));
                 }
                 rexNodeList.add(new RexInputRef(index, targetField.getType()));
-            } else { // field in target not in child
+            } else { // target field is not in child
                 // check if type-incompatibility between source and target
                 if ((type = srcMap.get(targetField.getName())) != null) {
                     warningQueue.postWarning(FarragoResource.instance().
@@ -258,17 +261,15 @@ public abstract class MedAbstractColumnSet
                             targetField.getType().toString()));
                 } else {
                     // field in target has been deleted in source
-                    RelDataType targetType = targetField.getType();
                     rexNodeList.add(
                         rexBuilder.makeCast(
-                            targetType,
+                            targetField.getType(),
                             rexBuilder.constantNull()));
                     warningQueue.postWarning(
                         FarragoResource.instance().DeletedFieldWarning.ex(
                             objectName, targetField.getName()));
                 }
             }
-            index++;
         }
 
         // check if data source has added fields
