@@ -92,17 +92,27 @@ to eliminate this repackaging burden.)</td>
 <td>Password for login to foreign server</td>
 </tr>
 <tr>
+<td>USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER</td> 
+<td>If set to 'TRUE', then for tables without a table-level SCHEMA_NAME
+specified, the server-level SCHEMA_NAME is used. The default is 'FALSE'.
+</td>
+</tr>
+<tr>
+<tr>
 <td>SCHEMA_NAME</td> 
-<td>Artificial foreign schema name.  This option is only required for
+<td> If USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER is set to 'FALSE':<br>
+Artificial foreign schema name.  This option is only required for
 servers which don't support schemas.  When specified, the plugin will
 accept this schema name as a foreign qualifier when importing foreign tables
 or accessing them directly, but will omit all schema references when
 sending SQL to the foreign server.  For servers that support schemas,
 this option should never be specified; reference the real foreign schema names 
-instead.
+instead. <br>
+If USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER is set to 'TRUE':<br>
+Server must support schemas. This SCHEMA_NAME will be used if the table-level
+SCHEMA_NAME is not set.
 </td>
 </tr>
-<tr>
 <td>QUALIFYING_CATALOG_NAME</td> 
 <td>Foreign catalog name to which this server should correspond.  This
 option should only be used for servers which support multiple
@@ -212,7 +222,7 @@ definition:
 <h2>JDBC Foreign Table Definition</h2>
 
 The only option always required when defining a JDBC foreign
-table is <code>TABLE_NAME</code>:
+table is <code>TABLE_NAME</code> (or <code>OBJECT</code>):
 
 <pre><code>
 create schema ora_sales;

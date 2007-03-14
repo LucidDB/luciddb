@@ -243,6 +243,49 @@ Error: From line 1, column 15 to line 1, column 48: Table 'MOF_SCHEMA.FOREIGN_EX
 | 40      | OPERATIONS  | BOSTON    |
 +---------+-------------+-----------+
 > 
+> -- test SCHEMA_NAME of server specified
+> create server hsqldb_schema_qual
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.hsqldb.jdbcDriver',
+>     url 'jdbc:hsqldb:testcases/hsqldb/scott',
+>     user_name 'SA',
+>     schema_name 'SALES',
+>     table_types 'TABLE,VIEW');
+> 
+> -- create a foreign table without schema name: should fail
+> create foreign table demo_schema.dept_server_schema
+> server hsqldb_schema_qual
+> options(object 'DEPT');
+Error: Table not found in statement [SELECT * FROM "DEPT"] (state=S0002,code=-22)
+> 
+> -- test schema of server with USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER set
+> create or replace server hsqldb_schema_qual
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.hsqldb.jdbcDriver',
+>     url 'jdbc:hsqldb:testcases/hsqldb/scott',
+>     user_name 'SA',
+>     schema_name 'SALES',
+>     use_schema_name_as_foreign_qualifier 'true',
+>     table_types 'TABLE,VIEW');
+> 
+> -- create a foreign table without schema name: should pass
+> create foreign table demo_schema.dept_server_schema
+> server hsqldb_schema_qual
+> options(object 'DEPT');
+> 
+> -- test same query as above, but against foreign table with schema name gotten from server
+> select * from demo_schema.dept_server_schema order by deptno;
++---------+-------------+-----------+
+| DEPTNO  |    DNAME    |    LOC    |
++---------+-------------+-----------+
+| 10      | ACCOUNTING  | NEW YORK  |
+| 20      | RESEARCH    | DALLAS    |
+| 30      | SALES       | CHICAGO   |
+| 40      | OPERATIONS  | BOSTON    |
++---------+-------------+-----------+
+> 
 > create schema demo_import_schema;
 > 
 > -- test full import

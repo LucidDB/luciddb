@@ -117,12 +117,13 @@ class MedJdbcNameDirectory
         }
 
         String [] foreignQualifiedName;
-        if (server.schemaName != null) {
+        if (server.schemaName != null &&
+            !server.useSchemaNameAsForeignQualifier) {
             foreignQualifiedName = new String[] { foreignName };
         } else if (server.catalogName != null) {
             foreignQualifiedName = new String[] {
-                    server.catalogName, schemaName, foreignName
-                };
+                server.catalogName, schemaName, foreignName
+            };
         } else {
             foreignQualifiedName = new String[] { schemaName, foreignName };
         }
