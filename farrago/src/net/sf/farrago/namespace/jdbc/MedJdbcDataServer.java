@@ -282,10 +282,10 @@ public class MedJdbcDataServer
             }
         }
 
-        String tableName = tableProps.getProperty(PROP_TABLE_NAME);
+        String tableName = tableProps.getProperty(PROP_OBJECT);
         if (tableName == null) {
-            requireProperty(tableProps, PROP_OBJECT);
-            tableName = tableProps.getProperty(PROP_OBJECT);
+            requireProperty(tableProps, PROP_TABLE_NAME);
+            tableName = tableProps.getProperty(PROP_TABLE_NAME);
         }
         MedJdbcNameDirectory directory =
             new MedJdbcNameDirectory(this, tableSchemaName);
