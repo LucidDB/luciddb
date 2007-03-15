@@ -68,6 +68,26 @@ public abstract class DmvTestUdr
         String dotFilename)
         throws Exception
     {
+        FarragoMdrTestContext context = new FarragoMdrTestContext();
+        try {
+            context.init(foreignServerName);
+            renderGraphviz(
+                context,
+                lurqlFilename,
+                transformationFilename,
+                dotFilename);
+        } finally {
+            context.closeAllocation();
+        }
+    }
+
+    public static void renderGraphviz(
+        FarragoMdrTestContext context,
+        String lurqlFilename,
+        String transformationFilename,
+        String dotFilename)
+        throws Exception
+    {
         lurqlFilename =
             FarragoProperties.instance().expandProperties(
                 lurqlFilename);
@@ -77,10 +97,8 @@ public abstract class DmvTestUdr
         dotFilename =
             FarragoProperties.instance().expandProperties(
                 dotFilename);
-        FarragoMdrTestContext context = new FarragoMdrTestContext();
         FileWriter dotWriter = new FileWriter(dotFilename);
         try {
-            context.init(foreignServerName);
             String lurql = readFileAsString(lurqlFilename);
             JmiQueryProcessor queryProcessor =
                 new LurqlQueryProcessor(
@@ -110,7 +128,6 @@ public abstract class DmvTestUdr
                 response,
                 dotWriter);
         } finally {
-            context.closeAllocation();
             dotWriter.close();
         }
     }
