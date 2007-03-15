@@ -94,7 +94,7 @@ public class LucidDbTestCleanup
             || name.equals("FLAT FILE")
             || name.equals("LUCIDDB LOCAL")
             || name.equals("SALESFORCE")
-            || name.equals("NETSUITE")
+            || name.contains("NETSUITE")
             || super.isBlessedWrapper(wrapper);
     }
 

@@ -148,7 +148,12 @@ public class DmvGraphvizRenderer
             if (!vertex.getElementSet().contains(parent)) {
                 String className =
                     ((ModelElement) obj.refMetaObject()).getName();
-                String objName = (String) obj.refGetValue("name");
+                String objName;
+                try {
+                    objName = (String) obj.refGetValue("name");
+                } catch (InvalidNameException ex) {
+                    continue;
+                }
                 if (isClusterParent(vertex)) {
                     return className + ":" + objName;
                 } else {

@@ -208,4 +208,15 @@ FROM `X`
     INNER JOIN `Y` ON `X`.`K` = `Y`.`K`]]>
         </Resource>
     </TestCase>
+    <TestCase name="testWhereListItemsOnSeparateLines">
+        <Resource name="desc"/>
+        <Resource name="formatted">
+            <![CDATA[SELECT
+    `X`
+FROM `Y`
+WHERE ((`H` IS NOT NULL) AND `I` < `J`)
+    OR (((`A` OR `B`) IS TRUE) AND `D` NOT IN (`F`, `G`))
+    OR `X` <> `Z`]]>
+        </Resource>
+    </TestCase>
 </Root>

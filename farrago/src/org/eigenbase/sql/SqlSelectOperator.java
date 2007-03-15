@@ -19,13 +19,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.*;
+import java.util.ArrayList;
 
 
 /**
@@ -46,7 +47,7 @@ import org.eigenbase.sql.util.*;
  * </p>
  */
 public class SqlSelectOperator
-    extends SqlOperator
+extends SqlOperator
 {
 
     //~ Constructors -----------------------------------------------------------
@@ -110,9 +111,9 @@ public class SqlSelectOperator
             windowDecls = new SqlNodeList(pos);
         }
         return
-            (SqlSelect) createCall(
-                pos, keywordList, selectList, fromClause, whereClause, groupBy,
-                having, windowDecls, orderBy);
+        (SqlSelect) createCall(
+            pos, keywordList, selectList, fromClause, whereClause, groupBy,
+            having, windowDecls, orderBy);
     }
 
     public <R> void acceptCall(SqlVisitor<R> visitor,
@@ -169,9 +170,40 @@ public class SqlSelectOperator
         writer.endList(fromFrame);
 
         SqlNode whereClause = operands[SqlSelect.WHERE_OPERAND];
+
         if (whereClause != null) {
             writer.sep("WHERE");
-            whereClause.unparse(writer, 0, 0);
+
+            if (!writer.isAlwaysUseParentheses()) {
+                SqlNode node = whereClause;
+
+                // decide whether to split on ORs or ANDs
+                SqlKind whereSepKind = SqlKind.And;
+                if (node instanceof SqlCall
+                    && ((SqlCall)node).getKind().isA(SqlKind.Or))
+                    whereSepKind = SqlKind.Or;
+
+                // unroll whereClause
+                ArrayList list = new ArrayList<SqlNode>(0);
+                while (node instanceof SqlCall && (
+                    ((SqlCall)node).getKind().isA(whereSepKind))) {
+                    list.add(0, ((SqlCall)node).getOperands()[1]);
+                    node = ((SqlCall)node).getOperands()[0];
+                }
+                list.add(0, node);
+
+                // unparse in a WhereList frame
+                final SqlWriter.Frame whereFrame = 
+                    writer.startList(SqlWriter.FrameType.WhereList);
+                unparseListClause(writer, 
+                    new SqlNodeList(
+                        list, 
+                        whereClause.getParserPosition()),
+                        whereSepKind);
+                writer.endList(whereFrame);
+            } else {
+                whereClause.unparse(writer, 0, 0);
+            }
         }
         SqlNodeList groupClause =
             (SqlNodeList) operands[SqlSelect.GROUP_OPERAND];
@@ -223,4 +255,4 @@ public class SqlSelectOperator
     }
 }
 
-// End SqlSelectOperator.java
+//End SqlSelectOperator.java

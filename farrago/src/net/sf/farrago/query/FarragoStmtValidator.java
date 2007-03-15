@@ -83,6 +83,7 @@ public class FarragoStmtValidator
     private SqlParserPos parserPos;
     private EigenbaseTimingTracer timingTracer;
     private FarragoReposTxnContext reposTxnContext;
+    private FarragoWarningQueue warningQueue;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -99,6 +100,7 @@ public class FarragoStmtValidator
      * @param ddlLockManager FarragoDdlLockManager to use for protecting catalog
      * objects in use from modification
      * @param indexMap FarragoSessionIndexMap to use for index access
+     * @param warningQueue warning queue to use during statement validation
      */
     public FarragoStmtValidator(
         FarragoRepos repos,
@@ -116,6 +118,10 @@ public class FarragoStmtValidator
         this.session = session;
         this.sharedDataWrapperCache = sharedDataWrapperCache;
         this.ddlLockManager = ddlLockManager;
+
+        // default is a private warning queue, but normally
+        // session resets queue to the one from stmt context
+        this.warningQueue = new FarragoWarningQueue();
 
         parser = session.getPersonality().newParser(session);
 
@@ -207,6 +213,18 @@ public class FarragoStmtValidator
     public FarragoDdlLockManager getDdlLockManager()
     {
         return ddlLockManager;
+    }
+
+    // implement FarragoSessionStmtValidator
+    public FarragoWarningQueue getWarningQueue()
+    {
+        return warningQueue;
+    }
+
+    // implement FarragoSessionStmtValidator
+    public void setWarningQueue(FarragoWarningQueue warningQueue)
+    {
+        this.warningQueue = warningQueue;
     }
 
     // implement FarragoSessionStmtValidator

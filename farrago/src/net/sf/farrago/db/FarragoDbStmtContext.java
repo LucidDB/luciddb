@@ -63,6 +63,7 @@ public class FarragoDbStmtContext
     private FarragoCompoundAllocation allocations;
     private FarragoSessionRuntimeContext runningContext;
     private final FarragoWarningQueue warningQueue;
+    private boolean isExecDirect;
 
     /**
      * query timeout in seconds, default to 0.
@@ -111,6 +112,7 @@ public class FarragoDbStmtContext
             unprepare();
             allocations = new FarragoCompoundAllocation();
             this.sql = sql;
+            this.isExecDirect = isExecDirect;
             executableStmt =
                 session.prepare(
                     this,
@@ -201,7 +203,9 @@ public class FarragoDbStmtContext
     private void executeImpl() 
     {
         assert (isPrepared());
-        warningQueue.clearWarnings();
+        if (!isExecDirect) {
+            warningQueue.clearWarnings();
+        }
         closeResultSet();
         traceExecute();
         boolean isDml = executableStmt.isDml();
@@ -387,6 +391,7 @@ public class FarragoDbStmtContext
                 allocations = null;
             }
             executableStmt = null;
+            isExecDirect = false;
 
             super.unprepare();
         }

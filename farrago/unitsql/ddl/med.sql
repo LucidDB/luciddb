@@ -154,6 +154,40 @@ options(schema_name 'SALES', table_name 'DEPT');
 -- test same query as above, but against foreign table with inferred types
 select * from demo_schema.dept_inferred order by deptno;
 
+-- test SCHEMA_NAME of server specified
+create server hsqldb_schema_qual
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
+    user_name 'SA',
+    schema_name 'SALES',
+    table_types 'TABLE,VIEW');
+
+-- create a foreign table without schema name: should fail
+create foreign table demo_schema.dept_server_schema
+server hsqldb_schema_qual
+options(object 'DEPT');
+
+-- test schema of server with USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER set
+create or replace server hsqldb_schema_qual
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
+    user_name 'SA',
+    schema_name 'SALES',
+    use_schema_name_as_foreign_qualifier 'true',
+    table_types 'TABLE,VIEW');
+
+-- create a foreign table without schema name: should pass
+create foreign table demo_schema.dept_server_schema
+server hsqldb_schema_qual
+options(object 'DEPT');
+
+-- test same query as above, but against foreign table with schema name gotten from server
+select * from demo_schema.dept_server_schema order by deptno;
+
 create schema demo_import_schema;
 
 -- test full import

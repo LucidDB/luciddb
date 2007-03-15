@@ -66,17 +66,23 @@ public class MedJdbcDataServer
     public static final String PROP_CATALOG_NAME = "QUALIFYING_CATALOG_NAME";
     public static final String PROP_SCHEMA_NAME = "SCHEMA_NAME";
     public static final String PROP_TABLE_NAME = "TABLE_NAME";
+    public static final String PROP_OBJECT = "OBJECT";
     public static final String PROP_TABLE_TYPES = "TABLE_TYPES";
     public static final String PROP_EXT_OPTIONS = "EXTENDED_OPTIONS";
     public static final String PROP_TYPE_SUBSTITUTION = "TYPE_SUBSTITUTION";
     public static final String PROP_TYPE_MAPPING = "TYPE_MAPPING";
     public static final String PROP_LOGIN_TIMEOUT = "LOGIN_TIMEOUT";
     public static final String PROP_VALIDATION_QUERY = "VALIDATION_QUERY";
+    public static final String PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER =
+        "USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER";
 
     // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
     public static final String PROP_NAME = "NAME";
     public static final String PROP_TYPE = "TYPE";
+
+    public static final boolean DEFAULT_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER =
+        false;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -95,6 +101,7 @@ public class MedJdbcDataServer
     protected DatabaseMetaData databaseMetaData;
     protected boolean validateConnection = false;
     protected String validationQuery;
+    protected boolean useSchemaNameAsForeignQualifier;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -125,6 +132,12 @@ public class MedJdbcDataServer
             connectProps = (Properties) props.clone();
             removeNonDriverProps(connectProps);
         }
+
+        useSchemaNameAsForeignQualifier =
+            getBooleanProperty(
+                props,
+                PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER,
+                DEFAULT_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER);
 
         String tableTypeString = props.getProperty(PROP_TABLE_TYPES);
         if (tableTypeString == null) {
@@ -229,6 +242,7 @@ public class MedJdbcDataServer
         props.remove(PROP_TYPE_MAPPING);
         props.remove(PROP_TABLE_TYPES);
         props.remove(PROP_LOGIN_TIMEOUT);
+        props.remove(PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER);
     }
 
     // implement FarragoMedDataServer
@@ -259,7 +273,7 @@ public class MedJdbcDataServer
         String tableSchemaName = tableProps.getProperty(PROP_SCHEMA_NAME);
         if (tableSchemaName == null) {
             tableSchemaName = schemaName;
-        } else if (schemaName != null) {
+        } else if (schemaName != null && !useSchemaNameAsForeignQualifier) {
             if (!tableSchemaName.equals(schemaName)) {
                 throw FarragoResource.instance().MedPropertyMismatch.ex(
                     schemaName,
@@ -267,8 +281,12 @@ public class MedJdbcDataServer
                     PROP_SCHEMA_NAME);
             }
         }
-        requireProperty(tableProps, PROP_TABLE_NAME);
-        String tableName = tableProps.getProperty(PROP_TABLE_NAME);
+
+        String tableName = tableProps.getProperty(PROP_OBJECT);
+        if (tableName == null) {
+            requireProperty(tableProps, PROP_TABLE_NAME);
+            tableName = tableProps.getProperty(PROP_TABLE_NAME);
+        }
         MedJdbcNameDirectory directory =
             new MedJdbcNameDirectory(this, tableSchemaName);
         return
