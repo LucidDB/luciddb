@@ -515,9 +515,7 @@ public final class FennelTupleAccessor
      */
     public void setCurrentTupleBuf(ByteBuffer currTupleBuf)
     {
-        synchronized (attrAccessors) {
-            this.currTupleBuf = currTupleBuf;
-        }
+        this.currTupleBuf = currTupleBuf;
     }
 
     /**
@@ -624,37 +622,35 @@ public final class FennelTupleAccessor
         boolean sliced = false;
         ByteBuffer prevCurrent = currTupleBuf;
 
-        synchronized (attrAccessors) {
-            // see if we're not at the beginning of the tuple buffer; if not
-            // we have to slice it
-            if (currTupleBuf.position() != 0) {
-                while ((currTupleBuf.position() & 0x3) != 0) {
-                    currTupleBuf.position(currTupleBuf.position() + 1);
-                }
-                currTupleBuf = currTupleBuf.slice();
-                if (setNativeOrder) {
-                    currTupleBuf.order(ByteOrder.nativeOrder());
-                }
-                sliced = true;
+        // see if we're not at the beginning of the tuple buffer; if not
+        // we have to slice it
+        if (currTupleBuf.position() != 0) {
+            while ((currTupleBuf.position() & 0x3) != 0) {
+                currTupleBuf.position(currTupleBuf.position() + 1);
             }
+            currTupleBuf = currTupleBuf.slice();
+            if (setNativeOrder) {
+                currTupleBuf.order(ByteOrder.nativeOrder());
+            }
+            sliced = true;
+        }
 
-            int i;
-            for (i = 0; i < n; ++i) {
-                FennelAttributeAccessor attr = getAttributeAccessor(i);
-                if (!attr.isPresent(currTupleBuf)) {
-                    tuple.getDatum(iFirstDatum + i).reset();
-                } else {
-                    attr.unmarshalValue(
-                        this,
-                        tuple.getDatum(iFirstDatum + i));
-                }
+        int i;
+        for (i = 0; i < n; ++i) {
+            FennelAttributeAccessor attr = getAttributeAccessor(i);
+            if (!attr.isPresent(currTupleBuf)) {
+                tuple.getDatum(iFirstDatum + i).reset();
+            } else {
+                attr.unmarshalValue(
+                    this,
+                    tuple.getDatum(iFirstDatum + i));
             }
-            currTupleBuf.position(getByteCount(tuple));
-            if (sliced) {
-                prevCurrent.position(
-                    prevCurrent.position() + currTupleBuf.position());
-                currTupleBuf = prevCurrent;
-            }
+        }
+        currTupleBuf.position(getByteCount(tuple));
+        if (sliced) {
+            prevCurrent.position(
+                prevCurrent.position() + currTupleBuf.position());
+            currTupleBuf = prevCurrent;
         }
     }
 
