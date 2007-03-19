@@ -34,6 +34,7 @@
 -Dnet.sf.farrago.home=${farrago.dir}
 -Dnet.sf.farrago.catalog=${project.catalog.dir}
 -Djava.util.logging.config.file=${FarragoTrace.properties}
+-Djava.security.auth.login.config=jaas.config
 ${farrago.test.jvmargs}
 ">
 
@@ -51,7 +52,7 @@ ${farrago.test.jvmargs}
   <property file="initBuild.properties"/>
 
   <!-- import local property overrides; these take precedence over
-       later definitions in this file -->
+  later definitions in this file -->
   <property file="customBuild.properties"/>
 
   <!-- Definitions for Farrago build properties and macros -->
@@ -440,6 +441,7 @@ require version '${required.ant.version}'."/>
     <!-- NOTE:  redundant backup is an intentional checkpoint; in case
     populateTestData fails, it can be debugged from restored empty catalog -->
     <antcall target="backupCatalog"/>
+    <antcall target="createJaasConfig"/>
   </target>
 
   <target name="createCatalogIfNotUptodate" depends="checkCatalogUptodate"
@@ -476,6 +478,16 @@ require version '${required.ant.version}'."/>
 
   <target name="compileCatalog"
     depends="cleanCatalog,generateSqlTestWrapper,createRepository"/>
+
+  <!-- creates the plugin/jaas.config file from template -->
+  <target name="createJaasConfig">
+    <copy file="${farrago.plugin.dir}/templates/jaas.config.tmpl"
+      tofile="${farrago.plugin.dir}/jaas.config">
+      <filterset>
+        <filter token="FARRAGO_LOGIN_MODULE" value="net.sf.farrago.test.FarragoMockLoginModule"/>
+      </filterset>
+    </copy>
+  </target>
 
   <!-- initialize catalog repository -->
   <target name="createRepository" 

@@ -43,6 +43,8 @@ inner join
         sys_cwm."Core"."ModelElement" me
 on      g."Element" = me."mofId";
 
+create user "MockLoginModuleTestUser" authorization 'Unknown';
+
 -------------------------------------------------------------------------
 -- Test 1: 
 -- Create User U1, 
@@ -148,6 +150,15 @@ order by grantee;
 -- should fail:  unknown user
 !closeall
 !connect jdbc:farrago: BOBO tiger
+
+-- should fail:  user with wrong password
+!closeall
+!connect jdbc:farrago: "MockLoginModuleTestUser" blah
+
+-- should succeed:  user with correct password
+!closeall
+!connect jdbc:farrago: "MockLoginModuleTestUser" secret
+
 
 -------------------------------------------------------------------------
 -- Test 4:
