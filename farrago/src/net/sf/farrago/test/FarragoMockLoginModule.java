@@ -44,10 +44,23 @@ import java.util.Iterator;
 
 public class FarragoMockLoginModule implements LoginModule
 {
+    // REVIEW jvs 19-Mar-2007: alignment spacing below will get
+    // removed automatically by Jalopy
+    
     CallbackHandler callbackHandler;
     Subject  subject;
     Map      sharedState;
     Map      options;
+    
+    // REVIEW jvs 19-Mar-2007: use ArrayList instead of Vector unless you
+    // actually need fine-grained synchronization.  Which raises the question,
+    // what are the thread-safety constraints for this class?
+
+    // Also, the preferred pattern is to declare the variable using
+    // an interface type, e.g. List, and then only reference the specific
+    // implementation (ArrayList, Vector, ...) at the point of
+    // instantiation.  The only exception should be where you need
+    // to refer to subclass-specific methods for some reason.
     
     Vector<FarragoMockCredential> tempCredentials;
     Vector<FarragoMockPrincipal> tempPrincipals;
@@ -57,6 +70,9 @@ public class FarragoMockLoginModule implements LoginModule
     
     // config options
     boolean debug;
+
+    // REVIEW jvs 19-Mar-2007:  for all methods (including constructors)
+    // Jalopy will move  opening left-curly onto new line
     
     public FarragoMockLoginModule() {
         success = false;
@@ -75,6 +91,9 @@ public class FarragoMockLoginModule implements LoginModule
         tempPrincipals.clear();
         tempCredentials.clear();
         
+        // REVIEW jvs 19-Mar-2007: is there a way to avoid this?  The
+        // login module should be decoupled from the callback handler.
+        
         if (callbackHandler instanceof FarragoNoninteractiveCallbackHandler) {
             ((FarragoNoninteractiveCallbackHandler)callbackHandler).clearPassword();
         }
@@ -84,7 +103,6 @@ public class FarragoMockLoginModule implements LoginModule
     /**
      * Called if the LoginContext's required authentications succeeded.
      */
-    
     public boolean commit()
         throws LoginException
     {
@@ -96,6 +114,10 @@ public class FarragoMockLoginModule implements LoginModule
                 tempPrincipals.clear();
                 tempCredentials.clear();
             } catch (Exception ex) {
+                // REVIEW jvs 19-Mar-2007: Farrago code should not
+                // write directly to System.out/err.  To avoid losing
+                // the stack, would it work to do
+                // loginException.initCause(ex) before throwing it?
                 ex.printStackTrace(System.out);
                 throw new LoginException(ex.getMessage());
             }
@@ -123,6 +145,10 @@ public class FarragoMockLoginModule implements LoginModule
         this.sharedState = sharedState;
         this.options     = options;
         
+        // REVIEW jvs 19-Mar-2007: Jalopy will insert curly braces
+        // automatically for blocks such as the assignment to debug
+        // below.
+        
         // initialize any configured options
         if (options.containsKey("debug"))
             debug = "true".equalsIgnoreCase((String)options.get("debug"));
@@ -131,7 +157,6 @@ public class FarragoMockLoginModule implements LoginModule
     /**
      * Try to log in a user.
      */
-    
     public boolean login()
         throws LoginException
     { 
