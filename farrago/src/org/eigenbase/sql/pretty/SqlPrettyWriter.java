@@ -388,7 +388,8 @@ implements SqlWriter
     }
 
     /**
-     * Sets whether to print a newline before each AND in WHERE clauses.
+     * Sets whether to print a newline before each AND or OR  (whichever 
+     * is higher level) in WHERE clauses.
      * NOTE: <i>Ignored when alwaysUseParentheses is set to true.</i>
      */
 

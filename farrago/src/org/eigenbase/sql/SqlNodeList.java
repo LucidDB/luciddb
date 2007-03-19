@@ -147,11 +147,12 @@ implements Iterable<SqlNode>
             SqlNode node = list.get(i);
             writer.sep(sepKind.getName(), false);
             lprec = rprec = 0;
-            if (node instanceof SqlCall && (
-                ((SqlCall)node).getKind().isA(SqlKind.And)
-                ||((SqlCall)node).getKind().isA(SqlKind.Or))) {
-                lprec = ((SqlCall)node).getOperator().getLeftPrec();
-                rprec = ((SqlCall)node).getOperator().getRightPrec();
+            if (node instanceof SqlCall) {
+                SqlCall call = (SqlCall)node;
+                if (call.getKind().isA(SqlKind.And)||call.getKind().isA(SqlKind.Or)) {
+                    lprec = call.getOperator().getLeftPrec();
+                    rprec = call.getOperator().getRightPrec();
+                }
             }
             node.unparse(writer,lprec, rprec);
         }
