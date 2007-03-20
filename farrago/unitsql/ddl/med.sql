@@ -300,3 +300,35 @@ select * from demo_schema.dept_nosub;
 
 -- should succeed: query against said view
 select * from demo_schema.dept_nosub_view order by dno;
+
+-- test lenient option
+create server hsqldb_orig
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
+    user_name 'SA',
+    schema_name 'SALES',
+    use_schema_name_as_foreign_qualifier 'true',
+    table_types 'TABLE,VIEW',
+    lenient 'true'
+);
+
+create foreign table demo_schema.dept_changing
+server hsqldb_orig
+options (object 'DEPT');
+
+select * from demo_schema.dept_changing;
+
+create or replace server hsqldb_orig
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb_modified/scott',
+    user_name 'SA',
+    schema_name 'SALES',
+    use_schema_name_as_foreign_qualifier 'true',
+    table_types 'TABLE,VIEW',
+    lenient 'true');
+
+select * from demo_schema.dept_changing;

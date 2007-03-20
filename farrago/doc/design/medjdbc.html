@@ -171,6 +171,16 @@ before TYPE_SUBSTITUTION and does not depend on TYPE_SUBSTITUTION.
 </td>
 </tr>
 <tr>
+<td>LENIENT</td>
+<td>
+If set to 'TRUE', match target columns specified in the foreign table
+definition with foreign columns using case-insensitive string comparison.
+Specified target columns which are missing in foreign columns are filled
+in with null. Specified target columns with types that are cast-incompatible
+from foreign columns are filled in with null.  The default is 'FALSE';
+columns are mapped by position.
+</td>
+<tr>
 <td>LOGIN_TIMEOUT</td>
 <td>
 The maximum time in seconds to wait while attempting to connect to

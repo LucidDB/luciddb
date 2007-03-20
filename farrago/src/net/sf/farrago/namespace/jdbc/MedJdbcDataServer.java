@@ -75,6 +75,7 @@ public class MedJdbcDataServer
     public static final String PROP_VALIDATION_QUERY = "VALIDATION_QUERY";
     public static final String PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER =
         "USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER";
+    public static final String PROP_LENIENT = "LENIENT";
 
     // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
@@ -83,6 +84,7 @@ public class MedJdbcDataServer
 
     public static final boolean DEFAULT_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER =
         false;
+    public static final boolean DEFAULT_LENIENT = false;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -102,6 +104,7 @@ public class MedJdbcDataServer
     protected boolean validateConnection = false;
     protected String validationQuery;
     protected boolean useSchemaNameAsForeignQualifier;
+    protected boolean lenient;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -138,6 +141,11 @@ public class MedJdbcDataServer
                 props,
                 PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER,
                 DEFAULT_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER);
+        lenient =
+            getBooleanProperty(
+                props,
+                PROP_LENIENT,
+                DEFAULT_LENIENT);
 
         String tableTypeString = props.getProperty(PROP_TABLE_TYPES);
         if (tableTypeString == null) {
@@ -243,6 +251,7 @@ public class MedJdbcDataServer
         props.remove(PROP_TABLE_TYPES);
         props.remove(PROP_LOGIN_TIMEOUT);
         props.remove(PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER);
+        props.remove(PROP_LENIENT);
     }
 
     // implement FarragoMedDataServer
