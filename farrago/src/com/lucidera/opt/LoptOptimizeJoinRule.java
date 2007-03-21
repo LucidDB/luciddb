@@ -417,7 +417,7 @@ public class LoptOptimizeJoinRule
                         tmp.andNot(factorsAdded);
                         if (tmp.cardinality() != 0) {
                             continue;
-                        }                       
+                        }
                     }
                     // determine the best weight between the current factor
                     // under consideration and the factors that have already
@@ -456,7 +456,11 @@ public class LoptOptimizeJoinRule
             // add the factor; pass in a bitmap representing the factors
             // this factor joins with that have already been added to
             // the tree
-            BitSet factorsNeeded = multiJoin.getFactorsRefByFactor(nextFactor);
+            BitSet factorsNeeded =
+                (BitSet) multiJoin.getFactorsRefByFactor(nextFactor).clone();
+            if (multiJoin.isNullGenerating(nextFactor)) {
+                factorsNeeded.or(multiJoin.getOuterJoinFactors(nextFactor));
+            }
             factorsNeeded.and(factorsAdded);
             joinTree =
                 addFactorToTree(
