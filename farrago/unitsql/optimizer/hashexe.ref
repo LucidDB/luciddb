@@ -200,9 +200,9 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME) NOT NULL])'
-'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTSEMI])'
-'        FennelValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI])'
 '        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'        FennelValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
 > 
 > select ename from lhxemps
 > where empno in 

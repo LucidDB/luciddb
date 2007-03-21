@@ -274,16 +274,13 @@ public class RelMdUtil
         if ((domainSize == null) || (numSelected == null)) {
             return null;
         }
-        if (domainSize.equals(numSelected)) {
-            return domainSize;
-        }
 
         // The formula for this is:
         // 1. Assume we pick 80 random values between 1 and 100.
         // 2. The chance we skip any given value is .99 ^ 80
         // 3. Thus on average we will skip .99 ^ 80 percent of the values
         //    in the domain
-        // 4. generalized, we skip ( (n-k)/n ) ^ n values where n is the
+        // 4. generalized, we skip ( (n-1)/n ) ^ k values where n is the
         //    number of possible values and k is the number we are selecting
         // 5. Solving this we convert it to e ^ log( ( n-k)/n ) and after
         //    a lot of math we get the formula below.
