@@ -253,6 +253,10 @@ public abstract class MedAbstractColumnSet
                 }
                 rexNodeList.add(new RexInputRef(index, targetField.getType()));
             } else { // target field is not in child
+                rexNodeList.add(
+                    rexBuilder.makeCast(
+                        targetField.getType(),
+                        rexBuilder.constantNull()));
                 // check if type-incompatibility between source and target
                 if ((type = srcMap.get(targetField.getName())) != null) {
                     warningQueue.postWarning(FarragoResource.instance().
@@ -261,10 +265,6 @@ public abstract class MedAbstractColumnSet
                             targetField.getType().toString()));
                 } else {
                     // field in target has been deleted in source
-                    rexNodeList.add(
-                        rexBuilder.makeCast(
-                            targetField.getType(),
-                            rexBuilder.constantNull()));
                     warningQueue.postWarning(
                         FarragoResource.instance().DeletedFieldWarning.ex(
                             objectName, targetField.getName()));
