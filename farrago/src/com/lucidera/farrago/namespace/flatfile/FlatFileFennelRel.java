@@ -132,18 +132,9 @@ public class FlatFileFennelRel
             break;
         case SAMPLE:
             numRowsScan = params.getNumRowsScan();
-            // fall through to get program
-        case QUERY:
-            FlatFileProgramWriter pw = 
-                new FlatFileProgramWriter(
-                    getCluster().getRexBuilder(),
-                    FennelRelUtil.getPreparingStmt(this), 
-                    params,
-                    rowType);
-            assert (pw.getJavaOnlySection() == null);
-            RexProgram rexProgram = pw.getFennelSection();
-            program = pw.serializeProgram(rexProgram, this);
+            program = "sample";
             break;
+            // fall through to get program
         case QUERY_TEXT:
             break;
         default:

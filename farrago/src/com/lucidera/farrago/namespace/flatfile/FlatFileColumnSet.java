@@ -127,52 +127,21 @@ class FlatFileColumnSet
                 params,
                 rowType);
 
-        if (preferFennel()) {
-            RexProgram program = pw.getJavaOnlySection();
-            if (program == null) {
-                return newFennelRel(cluster, connection, schemaType, rowType);
-            }
+        if (schemaType == FlatFileParams.SchemaType.QUERY) {
+            RexProgram program = pw.getProgram();
             return newCalcRel(
-                cluster,
+                cluster, 
                 newFennelRel(
                     cluster, 
                     connection, 
-                    schemaType, 
-                    program.getInputRowType()),
+                    FlatFileParams.SchemaType.QUERY_TEXT, 
+                    program.getInputRowType()), 
                 program);
-        }
-
-        // Note: when using Java calc override the schema type
-        RexProgram program = pw.getProgram();
-        return newCalcRel(
-            cluster, 
-            newFennelRel(
-                cluster, 
-                connection, 
-                FlatFileParams.SchemaType.QUERY_TEXT, 
-                program.getInputRowType()), 
-            program);
-    }
-
-    /**
-     * Whether to prefer a Fennel implementation. A Fennel implementation
-     * is preferred for simple scan modes, SAMPLE and DESCRIBE, and when 
-     * the calc virtual machine settings are not equal to CALCVM_JAVA.
-     */
-    private boolean preferFennel()
-    {
-        switch (schemaType) {
-        case QUERY:
-            CalcVirtualMachine calcVm = getPreparingStmt().getRepos()
-                .getCurrentConfig().getCalcVirtualMachine();
-            return !calcVm.equals(CalcVirtualMachineEnum.CALCVM_JAVA);
-        default:
-            // basic modes such as SAMPLE and DESCRIBE can always be 
-            // implemented without Java
-            return true;
+        } else {
+            return newFennelRel(cluster, connection, schemaType, rowType);
         }
     }
-    
+
     /**
      * Constructs a new FlatFileFennelRel
      */

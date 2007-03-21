@@ -530,16 +530,10 @@ Error: From line 1, column 15 to line 1, column 39: Table 'FLATFILE_SCHEMA.examp
 > 
 > -- test files with null values
 > select * from flatfiledir_schema."withnulls" order by 3,1,2;
-+------+------------------------------------------+--------------+
-|  ID  |                   NAME                   | EXTRA_FIELD  |
-+------+------------------------------------------+--------------+
-|      |                                          |              |
-|      | Susan, Peter and Dave                    |              |
-| 123  |                                          |              |
-| 123  | "S,"                                     | F            |
-|      |                                          | G            |
-| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
-+------+------------------------------------------+--------------+
+Error: could not calculate results for the following row:
+[ '', '', '' ]
+Messages:
+[0]:PC=0 Code=22018 (state=,code=0)
 > drop table flatfiledir_schema."withnulls";
 > 
 > -- test badly qualified import foreign schema

@@ -113,7 +113,7 @@ public:
         FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testBuffer);
         FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testParser);
         FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testStream);
-        FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testStreamCalc);
+        //FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testStreamCalc);
     }
 
     void testBuffer();
