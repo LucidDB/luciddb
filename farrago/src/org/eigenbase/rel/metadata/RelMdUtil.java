@@ -280,10 +280,17 @@ public class RelMdUtil
         // 2. The chance we skip any given value is .99 ^ 80
         // 3. Thus on average we will skip .99 ^ 80 percent of the values
         //    in the domain
-        // 4. generalized, we skip ( (n-1)/n ) ^ k values where n is the
+        // 4. Generalized, we skip ( (n-1)/n ) ^ k values where n is the
         //    number of possible values and k is the number we are selecting
-        // 5. Solving this we convert it to e ^ log( ( n-k)/n ) and after
-        //    a lot of math we get the formula below.
+        // 5. This can be rewritten via approximation (if you want to
+        //    know why approximation is called for here, ask Bill Keese):
+        //  ((n-1)/n) ^ k
+        //  = e ^ ln( ((n-1)/n) ^ k )
+        //  = e ^ (k * ln ((n-1)/n))
+        //  = e ^ (k * ln (1-1/n))
+        // ~= e ^ (k * (-1/n))  because ln(1+x) ~= x for small x
+        //  = e ^ (-k/n)
+        // 6. Flipping it from number skipped to number visited, we get:
         double res =
             (domainSize > 0)
             ? ((1.0 - Math.exp(-1 * numSelected / domainSize)) * domainSize)
