@@ -606,7 +606,7 @@ class MedJdbcNameDirectory
     {
         HashMap<String, RelDataType> srcMap = new HashMap();
         for (RelDataTypeField srcField : srcRowType.getFieldList()) {
-            srcMap.put(srcField.getName().toUpperCase(), srcField.getType());
+            srcMap.put(srcField.getName(), srcField.getType());
         }
 
         ArrayList fieldsVector = new ArrayList();
@@ -615,7 +615,7 @@ class MedJdbcNameDirectory
         for (RelDataTypeField currField : currRowType.getFieldList()) {
             RelDataType type;
             if (((type =
-                     srcMap.get(currField.getName().toUpperCase())) != null) &&
+                     srcMap.get(currField.getName())) != null) &&
                 SqlTypeUtil.canCastFrom(
                     currField.getType(), type, true))
             {

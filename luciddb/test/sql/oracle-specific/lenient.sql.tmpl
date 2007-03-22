@@ -21,11 +21,14 @@ options
 select * from test.casting order by 1,2,3,4,5,6;
 
 create or replace foreign table CASTING (
-  mydate date,
+  "mydate" date,
+  "timestampcol" timestamp,
   timestampcol timestamp,
+  "datecol" date,
   datecol date,
+  "clobcol" varbinary,
   clobcol varbinary,
-  yyy varbinary
+  "yyy" varbinary
 ) server ORCL_SERVER_LENIENT
 options
 (object '@DATATYPE_TABLE@');
