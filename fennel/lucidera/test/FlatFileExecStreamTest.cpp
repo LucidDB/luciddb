@@ -113,13 +113,11 @@ public:
         FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testBuffer);
         FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testParser);
         FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testStream);
-        //FENNEL_UNIT_TEST_CASE(FlatFileExecStreamTest, testStreamCalc);
     }
 
     void testBuffer();
     void testParser();
     void testStream();
-    void testStreamCalc();
 };
 
 void FlatFileExecStreamTest::testBuffer()
@@ -279,57 +277,6 @@ void FlatFileExecStreamTest::testStream()
     verifier.insert("[ 'No one', 'travels' ]");
     verifier.insert("[ 'Along this way', 'but I,' ]");
     verifier.insert("[ 'This', 'autumn evening.' ]");
-
-    verifyOutput(
-        *pOutputStream,
-        3,
-        verifier);
-}
-
-void FlatFileExecStreamTest::testStreamCalc()
-{
-    StandardTypeDescriptorFactory stdTypeFactory;
-    TupleAttributeDescriptor attrDesc(
-        stdTypeFactory.newDataType(STANDARD_TYPE_INT_32),
-        false);
-    
-    FlatFileExecStreamParams flatfileParams;
-    flatfileParams.scratchAccessor =
-        pSegmentFactory->newScratchSegment(pCache,1);
-    flatfileParams.outputTupleDesc.push_back(attrDesc);
-    //flatfileParams.outputTupleDesc.push_back(attrDesc);
-    flatfileParams.dataFilePath = "flatfile/integer";
-    flatfileParams.fieldDelim = ',';
-    flatfileParams.rowDelim = '\n';
-    flatfileParams.quoteChar = '"';
-    flatfileParams.escapeChar = '\\';
-    flatfileParams.header = false;
-    flatfileParams.calcProgram =
-        std::string("O s4;\n") +
-        "I vc,255;\n" +
-        "L s8, s4, bo;\n" +
-        "C bo, bo, vc,5;\n" +
-        "V 1, 0, 0x3232303034 /* 22004 */;\n" +
-        "T;\n" +
-        "CALL 'castA(L0, I0) /* 0: CAST($0):BIGINT NOT NULL */;\n" +
-        "CAST L1, L0 /* 1: CAST(CAST($0):BIGINT NOT NULL):INTEGER NOT NULL CAST($0):INTEGER NOT NULL */;\n" +
-        "ISNULL L2, L1 /* 2: */;\n" +
-        "JMPF @6, L2 /* 3: */;\n" +
-        "RAISE C2 /* 4: */;\n" +
-        "RETURN /* 5: */;\n" +
-        "REF O0, L1 /* 6: */;\n" +
-        "RETURN /* 7: */;";
-
-    ExecStreamEmbryo flatfileStreamEmbryo;
-    flatfileStreamEmbryo.init(
-        FlatFileExecStream::newFlatFileExecStream(), flatfileParams);
-    flatfileStreamEmbryo.getStream()->setName("FlatFileExecStream");
-
-    SharedExecStream pOutputStream = prepareSourceGraph(flatfileStreamEmbryo);
-    StringExecStreamGeneratorImpl verifier;
-    verifier.insert("[ 123 ]");
-    verifier.insert("[ 456 ]");
-    verifier.insert("[ 777 ]");
 
     verifyOutput(
         *pOutputStream,
