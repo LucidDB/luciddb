@@ -60,6 +60,11 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/deriveEffectiveToTimestampTests.sql"/>
       </test>
 
+      <test name="splitStringsTest">
+        <junit-sql
+        file="${open.dir}/luciddb/test/sql/udr/udx/splitStringsTest.sql"/>
+      </test>
+
       <test name="collapseRows">
         <!-- UNRESOLVED ISSUE: FRG-209 -->
         <test-metadata>

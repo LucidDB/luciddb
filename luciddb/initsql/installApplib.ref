@@ -678,6 +678,43 @@
 > no sql
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.CollapseRowsUdx.execute';
 > 
+> -- split strings
+> create or replace function applib.split_string_to_rows(
+>        IN_STRING varchar(65535), 
+>        SEPARATOR_CHAR char(1), 
+>        ESCAPE_CHAR char(1),
+>        TRIM_TOKENS boolean)
+> returns table(OUT_STRINGS varchar(65535))
+> language java
+> parameter style system defined java
+> no sql
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.execute';
+> 
+> create or replace function applib.split_rows(
+>        IN_CURSOR cursor, 
+>        SEPARATOR_CHAR char(1), 
+>        ESCAPE_CHAR char(1), 
+>        TRIM_TOKENS boolean)
+> returns table(IN_CURSOR.*)
+> language java
+> specific split_strings_singlecol
+> parameter style system defined java
+> no sql
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.execute';
+> 
+> create or replace function applib.split_rows(
+>        IN_CURSOR cursor, 
+>        COL_NAME select from IN_CURSOR, 
+>        SEPARATOR_CHAR char(1), 
+>        ESCAPE_CHAR char(1), 
+>        TRIM_TOKENS boolean)
+> returns table(IN_CURSOR.*)
+> language java
+> specific split_strings_multicol
+> parameter style system defined java
+> no sql
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.execute';
+> 
 > ----
 > -- System procedures
 > ----
