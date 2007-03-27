@@ -304,9 +304,10 @@ ${farrago.test.jvmargs}
     <pathelement location="${thirdparty.dir}/postgresql-8.1-406.jdbc2.jar"/>
     <pathelement location="${vjdbc.dir}/lib/vjdbc_server.jar"/>
     <pathelement location="${vjdbc.dir}/lib/vjdbc.jar"/>
-    <pathelement location="${vjdbc.dir}/lib/commons-logging.jar"/>
-    <pathelement location="${vjdbc.dir}/lib/commons-pool-1.2.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/commons-logging-1.1.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/commons-pool-1.3.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-dbcp-1.2.1.jar"/>
+    <pathelement location="${vjdbc.dir}/lib/commons-digester-1.7.jar"/>    
     <pathelement path="${farrago.custom.classpath}"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
