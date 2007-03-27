@@ -90,7 +90,7 @@
 +--------------+---------+
 |    DNAME     | EXPR$1  |
 +--------------+---------+
-| Accounting   |         |
+| Accounting   | 0       |
 | Marketing    | 1       |
 | Development  | 2       |
 | Sales        | 2       |
@@ -201,23 +201,31 @@ Error: FennelResource.en_US.scalarQueryReturnedMultipleRows() (state=,code=0)
 0: jdbc:luciddb:> select * from EMP E1 where EMPNO = (
 . . . . . . . . >   select MIN(EMPNO) from EMP where LNAME = (
 . . . . . . . . >     select MIN(LNAME) from DEPT where DEPTNO = E1.DEPTNO));
-100, 'Bill', 'Bush', 'M', 30, null, 'HQ', 50000, null, 'Piano'
++--------+--------+--------+------+---------+----------+--------+--------+-------------+--------+
+| EMPNO  | FNAME  | LNAME  | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  | HOBBY  |
++--------+--------+--------+------+---------+----------+--------+--------+-------------+--------+
+| 100    | Bill   | Bush   | M    | 30      |          | HQ     | 50000  |             | Piano  |
++--------+--------+--------+------+---------+----------+--------+--------+-------------+--------+
 0: jdbc:luciddb:> -- scalar subquery inside IN subquery
 0: jdbc:luciddb:> select * from EMP E1 where EMPNO in (
 . . . . . . . . >   select EMPNO from EMP where SAL = (
 . . . . . . . . >     select MIN(SAL) from DEPT where DEPTNO = E1.DEPTNO))
 . . . . . . . . > order by EMPNO;
-100, 'Bill', 'Bush', 'M', 30, null, 'HQ', 50000, null, 'Piano'
-101, 'Bob', 'Brown', 'M', 50, 100, 'SJ', 50000, null, 'Skiing'
-102, 'Julie', 'Andrews', 'F', 30, 104, 'MP', 50000, null, 'Rugby'
-103, 'Frank', 'Webber', 'M', 20, 102, 'MP', 50000, null, 'Piano'
-104, 'Fritz', 'Fratz', 'M', 10, 100, 'HQ', 50000, null, 'Rugby'
-105, 'Rich', 'Guy', 'M', 30, 102, 'HQ', 50000, null, 'Gambling'
-106, 'Rob', 'Roy', 'M', 40, 102, 'SF', 50000, 7, 'Karate'
-107, 'Robin', 'Williams', 'M', 40, 103, 'HQ', 50000, 10, 'Telling Jokes'
-108, 'Mary', 'Reynolds', 'F', 50, 104, 'SF', 50000, null, ' '
-109, 'Jack', 'Nife', 'M', 40, 100, 'SF', 50000, 5, ' '
-110, 'Jill', 'Jones', 'F', 30, 101, 'MP', 50000, null, null
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |                |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |                |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
 0: jdbc:luciddb:> -- scalar subquery on both sides of =
 0: jdbc:luciddb:> select * from DEPT
 . . . . . . . . >  where (select MIN(SAL + EMPNO) from EMP where DEPTNO = DEPT.DEPTNO)
@@ -323,7 +331,7 @@ Error: FennelResource.en_US.scalarQueryReturnedMultipleRows() (state=,code=0)
 | 10      | F       | 2       |
 | 20      | M       | 1       |
 | 30      | M       | 6       |
-| 40      |         |         |
+| 40      |         | 0       |
 | 50      | F       | 1       |
 +---------+---------+---------+
 0: jdbc:luciddb:> --

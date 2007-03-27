@@ -86,11 +86,7 @@
       </test>
 
       <test name="null" requiresSuccess="download">
-        <!-- unresolved issue: FRG-167 DESC not implemented yet -->
-        <!-- FRG-208 -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
+        <!-- FRG-208, FRG-167 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/null.sql"/>
       </test>
 

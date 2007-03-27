@@ -45,8 +45,9 @@
 '        IterCalcRel'
 '          FennelToIteratorConverter'
 '            LcsRowScanRel'
-'              LcsIndexSearchRel'
-'                FennelValuesRel'
+'              LcsIndexMergeRel'
+'                LcsIndexSearchRel'
+'                  FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K10 = 2
 . . . . . . . . > ;

@@ -86,17 +86,17 @@
 +-----------+--------------+
 | C_BINARY  | C_VARBINARY  |
 +-----------+--------------+
-|           |              |
-|           |              |
-|           |              |
-|           |              |
-|           |              |
-|           |              |
-|           |              |
-|           |              |
-|           |              |
-|           |              |
-|           |              |
+| 00        | 11           |
+| 00        | 11           |
+| 00        | 11           |
+| 00        | 11           |
+| 00        | 11           |
+| 00        | 11           |
+| 00        | 11           |
+| 00        | 11           |
+| 00        | 11           |
+| 00        |              |
+| 00        |              |
 +-----------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- get table name, column name, data type info for imported foreign tables
@@ -106,8 +106,8 @@
 +------------+-----------------+------------------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | LOCALDB    | @name_prefix@_FT_SCHEMA  | BLOBTYPES_EXPLICIT     | C_BINARY     | -2         | BINARY     | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
 | LOCALDB    | @name_prefix@_FT_SCHEMA  | BLOBTYPES_EXPLICIT     | C_VARBINARY  | -3         | VARBINARY  | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
-| LOCALDB    | @name_prefix@_FT_SCHEMA  | BLOBTYPES_NONEXPLICIT  | C_BINARY     | -3         | VARBINARY  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 | 0                  | 1                 | YES          |                |               |              |                   |
-| LOCALDB    | @name_prefix@_FT_SCHEMA  | BLOBTYPES_NONEXPLICIT  | C_VARBINARY  | -3         | VARBINARY  | 0            | 0           |             |                 | 1         |          |             | 0              | 0                 | 0                  | 2                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_FT_SCHEMA  | BLOBTYPES_NONEXPLICIT  | C_BINARY     | -3         | VARBINARY  | 1            | 0           |             |                 | 1         |          |             | 0              | 0                 | 1                  | 1                 | YES          |                |               |              |                   |
+| LOCALDB    | @name_prefix@_FT_SCHEMA  | BLOBTYPES_NONEXPLICIT  | C_VARBINARY  | -3         | VARBINARY  | 1            | 0           |             |                 | 1         |          |             | 0              | 0                 | 1                  | 2                 | YES          |                |               |              |                   |
 | LOCALDB    | @name_prefix@_FT_SCHEMA  | TYPES_EXPLICIT         | C_CHAR       | 1          | CHAR       | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
 | LOCALDB    | @name_prefix@_FT_SCHEMA  | TYPES_EXPLICIT         | C_VARCHAR    | 12         | VARCHAR    | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
 | LOCALDB    | @name_prefix@_FT_SCHEMA  | TYPES_EXPLICIT         | C_DECIMAL    | 3          | DECIMAL    | 10           | 0           | 3           |                 | 1         |          |             | 0              | 0                 |                    | 3                 | YES          |                |               |              |                   |
