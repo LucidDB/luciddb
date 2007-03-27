@@ -389,6 +389,7 @@ ${farrago.test.jvmargs}
     <attribute name="inheritAll" default="true"/>
     <attribute name="gtlf.dtd.use.remote" default="false"/>
     <attribute name="gtlf.dtd.local" default="${thirdparty.dir}/blackhawk/gtlf-config-2-1.dtd"/>
+    <attribute name="luciddb.listener.port" default=""/>
     <sequential>
       <taskdef 
         name="bh" 
@@ -409,6 +410,8 @@ ${farrago.test.jvmargs}
         <jvmarg line="${assertions.jvmarg}"/>
         <sysproperty key="gtlf.dtd.use.remote" value="@{gtlf.dtd.use.remote}"/>
         <sysproperty key="gtlf.dtd.local" value="@{gtlf.dtd.local}"/>
+        <sysproperty key="luciddb.listener.port" 
+          value="@{luciddb.listener.port}"/>
       </bh>
     </sequential>
   </macrodef>

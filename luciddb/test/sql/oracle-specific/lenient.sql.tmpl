@@ -1,0 +1,38 @@
+-- use default ORACLE wrapper
+create server ORCL_SERVER_LENIENT
+foreign data wrapper ORACLE
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    schema_name '@SCHEMA@',
+    use_schema_name_as_foreign_qualifier 'true'
+);
+
+create schema test;
+set schema 'test';
+
+create foreign table CASTING
+server ORCL_SERVER_LENIENT
+options
+(object '@DATATYPE_TABLE@');
+
+select * from test.casting order by 1,2,3,4,5,6;
+
+create or replace foreign table CASTING (
+  "mydate" date,
+  "timestampcol" timestamp,
+  timestampcol timestamp,
+  "datecol" date,
+  datecol date,
+  "clobcol" varbinary,
+  clobcol varbinary,
+  "yyy" varbinary
+) server ORCL_SERVER_LENIENT
+options
+(object '@DATATYPE_TABLE@');
+
+select * from test.casting order by 1,2,3,4,5;
+
+drop schema test cascade;

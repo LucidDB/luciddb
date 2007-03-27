@@ -20,15 +20,11 @@
 */
 package com.lucidera.farrago;
 
-// TODO jvs 9-Apr-2006:  eliminate this once we stop depending on
-// Fennel calc, or make it dynamic for GPL version only.
-
-import com.disruptivetech.farrago.rel.*;
-
 import com.lucidera.lcs.*;
 import com.lucidera.opt.*;
 import com.lucidera.runtime.*;
 import com.lucidera.type.*;
+import com.lucidera.farrago.fennel.*;
 
 import java.io.*;
 import java.sql.*;
@@ -179,9 +175,7 @@ public class LucidDbSessionPersonality
         planner.addRelTraitDef(CallingConventionTraitDef.instance);
         RelOptUtil.registerAbstractRels(planner);
 
-        // TODO jvs 9-Apr-2006: Need to break this up, since we don't want to
-        // be depending on rules from non-LucidEra yellow zones.
-        FarragoDefaultPlanner.addStandardRules(
+        FarragoStandardPlannerRules.addDefaultRules(
             planner,
             fennelEnabled,
             calcVM);
@@ -462,7 +456,7 @@ public class LucidDbSessionPersonality
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use Fennel for calculating expressions
             assert (fennelEnabled);
-            builder.addRuleInstance(FennelCalcRule.instance);
+            builder.addRuleByDescription("FennelCalcRule");
             builder.addRuleInstance(new FennelOneRowRule());
         } else if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
             // use Java code generation for calculating expressions
@@ -481,12 +475,12 @@ public class LucidDbSessionPersonality
             builder.addConverters(false);
 
             // Split remaining expressions into Fennel part and Java part
-            builder.addRuleInstance(FarragoAutoCalcRule.instance);
+            builder.addRuleByDescription("FarragoAutoCalcRule");
 
             // Convert expressions, giving preference to Java
             builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
-            builder.addRuleInstance(FennelCalcRule.instance);
+            builder.addRuleByDescription("FennelCalcRule");
         }
 
         // Finally, add generic converters as necessary.
@@ -821,6 +815,21 @@ public class LucidDbSessionPersonality
     public void resetRowCounts(FemAbstractColumnSet table)
     {
         FarragoCatalogUtil.resetRowCounts(table);
+    }
+    
+    // implement FarragoStreamFactoryProvider
+    public void registerStreamFactories(long hStreamGraph)
+    {
+        // REVIEW jvs 22-Mar-2007:  We override FarragoDefaultSessionPersonality
+        // here to prevent dependency on DisruptiveTechJni unless
+        // explicitly requested via calc system parameter.
+        final CalcVirtualMachine calcVM =
+            database.getSystemRepos().getCurrentConfig().getCalcVirtualMachine();
+        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
+            LucidEraJni.registerStreamFactory(hStreamGraph);
+        } else {
+            super.registerStreamFactories(hStreamGraph);
+        }
     }
 }
 

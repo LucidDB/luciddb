@@ -340,6 +340,12 @@ public abstract class FarragoTestCase
             savedFennelConfig =
                 JmiUtil.getAttributeValues(
                     repos.getCurrentConfig().getFennelConfig());
+
+            // NOTE jvs 15-Mar-2007:  special case for these parameters
+            // which doesn't take effect until restart anyway;
+            // let the change be permanent (test must know what it is doing)
+            savedFarragoConfig.remove("serverRmiRegistryPort");
+            savedFarragoConfig.remove("serverSingleListenerPort");
         } finally {
             reposTxn.commit();
         }

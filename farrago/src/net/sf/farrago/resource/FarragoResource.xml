@@ -1047,6 +1047,10 @@ Messages: {1}</text>
 <text>Login failed for {0}: invalid username/password combination</text>
 </exception>
 
+<exception id="470101" name="SessionLogoutFailed">
+<text>There was an error when logging out user {0}</text>
+</exception>
+
 <exception id="470110" name="SessionOptimizerFailed">
 <text>Optimizer failed to find a valid physical implementation for relational expression {0}; see trace for partially optimized plan. Details: reason is [{1}]; while preparing statement [{2}].</text>
 </exception>

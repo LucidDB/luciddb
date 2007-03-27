@@ -45,7 +45,7 @@
 
 <exception id="800010" name="TimeDimInvalidEndDate">
 <text>Invalid end date</text>
-</exception>
+  </exception>
 
 <exception id="800020" name="TimeDimStartDayMustPrecedeEndDay">
 <text>Start day must precede end day</text>
@@ -225,6 +225,22 @@
 
 <exception id="900420" name="ParameterMustBeEitherRestrictOrCascade">
 <text>Syntax error: parameter must be either ''RESTRICT'' or ''CASCADE''.</text>
+</exception>
+
+<exception id="900500" name="InputMustBeSingleColumn">
+<text>Input cursor must be one single column.</text>
+</exception>
+
+<exception id="900501" name="SplitColNameMustBeSingleColumn">
+<text>Can only split a single column at a time.</text>
+</exception>
+
+<exception id="900510" name="SeparatorMustBeOneCharacter">
+<text>Split separator must be a single character.</text>
+</exception>
+
+<exception id="900511" name="EscapeCharMustBeOneCharacter">
+<text>Escape symbol must be a single character.</text>
 </exception>
 
 

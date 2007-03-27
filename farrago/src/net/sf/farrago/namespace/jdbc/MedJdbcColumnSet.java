@@ -58,6 +58,9 @@ class MedJdbcColumnSet
     final MedJdbcNameDirectory directory;
     final SqlSelect select;
     final SqlDialect dialect;
+    RelDataType origRowType;
+    RelDataType srcRowType;
+    RelDataType currRowType;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -67,12 +70,17 @@ class MedJdbcColumnSet
         String [] localName,
         SqlSelect select,
         SqlDialect dialect,
-        RelDataType rowType)
+        RelDataType rowType,
+        RelDataType origRowType,
+        RelDataType srcRowType)
     {
-        super(localName, foreignName, rowType, null, null);
+        super(localName, foreignName, origRowType, null, null);
         this.directory = directory;
         this.select = select;
         this.dialect = dialect;
+        this.srcRowType = srcRowType;
+        this.origRowType = origRowType;
+        this.currRowType = rowType;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -107,10 +115,18 @@ class MedJdbcColumnSet
             new MedJdbcQueryRel(
                 this,
                 cluster,
-                getRowType(),
+                currRowType,
                 connection,
                 dialect,
                 select);
+        if (directory.server.lenient) {
+            return
+                toLenientRel(
+                    cluster,
+                    rel,
+                    origRowType,
+                    srcRowType);
+        }
         return rel;
     }
 
@@ -125,7 +141,8 @@ class MedJdbcColumnSet
         if (directory.server == null) {
             return null;
         }
-        if (directory.server.schemaName != null) {
+        if (directory.server.schemaName != null &&
+            !directory.server.useSchemaNameAsForeignQualifier) {
             // Schema name should never be specified for a connection to
             // Farrago; if it is, bail.
             return null;
@@ -155,7 +172,7 @@ class MedJdbcColumnSet
         actualName[0] = catalogName;
         actualName[1] = schemaQualifiedName[schemaQualifiedName.length - 2];
         actualName[2] = schemaQualifiedName[schemaQualifiedName.length - 1];
-        
+
         // REVIEW jvs 14-Aug-2006:  Security security security.
         RelOptTable realTable =
             getPreparingStmt().getTableForMember(actualName);

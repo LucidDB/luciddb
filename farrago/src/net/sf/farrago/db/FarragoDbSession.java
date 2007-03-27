@@ -52,6 +52,9 @@ import org.eigenbase.util.*;
 
 import javax.jmi.reflect.RefObject;
 
+import javax.security.auth.login.*;
+import javax.security.auth.callback.*;
+
 
 /**
  * FarragoDbSession implements the {@link net.sf.farrago.session.FarragoSession}
@@ -257,9 +260,30 @@ public class FarragoDbSession
             if (femUser == null) {
                 throw FarragoResource.instance().SessionLoginFailed.ex(
                     repos.getLocalizedObjectName(sessionUser));
-            } else {
-                // TODO:  authenticate; use same SessionLoginFailed if fails
-            }
+            }  else if (database.isAuthenticationEnabled()){
+                // authenticate; use same SessionLoginFailed if fails
+                LoginContext lc;
+                CallbackHandler cbh = new FarragoNoninteractiveCallbackHandler(
+                    info.getProperty("user","GUEST"), info.getProperty("password"));
+                try {
+                    lc  = new LoginContext(
+                        "Farrago",
+                        null,
+                        cbh,
+                        database.getAuthenticationConfig());
+                    lc.login();
+                } catch (LoginException ex) {
+                    throw FarragoResource.instance().SessionLoginFailed.ex(
+                        repos.getLocalizedObjectName(sessionUser));
+                }
+                
+                try {
+                    lc.logout();
+                } catch (LoginException ex) {
+                    throw FarragoResource.instance().SessionLogoutFailed.ex(
+                        repos.getLocalizedObjectName(sessionUser));
+                }
+            } 
         }
 
         fennelTxnContext =

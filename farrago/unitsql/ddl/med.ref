@@ -509,4 +509,55 @@ Error: Cannot support JDBC type "VARCHAR" (ordinal 12, precision 2147483647, sca
 | 40   | OPERATIONS            | BOSTON                |
 +------+-----------------------+-----------------------+
 > 
+> -- test lenient option
+> create server hsqldb_orig
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.hsqldb.jdbcDriver',
+>     url 'jdbc:hsqldb:testcases/hsqldb/scott',
+>     user_name 'SA',
+>     schema_name 'SALES',
+>     use_schema_name_as_foreign_qualifier 'true',
+>     table_types 'TABLE,VIEW',
+>     lenient 'true'
+> );
+> 
+> create foreign table demo_schema.dept_changing
+> server hsqldb_orig
+> options (object 'DEPT');
+> 
+> select * from demo_schema.dept_changing;
++---------+-------------+-----------+
+| DEPTNO  |    DNAME    |    LOC    |
++---------+-------------+-----------+
+| 10      | ACCOUNTING  | NEW YORK  |
+| 20      | RESEARCH    | DALLAS    |
+| 30      | SALES       | CHICAGO   |
+| 40      | OPERATIONS  | BOSTON    |
++---------+-------------+-----------+
+> 
+> create or replace server hsqldb_orig
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.hsqldb.jdbcDriver',
+>     url 'jdbc:hsqldb:testcases/hsqldb_modified/scott',
+>     user_name 'SA',
+>     schema_name 'SALES',
+>     use_schema_name_as_foreign_qualifier 'true',
+>     table_types 'TABLE,VIEW',
+>     lenient 'true');
+> 
+> select * from demo_schema.dept_changing;
+Warning: 'DEPT_CHANGING' field 'DEPTNO' has datatype 'VARCHAR(1024)' in external data source; it will be cast to datatype 'INTEGER'. (state=,code=0)
+Warning: 'DEPT_CHANGING' field 'DNAME' does not exist in external data source. It will be filled in with nulls. (state=,code=0)
+Warning: 'DEPT_CHANGING' has field 'NEW_DNAME' added in external data source. (state=,code=0)
++---------+--------+-----------+
+| DEPTNO  | DNAME  |    LOC    |
++---------+--------+-----------+
+| 10      |        | NEW YORK  |
+| 20      |        | DALLAS    |
+| 30      |        | CHICAGO   |
+| 40      |        | BOSTON    |
++---------+--------+-----------+
+> 
 > !quit

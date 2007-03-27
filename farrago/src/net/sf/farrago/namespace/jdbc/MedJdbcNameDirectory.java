@@ -127,6 +127,8 @@ class MedJdbcNameDirectory
         } else {
             foreignQualifiedName = new String[] { schemaName, foreignName };
         }
+        RelDataType origRowType = null;
+        RelDataType mdRowType = null;
 
         SqlDialect dialect = new SqlDialect(server.databaseMetaData);
         SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
@@ -145,7 +147,6 @@ class MedJdbcNameDirectory
                 null,
                 SqlParserPos.ZERO);
 
-        if (rowType == null) {
             String sql = select.toSqlString(dialect);
             sql = normalizeQueryString(sql);
 
@@ -176,11 +177,59 @@ class MedJdbcNameDirectory
                     }
                     md = rs.getMetaData();
                 }
-                rowType =
-                    typeFactory.createResultSetType(
-                        md,
-                        shouldSubstituteTypes,
-                        typeMapping);
+                if (rowType == null) {
+                    rowType =
+                        typeFactory.createResultSetType(
+                            md,
+                            shouldSubstituteTypes,
+                            typeMapping);
+                    origRowType = rowType;
+                    mdRowType = rowType;
+                } else {
+                    origRowType = rowType;
+                    mdRowType = rowType;
+
+                    // if LENIENT, map names
+                    if (server.lenient) {
+                        origRowType = rowType;
+                        mdRowType =
+                            typeFactory.createResultSetType(
+                                md,
+                                shouldSubstituteTypes,
+                                typeMapping);
+                        rowType = updateRowType(
+                            typeFactory,
+                            rowType,
+                            mdRowType);
+
+                        List projList = new ArrayList();
+                        for (RelDataTypeField field : rowType.getFieldList()) {
+                            projList.add(
+                                new SqlIdentifier(
+                                    field.getName(), SqlParserPos.ZERO));
+                        }
+                        // push down projections
+                        select =
+                            opTab.selectOperator.createCall(
+                                null,
+                                new SqlNodeList(
+                                    Collections.unmodifiableList(
+                                        projList),
+                                    SqlParserPos.ZERO),
+                                new SqlIdentifier(
+                                    foreignQualifiedName, SqlParserPos.ZERO),
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                SqlParserPos.ZERO);
+                    } else {
+                        // REVIEW:  should we at least check to see if the
+                        // inferred row type is compatible with the imposed
+                        // row type?
+                    }
+                }
             } finally {
                 if (rs != null) {
                     rs.close();
@@ -192,19 +241,17 @@ class MedJdbcNameDirectory
                     ps.close();
                 }
             }
-        } else {
-            // REVIEW:  should we at least check to see if the inferred
-            // row type is compatible with the imposed row type?
-        }
 
-        return
-            new MedJdbcColumnSet(
-                this,
-                foreignQualifiedName,
-                localName,
-                select,
-                dialect,
-                rowType);
+            return
+                new MedJdbcColumnSet(
+                    this,
+                    foreignQualifiedName,
+                    localName,
+                    select,
+                    dialect,
+                    rowType,
+                    origRowType,
+                    mdRowType);
     }
 
     String normalizeQueryString(String sql)
@@ -503,7 +550,8 @@ class MedJdbcNameDirectory
 
     private String getSchemaPattern()
     {
-        if (server.schemaName != null) {
+        if (server.schemaName != null &&
+            !server.useSchemaNameAsForeignQualifier) {
             // schemaName is fake; don't use it
             return null;
         } else {
@@ -551,6 +599,41 @@ class MedJdbcNameDirectory
         }
     }
 
+    private RelDataType updateRowType(
+        FarragoTypeFactory typeFactory,
+        RelDataType currRowType,
+        RelDataType srcRowType)
+    {
+        HashMap<String, RelDataType> srcMap = new HashMap();
+        for (RelDataTypeField srcField : srcRowType.getFieldList()) {
+            srcMap.put(srcField.getName(), srcField.getType());
+        }
+
+        ArrayList fieldsVector = new ArrayList();
+        ArrayList typesVector = new ArrayList();
+
+        for (RelDataTypeField currField : currRowType.getFieldList()) {
+            RelDataType type;
+            if (((type =
+                     srcMap.get(currField.getName())) != null) &&
+                SqlTypeUtil.canCastFrom(
+                    currField.getType(), type, true))
+            {
+                fieldsVector.add(currField.getName());
+                typesVector.add(currField.getType());
+            }
+        }
+
+        typesVector.trimToSize();
+        fieldsVector.trimToSize();
+        RelDataType[] types = (RelDataType[])
+            typesVector.toArray(new RelDataType[typesVector.size()]);
+        String[] fields =
+            (String[]) fieldsVector.toArray(new String[fieldsVector.size()]);
+
+        RelDataType rowType = typeFactory.createStructType(types, fields);
+        return rowType;
+    }
 }
 
 // End MedJdbcNameDirectory.java

@@ -49,7 +49,6 @@
       </test>
 
       <test name="flatten">
-        <!-- LDB-125: update ref file after bug fix -->
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/flattenTest.sql"/>
       </test>
 
@@ -59,6 +58,11 @@
 
       <test name="deriveEffectiveToTimestampTests">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/deriveEffectiveToTimestampTests.sql"/>
+      </test>
+
+      <test name="splitStringsTest">
+        <junit-sql
+        file="${open.dir}/luciddb/test/sql/udr/udx/splitStringsTest.sql"/>
       </test>
 
       <test name="collapseRows">

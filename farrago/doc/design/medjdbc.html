@@ -171,6 +171,25 @@ before TYPE_SUBSTITUTION and does not depend on TYPE_SUBSTITUTION.
 </td>
 </tr>
 <tr>
+<td>LENIENT</td>
+<td>
+If set to 'TRUE', match target columns specified in the foreign table
+definition with data source columns using case-sensitive string
+comparison on column name.  Specified target columns which are missing
+in the source are filled in with null. Likewise, specified target
+columns with types that are cast-incompatible from matching source
+columns are filled in with null.  Other matching columns are cast to
+the target type (either the type specified explicitly, or the type
+stored in the catalog when the foreign table descriptor is created
+with implicit column types).  The default is 'FALSE', meaning columns
+are mapped by position rather than name, and mismatches in the mapping
+may lead to runtime errors.
+<p>
+Lenience makes the foreign table definition resilient to changes
+in the data source; strictness ensures that data is not accidentally
+lost or fabricated due to a mismapping.
+</td>
+<tr>
 <td>LOGIN_TIMEOUT</td>
 <td>
 The maximum time in seconds to wait while attempting to connect to
