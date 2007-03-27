@@ -969,6 +969,8 @@ ${farrago.test.jvmargs}
       value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}"/>
     <property name="release.lib.dir"
       location="${dist.dir}/${lucidera.release.spec}/lib"/>
+    <property name="lib.farrago.jar" 
+      location="${release.lib.dir}/farrago.jar"/>
     <property name="release.plugin.dir"
       location="${dist.dir}/${lucidera.release.spec}/plugin"/>
     <property name="release.bin.dir"
@@ -982,7 +984,7 @@ ${farrago.test.jvmargs}
     <if>
       <equals arg1="${osfamily}" arg2="unix"/>
       <then>
-	<exec executable="/bin/tar" spawn="false" dir="${dist.dir}">
+        <exec executable="/bin/tar" spawn="false" dir="${dist.dir}">
           <arg value="--bzip2"/>
           <arg value="-xf"/>
           <arg value="${farrago.dist.file}"/>
@@ -1071,8 +1073,32 @@ ${farrago.test.jvmargs}
     </replace>
     <chmod file="${release.bin.dir}/${sqllineEngine}" perm="u+x" />
 
+    <if>
+      <not>
+        <istrue value="${release.gpl}"/>
+      </not>
+      <then>
+        <property name="jar.tmp.dir" location="${dist.dir}/farrago.jar.tmp.dir"/>
+
+        <unjar src="${lib.farrago.jar}" dest="${jar.tmp.dir}" />
+
+        <delete file="${lib.farrago.jar}"/>
+        <jar update="true"
+          destfile="${lib.farrago.jar}"
+          basedir="${jar.tmp.dir}"
+          keepcompression="true"
+          excludes="**/disruptivetech/**"/>
+
+        <delete quiet="false" includeEmptyDirs="true">
+          <fileset dir="${dist.dir}" includes="**/*_dt*.so*"/>
+        </delete>
+
+        <delete dir="${jar.tmp.dir}" quiet="true"/>
+      </then>
+    </if>
+
     <jar update="true"
-      destfile="${release.lib.dir}/farrago.jar"
+      destfile="${lib.farrago.jar}"
       basedir="${release.lib.dir}"
       keepcompression="true"
       includes="FarragoRelease.properties"/>
@@ -1081,7 +1107,7 @@ ${farrago.test.jvmargs}
     <if>
       <equals arg1="${osfamily}" arg2="unix"/>
       <then>
-	<exec executable="/bin/tar" spawn="false" dir="${dist.dir}">
+        <exec executable="/bin/tar" spawn="false" dir="${dist.dir}">
           <arg value="--bzip2"/>
           <arg value="-cf"/>
           <arg value="${lu.release.file}"/>
