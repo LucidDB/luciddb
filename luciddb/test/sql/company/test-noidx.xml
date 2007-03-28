@@ -91,19 +91,12 @@
       </test>
 
       <test name="order" requiresSuccess="download">
-        <!-- TODO: FRG-167 DESC, ASC not implemented yet -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
+        <!-- FRG-167  -->
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/order.sql"/>
       </test>
 
       <test name="scalarSubquery" requiresSuccess="download">
         <!--  FRG-114 -->
-        <!-- Subqueries not completely supported -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/scalarSubquery.sql"/>
       </test>
 
