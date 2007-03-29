@@ -59,6 +59,9 @@ values current_path;
 -- test LucidDB's standard-bending for 
 -- SQL:2003 Part 2 Section 9.3 Syntax Rule 3.a.iii.3
 -- (see http://sf.net/mailarchive/message.php?msg_id=13337379)
+-- and some numeric type derivation
+
+values (1/3);
 
 !set outputformat csv
 
@@ -66,4 +69,6 @@ values ('no'), ('yes'), ('maybe');
 
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
-values ('no'), ('si'), ('es possible');
+values (1/7);
+
+values ('no'), ('si'), ('es posible');
