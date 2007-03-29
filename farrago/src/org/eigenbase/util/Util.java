@@ -1066,13 +1066,13 @@ public class Util
             // not to do so.
             try {
                 awtToolkit = Toolkit.getDefaultToolkit();
-            } catch (HeadlessException ex) {
-                // I'm not sure if this can actually happen, but if it does,
-                // just suppress it so that a headless server doesn't fail
-                // on startup.
+            } catch (Throwable ex) {
+                // Suppress problems so that a headless server doesn't fail on
+                // startup.  If AWT is actually needed, the same exception will
+                // show up later, which is fine.
                 
-                // REVIEW: SWZ: 18-Sept-2006: If this exception occurs, we'll
-                // retry the AWT load on each loadLibrary call.  Probably okay,
+                // NOTE jvs 27-Mar-2007: If this exception occurs, we'll
+                // retry the AWT load on each loadLibrary call.  That's okay,
                 // since there are only a few libraries and they're loaded
                 // via static initializers.
             }
