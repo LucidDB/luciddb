@@ -72,7 +72,7 @@
         <include name="COPYING"/>
       </fileset>
     </jar>
-    <war destfile="${dist.tmp.dir}/lib/vjdbc_servlet.war" 
+    <war destfile="${dist.dir}/vjdbc_servlet.war" 
       webxml="${farrago.dir}/ext/vjdbc/web.xml">
       <fileset dir="${thirdparty.dir}/vjdbc/conf/servlet">
         <include name="*.html"/>

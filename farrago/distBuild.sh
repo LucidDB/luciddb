@@ -203,7 +203,7 @@ fi
 
 # create farrago libs
 cd $DIST_DIR
-ant jar -Ddist.tmp.dir=$RELEASE_DIR
+ant jar
 
 # copy farrago libs
 cd $FARRAGO_DIR
@@ -215,6 +215,7 @@ if [ -e dist/README ]; then
     cp dist/README $RELEASE_DIR
 fi
 cp dist/farrago.jar $LIB_DIR
+cp dist/vjdbc_servlet.war $LIB_DIR
 cp dist/plugin/*.jar $PLUGIN_DIR
 
 # copy other farrago artifacts
