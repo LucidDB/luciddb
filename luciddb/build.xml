@@ -570,7 +570,7 @@ ${farrago.test.jvmargs}
       filesetmanifest="skip">
       <zipgroupfileset dir="${vjdbc.dir}/lib">
         <include name="vjdbc.jar"/>
-        <include name="commons-logging.jar"/>
+        <include name="commons-logging-1.1.jar"/>
       </zipgroupfileset>
       <fileset dir="${luciddb.dir}/license/client">
         <include name="COPYING"/>
