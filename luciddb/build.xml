@@ -582,9 +582,15 @@ ${farrago.test.jvmargs}
         <include
           name="com/lucidera/jdbc/LucidDbRmiDriver.class"/>
         <include
+          name="com/lucidera/jdbc/LucidDbHttpDriver.class"/>
+        <include
           name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
         <include
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcHttpClientDriver.class"/>
+        <include
           name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcHttpClientDriver.class"/>
         <include
           name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
         <include
@@ -1034,6 +1040,13 @@ ${farrago.test.jvmargs}
       todir="${release.lib.dir}" overwrite="true"/>
     <chmod file="${release.properties.target}" perm="u+w" />
     <touch file="${release.properties.target}"/>
+
+    <war destfile="${dist.dir}/${lucidera.release.spec}/lib/vjdbc_servlet.war"
+      update="true">
+      <webinf dir="${luciddb.dir}/ext/vjdbc">
+        <include name="vjdbc-config.xml"/>
+      </webinf>
+    </war>
 
     <if>
         <equals arg1="${osfamily}" arg2="unix"/>

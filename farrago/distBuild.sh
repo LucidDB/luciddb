@@ -203,7 +203,7 @@ fi
 
 # create farrago libs
 cd $DIST_DIR
-ant jar
+ant jar -Ddist.tmp.dir=$RELEASE_DIR
 
 # copy farrago libs
 cd $FARRAGO_DIR

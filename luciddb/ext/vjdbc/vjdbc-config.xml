@@ -1,0 +1,9 @@
+<vjdbc-configuration>
+<connection 
+    id="FarragoDBMS"
+    driver="com.lucidera.jdbc.LucidDbLocalDriver" 
+    user="sa"
+    password="sa"
+    connectionPooling="on"
+    url="jdbc:luciddb:"/>
+</vjdbc-configuration>
