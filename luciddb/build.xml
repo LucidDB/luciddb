@@ -463,9 +463,14 @@ ${farrago.test.jvmargs}
   </target>
 
   <!-- Copies the Farrago unconfigured catalog to our catalog directory. -->
+  <!-- Also copies Fennel resources to catalog/fennel. -->
   <target name="copyFarragoCatalog" depends="cleanCatalogData">
     <copy todir="${catalog.dir}" file="${farrago.ReposStorage.propfile}">
       <fileset dir="${farrago.catalog.unconfigured.dir}" />
+    </copy>
+    <mkdir dir="${catalog.dir}/fennel"/>
+    <copy todir="${catalog.dir}/fennel" overwrite="true">
+      <fileset dir="${farrago.catalog.dir}/fennel" includes="*.properties" />
     </copy>
   </target>
 

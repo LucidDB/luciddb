@@ -99,11 +99,11 @@
 0: jdbc:luciddb:> -- subquery returns more than one row (gives error)
 0: jdbc:luciddb:> select DNAME, (select EMPNO from EMP where DEPTNO = DEPT.DEPTNO)
 . . . . . . . . >  from DEPT order by DEPTNO;
-Error: FennelResource.en_US.scalarQueryReturnedMultipleRows() (state=,code=0)
+Error: Scalar query returned more than one row (state=,code=0)
 0: jdbc:luciddb:> -- ditto, uncorrelated (gives error)
 0: jdbc:luciddb:> select DNAME, (select EMPNO from EMP)
 . . . . . . . . >  from DEPT order by DEPTNO;
-Error: FennelResource.en_US.scalarQueryReturnedMultipleRows() (state=,code=0)
+Error: Scalar query returned more than one row (state=,code=0)
 0: jdbc:luciddb:> -- subquery returns 0 rows, correlated
 0: jdbc:luciddb:> select DNAME, (select EMPNO from EMP
 . . . . . . . . >                where DEPTNO = DEPT.DEPTNO and FNAME = 'Frank')
