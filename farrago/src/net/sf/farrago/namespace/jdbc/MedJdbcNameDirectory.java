@@ -148,116 +148,116 @@ class MedJdbcNameDirectory
                 null,
                 SqlParserPos.ZERO);
 
-            String sql = select.toSqlString(dialect);
-            sql = normalizeQueryString(sql);
+        String sql = select.toSqlString(dialect);
+        sql = normalizeQueryString(sql);
 
-            PreparedStatement ps = null;
+        PreparedStatement ps = null;
+        try {
+            ps = server.getConnection().prepareStatement(sql);
+        } catch (Exception ex) {
+            // Some drivers don't support prepareStatement
+        }
+        Statement stmt = null;
+        ResultSet rs = null;
+        try {
+            ResultSetMetaData md = null;
             try {
-                ps = server.getConnection().prepareStatement(sql);
-            } catch (Exception ex) {
-                // Some drivers don't support prepareStatement
+                if (ps != null) {
+                    md = ps.getMetaData();
+                }
+            } catch (SQLException ex) {
+                // Some drivers can't return metadata before execution. Fall
+                // through to recovery below.
             }
-            Statement stmt = null;
-            ResultSet rs = null;
-            try {
-                ResultSetMetaData md = null;
-                try {
-                    if (ps != null) {
-                        md = ps.getMetaData();
-                    }
-                } catch (SQLException ex) {
-                    // Some drivers can't return metadata before execution. Fall
-                    // through to recovery below.
+            if (md == null) {
+                if (ps != null) {
+                    rs = ps.executeQuery();
+                } else {
+                    stmt = server.getConnection().createStatement();
+                    rs = stmt.executeQuery(sql);
                 }
-                if (md == null) {
-                    if (ps != null) {
-                        rs = ps.executeQuery();
-                    } else {
-                        stmt = server.getConnection().createStatement();
-                        rs = stmt.executeQuery(sql);
-                    }
-                    md = rs.getMetaData();
-                }
-                if (rowType == null) {
-                    rowType =
+                md = rs.getMetaData();
+            }
+            if (rowType == null) {
+                rowType =
+                    typeFactory.createResultSetType(
+                        md,
+                        shouldSubstituteTypes,
+                        typeMapping);
+                origRowType = rowType;
+                mdRowType = rowType;
+            } else {
+                origRowType = rowType;
+                mdRowType = rowType;
+
+                // if LENIENT, map names
+                if (server.lenient) {
+                    origRowType = rowType;
+                    mdRowType =
                         typeFactory.createResultSetType(
                             md,
                             shouldSubstituteTypes,
                             typeMapping);
-                    origRowType = rowType;
-                    mdRowType = rowType;
-                } else {
-                    origRowType = rowType;
-                    mdRowType = rowType;
+                    rowType = updateRowType(
+                        typeFactory,
+                        rowType,
+                        mdRowType);
 
-                    // if LENIENT, map names
-                    if (server.lenient) {
-                        origRowType = rowType;
-                        mdRowType =
-                            typeFactory.createResultSetType(
-                                md,
-                                shouldSubstituteTypes,
-                                typeMapping);
-                        rowType = updateRowType(
-                            typeFactory,
-                            rowType,
-                            mdRowType);
-
-                        List projList = new ArrayList();
-                        for (RelDataTypeField field : rowType.getFieldList()) {
-                            projList.add(
-                                new SqlIdentifier(
-                                    field.getName(), SqlParserPos.ZERO));
-                        }
-                        // push down projections
-                        select =
-                            opTab.selectOperator.createCall(
-                                null,
-                                new SqlNodeList(
-                                    Collections.unmodifiableList(
-                                        projList),
-                                    SqlParserPos.ZERO),
-                                new SqlIdentifier(
-                                    foreignQualifiedName, SqlParserPos.ZERO),
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                SqlParserPos.ZERO);
-                    } else {
-                        // Server is strict: make sure the inferred
-                        // row type is compatible with the imposed row type
-                        validateRowType(
-                            rowType,
-                            typeFactory.createResultSetType(
-                                md,
-                                true,
-                                typeMapping));
+                    List projList = new ArrayList();
+                    for (RelDataTypeField field : rowType.getFieldList()) {
+                        projList.add(
+                            new SqlIdentifier(
+                                field.getName(), SqlParserPos.ZERO));
                     }
-                }
-            } finally {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (ps != null) {
-                    ps.close();
+                    // push down projections
+                    select =
+                        opTab.selectOperator.createCall(
+                            null,
+                            new SqlNodeList(
+                                Collections.unmodifiableList(
+                                    projList),
+                                SqlParserPos.ZERO),
+                            new SqlIdentifier(
+                                foreignQualifiedName, SqlParserPos.ZERO),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            SqlParserPos.ZERO);
+                } else {
+                    // Server is strict: make sure the inferred
+                    // row type is compatible with the imposed row type
+                    validateRowType(
+                        rowType,
+                        typeFactory.createResultSetType(
+                            md,
+                            true,
+                            typeMapping));
                 }
             }
+        } finally {
+            if (rs != null) {
+                rs.close();
+            }
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (ps != null) {
+                ps.close();
+            }
+        }
 
-            return
-                new MedJdbcColumnSet(
-                    this,
-                    foreignQualifiedName,
-                    localName,
-                    select,
-                    dialect,
-                    rowType,
-                    origRowType,
-                    mdRowType);
+        return
+            new MedJdbcColumnSet(
+                this,
+                foreignQualifiedName,
+                localName,
+                select,
+                dialect,
+                rowType,
+                origRowType,
+                mdRowType);
     }
 
     String normalizeQueryString(String sql)
