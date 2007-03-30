@@ -332,3 +332,21 @@ options(
     lenient 'true');
 
 select * from demo_schema.dept_changing;
+
+-- test strictness
+-- missing columns, should fail
+create foreign table demo_schema.dept_missing_col(
+    dno integer,
+    dname char(20))
+server hsqldb_demo
+options(schema_name 'SALES', table_name 'DEPT');
+
+-- extra columns, should fail
+create foreign table demo_schema.dept_extra_col(
+    dno integer,
+    dname char(20),
+    loc char(20),
+    extra_col integer)
+server hsqldb_demo
+options(schema_name 'SALES', table_name 'DEPT');
+

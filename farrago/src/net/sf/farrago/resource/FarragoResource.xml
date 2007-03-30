@@ -852,6 +852,14 @@ Messages: {1}</text>
 <text>''{0}'' has field ''{1}'' added in external data source.</text>
 </exception>
 
+<exception id="460200" name="NumberOfColumnsMismatch">
+<text>Number of fields in foreign table: ''{0}''. Number of fields in external data source: {1}''.</text>
+</exception>
+
+<exception id="460210" name="TypesOfColumnsMismatch">
+<text>External data source field ''{0}'' has datatype ''{1}'' which cannot be cast to datatype ''{2}'' of foreign table field ''{3}''.</text>
+</exception>
+
 <!-- NOTE:  Mock resources don't really need localization; this one is
      just here as an example of how to do i18n for wrapper properties.  -->
 

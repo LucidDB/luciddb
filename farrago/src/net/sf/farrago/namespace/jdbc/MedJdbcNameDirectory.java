@@ -28,6 +28,7 @@ import java.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
@@ -225,9 +226,14 @@ class MedJdbcNameDirectory
                                 null,
                                 SqlParserPos.ZERO);
                     } else {
-                        // REVIEW:  should we at least check to see if the
-                        // inferred row type is compatible with the imposed
-                        // row type?
+                        // Server is strict: make sure the inferred
+                        // row type is compatible with the imposed row type
+                        validateRowType(
+                            rowType,
+                            typeFactory.createResultSetType(
+                                md,
+                                true,
+                                typeMapping));
                     }
                 }
             } finally {
@@ -633,6 +639,33 @@ class MedJdbcNameDirectory
 
         RelDataType rowType = typeFactory.createStructType(types, fields);
         return rowType;
+    }
+
+    private void validateRowType(RelDataType rowType, RelDataType srcRowType)
+    {
+        RelDataTypeField[] fieldList = rowType.getFields();
+        RelDataTypeField[] srcFieldList = srcRowType.getFields();
+
+        // check that the number of fields match
+        if (fieldList.length != srcFieldList.length) {
+            throw FarragoResource.instance().NumberOfColumnsMismatch.ex(
+                Integer.toString(fieldList.length),
+                Integer.toString(srcFieldList.length));
+        }
+
+        // check that types of fields are compatible
+        for (int i = 0; i < fieldList.length; i++) {
+            if (!SqlTypeUtil.canCastFrom(
+                    fieldList[i].getType(),
+                    srcFieldList[i].getType(),
+                    true)) {
+                throw FarragoResource.instance().TypesOfColumnsMismatch.ex(
+                    srcFieldList[i].getName(),
+                    srcFieldList[i].getType().toString(),
+                    fieldList[i].getType().toString(),
+                    fieldList[i].getName());
+            }
+        }
     }
 }
 
