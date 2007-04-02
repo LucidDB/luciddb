@@ -65,12 +65,13 @@ public class FactoryGen
      * <li>args[4] = target class name
      * <li>args[5] = source package Java metaclass name
      * <li>args[6] = source extent name
+     * <li>(optional) args[7] = model timestamp
      * </ul>
      */
     public static void main(String [] args)
         throws ClassNotFoundException, IOException
     {
-        assert (args.length == 7);
+        assert ((args.length == 7) || (args.length == 8));
         FileWriter writerInterface = new FileWriter(args[0]);
         FileWriter writerClass = new FileWriter(args[1]);
         String targetPackageName = args[2];
@@ -78,6 +79,10 @@ public class FactoryGen
         String targetClassName = args[4];
         String sourcePackageJavaMetaclassName = args[5];
         String sourceExtentName = args[6];
+        String modelTimestamp = "NO_TIMESTAMP_ASSIGNED";
+        if (args.length == 8) {
+            modelTimestamp = args[7];
+        }
 
         FarragoModelLoader modelLoader = null;
         PrintWriter pwInterface = new PrintWriter(writerInterface);
@@ -111,6 +116,12 @@ public class FactoryGen
             pw.println(" getRootPackage()");
             pw.println("    {");
             pw.println("        return rootPackage;");
+            pw.println("    }");
+            pw.println();
+            pw.print("    public String");
+            pw.println(" getCompiledModelTimestamp()");
+            pw.println("    {");
+            pw.println("        return \"" + modelTimestamp + "\";");
             pw.println("    }");
             pw.println();
 

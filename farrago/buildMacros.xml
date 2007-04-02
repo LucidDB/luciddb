@@ -637,6 +637,16 @@ ${farrago.test.jvmargs}
     </sequential>
   </macrodef>
 
+  <!-- Macro for extracting the timestamp from an ArgoUML model  -->
+  <macrodef name="farrago.extractModelTimestamp">
+    <attribute name="umlFile" default="unspecified" />
+    <attribute name="outFile" default="unspecified" />
+    <sequential>
+      <xslt style="${farrago.xmi.dir}/extractArgoTimestamp.xsl" in="@{umlFile}"
+        out="@{outFile}"/>
+    </sequential>
+  </macrodef>
+
   <!-- Macro for running JUnit and sqlline tests -->
   <macrodef name="farrago.runTests">
     <attribute name="targetonerror" default=""/>

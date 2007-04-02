@@ -92,8 +92,12 @@
 <text>Failed reading boot URL list</text>
 </exception>
 
-<exception id="400110" name="CatalogBootUrlUpdateFailed">
+<exception id="400120" name="CatalogBootUrlUpdateFailed">
 <text>Failed to modify boot URL list</text>
+</exception>
+
+<exception id="400130" name="CatalogModelTimestampCheckFailed">
+<text>Stored catalog model timestamp ''{0}'' does not match compiled catalog timestamp ''{1}''</text>
 </exception>
 
 <message name="CatalogBootstrapObjDescription">
