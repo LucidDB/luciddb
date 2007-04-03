@@ -105,8 +105,10 @@ public abstract class JmiObjUtil
                 if (srcValObj.refImmediateComposite() != null) {
                     RefObject oldValRef = (RefObject) oldVal;
 
-                    if (compositeEquals(oldValRef, srcValObj)) {
-                        continue;
+                    if (oldValRef != null) {
+                        if (compositeEquals(oldValRef, srcValObj)) {
+                            continue;
+                        }
                     }
 
                     // Trying to copy this directly would lead
