@@ -23,8 +23,8 @@
 
 package net.sf.farrago.test;
 
-import java.io.Serializable;
-import java.security.Principal;
+import java.io.*;
+import java.security.*;
 
 /**
  * Mock JAAS principal class
@@ -37,41 +37,49 @@ public class FarragoMockPrincipal
 {
     private String name;
 
-    public FarragoMockPrincipal() {
+    public FarragoMockPrincipal()
+    {
         name = "";
     }
 
-    public FarragoMockPrincipal(String newName) {
+    public FarragoMockPrincipal(String newName)
+    {
         name = newName;
     }
 
-    public boolean equals(Object o) {
-
-        if (o == null)
+    public boolean equals(Object o)
+    {
+        if (o == null) {
             return false;
+        }
 
-        if (this == o)
+        if (this == o) {
             return true;
+        }
  
         if (o instanceof FarragoMockPrincipal) {
-            if (((FarragoMockPrincipal) o).getName().equals(name))
+            if (((FarragoMockPrincipal) o).getName().equals(name)) {
                 return true;
-            else
+            } else {
                 return false;
-        }
-        else 
+            }
+        } else {
             return false;
+        }
     }
 
-    public int hashCode() {
+    public int hashCode()
+    {
         return name.hashCode();
     }
 
-    public String toString() {
+    public String toString()
+    {
         return name;
     }
 
-    public String getName() {
+    public String getName()
+    {
         return name;
     }
 }
