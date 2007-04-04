@@ -43,6 +43,10 @@
 <text>Invalid start date</text>
 </exception>
 
+<exception id="800001" name="TimeDimInvalidFiscalStartMonth">
+<text>Fiscal start month should be a value between 1 and 12</text>
+</exception>
+
 <exception id="800010" name="TimeDimInvalidEndDate">
 <text>Invalid end date</text>
   </exception>

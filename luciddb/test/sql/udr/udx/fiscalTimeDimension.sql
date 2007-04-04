@@ -84,3 +84,10 @@ order by time_key;
 select * 
 from table(applib.fiscal_time_dimension(2006, 12, 10, 2007, 1, 20, 2))
 order by time_key;
+
+-- check leap years
+select * from table(applib.fiscal_time_dimension(1996, 2, 20, 1996, 3, 15, 10))
+order by time_key;
+
+select * from table(applib.fiscal_time_dimension(2016, 2, 27, 2016, 3, 12, 11))
+order by time_key;
