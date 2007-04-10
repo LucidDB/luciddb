@@ -25,6 +25,7 @@
 #include "fennel/cache/PagePredicate.h"
 #include "fennel/segment/SnapshotRandomAllocationSegment.h"
 #include "fennel/segment/SegmentFactory.h"
+#include "fennel/segment/SegmentAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -38,6 +39,8 @@ SnapshotRandomAllocationSegment::SnapshotRandomAllocationSegment(
         SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
             versionedSegment);
     snapshotCsn = snapshotCsnInit;
+    needPageFlush = false;
+    forceCacheUnmap = false;
 }
 
 BlockId SnapshotRandomAllocationSegment::translatePageId(PageId pageId)
@@ -48,23 +51,36 @@ BlockId SnapshotRandomAllocationSegment::translatePageId(PageId pageId)
 
 PageId SnapshotRandomAllocationSegment::getSnapshotId(PageId pageId)
 {
+    StrictMutexGuard mutexGuard(snapshotPageMapMutex);
+
+    // If possible, use the mapping we've previously cached
+    PageMapConstIter pSnapshotPageId = snapshotPageMap.find(pageId);
+    if (pSnapshotPageId != snapshotPageMap.end()) {
+        return snapshotPageMap[pageId];
+    }
+
     VersionedPageEntry pageEntry;
-    pVersionedRandomSegment->getPageEntryCopy(pageId, pageEntry);
+    pVersionedRandomSegment->getLatestPageEntryCopy(pageId, pageEntry);
     // Handle the special case where there's no chain
     if (pageEntry.versionChainPageId == pageId) {
+        snapshotPageMap[pageId] = pageId;
         return pageId;
     }
 
+    // If we have to walk through the page chain, then we need to be starting
+    // from the anchor
+    assert(pageId == getAnchorPageId(pageId));
     PageId chainPageId = pageEntry.versionChainPageId;
     do {
-        pVersionedRandomSegment->getPageEntryCopy(chainPageId, pageEntry);
+        pVersionedRandomSegment->getLatestPageEntryCopy(chainPageId, pageEntry);
         if (snapshotCsn >= pageEntry.allocationCsn) {
             // only consider uncommitted pageEntry's if they correspond to
-            // the current xact
+            // the current txn
             if ((pageEntry.ownerId == UNCOMMITTED_PAGE_OWNER_ID &&
                     snapshotCsn == pageEntry.allocationCsn) ||
                 pageEntry.ownerId != UNCOMMITTED_PAGE_OWNER_ID)
             {
+                snapshotPageMap[pageId] = chainPageId;
                 return chainPageId;
             }
         }
@@ -86,7 +102,7 @@ void SnapshotRandomAllocationSegment::setPageSuccessor(
     PageId snapshotId = getSnapshotId(pageId);
     DelegatingSegment::setPageSuccessor(snapshotId, successorId);
 
-    SXMutexExclusiveGuard mapGuard(mutex);
+    SXMutexExclusiveGuard mapGuard(modPageMapMutex);
     incrPageUpdateCount(
         snapshotId,
         ANON_PAGE_OWNER_ID,
@@ -98,42 +114,40 @@ void SnapshotRandomAllocationSegment::incrPageUpdateCount(
     PageOwnerId ownerId,
     ModifiedPageEntry::ModType modType)
 {
+    needPageFlush = true;
+
     // Add an entry into the map if it's not there yet.  Otherwise, increment
     // the count for the existing entry.
-    SnapshotMapConstIter iter = snapshotPageMap.find(pageId);
+    ModifiedPageEntryMapIter iter = modPageEntries.find(pageId);
     SharedModifiedPageEntry pModPageEntry;
-    if (iter == snapshotPageMap.end()) {
+    if (iter == modPageEntries.end()) {
         pModPageEntry = SharedModifiedPageEntry(new ModifiedPageEntry());
         pModPageEntry->updateCount = 0;
-        pModPageEntry->netAllocations = 0;
         pModPageEntry->allocationCount = 0;
+        pModPageEntry->lastModType = modType;
         pModPageEntry->ownerId = ownerId;
     } else {
         pModPageEntry = iter->second;
+        // Once we've deallocated a page, we should not be reusing the
+        // pageId
+        assert(pModPageEntry->lastModType != ModifiedPageEntry::DEALLOCATED);
     }
 
     // Update counts corresponding to updates to the SegmentAllocationNode
     if (modType == ModifiedPageEntry::ALLOCATED) {
-        pModPageEntry->netAllocations++;
         pModPageEntry->allocationCount++;
+        assert(pModPageEntry->allocationCount <= 1);
+        pModPageEntry->lastModType = modType;
+        pModPageEntry->ownerId = ownerId;
     } else if (modType == ModifiedPageEntry::DEALLOCATED) {
-        pModPageEntry->netAllocations--;
-        pModPageEntry->allocationCount++;
+        pModPageEntry->lastModType = modType;
     }
-    permAssert(
-        pModPageEntry->netAllocations >= -1 &&
-        pModPageEntry->netAllocations <= 1);
 
     // Update count corresponding to the VersionedExtentAllocationNode
     pModPageEntry->updateCount++;
 
-    snapshotPageMap.insert(SnapshotPageMap::value_type(pageId, pModPageEntry));
-}
-
-PageId SnapshotRandomAllocationSegment::translateBlockId(BlockId blockId)
-{
-    PageId snapshotId = DelegatingSegment::translateBlockId(blockId);
-    return getAnchorPageId(snapshotId);
+    modPageEntries.insert(
+        ModifiedPageEntryMap::value_type(pageId, pModPageEntry));
 }
 
 PageId SnapshotRandomAllocationSegment::getAnchorPageId(PageId snapshotId)
@@ -145,7 +159,7 @@ PageId SnapshotRandomAllocationSegment::getAnchorPageId(PageId snapshotId)
     PageId anchorPageId = NULL_PAGE_ID;
     TxnId minCsn = NULL_TXN_ID;
     do {
-        pVersionedRandomSegment->getPageEntryCopy(chainPageId, pageEntry);
+        pVersionedRandomSegment->getLatestPageEntryCopy(chainPageId, pageEntry);
         if (chainPageId == snapshotId || pageEntry.allocationCsn < minCsn) {
             minCsn = pageEntry.allocationCsn;
             anchorPageId = chainPageId;
@@ -160,7 +174,7 @@ PageId SnapshotRandomAllocationSegment::getAnchorPageId(PageId snapshotId)
 
 PageId SnapshotRandomAllocationSegment::allocatePageId(PageOwnerId ownerId)
 {
-    SXMutexExclusiveGuard mapGuard(mutex);
+    SXMutexExclusiveGuard mapGuard(modPageMapMutex);
 
     PageId pageId =
         DelegatingSegment::allocatePageId(UNCOMMITTED_PAGE_OWNER_ID);
@@ -183,76 +197,119 @@ void SnapshotRandomAllocationSegment::deallocatePageRange(
     permAssert(startPageId != NULL_PAGE_ID);
     permAssert(startPageId == endPageId);
 
-    // We should only be calling deallocate on anchor pages.
-    // Once we've confirmed the page is an anchor, deallocate all pages
-    // chained from that anchor.
-    assert(getAnchorPageId(startPageId) == startPageId);
+    SXMutexExclusiveGuard mapGuard(modPageMapMutex);
+    StrictMutexGuard mutexGuard(snapshotPageMapMutex);
 
-    SXMutexExclusiveGuard mapGuard(mutex);
+    // Mark the pages in the page chain as deallocation-deferred.  The actual
+    // deallocation of these pages will be done by an ALTER SYSTEM DEALLOCATE
+    // OLD.
 
     PageId chainPageId = startPageId;
     VersionedPageEntry pageEntry;
     do {
-        pVersionedRandomSegment->getPageEntryCopy(chainPageId, pageEntry);
-        DelegatingSegment::deallocatePageRange(
-            pageEntry.versionChainPageId,
-            pageEntry.versionChainPageId);
+        pVersionedRandomSegment->getLatestPageEntryCopy(chainPageId, pageEntry);
+        DelegatingSegment::deallocatePageRange(chainPageId, chainPageId);
         incrPageUpdateCount(
-            pageEntry.versionChainPageId,
+            chainPageId,
             ANON_PAGE_OWNER_ID,
             ModifiedPageEntry::DEALLOCATED);
+        snapshotPageMap.erase(chainPageId);
+
         chainPageId = pageEntry.versionChainPageId;
     } while (chainPageId != startPageId);
 }
 
-PageId SnapshotRandomAllocationSegment::updatePage(PageId pageId)
+PageId SnapshotRandomAllocationSegment::updatePage(
+    PageId pageId,
+    bool needsTranslation)
 {
-    assert(pageId == getAnchorPageId(pageId));
+    PageId anchorPageId;
+    PageId snapshotId;
+    PageOwnerId ownerId;
 
     // If the snapshot page is newly allocated, then we can update the page
     // in-place.  The page we would have updated should be the page chained
     // from the anchor, which corresponds to the latest version of the page.
     // That, in turn, should correspond to the snapshot we would have read.
-    
-    VersionedPageEntry pageEntry;
-    pVersionedRandomSegment->getPageEntryCopy(pageId, pageEntry);
-    assert(pageEntry.versionChainPageId == getSnapshotId(pageId));
-    if (isPageNewlyAllocated(pageEntry.versionChainPageId)) {
-        return NULL_PAGE_ID;
+
+    if (needsTranslation) {
+        assert(pageId == getAnchorPageId(pageId));
+        VersionedPageEntry pageEntry;
+        pVersionedRandomSegment->getLatestPageEntryCopy(pageId, pageEntry);
+        assert(pageEntry.versionChainPageId == getSnapshotId(pageId));
+        if (isPageNewlyAllocated(pageEntry.versionChainPageId)) {
+            return NULL_PAGE_ID;
+        }
+
+        anchorPageId = pageId;
+        snapshotId = pageEntry.versionChainPageId;
+        ownerId = pageEntry.ownerId;
+
+    } else {
+        if (isPageNewlyAllocated(pageId)) {
+            return NULL_PAGE_ID;
+        }
+        VersionedPageEntry pageEntry;
+        anchorPageId = getAnchorPageId(pageId);
+        pVersionedRandomSegment->getLatestPageEntryCopy(
+            anchorPageId,
+            pageEntry);
+        assert(pageEntry.versionChainPageId == pageId);
+        assert(pageId == getSnapshotId(anchorPageId));
+
+        snapshotId = pageId;
+        ownerId = pageEntry.ownerId;
     }
 
     // Otherwise, this is the first time we're modifying the page.
     // Allocate a new page and chain it into the existing version chain.
+    // Also set the successor page on the new page to the successor set
+    // on the current snapshot page.
 
-    PageId newPageId = allocatePageId(pageEntry.ownerId);
-    pVersionedRandomSegment->chainPageEntries(
+    PageId newPageId = allocatePageId(ownerId);
+
+    SXMutexExclusiveGuard mapGuard(modPageMapMutex);
+
+    VersionedPageEntry pageEntry;
+    pVersionedRandomSegment->getLatestPageEntryCopy(snapshotId, pageEntry);
+    chainPageEntries(
         newPageId,
-        pageEntry.versionChainPageId,
+        snapshotId,
         pageEntry.successorId);
+    chainPageEntries(anchorPageId, newPageId, NULL_PAGE_ID);
 
-    SXMutexExclusiveGuard mapGuard(mutex);
-    incrPageUpdateCount(
-        newPageId,
-        ANON_PAGE_OWNER_ID,
-        ModifiedPageEntry::MODIFIED);
-    pVersionedRandomSegment->chainPageEntries(pageId, newPageId, NULL_PAGE_ID);
+    // Store a mapping of the new page to itself so when we later need to
+    // update that page, our cached mapping will tell us to directly
+    // access that page.
+    StrictMutexGuard mutexGuard(snapshotPageMapMutex);
+    snapshotPageMap[newPageId] = newPageId;
+    snapshotPageMap[anchorPageId] = newPageId;
+    return newPageId;
+}
+
+void SnapshotRandomAllocationSegment::chainPageEntries(
+    PageId pageId,
+    PageId versionChainPageId,
+    PageId successorId)
+{
+    pVersionedRandomSegment->chainPageEntries(
+        pageId,
+        versionChainPageId,
+        successorId);
     incrPageUpdateCount(
         pageId,
         ANON_PAGE_OWNER_ID,
         ModifiedPageEntry::MODIFIED);
-
-    return newPageId;
 }
 
 bool SnapshotRandomAllocationSegment::isPageNewlyAllocated(PageId pageId)
 {
-    SXMutexSharedGuard mapGuard(mutex);
+    SXMutexSharedGuard mapGuard(modPageMapMutex);
 
-    SnapshotMapConstIter iter =
-        snapshotPageMap.find(pageId);
-    if (iter != snapshotPageMap.end()) {
+    ModifiedPageEntryMapIter iter = modPageEntries.find(pageId);
+    if (iter != modPageEntries.end()) {
         SharedModifiedPageEntry pModPageEntry = iter->second;
-        if (pModPageEntry->netAllocations == 1) {
+        if (pModPageEntry->lastModType == ModifiedPageEntry::ALLOCATED) {
             return true;
         }
     }
@@ -261,66 +318,155 @@ bool SnapshotRandomAllocationSegment::isPageNewlyAllocated(PageId pageId)
 
 void SnapshotRandomAllocationSegment::commitChanges(TxnId commitCsn)
 {
-    SXMutexExclusiveGuard mapGuard(mutex);
+    SXMutexExclusiveGuard mapGuard(modPageMapMutex);
 
-    for (SnapshotMapConstIter iter = snapshotPageMap.begin();
-        iter != snapshotPageMap.end();
-        iter++)
-    {
-        SharedModifiedPageEntry pModEntry = iter->second;
-        pVersionedRandomSegment->updatePageEntry(
-            iter->first,
-            pModEntry->updateCount,
-            pModEntry->allocationCount,
-            pModEntry->netAllocations,
-            pModEntry->netAllocations ? commitCsn : NULL_TXN_ID,
-            pModEntry->ownerId,
-            true);
-    }
-    snapshotPageMap.clear();
+    pVersionedRandomSegment->updateAllocNodes(
+        modPageEntries,
+        commitCsn,
+        true);
+    modPageEntries.clear();
 }
 
 void SnapshotRandomAllocationSegment::rollbackChanges()
 {
-    SXMutexExclusiveGuard mapGuard(mutex);
+    SXMutexExclusiveGuard mapGuard(modPageMapMutex);
 
-    for (SnapshotMapConstIter iter = snapshotPageMap.begin();
-        iter != snapshotPageMap.end();
-        iter++)
-    {
-        SharedModifiedPageEntry pModEntry = iter->second;
-        pVersionedRandomSegment->updatePageEntry(
-            iter->first,
-            pModEntry->updateCount,
-            pModEntry->allocationCount,
-            pModEntry->netAllocations,
-            NULL_TXN_ID,
-            ANON_PAGE_OWNER_ID,
-            false);
-    }
-    snapshotPageMap.clear();
+    pVersionedRandomSegment->updateAllocNodes(
+        modPageEntries,
+        NULL_TXN_ID,
+        false);
+
+    // In the case of a rollback, keep around the entries in the
+    // modPageEntries because we'll need to later use these entries to
+    // discard newly allocated pages from the cache.
 }
 
 MappedPageListener *SnapshotRandomAllocationSegment::getMappedPageListener(
-    PageId pageId)
+    BlockId blockId)
 {
-    if (isPageNewlyAllocated(pageId)) {
+    PageId snapshotId = translateBlockId(blockId);
+    if (isPageNewlyAllocated(snapshotId)) {
         return this;
     } else {
         return pVersionedRandomSegment;
     }
 }
 
+void SnapshotRandomAllocationSegment::setForceCacheUnmap()
+{
+    forceCacheUnmap = true;
+}
+
 void SnapshotRandomAllocationSegment::delegatedCheckpoint(
     Segment &delegatingSegment,
     CheckpointType checkpointType)
 {
-    // Need to match on either the snapshot segment itself or the underlying
-    // versioned random segment.  The former will match data pages while the
-    // latter will match allocation node pages.
-    MappedUnionPageListenerPredicate
-        pagePredicate(delegatingSegment, *pVersionedRandomSegment);
-    pCache->checkpointPages(pagePredicate, checkpointType);
+    // Execute the checkpoint only if we have dirty pages or if we're in a
+    // mode where we need to execute the checkpoint to discard old entries from
+    // the cache.
+    //
+    // Note that we need to define this method to avoid calling
+    // delegatedCheckpoint on the underlying VersionedRandomAllocationSegment.
+    if (needPageFlush ||
+        (checkpointType == CHECKPOINT_FLUSH_AND_UNMAP && forceCacheUnmap))
+    {
+        MappedPageListenerPredicate pagePredicate(delegatingSegment);
+        pCache->checkpointPages(pagePredicate,checkpointType);
+        needPageFlush = false;
+    }
+}
+
+MappedPageListener
+*SnapshotRandomAllocationSegment::notifyAfterPageCheckpointFlush(
+    CachePage &page)
+{
+    // In the case of rollback, for page allocations, we want to leave
+    // the page's listener mapped to this segment so it will be removed
+    // from the cache when the segment is destructed.
+    if (!modPageEntries.empty()) {
+        PageId pageId = DelegatingSegment::translateBlockId(page.getBlockId());
+        ModifiedPageEntryMapIter iter = modPageEntries.find(pageId);
+        if (iter != modPageEntries.end()) {
+            SharedModifiedPageEntry pModPageEntry = iter->second;
+            if (pModPageEntry->lastModType == ModifiedPageEntry::ALLOCATED) {
+                return this;
+            }
+        } else {
+            permAssert(false);
+        }
+    }
+    return pVersionedRandomSegment;
+}
+
+bool SnapshotRandomAllocationSegment::canFlushPage(CachePage &page)
+{
+    // We can always flush snapshot pages since dirty snapshot pages are
+    // always new so we don't have to worry about flushing corresponding
+    // log pages
+    return true;
+}
+
+void SnapshotRandomAllocationSegment::notifyPageDirty(
+    CachePage &page,
+    bool bDataValid)
+{
+    // Since snapshot pages are always new, we only need to call notifyPageDirty
+    // when the page is first allocated.  That is indicated by bDataValid being
+    // false.  bDataValid will be passed in as true in the case where we're
+    // copying an existing page into a newly allocated snapshot page.
+    // Since we've already called notifyPageDirty on the newly allocated
+    // snapshot page, there's no need to call it again.
+    if (!bDataValid) {
+        DelegatingSegment::notifyPageDirty(page, bDataValid);
+    }
+}
+
+void SnapshotRandomAllocationSegment::versionPage(
+    PageId destAnchorPageId,
+    PageId srcAnchorPageId)
+{
+    assert(destAnchorPageId == getAnchorPageId(destAnchorPageId));
+    assert(srcAnchorPageId == getAnchorPageId(srcAnchorPageId));
+
+    VersionedPageEntry pageEntry;
+    pVersionedRandomSegment->getLatestPageEntryCopy(
+        destAnchorPageId,
+        pageEntry);
+    TxnId largestDestCsn = pageEntry.allocationCsn;
+    if (pageEntry.versionChainPageId != destAnchorPageId) {
+        pVersionedRandomSegment->getLatestPageEntryCopy(
+            pageEntry.versionChainPageId,
+            pageEntry);
+        largestDestCsn = pageEntry.allocationCsn;
+    }
+
+    SXMutexExclusiveGuard mapGuard(modPageMapMutex);
+
+    // Link the destination anchor to the page following the source anchor,
+    // and then link the source anchor to the original page following the 
+    // destination anchor.
+    pVersionedRandomSegment->getLatestPageEntryCopy(
+        srcAnchorPageId,
+        pageEntry);
+    assert(pageEntry.allocationCsn >= largestDestCsn);
+    PageId pageIdAfterSrcAnchor = pageEntry.versionChainPageId;
+    pVersionedRandomSegment->getLatestPageEntryCopy(
+        destAnchorPageId,
+        pageEntry);
+    PageId pageIdAfterDestAnchor = pageEntry.versionChainPageId;
+
+    chainPageEntries(destAnchorPageId, pageIdAfterSrcAnchor, NULL_PAGE_ID);
+    chainPageEntries(srcAnchorPageId, pageIdAfterDestAnchor, NULL_PAGE_ID);
+
+    StrictMutexGuard mutexGuard(snapshotPageMapMutex);
+    snapshotPageMap[destAnchorPageId] = pageIdAfterSrcAnchor;
+}
+
+void SnapshotRandomAllocationSegment::discardCachePage(BlockId blockId)
+{
+    // We cannot discard snapshot pages because they really haven't been 
+    // freed yet and still may be referenced by other threads.  The
+    // pages will be removed from the cache when they are actually freed.
 }
 
 FENNEL_END_CPPFILE("$Id$");

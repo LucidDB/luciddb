@@ -40,7 +40,9 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct DatabaseHeader : public StoredNode
 {
-    static const MagicNumber MAGIC_NUMBER = 0xb1b7b315d821d90aLL;
+    // Magic number history:
+    // Modified on 3/1/07 - previous value = 0xb1b7b315d821d90aLL;
+    static const MagicNumber MAGIC_NUMBER = 0xb0941b203b81f718LL;
 
     /**
      * Data segment version number at last checkpoint.

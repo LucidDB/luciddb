@@ -55,8 +55,7 @@ RandomAllocationSegmentBase::~RandomAllocationSegmentBase()
 {
 }
 
-void RandomAllocationSegmentBase::formatFromSegment(
-    SharedSegment allocNodeSegment)
+void RandomAllocationSegmentBase::format()
 {
     // calculate number of SegAllocNodes based on current segment size
     uint nSegAllocPages = inferSegAllocCount();
@@ -92,12 +91,11 @@ void RandomAllocationSegmentBase::formatFromSegment(
     // format each SegAllocNode
     
     ExtentNum extentNum = 0;
-    SegmentAccessor segAccessor(allocNodeSegment, pCache);
-    SegAllocLock segAllocLock(segAccessor);
+    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegAllocLock segAllocLock(selfAccessor);
     for (uint iSegAlloc = 0; iSegAlloc < nSegAllocPages; iSegAlloc++) {
 
-        PageId origSegAllocPageId = getSegAllocPageId(iSegAlloc);
-        PageId segAllocPageId = getSegAllocPageIdForWrite(origSegAllocPageId);
+        PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
         segAllocLock.lockExclusive(segAllocPageId);
 
         // REVIEW: have to do setMagicNumber() explicitly since we skipped
@@ -256,22 +254,19 @@ void RandomAllocationSegmentBase::splitPageId(
     }
 }
 
-void RandomAllocationSegmentBase::deallocatePageRangeFromSegment(
+void RandomAllocationSegmentBase::deallocatePageRange(
     PageId startPageId,
-    PageId endPageId,
-    SharedSegment allocNodeSegment)
+    PageId endPageId)
 {
     permAssert(startPageId == endPageId);
     if (startPageId != NULL_PAGE_ID) {
-        deallocatePageId(startPageId, allocNodeSegment);
+        deallocatePageId(startPageId);
     } else {
         format();
     }
 }
 
-void RandomAllocationSegmentBase::deallocatePageId(
-    PageId pageId,
-    SharedSegment allocNodeSegment)
+void RandomAllocationSegmentBase::deallocatePageId(PageId pageId)
 {
     permAssert(pageId != NULL_PAGE_ID);
     assert(isPageIdAllocated(pageId));
@@ -287,10 +282,9 @@ void RandomAllocationSegmentBase::deallocatePageId(
     // otherwise someone calling allocatePageId at the same time could fail
     freePageEntry(extentNum, iPageInExtent);
     
-    SegmentAccessor segAccessor(allocNodeSegment, pCache);
-    SegAllocLock segAllocLock(segAccessor);
-    PageId origSegAllocPageId = getSegAllocPageId(iSegAlloc);
-    PageId segAllocPageId = getSegAllocPageIdForWrite(origSegAllocPageId);
+    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegAllocLock segAllocLock(selfAccessor);
+    PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
     segAllocLock.lockExclusive(segAllocPageId);
     SegmentAllocationNode &segAllocNode = segAllocLock.getNodeForWrite();
     ExtentNum relativeExtentNum = extentNum % nExtentsPerSegAlloc;
@@ -313,7 +307,10 @@ BlockId RandomAllocationSegmentBase::translatePageId(PageId pageId)
     return DelegatingSegment::translatePageId(pageId);
 }
 
-bool RandomAllocationSegmentBase::testPageId(PageId pageId,bool testAllocation)
+bool RandomAllocationSegmentBase::testPageId(
+    PageId pageId,
+    bool testAllocation,
+    bool thisSegment)
 {
     if (!DelegatingSegment::isPageIdAllocated(pageId)) {
         return false;
@@ -333,18 +330,18 @@ bool RandomAllocationSegmentBase::testPageId(PageId pageId,bool testAllocation)
             return true;
         }
     }
-    PageOwnerId ownerId = getPageOwnerId(extentNum, iPageInExtent);
+    PageOwnerId ownerId = getPageOwnerId(pageId, thisSegment);
     return (ownerId != UNALLOCATED_PAGE_OWNER_ID);
 }
 
 bool RandomAllocationSegmentBase::isPageIdValid(PageId pageId)
 {
-    return testPageId(pageId,false);
+    return testPageId(pageId,false,true);
 }
 
 bool RandomAllocationSegmentBase::isPageIdAllocated(PageId pageId)
 {
-    return testPageId(pageId,true);
+    return testPageId(pageId,true,true);
 }
 
 BlockNum RandomAllocationSegmentBase::getAllocatedSizeInPages()

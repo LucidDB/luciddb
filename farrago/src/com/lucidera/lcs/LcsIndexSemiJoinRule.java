@@ -21,16 +21,20 @@
 package com.lucidera.lcs;
 
 import java.util.*;
+import java.util.logging.*;
 
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.trace.*;
 
 
 /**
@@ -60,7 +64,7 @@ public class LcsIndexSemiJoinRule
 
     public LcsIndexSemiJoinRule(RelOptRuleOperand rule, String id)
     {
-        // This rule is fired for either of the following three patterns:
+        // This rule is fired for either of the following 4 patterns:
         //
         // RelOptRuleOperand(
         //    SemiJoinRel.class,
@@ -111,19 +115,22 @@ public class LcsIndexSemiJoinRule
 
         // if the rowscan is already being used with an index, then let one
         // of the other rules handle those cases
-        if ((call.rels.length == 2) && !origRowScan.isFullScan()) {
+        if ((call.rels.length == 2) && !origRowScan.isFullScan) {
             return;
         }
         RelNode rightRel = semiJoin.getRight();
 
         // find the best index to filter the LHS of a SemiJoinRel
         List<Integer> bestKeyOrder = new ArrayList<Integer>();
-        
+                
+        LcsIndexOptimizer indexOptimizer =
+            new LcsIndexOptimizer(origRowScan);
         FemLocalIndex bestIndex =
-            LcsIndexOptimizer.findSemiJoinIndexByCost(
-                origRowScan, rightRel,
-                semiJoin.getLeftKeys(), semiJoin.getRightKeys(), bestKeyOrder);
-            
+            indexOptimizer.findSemiJoinIndexByCost(
+                rightRel, semiJoin.getLeftKeys(),
+                semiJoin.getRightKeys(), bestKeyOrder);
+        
+
         if (bestIndex != null) {
             transformSemiJoin(
                 semiJoin,
@@ -233,19 +240,19 @@ public class LcsIndexSemiJoinRule
                 FennelRelUtil.newIotaProjection(nKeys),
                 false);
 
-        // create a merge and index search on top of the index scan
-        boolean needIntersect = (call.rels.length > 2);
-        FennelRelImplementor relImplementor =
-            FennelRelUtil.getRelImplementor(origRowScan);
+        // Add the new semi join filtering index to the access path.
+        int rowScanRelPosInCall = 1;
+        
         RelNode [] inputRels =
-            createMergeIdxSearches(
-                relImplementor,
+            addNewIndexAccessRel(
                 call,
+                rowScanRelPosInCall,
                 sort,
-                origRowScan,
-                index,
-                needIntersect);
+                index);
 
+        Double rowScanInputSelectivity =
+            RelMdUtil.computeSemiJoinSelectivity(semiJoin);
+        
         LcsRowScanRel newRowScan =
             new LcsRowScanRel(
                 origRowScan.getCluster(),
@@ -255,8 +262,9 @@ public class LcsIndexSemiJoinRule
                 origRowScan.getConnection(),
                 origRowScan.projectedColumns,
                 false,
-                origRowScan.hasExtraFilter,
-                origRowScan.residualColumns);
+                origRowScan.hasResidualFilter,
+                origRowScan.residualColumns,
+                rowScanInputSelectivity);
 
         call.transformTo(newRowScan);
     }
@@ -302,192 +310,78 @@ public class LcsIndexSemiJoinRule
     }
 
     /**
-     * Creates a merge on top of an index search on top of a sort. If necessary,
-     * creates an intersect on top of the merges. This will then feed into the
-     * rowscan.
-     *
-     * @param relImplementor for allocating dynamic parameters
-     * @param call inputs into this rule
-     * @param sort distinct, sorted input into index search
-     * @param indexScan index scan to be used with search
-     * @param rowScan the original row scan
-     * @param needIntersect true if the row scan requires more than 1 index
-     * search and therefore, an intersect needs to feed into the scan
-     *
-     * @return input into the row scan
+     * 
+     * @param call call this rule is matched against
+     * @param rowScanRelPosInCall the position(start from 0) of the
+     * LcsRowScanRel in the sequence of rels matched by this rule
+     * @param sort input to the index search rel to be created
+     * @param index the index to use in the index search rel
+     * 
+     * @return the new input rels, after adding the new index search rel,
+     * to the row scan rel.
      */
-    private RelNode [] createMergeIdxSearches(
-        FennelRelImplementor relImplementor,
+    private static RelNode [] addNewIndexAccessRel(
         RelOptRuleCall call,
+        int rowScanRelPosInCall,
         FennelSortRel sort,
-        LcsRowScanRel rowScan,
-        FemLocalIndex index,
-        boolean needIntersect)
+        FemLocalIndex index)
     {
-        // if there already is a child underneath the rowscan, then we'll
-        // need to create an intersect; for the intersect, we'll need dynamic
-        // parameters; either create new ones if there is no intersect yet or
-        // reuse the existing ones
-        FennelRelParamId startRidParamId;
-        FennelRelParamId rowLimitParamId;
-        if (needIntersect) {
-            if (call.rels[2] instanceof LcsIndexIntersectRel) {
-                startRidParamId =
-                    ((LcsIndexIntersectRel) call.rels[2]).getStartRidParamId();
-                rowLimitParamId =
-                    ((LcsIndexIntersectRel) call.rels[2]).getRowLimitParamId();
-            } else {
-                startRidParamId = relImplementor.allocateRelParamId();
-                rowLimitParamId = relImplementor.allocateRelParamId();
-            }
-        } else {
-            startRidParamId = null;
-            rowLimitParamId = null;
-        }
-
-        // directives don't need to be passed into the index search
-        // because we are doing an equijoin where the sort feeds in
-        // the search values; also no need to set the dynamic parameters
-        // since those are set in the parent index merge rel
-        LcsIndexSearchRel indexSearch =
-            new LcsIndexSearchRel(
-                rowScan.getCluster(),
-                sort,
-                rowScan.lcsTable,
-                index,
-                false,
-                null,
-                true,
-                false,
-                null,
-                null,
-                null,
-                null,
-                null);
-
-        // create a merge on top of the index search
-        LcsIndexMergeRel merge =
-            new LcsIndexMergeRel(
-                rowScan.lcsTable,
-                indexSearch,
-                startRidParamId,
-                rowLimitParamId,
-                relImplementor.allocateRelParamId());
-
-        // finally create the new row scan
-        int inputLen = rowScan.getInputs().length;
-        if (rowScan.isFullScan) {
-            inputLen++;
-        }
-        RelNode [] inputRels = new RelNode[inputLen];
-        if (needIntersect) {
-            LcsIndexIntersectRel intersectRel =
-                addIntersect(
-                    relImplementor,
-                    call,
-                    rowScan,
-                    call.rels[2],
-                    merge,
-                    startRidParamId,
-                    rowLimitParamId);
-            inputRels[0] = intersectRel;
-        } else {
-            inputRels[0] = merge;
+        assert (call.rels[rowScanRelPosInCall] instanceof LcsRowScanRel);
+        LcsRowScanRel origRowScanRel =
+            (LcsRowScanRel)call.rels[rowScanRelPosInCall];        
+        
+        RelNode newIndexAccessRel = null;
+        // AND the INDEX rels together.
+        if (!origRowScanRel.isFullScan) {
+            assert (call.rels.length > rowScanRelPosInCall+1);
+            newIndexAccessRel = call.rels[rowScanRelPosInCall+1];
         }
         
-        if (rowScan.hasExtraFilter) {
+        // Always require merge for the index access to be added
+        boolean requireMerge = true;
+        
+        // No input key proj required
+        // An equality condition using the input sort values is implied.
+        Integer[] inputKeyProj = null;
+        Integer[] inputDirectiveProj = null;
+        
+        newIndexAccessRel =
+            LcsIndexOptimizer.addNewIndexAccessRel(
+                newIndexAccessRel,
+                call,
+                rowScanRelPosInCall,
+                index,
+                sort,
+                inputKeyProj,
+                inputDirectiveProj,
+                requireMerge);
+
+        // Number of existing residual filters
+        int origResidualColumnCount = 0;
+        if (origRowScanRel.hasResidualFilter) {
+            origResidualColumnCount =
+                origRowScanRel.residualColumns.length;
+        }
+
+        int origIndexRelCount =
+            origRowScanRel.getInputs().length - origResidualColumnCount;
+        int indexRelCount = 1;
+        
+        RelNode [] rowScanInputRels =
+            new RelNode[indexRelCount + 
+                        origResidualColumnCount];
+                
+        // finally create the new row scan
+        rowScanInputRels[0] = newIndexAccessRel;
+        
+        if (origRowScanRel.hasResidualFilter) {
             System.arraycopy(
-                rowScan.getInputs(),
-                (rowScan.isFullScan) ? 0 : 1,
-                inputRels, 1, inputLen - 1);
+                origRowScanRel.getInputs(), origIndexRelCount,
+                rowScanInputRels, indexRelCount, origResidualColumnCount);
         }
 
-        return inputRels;
-    }
-
-    /**
-     * Creates an intersect of an existing set of merge/index search/sort
-     * RelNodes strung together with a new merge/index search/sort RelNode
-     * chain. In doing so, make sure all children of the intersect have the
-     * correct dynamic parameters.
-     *
-     * @param rowScan rowScan underneath this intersect
-     * @param existingMerges existing merges
-     * @param newInput new merge to be intersected with the existing
-     * @param startRidParamId id for startRid parameter
-     * @param rowLimitParamId id for rowLimit parameter
-     *
-     * @return new intersect relnode
-     */
-    private LcsIndexIntersectRel addIntersect(
-        FennelRelImplementor relImplementor,
-        RelOptRuleCall call,
-        LcsRowScanRel rowScan,
-        RelNode existingMerges,
-        RelNode newMerge,
-        FennelRelParamId startRidParamId,
-        FennelRelParamId rowLimitParamId)
-    {
-        RelNode [] mergeRels;
-        int nMergeRels;
-
-        // if there's already an intersect, get the existing children
-        // of that intersect
-        if (existingMerges instanceof LcsIndexIntersectRel) {
-            nMergeRels = existingMerges.getInputs().length;
-            mergeRels = new RelNode[nMergeRels + 1];
-            for (int i = 0; i < nMergeRels; i++) {
-                mergeRels[i] = existingMerges.getInputs()[i];
-            }
-        } else {
-            nMergeRels = 1;
-            mergeRels = new RelNode[2];
-
-            if (existingMerges instanceof LcsIndexMergeRel) {
-                // recreate the index merge rel with the appropriate dynamic
-                // params
-                mergeRels[0] =
-                    new LcsIndexMergeRel(
-                        rowScan.lcsTable,
-                        (LcsIndexSearchRel) call.rels[3],
-                        startRidParamId,
-                        rowLimitParamId,
-                        relImplementor.allocateRelParamId());
-            } else {
-                // recreate the index search with the appropriate dynamic
-                // params
-                assert (existingMerges instanceof LcsIndexSearchRel);
-                LcsIndexSearchRel indexSearch =
-                    (LcsIndexSearchRel) call.rels[2];
-                mergeRels[0] =
-                    new LcsIndexSearchRel(
-                        indexSearch.getCluster(),
-                        indexSearch.getChild(),
-                        indexSearch.lcsTable,
-                        indexSearch.index,
-                        false,
-                        null,
-                        indexSearch.isUniqueKey(),
-                        indexSearch.isOuter(),
-                        indexSearch.getInputKeyProj(),
-                        indexSearch.getInputJoinProj(),
-                        indexSearch.getInputDirectiveProj(),
-                        startRidParamId,
-                        rowLimitParamId);
-            }
-        }
-        mergeRels[nMergeRels] = newMerge;
-
-        LcsIndexIntersectRel intersectRel =
-            new LcsIndexIntersectRel(
-                rowScan.getCluster(),
-                mergeRels,
-                rowScan.lcsTable,
-                startRidParamId,
-                rowLimitParamId);
-
-        return intersectRel;
-    }
+        return rowScanInputRels;
+    }    
 }
 
 // End LcsIndexSemiJoinRule.java

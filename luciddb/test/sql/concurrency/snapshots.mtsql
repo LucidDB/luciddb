@@ -1,0 +1,86 @@
+@nolockstep
+
+@setup
+-- Test snapshot reads by selecting from a table that's being inserted into
+
+  set schema 'concurrency';
+
+  create table snapshot(a int unique, b int);
+  insert into snapshot values(1, 0);
+
+@end
+
+--------------------------------------------------------------------------------
+
+@thread cleanup
+
+  @sync
+  @sync
+  @sync
+  @sync
+  @sync
+  @sync
+
+  set schema 'concurrency';
+  select * from snapshot;
+  drop table snapshot;
+
+@end
+
+--------------------------------------------------------------------------------
+
+@thread inserter
+
+  set schema 'concurrency';
+
+  @sync
+  insert into snapshot values(2, sys_boot.mgmt.sleep(5000));
+  @sync
+  insert into snapshot values(3, sys_boot.mgmt.sleep(5000));
+  @sync
+  insert into snapshot select a + 3, sys_boot.mgmt.sleep(1500) from snapshot;
+  @sync
+  @err insert into snapshot select 10 - a, sys_boot.mgmt.sleep(1500) from snapshot;
+  @sync
+  @sync
+
+@end
+
+--------------------------------------------------------------------------------
+
+@thread reader
+
+  set schema 'concurrency';
+
+  -- this should see only 1; do both a full table scan and an index scan
+  @sync
+  @sleep 1000
+  select * from snapshot;
+  select * from snapshot where a >= 0;
+
+  -- this should see 1, 2
+  @sync
+  @sleep 1000
+  select * from snapshot;
+  select * from snapshot where a >= 0;
+
+  -- this should see 1, 2, 3
+  @sync
+  @sleep 1000
+  select * from snapshot;
+  select * from snapshot where a >= 0;
+
+  -- this should see 1, 2, 3, 4, 5, 6
+  @sync
+  @sleep 1000
+  select * from snapshot;
+  select * from snapshot where a >= 0;
+
+  -- this should still see 1, 2, 3, 4, 5, 6
+  @sync
+  select * from snapshot;
+  select * from snapshot where a >= 0;
+
+  @sync
+
+@end

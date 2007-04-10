@@ -1015,6 +1015,36 @@ public class FarragoDatabase
         cmd.setAsync(async);
         fennelDbHandle.executeCmd(cmd);
     }
+    
+    public void deallocateOld()
+    {
+        if (!systemRepos.isFennelEnabled()) {
+            return;
+        }
+        FemCmdAlterSystemDeallocate cmd =
+            systemRepos.newFemCmdAlterSystemDeallocate();
+        cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
+        fennelDbHandle.executeCmd(cmd);
+    }
+    
+    public static FarragoSessionFactory newSessionFactory()
+    {
+        String libraryName =
+            FarragoProperties.instance().defaultSessionFactoryLibraryName.get();
+        try {
+            FarragoPluginClassLoader classLoader =
+                new FarragoPluginClassLoader();
+            Class c =
+                classLoader.loadClassFromLibraryManifest(
+                    libraryName,
+                    "SessionFactoryClassName");
+            return (FarragoSessionFactory) classLoader.newPluginInstance(c);
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().PluginInitFailed.ex(
+                libraryName,
+                ex);
+        }
+    }
 
     /**
      * Main entry point which creates a new Farrago database.
@@ -1025,7 +1055,7 @@ public class FarragoDatabase
     {
         FarragoDatabase database =
             new FarragoDatabase(
-                new FarragoDbSessionFactory(),
+                FarragoDatabase.newSessionFactory(),
                 true);
         database.close(false);
     }

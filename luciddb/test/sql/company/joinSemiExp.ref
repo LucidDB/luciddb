@@ -123,8 +123,7 @@
 '          FennelReshapeRel'
 '            LcsRowScanRel'
 '          LcsRowScanRel'
-'            LcsIndexSearchRel'
-'              FennelValuesRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select R.LNAME 
@@ -141,8 +140,7 @@
 '          FennelReshapeRel'
 '            LcsRowScanRel'
 '          LcsRowScanRel'
-'            LcsIndexSearchRel'
-'              FennelValuesRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- double reference of a table
 0: jdbc:luciddb:> explain plan excluding attributes for

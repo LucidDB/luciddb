@@ -864,6 +864,10 @@ Messages: {1}</text>
 <text>External data source field ''{0}'' has datatype ''{1}'' which cannot be cast to datatype ''{2}'' of foreign table field ''{3}''.</text>
 </exception>
 
+<exception id="460220" name="DataServerIndexVersionFailed">
+<text>Failed to version index root page for {0}</text>
+</exception>
+
 <!-- NOTE:  Mock resources don't really need localization; this one is
      just here as an example of how to do i18n for wrapper properties.  -->
 

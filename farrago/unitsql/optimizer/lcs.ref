@@ -756,6 +756,9 @@
 > insert into tencols values(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 > insert into tencols values(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
 > 
+> -- fake row count so that index access is considered
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LCS', 'TENCOLS', 100);
+> 
 > !set outputformat csv
 > -- should select all clusters
 > explain plan for select * from tencols;
@@ -939,7 +942,7 @@
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, RECTANGLES]])'
 '    FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, BOOLEAN R, DOUBLE R, DOUBLE R, INTEGER NOT NULL ID) NOT NULL])'
 '      FennelRenameRel(fieldNames=[[NAME, R, R, R, ID]])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=['Default'], expr#2=[false], expr#3=[2.0], expr#4=[Reinterpret($t3)], expr#5=[CAST($t4):DOUBLE NOT NULL], expr#6=[1E1], expr#7=[/($t5, $t6)], expr#8=[CAST($t7):DOUBLE], expr#9=[4.0], expr#10=[Reinterpret($t9)], expr#11=[CAST($t10):DOUBLE NOT NULL], expr#12=[/($t11, $t6)], expr#13=[CAST($t12):DOUBLE], expr#14=[1], EXPR$0=[$t1], EXPR$1=[$t2], EXPR$1=[$t8], EXPR$1=[$t13], EXPR$2=[$t14])'
+'        FennelCalcRel(expr#0=[{inputs}], expr#1=['Default'], expr#2=[false], expr#3=[2.0], expr#4=[Reinterpret($t3)], expr#5=[CAST($t4):DOUBLE NOT NULL], expr#6=[1E1], expr#7=[/INT($t5, $t6)], expr#8=[CAST($t7):DOUBLE], expr#9=[4.0], expr#10=[Reinterpret($t9)], expr#11=[CAST($t10):DOUBLE NOT NULL], expr#12=[/INT($t11, $t6)], expr#13=[CAST($t12):DOUBLE], expr#14=[1], EXPR$0=[$t1], EXPR$1=[$t2], EXPR$1=[$t8], EXPR$1=[$t13], EXPR$2=[$t14])'
 '          FennelValuesRel(tuples=[[{ 0 }]])'
 > 
 > explain plan for

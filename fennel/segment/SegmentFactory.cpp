@@ -31,6 +31,7 @@
 #include "fennel/segment/RandomAllocationSegment.h"
 #include "fennel/segment/SnapshotRandomAllocationSegment.h"
 #include "fennel/segment/VersionedRandomAllocationSegment.h"
+#include "fennel/segment/DynamicDelegatingSegment.h"
 #include "fennel/segment/CircularSegment.h"
 #include "fennel/segment/SegmentAccessor.h"
 #include "fennel/common/ConfigMap.h"
@@ -119,6 +120,15 @@ SharedSegment SegmentFactory::newSnapshotRandomAllocationSegment(
             snapshotCsn);
     SharedSegment pSegment(pSnapshotSegment, ClosableObjectDestructor());
     return newTracingSegment(pSegment, "SnapshotRandomAllocationSegment");
+}
+
+SharedSegment SegmentFactory::newDynamicDelegatingSegment(
+    SharedSegment delegateSegment)
+{
+    DynamicDelegatingSegment *pDelegatingSegment =
+        new DynamicDelegatingSegment(WeakSegment(delegateSegment));
+    SharedSegment pSegment(pDelegatingSegment, ClosableObjectDestructor());
+    return newTracingSegment(pSegment, "DynamicDelegatingSegment");
 }
 
 SharedSegment SegmentFactory::newWALSegment(

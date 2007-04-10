@@ -6,6 +6,7 @@ CircularSegment.cpp \
 CrcSegOutputStream.cpp \
 CrcSegInputStream.cpp \
 DelegatingSegment.cpp \
+DynamicDelegatingSegment.cpp \
 LinearDeviceSegment.cpp \
 LinearViewSegment.cpp \
 RandomAllocationSegmentBase.cpp \

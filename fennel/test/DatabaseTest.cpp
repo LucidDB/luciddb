@@ -263,6 +263,8 @@ void DatabaseTest::testForceTxns()
 {
     configMap.setStringParam(
         "forceTxns","true");
+    configMap.setStringParam(
+        "disableSnapshots","true");
     testCreateData();
     pDatabase->checkpointImpl();
     verifyData(5);

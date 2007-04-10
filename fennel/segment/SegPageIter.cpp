@@ -135,6 +135,10 @@ void SegPageIter::prefetchBatch(PageId beginPageId,uint batchNumber)
         CompoundId::setDeviceId(pageId,deviceId);
         CompoundId::setBlockNum(pageId,minBlockNum);
         pageId = segment.getPhysicalID(pageId);
+        // TODO zfong 2/15/07 - When this code is enabled, we cannot assume
+        // that every page read from the batch maps to the same page listener.
+        // The mappedPageListener needs to be determined for each page based
+        // on its pageId.
         batchSlots[batchNumber] = RecordMgr::getCache().prefetchBatch(
             pageId,&segment);
         if (batchSlots[batchNumber] != -1) return;
@@ -149,7 +153,7 @@ void SegPageIter::prefetchBatch(PageId beginPageId,uint batchNumber)
         BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
         segmentAccessor.pCacheAccessor->prefetchPage(
             blockId,
-            segmentAccessor.pSegment.get());
+            segmentAccessor.pSegment->getMappedPageListener(blockId));
     }
 }
 

@@ -112,6 +112,23 @@ public:
      * @param page the page that was flushed
      */
     virtual void notifyAfterPageFlush(CachePage &page);
+
+    /**
+     * Receives notification that a page has been flushed during a checkpoint.
+     * Also determines if the listener on the page needs to be reset.
+     *
+     * <p>Note that if the page listener is reset, that page may not be unmapped
+     * during a CHECKPOINT_FLUSH_AND_UNMAP checkpoint call.
+     *
+     * <p>This method should be called immediately after the page flush has
+     * completed while the checkpoint is still in progress.
+     *
+     * @param page the page that was flushed
+     *
+     * @return NULL if the listener on the page does not need to be reset;
+     * otherwise, returns the listener that the page should be reset to
+     */
+    virtual MappedPageListener *notifyAfterPageCheckpointFlush(CachePage &page);
 };
 
 FENNEL_END_NAMESPACE

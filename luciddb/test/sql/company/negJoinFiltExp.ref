@@ -16,9 +16,7 @@
 '      LcsRowScanRel'
 '      FennelReshapeRel'
 '        LcsRowScanRel'
-'          LcsIndexMergeRel'
-'            LcsIndexSearchRel'
-'              FennelValuesRel'
+'          FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this isn't worth it since the rows from emp are limited
 0: jdbc:luciddb:> explain plan excluding attributes for select * from emp,dept
@@ -29,13 +27,12 @@
 'FennelToIteratorConverter'
 '  FennelReshapeRel'
 '    LhxJoinRel'
+'      FennelReshapeRel'
+'        LcsRowScanRel'
+'          FennelValuesRel'
 '      LcsRowScanRel'
 '        LcsIndexSearchRel'
 '          FennelValuesRel'
-'      FennelReshapeRel'
-'        LcsRowScanRel'
-'          LcsIndexSearchRel'
-'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this shouldn't do it because the filter condition's on the big table
 0: jdbc:luciddb:> explain plan excluding attributes for select * from emp,dept
@@ -58,8 +55,7 @@
 '    FennelCartesianProductRel'
 '      LcsRowScanRel'
 '      LcsRowScanRel'
-'        LcsIndexSearchRel'
-'          FennelValuesRel'
+'        FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this shouldn't do it because the equi join is not accessible top level
 0: jdbc:luciddb:> explain plan excluding attributes for select * from emp,dept
@@ -70,8 +66,7 @@
 '    FennelCartesianProductRel'
 '      LcsRowScanRel'
 '      LcsRowScanRel'
-'        LcsIndexSearchRel'
-'          FennelValuesRel'
+'        FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this shouldn't do it because the filter condition is not accessible top level
 0: jdbc:luciddb:> explain plan excluding attributes for select * from emp,dept
@@ -92,8 +87,7 @@
 '  LhxJoinRel'
 '    LcsRowScanRel'
 '    LcsRowScanRel'
-'      LcsIndexSearchRel'
-'        FennelValuesRel'
+'      FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- pre filter should happen here, but we still need to join to location since
 0: jdbc:luciddb:> -- location.state is not unique
@@ -125,8 +119,7 @@
 '        IterCalcRel'
 '          FennelToIteratorConverter'
 '            LcsRowScanRel'
-'              LcsIndexSearchRel'
-'                FennelValuesRel'
+'              FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !set outputformat table
 0: jdbc:luciddb:> !quit

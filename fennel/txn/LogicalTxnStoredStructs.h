@@ -133,6 +133,11 @@ struct LogicalTxnLogCheckpointMemento
      * Number of uncommitted transactions active at time of checkpoint.
      */
     uint nUncommittedTxns;
+
+    /**
+     * TxnId of the next new transaction
+     */
+    TxnId nextTxnId;
 };
 
 /**

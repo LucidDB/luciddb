@@ -118,6 +118,13 @@ public class LucidDbTestCleanup
         LucidDbTestCleanup cleanup = newCleanup();
         cleanup.execute();
     }
+    
+    public void execute()
+        throws Exception
+    {
+        super.execute();
+        ldbStmt.executeUpdate("alter system deallocate old");       
+    }
 
     private static LucidDbTestCleanup newCleanup()
         throws Exception

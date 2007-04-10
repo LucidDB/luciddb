@@ -160,7 +160,7 @@ Error: At line 1, column 9: Unknown identifier 'X' (state=,code=0)
 > 
 > values (1/7);
 'EXPR$0'
-'0'
+'0.142857'
 > 
 > values ('no'), ('si'), ('es posible');
 'EXPR$0'

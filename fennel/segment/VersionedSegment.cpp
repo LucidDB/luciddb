@@ -272,7 +272,9 @@ void VersionedSegment::prepareOnlineRecovery()
 }
 
 void VersionedSegment::recover(
-    PageId firstLogPageId,SegVersionNum versionNumberInit)
+    SharedSegment pDelegatingSegment,
+    PageId firstLogPageId,
+    SegVersionNum versionNumberInit)
 {
     assert(dataToLogMap.empty());
     assert(pWALSegment->getMinDirtyPageId() == NULL_PAGE_ID);
@@ -295,7 +297,7 @@ void VersionedSegment::recover(
     // TODO:  what about when one shadow log stores pages for multiple
     // VersionedSegments?
     SegmentAccessor logSegmentAccessor(logSegment,pCache);
-    SegmentAccessor dataSegmentAccessor(getDelegateSegment(),pCache);
+    SegmentAccessor dataSegmentAccessor(pDelegatingSegment,pCache);
     for (; firstLogPageId != NULL_PAGE_ID;
          firstLogPageId = logSegment->getPageSuccessor(firstLogPageId))
     {

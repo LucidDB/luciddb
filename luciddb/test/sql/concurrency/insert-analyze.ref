@@ -49,13 +49,13 @@
 > set schema 'concurrency';
 0 rows affected.
 > analyze table t2 compute statistics for all columns;
-net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+0 rows affected.
 -- end of thread analyze1
 
 -- thread analyze2
 > set schema 'concurrency';
 0 rows affected.
 > analyze table t1 compute statistics for all columns;
-net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.CONCURRENCY.T1
 -- end of thread analyze2
 

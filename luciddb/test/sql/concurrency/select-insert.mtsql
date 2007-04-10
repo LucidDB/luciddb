@@ -50,7 +50,7 @@
   @sync
   @sync
   @sleep 1000
-  @err insert into t1 values(3);
+  insert into t1 values(3);
   @sync
 
 @end

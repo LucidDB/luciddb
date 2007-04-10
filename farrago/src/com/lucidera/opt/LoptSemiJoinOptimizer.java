@@ -282,12 +282,17 @@ public class LoptSemiJoinOptimizer
         // find the best index
         List<Integer> bestKeyOrder = new ArrayList<Integer>();
         LcsRowScanRel tmpFactRel =
-            (LcsRowScanRel)factTable.toRel(factRel.getCluster(), factTable.getPreparingStmt());
-
+            (LcsRowScanRel)factTable.toRel(
+                factRel.getCluster(), 
+                factTable.getPreparingStmt());
+        
+        LcsIndexOptimizer indexOptimizer =
+            new LcsIndexOptimizer(tmpFactRel);
         FemLocalIndex bestIndex =
-            LcsIndexOptimizer.findSemiJoinIndexByCost(
-                tmpFactRel, dimRel, actualLeftKeys, rightKeys, bestKeyOrder);
-            
+            indexOptimizer.findSemiJoinIndexByCost(
+                dimRel, actualLeftKeys, rightKeys, bestKeyOrder);
+      
+
         if (bestIndex == null) {
             return null;
         }

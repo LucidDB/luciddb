@@ -65,6 +65,11 @@ public abstract class DdlAlterStmt
         super(alterElement);
     }
 
+    public DdlAlterStmt(CwmModelElement alterElement, boolean runsAsDml)
+    {
+        super(alterElement, runsAsDml);
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     public void setColumn(CwmColumn column)

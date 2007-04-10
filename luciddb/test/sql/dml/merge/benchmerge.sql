@@ -263,4 +263,5 @@ when not matched then
 
 select count(*) from bench1M;
 select count(*) from bench1M where "kseq">0 and "kseq"<1000001;
-
+-- do an analyze table, which implicitly verifies the btree pages
+analyze table bench1M compute statistics for all columns;

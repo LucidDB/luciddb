@@ -97,20 +97,34 @@ public class RelMdUtil
         return bd.doubleValue();
     }
 
+    
     /**
      * Computes the selectivity of a semijoin filter if it is applied on a fact
      * table. The computation is based on the selectivity of the dimension
      * table/columns and the number of distinct values in the fact table
      * columns.
-     *
+     * 
+     * @param rel semijoin rel
+     * @return calculated selectivity 
+     */
+    public static double computeSemiJoinSelectivity(
+        SemiJoinRel rel)
+    {
+        return computeSemiJoinSelectivity(
+            rel.getLeft(), rel.getRight(),
+            rel.getLeftKeys(), rel.getRightKeys());
+    }
+
+    /**
+     * Computes the selectivity of a semijoin filter if it is applied on a fact
+     * table. The computation is based on the selectivity of the dimension
+     * table/columns and the number of distinct values in the fact table
+     * columns.
+     * 
      * @param factRel fact table participating in the semijoin
      * @param dimRel dimension table participating in the semijoin
-     * @param rel RelNode corresponding to the semijoin; used to access the
-     * semijoin keys; the left and right children may be different from the fact
-     * and dimension table parameters passed into this method if semijoins are
-     * being chained together
-     *
-     * @return calculated selectivity
+     * @param rel semijoin rel
+     * @return calculated selectivity 
      */
     public static double computeSemiJoinSelectivity(
         RelNode factRel,
@@ -132,7 +146,7 @@ public class RelMdUtil
      * @param dimRel dimension table participating in the semijoin
      * @param factKeyList LHS keys used in the filter
      * @param dimKeyList RHS keys used in the filter
-     * @return calculated selectivity
+     * @return calculated selectivity 
      */
     public static double computeSemiJoinSelectivity(
         RelNode factRel,

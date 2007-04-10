@@ -143,6 +143,19 @@ public interface FarragoMedLocalDataServer
         RelOptTable table,
         FemLocalIndex index,
         RelOptCluster cluster);
+    
+    /**
+     * Versions the root page of an index
+     * 
+     * @param oldRoot original root page
+     * @param newRoot new versioned, root page
+     * @param txnContext Fennel txn context
+     */
+    public void versionIndexRoot(
+        Long oldRoot,
+        Long newRoot,
+        FennelTxnContext txnContext)
+        throws SQLException;
 }
 
 // End FarragoMedLocalDataServer.java

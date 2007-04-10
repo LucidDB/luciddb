@@ -45,25 +45,55 @@ import org.eigenbase.stat.*;
  * @author Rushan Chen
  * @version $Id$
  */
-class LcsIndexAccessRule
+public class LcsIndexAccessRule
     extends RelOptRule
 {
 
     //~ Constructors -----------------------------------------------------------
 
-    /**
-     * Creates a new LcsIndexAccessRule object.
-     */
-    public LcsIndexAccessRule()
+    public LcsIndexAccessRule(RelOptRuleOperand rule, String id)
     {
-        super(
-            new RelOptRuleOperand(
-                FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(LcsRowScanRel.class, null)
-                }));
-    }
+        // This rule is fired for either of the following 4 patterns:
+        //
+        // RelOptRuleOperand(
+        //    FilterRel.class,
+        //    new RelOptRuleOperand [] {
+        //        new RelOptRuleOperand(LcsRowScanRel.class, null),
+        //    })
+        // or
+        //
+        // RelOptRuleOperand(
+        //     FilterRel.class,
+        //     new RelOptRuleOperand [] {
+        //         new RelOptRuleOperand(LcsRowScanRel.class,
+        //         new RelOptRuleOperand [] {
+        //             new RelOptRuleOperand(LcsIndexIntersectRel.class, null)
+        //     })})
+        // or
+        //
+        // RelOptRuleOperand(
+        //     FilterRel.class,
+        //     new RelOptRuleOperand [] {
+        //         new RelOptRuleOperand(LcsRowScanRel.class,
+        //         new RelOptRuleOperand [] {
+        //             new RelOptRuleOperand(LcsIndexSearchRel.class, null)
+        //     })})
+        // or
+        //
+        // RelOptRuleOperand(
+        //     FilterRel.class,
+        //     new RelOptRuleOperand [] {
+        //         new RelOptRuleOperand(LcsRowScanRel.class,
+        //         new RelOptRuleOperand [] {
+        //             new RelOptRuleOperand(LcsIndexMergeRel.class,
+        //             new RelOptRuleOperand [] {
+        //                 new RelOptRuleOperand(LcsIndexSearchRel.class, null)
+        //     })})})
 
+        super(rule);
+        description = "LcsIndexAccessRule: " + id;
+    }
+    
     //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
@@ -75,17 +105,21 @@ class LcsIndexAccessRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
+        int rowScanRelPosInCall = 1;
         FilterRel filter = (FilterRel) call.rels[0];
-        LcsRowScanRel origRowScan = (LcsRowScanRel) call.rels[1];
+        LcsRowScanRel origRowScan =
+            (LcsRowScanRel) call.rels[rowScanRelPosInCall];
 
-        // If LcsRowScanRel already has input(s), it means Sarg Analysis has
-        // already been done for the predicates in this FilterRel, and
-        // LcsIndexSearchRel and/or residual SargRel have been allocated as
-        // inputs to LcsRowScanRel.
-        if (origRowScan.getInputs().length > 0) {
+        // if the rowscan is already being used with an index, then let one
+        // of the other rules handle those cases
+        if ((call.rels.length == rowScanRelPosInCall + 1)
+            && !origRowScan.isFullScan) {
+            // Filter
+            //   RowScanRel with index access input
+            //     some input
             return;
         }
-
+        
         RexBuilder rexBuilder = origRowScan.getCluster().getRexBuilder();
         SargFactory sargFactory = new SargFactory(rexBuilder);
         SargRexAnalyzer rexAnalyzer = sargFactory.newRexAnalyzer();
@@ -95,37 +129,43 @@ class LcsIndexAccessRule
         List<SargBinding> sargBindingList = rexAnalyzer.analyzeAll(filterExp);
 
         if (sargBindingList.isEmpty()) {
-            // Predicate was not sargable
+            // No sargable predicates.
             return;
         }
 
-        considerIndex(origRowScan, sargBindingList, call, rexAnalyzer);
+        considerIndex(call, rowScanRelPosInCall, rexAnalyzer, sargBindingList);
     }
 
     private void considerIndex(
-        LcsRowScanRel origRowScan,
-        List<SargBinding> sargBindingList,
         RelOptRuleCall call,
-        SargRexAnalyzer rexAnalyzer)
+        int rowScanRelPosInCall,
+        SargRexAnalyzer rexAnalyzer,
+        List<SargBinding> sargBindingList)
     {
-        FennelRelImplementor relImplementor =
-            FennelRelUtil.getRelImplementor(origRowScan);
-
-        // By default, these parameters are not used:
-        FennelRelParamId startRidParamId = null;
-        FennelRelParamId rowLimitParamId = null;
-
+        LcsRowScanRel origRowScan =
+            ((LcsRowScanRel)call.rels[rowScanRelPosInCall]);
+        
         RexBuilder rexBuilder = origRowScan.getCluster().getRexBuilder();
 
         Map<CwmColumn, SargIntervalSequence> col2SeqMap =
             LcsIndexOptimizer.getCol2SeqMap(origRowScan, sargBindingList);
 
+        Double filterCorrelationFactor = 0.5;
+        // Combined selectivity for all the sargable filters
+        Double sargFilterSelectivity =
+            RelMetadataQuery.getSelectivity(
+                origRowScan,
+                rexAnalyzer.getSargBindingListToRexNode(sargBindingList));
+            
         // Try cost based index selection
         List<List<LcsIndexOptimizer.SargColumnFilter>> colFilterLists =
             getSargColFilterLists(origRowScan, sargBindingList, col2SeqMap);
         
+        LcsIndexOptimizer indexOptimizer =
+            new LcsIndexOptimizer(origRowScan);
+        
         Map<FemLocalIndex, Integer> index2PosMap =
-            LcsIndexOptimizer.getIndex2MatchedPosByCost(origRowScan, colFilterLists);
+            indexOptimizer.getIndex2MatchedPosByCost(colFilterLists);
 
         assert (index2PosMap != null);
 
@@ -146,51 +186,79 @@ class LcsIndexAccessRule
                 sargBindingList,
                 index2PosMap, 
                 nonResidualSargBindingList);
-        
+
         int residualColumnCount = residualSargBindingList.size();
-        
         if (indexSet.size() == 0 && residualColumnCount == 0) {
             // no index usable
             // no residual filtering
             return;
         }
 
-        RexNode nonResidualRexNode =
-            rexAnalyzer.getResidualSargRexNode(nonResidualSargBindingList);
-
-        RexNode postFilterRexNode = rexAnalyzer.getPostFilterRexNode();
-
-        RexNode extraFilter = null;
-
-        if ((nonResidualRexNode != null) && (postFilterRexNode != null)) {
-            extraFilter =
+        RexNode nonResidualFilter =
+            rexAnalyzer.getSargBindingListToRexNode(
+                nonResidualSargBindingList);
+        RexNode nonSargFilter = rexAnalyzer.getNonSargFilterRexNode();
+        RexNode postFilter = null;
+        
+        if ((nonResidualFilter != null) && (nonSargFilter != null)) {
+            postFilter =
                 rexBuilder.makeCall(
                     SqlStdOperatorTable.andOperator,
-                    nonResidualRexNode,
-                    postFilterRexNode);
-        } else if (nonResidualRexNode != null) {
-            extraFilter = nonResidualRexNode;
-        } else if (postFilterRexNode != null) {
-            extraFilter = postFilterRexNode;
+                    nonResidualFilter,
+                    nonSargFilter);
+        } else if (nonResidualFilter != null) {
+            postFilter = nonResidualFilter;
+        } else if (nonSargFilter != null) {
+            postFilter = nonSargFilter;
         }
         
-        RelNode [] rowScanInputRels =
-            new RelNode[(indexSet.size() > 0 ? 1 : 0) + residualColumnCount];
+        // calculate input selectivity now that we know which filters are used
+        // for index and residual filtering
+        Double rowScanInputSelectivity = 1.0;
+        if (sargFilterSelectivity != null) {
+            rowScanInputSelectivity = sargFilterSelectivity;
+        }
         
+        if (nonResidualFilter != null) {
+            // Selectivity for the non residual sarg filters
+            Double nonResidualSargFilterSelectivity =
+                RelMetadataQuery.getSelectivity(
+                    origRowScan,
+                    nonResidualFilter);
+            if (nonResidualSargFilterSelectivity != null) {
+                rowScanInputSelectivity /= nonResidualSargFilterSelectivity;
+                rowScanInputSelectivity /= filterCorrelationFactor;
+                rowScanInputSelectivity =
+                    Math.min(1.0, rowScanInputSelectivity);
+            }
+        }
+
+        int origResidualColumnCount = 0;
+        if (origRowScan.hasResidualFilter) {
+            origResidualColumnCount =
+                origRowScan.residualColumns.length;
+        }
+
+        int origIndexRelCount =
+            origRowScan.getInputs().length - origResidualColumnCount;        
+        int indexRelCount =
+            (indexSet.size() > 0 || origIndexRelCount == 1) ? 1 : 0;
+        
+        RelNode [] rowScanInputRels =
+            new RelNode[indexRelCount + 
+                        residualColumnCount +
+                        origResidualColumnCount];
+        
+        // Setup the new index input rel
         if (indexSet.size() > 0) {
         
-            // AND the INDEX search rels together.
-            RelNode [] indexRels = new RelNode[indexSet.size()];
-            boolean requireIntersect = indexRels.length > 1;
-
-            int i = 0;
-
-            if (requireIntersect) {
-                // Allocate AND here
-                rowLimitParamId = relImplementor.allocateRelParamId();
-                startRidParamId = relImplementor.allocateRelParamId();
+            // AND the INDEX rels together.
+            RelNode newIndexAccessRel = null;    
+            if (!origRowScan.isFullScan) {
+                assert (call.rels.length > rowScanRelPosInCall+1);
+                newIndexAccessRel = call.rels[rowScanRelPosInCall+1];
             }
-
+            
             for (FemLocalIndex index : indexSet) {
                 int matchedPos = index2PosMap.get(index);
 
@@ -203,35 +271,21 @@ class LcsIndexAccessRule
                         matchedPos,
                         sargSeqList);
 
-                FennelRel indexRel =
-                    newIndexRel(call,
-                        origRowScan,
-                        candidate,
-                        startRidParamId,
-                        rowLimitParamId);
-                indexRels[i] = indexRel;
-                i++;
+                newIndexAccessRel =
+                    addNewIndexAccessRel(
+                        newIndexAccessRel,
+                        call,
+                        rowScanRelPosInCall,
+                        candidate);
             }
-
-
-            if (requireIntersect) {
-                FennelRel intersectRel =
-                    new LcsIndexIntersectRel(
-                        origRowScan.getCluster(),
-                        indexRels,
-                        origRowScan.lcsTable,
-                        startRidParamId,
-                        rowLimitParamId);
-                rowScanInputRels[0] = intersectRel;
-            } else {
-                rowScanInputRels[0] = indexRels[0];
-            }
+            rowScanInputRels[0] = newIndexAccessRel;
+        } else if (origIndexRelCount == 1) {
+            rowScanInputRels[0] = origRowScan.getInput(0);
         }
         
-        Integer [] resCols = new Integer[residualColumnCount];       
+        Integer [] resCols = new Integer[residualColumnCount];
+        RelNode [] valueRels = new RelNode[residualColumnCount];        
         final RelTraitSet callTraits = call.rels[0].getTraits();
-
-        RelNode [] valueRels = new RelNode[residualColumnCount];
 
         buildColumnFilters(
             resCols,        
@@ -240,12 +294,23 @@ class LcsIndexAccessRule
             residualColumnCount,
             residualSargBindingList,
             origRowScan);
+
+        // Setup the new residual input rels and residual columns
+        Integer [] newResCols =
+            new Integer[residualColumnCount + origResidualColumnCount];
         
-        int offset = (indexSet.size() > 0) ? 1 : 0;
         for (int i = 0; i < residualColumnCount; i++) {
-            rowScanInputRels[i + offset] = valueRels[i];
+            rowScanInputRels[i + indexRelCount] = valueRels[i];
+            newResCols[i] = resCols[i];
         }
-             
+        
+        for (int i = 0; i < origResidualColumnCount; i++) {
+            rowScanInputRels[i + indexRelCount + residualColumnCount] =
+                origRowScan.getInput(i + origIndexRelCount);
+            newResCols[i + residualColumnCount] =
+                origRowScan.residualColumns[i];
+        }
+        
         // Build a RowScan rel based on index search with no extra filters.
         LcsRowScanRel rowScan =
             new LcsRowScanRel(
@@ -255,11 +320,12 @@ class LcsIndexAccessRule
             origRowScan.clusteredIndexes,
             origRowScan.getConnection(),
             origRowScan.projectedColumns,
-            indexSet.size() == 0,
-            residualColumnCount > 0,
-            resCols);
+            indexRelCount == 0,
+            newResCols.length > 0,
+            newResCols,
+            rowScanInputSelectivity);
 
-        transformCall(call, rowScan, extraFilter);       
+        transformCall(call, rowScan, postFilter);       
     }
 
     private void buildColumnFilters(
@@ -296,9 +362,12 @@ class LcsIndexAccessRule
             int i = 0;
             // then create the actual column filters in that sort order
             for (LcsIndexOptimizer.SargColumnFilter filter : filterSet) {
-                residualColumns[i] = filter.columnPos;
+                // Residual column position is relative to the underlying
+                // column store table, same with the project column positions.
+                residualColumns[i] =
+                    origRowScan.getOriginalColumnOrdinal(filter.columnPos);
                 searchColumns[0] = 
-                    origRowScan.getColumnForFieldAccess(residualColumns[i]);
+                    origRowScan.getColumnForFieldAccess(filter.columnPos);
 
                 RelDataType keyRowType =
                     getSearchKeyRowType(
@@ -351,7 +420,8 @@ class LcsIndexAccessRule
         return seqList;
     }
 
-    private static List<List<LcsIndexOptimizer.SargColumnFilter>> getSargColFilterLists(
+    private static List<List<LcsIndexOptimizer.SargColumnFilter>>
+    getSargColFilterLists(
         LcsRowScanRel origRowScan,
         List<SargBinding> sargBindingList,
         Map<CwmColumn, SargIntervalSequence> col2SeqMap)
@@ -427,52 +497,40 @@ class LcsIndexAccessRule
         return retSargBindingList;
     }
 
-    private FennelRel newIndexRel(
+    private RelNode addNewIndexAccessRel(
+        RelNode oldIndexAccessRel,        
         RelOptRuleCall call,
-        LcsRowScanRel origRowScan,
-        LcsIndexOptimizer.CandidateIndex candidate,
-        FennelRelParamId startRidParamId,
-        FennelRelParamId rowLimitParamId)
+        int rowScanRelPosInCall,
+        LcsIndexOptimizer.CandidateIndex candidate)
     {
+        assert (call.rels[rowScanRelPosInCall] instanceof LcsRowScanRel);
+        LcsRowScanRel rowScanRel =
+            (LcsRowScanRel)call.rels[rowScanRelPosInCall];
+        
         FemLocalIndex index = candidate.index;
         int matchedPos = candidate.matchedPos;
         List<SargIntervalSequence> sargSeqList = candidate.sargSeqList;
+        boolean requireMerge = candidate.requireMerge();
 
-        FennelRelImplementor relImplementor =
-            FennelRelUtil.getRelImplementor(origRowScan);
-        final RelTraitSet callTraits = call.rels[0].getTraits();
-
-        assert (sargSeqList.size() == matchedPos);
-        int indexKeyLength = index.getIndexedFeature().size();
-        boolean partialMatch = matchedPos < indexKeyLength;
+        RelOptCluster cluster = rowScanRel.getCluster();
+        
+        final RelTraitSet callTraits =
+            call.rels[rowScanRelPosInCall].getTraits();
 
         RelDataType keyRowType =
-            getIndexInputType(origRowScan, index, matchedPos);
-
-        RelNode sargRel;
-
-        sargRel =
+            getIndexInputType(rowScanRel, index, matchedPos);
+        RelNode sargRel =
             FennelRelUtil.convertSargExpr(
                 callTraits,
                 keyRowType,
-                origRowScan.getCluster(),
+                cluster,
                 sargSeqList);
-
-        boolean requireUnion =
-            (
-                sargSeqList.get(sargSeqList.size() - 1).isRange()
-                || (
-                    sargSeqList.get(sargSeqList.size() - 1).isPoint()
-                    && partialMatch
-                   )
-            );
-
+        
         RelNode keyInput =
             mergeTraitsAndConvert(
                 callTraits,
                 FennelRel.FENNEL_EXEC_CONVENTION,
                 sargRel);
-
         assert (keyInput != null);
 
         // Set up projections for the search directive and key.
@@ -483,44 +541,20 @@ class LcsIndexAccessRule
             inputKeyProj[i + matchedPos] = matchedPos + i + 2;
         }
 
-        FennelRelParamId startRidParamIdForSearch =
-            requireUnion ? null : startRidParamId;
-        FennelRelParamId rowLimitParamIdForSearch =
-            requireUnion ? null : rowLimitParamId;
-
-        LcsIndexSearchRel indexSearch =
-            new LcsIndexSearchRel(
-                origRowScan.getCluster(),
-                keyInput,
-                origRowScan.lcsTable,
+        RelNode indexRel =
+            LcsIndexOptimizer.addNewIndexAccessRel(
+                oldIndexAccessRel,
+                call,
+                rowScanRelPosInCall,
                 index,
-                false,
-                null,
-                false,
-                false,
+                keyInput,
                 inputKeyProj,
-                null,
                 inputDirectiveProj,
-                startRidParamIdForSearch,
-                rowLimitParamIdForSearch);
-
-        FennelRel inputRel = indexSearch;
-
-        if (requireUnion) {
-            FennelRelParamId chopperRidLimitParamId =
-                relImplementor.allocateRelParamId();
-
-            inputRel =
-                new LcsIndexMergeRel(
-                    origRowScan.lcsTable,
-                    indexSearch,
-                    startRidParamId,
-                    rowLimitParamId,
-                    chopperRidLimitParamId);
-        }
-
-        return inputRel;
+                requireMerge);
+                
+        return indexRel;
     }
+
 
     /**
      * Create a type descriptor for the rows representing search keys along

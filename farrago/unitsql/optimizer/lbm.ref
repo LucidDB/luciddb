@@ -469,6 +469,76 @@
 | 91   | 92   | 93   | 94   | 95   | 96   | 97   | 98   | 99   |
 +------+------+------+------+------+------+------+------+------+
 > 
+> -- Test for residual filter bug
+> -- force plan without index access
+> -- and use only residual filters
+> drop index multimulti_mixed_a;
+> drop index multimulti_mixed_b;
+> drop index multimulti_mixed_c;
+> 
+> explain plan for
+> select count(*) from multimulti where a1 = 11 and b1 = 12;
++-------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                  column0                                                                  |
++-------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                 |
+|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                  |
+|     FennelAggRel(groupCount=[0], agg#0=[COUNT()])                                                                                         |
+|       FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])                                                                       |
+|         LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[0, 1]], clustered indexes=[[MULTI_1]], residual columns=[[0, 1]])  |
+|           FennelValuesRel(tuples=[[{ '[', 11, ']', 11 }]])                                                                                |
+|           FennelValuesRel(tuples=[[{ '[', 12, ']', 12 }]])                                                                                |
++-------------------------------------------------------------------------------------------------------------------------------------------+
+> 
+> select count(*) from multimulti where a1 = 11 and b1 = 12;
++---------+
+| EXPR$0  |
++---------+
+| 3       |
++---------+
+> 
+> explain plan for
+> select count(*) from multimulti where a1 = 21 and a2 = 24;
++----------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                      column0                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                          |
+|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                           |
+|     FennelAggRel(groupCount=[0], agg#0=[COUNT()])                                                                                                  |
+|       FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])                                                                                |
+|         LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[0, 3]], clustered indexes=[[MULTI_1, MULTI_2]], residual columns=[[0, 3]])  |
+|           FennelValuesRel(tuples=[[{ '[', 21, ']', 21 }]])                                                                                         |
+|           FennelValuesRel(tuples=[[{ '[', 24, ']', 24 }]])                                                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------------------+
+> 
+> select count(*) from multimulti where a1 = 21 and a2 = 24;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+> 
+> explain plan for
+> select count(*) from multimulti where a1 = 31 and a3 = 37;
++----------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                      column0                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                          |
+|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                           |
+|     FennelAggRel(groupCount=[0], agg#0=[COUNT()])                                                                                                  |
+|       FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])                                                                                |
+|         LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[0, 6]], clustered indexes=[[MULTI_1, MULTI_3]], residual columns=[[0, 6]])  |
+|           FennelValuesRel(tuples=[[{ '[', 31, ']', 31 }]])                                                                                         |
+|           FennelValuesRel(tuples=[[{ '[', 37, ']', 37 }]])                                                                                         |
++----------------------------------------------------------------------------------------------------------------------------------------------------+
+> 
+> select count(*) from multimulti where a1 = 31 and a3 = 37;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+> 
 > drop table multimulti;
 > 
 > 

@@ -41,7 +41,6 @@ class RandomAllocationSegment : public RandomAllocationSegmentBase
     virtual PageId getSegAllocPageIdForWrite(PageId origSegAllocPageId);
     virtual PageId getExtAllocPageIdForWrite(ExtentNum extentNum);
     virtual PageId allocateFromExtent(ExtentNum extentNum, PageOwnerId ownerId);
-    virtual void format();
     virtual void formatPageExtents(
         SegmentAllocationNode &segAllocNode,
         ExtentNum &extentNum);
@@ -49,15 +48,18 @@ class RandomAllocationSegment : public RandomAllocationSegmentBase
         ExtentNum extentNum,
         PageOwnerId ownerId);
     virtual void freePageEntry(ExtentNum extentNum, BlockNum iPageInExtent);
-    virtual PageOwnerId getPageOwnerId(
-        ExtentNum extentNum,
-        BlockNum iPageInExtent);
+    virtual PageOwnerId getPageOwnerId(PageId pageId, bool thisSegment);
     virtual PageId getSegAllocPageIdForRead(
         PageId origSegAllocPageId,
         SharedSegment &allocNodeSegment);
     virtual PageId getExtAllocPageIdForRead(
         ExtentNum extentNum,
         SharedSegment &allocNodeSegment);
+    virtual void getPageEntryCopy(
+        PageId pageId,
+        PageEntry &pageEntryCopy,
+        bool isAllocated,
+        bool thisSegment);
 
 public:
     explicit RandomAllocationSegment(SharedSegment delegateSegment);
@@ -66,7 +68,6 @@ public:
     virtual PageId allocatePageId(PageOwnerId ownerId);
     virtual PageId getPageSuccessor(PageId pageId);
     virtual void setPageSuccessor(PageId pageId, PageId successorId);
-    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
 };
 
 FENNEL_END_NAMESPACE

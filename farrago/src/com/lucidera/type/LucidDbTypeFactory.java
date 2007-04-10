@@ -130,39 +130,36 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
     {
         if (SqlTypeUtil.isExactNumeric(type1)
             && SqlTypeUtil.isExactNumeric(type2)) {
-            if (SqlTypeUtil.isDecimal(type1)
-                || SqlTypeUtil.isDecimal(type2)) {
-                int p1 = type1.getPrecision();
-                int p2 = type2.getPrecision();
-                int s1 = type1.getScale();
-                int s2 = type2.getScale();
+            int p1 = type1.getPrecision();
+            int p2 = type2.getPrecision();
+            int s1 = type1.getScale();
+            int s2 = type2.getScale();
 
-                int dout =
-                    Math.min(p1 - s1 + s2,
-                        SqlTypeName.MAX_NUMERIC_PRECISION);
+            int dout =
+                Math.min(p1 - s1 + s2,
+                    SqlTypeName.MAX_NUMERIC_PRECISION);
 
-                int scale = Math.max(6, s1 + p2 + 1);
+            int scale = Math.max(6, s1 + p2 + 1);
 
-                // LucidDb preserves the scale, but caps it, in order to 
-                // preserve the integral part of the result.
-                scale = Math.min(scale, DECIMAL_QUOTIENT_SCALE_CAP);
-                dout = 
-                    Math.min(dout, 
-                        SqlTypeName.MAX_NUMERIC_PRECISION - scale);
+            // LucidDb preserves the scale, but caps it, in order to 
+            // preserve the integral part of the result.
+            scale = Math.min(scale, DECIMAL_QUOTIENT_SCALE_CAP);
+            dout = 
+                Math.min(dout, 
+                    SqlTypeName.MAX_NUMERIC_PRECISION - scale);
 
-                int precision = dout + scale;
-                assert (precision <= SqlTypeName.MAX_NUMERIC_PRECISION);
-                assert (precision > 0);
+            int precision = dout + scale;
+            assert (precision <= SqlTypeName.MAX_NUMERIC_PRECISION);
+            assert (precision > 0);
 
-                RelDataType ret;
-                ret =
-                    createSqlType(
-                        SqlTypeName.Decimal,
-                        precision,
-                        scale);
+            RelDataType ret;
+            ret =
+                createSqlType(
+                    SqlTypeName.Decimal,
+                    precision,
+                    scale);
 
-                return ret;
-            }
+            return ret;
         }
         
         return null;

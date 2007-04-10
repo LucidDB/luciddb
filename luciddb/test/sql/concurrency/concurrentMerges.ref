@@ -1,0 +1,956 @@
+-- setup
+> create schema sales;
+0 rows affected.
+> set schema 'sales';
+0 rows affected.
+> create table emps(
+> empno integer not null,
+> name varchar(128) not null,
+> deptno integer not null,
+> gender char(1) default 'M',
+> city varchar(128),
+> empid integer not null unique,
+> age integer,
+> public_key varbinary(50),
+> slacker boolean,
+> manager boolean not null,
+> primary key(deptno,empno))
+> create index emps_ux on emps(name);
+0 rows affected.
+> insert into emps values
+> (100,'Fred',10,null,null,30,25, x'41626320',true,false),
+> (110,trim('Eric'),20,'M',trim('San Francisco'),3,80,x'416263',null,false),
+> (110,'John',40,'M','Vancouver',2,null,x'58797A',false,true),
+> (120,'Wilma',20,'F',null,1,50,null,null,true);
+4 rows affected.
+-- end of setup
+
+-- thread cleanup
+> drop schema sales cascade;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread t1
+> create schema s1;
+0 rows affected.
+> set schema 's1';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s1', deptno, gender || '_s1', city || '_s1', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s1', 10, 'M_s1', 'San Mateo_s1', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_S1', 20, 'F_s1', 'San Francisco_s1', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s1'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s1              | 11         |        | SAN MATEO_S1                   | 25         | 5625.00    |
+| 110        | Eric_s1              | 21         | M_s1   | SAN FRANCISCO_S1               | 80         | 18000.00   |
+| 120        | Wilma_s1             | 21         | F_s1   | SAN MATEO_S1                   | 50         | 11250.00   |
+| 130        | John_s1              | 41         | M_s1   | VANCOUVER_S1                   |            |            |
+| 140        | BARNEY_S1            |            | M_s1   | San Mateo_s1                   | 41         | 41000.00   |
+| 150        | BETTY_S1             |            | F_s1   | San Francisco_s1               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s1 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> create schema s1;
+0 rows affected.
+> set schema 's1';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s1', deptno, gender || '_s1', city || '_s1', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s1', 10, 'M_s1', 'San Mateo_s1', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_S1', 20, 'F_s1', 'San Francisco_s1', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s1'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s1              | 11         |        | SAN MATEO_S1                   | 25         | 5625.00    |
+| 110        | Eric_s1              | 21         | M_s1   | SAN FRANCISCO_S1               | 80         | 18000.00   |
+| 120        | Wilma_s1             | 21         | F_s1   | SAN MATEO_S1                   | 50         | 11250.00   |
+| 130        | John_s1              | 41         | M_s1   | VANCOUVER_S1                   |            |            |
+| 140        | BARNEY_S1            |            | M_s1   | San Mateo_s1                   | 41         | 41000.00   |
+| 150        | BETTY_S1             |            | F_s1   | San Francisco_s1               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s1 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> create schema s1;
+0 rows affected.
+> set schema 's1';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s1', deptno, gender || '_s1', city || '_s1', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s1', 10, 'M_s1', 'San Mateo_s1', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_S1', 20, 'F_s1', 'San Francisco_s1', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s1'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s1              | 11         |        | SAN MATEO_S1                   | 25         | 5625.00    |
+| 110        | Eric_s1              | 21         | M_s1   | SAN FRANCISCO_S1               | 80         | 18000.00   |
+| 120        | Wilma_s1             | 21         | F_s1   | SAN MATEO_S1                   | 50         | 11250.00   |
+| 130        | John_s1              | 41         | M_s1   | VANCOUVER_S1                   |            |            |
+| 140        | BARNEY_S1            |            | M_s1   | San Mateo_s1                   | 41         | 41000.00   |
+| 150        | BETTY_S1             |            | F_s1   | San Francisco_s1               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s1 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> create schema s1;
+0 rows affected.
+> set schema 's1';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s1', deptno, gender || '_s1', city || '_s1', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s1', 10, 'M_s1', 'San Mateo_s1', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_S1', 20, 'F_s1', 'San Francisco_s1', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s1'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s1              | 11         |        | SAN MATEO_S1                   | 25         | 5625.00    |
+| 110        | Eric_s1              | 21         | M_s1   | SAN FRANCISCO_S1               | 80         | 18000.00   |
+| 120        | Wilma_s1             | 21         | F_s1   | SAN MATEO_S1                   | 50         | 11250.00   |
+| 130        | John_s1              | 41         | M_s1   | VANCOUVER_S1                   |            |            |
+| 140        | BARNEY_S1            |            | M_s1   | San Mateo_s1                   | 41         | 41000.00   |
+| 150        | BETTY_S1             |            | F_s1   | San Francisco_s1               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s1 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> create schema s1;
+0 rows affected.
+> set schema 's1';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s1', deptno, gender || '_s1', city || '_s1', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s1', 10, 'M_s1', 'San Mateo_s1', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_S1', 20, 'F_s1', 'San Francisco_s1', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s1'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s1              | 11         |        | SAN MATEO_S1                   | 25         | 5625.00    |
+| 110        | Eric_s1              | 21         | M_s1   | SAN FRANCISCO_S1               | 80         | 18000.00   |
+| 120        | Wilma_s1             | 21         | F_s1   | SAN MATEO_S1                   | 50         | 11250.00   |
+| 130        | John_s1              | 41         | M_s1   | VANCOUVER_S1                   |            |            |
+| 140        | BARNEY_S1            |            | M_s1   | San Mateo_s1                   | 41         | 41000.00   |
+| 150        | BETTY_S1             |            | F_s1   | San Francisco_s1               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s1 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+-- end of thread t1
+
+-- thread t2
+> create schema s2;
+0 rows affected.
+> set schema 's2';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s2', deptno, gender || '_s2', city || '_s2', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s2', 10, 'M_s2', 'San Mateo_s2', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_s2', 20, 'F_s2', 'San Francisco_s2', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s2'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s2              | 11         |        | SAN MATEO_S2                   | 25         | 5625.00    |
+| 110        | Eric_s2              | 21         | M_s2   | SAN FRANCISCO_S2               | 80         | 18000.00   |
+| 120        | Wilma_s2             | 21         | F_s2   | SAN MATEO_S2                   | 50         | 11250.00   |
+| 130        | John_s2              | 41         | M_s2   | VANCOUVER_S2                   |            |            |
+| 140        | BARNEY_S2            |            | M_s2   | San Mateo_s2                   | 41         | 41000.00   |
+| 150        | BETTY_S2             |            | F_s2   | San Francisco_s2               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s2 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> create schema s2;
+0 rows affected.
+> set schema 's2';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s2', deptno, gender || '_s2', city || '_s2', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s2', 10, 'M_s2', 'San Mateo_s2', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_s2', 20, 'F_s2', 'San Francisco_s2', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s2'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s2              | 11         |        | SAN MATEO_S2                   | 25         | 5625.00    |
+| 110        | Eric_s2              | 21         | M_s2   | SAN FRANCISCO_S2               | 80         | 18000.00   |
+| 120        | Wilma_s2             | 21         | F_s2   | SAN MATEO_S2                   | 50         | 11250.00   |
+| 130        | John_s2              | 41         | M_s2   | VANCOUVER_S2                   |            |            |
+| 140        | BARNEY_S2            |            | M_s2   | San Mateo_s2                   | 41         | 41000.00   |
+| 150        | BETTY_S2             |            | F_s2   | San Francisco_s2               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s2 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> create schema s2;
+0 rows affected.
+> set schema 's2';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s2', deptno, gender || '_s2', city || '_s2', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s2', 10, 'M_s2', 'San Mateo_s2', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_s2', 20, 'F_s2', 'San Francisco_s2', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s2'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s2              | 11         |        | SAN MATEO_S2                   | 25         | 5625.00    |
+| 110        | Eric_s2              | 21         | M_s2   | SAN FRANCISCO_S2               | 80         | 18000.00   |
+| 120        | Wilma_s2             | 21         | F_s2   | SAN MATEO_S2                   | 50         | 11250.00   |
+| 130        | John_s2              | 41         | M_s2   | VANCOUVER_S2                   |            |            |
+| 140        | BARNEY_S2            |            | M_s2   | San Mateo_s2                   | 41         | 41000.00   |
+| 150        | BETTY_S2             |            | F_s2   | San Francisco_s2               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s2 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> create schema s2;
+0 rows affected.
+> set schema 's2';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s2', deptno, gender || '_s2', city || '_s2', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s2', 10, 'M_s2', 'San Mateo_s2', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_s2', 20, 'F_s2', 'San Francisco_s2', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s2'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s2              | 11         |        | SAN MATEO_S2                   | 25         | 5625.00    |
+| 110        | Eric_s2              | 21         | M_s2   | SAN FRANCISCO_S2               | 80         | 18000.00   |
+| 120        | Wilma_s2             | 21         | F_s2   | SAN MATEO_S2                   | 50         | 11250.00   |
+| 130        | John_s2              | 41         | M_s2   | VANCOUVER_S2                   |            |            |
+| 140        | BARNEY_S2            |            | M_s2   | San Mateo_s2                   | 41         | 41000.00   |
+| 150        | BETTY_S2             |            | F_s2   | San Francisco_s2               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s2 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> create schema s2;
+0 rows affected.
+> set schema 's2';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s2', deptno, gender || '_s2', city || '_s2', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s2', 10, 'M_s2', 'San Mateo_s2', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_s2', 20, 'F_s2', 'San Francisco_s2', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s2'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s2              | 11         |        | SAN MATEO_S2                   | 25         | 5625.00    |
+| 110        | Eric_s2              | 21         | M_s2   | SAN FRANCISCO_S2               | 80         | 18000.00   |
+| 120        | Wilma_s2             | 21         | F_s2   | SAN MATEO_S2                   | 50         | 11250.00   |
+| 130        | John_s2              | 41         | M_s2   | VANCOUVER_S2                   |            |            |
+| 140        | BARNEY_S2            |            | M_s2   | San Mateo_s2                   | 41         | 41000.00   |
+| 150        | BETTY_S2             |            | F_s2   | San Francisco_s2               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s2 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+-- end of thread t2
+
+-- thread t3
+> create schema s3;
+0 rows affected.
+> set schema 's3';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s3', deptno, gender || '_s3', city || '_s3', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s3', 10, 'M_s3', 'San Mateo_s3', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_s3', 20, 'F_s3', 'San Francisco_s3', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s3'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s3              | 11         |        | SAN MATEO_S3                   | 25         | 5625.00    |
+| 110        | Eric_s3              | 21         | M_s3   | SAN FRANCISCO_S3               | 80         | 18000.00   |
+| 120        | Wilma_s3             | 21         | F_s3   | SAN MATEO_S3                   | 50         | 11250.00   |
+| 130        | John_s3              | 41         | M_s3   | VANCOUVER_S3                   |            |            |
+| 140        | BARNEY_S3            |            | M_s3   | San Mateo_s3                   | 41         | 41000.00   |
+| 150        | BETTY_S3             |            | F_s3   | San Francisco_s3               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s3 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> create schema s3;
+0 rows affected.
+> set schema 's3';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s3', deptno, gender || '_s3', city || '_s3', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s3', 10, 'M_s3', 'San Mateo_s3', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_s3', 20, 'F_s3', 'San Francisco_s3', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s3'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s3              | 11         |        | SAN MATEO_S3                   | 25         | 5625.00    |
+| 110        | Eric_s3              | 21         | M_s3   | SAN FRANCISCO_S3               | 80         | 18000.00   |
+| 120        | Wilma_s3             | 21         | F_s3   | SAN MATEO_S3                   | 50         | 11250.00   |
+| 130        | John_s3              | 41         | M_s3   | VANCOUVER_S3                   |            |            |
+| 140        | BARNEY_S3            |            | M_s3   | San Mateo_s3                   | 41         | 41000.00   |
+| 150        | BETTY_S3             |            | F_s3   | San Francisco_s3               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s3 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> create schema s3;
+0 rows affected.
+> set schema 's3';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s3', deptno, gender || '_s3', city || '_s3', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s3', 10, 'M_s3', 'San Mateo_s3', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_s3', 20, 'F_s3', 'San Francisco_s3', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s3'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s3              | 11         |        | SAN MATEO_S3                   | 25         | 5625.00    |
+| 110        | Eric_s3              | 21         | M_s3   | SAN FRANCISCO_S3               | 80         | 18000.00   |
+| 120        | Wilma_s3             | 21         | F_s3   | SAN MATEO_S3                   | 50         | 11250.00   |
+| 130        | John_s3              | 41         | M_s3   | VANCOUVER_S3                   |            |            |
+| 140        | BARNEY_S3            |            | M_s3   | San Mateo_s3                   | 41         | 41000.00   |
+| 150        | BETTY_S3             |            | F_s3   | San Francisco_s3               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s3 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> create schema s3;
+0 rows affected.
+> set schema 's3';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s3', deptno, gender || '_s3', city || '_s3', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s3', 10, 'M_s3', 'San Mateo_s3', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_s3', 20, 'F_s3', 'San Francisco_s3', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s3'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s3              | 11         |        | SAN MATEO_S3                   | 25         | 5625.00    |
+| 110        | Eric_s3              | 21         | M_s3   | SAN FRANCISCO_S3               | 80         | 18000.00   |
+| 120        | Wilma_s3             | 21         | F_s3   | SAN MATEO_S3                   | 50         | 11250.00   |
+| 130        | John_s3              | 41         | M_s3   | VANCOUVER_S3                   |            |            |
+| 140        | BARNEY_S3            |            | M_s3   | San Mateo_s3                   | 41         | 41000.00   |
+| 150        | BETTY_S3             |            | F_s3   | San Francisco_s3               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s3 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> create schema s3;
+0 rows affected.
+> set schema 's3';
+0 rows affected.
+> create table emps(
+> empno int not null unique, name varchar(20) not null, deptno int,
+> gender char(4), city char(30), age int, salary numeric(10,2));
+0 rows affected.
+> create index ideptno on emps(deptno);
+0 rows affected.
+> create index icity on emps(city);
+0 rows affected.
+> create table tempemps(
+> t_empno int, t_name varchar(25), t_deptno int, t_gender char(4),
+> t_city char(35), t_age int);
+0 rows affected.
+> create table salarytable(empno int, salary int);
+0 rows affected.
+> insert into emps(empno, name, deptno, gender, city, age, salary)
+> select case when name = 'John' then 130 else empno end,
+> name || '_s3', deptno, gender || '_s3', city || '_s3', age,
+> age * 900
+> from sales.emps;
+4 rows affected.
+> insert into tempemps values(
+> 140, 'Barney_s3', 10, 'M_s3', 'San Mateo_s3', 41);
+1 row affected.
+> insert into tempemps values(
+> 150, 'Betty_s3', 20, 'F_s3', 'San Francisco_s3', 40);
+1 row affected.
+> insert into tempemps
+> select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo_s3'),
+> age
+> from emps;
+4 rows affected.
+> merge into emps e
+> using tempemps t on t.t_empno = e.empno
+> when matched then
+> update set deptno = t.t_deptno, city = upper(t.t_city),
+> salary = salary * .25
+> when not matched then
+> insert (empno, name, age, gender, salary, city)
+> values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender,
+> t.t_age * 1000, t.t_city);
+6 rows affected.
+> select * from emps order by empno;
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| EMPNO      | NAME                 | DEPTNO     | GENDER | CITY                           | AGE        | SALARY     |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+| 100        | Fred_s3              | 11         |        | SAN MATEO_S3                   | 25         | 5625.00    |
+| 110        | Eric_s3              | 21         | M_s3   | SAN FRANCISCO_S3               | 80         | 18000.00   |
+| 120        | Wilma_s3             | 21         | F_s3   | SAN MATEO_S3                   | 50         | 11250.00   |
+| 130        | John_s3              | 41         | M_s3   | VANCOUVER_S3                   |            |            |
+| 140        | BARNEY_S3            |            | M_s3   | San Mateo_s3                   | 41         | 41000.00   |
+| 150        | BETTY_S3             |            | F_s3   | San Francisco_s3               | 40         | 40000.00   |
++------------+----------------------+------------+--------+--------------------------------+------------+------------+
+
+> drop schema s3 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+-- end of thread t3
+

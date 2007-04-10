@@ -145,10 +145,33 @@ public:
         SharedSegment pTempSegment,
         bool bFormat);
 
+    /**
+     * Opens a new SnapshotRandomAllocationSegment.
+     *
+     * @param delegateSegment the underlying segment providing storage; most
+     * likely, this is the same as the versionedSegment
+     *
+     * @param versionedSegment the underlying segment that provides versioning
+     * of pages
+     *
+     * @param snapshotCsn the commit sequence number associated with the segment
+     * that determines which pages to read
+     *
+     * @return new segment
+     */
     SharedSegment newSnapshotRandomAllocationSegment(
         SharedSegment delegateSegment,
         SharedSegment versionedSegment,
         TxnId snapshotCsn);
+
+    /**
+     * Opens a new DynamicDelegatingSegment.
+     *
+     * @param delegateSegment initial underlying delegating segment
+     *
+     * @return new segment
+     */
+    SharedSegment newDynamicDelegatingSegment(SharedSegment delegateSegment);
 
     /**
      * Opens a WALSegment.

@@ -76,7 +76,8 @@ template <class AllocationLockT>
 PageId VersionedRandomAllocationSegment::getTempAllocNodePage(
     PageId origNodePageId)
 {
-    SXMutexExclusiveGuard mapGuard(mutex);
+    SXMutexExclusiveGuard mapGuard(mapMutex);
+
     PageId tempNodePageId;
     SharedModifiedAllocationNode pModAllocNode;
 
@@ -119,6 +120,28 @@ PageId VersionedRandomAllocationSegment::getTempAllocNodePage(
             pModAllocNode));
 
     return tempNodePageId;
+}
+
+inline PageOwnerId VersionedRandomAllocationSegment::makeDeallocatedPageOwnerId(
+    TxnId txnId)
+{
+    assert(VALID_PAGE_OWNER_ID(txnId));
+    return PageOwnerId(DEALLOCATED_PAGE_OWNER_ID_MASK | opaqueToInt(txnId));
+}
+
+inline bool VersionedRandomAllocationSegment::isDeallocatedPageOwnerId(
+    PageOwnerId pageOwnerId)
+{
+    return
+        (pageOwnerId != ANON_PAGE_OWNER_ID &&
+        (opaqueToInt(pageOwnerId) & DEALLOCATED_PAGE_OWNER_ID_MASK));
+}
+
+inline TxnId VersionedRandomAllocationSegment::getDeallocatedTxnId(
+    PageOwnerId pageOwnerId)
+{
+    assert(isDeallocatedPageOwnerId(pageOwnerId));
+    return TxnId(opaqueToInt(pageOwnerId) & ~DEALLOCATED_PAGE_OWNER_ID_MASK);
 }
 
 FENNEL_END_NAMESPACE

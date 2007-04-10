@@ -37,7 +37,7 @@
 
   @sync
   @sleep 1000
-  @err select * from t1 where c=1;
+  select * from t1 where c=1;
   @sync
 
 @end
@@ -54,7 +54,7 @@
 
   @sync
   @sleep 1000
-  @err select * from t2;
+  select * from t2;
   @sync
 
 @end

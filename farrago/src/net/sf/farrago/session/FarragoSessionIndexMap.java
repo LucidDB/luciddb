@@ -144,6 +144,17 @@ public interface FarragoSessionIndexMap
      * Commit hook
      */
     public void onCommit();
+    
+    /**
+     * Versions an index root page
+     * 
+     * @param oldIndexRoots list of current index root ids
+     * @param newIndexRoots list of new index root ids
+     */
+    public void versionIndexRoot(
+        FarragoDataWrapperCache wrapperCache,
+        FemLocalIndex index,
+        Long newRoot);
 }
 
 // End FarragoSessionIndexMap.java

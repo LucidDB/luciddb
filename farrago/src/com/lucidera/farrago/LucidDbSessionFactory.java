@@ -45,7 +45,9 @@ public class LucidDbSessionFactory
         FarragoSession session,
         FarragoSessionPersonality defaultPersonality)
     {
-        return new LucidDbSessionPersonality((FarragoDbSession) session);
+        return new LucidDbSessionPersonality(
+            (FarragoDbSession) session,
+            defaultPersonality);
     }
 
     // implement FarragoSessionFactory

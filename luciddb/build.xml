@@ -529,8 +529,12 @@ ${farrago.test.jvmargs}
 
   <!-- write initial metadata to catalog -->
   <target name="populateCatalog">
-    <farrago.javaExec classpathref="farrago.run.classpath"
-      classname="net.sf.farrago.db.FarragoDatabase"/>
+    <java fork="yes" failonerror="true"
+      classpathref="farrago.run.classpath"
+      classname="net.sf.farrago.db.FarragoDatabase">
+      <jvmarg line="${assertions.jvmarg}"/>
+      <jvmarg line="&FarragoProps;"/>
+    </java>
   </target>
 
   <!-- create various output directories -->

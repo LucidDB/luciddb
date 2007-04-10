@@ -22,7 +22,12 @@
 */
 package net.sf.farrago.ddl;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.session.*;
 
 
@@ -35,6 +40,9 @@ import net.sf.farrago.session.*;
 public class DdlTruncateStmt
     extends DdlStmt
 {
+    //~ Instance fields --------------------------------------------------------
+
+    private CwmTable table;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -45,25 +53,53 @@ public class DdlTruncateStmt
      */
     public DdlTruncateStmt(CwmModelElement truncatedElement)
     {
-        super(truncatedElement);
+        super(truncatedElement, true);
+        this.table = (CwmTable) truncatedElement;
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    // override DdlStmt
+    
+    // implement DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
-        super.preValidate(ddlValidator);
-
-        // There's no JMI operation corresponding to a truncation, so use
-        // an explicit call to request it.
-        ddlValidator.scheduleTruncation(getModelElement());
+        // Use a reentrant session to simplify cleanup.
+        FarragoSession session = ddlValidator.newReentrantSession();
+        try {
+            execute(ddlValidator, session);
+        } finally {
+            ddlValidator.releaseReentrantSession(session);
+        }
     }
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
     {
         visitor.visit(this);
+    }
+    
+    private void execute(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSession session)
+    {
+        FarragoRepos repos = session.getRepos();
+        FarragoSessionIndexMap baseIndexMap = ddlValidator.getIndexMap();
+        FarragoDataWrapperCache wrapperCache = 
+            ddlValidator.getDataWrapperCache();
+        for (FemLocalIndex index :
+            FarragoCatalogUtil.getTableIndexes(repos, table))
+        {
+            baseIndexMap.dropIndexStorage(wrapperCache, index, true);
+        }
+        
+        FarragoReposTxnContext txn = repos.newTxnContext();
+        try {
+            txn.beginWriteTxn();
+            session.getPersonality().resetRowCounts(
+                (FemAbstractColumnSet) table);
+            txn.commit();
+        } finally {
+            txn.rollback();
+        }
     }
 }
 

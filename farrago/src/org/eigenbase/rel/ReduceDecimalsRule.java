@@ -246,8 +246,6 @@ public class ReduceDecimalsRule
 
             RexExpander arithmetic = new BinaryArithmeticExpander(rexBuilder);
             map.put(SqlStdOperatorTable.divideOperator, arithmetic);
-            // REVIEW jvs 28-Mar-2007:  Do we actually need this?
-            map.put(SqlStdOperatorTable.divideIntegerOperator, arithmetic);
             map.put(SqlStdOperatorTable.multiplyOperator, arithmetic);
             map.put(SqlStdOperatorTable.plusOperator, arithmetic);
             map.put(SqlStdOperatorTable.minusOperator, arithmetic);
@@ -749,10 +747,8 @@ public class ReduceDecimalsRule
             RexNode a,
             RexNode b)
         {
-            // TODO jvs 28-Mar-2007:  use divideIntegerOperator instead
-            
             return builder.makeCall(
-                SqlStdOperatorTable.divideOperator,
+                SqlStdOperatorTable.divideIntegerOperator,
                 a,
                 b);
         }

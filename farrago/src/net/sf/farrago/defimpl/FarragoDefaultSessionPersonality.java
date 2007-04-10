@@ -39,8 +39,10 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.ddl.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
@@ -514,6 +516,18 @@ public class FarragoDefaultSessionPersonality
     // implement FarragoSessionPersonality
     public void resetRowCounts(FemAbstractColumnSet table)
     {
+    }
+    
+    // implement FarragoSessionPersonality
+    public void updateIndexRoot(
+        FemLocalIndex index,
+        FarragoDataWrapperCache wrapperCache,
+        FarragoSessionIndexMap baseIndexMap,
+        Long newRoot)
+    {
+        // Drop old roots and update references to point to new roots
+        baseIndexMap.dropIndexStorage(wrapperCache, index, false);
+        baseIndexMap.setIndexRoot(index, newRoot);
     }
 
     /**

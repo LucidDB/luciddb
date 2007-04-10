@@ -55,8 +55,6 @@ class LucidDbTxnMgr
 
     private final LockManager2 lockMgr;
 
-    private final String dbWriteLock;
-
     //~ Constructors -----------------------------------------------------------
 
     LucidDbTxnMgr()
@@ -66,13 +64,6 @@ class LucidDbTxnMgr
         // java.util.logging settings
         LoggerFacade loggerFacade = new Jdk14Logger(tracer);
         lockMgr = new GenericLockManager(2, loggerFacade);
-
-        // This represents a lock which can be acquired on the entire database.
-        // It prevents concurrent writes, but does not prevent reads; for that
-        // we use table-level locking.  By declaring this non-static and using
-        // new String(), this allows for the rather theoretical possibility of
-        // two LucidDB instances running in the same JVM.
-        dbWriteLock = new String(FarragoCatalogInit.LOCALDB_CATALOG_NAME);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -97,16 +88,8 @@ class LucidDbTxnMgr
                 SqlParserPos.ZERO);
         String renderedTableName = sqlId.toString();
 
-        if (accessType == TableAccessMap.Mode.READ_ACCESS) {
-            // S-lock only the table; readers don't care about
-            // the database lock
-            acquireLock(txnId, localTableName, renderedTableName, 1);
-        } else {
-            // X-lock the database to exclude other writers but
-            // not readers
-            acquireLock(txnId, dbWriteLock, dbWriteLock, 2);
-
-            // X-lock the table to exclude readers
+        if (accessType != TableAccessMap.Mode.READ_ACCESS) {
+            // X-lock the table to exclude writers on the same table
             acquireLock(txnId, localTableName, renderedTableName, 2);
         }
     }

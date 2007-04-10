@@ -38,11 +38,6 @@ RandomAllocationSegment::RandomAllocationSegment(
     nPagesPerSegAlloc = nPagesPerExtent*nExtentsPerSegAlloc + 1;
 }
 
-void RandomAllocationSegment::format()
-{
-    formatFromSegment(shared_from_this());
-}
-
 void RandomAllocationSegment::formatPageExtents(
     SegmentAllocationNode &segAllocNode,
     ExtentNum &extentNum)
@@ -52,7 +47,6 @@ void RandomAllocationSegment::formatPageExtents(
             ExtentAllocLock,
             PageEntry>(
         segAllocNode,
-        shared_from_this(),
         extentNum);
 }
 
@@ -88,6 +82,19 @@ PageId RandomAllocationSegment::getExtAllocPageIdForRead(
     return getExtentAllocPageId(extentNum);
 }
 
+void RandomAllocationSegment::getPageEntryCopy(
+    PageId pageId,
+    PageEntry &pageEntryCopy,
+    bool isAllocated,
+    bool thisSegment)
+{
+    getPageEntryCopyTemplate<ExtentAllocationNode, ExtentAllocLock, PageEntry>(
+        pageId,
+        pageEntryCopy,
+        isAllocated,
+        thisSegment);
+}
+
 PageId RandomAllocationSegment::allocateFromNewExtent(
     ExtentNum extentNum,
     PageOwnerId ownerId)
@@ -116,13 +123,6 @@ PageId RandomAllocationSegment::allocateFromExtent(
             shared_from_this());
 }
 
-void RandomAllocationSegment::deallocatePageRange(
-    PageId startPageId,
-    PageId endPageId)
-{
-    deallocatePageRangeFromSegment(startPageId, endPageId, shared_from_this());
-}
-
 void RandomAllocationSegment::freePageEntry(
     ExtentNum extentNum,
     BlockNum iPageInExtent)
@@ -132,14 +132,15 @@ void RandomAllocationSegment::freePageEntry(
             ExtentAllocLock,
             PageEntry>(
         extentNum,
-        iPageInExtent,
-        shared_from_this());
+        iPageInExtent);
 }
 
 PageId RandomAllocationSegment::getPageSuccessor(PageId pageId)
 {
-    return
-        getPageSuccessorTemplate<ExtentAllocationNode, ExtentAllocLock>(pageId);
+    PageEntry pageEntry;
+
+    getPageEntryCopy(pageId, pageEntry, true, true);
+    return pageEntry.successorId;
 }
 
 void RandomAllocationSegment::setPageSuccessor(
@@ -153,15 +154,10 @@ void RandomAllocationSegment::setPageSuccessor(
 }
 
 PageOwnerId RandomAllocationSegment::getPageOwnerId(
-    ExtentNum extentNum,
-    BlockNum iPageInExtent)
+    PageId pageId,
+    bool thisSegment)
 {
-    return
-        getPageOwnerIdTemplate<
-                ExtentAllocationNode,
-                ExtentAllocLock>(
-            extentNum,
-            iPageInExtent);
+    return getPageOwnerIdTemplate<PageEntry>(pageId, thisSegment);
 }
 
 FENNEL_END_CPPFILE("$Id$");

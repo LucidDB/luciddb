@@ -153,9 +153,10 @@ public class LcsTableProjectionRule
                 indexList,
                 origScan.getConnection(),
                 projectedColumns,
-                origScan.isFullScan(),
-                origScan.hasExtraFilter(),
-                origScan.residualColumns);
+                origScan.isFullScan,
+                origScan.hasResidualFilter,
+                origScan.residualColumns,
+                origScan.inputSelectivity);
 
         // create new RelNodes to replace the existing ones, either
         // removing or replacing the ProjectRel and recreating the row scan
