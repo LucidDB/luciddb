@@ -461,11 +461,21 @@ public interface SqlValidator
     void popCursorMap();
     
     /**
-     * Enables or disables expansion of identifiers.
+     * Enables or disables expansion of identifiers other than
+     * column references.
      *
      * @param expandIdentifiers new setting
      */
     void setIdentifierExpansion(boolean expandIdentifiers);
+
+    /**
+     * Enables or disables expansion of column references.
+     * (Currently this does not apply to the ORDER BY clause;
+     * may be fixed in the future.)
+     *
+     * @param expandColumnReferences new setting
+     */
+    void setColumnReferenceExpansion(boolean expandColumnReferences);
 
     /**
      * Returns expansion of identifiers.
