@@ -178,6 +178,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${resgen.dir}/lib/eigenbase-xom.jar"/>
     <pathelement path="${mdrlibs.dir}/jmi.jar"/>
     <pathelement path="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
+    <pathelement location="${openjava.dir}/openjava.jar"/>
   </path>
   <property name="applib.build.classpath" refid="applib.build.classpath"/>
 
@@ -733,11 +734,13 @@ ${farrago.test.jvmargs}
 
   <!-- REVIEW jvs 4-June-2006:  Should probably blow away plugin/*.jar -->
   <target name="cleanJars">
-    <antcall target="cleanClientJar"/>
-    <antcall target="cleanApplib"/>
-    <antcall target="cleanMBean"/>
-    <antcall target="cleanJdbcPlugins"/>
+    <delete dir="${luciddb.plugin.dir}"/>
   </target>
+
+<!--     <antcall target="cleanClientJar"/> -->
+<!--     <antcall target="cleanApplib"/> -->
+<!--     <antcall target="cleanMBean"/> -->
+<!--     <antcall target="cleanJdbcPlugins"/> -->
 
   <target name="cleanJdbcPlugins">
     <delete file="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar" quiet="true"/>

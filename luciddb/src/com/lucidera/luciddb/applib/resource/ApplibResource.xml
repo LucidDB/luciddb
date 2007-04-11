@@ -231,6 +231,24 @@
 <text>Syntax error: parameter must be either ''RESTRICT'' or ''CASCADE''.</text>
 </exception>
 
+<exception id="900430" name="InvalidCheckColumns">
+<text>Check constraint column(s) could not be found or are not of type VARCHAR: {0}</text>
+</exception>
+
+<exception id="900431" name="RowConstraintsFatal">
+<text>Row constraint UDX failed with FATAL error code: {0}
+Message: {1}</text>
+</exception>
+
+<exception id="900432" name="MessageCatalogLoadFailed">
+<text>Failed to load message catalog jar ''{0}'', resource bundle ''{1}'' at ''{2}''
+Message: {3}</text>
+</exception>
+
+<exception id="900433" name="NoSuchMessageCatalogJar">
+<text>Message Catalog Jar ''{0}'' could not be found at ''{1}''</text>
+</exception>
+
 <exception id="900500" name="InputMustBeSingleColumn">
 <text>Input cursor must be one single column.</text>
 </exception>
@@ -246,7 +264,6 @@
 <exception id="900511" name="EscapeCharMustBeOneCharacter">
 <text>Escape symbol must be a single character.</text>
 </exception>
-
 
 <!-- ====================================================================== -->
  Messages

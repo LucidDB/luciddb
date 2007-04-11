@@ -715,6 +715,40 @@ parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.execute';
 
+-- enforce row constraints, default message catalog
+create or replace function enforce_row_constraints(c cursor, r select from c)
+returns table(c.*)
+language java
+parameter style system defined java
+no sql
+specific enforce_row_constraints_default_msg_jar
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.EnforceRowConstraintsUdx.execute';
+
+-- enforce row constraints with msg jar
+create or replace function enforce_row_constraints(
+  c cursor,
+  r select from c,
+  msgJarName varchar(128))
+returns table(c.*)
+language java
+parameter style system defined java
+no sql
+specific enforce_row_constraints_with_msg_jar
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.EnforceRowConstraintsUdx.execute';
+
+-- enforce row constraints with tag for logging
+create or replace function enforce_row_constraints(
+  c cursor,
+  r select from c,
+  msgJarName varchar(128),
+  tag varchar(128))
+returns table(c.*)
+language java
+parameter style system defined java
+no sql
+specific enforce_row_constraints_with_tag
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.EnforceRowConstraintsUdx.execute';
+
 ----
 -- System procedures
 ----
