@@ -9,9 +9,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel'
-'    LcsNormalizerRel'
-'      LcsIndexOnlyScanRel'
-'        FennelValuesRel'
+'    LcsRowScanRel'
+'      FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select KSEQ, K2, K4 from bench100 
 . . . . . . . . > where K2=1 
