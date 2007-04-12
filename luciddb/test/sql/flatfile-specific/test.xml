@@ -19,9 +19,6 @@
       </test>
 
       <test name="negatives">
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/flatfile-specific/gen/negatives.sql"/>
       </test>
 

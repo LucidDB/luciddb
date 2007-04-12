@@ -10,9 +10,7 @@
 . . . . . . . . >         lenient 'no',
 . . . . . . . . >         directory '@DIRECTORY@',
 . . . . . . . . >         file_extension '.csv');
-***************************************************
-LDB-154: server definition should return error here
-***************************************************
+Error: Mapping source columns in data files to target columns specified by control files requires server to be lenient. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- mapped without header
 0: jdbc:luciddb:> create server mapwoheader_server

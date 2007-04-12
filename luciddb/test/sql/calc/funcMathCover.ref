@@ -3,11 +3,6 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> SELECT n1, ABS(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
-Error: could not calculate results for the following row:
-[ -2147483648 ]
-Messages:
-[0]:PC=2 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> SELECT n2, ABS(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
 +----------+---------+
 |    N2    | EXPR$1  |
@@ -1898,7 +1893,7 @@ Error: From line 1, column 12 to line 1, column 29: No match found for function 
 Error: From line 1, column 12 to line 1, column 30: No match found for function signature VALUERANGE(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> SELECT n1, VALUERANGE(n1, (SELECT MIN(N2) FROM TEST_REAL_TABLE))
 . . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY 1;
-Error: From line 1, column 12 to line 1, column 64: No match found for function signature VALUERANGE(<NUMERIC>, <RecordType(REAL EXPR$0)>) (state=,code=0)
+Error: From line 1, column 12 to line 1, column 64: No match found for function signature VALUERANGE(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- End test
 0: jdbc:luciddb:> 
