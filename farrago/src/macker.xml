@@ -64,7 +64,6 @@
     <pattern name="fennel" class="net.sf.farrago.fennel.*" />
     <pattern name="fennel.tuple" class="net.sf.farrago.fennel.tuple.*" />
     <pattern name="session" class="net.sf.farrago.session.*" />
-    <pattern name="session.impl" class="net.sf.farrago.session.impl.*" />
     <pattern name="runtime" class="net.sf.farrago.runtime.*" />
     <pattern name="dynamic" class="net.sf.farrago.dynamic.*" />
     <pattern name="ojrex" class="net.sf.farrago.ojrex.*" />
@@ -137,7 +136,6 @@
       <include pattern="fennel"/>
       <include pattern="fennel.tuple" />
       <include pattern="session"/>
-      <include pattern="session.impl"/>
       <include pattern="runtime"/>
       <include pattern="dynamic"/>
       <include pattern="ojrex"/>
@@ -440,22 +438,6 @@
         </allow>
       </deny>
     </access-rule>
-
-      <pattern name="session.impl.deps">
-        <include pattern="session.deps" />
-        <include pattern="session.impl" />
-      </pattern>
-
-      <access-rule>
-        <message>session.impl dependency violation</message>
-        <deny>
-          <from pattern="session.impl" />
-          <to pattern="farrago" />
-          <allow>
-            <to pattern="session.impl.deps" />
-          </allow>
-        </deny>
-      </access-rule>
 
     <pattern name="jdbc.param.deps">
       <include pattern="fennel.tuple.deps" />
