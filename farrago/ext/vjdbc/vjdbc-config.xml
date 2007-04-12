@@ -5,5 +5,5 @@
     user="sa"
     password="sa"
     connectionPooling="on"
-    url="jdbc:farrago:"/>
+    url="jdbc:farrago:;remoteProtocol=\"HTTP\""/>
 </vjdbc-configuration>

@@ -151,13 +151,17 @@ order by grantee;
 !closeall
 !connect jdbc:farrago: BOBO tiger
 
--- should fail:  user with wrong password
+-- should succeed:  local driver, user with wrong password
 !closeall
 !connect jdbc:farrago: "MockLoginModuleTestUser" blah
 
--- should succeed:  user with correct password
+-- should fail:  spoof remote driver, user with wrong password
 !closeall
-!connect jdbc:farrago: "MockLoginModuleTestUser" secret
+!connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" blah
+
+-- should succeed:  spoof remote driver, user with correct password
+!closeall
+!connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" secret
 
 
 -------------------------------------------------------------------------

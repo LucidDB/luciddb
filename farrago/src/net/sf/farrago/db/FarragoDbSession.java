@@ -240,7 +240,7 @@ public class FarragoDbSession
                     SessionClientProcessIdNotNumeric.ex(processStr));
             }
         }
-
+        String remoteProtocol = info.getProperty("remoteProtocol", "none");
         FemUser femUser = null;
 
         if (MDR_USER_NAME.equals(sessionVariables.sessionUserName)) {
@@ -260,7 +260,8 @@ public class FarragoDbSession
             if (femUser == null) {
                 throw FarragoResource.instance().SessionLoginFailed.ex(
                     repos.getLocalizedObjectName(sessionUser));
-            }  else if (database.isAuthenticationEnabled()){
+            }  else if (database.isAuthenticationEnabled() 
+                    && !remoteProtocol.equals("none")) {
                 // authenticate; use same SessionLoginFailed if fails
                 LoginContext lc;
                 CallbackHandler cbh = new FarragoNoninteractiveCallbackHandler(
