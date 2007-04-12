@@ -152,6 +152,9 @@
 
       <test name="funcMathCover" requiresSuccess="null">
         <!-- decimal precision different on different VMs -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMathCover.sql"/>
       </test>
 
