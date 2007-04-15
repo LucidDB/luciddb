@@ -109,6 +109,10 @@ public class FarragoUserDefinedRoutine
         this.preparingStmt = preparingStmt;
         this.routine = routine;
         this.returnType = returnType;
+
+        if (preparingStmt != null && routine != null && isDynamicFunction()) {
+            this.preparingStmt.disableStatementCaching();
+        }
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -590,6 +594,11 @@ public class FarragoUserDefinedRoutine
     public static boolean hasReturnPrefix(String body)
     {
         return body.startsWith(RETURN_PREFIX);
+    }
+
+    private boolean isDynamicFunction()
+    {
+        return getFemRoutine().isDynamicFunction();
     }
 
     // override SqlOperator

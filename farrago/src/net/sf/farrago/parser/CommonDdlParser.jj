@@ -2102,10 +2102,21 @@ void RoutineCharacteristics(FemRoutine routine) :
         {
             routine.setDeterministic(true);
         }
-        | <NOT> <DETERMINISTIC>
+        | <DYNAMIC_FUNCTION>
         {
-            routine.setDeterministic(false);
-        }
+            routine.setDynamicFunction(true);
+        }        
+        | <NOT>
+        (
+            <DETERMINISTIC>
+            {
+                routine.setDeterministic(false);
+            }
+            | <DYNAMIC_FUNCTION>
+            {
+                routine.setDynamicFunction(false);
+            }
+        )
         | <NO> <SQL>
         {
             routine.setDataAccess(RoutineDataAccessEnum.RDA_NO_SQL);

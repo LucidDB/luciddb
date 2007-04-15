@@ -435,6 +435,7 @@ create or replace function applib.get_var(
 returns varchar(65535)
 language java
 deterministic
+dynamic_function
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeGet';
 
