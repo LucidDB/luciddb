@@ -31,17 +31,16 @@ import java.util.TimeZone;
 import net.sf.farrago.resource.*;
 
 import org.eigenbase.resource.*;
-import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.SqlIntervalQualifier;
 import org.eigenbase.util.Util;
 import org.eigenbase.util14.*;
 
 
 /**
- * Runtime type for basic date/time/timestamp values without time zone 
- * information. All of these types are represented by subclasses of 
+ * Runtime type for basic date/time/timestamp values without time zone
+ * information. All of these types are represented by subclasses of
  * {@link ZonelessDatetime} and have a similar internal representation.
- * This class interoperates with java.sql (Jdbc) types since they are 
+ * This class interoperates with java.sql (Jdbc) types since they are
  * commonly used for external data.
  *
  * TODO: we can probably be smarter about how we allocate Java objects
@@ -69,13 +68,13 @@ public abstract class SqlDateTimeWithoutTZ
     //~ Instance fields --------------------------------------------------------
 
     /**
-     * Calendar, which holds the client time zone. It defaults to null, 
+     * Calendar, which holds the client time zone. It defaults to null,
      * which implies that no explicit time zone has been set.
      */
     private Calendar cal;
 
     /**
-     *  The calendar to use as a temporary variable. This calendar's time 
+     *  The calendar to use as a temporary variable. This calendar's time
      *  zone is set to the value time zone.
      */
     private Calendar tempCal;
@@ -114,7 +113,7 @@ public abstract class SqlDateTimeWithoutTZ
      *
      * @return String representing the default Date/Time format to use
      */
-    // REVIEW jpham 2006-09-27: since this is protected, I'm assuming noone 
+    // REVIEW jpham 2006-09-27: since this is protected, I'm assuming noone
     // needs it
     // protected abstract void parse(String date, String format, TimeZone tz);
 
@@ -132,8 +131,8 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Per the {@link NullableValue} contract, returns either null or 
-     * the value of this object as a Jdbc compatible value. The Jdbc value 
+     * Per the {@link NullableValue} contract, returns either null or
+     * the value of this object as a Jdbc compatible value. The Jdbc value
      * is constructed relative to the server default time zone.
      */
     public Object getNullableData()
@@ -145,7 +144,7 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Return data to result sets as ZonelessDatetime so that it may be 
+     * Return data to result sets as ZonelessDatetime so that it may be
      * properly localized by a Jdbc driver or client application.
      */
     public Object getSpecialData()
@@ -166,11 +165,13 @@ public abstract class SqlDateTimeWithoutTZ
 
     /**
      * Assigns a value from another object.
-     * 
-     * <p>The Object may be a Long or long if it is being intialized from a 
-     * constant, or being translated from a Fennel value. If so, then the 
-     * Fennel type must match the Farrago type. It is legal to assign a 
-     * GmtDate to a GmtDate and a GmtTime to a GmtTime, but it is not valid 
+     *
+     * <p>The Object may be a {@link Long} or <code>long</code> if it is being
+     * intialized from a
+     * constant, or being translated from a Fennel value. If so, then the
+     * Fennel type must match the Farrago type. It is legal to assign a
+     * {@link ZonelessDate} to a {@link ZonelessDate} and a
+     * {@link ZonelessTime} to a {@link ZonelessTime], but it is not valid
      * to assign a Timestamp to either, or vice versa.
      *
      * @param date value to assign, or null to set null
@@ -214,8 +215,8 @@ public abstract class SqlDateTimeWithoutTZ
 
     /**
      * Assigns a value from another object.
-     * 
-     * @see assignFrom(Object)
+     *
+     * @see #assignFrom(Object)
      */
     public void assignFrom(long l)
     {
@@ -225,7 +226,7 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Attempts to parse the string, throwing an understandable exception 
+     * Attempts to parse the string, throwing an understandable exception
      * if an error was detected.
      */
     private void attemptParse(String s) {
@@ -248,13 +249,13 @@ public abstract class SqlDateTimeWithoutTZ
     protected abstract void assignFromString(String s);
 
     /**
-     * Gets a calendar with the time and time zone of this value. 
-     * The calendar returned is not the internal calendar of this 
+     * Gets a calendar with the time and time zone of this value.
+     * The calendar returned is not the internal calendar of this
      * SqlDateTimeWithoutTZ.
-     * 
-     * TODO: does anyone use this? Currently it returns a copy of a 
+     *
+     * TODO: does anyone use this? Currently it returns a copy of a
      *   Calendar with the value time zone and the milliseconds.
-     *   
+     *
      * @deprecated please review this code
      */
     public Calendar getCal()
@@ -265,16 +266,16 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Assigns the time and time zone from a Calendar value. 
-     * 
-     * TODO: Does anyone use this? If so, we want to be careful about the 
+     * Assigns the time and time zone from a Calendar value.
+     *
+     * TODO: Does anyone use this? If so, we want to be careful about the
      *   meaning of this.cal. Elsewhere we use it for "client time zone"
-     *   but here we seem to be using it to mean "value time zone". Or if we 
-     *   indeed mean "client time zone", then we should not be setting the 
+     *   but here we seem to be using it to mean "value time zone". Or if we
+     *   indeed mean "client time zone", then we should not be setting the
      *   milliseconds time value.
-     * 
+     *
      * @param cal calendar value to assign from
-     * 
+     *
      * @deprecated please review this code
      */
     public void setCal(Calendar cal)
@@ -296,7 +297,7 @@ public abstract class SqlDateTimeWithoutTZ
     /**
      * Returns a string in the specified datetime format
      * TODO: does anyone use this?
-     * 
+     *
      * @deprecated please review this code
      */
     public String toString(String format)
@@ -436,10 +437,10 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Gets a temporary calendar object, initialized with this object's time 
+     * Gets a temporary calendar object, initialized with this object's time
      * zone and milliseconds value.
      */
-    protected Calendar getTempCal() 
+    protected Calendar getTempCal()
     {
         if (tempCal == null) {
             tempCal = Calendar.getInstance(getValueTimeZone());
@@ -451,7 +452,7 @@ public abstract class SqlDateTimeWithoutTZ
     //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * SQL date value. The value field of this object represents milliseconds 
+     * SQL date value. The value field of this object represents milliseconds
      * of a FarragoDate.
      */
     public static class SqlDate
@@ -470,7 +471,7 @@ public abstract class SqlDateTimeWithoutTZ
         {
             return new Date(value.getJdbcDate(defaultZone));
         }
-        
+
         // implement SqlDateTimeWithoutTZ
         protected void assignFromString(String s)
         {
@@ -558,13 +559,13 @@ public abstract class SqlDateTimeWithoutTZ
 
         /**
          * Sets the current date for use by time to timestamp conversion
-         * 
+         *
          * @param date the value of the current_date context variable
          */
         public void setCurrentDate(SqlDateTimeWithoutTZ date)
         {
-            if (currentDate != null 
-                && date.value.getTime() == currentDate.getTime()) 
+            if (currentDate != null
+                && date.value.getTime() == currentDate.getTime())
             {
                 return;
             }

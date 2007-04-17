@@ -9,17 +9,17 @@
 ProjectRel(DEPTNO=[$0])
   JoinRel(condition=[true], joinType=[inner])
     ProjectRel(DEPTNO=[$0], NAME=[$1])
-      TableAccessRel(table=[[SALES, DEPT]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
     ProjectRel(DEPTNO=[$0], NAME=[$1])
-      TableAccessRel(table=[[SALES, DEPT]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(DEPTNO=[$0])
   JoinRel(condition=[true], joinType=[inner])
-    TableAccessRel(table=[[SALES, DEPT]])
-    TableAccessRel(table=[[SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
     </TestCase>
@@ -32,11 +32,11 @@ ProjectRel(DEPTNO=[$0])
 UnionRel(all=[false])
   UnionRel(all=[false])
     ProjectRel(NAME=[$1])
-      TableAccessRel(table=[[SALES, DEPT]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
     ProjectRel(ENAME=[$1])
-      TableAccessRel(table=[[SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
   ProjectRel(ENAME=[$0])
-    TableAccessRel(table=[[SALES, BONUS]])
+    TableAccessRel(table=[[CATALOG, SALES, BONUS]])
 ]]>
         </Resource>
         <Resource name="planAfter">
@@ -46,11 +46,11 @@ AggregateRel(groupCount=[1])
     AggregateRel(groupCount=[1])
       UnionRel(all=[true])
         ProjectRel(NAME=[$1])
-          TableAccessRel(table=[[SALES, DEPT]])
+          TableAccessRel(table=[[CATALOG, SALES, DEPT]])
         ProjectRel(ENAME=[$1])
-          TableAccessRel(table=[[SALES, EMP]])
+          TableAccessRel(table=[[CATALOG, SALES, EMP]])
     ProjectRel(ENAME=[$0])
-      TableAccessRel(table=[[SALES, BONUS]])
+      TableAccessRel(table=[[CATALOG, SALES, BONUS]])
 ]]>
         </Resource>
     </TestCase>
@@ -63,11 +63,11 @@ AggregateRel(groupCount=[1])
 UnionRel(all=[false])
   UnionRel(all=[false])
     ProjectRel(NAME=[$1])
-      TableAccessRel(table=[[SALES, DEPT]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
     ProjectRel(ENAME=[$1])
-      TableAccessRel(table=[[SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
   ProjectRel(ENAME=[$0])
-    TableAccessRel(table=[[SALES, BONUS]])
+    TableAccessRel(table=[[CATALOG, SALES, BONUS]])
 ]]>
         </Resource>
         <Resource name="planAfter">
@@ -76,11 +76,11 @@ AggregateRel(groupCount=[1])
   UnionRel(all=[true])
     UnionRel(all=[false])
       ProjectRel(NAME=[$1])
-        TableAccessRel(table=[[SALES, DEPT]])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
       ProjectRel(ENAME=[$1])
-        TableAccessRel(table=[[SALES, EMP]])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
     ProjectRel(ENAME=[$0])
-      TableAccessRel(table=[[SALES, BONUS]])
+      TableAccessRel(table=[[CATALOG, SALES, BONUS]])
 ]]>
         </Resource>
     </TestCase>
@@ -93,11 +93,11 @@ AggregateRel(groupCount=[1])
 UnionRel(all=[false])
   UnionRel(all=[false])
     ProjectRel(NAME=[$1])
-      TableAccessRel(table=[[SALES, DEPT]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
     ProjectRel(ENAME=[$1])
-      TableAccessRel(table=[[SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
   ProjectRel(ENAME=[$0])
-    TableAccessRel(table=[[SALES, BONUS]])
+    TableAccessRel(table=[[CATALOG, SALES, BONUS]])
 ]]>
         </Resource>
         <Resource name="planAfter">
@@ -106,11 +106,11 @@ UnionRel(all=[false])
   AggregateRel(groupCount=[1])
     UnionRel(all=[true])
       ProjectRel(NAME=[$1])
-        TableAccessRel(table=[[SALES, DEPT]])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
       ProjectRel(ENAME=[$1])
-        TableAccessRel(table=[[SALES, EMP]])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
   ProjectRel(ENAME=[$0])
-    TableAccessRel(table=[[SALES, BONUS]])
+    TableAccessRel(table=[[CATALOG, SALES, BONUS]])
 ]]>
         </Resource>
     </TestCase>
@@ -123,11 +123,11 @@ UnionRel(all=[false])
 IntersectRel(all=[false])
   UnionRel(all=[false])
     ProjectRel(NAME=[$1])
-      TableAccessRel(table=[[SALES, DEPT]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
     ProjectRel(ENAME=[$1])
-      TableAccessRel(table=[[SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
   ProjectRel(FNAME=[$1])
-    TableAccessRel(table=[[CUSTOMER, CONTACT]])
+    TableAccessRel(table=[[CATALOG, CUSTOMER, CONTACT]])
 ]]>
         </Resource>
         <Resource name="planAfter">
@@ -136,12 +136,12 @@ IntersectRel(all=[false])
   UnionRel(all=[false])
     ProjectRel(NAME=[CAST($0):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL])
       ProjectRel(NAME=[$1])
-        TableAccessRel(table=[[SALES, DEPT]])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
     ProjectRel(ENAME=[$1])
-      TableAccessRel(table=[[SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
   ProjectRel(FNAME=[CAST($0):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL])
     ProjectRel(FNAME=[$1])
-      TableAccessRel(table=[[CUSTOMER, CONTACT]])
+      TableAccessRel(table=[[CATALOG, CUSTOMER, CONTACT]])
 ]]>
         </Resource>
     </TestCase>
@@ -153,13 +153,13 @@ IntersectRel(all=[false])
             <![CDATA[
 ProjectRel(EXPR$0=[UPPER($0)])
   ProjectRel(ENAME=[LOWER($1)])
-    TableAccessRel(table=[[SALES, EMP]])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
         <Resource name="planAfter">
             <![CDATA[
 CalcRel(expr#0..8=[{inputs}], expr#9=[LOWER($t1)], expr#10=[UPPER($t9)], EXPR$0=[$t10])
-  TableAccessRel(table=[[SALES, EMP]])
+  TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
     </TestCase>
@@ -171,14 +171,14 @@ CalcRel(expr#0..8=[{inputs}], expr#9=[LOWER($t1)], expr#10=[UPPER($t9)], EXPR$0=
             <![CDATA[
 ProjectRel(NAME=[$1])
   FilterRel(condition=[=($0, 12)])
-    TableAccessRel(table=[[SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(NAME=[$1])
   CalcRel(expr#0..1=[{inputs}], expr#2=[12], expr#3=[=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])
-    TableAccessRel(table=[[SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
     </TestCase>
@@ -190,13 +190,13 @@ ProjectRel(NAME=[$1])
             <![CDATA[
 ProjectRel(EXPR$0=[UPPER($1)])
   FilterRel(condition=[=($0, 20)])
-    TableAccessRel(table=[[SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
         <Resource name="planAfter">
             <![CDATA[
 CalcRel(expr#0..1=[{inputs}], expr#2=[20], expr#3=[=($t0, $t2)], expr#4=[UPPER($t1)], EXPR$0=[$t4], $condition=[$t3])
-  TableAccessRel(table=[[SALES, DEPT]])
+  TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
     </TestCase>

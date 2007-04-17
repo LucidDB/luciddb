@@ -2063,7 +2063,6 @@ public abstract class RelOptUtil
                     rexBuilder.makeInputRef(
                         right.getRowType().getFields()[rightKey].getType(),
                         rightKey + offset));
-            createInputRef(right, leftKey);
             if (i == 0) {
                 equiCondition = equi;
             } else {

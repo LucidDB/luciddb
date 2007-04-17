@@ -80,7 +80,7 @@ public class RexProgram
     private final List<RexNode> exprReadOnlyList;
 
     /**
-     * Reference counts, computed on demand.
+     * Reference counts for each expression, computed on demand.
      */
     private int [] refCounts;
 
@@ -151,13 +151,12 @@ public class RexProgram
 
     //~ Methods ----------------------------------------------------------------
 
-    // REVIEW jvs 16-Oct-2006:  The description below is confusing.  I
-    // think it means "none of the entries are null, there may be none,
-    // and there is no further reduction into smaller common subexpressions
-    // possible"?
     /**
-     * Returns the common sub-expressions of this program. Never null, may be
-     * empty, and never contain common sub-expressions.
+     * Returns the common sub-expressions of this program.
+     *
+     * <p>The list is never null but may be empty; each the expression in the
+     * list is not null; and no further reduction into smaller common
+     * subexpressions is possible.
      *
      * @post return != null
      * @post !containCommonExprs(exprs)
@@ -270,15 +269,16 @@ public class RexProgram
         List<Object> valueList = new ArrayList<Object>();
         termList.add("child");
         collectExplainTerms("", termList, valueList, pw.getDetailLevel());
-        String [] terms =
-            (String []) termList.toArray(new String[termList.size()]);
-        Object [] values =
-            (Object []) valueList.toArray(new Object[valueList.size()]);
+
+        if (pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES && false) {
+            termList.add("type");
+            valueList.add(rel.getRowType());
+        }
 
         // Relational expressions which contain a program should report their
         // children in a different way than getChildExps().
         assert rel.getChildExps().length == 0;
-        pw.explain(rel, terms, values);
+        pw.explain(rel, termList, valueList);
     }
 
     public void collectExplainTerms(
@@ -1040,3 +1040,4 @@ loop:
 }
 
 // End RexProgram.java
+

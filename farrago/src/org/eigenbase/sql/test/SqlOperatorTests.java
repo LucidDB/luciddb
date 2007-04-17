@@ -694,6 +694,7 @@ public abstract class SqlOperatorTests
         }
 
         // timestamp <-> date
+        if (Util.deprecated(false, false))
         getTester().checkScalar(
             "cast(TIMESTAMP '1945-02-24 12:42:25.34' as DATE)",
             "1945-02-24",

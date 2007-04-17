@@ -45,7 +45,6 @@ POINT="$4"
 # Construct release names
 RELEASE_NUMBER="$MAJOR.$MINOR.$POINT"
 BINARY_RELEASE="eigenbase-$RELEASE_NUMBER"
-LUCIDDB_BINARY_RELEASE="luciddb-$RELEASE_NUMBER"
 SRC_RELEASE="eigenbase-src-$RELEASE_NUMBER"
 FENNEL_RELEASE="fennel-$RELEASE_NUMBER"
 FARRAGO_RELEASE="farrago-$RELEASE_NUMBER"
@@ -63,12 +62,6 @@ if [ $cygwin = "true" ]; then
     ARCHIVE_SUFFIX=zip
 else
     ARCHIVE_SUFFIX=tar.bz2
-    
-    # Verify that chrpath is available
-    if [ ! -e /usr/bin/chrpath ]; then
-        echo "Error:  /usr/bin/chrpath is not installed"
-        exit -1
-    fi
 fi
 
 # Generate version info
@@ -79,11 +72,10 @@ p4 label -o $LABEL >> $DIST_DIR/VERSION
 
 # Start from a clean sync to requested label
 cd $OPEN_DIR
-rm -rf thirdparty fennel farrago luciddb
+rm -rf thirdparty fennel farrago
 p4 sync -f thirdparty/...@$LABEL
 p4 sync -f fennel/...@$LABEL
 p4 sync -f farrago/...@$LABEL
-p4 sync -f luciddb/...@$LABEL
 
 # Verify that client was mapped correctly
 if [ ! -e thirdparty ]; then
@@ -98,13 +90,6 @@ if [ ! -e farrago ]; then
     echo "Error:  farrago is not where it should be"
     exit -1
 fi
-if [ ! -e luciddb ]; then
-    echo "Error:  luciddb is not where it should be"
-    exit -1
-fi
-
-# Create farrago/customBuild.properties to set GPL release flag
-echo 'release.gpl=true' > farrago/customBuild.properties
 
 if [ $cygwin = "false" ]; then
 
@@ -114,26 +99,9 @@ rm -f $SRC_RELEASE.$ARCHIVE_SUFFIX
 rm -rf $SRC_RELEASE
 mkdir $SRC_RELEASE
 cp -R $OPEN_DIR/thirdparty $SRC_RELEASE
-# Delete and stub out irrelevant thirdparty archives
 rm -f $SRC_RELEASE/thirdparty/icu-2.8.patch.tgz
-rm -f $SRC_RELEASE/thirdparty/tpch.tar.gz
-rm -f $SRC_RELEASE/thirdparty/postgresql-*
-rm -f $SRC_RELEASE/thirdparty/logging-log4j-*
-rm -f $SRC_RELEASE/thirdparty/jfreechart-*
-rm -f $SRC_RELEASE/thirdparty/jdbcappender.zip
-rm -f $SRC_RELEASE/thirdparty/jcommon-*
-rm -rf $SRC_RELEASE/thirdparty/GroboUtils
-touch $SRC_RELEASE/thirdparty/logging-log4j-1.3alpha-8.tar.gz
-touch $SRC_RELEASE/thirdparty/log4j
-touch $SRC_RELEASE/thirdparty/jdbcappender.zip
-touch $SRC_RELEASE/thirdparty/jdbcappender
-touch $SRC_RELEASE/thirdparty/jtds-1.2-dist.zip
-touch $SRC_RELEASE/thirdparty/jtds
-touch $SRC_RELEASE/thirdparty/tpch.tar.gz
-touch $SRC_RELEASE/thirdparty/tpch
 cp -R $OPEN_DIR/fennel $SRC_RELEASE
 cp -R $OPEN_DIR/farrago $SRC_RELEASE
-cp -R $OPEN_DIR/luciddb $SRC_RELEASE
 cp $DIST_DIR/VERSION $SRC_RELEASE
 cp $DIST_DIR/README.src $SRC_RELEASE/README
 cp $OPEN_DIR/farrago/COPYING $SRC_RELEASE
@@ -169,17 +137,10 @@ jdbc.driver.version.minor=$MINOR
 jdbc.url.base=jdbc:farrago:
 jdbc.url.port.default=5433
 EOF
-
 cd $OPEN_DIR/farrago
-./initBuild.sh --with-fennel --with-optimization --without-debug
+./initBuild.sh --with-fennel --with-optimization
 ./distBuild.sh --skip-init-build
-mv ../farrago/dist/farrago.$ARCHIVE_SUFFIX \
-    $DIST_DIR/$BINARY_RELEASE.$ARCHIVE_SUFFIX
-
-cd $OPEN_DIR/luciddb
-./initBuild.sh --without-farrago-build --with-optimization --without-debug
-mv dist/luciddb.$ARCHIVE_SUFFIX \
-    $DIST_DIR/$LUCIDDB_BINARY_RELEASE.$ARCHIVE_SUFFIX
+mv dist/farrago.$ARCHIVE_SUFFIX $DIST_DIR/$BINARY_RELEASE.$ARCHIVE_SUFFIX
 
 if [ $cygwin = "false" ]; then
 

@@ -54,11 +54,11 @@ abstract class SqlAbstractDateTimeLiteral
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Constructs a datetime literal based on a Calendar. If the literal 
-     * is to represent a Timestamp, the Calendar is expected to follow 
-     * java.sql semantics. If the Calendar is to represent a Time or Date, 
-     * the Calendar is expected to follow {@link GmtTime} and 
-     * {@link GmtDate} semantics.
+     * Constructs a datetime literal based on a Calendar. If the literal
+     * is to represent a Timestamp, the Calendar is expected to follow
+     * java.sql semantics. If the Calendar is to represent a Time or Date,
+     * the Calendar is expected to follow {@link ZonelessTime} and 
+     * {@link ZonelessDate} semantics.
      */
     protected SqlAbstractDateTimeLiteral(
         Calendar d,

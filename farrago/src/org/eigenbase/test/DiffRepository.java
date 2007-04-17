@@ -130,6 +130,7 @@ public class DiffRepository
     private static final String RootTag = "Root";
     private static final String TestCaseTag = "TestCase";
     private static final String TestCaseNameAttr = "name";
+    private static final String TestCaseOverridesAttr = "overrides";
     private static final String ResourceTag = "Resource";
     private static final String ResourceNameAttr = "name";
 
@@ -152,7 +153,8 @@ public class DiffRepository
 
     //~ Constructors -----------------------------------------------------------
 
-    public DiffRepository(File refFile,
+    public DiffRepository(
+        File refFile,
         File logFile,
         DiffRepository baseRepos)
     {
@@ -342,7 +344,7 @@ public class DiffRepository
         final String testCaseName,
         String resourceName)
     {
-        Element testCaseElement = getTestCaseElement(root, testCaseName);
+        Element testCaseElement = getTestCaseElement(testCaseName, true);
         if (testCaseElement == null) {
             if (baseRepos != null) {
                 return baseRepos.get(testCaseName, resourceName);
@@ -389,14 +391,14 @@ public class DiffRepository
      * Returns the &lt;TestCase&gt; element corresponding to the current test
      * case.
      *
-     * @param root Root element of the document
      * @param testCaseName Name of test case
-     *
+     * @param checkOverride Make sure that if an element overrides an element
+     *   in a base repository, it has overrides="true"
      * @return TestCase element, or null if not found
      */
-    private static Element getTestCaseElement(
-        final Element root,
-        final String testCaseName)
+    private Element getTestCaseElement(
+        final String testCaseName,
+        boolean checkOverride)
     {
         final NodeList childNodes = root.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
@@ -405,6 +407,17 @@ public class DiffRepository
                 Element testCase = (Element) child;
                 if (testCaseName.equals(
                         testCase.getAttribute(TestCaseNameAttr))) {
+                    if (checkOverride &&
+                        baseRepos != null &&
+                        baseRepos.getTestCaseElement(
+                            testCaseName, false) != null &&
+                        !"true".equals(
+                            testCase.getAttribute(TestCaseOverridesAttr))) {
+                        throw new RuntimeException(
+                            "TestCase  '" + testCaseName + "' overrides a " +
+                                "testcase in the base repository, but does " +
+                                "not specify 'overrides=true'");
+                    }
                     return testCase;
                 }
             }
@@ -568,7 +581,7 @@ public class DiffRepository
         String resourceName,
         String value)
     {
-        Element testCaseElement = getTestCaseElement(root, testCaseName);
+        Element testCaseElement = getTestCaseElement(testCaseName, true);
         if (testCaseElement == null) {
             testCaseElement = doc.createElement(TestCaseTag);
             testCaseElement.setAttribute(TestCaseNameAttr, testCaseName);

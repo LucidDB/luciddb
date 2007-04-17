@@ -40,7 +40,7 @@ import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fem.security.*;
-import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fem.sql2003.FemAbstractColumnSet;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
@@ -76,8 +76,8 @@ public class FarragoDefaultSessionPersonality
     //~ Static fields ----------------------------------------------------------
 
     /**
-     * Numeric data from external data sources may have a greater precision 
-     * than Farrago. Whether data of greater precision should be replaced 
+     * Numeric data from external data sources may have a greater precision
+     * than Farrago. Whether data of greater precision should be replaced
      * with null when it overflows due to the greater precision.
      */
     public static final String SQUEEZE_JDBC_NUMERIC = "squeezeJdbcNumeric";
@@ -380,7 +380,7 @@ public class FarragoDefaultSessionPersonality
     {
         return variables.cloneVariables();
     }
-    
+
     // implement FarragoSessionPersonality
     public void validateSessionVariable(
         FarragoSessionDdlValidator ddlValidator,
@@ -388,7 +388,7 @@ public class FarragoDefaultSessionPersonality
         String name,
         String value)
     {
-        String validatedValue = 
+        String validatedValue =
             paramValidator.validate(ddlValidator, name, value);
         variables.set(name, validatedValue);
     }
@@ -450,7 +450,7 @@ public class FarragoDefaultSessionPersonality
         if (feature == maasFeature) {
             return false;
         }
-        
+
         // Farrago doesn't support MERGE
         if (feature == EigenbaseResource.instance().SQLFeature_F312) {
             return false;
@@ -467,7 +467,7 @@ public class FarragoDefaultSessionPersonality
         // that happens inside of FarragoPreparingStmt so that
         // this provider gets low priority.
     }
-    
+
     // implement FarragoSessionPersonality
     public void getRowCounts(
         ResultSet resultSet,
@@ -487,14 +487,14 @@ public class FarragoDefaultSessionPersonality
         }
         assert (!nextRowCount);
     }
-    
+
     protected boolean addRowCount(ResultSet resultSet, List<Long> rowCounts)
         throws SQLException
     {
         rowCounts.add(resultSet.getLong(1));
         return resultSet.next();
     }
-    
+
     // implement FarragoSessionPersonality
     public long updateRowCounts(
         FarragoSession session,
@@ -510,7 +510,7 @@ public class FarragoDefaultSessionPersonality
         }
         return count;
     }
-    
+
     // implement FarragoSessionPersonality
     public void resetRowCounts(FemAbstractColumnSet table)
     {
@@ -524,7 +524,7 @@ public class FarragoDefaultSessionPersonality
         int type;
         boolean nullability;
         Long rangeStart, rangeEnd;
-        
+
         public ParamDesc(int type, boolean nullability) {
             this.type = type;
             this.nullability = nullability;
@@ -537,18 +537,18 @@ public class FarragoDefaultSessionPersonality
             rangeEnd = end;
         }
     }
-    
+
     /**
      * ParamValidator is a basic session parameter validator
      */
-    public class ParamValidator 
+    public class ParamValidator
     {
         private final int BOOLEAN_TYPE = 1;
         private final int INT_TYPE = 2;
         private final int STRING_TYPE = 3;
         private final int DIRECTORY_TYPE = 4;
         private final int LONG_TYPE = 5;
-        
+
         private Map<String, ParamDesc> params;
 
         public ParamValidator()
@@ -572,7 +572,7 @@ public class FarragoDefaultSessionPersonality
             assert (start <= end);
             params.put(name, new ParamDesc(INT_TYPE, nullability, start, end));
         }
-        
+
         public void registerLongParam(
             String name, boolean nullability, long start, long end)
         {
@@ -592,7 +592,7 @@ public class FarragoDefaultSessionPersonality
 
         public String validate(
             FarragoSessionDdlValidator ddlValidator,
-            String name, 
+            String name,
             String value)
         {
             if (! params.containsKey(name)) {

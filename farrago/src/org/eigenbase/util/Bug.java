@@ -165,6 +165,13 @@ public abstract class Bug
 
     public static final boolean FrgIntegrationFixed = false;
 
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-216">issue
+     * FRG-216: Java calc 'expression splitting' causes serious problems</a> is
+     * fixed.
+     */
+    public static final boolean Frg216Fixed = false;
+
     // johnk
 
     // jouellette

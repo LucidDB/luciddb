@@ -165,12 +165,20 @@ public class SqlToRelTestBase
                                     RelFieldCollation.Direction.Ascending))));
                 }
             }
+            if (names.length < 3) {
+                String[] newNames = {"CATALOG", "SALES", ""};
+                System.arraycopy(
+                    names, 0, newNames, newNames.length - names.length,
+                    names.length);
+                names = newNames;
+            }
             return createColumnSet(names, rowType, collationList);
         }
 
         public RelOptTable getTableForMember(
-            String [] names,
-            final String datasetName)
+            String[] names,
+            final String datasetName,
+            boolean[] usedDataset)
         {
             final RelOptTable table = getTableForMember(names);
 
@@ -187,6 +195,10 @@ public class SqlToRelTestBase
                         return qualifiedName;
                     }
                 };
+            if (usedDataset != null) {
+                assert usedDataset.length == 1;
+                usedDataset[0] = true;
+            }
             return datasetTable;
         }
 

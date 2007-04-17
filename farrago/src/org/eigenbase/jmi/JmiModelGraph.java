@@ -121,8 +121,9 @@ public class JmiModelGraph
         this(
             refRootPackage,
             classLoader,
-            new DirectedMultigraph<JmiClassVertex,
-            DirectedEdge<JmiClassVertex>>(),
+            new DirectedMultigraph<
+                JmiClassVertex,
+                DirectedEdge<JmiClassVertex>>(),
             strict);
     }
 

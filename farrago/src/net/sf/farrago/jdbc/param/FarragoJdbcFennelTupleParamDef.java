@@ -541,7 +541,7 @@ public class FarragoJdbcFennelTupleParamDef
         }
     }
 
-    public void setDate(FennelTupleDatum datum, Date val)
+    public void setDate(FennelTupleDatum datum, ZonelessDate val)
     {
         if (val == null) {
             setNull(datum);
@@ -565,7 +565,7 @@ public class FarragoJdbcFennelTupleParamDef
         }
     }
 
-    public void setTime(FennelTupleDatum datum, Time val)
+    public void setTime(FennelTupleDatum datum, ZonelessTime val)
     {
         if (val == null) {
             setNull(datum);
@@ -588,7 +588,7 @@ public class FarragoJdbcFennelTupleParamDef
         }
     }
 
-    public void setTimestamp(FennelTupleDatum datum, Timestamp val)
+    public void setTimestamp(FennelTupleDatum datum, ZonelessTimestamp val)
     {
         if (val == null) {
             setNull(datum);
@@ -671,12 +671,12 @@ public class FarragoJdbcFennelTupleParamDef
                     datum,
                     NumberUtil.toBigDecimal(n));
             }
-        } else if (val instanceof Time) {
-            setTime(datum, (Time) val);
-        } else if (val instanceof Date) {
-            setDate(datum, (Date) val);
-        } else if (val instanceof Timestamp) {
-            setTimestamp(datum, (Timestamp) val);
+        } else if (val instanceof ZonelessTime) {
+            setTime(datum, (ZonelessTime) val);
+        } else if (val instanceof ZonelessDate) {
+            setDate(datum, (ZonelessDate) val);
+        } else if (val instanceof ZonelessTimestamp) {
+            setTimestamp(datum, (ZonelessTimestamp) val);
         } else if (val instanceof byte []) {
             setBytes(datum, (byte []) val);
         } else {

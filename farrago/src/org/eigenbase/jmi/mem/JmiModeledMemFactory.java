@@ -65,12 +65,12 @@ public abstract class JmiModeledMemFactory
     {
         definePackage(
             modelGraph.getRefRootPackage(),
-            getRootPackageImpl().clazz);
+            (Class<? extends RefPackage>) getRootPackageImpl().clazz);
     }
 
     private void definePackage(
         RefPackage refPackageModeled,
-        Class iface)
+        Class<? extends RefPackage> iface)
         throws ClassNotFoundException
     {
         defineMetaObject(
@@ -146,7 +146,7 @@ public abstract class JmiModeledMemFactory
             String sourceAttrName = "ParentOf$" + targetAttrName;
             boolean sourceMany = false;
             boolean isComposite = true;
-            
+
             createRelationship(
                 sourceInterface,
                 targetAttrName,
@@ -157,7 +157,7 @@ public abstract class JmiModeledMemFactory
                 isComposite);
         }
     }
-    
+
     private void defineAssociations()
         throws ClassNotFoundException
     {
@@ -170,7 +170,7 @@ public abstract class JmiModeledMemFactory
             defineMetaObject(
                 ifaceAssoc,
                 edge.getMofAssoc());
-            
+
             Class sourceInterface =
                 JmiObjUtil.getJavaInterfaceForRefObject(
                     ((JmiClassVertex) edge.getSource()).getRefClass());
@@ -188,7 +188,7 @@ public abstract class JmiModeledMemFactory
             String targetAttrName = parseGetter(targetAccessorName);
             boolean targetMany =
                 (edge.getTargetEnd().getMultiplicity().getUpper() != 1);
-            
+
             Class targetInterface =
                 JmiObjUtil.getJavaInterfaceForRefObject(
                     ((JmiClassVertex) edge.getTarget()).getRefClass());

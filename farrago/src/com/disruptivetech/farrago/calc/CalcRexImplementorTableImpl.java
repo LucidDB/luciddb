@@ -52,6 +52,12 @@ public class CalcRexImplementorTableImpl
     private static final CalcRexImplementorTableImpl std =
         new CalcRexImplementorTableImpl(null).initStandard();
 
+    /**
+     * Number of milliseconds in a day. This is the modulo 'mask' when
+     * converting TIMESTAMP values to DATE and TIME values.
+     */
+    private static final long MILLIS_IN_DAY = 86400L * 1000L;
+
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -1097,13 +1103,15 @@ public class CalcRexImplementorTableImpl
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castTimestampToStr));
 
-            // Timestamp to date, time types
-            putSM(
+            // TIMESTAMP to and from DATE and TIME.
+            put(
                 SqlTypeName.Timestamp,
-                SqlTypeName.datetimeTypes,
-                new UsingInstrImplementor(CalcProgramBuilder.Cast));
-
-            // date, time to timestamp
+                SqlTypeName.Date,
+                new CastTimestampToDateImplementor());
+            put(
+                SqlTypeName.Timestamp,
+                SqlTypeName.Time,
+                new CastTimestampToTimeImplementor());
             put(
                 SqlTypeName.Date,
                 SqlTypeName.Timestamp,
@@ -1262,86 +1270,158 @@ public class CalcRexImplementorTableImpl
                 "Cast from '" + fromType.toString()
                 + "' to '" + toType.toString() + "'");
         }
+    }
 
-        static class Pair <T1, T2>
+    static class Pair <T1, T2>
+    {
+        private final T1 o1;
+        private final T2 o2;
+
+        Pair(T1 o1, T2 o2)
         {
-            private final T1 o1;
-            private final T2 o2;
-
-            Pair(T1 o1, T2 o2)
-            {
-                this.o1 = o1;
-                this.o2 = o2;
-            }
-
-            public boolean equals(Object obj)
-            {
-                return obj instanceof Pair
-                    && Util.equal(this.o1, ((Pair) obj).o1)
-                    && Util.equal(this.o2, ((Pair) obj).o2);
-            }
-
-            public int hashCode()
-            {
-                int h1 = Util.hash(0, o1);
-                return Util.hash(h1, o2);
-            }
+            this.o1 = o1;
+            this.o2 = o2;
         }
 
-        static class DoubleKeyMap
-            extends HashMap<Pair<SqlTypeName, SqlTypeName>, CalcRexImplementor>
+        public boolean equals(Object obj)
         {
-
+            return obj instanceof Pair
+                && Util.equal(this.o1, ((Pair) obj).o1)
+                && Util.equal(this.o2, ((Pair) obj).o2);
         }
 
-        /**
-         * Implementor for casting between char and decimal types
-         */
-        private static class CastDecimalImplementor
-            extends InstrDefImplementor
+        public int hashCode()
         {
-            CastDecimalImplementor(CalcProgramBuilder.InstructionDef instr)
-            {
-                super(instr);
-            }
+            int h1 = Util.hash(0, o1);
+            return Util.hash(h1, o2);
+        }
+    }
 
-            // refine InstrDefImplementor
-            protected List<CalcReg> makeRegList(
-                RexToCalcTranslator translator,
-                RexCall call)
-            {
-                RelDataType decimalType;
-                Util.pre(
-                    SqlTypeUtil.isDecimal(call.getType())
+    static class DoubleKeyMap
+        extends HashMap<Pair<SqlTypeName, SqlTypeName>, CalcRexImplementor>
+    {
+
+    }
+
+    /**
+     * Implementor for casting between char and decimal types.
+     */
+    private static class CastDecimalImplementor
+        extends InstrDefImplementor
+    {
+        CastDecimalImplementor(CalcProgramBuilder.InstructionDef instr)
+        {
+            super(instr);
+        }
+
+        // refine InstrDefImplementor
+        protected List<CalcReg> makeRegList(
+            RexToCalcTranslator translator,
+            RexCall call)
+        {
+            RelDataType decimalType;
+            Util.pre(
+                SqlTypeUtil.isDecimal(call.getType())
                     || SqlTypeUtil.isDecimal(call.operands[0].getType()),
-                    "CastDecimalImplementor can only cast decimal types");
-                if (SqlTypeUtil.isDecimal(call.getType())) {
-                    Util.pre(
-                        SqlTypeUtil.inCharFamily(call.operands[0].getType()),
-                        "CalRex cannot cast non char type to decimal");
-                    decimalType = call.getType();
-                } else {
-                    Util.pre(
-                        SqlTypeUtil.inCharFamily(call.getType()),
-                        "CalRex cannot cast from decimal to non char type");
-                    decimalType = call.operands[0].getType();
-                }
-                RexLiteral precision =
-                    translator.rexBuilder.makeExactLiteral(
-                        BigDecimal.valueOf(decimalType.getPrecision()));
-                RexLiteral scale =
-                    translator.rexBuilder.makeExactLiteral(
-                        BigDecimal.valueOf(decimalType.getScale()));
-
-                List<CalcReg> regList =
-                    implementOperands(call, translator);
-                regList.add(translator.implementNode(precision));
-                regList.add(translator.implementNode(scale));
-                regList.add(
-                    0,
-                    createResultRegister(translator, call));
-                return regList;
+                "CastDecimalImplementor can only cast decimal types");
+            if (SqlTypeUtil.isDecimal(call.getType())) {
+                Util.pre(
+                    SqlTypeUtil.inCharFamily(call.operands[0].getType()),
+                    "CalRex cannot cast non char type to decimal");
+                decimalType = call.getType();
+            } else {
+                Util.pre(
+                    SqlTypeUtil.inCharFamily(call.getType()),
+                    "CalRex cannot cast from decimal to non char type");
+                decimalType = call.operands[0].getType();
             }
+            RexLiteral precision =
+                translator.rexBuilder.makeExactLiteral(
+                    BigDecimal.valueOf(decimalType.getPrecision()));
+            RexLiteral scale =
+                translator.rexBuilder.makeExactLiteral(
+                    BigDecimal.valueOf(decimalType.getScale()));
+
+            List<CalcReg> regList =
+                implementOperands(call, translator);
+            regList.add(translator.implementNode(precision));
+            regList.add(translator.implementNode(scale));
+            regList.add(
+                0,
+                createResultRegister(translator, call));
+            return regList;
+        }
+    }
+
+    /**
+     * Implementor for casting from TIMESTAMP to DATE.
+     */
+    private static class CastTimestampToDateImplementor
+        extends AbstractCalcRexImplementor
+    {
+
+        public CalcReg implement(
+            RexCall call, RexToCalcTranslator translator)
+        {
+            RelDataType fromType = call.getOperands()[0].getType();
+            SqlTypeName fromTypeName = fromType.getSqlTypeName();
+            assert fromTypeName == SqlTypeName.Timestamp;
+            SqlTypeName toTypeName = call.getType().getSqlTypeName();
+            assert toTypeName == SqlTypeName.Date;
+
+            // Remove milliseconds part of the date:
+            //   millisInDay := 86400000
+            //   mod := x % millisInDay
+            //   res := x - mod
+            CalcReg xReg = translator.implementNode(call.getOperands()[0]);
+            CalcReg millisInDayReg =
+                translator.builder.newInt8Literal(MILLIS_IN_DAY);
+            CalcProgramBuilder.RegisterDescriptor resultDesc =
+                translator.getCalcRegisterDescriptor(call);
+            CalcReg modReg = translator.builder.newLocal(resultDesc);
+            CalcProgramBuilder.integralNativeMod.add(
+                translator.builder,
+                modReg,
+                xReg,
+                millisInDayReg);
+            CalcReg resReg = translator.builder.newLocal(resultDesc);
+            CalcProgramBuilder.nativeMinus.add(
+                translator.builder,
+                resReg,
+                xReg,
+                modReg);
+            return resReg;
+        }
+    }
+
+    /**
+     * Implementor for casting from TIMESTAMP to TIME.
+     */
+    private static class CastTimestampToTimeImplementor
+        extends AbstractCalcRexImplementor
+    {
+        public CalcReg implement(
+            RexCall call, RexToCalcTranslator translator)
+        {
+            RelDataType fromType = call.getOperands()[0].getType();
+            SqlTypeName fromTypeName = fromType.getSqlTypeName();
+            assert fromTypeName == SqlTypeName.Timestamp;
+            SqlTypeName toTypeName = call.getType().getSqlTypeName();
+            assert toTypeName == SqlTypeName.Time;
+
+            // Mask all but the milliseconds part of the date:
+            //   millisInDay := 86400000
+            //   res := x % millisInDay
+            CalcReg xReg = translator.implementNode(call.getOperands()[0]);
+            CalcReg millisInDayReg =
+                translator.builder.newInt8Literal(MILLIS_IN_DAY);
+            CalcReg resReg = createResultRegister(translator, call);
+            CalcProgramBuilder.integralNativeMod.add(
+                translator.builder,
+                resReg,
+                xReg,
+                millisInDayReg);
+            return resReg;
         }
     }
 

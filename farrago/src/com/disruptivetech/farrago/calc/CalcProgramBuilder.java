@@ -24,6 +24,7 @@ import java.io.*;
 
 import java.util.*;
 import java.util.logging.*;
+import java.math.BigInteger;
 
 import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.resource.*;
@@ -57,6 +58,8 @@ public class CalcProgramBuilder
     public static final String SEPARATOR_NEWLINE = NL;
     public static final String SEPARATOR_SEMICOLON_NEWLINE = ";" + NL;
     private static final Logger tracer = FarragoTrace.getCalcTracer();
+    private static final BigInteger Uint4_MAX = BigInteger.ONE.shiftLeft(32);
+    private static final BigInteger Uint8_MAX = BigInteger.ONE.shiftLeft(64);
 
     // -- instructions -------------------------------------------------------
     static final String refInstruction = "REF";
@@ -678,8 +681,7 @@ public class CalcProgramBuilder
                 -1);
     }
 
-    public CalcReg newInt8Literal(int i) //REVIEW shouldnt this be a long type?
-
+    public CalcReg newInt8Literal(long i)
     {
         return newLiteral(
                 OpType.Int8,
@@ -687,22 +689,25 @@ public class CalcProgramBuilder
                 -1);
     }
 
-    public CalcReg newUint4Literal(int i)
+    // use a BigInteger because large unsigned ints won't fit into an int
+    public CalcReg newUint4Literal(BigInteger i)
     {
-        compilationAssert(i >= 0,
+        compilationAssert(i.compareTo(BigInteger.ZERO) >= 0,
             "Unsigned value was found to be negative. Value=" + i);
+        assert i.compareTo(Uint4_MAX) < 0;
         return newLiteral(
                 OpType.Uint4,
                 i,
                 -1);
     }
 
-    public CalcReg newUint8Literal(int i) //REVIEW shouldnt this be a long
-                                           //type?
-
+    // use a BigInteger because a large unsigned long value won't fit into a
+    // long
+    public CalcReg newUint8Literal(BigInteger i)
     {
-        compilationAssert(i >= 0,
+        compilationAssert(i.compareTo(BigInteger.ZERO) >= 0,
             "Unsigned value was found to be negative. Value=" + i);
+        assert i.compareTo(Uint8_MAX) < 0;
         return newLiteral(
                 OpType.Uint8,
                 i,
@@ -1863,6 +1868,9 @@ public class CalcProgramBuilder
      * Enumeration of the types supported by the calculator. These types map
      * onto the {@link FennelStandardTypeDescriptor} values, and even have the
      * same names and ordinals.
+     *
+     * @see CalcProgramBuilder#Uint4_MAX
+     * @see CalcProgramBuilder#Uint8_MAX
      */
     public static class OpType
         implements EnumeratedValues.Value

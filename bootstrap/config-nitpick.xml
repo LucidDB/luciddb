@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE cruisecontrol [
+
+<!ENTITY open_p4port     "perforce.eigenbase.org:1666">
+<!ENTITY open_p4client   "cruise.nitpick">
+<!ENTITY open_p4user     "guest">
+<!ENTITY open_root       "//open/dt/dev">
+<!ENTITY open_propfile   "nitpick.perforce.properties">
+<!ENTITY open_default.build.home     "/home/cruise/work">
+<!ENTITY open_integration.build.home "/home/cruise/work/build">
+
+<!ENTITY aspen_p4port    "jhyde.dyndns.org:1666">
+<!ENTITY aspen_p4client  "cruise.nitpick">
+<!ENTITY aspen_p4user    "guest">
+
+<!ENTITY buildresultsbase "http://nitpick.kalucki.com:8083/cruisecontrol/buildresults">
+<!ENTITY mailhost         "mail.speakeasy.net">
+<!ENTITY reportsuccess    "always">
+<!ENTITY returnname       "Build Monkey-Part Deux-Folie de Deux-Pas de Deux-Les Deux Magots">
+<!ENTITY returnaddress    "buildmonkeypartdeux@disruptivetech.com">
+<!ENTITY skipusers        "true">
+<!ENTITY spamwhilebroken  "true">
+<!ENTITY subjectprefix    "Continuous Integration: ">
+<!ENTITY failureaddress   "the.team@disruptivetech.com">
+<!ENTITY emailmapper      "/home/cruise/work/bootstrap/p4email.txt">
+
+<!ENTITY reportwhenfixed  "true">
+
+<!ENTITY scp_user         "cruise">
+<!ENTITY scp_host         "nitpick">
+<!ENTITY scp_filesep      "/">
+<!ENTITY scp_options      "-P 9023">
+<!ENTITY rsync_cmd        "rsync -az -e &quot;ssh -p 9023&quot; --delete-after">
+<!ENTITY rsync_dest       "cruise@nitpick:web/artifacts">
+
+<!ENTITY build_interval         "3600">
+<!ENTITY build_interval_aspen   "300">
+
+<!ENTITY ant              "./doant.sh">
+
+<!ENTITY configSuffix     "">
+
+<!ENTITY saffronProject SYSTEM "config-saffron.xml">
+<!ENTITY fennelProject SYSTEM "config-fennel.xml">
+<!ENTITY farragoProject SYSTEM "config-farrago.xml">
+<!ENTITY aspenProject SYSTEM "config-aspen.xml">
+
+]>
+
+<cruisecontrol>
+	&saffronProject;
+	<!-- &fennelProject; -->
+	<!-- &farragoProject; -->
+	&aspenProject;
+</cruisecontrol>
