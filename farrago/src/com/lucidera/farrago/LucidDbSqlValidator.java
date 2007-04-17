@@ -97,6 +97,7 @@ public class LucidDbSqlValidator extends FarragoSqlValidator
             SqlValidatorUtil.getRelOptTable(
                 targetNs,
                 getPreparingStmt().getRelOptSchema(),
+                null,
                 null);
         BitSet uniqueCols =
             FarragoCatalogUtil.getUniqueKeyCols(
