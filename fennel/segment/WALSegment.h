@@ -27,8 +27,6 @@
 #include "fennel/segment/DelegatingSegment.h"
 #include "fennel/synch/SynchObj.h"
 
-#include <set>
-
 FENNEL_BEGIN_NAMESPACE
 
 /**
@@ -41,9 +39,6 @@ FENNEL_BEGIN_NAMESPACE
 class WALSegment : public DelegatingSegment
 {
     friend class SegmentFactory;
-    
-    typedef std::set<PageId> PageSet;
-    typedef PageSet::const_iterator PageSetConstIter;
     
     mutable StrictMutex mutex;
     PageSet dirtyPageSet;

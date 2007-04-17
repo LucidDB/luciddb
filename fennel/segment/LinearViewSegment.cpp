@@ -118,23 +118,14 @@ Segment::AllocationOrder LinearViewSegment::getAllocationOrder() const
     return LINEAR_ALLOCATION;
 }
 
-PageId LinearViewSegment::updatePage(PageId pageId)
+PageId LinearViewSegment::updatePage(PageId pageId, bool needsTranslation)
 {
     assert(isPageIdAllocated(pageId));
     BlockNum blockNum = getLinearBlockNum(pageId);
     PageId underlyingPageId = pageTable[blockNum];
-    return DelegatingSegment::updatePage(underlyingPageId);
+    return DelegatingSegment::updatePage(underlyingPageId, needsTranslation);
 }
 
-MappedPageListener *LinearViewSegment::getMappedPageListener(
-    PageId pageId)
-{
-    assert(isPageIdAllocated(pageId));
-    BlockNum blockNum = getLinearBlockNum(pageId);
-    PageId underlyingPageId = pageTable[blockNum];
-    return DelegatingSegment::getMappedPageListener(underlyingPageId);
-}
-
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/segment/LinearViewSegment.cpp#6 $");
 
 // End LinearViewSegment.cpp

@@ -435,7 +435,7 @@ public class StandardConvertletTable
             RexNode factor = rexBuilder.makeExactLiteral(BigDecimal.valueOf(val));
             RexNode div =
                 rexBuilder.makeCall(
-                    SqlStdOperatorTable.divideOperator,
+                    SqlStdOperatorTable.divideIntegerOperator,
                     kase,
                     factor);
             RexNode mult =
@@ -507,7 +507,7 @@ public class StandardConvertletTable
         }
 
         res = rexBuilder.makeCall(
-            SqlStdOperatorTable.divideOperator,
+            SqlStdOperatorTable.divideIntegerOperator,
             res,
             factor);
         return res;

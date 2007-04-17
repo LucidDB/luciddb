@@ -53,6 +53,7 @@ FennelResource::FennelResource(Locale locale)
       _scalarQueryReturnedMultipleRows(this, "scalarQueryReturnedMultipleRows"),
       _scratchMemExhausted(this, "scratchMemExhausted"),
       _uniqueConstraintViolated(this, "uniqueConstraintViolated"),
+      _incompatibleDataFormat(this, "incompatibleDataFormat"),
       _readDataFailed(this, "readDataFailed"),
       _dataTransferFailed(this, "dataTransferFailed"),
       _writeLogFailed(this, "writeLogFailed"),
@@ -105,6 +106,10 @@ string FennelResource::scratchMemExhausted() const
 string FennelResource::uniqueConstraintViolated() const
 {
     return _uniqueConstraintViolated.format();
+}
+string FennelResource::incompatibleDataFormat() const
+{
+    return _incompatibleDataFormat.format();
 }
 string FennelResource::readDataFailed(const std::string &p0) const
 {

@@ -29,7 +29,6 @@
 #include "fennel/cache/FuzzyCheckpointSet.h"
 #include "fennel/common/PseudoUuid.h"
 
-#include <hash_map>
 #include <boost/crc.hpp>
 
 FENNEL_BEGIN_NAMESPACE
@@ -60,9 +59,6 @@ class VersionedSegment : public DelegatingSegment
     // TODO:  use a 64-bit crc instead
     boost::crc_32_type crcComputer;
     
-    typedef std::hash_map<PageId,PageId> PageMap;
-    typedef PageMap::const_iterator PageMapConstIter;
-
     PageMap dataToLogMap;
 
     explicit VersionedSegment(
@@ -79,12 +75,17 @@ public:
     /**
      * Recovers to a specific version from the log.
      *
+     * @param pDelegatingSegment segment from which pages to recover originate
+     *
      * @param firstLogPageId starting PageId in log segment
      *
      * @param versionNumber version number to recover to, or MAXU
      * to use current version number
      */
-    void recover(PageId firstLogPageId, SegVersionNum versionNumber = MAXU);
+    void recover(
+        SharedSegment pDelegatingSegment,
+        PageId firstLogPageId,
+        SegVersionNum versionNumber = MAXU);
 
     /**
      * Prepares for "online" recovery, meaning a revert back to the last

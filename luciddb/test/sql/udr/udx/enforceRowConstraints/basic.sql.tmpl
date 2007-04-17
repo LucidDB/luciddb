@@ -1,0 +1,204 @@
+
+create schema rcbasic;
+set schema 'rcbasic';
+
+-- rows with no exception
+alter session set "logDir" = '@LOGDIR@';
+alter session set "etlProcessId" ='Basic';
+alter session set "etlActionId" = 'NoException';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+      cast(null as varchar(128)) as constraint_test
+    from ffserver.bcp.EMP),
+  row(constraint_test),
+  'TestMsgs',
+  'RC1'))
+order by empno;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."Basic_NoException_RC1"
+order by empno;
+
+-- rows with warnings
+alter session set "etlActionId" = 'Warnings';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *, 
+    case when commission is null then 'LowCommWarn'
+      when commission <= 5 then 'LowCommWarn'
+      else cast(null as varchar(128)) end as commcheck 
+    from ffserver.bcp.EMP),
+  row(commcheck),
+  'TestMsgs',
+  'RC2'))
+order by empno;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."Basic_Warnings_RC2"
+order by EMPNO;
+
+-- rows rejected
+alter session set "errorMax" = 10;
+alter session set "etlActionId" = 'Rejects';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when LOCID = 'HQ' then 'RejHQErr'
+      else cast(null as varchar(128)) end as loccheck
+    from ffserver.bcp.EMP),
+  row(loccheck),
+  'TestMsgs',
+  'RC3'))
+order by empno;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."Basic_Rejects_RC3"
+order by EMPNO;
+
+-- rejects escalated to fatal
+alter session set "errorMax" = 2;
+alter session set "etlActionId" = 'EscalatedRejects';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when LOCID = 'HQ' then 'RejHQErr'
+      else cast(null as varchar(128)) end as loccheck
+    from ffserver.bcp.EMP),
+  row(loccheck),
+  'TestMsgs',
+  'RC4'))
+order by empno;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."Basic_EscalatedRejects_RC4"
+order by EMPNO;
+
+-- fatal rows
+alter session set "errorMax" = 10;
+alter session set "etlActionId" = 'Fatals';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when HOBBY is null then 'NoHobbyErr'
+      else cast(null as varchar(128)) end as hobbycheck
+    from ffserver.bcp.EMP),
+  row(hobbycheck),
+  'TestMsgs',
+  'RC5'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."Basic_Fatals_RC5"
+order by EMPNO;
+
+-- basic mixed 
+alter session set "errorMax" = 4;
+alter session set "etlActionId" = 'MixedErrors1';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when commission is null then 'LowCommWarn'
+      when commission <= 5 then 'LowCommWarn'
+      else cast(null as varchar(128)) end as commcheck,
+    case when LOCID = 'HQ' then 'RejHQErr'
+      else cast(null as varchar(128)) end as loccheck
+    from ffserver.bcp.EMP),
+  row(commcheck, loccheck),
+  'TestMsgs',
+  'RC6'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."Basic_MixedErrors1_RC6"
+order by EMPNO, LE_ERROR_CODE;
+
+-- mixed rejects
+alter session set "errorMax" = 7;
+alter session set "etlActionId" = 'MixedErrors2';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when commission is null then 'LowCommWarn'
+      when commission <= 5 then 'LowCommWarn'
+      else cast(null as varchar(128)) end as commcheck,
+    case when LOCID = 'HQ' then 'RejHQErr'
+      else cast(null as varchar(128)) end as loccheck,
+    case when SEX = 'F' then 'RejFemErr'
+      else cast(null as varchar(128)) end as sexcheck
+    from ffserver.bcp.EMP),
+  row(commcheck, loccheck, sexcheck),
+  'TestMsgs',
+  'RC7'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."Basic_MixedErrors2_RC7"
+order by EMPNO, LE_ERROR_CODE;
+
+-- mixed with escalation
+alter session set "errorMax" = 5;
+alter session set "etlActionId" = 'MixedErrors3';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when commission is null then 'LowCommWarn'
+      when commission <= 5 then 'LowCommWarn'
+      else cast(null as varchar(128)) end as commcheck,
+    case when LOCID = 'HQ' then 'RejHQErr'
+      else cast(null as varchar(128)) end as loccheck,
+    case when SEX = 'F' then 'RejFemErr'
+      else cast(null as varchar(128)) end as sexcheck
+    from ffserver.bcp.EMP),
+  row(commcheck, loccheck, sexcheck),
+  'TestMsgs',
+  'RC8'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."Basic_MixedErrors3_RC8"
+order by EMPNO, LE_ERROR_CODE;
+
+-- mixed with fatal
+alter session set "errorMax" = 7;
+alter session set "etlActionId" = 'MixedErrors4';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when commission is null then 'LowCommWarn'
+      when commission <= 5 then 'LowCommWarn'
+      else cast(null as varchar(128)) end as commcheck,
+    case when LOCID = 'HQ' then 'RejHQErr'
+      else cast(null as varchar(128)) end as loccheck,
+    case when HOBBY is null then 'NoHobbyErr'
+      else cast(null as varchar(128)) end as hobbycheck,
+    case when SEX = 'F' then 'RejFemErr'
+      else cast(null as varchar(128)) end as sexcheck
+    from ffserver.bcp.EMP),
+  row(commcheck, loccheck, hobbycheck, sexcheck),
+  'TestMsgs',
+  'RC9'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."Basic_MixedErrors4_RC9"
+order by EMPNO, LE_ERROR_CODE;
+
+-- mixed, same column
+alter session set "etlActionId" = 'MixedErrors5';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when LOCID = 'HQ' then 'RejHQErr'
+      when SEX = 'F' then 'RejFemErr'
+      else cast(null as varchar(128)) end as dualcheck
+    from ffserver.bcp.EMP),
+  row(dualcheck),
+  'TestMsgs',
+  'RC10'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."Basic_MixedErrors5_RC10"
+order by EMPNO, LE_ERROR_CODE;
+

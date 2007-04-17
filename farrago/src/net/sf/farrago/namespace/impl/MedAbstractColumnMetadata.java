@@ -257,7 +257,7 @@ public abstract class MedAbstractColumnMetadata
             // determine which predicates are sargable and which aren't
             List<SargBinding> sargBindingList =
                 rexAnalyzer.analyzeAll(predicate);
-            nonSargFilters = rexAnalyzer.getPostFilterRexNode();
+            nonSargFilters = rexAnalyzer.getNonSargFilterRexNode();
 
             if (!sargBindingList.isEmpty()) {
                 col2SeqMap = new HashMap<CwmColumn, SargIntervalSequence>();

@@ -246,7 +246,7 @@ DdlStmt DdlStmtEof() :
         (
             <TRUNCATE>
             {
-                reposTxnContext.beginLockedTxn(false);
+                reposTxnContext.beginLockedTxn(true);
             }
             (
                 <TABLE> modelElement = TableIdentifier()
@@ -278,29 +278,40 @@ DdlStmt DdlStmtEof() :
         )
         |
         <ALTER>
-        {
-            reposTxnContext.beginLockedTxn(false);
-        }
         (
             <SYSTEM>
+            {
+                reposTxnContext.beginLockedTxn(false);
+            }
             (
                 <SET> ddlStmt = SystemParamAssignment()
                 |
                 <ADD> ddlStmt = CatalogExtension()
                 |
                 <REPLACE> ddlStmt = CatalogReplace()
+                |
+                <DEALLOCATE> ddlStmt = DeallocateOld()
             )
             |
             <SESSION>
+            {
+                reposTxnContext.beginLockedTxn(false);
+            }
             (
                 <IMPLEMENTATION> ddlStmt = SessionImplementation()
                 |
                 <SET> ddlStmt = SessionParamAssignment()
             )
             |
-            <TABLE> ddlStmt = AlterTableStmt()
+            <TABLE>
+            {
+                ddlStmt = AlterTableStmt();
+            }
             |
-            ddlStmt = ExtensionModelAlter()
+            {
+                reposTxnContext.beginLockedTxn(false);
+                ddlStmt = ExtensionModelAlter();
+            }
         )
         |
         <GRANT>
@@ -1467,6 +1478,16 @@ DdlStmt CatalogReplace() :
     }
 }
 
+DdlStmt DeallocateOld() :
+{
+}
+{
+    <OLD>
+    {
+        return new DdlDeallocateOldStmt();
+    }
+}
+
 DdlStmt SessionImplementation() :
 {
     SqlIdentifier jarName = null;
@@ -1491,17 +1512,21 @@ DdlStmt AlterTableStmt() :
 {
     DdlStmt ddlStmt;
     CwmTable table;
+    FarragoReposTxnContext reposTxnContext = 
+        farragoParser.getStmtValidator().getReposTxnContext();
 }
 {
     table = TableIdentifier()
     (
         <ALTER> <COLUMN> ddlStmt = AlterColumnStmt(table)
         {
+            reposTxnContext.beginLockedTxn(false);
             return ddlStmt;
         }
         |
         <REBUILD>
         {
+            reposTxnContext.beginLockedTxn(true);
             return new DdlRebuildTableStmt(table);
         }
     )
@@ -2077,10 +2102,21 @@ void RoutineCharacteristics(FemRoutine routine) :
         {
             routine.setDeterministic(true);
         }
-        | <NOT> <DETERMINISTIC>
+        | <DYNAMIC_FUNCTION>
         {
-            routine.setDeterministic(false);
-        }
+            routine.setDynamicFunction(true);
+        }        
+        | <NOT>
+        (
+            <DETERMINISTIC>
+            {
+                routine.setDeterministic(false);
+            }
+            | <DYNAMIC_FUNCTION>
+            {
+                routine.setDynamicFunction(false);
+            }
+        )
         | <NO> <SQL>
         {
             routine.setDataAccess(RoutineDataAccessEnum.RDA_NO_SQL);

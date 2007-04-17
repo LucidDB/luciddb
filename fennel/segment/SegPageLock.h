@@ -56,17 +56,26 @@ class SegPageLock : public boost::noncopyable
     SegmentAccessor segmentAccessor;
     CachePage *pPage;
     LockMode lockMode;
+    PageId lockedPageId;
+    bool newPage;
+
+    inline void resetPage()
+    {
+        pPage = NULL;
+        lockedPageId = NULL_PAGE_ID;
+        newPage = false;
+    }
 
 public:
     explicit SegPageLock()
     {
-        pPage = NULL;
+        resetPage();
     }
 
     explicit SegPageLock(
         SegmentAccessor const &segmentAccessor)
     {
-        pPage = NULL;
+        resetPage();
         accessSegment(segmentAccessor);
     }
     
@@ -110,6 +119,7 @@ public:
             return pageId;
         }
         lockPage(pageId,LOCKMODE_X,false);
+        newPage = true;
         return pageId;
     }
     
@@ -118,7 +128,7 @@ public:
         assert(isLocked());
         BlockId blockId = pPage->getBlockId();
         unlock();
-        segmentAccessor.pCacheAccessor->discardPage(blockId);
+        segmentAccessor.pSegment->discardCachePage(blockId);
         PageId pageId = segmentAccessor.pSegment->translateBlockId(blockId);
         segmentAccessor.pSegment->deallocatePageRange(pageId,pageId);
     }
@@ -127,7 +137,7 @@ public:
     {
         assert(pageId != NULL_PAGE_ID);
         BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
-        segmentAccessor.pCacheAccessor->discardPage(blockId);
+        segmentAccessor.pSegment->discardCachePage(blockId);
         segmentAccessor.pSegment->deallocatePageRange(pageId,pageId);
     }
         
@@ -137,19 +147,24 @@ public:
             segmentAccessor.pCacheAccessor->unlockPage(
                 *pPage,
                 lockMode);
-            pPage = NULL;
+            resetPage();
         }
     }
 
     inline void dontUnlock()
     {
-        pPage = NULL;
+        resetPage();
     }
     
     inline void lockPage(
         PageId pageId,LockMode lockModeInit,
         bool readIfUnmapped = true)
     {
+        // if the page we want to lock is already locked, nothing needs to
+        // be done
+        if (isLocked() && pageId == lockedPageId) {
+            return;
+        }
         unlock();
         lockMode = lockModeInit;
         BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
@@ -157,7 +172,8 @@ public:
             blockId,
             lockModeInit,
             readIfUnmapped,
-            segmentAccessor.pSegment.get());
+            segmentAccessor.pSegment->getMappedPageListener(blockId));
+        lockedPageId = pageId;
     }
 
     inline void lockPageWithCoupling(
@@ -169,11 +185,12 @@ public:
             blockId,
             lockModeInit,
             true,
-            segmentAccessor.pSegment.get());
+            segmentAccessor.pSegment->getMappedPageListener(blockId));
         assert(pNewPage);
         unlock();
         lockMode = lockModeInit;
         pPage = pNewPage;
+        lockedPageId = pageId;
     }
     
     inline void lockShared(PageId pageId)
@@ -198,10 +215,54 @@ public:
         lockMode = LOCKMODE_X;
     }
 
+    inline void updatePage()
+    {
+        // if the page is new, we already have the page we want to update
+        if (newPage) {
+            return;
+        }
+        // if the page cannot be updated in place, lock the page that will
+        // be updated
+        PageId origPageId =
+            segmentAccessor.pSegment->translateBlockId(getPage().getBlockId());
+        PageId updatePageId = segmentAccessor.pSegment->updatePage(origPageId);
+        if (updatePageId != NULL_PAGE_ID) {
+            lockUpdatePage(updatePageId);
+        }
+    }
+
+    inline void lockUpdatePage(PageId updatePageId)
+    {
+        BlockId blockId =
+            segmentAccessor.pSegment->translatePageId(updatePageId);
+        assert(lockMode == LOCKMODE_X);
+        CachePage *pNewPage = segmentAccessor.pCacheAccessor->lockPage(
+            blockId,
+            lockMode,
+            true,
+            segmentAccessor.pSegment->getMappedPageListener(blockId));
+        assert(pNewPage);
+        // copy the original page while we have both the original and new
+        // pages locked
+        memcpy(
+            pNewPage->getWritableData(),
+            pPage->getReadableData(),
+            segmentAccessor.pSegment->getUsablePageSize());
+        PageId origPageId = lockedPageId;
+        unlock();
+        pPage = pNewPage;
+        newPage = true;
+        // keep track of the locked page based on the original pageId
+        // requested
+        lockedPageId = origPageId;
+    }
+    
     inline PageId getPageId()
     {
-        return segmentAccessor.pSegment->translateBlockId(
-            getPage().getBlockId());
+        // note that lockedPageId may not be the same as 
+        // segmentAccessor.pSegment->translateBlockId(getPage().getBlockId())
+        // if the page is versioned
+        return lockedPageId;
     }
 
     inline void flushPage(bool async)
@@ -219,6 +280,10 @@ public:
         assert(lockMode == LOCKMODE_X);
         assert(other.lockMode == LOCKMODE_X);
         assert(pPage != other.pPage);
+
+        // since we're copying new data into other, treat it as an update
+        other.updatePage();
+
         // both pages will end up with this page's footer, on the assumption
         // that other was a scratch page
         // TODO:  correctly swap footers as well?
@@ -316,6 +381,7 @@ public:
     
     inline Node &getNodeForWrite()
     { 
+        updatePage();
         return *reinterpret_cast<Node *>(getPage().getWritableData());
     }
 

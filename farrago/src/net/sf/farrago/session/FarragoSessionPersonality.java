@@ -35,7 +35,9 @@ import org.eigenbase.sql.type.*;
 import org.eigenbase.resource.EigenbaseResource;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.namespace.util.*;
 
 
 /**
@@ -349,6 +351,21 @@ public interface FarragoSessionPersonality
      * @param table column set corresponding to table
      */
     public void resetRowCounts(FemAbstractColumnSet table);
+    
+    /**
+     * Gives the personality the opportunity to update an index root page
+     * when the index is rebuilt
+     * 
+     * @param index index whose root is being updated
+     * @param wrapperCache cache for looking up data wrappers
+     * @param baseIndexMap map for managing index storage
+     * @param newRoot index's new root page
+     */
+    public void updateIndexRoot(
+        FemLocalIndex index,
+        FarragoDataWrapperCache wrapperCache,
+        FarragoSessionIndexMap baseIndexMap,
+        Long newRoot);
 }
 
 // End FarragoSessionPersonality.java

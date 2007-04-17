@@ -1,0 +1,7 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT n1, ABS(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
+Error: could not calculate results for the following row:
+[ -2147483648 ]
+Messages:
+[0]:PC=2 Code=22003 (state=,code=0)

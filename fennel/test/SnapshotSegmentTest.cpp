@@ -53,6 +53,7 @@ public:
         FENNEL_UNIT_TEST_CASE(SnapshotSegmentTest, testSnapshotReads);
         FENNEL_UNIT_TEST_CASE(SnapshotSegmentTest, testRollback);
         FENNEL_UNIT_TEST_CASE(SnapshotSegmentTest, testUncommittedReads);
+        FENNEL_UNIT_TEST_CASE(SnapshotSegmentTest, testDeallocateOld);
     }
   
     virtual void testCaseSetUp()
@@ -92,6 +93,7 @@ public:
                 pVersionedRandomSegment,
                 pVersionedRandomSegment,
                 currCsn);
+        setForceCacheUnmap(pSnapshotRandomSegment);
 
         // Set pRandomSegment so we can use PagingTestBase::testMultipleThreads
         // to exercise concurrent allocations/deallocations
@@ -103,6 +105,18 @@ public:
                 pSnapshotRandomSegment,
                 firstPageId);
         pLinearSegment = pLinearViewSegment;
+    }
+
+    void setForceCacheUnmap(SharedSegment pSegment)
+    {
+        // Force the snapshot segment to always execute its checkpoints during
+        // a cache flush and unmap, in order to unmap these page from the cache
+        if (pSegment) {
+            SnapshotRandomAllocationSegment *pSnapshotSegment =
+                SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
+                    pSegment);
+            pSnapshotSegment->setForceCacheUnmap();
+        }
     }
 
     virtual void closeStorage()
@@ -262,6 +276,7 @@ public:
                 pVersionedRandomSegment,
                 pVersionedRandomSegment,
                 TxnId(6));
+        setForceCacheUnmap(pSnapshotRandomSegment2);
         SharedSegment pLinearViewSegment =
             pSegmentFactory->newLinearViewSegment(
                 pSnapshotRandomSegment2,
@@ -282,6 +297,112 @@ public:
         openStorage(DeviceMode::load);
         testSequentialRead();
         closeStorage();
+    }
+
+    void testDeallocateOld()
+    {
+        // Create and initialize a VersionedRandomAllocationSegment using
+        // a snapshot with TxnId(0)
+        currCsn = TxnId(0);
+        openStorage(DeviceMode::createNew);
+        testAllocateAll();
+        closeStorage();
+
+        // Create a snapshot at TxnId(3) where every 3 pages are updated
+        updatedCsns.push_back(TxnId(3));
+        currCsn = TxnId(3);
+        openStorage(DeviceMode::load);
+        testSkipWrite(3);
+        closeStorage();
+
+        // Create a snapshot at TxnId(5) where every 5 pages are updated
+        updatedCsns.push_back(TxnId(5));
+        currCsn = TxnId(5);
+        openStorage(DeviceMode::load);
+        testSkipWrite(5);
+        closeStorage();
+
+        // Create a snapshot at TxnId(7) where every 7 pages are updated
+        updatedCsns.push_back(TxnId(7));
+        currCsn = TxnId(7);
+        openStorage(DeviceMode::load);
+        testSkipWrite(7);
+        closeStorage();
+
+        uint totalPages = 
+            nDiskPages +
+            nDiskPages/3 + ((nDiskPages % 3) ? 1 : 0) +
+            nDiskPages/5 + ((nDiskPages % 5) ? 1 : 0) +
+            nDiskPages/7 + ((nDiskPages % 7) ? 1 : 0);
+
+        // Deallocate pages -- set the oldestActiveTxnId at TxnId(3).  No
+        // pages should be deallocated.
+        deallocateOldPages(TxnId(3), totalPages, totalPages, 3, 8);
+
+        // Deallocate pages -- set the oldestActiveTxnId at TxnId(4).  No
+        // pages should be deallocated.
+        deallocateOldPages(TxnId(4), totalPages, totalPages, 4, 8);
+
+        // Deallocate pages -- set the oldestActiveTxnId at TxnId(6).  Only
+        // pages with both TxnId(3) and TxnId(5) in their page chain should
+        // be deallocated, with only the TxnId(3) pages being deallocated.
+        uint nPages =
+            totalPages - (nDiskPages/(3*5) + ((nDiskPages % (3*5)) ? 1 : 0));
+        deallocateOldPages(TxnId(6), totalPages, nPages, 6, 8);
+
+        // Deallocate pages -- set the oldestActiveTxnId at TxnId(8).  Pages
+        // with only 2 old pages in the chain can be deallocated, with only
+        // the older of the two being deallocated.
+        totalPages = nPages;
+        nPages =
+            totalPages -
+                (nDiskPages/(5*7) + ((nDiskPages % (5*7)) ? 1 : 0)) -
+                (nDiskPages/(3*7) + ((nDiskPages % (3*7)) ? 1 : 0)) +
+                (nDiskPages/(3*5*7) + ((nDiskPages % (3*5*7)) ? 1 : 0));
+        deallocateOldPages(TxnId(8), totalPages, nPages, 8, 8);
+    }
+
+    void deallocateOldPages(
+        TxnId oldestActiveTxnId,
+        uint numPagesBefore,
+        uint numPagesAfter,
+        uint readStart,
+        uint readEnd)
+    {
+        currCsn = TxnId(10);
+        openStorage(DeviceMode::load);
+        VersionedRandomAllocationSegment *pVRSegment =
+            SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
+                pVersionedRandomSegment);
+        uint nPages = pVRSegment->getAllocatedSizeInPages();
+        assert(nPages == numPagesBefore);
+        uint iSegAlloc = 0;
+        ExtentNum extentNum = 0;
+        uint numPages = 100;
+        PageSet oldPageSet;
+        bool morePages = true;
+        do {
+            morePages =
+                pVRSegment->getOldPageIds(
+                    iSegAlloc,
+                    extentNum,
+                    oldestActiveTxnId,
+                    numPages,
+                    oldPageSet);
+            pVRSegment->deallocateOldPages(oldPageSet, oldestActiveTxnId);
+            oldPageSet.clear();
+        } while (morePages);
+        nPages = pVRSegment->getAllocatedSizeInPages();
+        assert(nPages == numPagesAfter);
+        closeStorage();
+
+        // Read all pages for the specified TxnId range
+        for (uint i = readStart; i <= readEnd; i++) {
+            currCsn = TxnId(i);
+            openStorage(DeviceMode::load);
+            testSequentialRead();
+            closeStorage();
+        }
     }
 };
 

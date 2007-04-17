@@ -34,9 +34,9 @@ import org.eigenbase.reltype.*;
 
 /**
  * LcsIndexSearchRel is a relation for reading from an unclustered index. It has
- * two major modes. In the "full scan" mode, it has no input and it scans an
- * entire. In the "key search" mode, it has one input and only searches for keys
- * produced by its child.
+ * two major modes. In the "full scan" mode, it has no input and it scans the
+ * entire index. In the "key search" mode, it has one input and only searches for
+ * keys produced by its child.
  *
  * <p>Key search relations, have two formats for input. A single key set may be
  * specified, in which case, exact matches for keys are returned. The double key
@@ -110,6 +110,10 @@ class LcsIndexSearchRel
      * be added to the output
      * @param inputDirectiveProj for a double key search, the projection of
      * input fields describing search endpoints, such as OPEN or CLOSED
+     * @param startRidParamId parameter ID for searching using start Rid as
+     * part of the key
+     * @param rowLimitParamId parameter ID to limit the number of rows fetched
+     * in one execute
      */
     public LcsIndexSearchRel(
         RelOptCluster cluster,
@@ -158,6 +162,38 @@ class LcsIndexSearchRel
 
     // implement Cloneable
     public LcsIndexSearchRel clone()
+    {
+        LcsIndexSearchRel clone =
+            new LcsIndexSearchRel(
+                getCluster(),
+                getChild(),
+                lcsTable,
+                index,
+                fullScan,
+                projectedColumns,
+                isUniqueKey,
+                isOuter,
+                inputKeyProj,
+                inputJoinProj,
+                inputDirectiveProj,
+                startRidParamId,
+                rowLimitParamId);
+        clone.inheritTraitsFrom(this);
+        return clone;
+    }
+
+    /**
+     * Create a new index search rel based on the existing one but with new
+     * dynamic parameters.
+     * @param startRidParamId parameter ID for searching using start Rid as
+     * part of the key
+     * @param rowLimitParamId parameter ID to limit the number of rows fetched
+     * in one execute
+     * @return the newly created index search rel.
+     */
+    public LcsIndexSearchRel cloneWithNewParams(
+        FennelRelParamId startRidParamId,
+        FennelRelParamId rowLimitParamId)
     {
         LcsIndexSearchRel clone =
             new LcsIndexSearchRel(

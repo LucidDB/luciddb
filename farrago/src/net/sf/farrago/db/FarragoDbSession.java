@@ -240,7 +240,7 @@ public class FarragoDbSession
                     SessionClientProcessIdNotNumeric.ex(processStr));
             }
         }
-
+        String remoteProtocol = info.getProperty("remoteProtocol", "none");
         FemUser femUser = null;
 
         if (MDR_USER_NAME.equals(sessionVariables.sessionUserName)) {
@@ -260,7 +260,8 @@ public class FarragoDbSession
             if (femUser == null) {
                 throw FarragoResource.instance().SessionLoginFailed.ex(
                     repos.getLocalizedObjectName(sessionUser));
-            }  else if (database.isAuthenticationEnabled()){
+            }  else if (database.isAuthenticationEnabled() 
+                    && !remoteProtocol.equals("none")) {
                 // authenticate; use same SessionLoginFailed if fails
                 LoginContext lc;
                 CallbackHandler cbh = new FarragoNoninteractiveCallbackHandler(
@@ -1047,6 +1048,9 @@ public class FarragoDbSession
         stmtValidator.getTimingTracer().traceTime("end DDL validation");
 
         if (!isExecDirect) {
+            if (ddlStmt.requiresCommit()) {
+                commitImpl();
+            }
             return null;
         }
 
@@ -1072,7 +1076,19 @@ public class FarragoDbSession
         if (ddlStmt.runsAsDml()) {
             accessTargetTable(stmtContext, ddlStmt);
         }
-        ddlValidator.validate(ddlStmt);
+        if (ddlStmt.requiresCommit()) {
+            // start a Fennel txn to cover any effects on storage
+            fennelTxnContext.initiateTxn();
+        }
+        boolean rollbackFennel = true;
+        try {           
+            ddlValidator.validate(ddlStmt);
+            rollbackFennel = false;
+        } finally {
+            if (rollbackFennel) {
+                rollbackImpl();
+            }
+        }
     }
 
     /**
@@ -1140,11 +1156,7 @@ public class FarragoDbSession
         FarragoSessionDdlStmt ddlStmt)
     {
         tracer.fine("updating storage");
-        if (ddlStmt.requiresCommit()) {
-            // start a Fennel txn to cover any effects on storage
-            fennelTxnContext.initiateTxn();
-        }
-
+        
         boolean rollbackFennel = true;
         try {
             ddlValidator.executeStorage();
@@ -1285,6 +1297,12 @@ public class FarragoDbSession
         {
             shutDownRequested = true;
             catalogDumpRequested = true;
+        }
+
+        // implement DdlVisitor
+        public void visit(DdlDeallocateOldStmt stmt)
+        {
+            database.deallocateOld();
         }
     }
 

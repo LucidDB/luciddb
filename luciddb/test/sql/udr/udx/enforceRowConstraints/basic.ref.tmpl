@@ -1,0 +1,403 @@
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema rcbasic;
+0: jdbc:luciddb:> set schema 'rcbasic';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- rows with no exception
+0: jdbc:luciddb:> alter session set "logDir" = '@LOGDIR@';
+0: jdbc:luciddb:> alter session set "etlProcessId" ='Basic';
+0: jdbc:luciddb:> alter session set "etlActionId" = 'NoException';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >       cast(null as varchar(128)) as constraint_test
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(constraint_test),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'RC1'))
+. . . . . . . . > order by empno;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+------------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      | CONSTRAINT_TEST  |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+------------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |                  |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |                  |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |                  |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |                  |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          |                  |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |                  |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         |                  |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |                  |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |                |                  |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                |                  |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |                |                  |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."Basic_NoException_RC1"
+. . . . . . . . > order by empno;
+Error: From line 2, column 6 to line 2, column 42: Table 'LOGSERVER.BCP.Basic_NoException_RC1' not found (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- rows with warnings
+0: jdbc:luciddb:> alter session set "etlActionId" = 'Warnings';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *, 
+. . . . . . . . >     case when commission is null then 'LowCommWarn'
+. . . . . . . . >       when commission <= 5 then 'LowCommWarn'
+. . . . . . . . >       else cast(null as varchar(128)) end as commcheck 
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(commcheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'RC2'))
+. . . . . . . . > order by empno;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+--------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |  COMMCHECK   |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+--------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          | LowCommWarn  |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         | LowCommWarn  |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          | LowCommWarn  |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          | LowCommWarn  |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          | LowCommWarn  |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       | LowCommWarn  |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         |              |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |              |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |                | LowCommWarn  |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                | LowCommWarn  |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |                | LowCommWarn  |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."Basic_Warnings_RC2"
+. . . . . . . . > order by EMPNO;
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |                           LE_EXCEPTION                           | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 100    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 101    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 102    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 103    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 104    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 105    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 108    |
+| Warning   | LowCommWarn    | Warning: commission earned (5) is below the acceptable limit     | COMMCHECK         | 109    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 110    |
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- rows rejected
+0: jdbc:luciddb:> alter session set "errorMax" = 10;
+0: jdbc:luciddb:> alter session set "etlActionId" = 'Rejects';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when LOCID = 'HQ' then 'RejHQErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as loccheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(loccheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'RC3'))
+. . . . . . . . > order by empno;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+---------+-----------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |  HOBBY  | LOCCHECK  |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+---------+-----------+
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing  |           |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby   |           |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano   |           |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate  |           |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |         |           |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |         |           |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |         |           |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+---------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."Basic_Rejects_RC3"
+. . . . . . . . > order by EMPNO;
++-----------+----------------+-------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |         LE_EXCEPTION          | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+-------------------------------+-------------------+--------+
+| Error     | RejHQErr       | Location Id is head quarters  | LOCCHECK          | 100    |
+| Error     | RejHQErr       | Location Id is head quarters  | LOCCHECK          | 104    |
+| Error     | RejHQErr       | Location Id is head quarters  | LOCCHECK          | 105    |
+| Error     | RejHQErr       | Location Id is head quarters  | LOCCHECK          | 107    |
++-----------+----------------+-------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- rejects escalated to fatal
+0: jdbc:luciddb:> alter session set "errorMax" = 2;
+0: jdbc:luciddb:> alter session set "etlActionId" = 'EscalatedRejects';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when LOCID = 'HQ' then 'RejHQErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as loccheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(loccheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'RC4'))
+. . . . . . . . > order by empno;
+Error: Exceeded limit of 2 errors. Last error was:
+Could not calculate result column LOCCHECK for the following row:
+[105,Rich,Guy,M,30,102,HQ,50000,,Gambling]
+Messages: Location Id is head quarters (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."Basic_EscalatedRejects_RC4"
+. . . . . . . . > order by EMPNO;
++-----------+----------------+-------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |         LE_EXCEPTION          | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+-------------------------------+-------------------+--------+
+| Error     | RejHQErr       | Location Id is head quarters  | LOCCHECK          | 100    |
+| Error     | RejHQErr       | Location Id is head quarters  | LOCCHECK          | 104    |
+| Error     | RejHQErr       | Location Id is head quarters  | LOCCHECK          | 105    |
++-----------+----------------+-------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- fatal rows
+0: jdbc:luciddb:> alter session set "errorMax" = 10;
+0: jdbc:luciddb:> alter session set "etlActionId" = 'Fatals';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when HOBBY is null then 'NoHobbyErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as hobbycheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(hobbycheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'RC5'))
+. . . . . . . . > order by EMPNO;
+Error: Row constraint UDX failed with FATAL error code: NoHobbyErr
+Message: Employee Mary Reynolds must have a hobby! (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."Basic_Fatals_RC5"
+. . . . . . . . > order by EMPNO;
++-----------+----------------+--------------------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |                LE_EXCEPTION                | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+--------------------------------------------+-------------------+--------+
+| Error     | NoHobbyErr     | Employee Mary Reynolds must have a hobby!  | HOBBYCHECK        | 108    |
++-----------+----------------+--------------------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- basic mixed 
+0: jdbc:luciddb:> alter session set "errorMax" = 4;
+0: jdbc:luciddb:> alter session set "etlActionId" = 'MixedErrors1';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when commission is null then 'LowCommWarn'
+. . . . . . . . >       when commission <= 5 then 'LowCommWarn'
+. . . . . . . . >       else cast(null as varchar(128)) end as commcheck,
+. . . . . . . . >     case when LOCID = 'HQ' then 'RejHQErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as loccheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(commcheck, loccheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'RC6'))
+. . . . . . . . > order by EMPNO;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+---------+--------------+-----------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |  HOBBY  |  COMMCHECK   | LOCCHECK  |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+---------+--------------+-----------+
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing  | LowCommWarn  |           |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby   | LowCommWarn  |           |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano   | LowCommWarn  |           |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate  |              |           |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |         | LowCommWarn  |           |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |         | LowCommWarn  |           |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |         | LowCommWarn  |           |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+---------+--------------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."Basic_MixedErrors1_RC6"
+. . . . . . . . > order by EMPNO, LE_ERROR_CODE;
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |                           LE_EXCEPTION                           | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 100    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 100    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 101    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 102    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 103    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 104    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 104    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 105    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 105    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 107    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 108    |
+| Warning   | LowCommWarn    | Warning: commission earned (5) is below the acceptable limit     | COMMCHECK         | 109    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 110    |
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- mixed rejects
+0: jdbc:luciddb:> alter session set "errorMax" = 7;
+0: jdbc:luciddb:> alter session set "etlActionId" = 'MixedErrors2';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when commission is null then 'LowCommWarn'
+. . . . . . . . >       when commission <= 5 then 'LowCommWarn'
+. . . . . . . . >       else cast(null as varchar(128)) end as commcheck,
+. . . . . . . . >     case when LOCID = 'HQ' then 'RejHQErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as loccheck,
+. . . . . . . . >     case when SEX = 'F' then 'RejFemErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as sexcheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(commcheck, loccheck, sexcheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'RC7'))
+. . . . . . . . > order by EMPNO;
++--------+--------+---------+------+---------+----------+--------+--------+-------------+---------+--------------+-----------+-----------+
+| EMPNO  | FNAME  |  LNAME  | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |  HOBBY  |  COMMCHECK   | LOCCHECK  | SEXCHECK  |
++--------+--------+---------+------+---------+----------+--------+--------+-------------+---------+--------------+-----------+-----------+
+| 101    | Bob    | Brown   | M    | 50      | 100      | SJ     | 50000  |             | Skiing  | LowCommWarn  |           |           |
+| 103    | Frank  | Webber  | M    | 20      | 102      | MP     | 50000  |             | Piano   | LowCommWarn  |           |           |
+| 106    | Rob    | Roy     | M    | 40      | 102      | SF     | 50000  | 7           | Karate  |              |           |           |
+| 109    | Jack   | Nife    | M    | 40      | 100      | SF     | 50000  | 5           |         | LowCommWarn  |           |           |
++--------+--------+---------+------+---------+----------+--------+--------+-------------+---------+--------------+-----------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."Basic_MixedErrors2_RC7"
+. . . . . . . . > order by EMPNO, LE_ERROR_CODE;
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |                           LE_EXCEPTION                           | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 100    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 100    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 101    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 102    |
+| Error     | RejFemErr      | Employee number 102 is female. Name: Julie Andrews               | SEXCHECK          | 102    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 103    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 104    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 104    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 105    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 105    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 107    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 108    |
+| Error     | RejFemErr      | Employee number 108 is female. Name: Mary Reynolds               | SEXCHECK          | 108    |
+| Warning   | LowCommWarn    | Warning: commission earned (5) is below the acceptable limit     | COMMCHECK         | 109    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 110    |
+| Error     | RejFemErr      | Employee number 110 is female. Name: Jill Jones                  | SEXCHECK          | 110    |
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- mixed with escalation
+0: jdbc:luciddb:> alter session set "errorMax" = 5;
+0: jdbc:luciddb:> alter session set "etlActionId" = 'MixedErrors3';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when commission is null then 'LowCommWarn'
+. . . . . . . . >       when commission <= 5 then 'LowCommWarn'
+. . . . . . . . >       else cast(null as varchar(128)) end as commcheck,
+. . . . . . . . >     case when LOCID = 'HQ' then 'RejHQErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as loccheck,
+. . . . . . . . >     case when SEX = 'F' then 'RejFemErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as sexcheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(commcheck, loccheck, sexcheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'RC8'))
+. . . . . . . . > order by EMPNO;
+Error: Exceeded limit of 5 errors. Last error was:
+Could not calculate result column SEXCHECK for the following row:
+[108,Mary,Reynolds,F,50,104,SF,50000,,]
+Messages: Employee number 108 is female. Name: Mary Reynolds (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."Basic_MixedErrors3_RC8"
+. . . . . . . . > order by EMPNO, LE_ERROR_CODE;
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |                           LE_EXCEPTION                           | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 100    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 100    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 101    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 102    |
+| Error     | RejFemErr      | Employee number 102 is female. Name: Julie Andrews               | SEXCHECK          | 102    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 103    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 104    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 104    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 105    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 105    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 107    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 108    |
+| Error     | RejFemErr      | Employee number 108 is female. Name: Mary Reynolds               | SEXCHECK          | 108    |
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- mixed with fatal
+0: jdbc:luciddb:> alter session set "errorMax" = 7;
+0: jdbc:luciddb:> alter session set "etlActionId" = 'MixedErrors4';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when commission is null then 'LowCommWarn'
+. . . . . . . . >       when commission <= 5 then 'LowCommWarn'
+. . . . . . . . >       else cast(null as varchar(128)) end as commcheck,
+. . . . . . . . >     case when LOCID = 'HQ' then 'RejHQErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as loccheck,
+. . . . . . . . >     case when HOBBY is null then 'NoHobbyErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as hobbycheck,
+. . . . . . . . >     case when SEX = 'F' then 'RejFemErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as sexcheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(commcheck, loccheck, hobbycheck, sexcheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'RC9'))
+. . . . . . . . > order by EMPNO;
+Error: Row constraint UDX failed with FATAL error code: NoHobbyErr
+Message: Employee Mary Reynolds must have a hobby! (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."Basic_MixedErrors4_RC9"
+. . . . . . . . > order by EMPNO, LE_ERROR_CODE;
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |                           LE_EXCEPTION                           | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 100    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 100    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 101    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 102    |
+| Error     | RejFemErr      | Employee number 102 is female. Name: Julie Andrews               | SEXCHECK          | 102    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 103    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 104    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 104    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 105    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 105    |
+| Error     | RejHQErr       | Location Id is head quarters                                     | LOCCHECK          | 107    |
+| Warning   | LowCommWarn    | Warning: commission earned (null) is below the acceptable limit  | COMMCHECK         | 108    |
+| Error     | NoHobbyErr     | Employee Mary Reynolds must have a hobby!                        | HOBBYCHECK        | 108    |
+| Error     | RejFemErr      | Employee number 108 is female. Name: Mary Reynolds               | SEXCHECK          | 108    |
++-----------+----------------+------------------------------------------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- mixed, same column
+0: jdbc:luciddb:> alter session set "etlActionId" = 'MixedErrors5';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when LOCID = 'HQ' then 'RejHQErr'
+. . . . . . . . >       when SEX = 'F' then 'RejFemErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as dualcheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(dualcheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'RC10'))
+. . . . . . . . > order by EMPNO;
++--------+--------+---------+------+---------+----------+--------+--------+-------------+---------+------------+
+| EMPNO  | FNAME  |  LNAME  | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |  HOBBY  | DUALCHECK  |
++--------+--------+---------+------+---------+----------+--------+--------+-------------+---------+------------+
+| 101    | Bob    | Brown   | M    | 50      | 100      | SJ     | 50000  |             | Skiing  |            |
+| 103    | Frank  | Webber  | M    | 20      | 102      | MP     | 50000  |             | Piano   |            |
+| 106    | Rob    | Roy     | M    | 40      | 102      | SF     | 50000  | 7           | Karate  |            |
+| 109    | Jack   | Nife    | M    | 40      | 100      | SF     | 50000  | 5           |         |            |
++--------+--------+---------+------+---------+----------+--------+--------+-------------+---------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."Basic_MixedErrors5_RC10"
+. . . . . . . . > order by EMPNO, LE_ERROR_CODE;
++-----------+----------------+-----------------------------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |                    LE_EXCEPTION                     | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+-----------------------------------------------------+-------------------+--------+
+| Error     | RejHQErr       | Location Id is head quarters                        | DUALCHECK         | 100    |
+| Error     | RejFemErr      | Employee number 102 is female. Name: Julie Andrews  | DUALCHECK         | 102    |
+| Error     | RejHQErr       | Location Id is head quarters                        | DUALCHECK         | 104    |
+| Error     | RejHQErr       | Location Id is head quarters                        | DUALCHECK         | 105    |
+| Error     | RejHQErr       | Location Id is head quarters                        | DUALCHECK         | 107    |
+| Error     | RejFemErr      | Employee number 108 is female. Name: Mary Reynolds  | DUALCHECK         | 108    |
+| Error     | RejFemErr      | Employee number 110 is female. Name: Jill Jones     | DUALCHECK         | 110    |
++-----------+----------------+-----------------------------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

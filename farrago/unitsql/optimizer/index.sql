@@ -474,6 +474,9 @@ select * from lbmemps order by empno;
 
 select * from lbmemps order by empno;
 
+-- fake row count so that index access is considered
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'LBMEMPS', 100);
+
 -- the most simple case
 explain plan for
 select * from lbmemps where deptno = 20 order by empno;
@@ -625,6 +628,9 @@ insert into multikey values (1, 4);
 insert into multikey values (2, 2);
 create index imultikey on multikey(a, b);
 
+-- fake row count so that index access is considered
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'MULTIKEY', 100);
+
 !set outputformat csv
 explain plan for select * from multikey where a = 1 and b > 1;
 explain plan for select * from multikey where a = 1 and b <= 3;
@@ -643,6 +649,9 @@ create table person(
     age int)
 server sys_column_store_data_server
 create index age_idx on person(age);
+
+-- fake row count so that index access is considered
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'PERSON', 100);
 
 -- index search
 explain plan for
@@ -782,14 +791,28 @@ create view v as select * from t where a = 1 and b = 2;
 select * from v v1, v v2; 
 drop table t cascade;
 
---------------------------------------
--- Test for cost based index access --
---------------------------------------
+----------------------------------------
+-- Test for cost based index access   --
+-- 1.1 Single table index access path --
+--     with stats                     --
+----------------------------------------
 !set outputformat csv
 
 -- analyze table
 create table test(a int, b int, c int, d int);
 
+insert into test values(10,20,30,40);
+insert into test values(11,21,31,41);
+insert into test values(12,22,32,42);
+insert into test values(13,23,33,43);
+insert into test values(14,24,34,44);
+insert into test values(15,25,35,45);
+insert into test values(10,20,30,40);
+insert into test values(11,21,31,41);
+insert into test values(12,22,32,42);
+insert into test values(13,23,33,43);
+insert into test values(14,24,34,44);
+insert into test values(15,25,35,45);
 insert into test values(10,20,30,40);
 insert into test values(11,21,31,41);
 insert into test values(12,22,32,42);
@@ -840,8 +863,67 @@ order by a;
 
 drop table test cascade;
 
--- index costing in semijoin decision
--- artificial stats
+----------------------------------------
+-- Test for cost based index access   --
+-- 1.2 Single table index access path --
+--     with fake stats                --
+----------------------------------------
+create table t(a varchar(20), b char(20), c varchar(20), d varchar(20));
+
+create index t_abcd on t(a,b,c,d);
+create index t_a on t(a);
+create index t_b on t(b);
+
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'T', 100000);
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'T', 'A', 2, 100, 2, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'T', 'B', 3, 100, 3, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'T', 'C', 200, 100, 200, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'LBM', 'T', 'D', 300, 100, 300, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+-- deletion index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$DELETION_INDEX$T', 2);
+
+-- clustered index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$A', 2);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$B', 3);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$C', 200);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$D', 300);
+
+-- unclustered index
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'T_ABCD', 1000);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'T_A', 2);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'T_B', 2);
+
+
+explain plan for
+select * from t
+where a= 'a' and b= 'b';
+
+-- change stats and try again
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'T', 100000);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$C', 20);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$D', 30);
+call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'T_ABCD', 20);
+
+explain plan for
+select * from t
+where a= 'a' and b= 'b';
+
+drop table t cascade;
+
+----------------------------------------
+-- Test for cost based index access   --
+-- 2. Semijoin index access path      --
+--     with fake stats                --
+----------------------------------------
 create table t(b char(20), d varchar(20) not null);
 
 create index it_b on t(b);

@@ -54,13 +54,13 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '19
 0: jdbc:luciddb:> select fm, applib.day_number_overall(datecol) + applib.day_number_overall(tscol) / fm
 . . . . . . . . > from data_source
 . . . . . . . . > order by 1;
-+-----+---------+
-| FM  | EXPR$1  |
-+-----+---------+
-| 1   | -30464  |
-| 2   | 18919   |
-| 10  | 15594   |
-+-----+---------+
++-----+----------------+
+| FM  |     EXPR$1     |
++-----+----------------+
+| 1   | -30464.000000  |
+| 2   | 18919.000000   |
+| 10  | 15594.800000   |
++-----+----------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup 
 0: jdbc:luciddb:> drop view days;

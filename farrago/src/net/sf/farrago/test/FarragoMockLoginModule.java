@@ -23,18 +23,11 @@
 
 package net.sf.farrago.test;
 
-import java.util.Map;
-
-import javax.security.auth.Subject;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.login.LoginException;
-import javax.security.auth.spi.LoginModule;
+import java.util.*;
+import javax.security.auth.*;
 import javax.security.auth.callback.*;
-
-import net.sf.farrago.db.FarragoNoninteractiveCallbackHandler;
-
-import java.util.Vector;
-import java.util.Iterator;
+import javax.security.auth.login.*;
+import javax.security.auth.spi.*;
 
 /**
  * Mock login module for testing farrago authentication.
@@ -44,26 +37,13 @@ import java.util.Iterator;
 
 public class FarragoMockLoginModule implements LoginModule
 {
-    // REVIEW jvs 19-Mar-2007: alignment spacing below will get
-    // removed automatically by Jalopy
-    
     CallbackHandler callbackHandler;
-    Subject  subject;
-    Map      sharedState;
-    Map      options;
+    Subject subject;
+    Map sharedState;
+    Map options;
     
-    // REVIEW jvs 19-Mar-2007: use ArrayList instead of Vector unless you
-    // actually need fine-grained synchronization.  Which raises the question,
-    // what are the thread-safety constraints for this class?
-
-    // Also, the preferred pattern is to declare the variable using
-    // an interface type, e.g. List, and then only reference the specific
-    // implementation (ArrayList, Vector, ...) at the point of
-    // instantiation.  The only exception should be where you need
-    // to refer to subclass-specific methods for some reason.
-    
-    Vector<FarragoMockCredential> tempCredentials;
-    Vector<FarragoMockPrincipal> tempPrincipals;
+    List<FarragoMockCredential> tempCredentials;
+    List<FarragoMockPrincipal> tempPrincipals;
     
     // authentication status
     boolean success;
@@ -71,14 +51,12 @@ public class FarragoMockLoginModule implements LoginModule
     // config options
     boolean debug;
 
-    // REVIEW jvs 19-Mar-2007:  for all methods (including constructors)
-    // Jalopy will move  opening left-curly onto new line
-    
-    public FarragoMockLoginModule() {
+    public FarragoMockLoginModule()
+    {
         success = false;
         debug = false;
-        tempCredentials = new Vector<FarragoMockCredential>();
-        tempPrincipals = new Vector<FarragoMockPrincipal>();
+        tempCredentials = new ArrayList<FarragoMockCredential>();
+        tempPrincipals = new ArrayList<FarragoMockPrincipal>();
     }
     
     /**
@@ -90,13 +68,6 @@ public class FarragoMockLoginModule implements LoginModule
         success = false;
         tempPrincipals.clear();
         tempCredentials.clear();
-        
-        // REVIEW jvs 19-Mar-2007: is there a way to avoid this?  The
-        // login module should be decoupled from the callback handler.
-        
-        if (callbackHandler instanceof FarragoNoninteractiveCallbackHandler) {
-            ((FarragoNoninteractiveCallbackHandler)callbackHandler).clearPassword();
-        }
         return true;
     }
     
@@ -114,12 +85,9 @@ public class FarragoMockLoginModule implements LoginModule
                 tempPrincipals.clear();
                 tempCredentials.clear();
             } catch (Exception ex) {
-                // REVIEW jvs 19-Mar-2007: Farrago code should not
-                // write directly to System.out/err.  To avoid losing
-                // the stack, would it work to do
-                // loginException.initCause(ex) before throwing it?
-                ex.printStackTrace(System.out);
-                throw new LoginException(ex.getMessage());
+                LoginException le = new LoginException(ex.getMessage());
+                le.initCause(ex);
+                throw le;
             }
         } else {
             tempPrincipals.clear();
@@ -141,17 +109,14 @@ public class FarragoMockLoginModule implements LoginModule
     {
         // save the initial state
         this.callbackHandler = callbackHandler;
-        this.subject     = subject;
+        this.subject = subject;
         this.sharedState = sharedState;
-        this.options     = options;
-        
-        // REVIEW jvs 19-Mar-2007: Jalopy will insert curly braces
-        // automatically for blocks such as the assignment to debug
-        // below.
+        this.options = options;
         
         // initialize any configured options
-        if (options.containsKey("debug"))
+        if (options.containsKey("debug")) {
             debug = "true".equalsIgnoreCase((String)options.get("debug"));
+        }
     }
     
     /**
@@ -211,9 +176,6 @@ public class FarragoMockLoginModule implements LoginModule
         tempPrincipals.clear();
         tempCredentials.clear();
         
-        if (callbackHandler instanceof FarragoNoninteractiveCallbackHandler)
-            ((FarragoNoninteractiveCallbackHandler)callbackHandler).clearPassword();
-        
         // remove principals
         Iterator it = subject.getPrincipals(FarragoMockPrincipal.class).iterator();
         while (it.hasNext()) {
@@ -230,5 +192,4 @@ public class FarragoMockLoginModule implements LoginModule
         
         return true;
     }
-    
 }

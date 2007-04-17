@@ -453,6 +453,7 @@
 +----------+
 | 1000000  |
 +----------+
-0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- do an analyze table, which implicitly verifies the btree pages
+0: jdbc:luciddb:> analyze table bench1M compute statistics for all columns;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

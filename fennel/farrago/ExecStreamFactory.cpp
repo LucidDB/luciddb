@@ -459,7 +459,11 @@ void ExecStreamFactory::readBTreeParams(
 {
     params.segmentId = SegmentId(streamDef.getSegmentId());
     params.pageOwnerId = PageOwnerId(streamDef.getIndexId());
-    params.pSegment = pDatabase->getSegmentById(params.segmentId);
+    assert(VALID_PAGE_OWNER_ID(params.pageOwnerId));
+    params.pSegment =
+        pDatabase->getSegmentById(
+            params.segmentId,
+            pStreamGraphHandle->pSegment);
     readTupleDescriptor(params.tupleDesc, streamDef.getTupleDesc());
     CmdInterpreter::readTupleProjection(
         params.keyProj,

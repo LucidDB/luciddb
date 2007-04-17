@@ -370,10 +370,8 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[3]], outputRowType=[RecordType(INTEGER C0, INTEGER C9, BIGINT EXPR$2) NOT NULL])'
-'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 9, LCS_RID, LCS_RID]], clustered indexes=[[I_C0, I_C6_C7_C8_C9]])'
-'      LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
-'        LcsIndexSearchRel(table=[[LOCALDB, RID, TENCOLS]], index=[ITENCOLS], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'          FennelValuesRel(tuples=[[{ '(', 9, '+', null }]])'
+'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 9, LCS_RID, LCS_RID]], clustered indexes=[[I_C0, I_C6_C7_C8_C9]], residual columns=[[9]])'
+'      FennelValuesRel(tuples=[[{ '(', 9, '+', null }]])'
 > explain plan for select c0, c6, lcs_rid(c7) from tencols
 >     where c6 = 26 and lcs_rid(c8) = 2;
 'column0'

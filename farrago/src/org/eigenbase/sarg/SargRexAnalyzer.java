@@ -62,7 +62,7 @@ public class SargRexAnalyzer
 
     private List<RexNode> rexCFList;
 
-    private List<RexNode> rexPostFilterList;
+    private List<RexNode> nonSargFilterList;
 
     private List<SargBinding> sargBindingList;
 
@@ -236,7 +236,7 @@ public class SargRexAnalyzer
                     // recomposed.  Toss it.  (We could do a better job by at
                     // least using part of it, but the effort might be better
                     // spent on implementing deferred expression evaluation.)
-                    rexPostFilterList.add(currAndNode);
+                    nonSargFilterList.add(currAndNode);
                     sargBindingList.remove(i);
                     continue;
                 }
@@ -264,7 +264,7 @@ public class SargRexAnalyzer
         rexCFList = new ArrayList<RexNode>();
         sargBindingList = new ArrayList<SargBinding>();
         sarg2RexMap = new HashMap<SargExpr, RexNode>();
-        rexPostFilterList = new ArrayList<RexNode>();
+        nonSargFilterList = new ArrayList<RexNode>();
 
         SargBinding sargBinding;
 
@@ -283,7 +283,7 @@ public class SargRexAnalyzer
                 if (simpleMode) {
                     RexInputRef inputRef = sargBinding.getInputRef();
                     if (boundRefList.contains(inputRef)) {
-                        rexPostFilterList.add(rexPred);
+                        nonSargFilterList.add(rexPred);
                     } else {
                         boundRefList.add(inputRef);
                     }
@@ -291,7 +291,7 @@ public class SargRexAnalyzer
                         sargBinding.getExpr().evaluate();
                     if (sargSeq.isRange()) {
                         if (rangeFound) {
-                            rexPostFilterList.add(rexPred);
+                            nonSargFilterList.add(rexPred);
                         } else {
                             rangeFound = true;
                         }
@@ -302,7 +302,7 @@ public class SargRexAnalyzer
                     sargBinding.getExpr(),
                     rexPred);
             } else {
-                rexPostFilterList.add(rexPred);
+                nonSargFilterList.add(rexPred);
             }
         }
 
@@ -356,44 +356,53 @@ public class SargRexAnalyzer
      *
      * @return the rex predicate reconstructed from the non-sargable predicates.
      */
-    public RexNode getPostFilterRexNode()
+    public RexNode getNonSargFilterRexNode()
     {
-        if (rexPostFilterList.isEmpty()) {
+        if (nonSargFilterList.isEmpty()) {
             return null;
         }
 
-        RexNode newAndNode = rexPostFilterList.get(0);
+        RexNode newAndNode = nonSargFilterList.get(0);
 
-        for (int i = 1; i < rexPostFilterList.size(); i++) {
+        for (int i = 1; i < nonSargFilterList.size(); i++) {
             newAndNode =
                 factory.getRexBuilder().makeCall(
                     SqlStdOperatorTable.andOperator,
                     newAndNode,
-                    rexPostFilterList.get(i));
+                    nonSargFilterList.get(i));
         }
 
         return newAndNode;
+    }
+    
+    /**
+     * @deprecated
+     * @see {@link #getNonSargFilterRexNode()}
+     */
+    public RexNode getPostFilterRexNode()
+    {
+        return getNonSargFilterRexNode();
     }
 
     /**
      * Reconstructs a rex predicate from a list of SargBindings which are AND'ed
      * together.
      *
-     * @param residualSargList list of SargBindings to be converted.
+     * @param sargBindingList list of SargBindings to be converted.
      *
      * @return the rex predicate reconstructed from the list of SargBindings.
      */
-    public RexNode getResidualSargRexNode(List<SargBinding> residualSargList)
+    public RexNode getSargBindingListToRexNode(List<SargBinding> sargBindingList)
     {
-        if (residualSargList.isEmpty()) {
+        if (sargBindingList.isEmpty()) {
             return null;
         }
 
-        RexNode newAndNode = sarg2RexMap.get(residualSargList.get(0).getExpr());
+        RexNode newAndNode = sarg2RexMap.get(sargBindingList.get(0).getExpr());
 
-        for (int i = 1; i < residualSargList.size(); i++) {
+        for (int i = 1; i < sargBindingList.size(); i++) {
             RexNode nextNode =
-                sarg2RexMap.get(residualSargList.get(i).getExpr());
+                sarg2RexMap.get(sargBindingList.get(i).getExpr());
             newAndNode =
                 factory.getRexBuilder().makeCall(
                     SqlStdOperatorTable.andOperator,
@@ -401,6 +410,15 @@ public class SargRexAnalyzer
                     nextNode);
         }
         return newAndNode;
+    }
+    
+    /**
+     * @deprecated
+     * @see {@link #getSargBindingListToRexNode(List)}
+     */
+    public RexNode getResidualSargRexNode(List<SargBinding> residualSargList)
+    {
+        return getSargBindingListToRexNode(residualSargList);
     }
 
     /**

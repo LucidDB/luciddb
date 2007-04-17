@@ -44,34 +44,6 @@ public class LucidDbPreparingStmt extends FarragoPreparingStmt
         super(stmtValidator, sql);
     }
 
-    // override FarragoPreparingStmt
-    public boolean mayCacheImplementation()
-    {
-        // Do not cache statements which reference application variables,
-        // since their values may change at any time (LER-2133).
-        // REVIEW jvs 30-Sept-2006:  What about re-execution of a
-        // PreparedStatement?  Also, should allow this as part of
-        // DDL (similar to [NOT] DETERMINISTIC).
-
-        for (CwmModelElement element : allDependencies) {
-            if (!(element instanceof FemRoutine)) {
-                continue;
-            }
-            if (!element.getName().equals("GET_VAR")) {
-                continue;
-            }
-            if (element.getNamespace() == null) {
-                continue;
-            }
-            if (!element.getNamespace().getName().equals("APPLIB")) {
-                continue;
-            }
-            return false;
-        }
-        
-        return super.mayCacheImplementation();
-    }
-    
     // implement FarragoSessionPreparingStmt
     public SqlValidator getSqlValidator()
     {

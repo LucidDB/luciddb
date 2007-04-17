@@ -56,11 +56,11 @@ Error: From line 1, column 15 to line 1, column 38: No match found for function 
 | is who? VoterVoter  |
 +---------------------+
 0: jdbc:luciddb:> values(cast (applib.repeater('25', 2) as integer) / 25 - 1);
-+---------+
-| EXPR$0  |
-+---------+
-| 100     |
-+---------+
++-------------+
+|   EXPR$0    |
++-------------+
+| 100.000000  |
++-------------+
 0: jdbc:luciddb:> values(cast (applib.repeater('11', 3) as integer) + 10000000000);
 +--------------+
 |    EXPR$0    |

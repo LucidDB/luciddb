@@ -179,6 +179,16 @@ class MedMockLocalDataServer
                 rel.getRowType(),
                 rel);
     }
+    
+    //  implement FarragoMedLocalDataServer
+    public void versionIndexRoot(
+        Long oldRoot,
+        Long newRoot,
+        FennelTxnContext txnContext)
+        throws SQLException
+    {
+        return;
+    }
 }
 
 // End MedMockLocalDataServer.java

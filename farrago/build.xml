@@ -1077,6 +1077,8 @@ please disable it and try again.
 
   <!-- Generate FarragoMetadataFactory -->
   <target name="generateMetadataFactory">
+    <antcall target="extractFemTimestamp"/>
+    <property file="${farrago.xmi.dir}/femTimestamp.txt"/>
     <!-- FactoryGen.class needed for code generation -->
     <farrago.javaCompile
       srcdir="${farrago.src.dir}"
@@ -1096,9 +1098,14 @@ please disable it and try again.
       <arg value="FarragoMetadataFactoryImpl"/>
       <arg value="net.sf.farrago.FarragoPackage"/>
       <arg value="FarragoCatalog"/>
+      <arg value="${fem.timestamp}"/>
     </farrago.javaExec>
   </target>
 
+  <target name="extractFemTimestamp">
+    <farrago.extractModelTimestamp umlFile="${FarragoExtMetamodel.uml}"
+      outFile="${farrago.xmi.dir}/femTimestamp.txt"/>
+  </target>
 
   <!-- Debugging target for listing repository extents -->
   <target name="printRepositoryExtents" depends="farrago.mdr_taskdef">

@@ -37,15 +37,12 @@
 
 -----------------------------------------------------------
 
--- This analyze statement currently fails even though analyze is being run on
--- a table that's not being inserted into.  In the future, this analyze should
--- succeed.
 @thread analyze1
   set schema 'concurrency';
 
   @sync
   @sleep 1000
-  @err analyze table t2 compute statistics for all columns;
+  analyze table t2 compute statistics for all columns;
   @sync
 
 @end

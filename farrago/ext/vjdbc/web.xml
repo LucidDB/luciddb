@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+  <display-name>VJdbcServlet</display-name>
+  <description>Servlet for using VJdbc over HTTP</description>
+  
+  <servlet>
+    <servlet-name>VJdbcServlet</servlet-name>
+    <servlet-class>de.simplicit.vjdbc.server.servlet.ServletCommandSink</servlet-class>
+    <init-param>
+      <param-name>config-resource</param-name>
+      <param-value>/WEB-INF/vjdbc-config.xml</param-value>
+    </init-param>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>VJdbcServlet</servlet-name>
+    <url-pattern>/vjdbc</url-pattern>
+  </servlet-mapping>
+</web-app>

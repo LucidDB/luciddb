@@ -1,0 +1,35 @@
+create schema rc;
+set schema 'rc';
+
+-- create basic foreign server
+create server ffserver
+foreign data wrapper "FLAT FILE"
+options(
+  directory '@DIR@',
+  file_extension '.csv',
+  with_header 'yes',
+  num_rows_scan '10'
+);
+
+-- create server for logs
+create server logserver
+foreign data wrapper "FLAT FILE"
+options(
+  directory '@LOGDIR@',
+  file_extension '.log',
+  with_header 'yes'
+);
+
+-- create test enforce row constraints
+create or replace function enforce_row_constraints(
+  c cursor,
+  r select from c,
+  msgJarName varchar(128),
+  tag varchar(128))
+returns table(c.*)
+language java
+parameter style system defined java
+no sql
+specific enforce_row_constraints_test
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.EnforceRowConstraintsUdx.execute';
+

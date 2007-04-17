@@ -495,7 +495,7 @@ public class LoptMetadataProvider
         // otherwise, pass artificialOnly=false, which includes everything
         selectivity *=
             RelMdUtil.guessSelectivity(
-                rexAnalyzer.getPostFilterRexNode(),
+                rexAnalyzer.getNonSargFilterRexNode(),
                 excludeCalc);
         
         // selectivity must return at least one row

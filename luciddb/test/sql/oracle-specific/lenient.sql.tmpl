@@ -35,4 +35,43 @@ options
 
 select * from test.casting order by 1,2,3,4,5;
 
+-- test 'lenient' = 'false'
+
+create server ORCL_SERVER_STRICT
+foreign data wrapper ORACLE
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    schema_name '@SCHEMA@',
+    use_schema_name_as_foreign_qualifier 'true',
+    lenient 'false'
+);
+
+create or replace foreign table CASTING (
+  "mydate" date,
+  "timestampcol" timestamp,
+  timestampcol timestamp,
+  "datecol" date,
+  datecol date,
+  "clobcol" varbinary,
+  clobcol varbinary,
+  "yyy" varbinary
+) server ORCL_SERVER_STRICT
+options
+(object '@DATATYPE_TABLE@');
+
+create or replace foreign table CASTING (
+  "mydate" date,
+  "timestampcol" timestamp,
+  "numeric" numeric(10,1),
+  "numeric2" numeric(10,0),
+  "varchar" varchar(10),
+  "clob" varchar(10),
+  "blob" varbinary
+) server ORCL_SERVER_STRICT
+options
+(object '@DATATYPE_TABLE@');
+
 drop schema test cascade;

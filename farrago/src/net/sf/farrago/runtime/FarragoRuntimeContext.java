@@ -960,6 +960,33 @@ public class FarragoRuntimeContext
     }
 
     /**
+     * Handles runtime exception; if errorCode is non-null, exceptions are 
+     * defered until all errors on a row are processed;
+     * not currently implemented
+     */
+    public Object handleRowError(
+        String[] columnNames,
+        Object[] columnValues,
+        RuntimeException ex,
+        int columnIndex,
+        String tag,
+        boolean isWarning,
+        String errorCode,
+        String columnName)
+    {
+        throw Util.needToImplement(this);
+    }
+
+    /**
+     * Handles exception for row errors with defered exceptions; not currently
+     * implemented
+     */
+    public void handleRowErrorCompletion(RuntimeException ex, String tag)
+    {
+        throw Util.needToImplement(this);
+    }
+
+    /**
      * Helper for various handleRowError methods
      */
     private EigenbaseException handleRowErrorHelper(

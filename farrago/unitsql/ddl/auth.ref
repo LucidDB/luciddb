@@ -222,14 +222,18 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 sqlline> !connect jdbc:farrago: BOBO tiger
 Error: Login failed for "BOBO": invalid username/password combination (state=,code=0)
 > 
-> -- should fail:  user with wrong password
+> -- should succeed:  local driver, user with wrong password
 > !closeall
 sqlline> !connect jdbc:farrago: "MockLoginModuleTestUser" blah
+> 
+> -- should fail:  spoof remote driver, user with wrong password
+> !closeall
+sqlline> !connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" blah
 Error: Login failed for "MockLoginModuleTestUser": invalid username/password combination (state=,code=0)
 > 
-> -- should succeed:  user with correct password
+> -- should succeed:  spoof remote driver, user with correct password
 > !closeall
-sqlline> !connect jdbc:farrago: "MockLoginModuleTestUser" secret
+sqlline> !connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" secret
 > 
 > 
 > -------------------------------------------------------------------------

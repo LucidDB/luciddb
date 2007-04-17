@@ -45,13 +45,13 @@ Error: From line 1, column 15 to line 1, column 41: No match found for function 
 0: jdbc:luciddb:> select fm, applib.fiscal_year(datecol, fm) * fm + applib.fiscal_year(tscol, fm)/fm
 . . . . . . . . > from data_source
 . . . . . . . . > order by 1;
-+-----+---------+
-| FM  | EXPR$1  |
-+-----+---------+
-| 1   | 3855    |
-| 2   | 5013    |
-| 10  | 20146   |
-+-----+---------+
++-----+---------------+
+| FM  |    EXPR$1     |
++-----+---------------+
+| 1   | 3855.000000   |
+| 2   | 5013.000000   |
+| 10  | 20146.500000  |
++-----+---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view fyy;

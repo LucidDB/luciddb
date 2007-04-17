@@ -59,7 +59,7 @@ public class LcsIndexGuide
 
     //~ Static fields/initializers ---------------------------------------------
 
-    protected static final int LbmBitmapSegMaxSize = 512;
+    public static final int LbmBitmapSegMaxSize = 512;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -792,8 +792,8 @@ public class LcsIndexGuide
             computeProjectedColumns(projectedColumns);
         scanStream.setOutputProj(
             FennelRelUtil.createTupleProjection(repos, clusterProjection));
-        scanStream.setFullScan(rel.isFullScan());
-        scanStream.setHasExtraFilter(rel.hasExtraFilter());       
+        scanStream.setFullScan(rel.isFullScan);
+        scanStream.setHasExtraFilter(rel.hasResidualFilter);       
         Integer [] clusterResidualColumns =
             computeProjectedColumns(residualColumns);
         

@@ -34,7 +34,9 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.config.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
@@ -78,9 +80,19 @@ public class LucidDbSessionPersonality
         "lastUpsertRowsInserted";
     public static final String LAST_UPSERT_ROWS_INSERTED_DEFAULT = null;
     
+    //~ Instance fields --------------------------------------------------------
+    
+    /**
+     * If true, this session's default personality is LucidDb, as opposed to one
+     * that was switched from some other personality to LucidDb
+     */
+    private boolean defaultLucidDb;
+    
     //~ Constructors -----------------------------------------------------------
 
-    protected LucidDbSessionPersonality(FarragoDbSession session)
+    protected LucidDbSessionPersonality(
+        FarragoDbSession session,
+        FarragoSessionPersonality defaultPersonality)
     {
         super(session);
         paramValidator.registerDirectoryParam(LOG_DIR, false);
@@ -91,7 +103,8 @@ public class LucidDbSessionPersonality
         paramValidator.registerIntParam(
             ERROR_LOG_MAX, true, 0, Integer.MAX_VALUE);
         paramValidator.registerLongParam(
-            LAST_UPSERT_ROWS_INSERTED, true, 0, Long.MAX_VALUE); 
+            LAST_UPSERT_ROWS_INSERTED, true, 0, Long.MAX_VALUE);
+        defaultLucidDb = (defaultPersonality == null);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -314,10 +327,6 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(new LoptOptimizeJoinRule()); 
         builder.addMatchOrder(HepMatchOrder.ARBITRARY);
 
-        // Convert filters to bitmap index searches and boolean operators.  We
-        // didn't do this earlier to make join costing easier.
-        builder.addRuleByDescription("LcsIndexAccessRule");
-
         // Push semijoins down to tables.  (The join part is a NOP for now,
         // but once we start taking more kinds of join factors, it won't be.)
         builder.addGroupBegin();
@@ -327,7 +336,13 @@ public class LucidDbSessionPersonality
         builder.addGroupEnd();
 
         // Convert semijoins to physical index access.
+        // Do this immediately after LopOptimizeJoinRule and the PushSemiJoin
+        // rules.
         builder.addRuleClass(LcsIndexSemiJoinRule.class);
+
+        // Convert filters to bitmap index searches and boolean operators.
+        // Do this after LcsIndexSemiJoinRule 
+        builder.addRuleClass(LcsIndexAccessRule.class);
 
         // TODO zfong 10/27/06 - This rule is currently a no-op because we
         // won't generate a semijoin if it can't be converted to physical
@@ -829,6 +844,20 @@ public class LucidDbSessionPersonality
             LucidEraJni.registerStreamFactory(hStreamGraph);
         } else {
             super.registerStreamFactories(hStreamGraph);
+        }
+    }
+
+    //  implement FarragoSessionPersonality
+    public void updateIndexRoot(
+        FemLocalIndex index,
+        FarragoDataWrapperCache wrapperCache,
+        FarragoSessionIndexMap baseIndexMap,
+        Long newRoot)
+    {
+        if (defaultLucidDb) {
+            baseIndexMap.versionIndexRoot(wrapperCache, index, newRoot);
+        } else {
+            super.updateIndexRoot(index, wrapperCache, baseIndexMap, newRoot);
         }
     }
 }

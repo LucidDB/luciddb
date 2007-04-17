@@ -61,7 +61,7 @@ CachePage *SegmentTestBase::lockPage(OpType opType,uint iPage)
         if (opType == OP_WRITE_SEQ || opType == OP_WRITE_RAND ||
             opType == OP_WRITE_SKIP)
         {
-            pLinearSegment->updatePage(pageId);
+            pLinearSegment->updatePage(pageId, true);
         }
         pageLock.lockPage(pageId,getLockMode(opType));
         CachePage *pPage = pageLock.isLocked() ? &(pageLock.getPage()) : NULL;

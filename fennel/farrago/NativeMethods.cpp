@@ -31,6 +31,9 @@
 #include "fennel/farrago/Fem.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/common/ByteInputStream.h"
+#include "fennel/segment/DynamicDelegatingSegment.h"
+#include "fennel/segment/SegmentFactory.h"
+#include "fennel/db/Database.h"
 #include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
@@ -200,6 +203,18 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
         streamGraphHandle.javaRuntimeContext =
             pEnv->NewGlobalRef(hJavaStreamMap);
         streamGraphHandle.pExecStreamGraph->setTxn(txnHandle.pTxn);
+
+        // When snapshots are enabled, switch the delegating segment so
+        // the stream graph accesses the snapshot segment associated with
+        // the current txn
+        SharedDatabase pDb = txnHandle.pDb;
+        if (pDb->areSnapshotsEnabled()) {
+            DynamicDelegatingSegment *pSegment =
+                SegmentFactory::dynamicCast<DynamicDelegatingSegment *>(
+                    streamGraphHandle.pSegment);
+            pSegment->setDelegatingSegment(
+                WeakSegment(txnHandle.pSnapshotSegment));
+        }
         streamGraphHandle.pExecStreamGraph->setErrorTarget(
             CmdInterpreter::newErrorTarget(hJavaErrorTarget));
         txnHandle.pResourceGovernor->requestResources(

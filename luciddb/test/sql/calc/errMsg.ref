@@ -18,7 +18,9 @@ Error: From line 1, column 9 to line 1, column 14: Invalid number of arguments t
 0: jdbc:luciddb:> VALUES (tan(date '1995-11-12'));
 Error: From line 1, column 9 to line 1, column 30: No match found for function signature TAN(<DATE>) (state=,code=0)
 0: jdbc:luciddb:> VALUES (100 / 0);
-Error: java.lang.ArithmeticException: / by zero (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> VALUES (100 / sin(0));
 Error: From line 1, column 15 to line 1, column 20: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> -- VALUES (to_char(power(10,200) * power(10,200)));

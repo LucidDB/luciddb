@@ -23,7 +23,7 @@
 
 package net.sf.farrago.test;
 
-import java.util.Properties;
+import java.util.*;
 
 /**
  * Mock JAAS credential class.
@@ -33,7 +33,7 @@ import java.util.Properties;
 public class FarragoMockCredential
     extends Properties
 {
-    public FarragoMockCredential() {
-        
+    public FarragoMockCredential()
+    {
     }
 }

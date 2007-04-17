@@ -178,6 +178,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${resgen.dir}/lib/eigenbase-xom.jar"/>
     <pathelement path="${mdrlibs.dir}/jmi.jar"/>
     <pathelement path="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
+    <pathelement location="${openjava.dir}/openjava.jar"/>
   </path>
   <property name="applib.build.classpath" refid="applib.build.classpath"/>
 
@@ -463,9 +464,14 @@ ${farrago.test.jvmargs}
   </target>
 
   <!-- Copies the Farrago unconfigured catalog to our catalog directory. -->
+  <!-- Also copies Fennel resources to catalog/fennel. -->
   <target name="copyFarragoCatalog" depends="cleanCatalogData">
     <copy todir="${catalog.dir}" file="${farrago.ReposStorage.propfile}">
       <fileset dir="${farrago.catalog.unconfigured.dir}" />
+    </copy>
+    <mkdir dir="${catalog.dir}/fennel"/>
+    <copy todir="${catalog.dir}/fennel" overwrite="true">
+      <fileset dir="${farrago.catalog.dir}/fennel" includes="*.properties" />
     </copy>
   </target>
 
@@ -524,8 +530,12 @@ ${farrago.test.jvmargs}
 
   <!-- write initial metadata to catalog -->
   <target name="populateCatalog">
-    <farrago.javaExec classpathref="farrago.run.classpath"
-      classname="net.sf.farrago.db.FarragoDatabase"/>
+    <java fork="yes" failonerror="true"
+      classpathref="farrago.run.classpath"
+      classname="net.sf.farrago.db.FarragoDatabase">
+      <jvmarg line="${assertions.jvmarg}"/>
+      <jvmarg line="&FarragoProps;"/>
+    </java>
   </target>
 
   <!-- create various output directories -->
@@ -565,7 +575,7 @@ ${farrago.test.jvmargs}
       filesetmanifest="skip">
       <zipgroupfileset dir="${vjdbc.dir}/lib">
         <include name="vjdbc.jar"/>
-        <include name="commons-logging.jar"/>
+        <include name="commons-logging-1.1.jar"/>
       </zipgroupfileset>
       <fileset dir="${luciddb.dir}/license/client">
         <include name="COPYING"/>
@@ -577,9 +587,15 @@ ${farrago.test.jvmargs}
         <include
           name="com/lucidera/jdbc/LucidDbRmiDriver.class"/>
         <include
+          name="com/lucidera/jdbc/LucidDbHttpDriver.class"/>
+        <include
           name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
         <include
+          name="net/sf/farrago/jdbc/client/FarragoVjdbcHttpClientDriver.class"/>
+        <include
           name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcClientDriver.class"/>
+        <include
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcHttpClientDriver.class"/>
         <include
           name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
         <include
@@ -718,11 +734,13 @@ ${farrago.test.jvmargs}
 
   <!-- REVIEW jvs 4-June-2006:  Should probably blow away plugin/*.jar -->
   <target name="cleanJars">
-    <antcall target="cleanClientJar"/>
-    <antcall target="cleanApplib"/>
-    <antcall target="cleanMBean"/>
-    <antcall target="cleanJdbcPlugins"/>
+    <delete dir="${luciddb.plugin.dir}"/>
   </target>
+
+<!--     <antcall target="cleanClientJar"/> -->
+<!--     <antcall target="cleanApplib"/> -->
+<!--     <antcall target="cleanMBean"/> -->
+<!--     <antcall target="cleanJdbcPlugins"/> -->
 
   <target name="cleanJdbcPlugins">
     <delete file="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar" quiet="true"/>
@@ -969,6 +987,8 @@ ${farrago.test.jvmargs}
       value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}"/>
     <property name="release.lib.dir"
       location="${dist.dir}/${lucidera.release.spec}/lib"/>
+    <property name="lib.farrago.jar" 
+      location="${release.lib.dir}/farrago.jar"/>
     <property name="release.plugin.dir"
       location="${dist.dir}/${lucidera.release.spec}/plugin"/>
     <property name="release.bin.dir"
@@ -982,7 +1002,7 @@ ${farrago.test.jvmargs}
     <if>
       <equals arg1="${osfamily}" arg2="unix"/>
       <then>
-	<exec executable="/bin/tar" spawn="false" dir="${dist.dir}">
+        <exec executable="/bin/tar" spawn="false" dir="${dist.dir}">
           <arg value="--bzip2"/>
           <arg value="-xf"/>
           <arg value="${farrago.dist.file}"/>
@@ -1028,6 +1048,13 @@ ${farrago.test.jvmargs}
     <chmod file="${release.properties.target}" perm="u+w" />
     <touch file="${release.properties.target}"/>
 
+    <war destfile="${dist.dir}/${lucidera.release.spec}/lib/vjdbc_servlet.war"
+      update="true">
+      <webinf dir="${luciddb.dir}/ext/vjdbc">
+        <include name="vjdbc-config.xml"/>
+      </webinf>
+    </war>
+
     <if>
         <equals arg1="${osfamily}" arg2="unix"/>
       <then>
@@ -1071,8 +1098,32 @@ ${farrago.test.jvmargs}
     </replace>
     <chmod file="${release.bin.dir}/${sqllineEngine}" perm="u+x" />
 
+    <if>
+      <not>
+        <istrue value="${release.gpl}"/>
+      </not>
+      <then>
+        <property name="jar.tmp.dir" location="${dist.dir}/farrago.jar.tmp.dir"/>
+
+        <unjar src="${lib.farrago.jar}" dest="${jar.tmp.dir}" />
+
+        <delete file="${lib.farrago.jar}"/>
+        <jar update="true"
+          destfile="${lib.farrago.jar}"
+          basedir="${jar.tmp.dir}"
+          keepcompression="true"
+          excludes="**/disruptivetech/**"/>
+
+        <delete quiet="false" includeEmptyDirs="true">
+          <fileset dir="${dist.dir}" includes="**/*_dt*.so*"/>
+        </delete>
+
+        <delete dir="${jar.tmp.dir}" quiet="true"/>
+      </then>
+    </if>
+
     <jar update="true"
-      destfile="${release.lib.dir}/farrago.jar"
+      destfile="${lib.farrago.jar}"
       basedir="${release.lib.dir}"
       keepcompression="true"
       includes="FarragoRelease.properties"/>
@@ -1081,7 +1132,7 @@ ${farrago.test.jvmargs}
     <if>
       <equals arg1="${osfamily}" arg2="unix"/>
       <then>
-	<exec executable="/bin/tar" spawn="false" dir="${dist.dir}">
+        <exec executable="/bin/tar" spawn="false" dir="${dist.dir}">
           <arg value="--bzip2"/>
           <arg value="-cf"/>
           <arg value="${lu.release.file}"/>

@@ -150,5 +150,16 @@
 +---------+
 | 999     |
 +---------+
+0: jdbc:luciddb:> -- verify table row counts
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >     from sys_boot.mgmt.dba_stored_tables_internal1
+. . . . . . . . >     where table_name = 'SALES'
+. . . . . . . . > order by 1;
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| SALES       | 1000               | 0                  |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

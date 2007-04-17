@@ -1,0 +1,57 @@
+-- setup
+> set schema 's';
+0 rows affected.
+> select count(*) from bench1m;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1000000             |
++---------------------+
+
+-- end of setup
+
+-- thread cleanup
+> set schema 's';
+0 rows affected.
+> select count(*) from bench1m;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1000000             |
++---------------------+
+
+-- end of thread cleanup
+
+-- thread alter
+> set schema 's';
+0 rows affected.
+> alter table bench1m rebuild;
+0 rows affected.
+-- end of thread alter
+
+-- thread insert
+> set schema 's';
+0 rows affected.
+> insert into bench1m("kseq") values(-1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.S.BENCH1M
+-- end of thread insert
+
+-- thread delete
+> set schema 's';
+0 rows affected.
+> delete from bench1m where "kseq" = -1;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.S.BENCH1M
+-- end of thread delete
+
+-- thread select
+> set schema 's';
+0 rows affected.
+> select count(*) from bench1m;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1000000             |
++---------------------+
+
+-- end of thread select
+

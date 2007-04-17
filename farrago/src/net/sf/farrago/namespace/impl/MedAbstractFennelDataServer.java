@@ -204,6 +204,32 @@ public abstract class MedAbstractFennelDataServer
             return 1;
         }
     }
+    
+    //  implement FarragoMedLocalDataServer
+    public void versionIndexRoot(
+        Long oldRoot,
+        Long newRoot,
+        FennelTxnContext txnContext)
+    {
+        FemCmdVersionIndexRoot cmd = repos.newFemCmdVersionIndexRoot();
+        boolean implicitTxn = false;
+        if (!txnContext.isTxnInProgress()) {
+            implicitTxn = true;
+        }
+        try {
+            cmd.setOldRootPageId(oldRoot);
+            cmd.setNewRootPageId(newRoot);
+            cmd.setTxnHandle(txnContext.getTxnHandle());
+            getFennelDbHandle().executeCmd(cmd);
+            if (implicitTxn) {
+                txnContext.commit();
+            }
+        } finally {
+            if (implicitTxn) {
+                txnContext.rollback();
+            }
+        }
+    }
 }
 
 // End MedAbstractFennelDataServer.java

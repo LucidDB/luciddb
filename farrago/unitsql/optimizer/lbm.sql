@@ -328,6 +328,28 @@ insert into multimulti
         where a1 = 11 and b1 = 12;
 select * from multimulti order by a1, b1, c1, a2, b2, c2, a3, b3, c3;
 
+-- Test for residual filter bug
+-- force plan without index access
+-- and use only residual filters
+drop index multimulti_mixed_a;
+drop index multimulti_mixed_b;
+drop index multimulti_mixed_c;
+
+explain plan for
+select count(*) from multimulti where a1 = 11 and b1 = 12;
+
+select count(*) from multimulti where a1 = 11 and b1 = 12;
+
+explain plan for
+select count(*) from multimulti where a1 = 21 and a2 = 24;
+
+select count(*) from multimulti where a1 = 21 and a2 = 24;
+
+explain plan for
+select count(*) from multimulti where a1 = 31 and a3 = 37;
+
+select count(*) from multimulti where a1 = 31 and a3 = 37;
+
 drop table multimulti;
 
 

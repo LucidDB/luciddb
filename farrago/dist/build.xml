@@ -72,6 +72,17 @@
         <include name="COPYING"/>
       </fileset>
     </jar>
+    <war destfile="${dist.dir}/vjdbc_servlet.war" 
+      webxml="${farrago.dir}/ext/vjdbc/web.xml">
+      <fileset dir="${thirdparty.dir}/vjdbc/conf/servlet">
+        <include name="*.html"/>
+        <exclude name="applet.html"/>
+      </fileset>
+      <webinf dir="${farrago.dir}/ext/vjdbc">
+        <include name="vjdbc-config"/>
+      </webinf>
+      <lib dir="${thirdparty.dir}/vjdbc/lib" excludes="j2ee_api.jar,junit.jar"/>
+    </war>
   </target>
 
   <!-- TODO jvs 26-June-2005:  this isn't used yet -->

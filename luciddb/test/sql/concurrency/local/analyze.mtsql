@@ -71,12 +71,26 @@
 
 -- This select should succeed because it's not accessing the table being
 -- analyzed
-@thread select
+@thread select1
   set schema 's';
 
   @sync
   @sleep 1000
   select count(*) from bench100;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+-- This select should succeed even though it's accessing the table being
+-- analyzed
+@thread select2
+  set schema 's';
+
+  @sync
+  @sleep 1000
+  select count(*) from bench1m;
   @sync
 
 @end

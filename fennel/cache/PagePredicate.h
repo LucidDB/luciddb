@@ -77,23 +77,6 @@ public:
     virtual bool operator()(CachePage const &page);
 };
 
-/**
- * MappedUnionPageListenerPredicate is an implementation of PagePredicate which
- * returns true for pages with a either one of two MappedPageListeners
- */
-class MappedUnionPageListenerPredicate : public PagePredicate
-{
-    MappedPageListener &listener1;
-    MappedPageListener &listener2;
-    
-public:
-    explicit MappedUnionPageListenerPredicate(
-        MappedPageListener &listener1,
-        MappedPageListener &listener2);
-    
-    virtual bool operator()(CachePage const &page);
-};
-
 FENNEL_END_NAMESPACE
 
 #endif

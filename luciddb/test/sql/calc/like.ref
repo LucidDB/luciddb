@@ -51,7 +51,5 @@ Messages: Invalid escape sequence: %*E*R% at 1 (state=,code=0)
 0: jdbc:luciddb:> drop table foo
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- The following sequence was inspired by bug 6633,
-0: jdbc:luciddb:> -- which I could not reproduce in 2.0.
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

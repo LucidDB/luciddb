@@ -154,6 +154,8 @@ public class SqlValidatorImpl
     // method and always use this variable (or better, move preferences like
     // this to a separate "parameter" class)
     protected boolean expandIdentifiers;
+    
+    protected boolean expandColumnReferences;
 
     private boolean rewriteCalls;
 
@@ -1332,6 +1334,13 @@ public class SqlValidatorImpl
     }
 
     // implement SqlValidator
+    public void setColumnReferenceExpansion(
+        boolean expandColumnReferences)
+    {
+        this.expandColumnReferences = expandColumnReferences;
+    }
+
+    // implement SqlValidator
     public void setCallRewrite(boolean rewriteCalls)
     {
         this.rewriteCalls = rewriteCalls;
@@ -2014,7 +2023,13 @@ public class SqlValidatorImpl
     public void validateIdentifier(SqlIdentifier id, SqlValidatorScope scope)
     {
         final SqlIdentifier fqId = scope.fullyQualify(id);
-        Util.discard(fqId);
+        if (expandColumnReferences) {
+            // NOTE jvs 9-Apr-2007: this doesn't cover ORDER BY, which has its
+            // own ideas about qualification.
+            id.assignNamesFrom(fqId);
+        } else {
+            Util.discard(fqId);
+        }
     }
 
     public void validateLiteral(SqlLiteral literal)

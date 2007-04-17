@@ -297,6 +297,30 @@ class FarragoDbSessionIndexMap
             (FarragoMedLocalDataServer) wrapperCache.loadServerFromCatalog(
                 localTable.getServer());
     }
+    
+    public void versionIndexRoot(
+        FarragoDataWrapperCache wrapperCache,
+        FemLocalIndex index,
+        Long newRoot)
+    {
+        FarragoMedLocalDataServer server =
+            getIndexDataServer(wrapperCache, index);
+        try {
+            // Truncate the original index and then version the new index
+            // root to the now empty root.  Note that we cannot drop the
+            // original index because that would result in losing the
+            // original root page that we need to version.
+            dropIndexStorage(wrapperCache, index, true);
+            server.versionIndexRoot(
+                getIndexRoot(index),
+                newRoot,
+                dbSession.getFennelTxnContext());
+        } catch (SQLException ex) {
+            throw FarragoResource.instance().DataServerIndexVersionFailed.ex(
+                repos.getLocalizedObjectName(index),
+                ex);
+        }
+    }
 }
 
 // End FarragoDbSessionIndexMap.java

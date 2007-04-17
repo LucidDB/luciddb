@@ -92,8 +92,12 @@
 <text>Failed reading boot URL list</text>
 </exception>
 
-<exception id="400110" name="CatalogBootUrlUpdateFailed">
+<exception id="400120" name="CatalogBootUrlUpdateFailed">
 <text>Failed to modify boot URL list</text>
+</exception>
+
+<exception id="400130" name="CatalogModelTimestampCheckFailed">
+<text>Stored catalog model timestamp ''{0}'' does not match compiled catalog timestamp ''{1}''</text>
 </exception>
 
 <message name="CatalogBootstrapObjDescription">
@@ -850,6 +854,18 @@ Messages: {1}</text>
 <exception id="460190" name="AddedFieldWarning"
     className="java.sql.SQLWarning">
 <text>''{0}'' has field ''{1}'' added in external data source.</text>
+</exception>
+
+<exception id="460200" name="NumberOfColumnsMismatch">
+<text>Number of fields in foreign table: ''{0}''. Number of fields in external data source: {1}''.</text>
+</exception>
+
+<exception id="460210" name="TypesOfColumnsMismatch">
+<text>External data source field ''{0}'' has datatype ''{1}'' which cannot be cast to datatype ''{2}'' of foreign table field ''{3}''.</text>
+</exception>
+
+<exception id="460220" name="DataServerIndexVersionFailed">
+<text>Failed to version index root page for {0}</text>
 </exception>
 
 <!-- NOTE:  Mock resources don't really need localization; this one is

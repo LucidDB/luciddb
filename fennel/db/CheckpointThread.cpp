@@ -68,6 +68,11 @@ SXMutex &CheckpointThread::getActionMutex()
 void CheckpointThread::closeImpl()
 {
     StrictMutexGuard mutexGuard(mutex);
+
+    if (!isStarted()) {
+        return;
+    }
+
     quit = true;
     condition.notify_all();
     mutexGuard.unlock();

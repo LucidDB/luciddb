@@ -560,4 +560,24 @@ Warning: 'DEPT_CHANGING' has field 'NEW_DNAME' added in external data source. (s
 | 40      |        | BOSTON    |
 +---------+--------+-----------+
 > 
+> -- test strictness
+> -- missing columns, should fail
+> create foreign table demo_schema.dept_missing_col(
+>     dno integer,
+>     dname char(20))
+> server hsqldb_demo
+> options(schema_name 'SALES', table_name 'DEPT');
+Error: Number of fields in foreign table: '2'. Number of fields in external data source: 3'. (state=,code=0)
+> 
+> -- extra columns, should fail
+> create foreign table demo_schema.dept_extra_col(
+>     dno integer,
+>     dname char(20),
+>     loc char(20),
+>     extra_col integer)
+> server hsqldb_demo
+> options(schema_name 'SALES', table_name 'DEPT');
+Error: Number of fields in foreign table: '4'. Number of fields in external data source: 3'. (state=,code=0)
+> 
+> 
 > !quit

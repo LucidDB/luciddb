@@ -361,7 +361,7 @@ outer:
                 }
             }
             for (int i = 0; i < filters.length; ++i) {
-                String value;
+                Object value;
                 if (filters[i].isMofId()) {
                     value = refObj.refMofId();
                 } else {
@@ -369,9 +369,8 @@ outer:
                         refObj.refGetValue(
                             filters[i].getAttributeName());
                     if (objValue == null) {
-                        continue outer;
-                    }
-                    if (objValue instanceof RefObject) {
+                        value = LurqlFilter.NULL_VALUE;
+                    } else if (objValue instanceof RefObject) {
                         value = ((RefObject) objValue).refMofId();
                     } else {
                         value = objValue.toString();
@@ -382,7 +381,7 @@ outer:
                     assert(filterValues.size() == 1);
                     boolean match = filters[i].patternMatch(
                         (String) filterValues.iterator().next(),
-                        value);
+                        (String) value);
                     if (!match) {
                         continue outer;
                     }

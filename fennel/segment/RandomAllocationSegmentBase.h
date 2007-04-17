@@ -26,8 +26,6 @@
 
 #include "fennel/segment/DelegatingSegment.h"
 
-#include <boost/enable_shared_from_this.hpp>
-
 FENNEL_BEGIN_NAMESPACE
 
 struct SegmentAllocationNode;
@@ -67,8 +65,7 @@ struct PageEntry
  * <p>The allocation nodes may be stored in a separate segment.
  */
 class RandomAllocationSegmentBase
-    : public DelegatingSegment,
-        public boost::enable_shared_from_this<RandomAllocationSegmentBase>
+    : public DelegatingSegment
 {
     /**
      * Counts the number of allocated pages recorded in a SegmentAllocationNode
@@ -189,74 +186,49 @@ protected:
      *
      * @return true iff pageId is valid
      */
-    bool isPageIdValid(PageId pageId);
+    virtual bool isPageIdValid(PageId pageId);
 
     /**
      * Common implementation for isPageIdValid and isPageIdAllocated.
      */
-    bool testPageId(PageId pageId,bool testAllocation);
+    bool testPageId(PageId pageId,bool testAllocation,bool thisSegment);
 
     /**
-     * Retrieves the ownerId corresponding to an extent entry
+     * Retrieves the ownerId corresponding to a page entry
      *
      * @see getPageOwnerIdTemplate()
      *
-     * @param extentNum absolute 0-based extent number for which we are 
-     * returning the ownerId
+     * @param pageId PageId of the page whose owner we are retrieving
      *
-     * @param iPageInExtent 0-based index of page in extent
+     * @param thisSegment if true, retrieve page entry from this segment;
+     * otherwise, retrieve it from an alternative segment
      *
      * @return ownerId
      */
-    virtual PageOwnerId getPageOwnerId(
-        ExtentNum extentNum,
-        BlockNum iPageInExtent) = 0;
+    virtual PageOwnerId getPageOwnerId(PageId pageId, bool thisSegment) = 0;
 
     /**
-     * Retrieves the ownerId corresponding to an extent entry
+     * Retrieves the ownerId corresponding to a page entry
      *
-     * <p>This template method allows the caller to specify different extent
-     * allocation node types.
+     * <p>This template method allows the caller to specify different page
+     * entry types.
      *
-     * @param extentNum absolute 0-based extent number for which we are 
-     * returning the ownerId
+     * @param pageId PageId of the page whose owner we are retrieving
      *
-     * @param iPageInExtent 0-based index of page in extent
+     * @param thisSegment if true, retrieve page entry from this segment;
+     * otherwise, retrieve it from an alternative segment
      *
      * @return ownerId
      */
-    template <class ExtentAllocationNodeT, class ExtentAllocLockT>
-    PageOwnerId getPageOwnerIdTemplate(
-        ExtentNum extentNum,
-        BlockNum iPageInExtent);
+    template <class PageEntryT>
+    PageOwnerId getPageOwnerIdTemplate(PageId pageId, bool thisSegment);
 
     /**
      * Deallocates a single page.
      *
      * @param pageId PageId of page to deallocate
-     *
-     * @param allocNodeSegment segment where allocation node page updates
-     * should be done
      */
-    void deallocatePageId(PageId pageId, SharedSegment allocNodeSegment);
-
-    /**
-     * Deallocates a range of pages, updating the allocation node pages from
-     * a specified segment
-     *
-     * @param startPageId inclusive start of PageId range to deallocate, or
-     * default NULL_PAGE_ID for beginning of segment
-     *
-     * @param endPageId inclusive end of PageId range to deallocate,
-     * or default NULL_PAGE_ID for end of segment
-     *
-     * @param allocNodeSegment segment where allocation node page updates
-     * should be done
-     */
-    void deallocatePageRangeFromSegment(
-        PageId startPageId,
-        PageId endPageId,
-        SharedSegment allocNodeSegment);
+    void deallocatePageId(PageId pageId);
 
     /**
      * Marks the page entry corresponding to a deallocated page as unallocated
@@ -283,18 +255,12 @@ protected:
      * @param extentNum absolute 0-based extent number
      *
      * @param iPageInExtent 0-based index of deallocated page in extent
-     *
-     * @param allocNodeSegment segment that the allocation node page
-     * originates from
      */
     template <
         class ExtentAllocationNodeT,
         class ExtentAllocLockT,
         class PageEntryT>
-    void freePageEntryTemplate(
-        ExtentNum extentNum,
-        BlockNum iPageInExtent,
-        SharedSegment allocNodeSegment);
+    void freePageEntryTemplate(ExtentNum extentNum, BlockNum iPageInExtent);
 
     /**
      * Marks a page entry as unused
@@ -317,21 +283,9 @@ protected:
     /**
      * Formats allocation pages based on current size of underlying segment,
      * marking all pages as deallocated.
-     *
-     * @see formatFromSegment()
      */
-    virtual void format() = 0;
+    void format();
 
-    /**
-     * Formats allocation pages based on current size of underlying segment,
-     * marking all pages as deallocated.  The allocation nodes originate from
-     * a specified segment.
-     *
-     * @param allocNodeSegment segment from which the allocation nodes
-     * originate
-     */
-    void formatFromSegment(SharedSegment allocNodeSegment);
-    
     /**
      * Formats each of the extents within a segment allocation node
      *
@@ -355,9 +309,6 @@ protected:
      *
      * @param [in] segAllocNode locked segment allocation node
      *
-     * @param allocNodeSegment segment that the segment allocation node
-     * page originates from
-     *
      * @param [in, out] extentNum on input, the initial absolute 0-based
      * extent number that needs to be formatted; on output, the last
      * extent number formatted + 1
@@ -368,7 +319,6 @@ protected:
         class PageEntryT>
     void formatPageExtentsTemplate(
         SegmentAllocationNode &segAllocNode,
-        SharedSegment allocNodeSegment,
         ExtentNum &extentNum);
 
     /**
@@ -507,19 +457,6 @@ protected:
          PageOwnerId ownerId);
 
     /**
-     * Retrieves the successor pageId of a page.
-     *
-     * <p>This template method allows the caller to specify different extent
-     * allocation node types.
-     *
-     * @param pageId pageId whose successor page will be retrieved
-     *
-     * @return successor pageId
-     */
-    template <class ExtentAllocationNodeT, class ExtentAllocLockT>
-    PageId getPageSuccessorTemplate(PageId pageId);
-
-    /**
      * Sets the successor pageId for a page.
      *
      * <p>This template method allows the caller to specify different extent
@@ -568,6 +505,51 @@ protected:
         ExtentNum extentNum,
         SharedSegment &allocNodeSegment) = 0;
 
+    /**
+     * Retrieves a copy of the page entry for a specified page
+     *
+     * @see getPageEntryCopyTemplate()
+     *
+     * @param pageId pageId of the page whose page entry data we are retrieving
+     *
+     * @param [out] pageEntryCopy copy of page entry retrieved
+     *
+     * @param isAllocated if true, assert that the page is allocated
+     *
+     * @param thisSegment if true, retrieve page entry from this segment;
+     * otherwise, retrieve it from an alternative segment
+     */
+    virtual void getPageEntryCopy(
+        PageId pageId,
+        PageEntry &pageEntryCopy,
+        bool isAllocated,
+        bool thisSegment) = 0;
+
+    /**
+     * Retrieves a copy of the page entry for a specified page
+     *
+     * <p>This template method allows the caller to specify different extent
+     * allocation node and page entry types.
+     *
+     * @param pageId pageId of the page whose page entry data we are retrieving
+     *
+     * @param [out] pageEntryCopy copy of page entry retrieved
+     *
+     * @param isAllocated if true, assert that the page is allocated
+     *
+     * @param thisSegment if true, retrieve page entry from this segment;
+     * otherwise, retrieve it from an alternative segment
+     */
+    template <
+        class ExtentAllocationNodeT,
+        class ExtentAllocLockT,
+        class PageEntryT>
+    void getPageEntryCopyTemplate(
+         PageId pageId,
+         PageEntryT &pageEntryCopy,
+         bool isAllocated,
+         bool thisSegment);
+
 public:
     virtual ~RandomAllocationSegmentBase();
 
@@ -576,6 +558,7 @@ public:
     virtual bool isPageIdAllocated(PageId pageId);
     virtual AllocationOrder getAllocationOrder() const;
     virtual BlockNum getAllocatedSizeInPages();
+    virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
 };
 
 FENNEL_END_NAMESPACE

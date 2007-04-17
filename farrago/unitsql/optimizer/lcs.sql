@@ -363,6 +363,9 @@ create index i_c9 on tencols(c9);
 insert into tencols values(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 insert into tencols values(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
 
+-- fake row count so that index access is considered
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LCS', 'TENCOLS', 100);
+
 !set outputformat csv
 -- should select all clusters
 explain plan for select * from tencols;

@@ -26,6 +26,7 @@
 #include "fennel/cache/CachePage.h"
 #include "fennel/cache/PagePredicate.h"
 #include "fennel/segment/Segment.h"
+#include "fennel/segment/SegmentAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -113,14 +114,20 @@ bool Segment::ensureAllocatedSize(BlockNum nPages)
     return true;
 }
 
-PageId Segment::updatePage(PageId pageId)
+PageId Segment::updatePage(PageId pageId, bool needsTranslation)
 {
     return NULL_PAGE_ID;
 }
 
-MappedPageListener *Segment::getMappedPageListener(PageId pageId)
+MappedPageListener *Segment::getMappedPageListener(BlockId blockId)
 {
     return this;
+}
+
+void Segment::discardCachePage(BlockId blockId)
+{
+    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    selfAccessor.pCacheAccessor->discardPage(blockId);
 }
 
 FENNEL_END_CPPFILE("$Id$");

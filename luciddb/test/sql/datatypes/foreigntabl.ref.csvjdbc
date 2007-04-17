@@ -57,23 +57,10 @@
 . . . . . . . . > SCHEMA_NAME '@SCHEMA@'
 . . . . . . . . > , @TABLE_NAME@ 'blob'
 . . . . . . . . > );
+Error: External data source field 'c_binary' has datatype 'VARCHAR(1024)' which cannot be cast to datatype 'BINARY(10)' of foreign table field 'C_BINARY'. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from @name_prefix@_ft_schema.blobtypes_explicit;
-+-----------------------+-----------------------+
-|       C_BINARY        |      C_VARBINARY      |
-+-----------------------+-----------------------+
-| 58273030303030303030  | 58273131313131303030  |
-| 58273030303030303030  | 58273131313131303030  |
-| 58273030303030303030  | 58273131313131303030  |
-| 58273030303030303030  | 58273131313131303027  |
-| 58273030303030303031  | 582731313131313027    |
-| 58273030303030303031  | 5827313131313127      |
-| 58273030303030303031  | 58273131313127        |
-| 58273030303030303031  | 582731313127          |
-| 58273030303030303130  | 5827313127            |
-| 58273030303030303130  | 58273127              |
-| 58273030303030303130  | 582727                |
-+-----------------------+-----------------------+
+Error: From line 1, column 15 to line 1, column 46: Table 'CSV_FT_SCHEMA.BLOBTYPES_EXPLICIT' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create foreign table @name_prefix@_ft_schema.blobtypes_nonexplicit
 . . . . . . . . > server @SERVER_NAME@
@@ -104,8 +91,6 @@
 +------------+----------------+------------------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
 | TABLE_CAT  |  TABLE_SCHEM   |       TABLE_NAME       | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  | NULLABLE  | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  | IS_NULLABLE  | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
 +------------+----------------+------------------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------+----------+-------------+----------------+-------------------+--------------------+-------------------+--------------+----------------+---------------+--------------+-------------------+
-| LOCALDB    | @name_prefix@_FT_SCHEMA  | BLOBTYPES_EXPLICIT     | C_BINARY     | -2         | BINARY     | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |
-| LOCALDB    | @name_prefix@_FT_SCHEMA  | BLOBTYPES_EXPLICIT     | C_VARBINARY  | -3         | VARBINARY  | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 2                 | YES          |                |               |              |                   |
 | LOCALDB    | @name_prefix@_FT_SCHEMA  | BLOBTYPES_NONEXPLICIT  | c_binary     | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 1                 | YES          |                |               |              |                   |
 | LOCALDB    | @name_prefix@_FT_SCHEMA  | BLOBTYPES_NONEXPLICIT  | c_varbinary  | 12         | VARCHAR    | 1024         | 0           |             |                 | 1         |          |             | 0              | 0                 | 1024               | 2                 | YES          |                |               |              |                   |
 | LOCALDB    | @name_prefix@_FT_SCHEMA  | TYPES_EXPLICIT         | C_CHAR       | 1          | CHAR       | 10           | 0           |             |                 | 1         |          |             | 0              | 0                 | 10                 | 1                 | YES          |                |               |              |                   |

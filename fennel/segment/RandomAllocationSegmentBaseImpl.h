@@ -144,17 +144,16 @@ PageId RandomAllocationSegmentBase::allocateFromExtentTemplate(
 template <class ExtentAllocationNodeT, class ExtentAllocLockT, class PageEntryT>
 void RandomAllocationSegmentBase::formatPageExtentsTemplate(
     SegmentAllocationNode &segAllocNode,
-    SharedSegment allocNodeSegment,
     ExtentNum &extentNum)
 {
-    SegmentAccessor segAccessor(allocNodeSegment, pCache);
-    ExtentAllocLockT extentAllocLock(segAccessor);
+    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    ExtentAllocLockT extentAllocLock(selfAccessor);
     uint startOffset = extentNum % nExtentsPerSegAlloc;
     for (uint i = startOffset; i < segAllocNode.nExtents; ++i, ++extentNum) {
         // -1 for the extent allocation node itself
         segAllocNode.getExtentEntry(i).nUnallocatedPages =
             nPagesPerExtent - 1;
-        extentAllocLock.lockExclusive(getExtAllocPageIdForWrite(extentNum));
+        extentAllocLock.lockExclusive(getExtentAllocPageId(extentNum));
         extentAllocLock.setMagicNumber();
         formatExtentTemplate<
                 ExtentAllocationNodeT,
@@ -219,39 +218,16 @@ PageId RandomAllocationSegmentBase::allocateFromLockedExtentTemplate(
 template <class ExtentAllocationNodeT, class ExtentAllocLockT, class PageEntryT>
 void RandomAllocationSegmentBase::freePageEntryTemplate(
     ExtentNum extentNum,
-    BlockNum iPageInExtent,
-    SharedSegment allocNodeSegment)
+    BlockNum iPageInExtent)
 {
-    SegmentAccessor segAccessor(allocNodeSegment, pCache);
+    SegmentAccessor segAccessor(shared_from_this(), pCache);
     ExtentAllocLockT extentAllocLock(segAccessor);
 
-    extentAllocLock.lockExclusive(getExtAllocPageIdForWrite(extentNum));
+    extentAllocLock.lockExclusive(getExtentAllocPageId(extentNum));
     ExtentAllocationNodeT &extentNode = extentAllocLock.getNodeForWrite();
     PageEntryT &pageEntry = extentNode.getPageEntry(iPageInExtent);
     permAssert(pageEntry.ownerId != UNALLOCATED_PAGE_OWNER_ID);
     markPageEntryUnused(pageEntry);
-}
-
-template <class ExtentAllocationNodeT, class ExtentAllocLockT>
-PageId RandomAllocationSegmentBase::getPageSuccessorTemplate(PageId pageId)
-{
-    assert(isPageIdAllocated(pageId));
-
-    uint iSegAlloc;
-    ExtentNum extentNum;
-    BlockNum iPageInExtent;
-    splitPageId(pageId,iSegAlloc,extentNum,iPageInExtent);
-    permAssert(iPageInExtent);
-
-    SharedSegment allocNodeSegment;
-    PageId extentPageId = getExtAllocPageIdForRead(extentNum, allocNodeSegment);
-
-    SegmentAccessor segAccessor(allocNodeSegment, pCache);
-    ExtentAllocLockT extentAllocLock(segAccessor);
-    extentAllocLock.lockShared(extentPageId);
-    ExtentAllocationNodeT const &node = extentAllocLock.getNodeForRead();
-    PageId successorId = node.getPageEntry(iPageInExtent).successorId;
-    return successorId;
 }
 
 template <class ExtentAllocationNodeT, class ExtentAllocLockT>
@@ -276,19 +252,53 @@ void RandomAllocationSegmentBase::setPageSuccessorTemplate(
     node.getPageEntry(iPageInExtent).successorId = successorId;
 }
 
-template <class ExtentAllocationNodeT, class ExtentAllocLockT>
+template <class PageEntryT>
 PageOwnerId RandomAllocationSegmentBase::getPageOwnerIdTemplate(
-    ExtentNum extentNum,
-    BlockNum iPageInExtent)
+    PageId pageId,
+    bool thisSegment)
 {
+    PageEntryT pageEntry;
+
+    getPageEntryCopy(pageId, pageEntry, false, thisSegment);
+    return pageEntry.ownerId;
+}
+
+template <class ExtentAllocationNodeT, class ExtentAllocLockT, class PageEntryT>
+void RandomAllocationSegmentBase::getPageEntryCopyTemplate(
+    PageId pageId,
+    PageEntryT &pageEntryCopy,
+    bool isAllocated,
+    bool thisSegment)
+{
+    if (isAllocated) {
+        assert(testPageId(pageId, true, thisSegment));
+    }
+
+    ExtentNum extentNum;
+    BlockNum iPageInExtent;
+    uint iSegAlloc;
+    splitPageId(pageId, iSegAlloc, extentNum, iPageInExtent);
+    assert(iPageInExtent);
+
     SharedSegment allocNodeSegment;
-    PageId extentPageId = getExtAllocPageIdForRead(extentNum, allocNodeSegment);
+    PageId extentPageId;
+    if (thisSegment) {
+        allocNodeSegment = shared_from_this();
+        extentPageId = getExtentAllocPageId(extentNum);
+    } else {
+        extentPageId = getExtAllocPageIdForRead(extentNum, allocNodeSegment);
+    }
 
     SegmentAccessor segAccessor(allocNodeSegment, pCache);
     ExtentAllocLockT extentAllocLock(segAccessor);
     extentAllocLock.lockShared(extentPageId);
-    ExtentAllocationNodeT const &node = extentAllocLock.getNodeForRead();
-    return node.getPageEntry(iPageInExtent).ownerId;
+    ExtentAllocationNodeT const &extentNode =
+        extentAllocLock.getNodeForRead();
+
+    PageEntryT const &pageEntry =
+        extentNode.getPageEntry(iPageInExtent);
+
+    pageEntryCopy = pageEntry;
 }
 
 FENNEL_END_NAMESPACE

@@ -41,7 +41,7 @@
 
   @sync
   @sleep 1000
-  @err insert into t2 select * from t2;
+  insert into t2 select * from t2;
   @sync
 
 @end
@@ -65,7 +65,7 @@
 
   @sync
   @sleep 1000
-  @err insert into t1 select * from t1;
+  insert into t1 select * from t1;
   @sync
 
 @end

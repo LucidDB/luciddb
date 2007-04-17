@@ -83,13 +83,20 @@ public class TimeDimensionInternal extends GregorianCalendar
 
         ApplibResource res = ApplibResourceObject.get();
 
-        if ((startMonth < 0) || (startDate < 0)) {
+        if ((startMonth < 0) || (startDate < 0) || (startMonth > 12)
+            || (startDate > 31)) 
+        {
             throw res.TimeDimInvalidStartDate.ex();
         }
-
-        if ((endMonth < 0) || (endDate < 0)) {
+        if ((endMonth < 0) || (endDate < 0) || (endMonth > 12) 
+            || (endDate > 31)) 
+        {
             throw res.TimeDimInvalidEndDate.ex();
         }
+        if ((fiscalYearStartMonth < 0) || (fiscalYearStartMonth > 12)) {
+            throw res.TimeDimInvalidFiscalStartMonth.ex();
+        }
+
 
         long start = getTimeInMillis();
         this.startMonth = get(Calendar.MONTH);
@@ -330,7 +337,6 @@ public class TimeDimensionInternal extends GregorianCalendar
     }
 
     public Date getDate() {
-        this.currentDate.setTime(getTimeInMillis());
         return currentDate;
     }
 
@@ -380,10 +386,12 @@ public class TimeDimensionInternal extends GregorianCalendar
         if (doy >= this.fiscalYearStartDay) {
             dofy = doy - this.fiscalYearStartDay + 1;
         } else {
+            long tempTime = getTimeInMillis();
             add(Calendar.YEAR, -1);
             dofy = getActualMaximum(Calendar.DAY_OF_YEAR) -
                 this.fiscalYearStartDay + doy + 1;
-            add(Calendar.YEAR, 1);
+            setTimeInMillis(tempTime);
+            complete();
         }
         return dofy;
     }
@@ -435,6 +443,7 @@ public class TimeDimensionInternal extends GregorianCalendar
         complete();
 
         long currentTime = getTimeInMillis();
+        currentDate.setTime(currentTime);
         boolean isFirstDayOfYear = false;
         boolean isFiscalFirstDayOfYear = false;
 

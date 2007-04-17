@@ -270,7 +270,7 @@ public class FennelReshapeRule
         // Currently, it's all or nothing.  So, if there are filters rejected
         // by the analyzer, we can't process a subset using the reshape
         // exec stream
-        if (rexAnalyzer.getPostFilterRexNode() != null) {
+        if (rexAnalyzer.getNonSargFilterRexNode() != null) {
             return null;
         }
         

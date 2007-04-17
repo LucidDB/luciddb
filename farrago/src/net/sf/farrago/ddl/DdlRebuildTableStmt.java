@@ -58,7 +58,7 @@ public class DdlRebuildTableStmt
      */
     public DdlRebuildTableStmt(CwmTable table)
     {
-        super(table);
+        super(table, true);
         this.table = table;
     }
 
@@ -81,7 +81,7 @@ public class DdlRebuildTableStmt
             ddlValidator.getDataWrapperCache();
         SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
-
+        
         // Create new index roots
         Map<FemLocalIndex, Long> writeIndexMap = 
             new HashMap<FemLocalIndex, Long>();
@@ -97,9 +97,18 @@ public class DdlRebuildTableStmt
             writeIndexMap.put(index, newRoot);
         }
         
-        // Reset current row count, if applicable to the personality
-        session.getPersonality().resetRowCounts((FemAbstractColumnSet) table);
-
+        // Reset current row counts, if applicable to the personality.
+        //
+        // REVIEW zfong 3/27/07 - Note that the update to the rowcounts below,
+        // as well as the one that will be done as part of the insert-select
+        // that follows, are executed in separate MDR xacts.  This will
+        // result in inconsistent rowcounts if a failure occurs in the
+        // middle of the alter table rebuild.  The alternative is to hold
+        // the MDR lock for the duration of the entire alter table rebuild.
+        // Or another would be to find a way to defer updating the rowcounts.
+        session.getPersonality().resetRowCounts(
+            (FemAbstractColumnSet) table);
+               
         // Copy data from old roots to new roots
         FarragoSessionIndexMap rebuildMap = 
             new RebuildTableIndexMap(baseIndexMap, writeIndexMap);
@@ -107,21 +116,34 @@ public class DdlRebuildTableStmt
         session.getSessionVariables().set(
             FarragoDefaultSessionPersonality.CACHE_STATEMENTS, 
             Boolean.toString(false));
-        FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
+        FarragoSessionStmtContext stmtContext =
+            session.newStmtContext(null);
         stmtContext.prepare(getRebuildDml(writer), true);
         stmtContext.execute();
-
-        // Drop old roots and update references to point to new roots
-        for (FemLocalIndex index :
-            FarragoCatalogUtil.getTableIndexes(repos, table))
-        {
-            if (FarragoCatalogUtil.isDeletionIndex(index)) {
-                // Truncate the deletion index
-                baseIndexMap.dropIndexStorage(wrapperCache, index, true);
-            } else {
-                baseIndexMap.dropIndexStorage(wrapperCache, index, false);
-                baseIndexMap.setIndexRoot(index, writeIndexMap.get(index));
-            }
+   
+        FarragoReposTxnContext txn = repos.newTxnContext();
+        try {
+            txn.beginWriteTxn();
+          
+            for (FemLocalIndex index :
+                FarragoCatalogUtil.getTableIndexes(repos, table))
+            {
+                
+                if (FarragoCatalogUtil.isDeletionIndex(index)) {
+                    // Truncate the deletion index
+                    baseIndexMap.dropIndexStorage(wrapperCache, index, true);
+                } else {  
+                    // Let each personality decide how to update the index
+                    session.getPersonality().updateIndexRoot(
+                        index,
+                        wrapperCache,
+                        baseIndexMap,
+                        writeIndexMap.get(index));
+                }
+            }          
+            txn.commit();
+        } finally {
+            txn.rollback();
         }
     }
 
@@ -250,6 +272,15 @@ public class DdlRebuildTableStmt
         public void onCommit()
         {
             internalMap.onCommit();
+        }
+        
+        // implement FarragoSesssionIndexMap
+        public void versionIndexRoot(
+            FarragoDataWrapperCache wrapperCache,
+            FemLocalIndex index,
+            Long newRoot)
+        {
+            internalMap.versionIndexRoot(wrapperCache, index, newRoot);
         }
     }
 }

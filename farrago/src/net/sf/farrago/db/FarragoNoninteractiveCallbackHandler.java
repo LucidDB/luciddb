@@ -41,12 +41,14 @@ public class FarragoNoninteractiveCallbackHandler
 {
     String user, pass;
     
-    public FarragoNoninteractiveCallbackHandler(String user, String pass) {
+    public FarragoNoninteractiveCallbackHandler(String user, String pass)
+    {
         this.user = user;
         this.pass = (pass == null? "":pass);
     }
 
-    public void clearPassword() {
+    public void clearPassword()
+    {
         pass = "";
     }
     
@@ -66,6 +68,9 @@ public class FarragoNoninteractiveCallbackHandler
                     callbacks[i], "Unsupported callback class"));
             }
         }
+        // user/pass have been passed on to callbacks, 
+        // don't keep them in the handler
+        user = null;
+        pass = null;
     }
-
 }

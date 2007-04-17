@@ -70,8 +70,7 @@ public:
     virtual PageId getPageSuccessor(PageId pageId);
     virtual void setPageSuccessor(PageId pageId,PageId successorId);
     virtual AllocationOrder getAllocationOrder() const;
-    virtual PageId updatePage(PageId pageId);
-    virtual MappedPageListener *getMappedPageListener(PageId pageId);
+    virtual PageId updatePage(PageId pageId, bool needsTranslation = false);
 };
 
 FENNEL_END_NAMESPACE

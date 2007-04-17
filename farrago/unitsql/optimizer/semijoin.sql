@@ -251,6 +251,15 @@ explain plan for
             s.product_id = p.id and p.size = 'S' and sid > 2
         order by sid;
 
+explain plan for
+    select sid, p.name, p.color, p.size, s.quantity
+        from product p, sales s
+        where
+            s.product_id = p.id
+            and p.size = 'S' and p.color = 'white'
+            and sid > 2
+        order by sid;
+
 -- push semijoin past joins
 explain plan for
     select sid, p.name, p.color, p.size, sp.name, s.quantity

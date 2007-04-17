@@ -1,6 +1,8 @@
 0: jdbc:luciddb:> create foreign data wrapper @DATA_WRAPPER_NAME@
 . . . . . . . . > library '@DATA_LIBRARY@'
-. . . . . . . . > language java;
+. . . . . . . . > language java
+. . . . . . . . > options( type_mapping '@TYPE_MAPPING@')
+. . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create server @SERVER_NAME@
 . . . . . . . . > foreign data wrapper @DATA_WRAPPER_NAME@
