@@ -558,6 +558,7 @@ recursively ( &lt;path-spec-without-gather&gt; | '(' &lt;path-spec&gt; ')' )
 
 &lt;literal&gt; ::=
 &lt;single-quoted-string&gt;
+| null
 </code></pre>
 
 <ul>
@@ -566,6 +567,13 @@ recursively ( &lt;path-spec-without-gather&gt; | '(' &lt;path-spec&gt; ')' )
 
 <li>Identifiers only need to be quoted if they are keywords, contain
 non-alphanumeric characters, or start with a number.
+
+<li>All attribute comparison is currently string based; dynamic parameter
+values must be bound to either strings or sets of strings.
+
+<li>Unlike in SQL, there is no three-valued logic; the null literal
+can be used to test for null attributes via IN or equality predicates.
+It is not currently possible to pass null values via dynamic parameters.
 
 </ul>
 

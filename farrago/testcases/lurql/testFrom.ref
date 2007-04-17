@@ -115,6 +115,61 @@ Attribute: qualifiedName
 
 ****
 
+# Test filter based on null (without matches)
+PARSE RESULT:
+select *
+from
+class "ModelElement"
+where
+    "name" = null;
+
+EXECUTION RESULT:
+
+****
+
+# Test filter based on null (with matches)
+PARSE RESULT:
+select *
+from
+class "ModelElement"
+where
+    "container" = null;
+
+EXECUTION RESULT:
+Package: CorbaIdlTypes
+Package: Model
+Package: PrimitiveTypes
+
+****
+
+# Test filter based on null with IN (no matches for null)
+PARSE RESULT:
+select *
+from
+class "ModelElement"
+where
+    "name" in (null, 'Exception');
+
+EXECUTION RESULT:
+Class: Exception
+
+****
+
+# Test filter based on null with IN (with matches for null)
+PARSE RESULT:
+select *
+from
+class "ModelElement"
+where
+    "container" in (null, 'Foo');
+
+EXECUTION RESULT:
+Package: CorbaIdlTypes
+Package: Model
+Package: PrimitiveTypes
+
+****
+
 PARAM_VALUE className
 Exception
 
