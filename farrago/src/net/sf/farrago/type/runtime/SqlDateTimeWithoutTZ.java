@@ -330,6 +330,9 @@ public abstract class SqlDateTimeWithoutTZ
      */
     public String toString()
     {
+        if (isNull) {
+            return null;
+        }
         return value.toString();
     }
 
