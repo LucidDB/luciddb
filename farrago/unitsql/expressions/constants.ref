@@ -86,10 +86,20 @@
 > 
 > alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 > alter session set "errorMax" = 25;
+> !set shownestederrs true
 > 
 > select cast('xyz' as int)+2 from (values(0));
+Error: java.lang.NumberFormatException: For input string: "xyz" (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [0]
 Messages: java.lang.NumberFormatException: For input string: "xyz" (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: Failed while executing internal statement (state=,code=0)
+Error: Failed while executing internal statement (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: Failed while executing internal statement (state=,code=0)
+Error: Failed while executing internal statement (state=,code=0)
+> 
+> !set shownestederrs false
 > 
 > !quit

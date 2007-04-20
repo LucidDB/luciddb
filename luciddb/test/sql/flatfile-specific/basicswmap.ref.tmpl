@@ -1,6 +1,8 @@
 0: jdbc:luciddb:> ------------------------------------------------------------
 0: jdbc:luciddb:> -- test basic lenient reading from flatfiles with mapping
 0: jdbc:luciddb:> ------------------------------------------------------------
+0: jdbc:luciddb:> !set shownestederrs true
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create schema flatfile_schema;
 0: jdbc:luciddb:> set schema 'flatfile_schema';
 0: jdbc:luciddb:> 
@@ -837,11 +839,14 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from lenientwmap_server.bcp."missingquotes3" order by id;
+Error: Column has no delimiter (state=,code=0)
 Error: Could not process input:
 [238,"Peter ""peg leg"", Jimmy & Samantha ""Sam"",G
 
 ]
 Messages: Column has no delimiter (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create foreign table missingquotes3(
 . . . . . . . . >         id      int,
@@ -851,28 +856,37 @@ Messages: Column has no delimiter (state=,code=0)
 . . . . . . . . > server lenientwmap_server
 . . . . . . . . > options (filename 'missingquotes3');
 0: jdbc:luciddb:> select * from missingquotes3 order by id;
+Error: Column has no delimiter (state=,code=0)
 Error: Could not process input:
 [238,"Peter ""peg leg"", Jimmy & Samantha ""Sam"",G
 
 ]
 Messages: Column has no delimiter (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create foreign table missingquotes3a
 . . . . . . . . > server lenientwmap_server
 . . . . . . . . > options (filename 'missingquotes3');
 0: jdbc:luciddb:> select * from missingquotes3a order by id;
+Error: Column has no delimiter (state=,code=0)
 Error: Could not process input:
 [238,"Peter ""peg leg"", Jimmy & Samantha ""Sam"",G
 
 ]
 Messages: Column has no delimiter (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from "missingquotes3" order by id;
+Error: Column has no delimiter (state=,code=0)
 Error: Could not process input:
 [238,"Peter ""peg leg"", Jimmy & Samantha ""Sam"",G
 
 ]
 Messages: Column has no delimiter (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> 

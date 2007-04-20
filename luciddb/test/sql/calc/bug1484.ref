@@ -117,10 +117,7 @@
 0: jdbc:luciddb:> -- negative testing
 0: jdbc:luciddb:> -- unmatched mask
 0: jdbc:luciddb:> values applib.convert_date('*03-12-1998', 'MM-DD-YYYY');
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Invalid digit input string: caMask=MM-DD-YYYY caIn=*03-12-1998 (state=,code=0)
+Error: Invalid digit input string: caMask=MM-DD-YYYY caIn=*03-12-1998 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- still not work yet, JIRA LDB-105
 0: jdbc:luciddb:> -- non leap years feb 29

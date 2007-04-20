@@ -16,8 +16,10 @@ insert into foo values ('CREATURE')
 ;
 select * from foo where x like '%ER%' order by 1
 ;
+!set shownestederrs true
 select * from foo where x like '%*E*R%' escape '*'
 ;
+!set shownestederrs false
 select * from foo where x like '%ER*%' escape '*'
 ;
 select * from foo where x like '%ERR%' escape 'R'

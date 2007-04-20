@@ -961,7 +961,7 @@ public class FarragoRuntimeContext
 
     /**
      * Handles runtime exception; if errorCode is non-null, exceptions are 
-     * defered until all errors on a row are processed;
+     * deferred until all errors on a row are processed;
      * not currently implemented
      */
     public Object handleRowError(
@@ -978,7 +978,7 @@ public class FarragoRuntimeContext
     }
 
     /**
-     * Handles exception for row errors with defered exceptions; not currently
+     * Handles exception for row errors with deferred exceptions; not currently
      * implemented
      */
     public void handleRowErrorCompletion(RuntimeException ex, String tag)
@@ -1025,14 +1025,14 @@ public class FarragoRuntimeContext
         String msgs = Util.getMessages(ex);
 
         if (index < 0) {
-            return resource.JavaRowError.ex(row, msgs);
+            return resource.JavaRowError.ex(row, msgs, ex);
         } else if (index == 0) {
-            return resource.JavaCalcConditionError.ex(row, msgs);
+            return resource.JavaCalcConditionError.ex(row, msgs, ex);
         } else {
             String fieldName = (field != null) 
                 ? field : Integer.toString(index);
             return resource.JavaCalcError.ex(
-                fieldName, row, msgs);
+                fieldName, row, msgs, ex);
         }
     }
 

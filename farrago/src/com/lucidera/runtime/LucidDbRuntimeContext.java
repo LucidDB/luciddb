@@ -254,7 +254,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         String tag)
     {
         ErrorLogger logger = getLogger(tag);
-        logger.completeDeferedException(ex);
+        logger.completeDeferredException(ex);
     }
 
     /**
@@ -359,7 +359,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         /**
          * Completes defered exception during record logging
          */
-        public void completeDeferedException(RuntimeException ex);
+        public void completeDeferredException(RuntimeException ex);
 
         /**
          * Gets the name of the log file being written
@@ -503,7 +503,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             return log(ex, columnIndex, tag, isWarning, errorCode, columnName);
         }
 
-        public void completeDeferedException(RuntimeException ex)
+        public void completeDeferredException(RuntimeException ex)
         {
             // does nothing, work done in ErrorQuotaLogger
         }
@@ -902,7 +902,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             return deferedException;
         }
 
-        public void completeDeferedException(RuntimeException ex)
+        public void completeDeferredException(RuntimeException ex)
         {
             if (ex != null) {
                 synchronized (quota) {

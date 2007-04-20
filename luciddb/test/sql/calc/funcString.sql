@@ -1,5 +1,4 @@
 -- test STRING builtin functions
-
 set schema 's';
 
 select s1 || '-' || s2, upper(s1),
@@ -68,22 +67,22 @@ WHERE A.s1 = B.s1
 -- This statement should not return any rows
 SELECT A.c1, B.c1 FROM TEST_CHAR_TABLE A, TEST_CHAR_TABLE B
 WHERE A.c1 = B.c1
-  AND A.c1 <> LEFTN(B.c1, 10);
+  AND A.c1 <> APPLIB.LEFTN(B.c1, 10);
 -- This statement should not return any rows
 SELECT A.s1, B.s1 FROM TEST_VARCHAR_TABLE A, TEST_VARCHAR_TABLE B
 WHERE A.s1 = B.s1
-  AND A.s1 <> LEFTN(B.s1, 10);
+  AND A.s1 <> APPLIB.LEFTN(B.s1, 10);
 
 -- Note that LTRIM on a given character should not remove
 -- any characters that don't match.
 -- This statement should not return any rows
 SELECT A.c1, B.c1 FROM TEST_CHAR_TABLE A, TEST_CHAR_TABLE B
 WHERE A.c1 = B.c1
-  AND A.c1 <> LTRIM(B.c1, '@');
+  AND A.c1 <> TRIM(LEADING '@' FROM B.c1);
 -- This statement should not return any rows
 SELECT A.s1, B.s1 FROM TEST_VARCHAR_TABLE A, TEST_VARCHAR_TABLE B
 WHERE A.s1 = B.s1
-  AND A.s1 <> LTRIM(B.s1, '@');
+  AND A.s1 <> TRIM(LEADING '@' FROM B.s1);
 
 -- Just check that our substringing and padding, etc. returns
 -- the proper number of columns and that CHAR_LENGTH checks it properly.

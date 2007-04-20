@@ -1,6 +1,6 @@
 0: jdbc:luciddb:> -- test binary math operations in calculator
 0: jdbc:luciddb:> -- Was calc6.sql
-0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !set shownestederrs true
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select 10 + 100 + 1000 + n1 + n2 + n3 from boris
@@ -295,16 +295,22 @@
 . . . . . . . . > ((N3 * N2) - N1) AS DIFF1, (N3 * N2 - N1) AS DIFF2,
 . . . . . . . . > (N3 * (N2 - N1)) AS DIFF3
 . . . . . . . . > FROM TEST_NUMERIC_TABLE ORDER BY N1, N2, N3;
+Error: Overflow during calculation or cast. (state=,code=0)
 Error: Could not calculate result column 4 for the following row:
 [99999999, 999999999999, 9999999.99999]
 Messages: Overflow during calculation or cast. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> SELECT N1, N2, N3,
 . . . . . . . . > ((N3 * N2) - N1) AS DIFF1, (N3 * N2 - N1) AS DIFF2,
 . . . . . . . . > (N3 * (N2 - N1)) AS DIFF3
 . . . . . . . . > FROM TEST_REAL_TABLE ORDER BY N1, N2, N3;
+Error: Overflow during calculation or cast. (state=,code=0)
 Error: Could not calculate result column 4 for the following row:
 [1.233E31, 1.255E31, 1.277E32]
 Messages: Overflow during calculation or cast. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> SELECT N1, N2, N3,
 . . . . . . . . > ((N3 + N2) * N1) AS MUL1, (N3 + N2 * N1) AS MUL2,
 . . . . . . . . > (N3 + (N2 * N1)) AS MUL3
@@ -329,9 +335,12 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 . . . . . . . . > ((N3 + N2) * N1) AS MUL1, (N3 + N2 * N1) AS MUL2,
 . . . . . . . . > (N3 + (N2 * N1)) AS MUL3
 . . . . . . . . > FROM TEST_NUMERIC_TABLE ORDER BY N1, N2, N3;
+Error: Overflow during calculation or cast. (state=,code=0)
 Error: Could not calculate result column 4 for the following row:
 [99999999, 999999999999, 9999999.99999]
 Messages: Overflow during calculation or cast. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- FRG-209
 0: jdbc:luciddb:> SELECT N1, N2, N3,
@@ -374,9 +383,12 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 . . . . . . . . > N1 * N2, N1 * N3, N1 * N5, N3 * N5, N5 * N3, N5 * N2 * N3
 . . . . . . . . > FROM TEST_NUMERIC_TABLE ORDER BY N1, N2, N3
 . . . . . . . . > ;
+Error: Overflow during calculation or cast. (state=,code=0)
 Error: Could not calculate result column 6 for the following row:
 [99999999, 999999999999, 9999999.99999, 99999.999, 99999.9999999999]
 Messages: Overflow during calculation or cast. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- End test
 0: jdbc:luciddb:> 

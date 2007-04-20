@@ -474,7 +474,9 @@ server ff_lenient
 options (filename 'buggy');
 
 -- errors are usually returned immediately
+!set shownestederrs true
 select * from buggy order by 1;
+!set shownestederrs false
 
 -- but we can allow errors by setting this parameter
 alter session set "errorMax" = 100;
@@ -506,8 +508,10 @@ create table surrey(
 insert into surrey select * from buggy;
 
 -- we can limit the number of errors
+!set shownestederrs true
 alter session set "errorMax" = 1;
 select * from buggy order by 1;
+!set shownestederrs false
 
 -- another case of bad options
 create server mapped_server

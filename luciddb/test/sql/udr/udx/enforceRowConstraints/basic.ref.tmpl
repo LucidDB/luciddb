@@ -135,7 +135,8 @@ Error: From line 2, column 6 to line 2, column 42: Table 'LOGSERVER.BCP.Basic_No
 Error: Exceeded limit of 2 errors. Last error was:
 Could not calculate result column LOCCHECK for the following row:
 [105,Rich,Guy,M,30,102,HQ,50000,,Gambling]
-Messages: Location Id is head quarters (state=,code=0)
+Messages: Location Id is head quarters
+Location Id is head quarters (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
 . . . . . . . . > from logserver.bcp."Basic_EscalatedRejects_RC4"
@@ -294,7 +295,8 @@ Message: Employee Mary Reynolds must have a hobby! (state=,code=0)
 Error: Exceeded limit of 5 errors. Last error was:
 Could not calculate result column SEXCHECK for the following row:
 [108,Mary,Reynolds,F,50,104,SF,50000,,]
-Messages: Employee number 108 is female. Name: Mary Reynolds (state=,code=0)
+Messages: Employee number 108 is female. Name: Mary Reynolds
+Employee number 108 is female. Name: Mary Reynolds (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
 . . . . . . . . > from logserver.bcp."Basic_MixedErrors3_RC8"
