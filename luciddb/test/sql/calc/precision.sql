@@ -1,6 +1,8 @@
 -- test for precision (per Bill's request)
 -- Was calc9.sql
 
+!set shownestederrs true
+
 -- Check precision on computed results
 values (1.23 + 1.22222, 1.23 - 1.22222);
 values (1000.21 * 1000000);

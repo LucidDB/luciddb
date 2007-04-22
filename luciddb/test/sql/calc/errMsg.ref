@@ -18,16 +18,12 @@ Error: From line 1, column 9 to line 1, column 14: Invalid number of arguments t
 0: jdbc:luciddb:> VALUES (tan(date '1995-11-12'));
 Error: From line 1, column 9 to line 1, column 30: No match found for function signature TAN(<DATE>) (state=,code=0)
 0: jdbc:luciddb:> VALUES (100 / 0);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> VALUES (100 / sin(0));
 Error: From line 1, column 15 to line 1, column 20: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> -- VALUES (to_char(power(10,200) * power(10,200)));
 0: jdbc:luciddb:> VALUES (pow(10,200) * pow(10,200));
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> VALUES (exp(1000));
 +-----------+
 |  EXPR$0   |
@@ -37,9 +33,7 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Should get an error for a floating point out of range for some tests.
 0: jdbc:luciddb:> VALUES (LN(-1.0));
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invalid argument(s) for 'LN' function (state=,code=0)
+Error: Invalid argument(s) for 'LN' function (state=,code=0)
 0: jdbc:luciddb:> VALUES (LOG(-1.0));
 Error: From line 1, column 9 to line 1, column 17: No match found for function signature LOG(<NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> VALUES (ACOS(5.0));
@@ -55,9 +49,7 @@ Error: From line 1, column 9 to line 1, column 18: No match found for function s
 0: jdbc:luciddb:> VALUES (VALUERANGE(22.34323, 5.443));
 Error: From line 1, column 9 to line 1, column 35: No match found for function signature VALUERANGE(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> VALUES (CAST (1000000000000000000 AS DECIMAL ( 19, 0)) / CAST (.001  AS DECIMAL (10, 5)));
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- End test
 0: jdbc:luciddb:> 

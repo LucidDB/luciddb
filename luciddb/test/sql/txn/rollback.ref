@@ -15,9 +15,7 @@
 . . . . . . . . > select * from s.mock_fennel_table
 . . . . . . . . > union all
 . . . . . . . . > select 1/id from s.mock_fennel_table;
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- verify that table contents were rolled back
 0: jdbc:luciddb:> select count(*) from s.t;
@@ -45,9 +43,7 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 . . . . . . . . > select * from s.mock_fennel_table
 . . . . . . . . > union all
 . . . . . . . . > select 1/id from s.mock_fennel_table;
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- verify that table contents were rolled back
 0: jdbc:luciddb:> select count(*) from s.t;

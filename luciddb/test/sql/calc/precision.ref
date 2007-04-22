@@ -1,6 +1,8 @@
 0: jdbc:luciddb:> -- test for precision (per Bill's request)
 0: jdbc:luciddb:> -- Was calc9.sql
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !set shownestederrs true
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Check precision on computed results
 0: jdbc:luciddb:> values (1.23 + 1.22222, 1.23 - 1.22222);
 +----------+----------+
@@ -53,25 +55,40 @@ Error: From line 1, column 25 to line 1, column 45: Numeric literal '12345678901
 | 123456789012345.1234   |
 +------------------------+
 0: jdbc:luciddb:> SELECT x * 10 FROM FOO order by 1;
+Error: Overflow during calculation or cast. (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [123456789012345.0000]
 Messages: Overflow during calculation or cast. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> SELECT x * 100 FROM FOO order by 1;
+Error: Overflow during calculation or cast. (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [123456789012345.0000]
 Messages: Overflow during calculation or cast. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> SELECT x * 1000 FROM FOO order by 1;
+Error: Overflow during calculation or cast. (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [123456789012345.0000]
 Messages: Overflow during calculation or cast. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> SELECT x * 10000 FROM FOO order by 1;
+Error: Overflow during calculation or cast. (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [123456789012345.0000]
 Messages: Overflow during calculation or cast. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> SELECT x * 100000 FROM FOO order by 1;
+Error: Overflow during calculation or cast. (state=,code=0)
 Error: Could not calculate result column 1 for the following row:
 [123456789012345.0000]
 Messages: Overflow during calculation or cast. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
 0: jdbc:luciddb:> DROP TABLE FOO;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --  Check insertion into a decimal column of a really big

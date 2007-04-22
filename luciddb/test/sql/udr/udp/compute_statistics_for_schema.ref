@@ -42,9 +42,6 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- try using on a nonexisting schema, should get error (LER-2608)
 0: jdbc:luciddb:> call applib.compute_statistics_for_schema('IMAGINARY_SCHEMA');
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Schema 'IMAGINARY_SCHEMA' could not be found (state=,code=0)
+Error: Schema 'IMAGINARY_SCHEMA' could not be found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

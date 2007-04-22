@@ -4,6 +4,7 @@
 create schema s;
 set schema 's';
 
+!set shownestederrs true
 -- Note that I'd like to eliminate the boris table, but it's there (seemingly)
 -- to stay. Therefore I'm creating other test tables that have all the other types
 -- that we'll use later. When writing new tests or sql statements don't use

@@ -99,7 +99,8 @@ Error: Cannot update unique key column (MFGR) (state=,code=0)
 Error: Exceeded limit of 4 errors. Last error was:
 Could not calculate result column 3 for the following row:
 [20, SAUDI ARABIA, 2007-9-4, fluffily final accounts wake slyly-- fi]
-Messages: Cannot assign '2007-9-4' to a NUMERIC value: NumberFormatException (state=,code=0)
+Messages: Cannot assign '2007-9-4' to a NUMERIC value: NumberFormatException
+Cannot assign '2007-9-4' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- verify rollback
 0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
@@ -140,7 +141,8 @@ Messages: Cannot assign '2007-9-4' to a NUMERIC value: NumberFormatException (st
 Error: Exceeded limit of 7 errors. Last error was:
 Could not process input:
 [6,3,15]
-Messages: Unique constraint violation (state=,code=0)
+Messages: Unique constraint violation
+Unique constraint violation (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- verify rollback
 0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count

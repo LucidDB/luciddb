@@ -2,6 +2,7 @@
 -- Tests ported from 
 -- //open/lu/dev/farrago/unitsql/expressions/udfInvocation.sql
 
+!set shownestederrs true
 -- force usage of Java calculator for error message consistency
 alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 

@@ -36,9 +36,7 @@
 > insert into snapshot select a + 3, sys_boot.mgmt.sleep(1500) from snapshot;
 3 rows affected.
 > insert into snapshot select 10 - a, sys_boot.mgmt.sleep(1500) from snapshot;
-net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Could not process input:
-[4,11]
-Messages: Unique constraint violation
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Unique constraint violation
 -- end of thread inserter
 
 -- thread reader

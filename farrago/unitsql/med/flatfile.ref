@@ -741,10 +741,15 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 > options (filename 'buggy');
 > 
 > -- errors are usually returned immediately
+> !set shownestederrs true
 > select * from buggy order by 1;
+Error: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,code=0)
 Error: Could not calculate result column 3 for the following row:
 [Caroll & Graf, The Diary of a Country Priest, -]
 Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+> !set shownestederrs false
 > 
 > -- but we can allow errors by setting this parameter
 > alter session set "errorMax" = 100;
@@ -791,12 +796,16 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 Warning: Statement execution encountered recoverable exceptions; errors: 2; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > 
 > -- we can limit the number of errors
+> !set shownestederrs true
 > alter session set "errorMax" = 1;
 > select * from buggy order by 1;
 Error: Exceeded limit of 1 errors. Last error was:
 Could not calculate result column 2 for the following row:
 [Gary Larsen, null, 5.00]
-Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
+Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value
+Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+> !set shownestederrs false
 > 
 > -- another case of bad options
 > create server mapped_server

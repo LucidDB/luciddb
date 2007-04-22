@@ -4,6 +4,7 @@
 0: jdbc:luciddb:> create schema s;
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !set shownestederrs true
 0: jdbc:luciddb:> -- Note that I'd like to eliminate the boris table, but it's there (seemingly)
 0: jdbc:luciddb:> -- to stay. Therefore I'm creating other test tables that have all the other types
 0: jdbc:luciddb:> -- that we'll use later. When writing new tests or sql statements don't use
@@ -256,21 +257,49 @@
 . . . . . . . . > );
 0: jdbc:luciddb:> INSERT INTO test_date_table VALUES(NULL, NULL, NULL, NULL, NULL, NULL);
 0: jdbc:luciddb:> INSERT INTO test_date_table VALUES(cast ('1999-01-02' as date), cast('1999-02-03' as date), cast ('12:22' as time), cast ('02:33' as time), cast('1999-03-04' as timestamp), cast('1999-04-05' as timestamp));
+Error: Cannot assign '12:22' to a TIME value: not in format 'HH:mm:ss' (state=,code=0)
 Error: Could not calculate result column 3 for the following row:
 [0]
 Messages: Cannot assign '12:22' to a TIME value: not in format 'HH:mm:ss' (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
 0: jdbc:luciddb:> INSERT INTO test_date_table VALUES(cast('1999-06-07' as date), cast('1999-07-08' as date), cast ('12:22' as time), cast ('02:33' as time), cast('1999-09-10' as timestamp), cast('1999-08-09' as timestamp));
+Error: Cannot assign '12:22' to a TIME value: not in format 'HH:mm:ss' (state=,code=0)
 Error: Could not calculate result column 3 for the following row:
 [0]
 Messages: Cannot assign '12:22' to a TIME value: not in format 'HH:mm:ss' (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
 0: jdbc:luciddb:> INSERT INTO test_date_table VALUES(cast('1999-09-10' as date), cast('1999-10-11' as date), cast ('12:22' as time), cast ('02:33' as time), cast('1999-08-09' as timestamp), cast('1999-05-06' as timestamp));
+Error: Cannot assign '12:22' to a TIME value: not in format 'HH:mm:ss' (state=,code=0)
 Error: Could not calculate result column 3 for the following row:
 [0]
 Messages: Cannot assign '12:22' to a TIME value: not in format 'HH:mm:ss' (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
 0: jdbc:luciddb:> INSERT INTO test_date_table VALUES(cast('1999-11-12' as date), cast('1999-12-11' as date), cast ('12:22' as time), cast ('02:33' as time), cast('1999-12-31' as timestamp), cast('1999-12-01' as timestamp));
+Error: Cannot assign '12:22' to a TIME value: not in format 'HH:mm:ss' (state=,code=0)
 Error: Could not calculate result column 3 for the following row:
 [0]
 Messages: Cannot assign '12:22' to a TIME value: not in format 'HH:mm:ss' (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
 0: jdbc:luciddb:> -- FRG-22 TODO: check timestamp results after fix
 0: jdbc:luciddb:> SELECT * FROM TEST_DATE_TABLE ORDER BY d1,d2,t1,t2,ts1,ts2;
 +-----+-----+-----+-----+------+------+
