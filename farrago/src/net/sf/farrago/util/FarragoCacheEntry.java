@@ -31,7 +31,7 @@ public class FarragoCacheEntry
     implements FarragoObjectCache.Entry, FarragoObjectCache.UninitializedEntry
 {
     //~ Static fields/initializers --------------------------------------------
-    
+
     // NOTE jvs 15-July-2004: entry attribute synchronization is
     // fine-grained; pinCount is protected by FarragoObjectCache.mapKeyToEntry's
     // monitor, while the others are protected by the entry's monitor.
@@ -40,19 +40,19 @@ public class FarragoCacheEntry
     int pinCount;
     long memoryUsage;
     Thread constructionThread;
-    
+
     /**
      * The cache this entry is associated with
      */
     FarragoObjectCache parentCache;
-    
+
     //~ Constructor -----------------------------------------------------------
-    
+
     public FarragoCacheEntry(FarragoObjectCache parentCache)
     {
         this.parentCache = parentCache;
     }
-    
+
     //~ Methods ----------------------------------------------------------------
 
     // implement Entry

@@ -63,7 +63,7 @@ public class FarragoObjectCache
      * synchronized via mapKeyToEntry monitor.
      */
     private long bytesUsed;
-    
+
     /**
      * Victimization policy for this cache
      */
@@ -425,7 +425,13 @@ public class FarragoObjectCache
     public void closeAllocation()
     {
         discardAll();
+
+        // Temporarily disable assert. We would like there to be an invariant
+        // 'bytesUsed == sum of entry memoryUsage' which holds when
+        // mapKeyToEntry is locked, but this isn't so.
+        if (Util.deprecated(false, false)) {
         assert (bytesUsed == 0);
+        }
     }
 
     //~ Inner Interfaces -------------------------------------------------------
