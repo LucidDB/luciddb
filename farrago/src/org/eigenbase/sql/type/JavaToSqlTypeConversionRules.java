@@ -47,7 +47,8 @@ public class JavaToSqlTypeConversionRules
 
     //~ Instance fields --------------------------------------------------------
 
-    private final HashMap rules = new HashMap();
+    private final Map<Class<?>, SqlTypeName> rules =
+        new HashMap<Class<?>, SqlTypeName>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -104,7 +105,7 @@ public class JavaToSqlTypeConversionRules
      */
     public SqlTypeName lookup(Class javaClass)
     {
-        return (SqlTypeName) rules.get(javaClass);
+        return rules.get(javaClass);
     }
 }
 

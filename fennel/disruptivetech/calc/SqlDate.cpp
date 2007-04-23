@@ -185,19 +185,32 @@ int64_t CurrentTime()
 {
     ptime p = second_clock::universal_time();
     return p.time_of_day().total_milliseconds();
-    
 }
 
 int64_t CurrentTimestamp()
 {
     // REVIEW: SWZ: 4/30/2006: In practice, we should return the micro
     // second delta (or as much precision as we can muster) and let
-    // the instruction (which may have been given an explictit
+    // the instruction (which may have been given an explicit
     // precision) truncate the fractional seconds.  For now, returning
     // millis causes Fennel Calc to behave like the Java Calc for
     // CURRENT_TIME[STAMP].
     ptime p = microsec_clock::universal_time();
     return (p - epoc).total_milliseconds();
+}
+
+int64_t LocalTime()
+{
+    ptime p = second_clock::universal_time();
+    ptime plocal = local_adj::utc_to_local(p);
+    return plocal.time_of_day().total_milliseconds();
+}
+
+int64_t LocalTimestamp()
+{
+    ptime p = microsec_clock::universal_time();
+    ptime plocal = local_adj::utc_to_local(p);
+    return (plocal - epoc).total_milliseconds();
 }
 
 

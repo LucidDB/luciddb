@@ -172,6 +172,13 @@ public abstract class Bug
      */
     public static final boolean Frg216Fixed = false;
 
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FNL-54">issue
+     * FNL-54: cast time to timestamp should initialize date to current_date</a>
+     * is fixed.
+     */
+    public static final boolean Fnl54Fixed = false;
+
     // johnk
 
     // jouellette

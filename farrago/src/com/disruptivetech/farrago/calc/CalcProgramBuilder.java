@@ -62,29 +62,26 @@ public class CalcProgramBuilder
     private static final BigInteger Uint8_MAX = BigInteger.ONE.shiftLeft(64);
 
     // -- instructions -------------------------------------------------------
-    static final String refInstruction = "REF";
-    static final String jumpInstruction = "JMP";
-    static final String jumpTrueInstruction = "JMPT";
-    static final String jumpFalseInstruction = "JMPF";
-    static final String jumpNullInstruction = "JMPN";
-    static final String jumpNotNullInstruction = "JMPNN";
-    static final String returnInstruction = "RETURN";
-    static final String orInstruction = "OR";
-    static final String notEqualInstruction = "NE";
-    static final String moveInstruction = "MOVE";
-    static final String lessEqualThanInstruction = "LE";
-    static final String lessThanInstruction = "LT";
-    static final String isNotNullInstruction = "ISNOTNULL";
-    static final String isNullInstruction = "ISNULL";
-    static final String greaterEqualThanInstruction = "GE";
-    static final String greaterThanInstruction = "GT";
-    static final String equalInstruction = "EQ";
-    static final String andInstruction = "AND";
-    static final String addInstruction = "ADD";
+
+    public static final InstructionDef refInstruction =
+        new InstructionDef("REF", 2);
+    public static final JumpInstructionDef jumpInstruction =
+        new JumpInstructionDef("JMP", 1);
+    public static final JumpInstructionDef jumpTrueInstruction =
+        new JumpInstructionDef("JMPT", 2);
+    public static final JumpInstructionDef jumpFalseInstruction =
+        new JumpInstructionDef("JMPF", 2);
+    public static final JumpInstructionDef jumpNullInstruction =
+        new JumpInstructionDef("JMPN", 2);
+    public static final JumpInstructionDef jumpNotNullInstruction =
+        new JumpInstructionDef("JMPNN", 2);
+    public static final InstructionDef returnInstruction =
+        new InstructionDef("RETURN", 0);
+
     public static final InstructionDef nativeAdd =
-        new NativeInstructionDef(addInstruction, 3);
+        new NativeInstructionDef("ADD", 3);
     public static final InstructionDef pointerAdd =
-        new InstructionDef(addInstruction, 3) {
+        new InstructionDef("ADD", 3) {
             void add(
                 CalcProgramBuilder builder,
                 CalcReg... regs)
@@ -97,11 +94,19 @@ public class CalcProgramBuilder
             }
         };
     public static final InstructionDef boolAnd =
-        new BoolInstructionDef(andInstruction, 3);
+        new BoolInstructionDef("AND", 3);
     public static final InstructionDef integralNativeAnd =
-        new IntegralNativeInstructionDef(andInstruction, 3);
-    public static final InstructionDef Cast =
+        new IntegralNativeInstructionDef("AND", 3);
+    public static final InstructionDef cast =
         new NativeInstructionDef("CAST", 2);
+    public static final InstructionDef call =
+        new InstructionDef("CALL", 1) {
+            void add(
+                CalcProgramBuilder builder, Operand... operands)
+            {
+                addInternal(builder, operands);
+            }
+        };
     public static final InstructionDef nativeDiv =
         new NativeInstructionDef("DIV", 3) {
             void add(
@@ -113,49 +118,54 @@ public class CalcProgramBuilder
             }
         };
     public static final InstructionDef boolNativeEqual =
-        new BoolNativeInstructionDef(equalInstruction, 3);
+        new BoolNativeInstructionDef("EQ", 3);
     public static final InstructionDef boolEqual =
-        new BoolInstructionDef(equalInstruction, 3);
+        new ComparisonInstructionDef("EQ");
     public static final InstructionDef pointerBoolEqual =
-        new PointerBoolInstructionDef(equalInstruction, 3);
+        new PointerBoolInstructionDef("EQ", 3);
     public static final InstructionDef boolGreaterThan =
-        new BoolInstructionDef(greaterThanInstruction, 3);
+        new ComparisonInstructionDef("GT");
     public static final InstructionDef boolNativeGreaterThan =
-        new BoolNativeInstructionDef(greaterThanInstruction, 3);
+        new BoolNativeInstructionDef("GT", 3);
     public static final InstructionDef pointerBoolGreaterThan =
-        new PointerBoolInstructionDef(greaterThanInstruction, 3);
+        new PointerBoolInstructionDef("GT", 3);
     public static final InstructionDef boolGreaterOrEqualThan =
-        new BoolInstructionDef(greaterEqualThanInstruction, 3);
+        new ComparisonInstructionDef("GE");
     public static final InstructionDef boolNativeGreaterOrEqualThan =
-        new BoolNativeInstructionDef(greaterEqualThanInstruction, 3);
+        new BoolNativeInstructionDef("GE", 3);
     public static final InstructionDef pointerBoolGreaterOrEqualThan =
-        new PointerBoolInstructionDef(greaterEqualThanInstruction, 3);
+        new PointerBoolInstructionDef("GE", 3);
     public static final InstructionDef boolNativeIsNull =
-        new BoolNativeInstructionDef(isNullInstruction, 2);
+        new BoolNativeInstructionDef("ISNULL", 2);
     public static final InstructionDef boolIsNull =
-        new BoolInstructionDef(isNullInstruction, 2);
+        new BoolInstructionDef("ISNULL", 2);
     public static final InstructionDef pointerBoolIsNull =
-        new PointerBoolInstructionDef(isNullInstruction, 2);
+        new PointerBoolInstructionDef("ISNULL", 2);
     public static final InstructionDef boolNativeIsNotNull =
-        new BoolNativeInstructionDef(isNotNullInstruction, 2);
+        new BoolNativeInstructionDef("ISNOTNULL", 2);
     public static final InstructionDef boolIsNotNull =
-        new BoolInstructionDef(isNotNullInstruction, 2);
+        new BoolInstructionDef("ISNOTNULL", 2);
     public static final InstructionDef pointerBoolIsNotNull =
-        new PointerBoolInstructionDef(isNotNullInstruction, 2);
+        new PointerBoolInstructionDef("ISNOTNULL", 2);
     public static final InstructionDef boolLessThan =
-        new BoolInstructionDef(lessThanInstruction, 3);
+        new ComparisonInstructionDef("LT");
     public static final InstructionDef boolNativeLessThan =
-        new BoolNativeInstructionDef(lessThanInstruction, 3);
+        new BoolNativeInstructionDef("LT", 3);
     public static final InstructionDef pointerBoolLessThan =
-        new PointerBoolInstructionDef(lessThanInstruction, 3);
+        new PointerBoolInstructionDef("LT", 3);
     public static final InstructionDef boolLessOrEqualThan =
-        new BoolInstructionDef(lessEqualThanInstruction, 3);
+        new ComparisonInstructionDef("LE");
     public static final InstructionDef boolNativeLessOrEqualThan =
-        new BoolNativeInstructionDef(lessEqualThanInstruction, 3);
+        new BoolNativeInstructionDef("LE", 3);
     public static final InstructionDef pointerBoolLessOrEqualThan =
-        new PointerBoolInstructionDef(lessEqualThanInstruction, 3);
+        new PointerBoolInstructionDef("LE", 3);
     public static final InstructionDef nativeMinus =
         new NativeInstructionDef("SUB", 3);
+
+    /**
+     * Integral modulo instruction. Per C++, returns negative values when
+     * applied to negative values. For example, 10 % 3 = 1, -10 % 3 = -1.
+     */
     public static final InstructionDef integralNativeMod =
         new IntegralNativeInstructionDef("MOD", 3) {
             void add(
@@ -168,7 +178,7 @@ public class CalcProgramBuilder
             }
         };
     public static final InstructionDef move =
-        new InstructionDef(moveInstruction, 2) {
+        new InstructionDef("MOVE", 2) {
             void add(
                 CalcProgramBuilder builder,
                 CalcReg... regs)
@@ -182,11 +192,11 @@ public class CalcProgramBuilder
             }
         };
     public static final InstructionDef boolMove =
-        new BoolInstructionDef(moveInstruction, 2);
+        new BoolInstructionDef("MOVE", 2);
     public static final InstructionDef nativeMove =
-        new NativeInstructionDef(moveInstruction, 2);
+        new NativeInstructionDef("MOVE", 2);
     public static final InstructionDef pointerMove =
-        new InstructionDef(moveInstruction, 2) {
+        new InstructionDef("MOVE", 2) {
             void add(
                 CalcProgramBuilder builder,
                 CalcReg... regs)
@@ -202,15 +212,15 @@ public class CalcProgramBuilder
     public static final InstructionDef boolNot =
         new BoolInstructionDef("NOT", 2);
     public static final InstructionDef boolNativeNotEqual =
-        new BoolNativeInstructionDef(notEqualInstruction, 3);
+        new BoolNativeInstructionDef("NE", 3);
     public static final InstructionDef boolNotEqual =
-        new BoolInstructionDef(notEqualInstruction, 3);
+        new ComparisonInstructionDef("NE");
     public static final InstructionDef pointerBoolNotEqual =
-        new PointerBoolInstructionDef(notEqualInstruction, 3);
+        new PointerBoolInstructionDef("NE", 3);
     public static final InstructionDef boolOr =
-        new BoolInstructionDef(orInstruction, 3);
+        new BoolInstructionDef("OR", 3);
     public static final InstructionDef integralNativeOr =
-        new IntegralNativeInstructionDef(orInstruction, 3);
+        new IntegralNativeInstructionDef("OR", 3);
     public static final InstructionDef nativeNeg =
         new NativeInstructionDef("NEG", 2);
     public static final InstructionDef raise =
@@ -236,6 +246,62 @@ public class CalcProgramBuilder
         new IntegralNativeShift("SHFR");
     public static final InstructionDef integralNativeXor =
         new IntegralNativeInstructionDef("XOR", 3);
+
+    public static final InstructionDef allInstrDefs[] = {
+        boolAnd,
+        boolEqual,
+        boolGreaterOrEqualThan,
+        boolGreaterThan,
+        boolIsNotNull,
+        boolIsNull,
+        boolLessOrEqualThan,
+        boolLessThan,
+        boolMove,
+        boolNativeEqual,
+        boolNativeGreaterOrEqualThan,
+        boolNativeGreaterThan,
+        boolNativeIsNotNull,
+        boolNativeIsNull,
+        boolNativeLessOrEqualThan,
+        boolNativeLessThan,
+        boolNativeNotEqual,
+        call,
+        cast,
+        integralNativeAnd,
+        integralNativeMod,
+        integralNativeMul,
+        integralNativeOr,
+        integralNativeShiftLeft,
+        integralNativeShiftRight,
+        integralNativeXor,
+        jumpInstruction,
+        jumpTrueInstruction,
+        jumpFalseInstruction,
+        jumpNotNullInstruction,
+        jumpNullInstruction,
+        move,
+        nativeAdd,
+        nativeDiv,
+        nativeMinus,
+        nativeMove,
+        nativeNeg,
+        refInstruction,
+        nativeAdd,
+        pointerAdd,
+        pointerAdd,
+        pointerBoolEqual,
+        pointerBoolGreaterOrEqualThan,
+        pointerBoolGreaterThan,
+        pointerBoolIsNotNull,
+        pointerBoolIsNull,
+        pointerBoolLessOrEqualThan,
+        pointerBoolLessThan,
+        pointerBoolNotEqual,
+        pointerMove,
+        raise,
+        returnInstruction,
+        round,
+    };
 
     //~ Instance fields --------------------------------------------------------
 
@@ -375,10 +441,9 @@ public class CalcProgramBuilder
                 Operand operand = operands[j];
                 if (operand instanceof Line) {
                     Line line = (Line) operand;
-                    if (line.getLabel() != null) //we have a label, update the
-                    //line number with whats in the
-                    //labels map
-                    {
+                    if (line.getLabel() != null) {
+                        // We have a label; update the line number with what's
+                        // in the labels map
                         compilationAssert(null == line.getLine(),
                             "Line has already been bind.");
                         Integer lineNumberFromLabel =
@@ -531,14 +596,12 @@ public class CalcProgramBuilder
         int i = -1;
         for (Instruction inst : instructions) {
             ++i;
-            String op = inst.getOpCode();
 
             //this try-catch clause will pick up any compiler excpetions
             //messages and wrap it into a msg containg what line went wrong
             try {
-                //-----------Check if any jump instructions are jumping off the
-                //cliff
-                if (op.startsWith(jumpInstruction)) {
+                // Check if any jump instructions are jumping off the cliff
+                if (inst.def instanceof JumpInstructionDef) {
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue() >= instructions.size()) {
                         throw FarragoResource.instance().ProgramCompilationError
@@ -548,7 +611,7 @@ public class CalcProgramBuilder
                 }
 
                 //-----------Check if any jump instructions jumps to itself
-                if (op.startsWith(jumpInstruction)) {
+                if (inst.def instanceof JumpInstructionDef) {
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue() == i) {
                         throw FarragoResource.instance().ProgramCompilationError
@@ -559,7 +622,7 @@ public class CalcProgramBuilder
 
                 //-----------Forbidding loops. Check if any jump instructions
                 //jumps to a previous line.
-                if (op.startsWith(jumpInstruction)) {
+                if (inst.def instanceof JumpInstructionDef) {
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue() < i) {
                         throw FarragoResource.instance().ProgramCompilationError
@@ -689,7 +752,7 @@ public class CalcProgramBuilder
                 -1);
     }
 
-    // use a BigInteger because large unsigned ints won't fit into an int
+    // arg is a BigInteger because large unsigned ints won't fit into an int
     public CalcReg newUint4Literal(BigInteger i)
     {
         compilationAssert(i.compareTo(BigInteger.ZERO) >= 0,
@@ -701,7 +764,7 @@ public class CalcProgramBuilder
                 -1);
     }
 
-    // use a BigInteger because a large unsigned long value won't fit into a
+    // arg is a BigInteger because a large unsigned long value won't fit into a
     // long
     public CalcReg newUint8Literal(BigInteger i)
     {
@@ -842,54 +905,22 @@ public class CalcProgramBuilder
                 storageBytes);
     }
 
-    //---------------------------------------
-    //Instruction Creation
-    protected void addInstruction(
-        String operator,
-        Operand op1)
-    {
-        addInstruction(
-            operator,
-            new Operand[] { op1 });
-    }
+    // ---------------------------------------
+    // Instruction Creation
 
+    /**
+     * For internal use only. Applications should call
+     * <code>instruction.add(builder, operand0, operand1, ...)</code>.
+     *
+     * @param instrDef Instruction defn
+     * @param operands Operands
+     */
     protected void addInstruction(
-        String operator,
-        Operand op1,
-        Operand op2)
-    {
-        addInstruction(
-            operator,
-            new Operand[] { op1, op2 });
-    }
-
-    protected void addInstruction(
-        String operator,
-        Operand op1,
-        Operand op2,
-        Operand op3)
-    {
-        addInstruction(
-            operator,
-            new Operand[] { op1, op2, op3 });
-    }
-
-    protected void addInstruction(
-        String operator,
-        Operand [] operands)
+        InstructionDef instrDef,
+        Operand... operands)
     {
         assertOperandsNotNull(operands);
-        addInstruction(new Instruction(operator, operands));
-    }
-
-    protected void addInstruction(String operator)
-    {
-        addInstruction(new Instruction(operator, null));
-    }
-
-    protected void addInstruction(Instruction inst)
-    {
-        instructions.add(inst);
+        instructions.add(new Instruction(instrDef, operands));
     }
 
     /**
@@ -907,8 +938,7 @@ public class CalcProgramBuilder
             throw Util.needToImplement(
                 "TODO need to handle case when  instruction list is empty");
         }
-        Instruction inst =
-            (Instruction) instructions.toArray()[instructions.size() - 1];
+        Instruction inst = instructions.get(instructions.size() - 1);
         inst.setComment((inst.getComment() + " " + comment).trim());
     }
 
@@ -947,7 +977,7 @@ public class CalcProgramBuilder
                 != RegisterSetType.LiteralORDINAL
             )
             && (
-                result.getRegisterType().getOrdinal()
+                ((CalcReg) result).getRegisterType().getOrdinal()
                 != RegisterSetType.InputORDINAL
                ),
             "Expected a non constant register. Constant registers are Literals and Inputs");
@@ -1109,45 +1139,17 @@ public class CalcProgramBuilder
             RegisterSetType.Output == outputRegister.getRegisterType(),
             "Only output register allowed to reference other registers");
 
-        addInstruction(refInstruction, outputRegister, src);
+        refInstruction.add(this, outputRegister, src);
     }
 
     // Jump related instructions----------------------
 
-    /**
-     * Adds an uncondtional JMP instruction
-     *
-     * @param line
-     */
-    public void addJump(int line)
-    {
-        compilationAssert(line >= 0, "Line can not be negative. Value=" + line);
-        addInstruction(
-            jumpInstruction,
-            new Operand[] { new Line(line) });
-    }
-
     protected void addJumpBooleanWithCondition(
-        String op,
+        JumpInstructionDef op,
         int line,
         CalcReg reg)
     {
-        compilationAssert(line >= 0, "Line can not be negative. Value=" + line);
-        addJumpBooleanWithCondition(
-            op,
-            new Line(line),
-            reg);
-    }
-
-    protected void addJumpBooleanWithCondition(
-        String op,
-        Line line,
-        CalcReg reg)
-    {
-        assertRegisterBool(reg);
-
-        //reg != null is checked for in addInstuction
-        addInstruction(op, line, reg);
+        op.add(this, line, reg);
     }
 
     /**
@@ -1188,22 +1190,22 @@ public class CalcProgramBuilder
 
     public void addReturn()
     {
-        addInstruction(returnInstruction);
+        returnInstruction.add(this);
     }
 
     public void addLabelJump(String label)
     {
-        addInstruction(
-            jumpInstruction,
-            new Operand[] { new Line(label) });
+        jumpInstruction.add(
+            this,
+            label);
     }
 
     public void addLabelJumpTrue(
         String label,
         CalcReg reg)
     {
-        addJumpBooleanWithCondition(
-            jumpTrueInstruction,
+        jumpTrueInstruction.add(
+            this,
             new Line(label),
             reg);
     }
@@ -1212,9 +1214,9 @@ public class CalcProgramBuilder
         String label,
         CalcReg reg)
     {
-        addJumpBooleanWithCondition(
-            jumpFalseInstruction,
-            new Line(label),
+        jumpFalseInstruction.add(
+            this,
+            label,
             reg);
     }
 
@@ -1222,8 +1224,8 @@ public class CalcProgramBuilder
         String label,
         CalcReg reg)
     {
-        addInstruction(
-            jumpNullInstruction,
+        jumpNullInstruction.add(
+            this,
             new Line(label),
             reg);
     }
@@ -1232,8 +1234,8 @@ public class CalcProgramBuilder
         String label,
         CalcReg reg)
     {
-        addInstruction(
-            jumpNotNullInstruction,
+        jumpNotNullInstruction.add(
+            this,
             new Line(label),
             reg);
     }
@@ -1247,515 +1249,6 @@ public class CalcProgramBuilder
             label,
             line);
     }
-
-    // Bool related instructions----------------------
-
-    /**
-     * @deprecated
-     */
-    public void addBoolAnd(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        boolAnd.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolOr(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        boolOr.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolEqual(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        boolEqual.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolNotEqual(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        boolNotEqual.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolGreaterThan(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        boolGreaterThan.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolLessThan(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        boolLessThan.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolNot(
-        CalcReg result,
-        CalcReg op1)
-    {
-        boolNot.add(
-            this,
-            new CalcReg[] { result, op1 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolMove(
-        CalcReg result,
-        CalcReg op1)
-    {
-        boolMove.add(
-            this,
-            new CalcReg[] { result, op1 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolIsNull(
-        CalcReg result,
-        CalcReg op1)
-    {
-        boolIsNull.add(
-            this,
-            new CalcReg[] { result, op1 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolIsNotNull(
-        CalcReg result,
-        CalcReg op1)
-    {
-        boolIsNotNull.add(
-            this,
-            new CalcReg[] { result, op1 });
-    }
-
-    // Native instructions----------------------
-
-    /**
-     * @deprecated
-     */
-    public void addNativeAdd(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        nativeAdd.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addNativeSub(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        nativeMinus.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addNativeDiv(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        //smart check, check if divide by zero if op2 is a constant
-        nativeDiv.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addNativeNeg(
-        CalcReg result,
-        CalcReg op1)
-    {
-        nativeNeg.add(
-            this,
-            new CalcReg[] { result, op1 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addNativeMove(
-        CalcReg result,
-        CalcReg op1)
-    {
-        nativeMove.add(
-            this,
-            new CalcReg[] { result, op1 });
-    }
-
-    //Integral Native Instructions ---------------------------------
-
-    /**
-     * @deprecated
-     */
-    public void addIntegralNativeMod(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        integralNativeMod.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addIntegralNativeShiftLeft(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        integralNativeShiftLeft.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addIntegralNativeShiftRight(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        integralNativeShiftRight.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addIntegralNativeAnd(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        integralNativeAnd.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addIntegralNativeOr(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        integralNativeOr.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addIntegralNativeXor(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        integralNativeXor.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    //Bool Native Instructions --------------------------------
-
-    /**
-     * @deprecated
-     */
-    public void addBoolNativeEqual(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        boolNativeEqual.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolNativeNotEqual(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        boolNativeNotEqual.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolNativeGreaterThan(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        boolNativeGreaterThan.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolNativeGreaterOrEqual(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        boolNativeGreaterOrEqualThan.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolNativeLessThan(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        boolNativeLessThan.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolNativeLessOrEqual(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        boolNativeLessOrEqualThan.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolNativeIsNull(
-        CalcReg result,
-        CalcReg op1)
-    {
-        boolNativeIsNull.add(
-            this,
-            new CalcReg[] { result, op1 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addBoolNativeIsNotNull(
-        CalcReg result,
-        CalcReg op1)
-    {
-        boolNativeIsNotNull.add(
-            this,
-            new CalcReg[] { result, op1 });
-    }
-
-    //Pointer Instructions --------------------------------
-
-    /**
-     * @deprecated
-     */
-    public void addPointerMove(
-        CalcReg result,
-        CalcReg op1)
-    {
-        pointerMove.add(
-            this,
-            new CalcReg[] { result, op1 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addPointerAdd(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        pointerAdd.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addPointerEqual(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        pointerBoolEqual.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addPointerNotEqual(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        pointerBoolNotEqual.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addPointerGreaterThan(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        pointerBoolGreaterThan.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addPointerGreaterOrEqual(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        pointerBoolGreaterOrEqualThan.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addPointerLessThan(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        pointerBoolLessThan.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addPointerLessOrEqual(
-        CalcReg result,
-        CalcReg op1,
-        CalcReg op2)
-    {
-        pointerBoolLessOrEqualThan.add(
-            this,
-            new CalcReg[] { result, op1, op2 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addPointerIsNull(
-        CalcReg result,
-        CalcReg op1)
-    {
-        pointerBoolIsNull.add(
-            this,
-            new CalcReg[] { result, op1 });
-    }
-
-    /**
-     * @deprecated
-     */
-    public void addPointerIsNotNull(
-        CalcReg result,
-        CalcReg op1)
-    {
-        pointerBoolIsNotNull.add(
-            this,
-            new CalcReg[] { result, op1 });
-    }
-
-    //~ Inner Interfaces -------------------------------------------------------
 
     // -- Inner classes -------------------------------------------------------
 
@@ -1825,7 +1318,7 @@ public class CalcProgramBuilder
     /**
      * Reference to a line number
      */
-    public class Line
+    public static class Line
         implements Operand
     {
         java.lang.Integer line = null;
@@ -1841,6 +1334,13 @@ public class CalcProgramBuilder
             this.label = label;
         }
 
+        public String toString()
+        {
+            return label != null ? label :
+                line != null ? line.toString() :
+                    "null";
+        }
+
         final public String getLabel()
         {
             return label;
@@ -1848,7 +1348,7 @@ public class CalcProgramBuilder
 
         final public void setLine(int line)
         {
-            compilationAssert(null == this.line);
+            assert null == this.line;
             this.line = line;
         }
 
@@ -2027,19 +1527,19 @@ public class CalcProgramBuilder
         }
     }
 
-    /* Represents an instruction and its operands */
+    /** Represents an instruction and its operands */
     class Instruction
     {
-        private String opCode;
+        private InstructionDef def;
         private Operand [] operands;
         private String comment;
         private Integer lineNumber;
 
         public Instruction(
-            String opCode,
+            InstructionDef opCode,
             Operand [] operands)
         {
-            this.opCode = opCode;
+            this.def = opCode;
             this.operands = operands;
             comment = null;
             lineNumber = null;
@@ -2047,8 +1547,8 @@ public class CalcProgramBuilder
 
         final void print(PrintWriter writer)
         {
-            writer.print(opCode);
-            if (null != operands) {
+            writer.print(def.name);
+            if (null != operands && operands.length > 0) {
                 writer.print(' ');
                 printOperands(writer, operands);
             }
@@ -2062,11 +1562,6 @@ public class CalcProgramBuilder
                 writer.print(formatComment(comment));
             }
             writer.print(separator);
-        }
-
-        final public String getOpCode()
-        {
-            return opCode;
         }
 
         final public Operand [] getOperands()
@@ -2228,16 +1723,53 @@ public class CalcProgramBuilder
         }
 
         /**
+         * Adds this instruction with a set of operands to a program.
+         *
+         * <p>The default implementation casts each operand to a
+         * {@link CalcReg}, and calls
+         * {@link #add(CalcProgramBuilder, CalcReg[])}. If this instruction's
+         * operands are not registers, override this method.
+         *
+         * @param builder Program builder
+         * @param operands Operands
+         */
+        void add(
+            CalcProgramBuilder builder,
+            Operand... operands)
+        {
+            CalcReg[] regs;
+            if (operands instanceof CalcReg[]) {
+                regs = (CalcReg[]) operands;
+            } else {
+                regs = new CalcReg[operands.length];
+                System.arraycopy(operands, 0, regs, 0, operands.length);
+            }
+            add(builder, regs);
+        }
+
+        protected final void addInternal(
+            CalcProgramBuilder builder,
+            Operand[] regs)
+        {
+            assert regs.length == regCount :
+                "Wrong number of params for instruction " + name;
+            builder.assertOperandsNotNull(regs);
+            builder.addInstruction(this, regs);
+        }
+
+        /**
          * Adds this instruction to a program.
          */
         void add(
             CalcProgramBuilder builder,
             CalcReg... regs)
         {
-            assert regs.length == regCount : "Wrong number of params for instruction "
-                + name;
-            builder.assertOperandsNotNull(regs);
-            builder.addInstruction(name, regs);
+            addInternal(builder, regs);
+        }
+
+        public String toString()
+        {
+            return name;
         }
     }
 
@@ -2290,6 +1822,33 @@ public class CalcProgramBuilder
                 builder.assertIsNativeType(regs[2]); //todo need precision
                                                      //checking
             }
+            super.add(builder, regs);
+        }
+    }
+
+    static class ComparisonInstructionDef
+        extends InstructionDef
+    {
+        ComparisonInstructionDef(String name)
+        {
+            super(name, 3);
+        }
+
+        /**
+         * @pre result is not constant
+         * @pre result/op1/op2 are of type Boolean
+         */
+        void add(
+            CalcProgramBuilder builder,
+            CalcReg... regs)
+        {
+            assert (this.regCount == regs.length);
+            builder.assertRegisterBool(regs[0]);
+            builder.assertRegisterNotConstant(regs[0]);
+            builder.compilationAssert(
+                regs[1].getOpType() == regs[2].getOpType(),
+                "Operand types must match");
+
             super.add(builder, regs);
         }
     }
@@ -2419,8 +1978,8 @@ public class CalcProgramBuilder
             System.arraycopy(regs, 1, registers, 0, registers.length);
             builder.compilationAssert(result != null, "Result can not be null");
             builder.assertOperandsNotNull(registers);
-            builder.addInstruction(
-                "CALL",
+            call.add(
+                builder,
                 new FunctionCall(result, funName, registers));
         }
     }
@@ -2463,8 +2022,8 @@ public class CalcProgramBuilder
             CalcProgramBuilder builder,
             CalcReg... regs)
         {
-            builder.assertRegisterNotConstant(regs[0]);
-            CalcReg op2 = regs[2];
+            builder.assertRegisterNotConstant((CalcReg) regs[0]);
+            CalcReg op2 = (CalcReg) regs[2];
 
             //second operand can only be either long or ulong
             builder.assertRegisterInteger(op2);
@@ -2487,6 +2046,52 @@ public class CalcProgramBuilder
                     + ((java.lang.Integer) op2.getValue()).intValue());
             }
             super.add(builder, regs);
+        }
+    }
+
+    static class JumpInstructionDef extends InstructionDef {
+        JumpInstructionDef(
+            String name, int regCount)
+        {
+            super(name, regCount);
+        }
+
+        void add(
+            CalcProgramBuilder builder,
+            Operand... operands)
+        {
+            if (operands[0] instanceof Line) {
+                Line line = (Line) operands[0];
+                if (line.line != null) {
+                    builder.compilationAssert(line.line >= 0,
+                        "Line can not be negative. Value=" + line);
+                }
+            }
+            if (regCount == 2) {
+                builder.assertRegisterBool((CalcReg) operands[1]);
+            }
+            addInternal(builder, operands);
+        }
+
+        void add(CalcProgramBuilder builder, int line)
+        {
+            add(builder, new Line(line));
+        }
+
+        void add(CalcProgramBuilder builder, String label)
+        {
+            add(builder, new Line(label));
+        }
+
+        void add(CalcProgramBuilder builder, int line, CalcReg reg)
+        {
+            builder.assertRegisterBool(reg);
+            add(builder, new Line(line));
+        }
+
+        void add(CalcProgramBuilder builder, String label, CalcReg reg) {
+            builder.assertRegisterBool(reg);
+            add(builder, new Line(label), reg);
         }
     }
 

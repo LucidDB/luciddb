@@ -22,7 +22,6 @@
 */
 package net.sf.farrago.ojrex;
 
-import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
 import openjava.mop.*;
@@ -32,13 +31,12 @@ import openjava.ptree.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 
 
 /**
- * FarragoOJRexBuiltinImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for builtin functions
+ * FarragoOJRexBuiltinImplementor implements Farrago specifics of
+ * {@link org.eigenbase.oj.rex.OJRexImplementor} for builtin functions
  *
  * @author Xiaoyang Luo
  * @version $Id$

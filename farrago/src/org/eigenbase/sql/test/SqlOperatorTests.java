@@ -25,8 +25,8 @@ package org.eigenbase.sql.test;
 import java.math.*;
 
 import java.util.regex.*;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
+import java.text.SimpleDateFormat;
 
 import junit.framework.*;
 
@@ -166,7 +166,7 @@ public abstract class SqlOperatorTests
     public static final String [] minNumericStrings =
         new String[] { Long.toString(Byte.MIN_VALUE), Long.toString(
                 Short.MIN_VALUE), Long.toString(Integer.MIN_VALUE), Long
-            .toString(Long.MIN_VALUE), "-999.99", 
+            .toString(Long.MIN_VALUE), "-999.99",
             // NOTE jvs 26-Apr-2006:  Win32 takes smaller values from
             // win32_values.h
             "1E-37", /*Float.toString(Float.MIN_VALUE)*/ "2E-307", /*Double.toString(Double.MIN_VALUE)*/ "2E-307" /*Double.toString(Double.MIN_VALUE)*/, };
@@ -186,7 +186,7 @@ public abstract class SqlOperatorTests
     public static final String [] maxNumericStrings =
         new String[] { Long.toString(Byte.MAX_VALUE), Long.toString(
                 Short.MAX_VALUE), Long.toString(Integer.MAX_VALUE), Long
-            .toString(Long.MAX_VALUE), "999.99", 
+            .toString(Long.MAX_VALUE), "999.99",
             // NOTE jvs 26-Apr-2006:  use something slightly less than MAX_VALUE
             // because roundtripping string to approx to string doesn't preserve
             // MAX_VALUE on win32
@@ -204,6 +204,11 @@ public abstract class SqlOperatorTests
             "1e309"
         };
     private static final boolean[] FalseTrue = new boolean[]{false, true};
+
+    // todo: log jira feature request to support time and timestamp with
+    // precision
+    private static final Boolean SupportDatetimeWithPrecision =
+        Util.deprecated(false,false);
 
     //~ Constructors -----------------------------------------------------------
 
@@ -641,10 +646,9 @@ public abstract class SqlOperatorTests
         // Test cast for date/time/timestamp
         getTester().setFor(SqlStdOperatorTable.castFunc);
 
-        // TODO: precision should not be included
         getTester().checkScalar(
             "cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIMESTAMP)",
-            "1945-02-24 12:42:25.34",
+            "1945-02-24 12:42:25.0",
             "TIMESTAMP(0) NOT NULL");
 
         getTester().checkScalar(
@@ -652,13 +656,13 @@ public abstract class SqlOperatorTests
             "12:42:25",
             "TIME(0) NOT NULL");
 
-        if (todo) {
-            // test rounding
-            getTester().checkScalar(
-                "cast(TIME '12:42:25.9' as TIME)",
-                "12:42:26",
-                "TIME(0) NOT NULL");
+        // test rounding
+        getTester().checkScalar(
+            "cast(TIME '12:42:25.9' as TIME)",
+            "12:42:26",
+            "TIME(0) NOT NULL");
 
+        if (SupportDatetimeWithPrecision) {
             // test precision
             getTester().checkScalar(
                 "cast(TIME '12:42:25.34' as TIME(2))",
@@ -677,37 +681,49 @@ public abstract class SqlOperatorTests
             "12:42:25",
             "TIME(0) NOT NULL");
 
-        // FIXME: FNL-54 cast time to timestamp
-        if (todo) {
-            // Note: Casting to time should lose date info, then casting 
-            // back to timestamp should initialize to current_date
-            getTester().checkScalar(
-                "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIME) as TIMESTAMP)",
-                "1970-01-01 12:42:25.34",
-                "TIMESTAMP(0) NOT NULL");
-
-            // TODO: precision should not be included
-            getTester().checkScalar(
-                "cast(TIME '12:42:25.34' as TIMESTAMP)",
-                "1970-01-01 12:42:25.34",
-                "TIMESTAMP(0) NOT NULL");
+        // Generate the current date as a string, e.g. "2007-04-18". The value
+        // is guaranteed to be good for at least 2 minutes, which should give
+        // us time to run the rest of the tests.
+        final String today;
+        while (true) {
+            final Calendar cal = Calendar.getInstance();
+            if (cal.get(Calendar.HOUR_OF_DAY) == 23 &&
+                cal.get(Calendar.MINUTE) >= 58) {
+                try {
+                    Thread.sleep(60 * 1000);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            } else {
+                today = new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime());
+                break;
+            }
         }
 
+        // Note: Casting to time(0) should lose date info and fractional
+        // seconds, then casting back to timestamp should initialize to
+        // current_date.
+        getTester().checkScalar(
+            "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIME) as TIMESTAMP)",
+            today + " 12:42:25.0",
+            "TIMESTAMP(0) NOT NULL");
+
+        getTester().checkScalar(
+            "cast(TIME '12:42:25.34' as TIMESTAMP)",
+            today + " 12:42:25.0",
+            "TIMESTAMP(0) NOT NULL");
+
         // timestamp <-> date
-        if (Util.deprecated(false, false))
         getTester().checkScalar(
             "cast(TIMESTAMP '1945-02-24 12:42:25.34' as DATE)",
             "1945-02-24",
             "DATE NOT NULL");
 
-        if (todo) {
-            // Note: casting to Date discards Time fields
-            // FIXME: doesn't work with Fennel
-            getTester().checkScalar(
-                "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as DATE) as TIMESTAMP)",
-                "1945-02-24 00:00:00",
-                "TIMESTAMP(0) NOT NULL");
-        }
+        // Note: casting to Date discards Time fields
+        getTester().checkScalar(
+            "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as DATE) as TIMESTAMP)",
+            "1945-02-24 00:00:00.0",
+            "TIMESTAMP(0) NOT NULL");
 
         // TODO: precision should not be included
         getTester().checkScalar(
@@ -742,7 +758,7 @@ public abstract class SqlOperatorTests
             "12:42:25",
             "TIME(0) NOT NULL");
 
-        if (todo) {
+        if (SupportDatetimeWithPrecision) {
             getTester().checkScalar(
                 "cast('12:42:25.34' as TIME(2))",
                 "12:42:25.34",
@@ -771,7 +787,6 @@ public abstract class SqlOperatorTests
                 "1945-02-24 12:42:25.34");
         }
 
-        // TODO: precision should not be included
         getTester().checkScalar(
             "cast('1945-02-24 12:42:25' as TIMESTAMP)",
             "1945-02-24 12:42:25.0",
@@ -786,11 +801,10 @@ public abstract class SqlOperatorTests
             "TIMESTAMP(0) NOT NULL");
         getTester().checkScalar(
             "cast('1945-02-24 12:42:25.34' as TIMESTAMP)",
-            "1945-02-24 12:42:25.34",
+            "1945-02-24 12:42:25.0",
             "TIMESTAMP(0) NOT NULL");
 
-        if (todo) {
-            // TODO: precision not supported
+        if (SupportDatetimeWithPrecision) {
             getTester().checkScalar(
                 "cast('1945-02-24 12:42:25.34' as TIMESTAMP(2))",
                 "1945-02-24 12:42:25.34",
@@ -831,6 +845,10 @@ public abstract class SqlOperatorTests
         getTester().checkNull("cast(cast(null as varchar(10)) as time)");
         getTester().checkNull("cast(cast(null as varchar(10)) as date)");
         getTester().checkNull("cast(cast(null as varchar(10)) as timestamp)");
+        getTester().checkNull("cast(cast(null as date) as timestamp)");
+        getTester().checkNull("cast(cast(null as time) as timestamp)");
+        getTester().checkNull("cast(cast(null as timestamp) as date)");
+        getTester().checkNull("cast(cast(null as timestamp) as time)");
     }
 
     public void testCastExactString()

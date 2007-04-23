@@ -196,8 +196,8 @@ public class CalcProgramBuilderTest
 
     public void testJmpToNoWhere()
     {
-        builder.addJump(1);
-        builder.addJump(188);
+        CalcProgramBuilder.jumpInstruction.add(builder, 1);
+        CalcProgramBuilder.jumpInstruction.add(builder, 188);
         assertExceptionIsThrown("(?s)(?i).*line 188 doesn.t exist.*");
     }
 
@@ -215,7 +215,7 @@ public class CalcProgramBuilderTest
         CalcProgramBuilder.boolAnd.add(builder, out0, const0, const1);
         CalcProgramBuilder.boolAnd.add(builder, out0, const0, const1);
         CalcProgramBuilder.boolAnd.add(builder, out0, const0, const1);
-        builder.addJump(2); //jumping back
+        CalcProgramBuilder.jumpInstruction.add(builder, 2);
         assertExceptionIsThrown(
             "(?s)(?i).*Loops are forbidden. Cannot jump to a previous line.*");
     }
@@ -227,7 +227,7 @@ public class CalcProgramBuilderTest
         CalcReg const0 = builder.newBoolLiteral(true);
         CalcReg const1 = builder.newBoolLiteral(true);
         CalcProgramBuilder.boolAnd.add(builder, out0, const0, const1);
-        builder.addJump(1); //jumping to itself
+        CalcProgramBuilder.jumpInstruction.add(builder, 1);
         assertExceptionIsThrown(
             "(?s)(?i).*Cannot jump to the same line as the instruction.*");
     }
@@ -241,7 +241,7 @@ public class CalcProgramBuilderTest
         CalcProgramBuilder.boolAnd.add(builder, out0, const0, const1);
         builder.addLabelJump("label$0");
         builder.addLabelJumpTrue("label$0", out0);
-        builder.addLabelJumpFalse("label$1", out0);
+        CalcProgramBuilder.jumpFalseInstruction.add(builder, new CalcProgramBuilder.Line("label$1"), out0);
         builder.addLabel("label$0");
         builder.addLabelJumpNull("label$1", out0);
         builder.addLabelJumpNotNull("label$1", out0);
@@ -296,31 +296,50 @@ public class CalcProgramBuilderTest
     public void testJumpBooleanFails()
         throws Exception
     {
-        Object [] args;
+        CalcProgramBuilder.Operand [] args;
 
         //Testing the jumpBooleans with register type != Boolean, expecting
         //asserts
         CalcReg const0 = builder.newInt4Literal(3);
-        args = new Object[] { new Integer(2), const0 };
-        for (Method method : getMethods("(?i)addJump\\w+")) {
-            assertExceptionIsThrown(
-                method,
-                args,
-                "(?s).*Expected a register of Boolean type.*");
+        args = new CalcProgramBuilder.Operand[] {
+            new CalcProgramBuilder.Line(2),
+            const0
+        };
+        for (CalcProgramBuilder.InstructionDef instr :
+            CalcProgramBuilder.allInstrDefs) {
+            if (!(instr instanceof CalcProgramBuilder.JumpInstructionDef)) {
+                continue;
+            }
+            if (instr.regCount == 2) {
+                assertExceptionIsThrown(
+                    instr,
+                    args,
+                    "(?s).*Expected a register of Boolean type.*");
+            }
         }
 
-        //Testing jumps with negative line nbr
+        // Testing jumps with negative line nbr
         CalcReg input0 = builder.newInput(CalcProgramBuilder.OpType.Bool, -1);
-        Object [] args1 = new Object[] { new Integer(-2) };
-        Object [] args2 = new Object[] { new Integer(-2), input0 };
+        CalcProgramBuilder.Operand [] args1 = {
+            new CalcProgramBuilder.Line(-2)
+        };
+        CalcProgramBuilder.Operand [] args2 = {
+            new CalcProgramBuilder.Line(-2),
+            input0
+        };
         args = args1;
-        for (Method method : getMethods("addJump\\w+")) {
-            if (method.getParameterTypes().length == 2) {
+        for (CalcProgramBuilder.InstructionDef instr :
+            CalcProgramBuilder.allInstrDefs) {
+            if (!(instr instanceof CalcProgramBuilder.JumpInstructionDef)) {
+                continue;
+            }
+            if (instr.regCount == 2) {
                 args = args2;
             } else {
                 args = args1;
             }
-            assertExceptionIsThrown(method,
+            assertExceptionIsThrown(
+                instr,
                 args,
                 "(?s).*Line can not be negative. Value=-2.*");
         }
@@ -342,24 +361,28 @@ public class CalcProgramBuilderTest
             builder.newInput(CalcProgramBuilder.OpType.Int4, -1);
         CalcReg in3 =
             builder.newInput(CalcProgramBuilder.OpType.Uint4, -1);
-        Object [] args;
-        Object [] cb_ib = new Object[] { const0, in0 };
-        Object [] cb_ib_ib = new Object[] { const0, in0, in1 };
-        Object [] oi_ib = new Object[] { out1, in0 };
-        Object [] ob_il = new Object[] { out0, in2 };
-        Object [] ob_il_il = new Object[] { out0, in2, in3 };
-        Object [] il_cb = new Object[] { in2, const0 };
-        Object [] ib_cb = new Object[] { in0, const0 };
-        Object [] ol_cb_cb = new Object[] { out1, const0, const0 };
-        Object [] ib_cb_cb = new Object[] { in0, const0, const0 };
+        CalcProgramBuilder.Operand [] args;
+        CalcProgramBuilder.Operand [] cb_ib = { const0, in0 };
+        CalcProgramBuilder.Operand [] cb_ib_ib = { const0, in0, in1 };
+        CalcProgramBuilder.Operand [] oi_ib = { out1, in0 };
+        CalcProgramBuilder.Operand [] ob_il = { out0, in2 };
+        CalcProgramBuilder.Operand [] ob_il_il = { out0, in2, in3 };
+        CalcProgramBuilder.Operand [] il_cb = { in2, const0 };
+        CalcProgramBuilder.Operand [] ib_cb = { in0, const0 };
+        CalcProgramBuilder.Operand [] ol_cb_cb = { out1, const0, const0 };
+        CalcProgramBuilder.Operand [] ib_cb_cb = { in0, const0, const0 };
 
         // Attempting to store result in literal register
-        for (Method method : getMethods("addBool\\w*")) {
+        for (CalcProgramBuilder.InstructionDef instr :
+            CalcProgramBuilder.allInstrDefs) {
+            if (!(instr instanceof CalcProgramBuilder.BoolInstructionDef)) {
+                continue;
+            }
             args = cb_ib;
-            if (method.getParameterTypes().length == 3) {
+            if (instr.regCount == 3) {
                 args = cb_ib_ib;
             }
-            assertExceptionIsThrown(method,
+            assertExceptionIsThrown(instr,
                 args,
                 "(?s).*Expected a non constant register.*");
         }
@@ -385,7 +408,8 @@ public class CalcProgramBuilderTest
         }
 
         for (Method method : getMethods("addBool\\w*")) {
-            if (method.getName().startsWith("addBoolNative")) {
+            String name = method.getName();
+            if (name.startsWith("addBoolNative")) {
                 continue;
             }
             args = ob_il;
@@ -406,13 +430,14 @@ public class CalcProgramBuilderTest
         CalcReg in1 =
             builder.newInput(CalcProgramBuilder.OpType.Int4, -1);
         CalcReg in2 = builder.newInt4Literal(0);
+
         assertExceptionIsThrown(
-            "addNativeDiv",
-            new Object[] { in0, in1, in2 },
+            CalcProgramBuilder.nativeDiv,
+            new CalcProgramBuilder.Operand[] { in0, in1, in2 },
             "(?s).*A literal register of Integer type and value=0 was found.*");
         assertExceptionIsThrown(
-            "addIntegralNativeMod",
-            new Object[] { in0, in1, in2 },
+            CalcProgramBuilder.integralNativeMod,
+            new CalcProgramBuilder.Operand[] { in0, in1, in2 },
             "(?s).*A literal register of Integer type and value=0 was found.*");
     }
 
@@ -425,9 +450,9 @@ public class CalcProgramBuilderTest
             builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
         CalcReg out2 =
             builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
-        Object [] args;
-        Object [] args2 = new Object[] { out0, out1 };
-        Object [] args3 = new Object[] { out0, out1, out2 };
+        CalcProgramBuilder.Operand [] args;
+        CalcProgramBuilder.Operand [] args2 = new CalcProgramBuilder.Operand[] { out0, out1 };
+        CalcProgramBuilder.Operand [] args3 = new CalcProgramBuilder.Operand[] { out0, out1, out2 };
 
         for (Method method : getMethods("addNative\\w*")) {
             args = args2;
@@ -439,8 +464,8 @@ public class CalcProgramBuilderTest
                 "(?s).*Register is not of native OpType.*");
         }
 
-        args2 = new Object[] { out1, out0 };
-        args3 = new Object[] { out1, out0, out2 };
+        args2 = new CalcProgramBuilder.Operand[] { out1, out0 };
+        args3 = new CalcProgramBuilder.Operand[] { out1, out0, out2 };
         for (Method method : getMethods("addNative\\w*")) {
             args = args2;
             if (method.getParameterTypes().length == 3) {
@@ -451,7 +476,7 @@ public class CalcProgramBuilderTest
                 "(?s).*Register is not of native OpType.*");
         }
 
-        args3 = new Object[] { out1, out2, out0 };
+        args3 = new CalcProgramBuilder.Operand[] { out1, out2, out0 };
         for (Method method : getMethods("addNative\\w*")) {
             if (method.getParameterTypes().length == 2) {
                 continue;
@@ -471,9 +496,9 @@ public class CalcProgramBuilderTest
         CalcReg in2 = builder.newInput(CalcProgramBuilder.OpType.Real, -1);
         CalcReg out0 =
             builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
-        Object [] args;
-        Object [] args2 = new Object[] { const0, in0 };
-        Object [] args3 = new Object[] { const0, in0, in1 };
+        CalcProgramBuilder.Operand [] args;
+        CalcProgramBuilder.Operand [] args2 = new CalcProgramBuilder.Operand[] { const0, in0 };
+        CalcProgramBuilder.Operand [] args3 = new CalcProgramBuilder.Operand[] { const0, in0, in1 };
 
         for (Method method : getMethods("addIntegralNative\\w*")) {
             args = args2;
@@ -486,11 +511,13 @@ public class CalcProgramBuilderTest
         }
 
         CalcReg const1 = builder.newInt4Literal(-1);
-        args = new Object[] { out0, in1, const1 };
-        assertExceptionIsThrown("addIntegralNativeShiftLeft",
+        args = new CalcProgramBuilder.Operand[] { out0, in1, const1 };
+        assertExceptionIsThrown(
+            CalcProgramBuilder.integralNativeShiftLeft,
             args,
             "(?s).*Cannot shift negative amout of steps. Value=-1.*");
-        assertExceptionIsThrown("addIntegralNativeShiftRight",
+        assertExceptionIsThrown(
+            CalcProgramBuilder.integralNativeShiftRight,
             args,
             "(?s).*Cannot shift negative amout of steps. Value=-1.*");
     }
@@ -508,9 +535,9 @@ public class CalcProgramBuilderTest
         CalcReg in2 = builder.newInput(CalcProgramBuilder.OpType.Real, -1);
         CalcReg in3 = builder.newInput(CalcProgramBuilder.OpType.Bool, -1);
 
-        Object [] args;
-        Object [] args2 = new Object[] { const0, in0 };
-        Object [] args3 = new Object[] { in1, in0, in1 };
+        CalcProgramBuilder.Operand [] args;
+        CalcProgramBuilder.Operand [] args2 = new CalcProgramBuilder.Operand[] { const0, in0 };
+        CalcProgramBuilder.Operand [] args3 = new CalcProgramBuilder.Operand[] { in1, in0, in1 };
 
         for (Method method : getMethods("addPointer\\w*")) {
             args = args2;
@@ -523,8 +550,8 @@ public class CalcProgramBuilderTest
         }
 
         // Testing PointerBoolean operators
-        args2 = new Object[] { out1, in1 };
-        args3 = new Object[] { out1, in1, in2 };
+        args2 = new CalcProgramBuilder.Operand[] { out1, in1 };
+        args3 = new CalcProgramBuilder.Operand[] { out1, in1, in2 };
         for (Method method : getMethods("addPointer\\w*")) {
             if (method.getName().equals("addPointerMove")
                 || (method.getName().equals("addPointerAdd"))) {
@@ -540,8 +567,8 @@ public class CalcProgramBuilderTest
                 "(?s).*Expected a register of Boolean type.*");
         }
 
-        args2 = new Object[] { out0, in3 };
-        args3 = new Object[] { out0, in3, in0 };
+        args2 = new CalcProgramBuilder.Operand[] { out0, in3 };
+        args3 = new CalcProgramBuilder.Operand[] { out0, in3, in0 };
         for (Method method : getMethods("addPointer\\w*")) {
             if (method.getName().equals("addPointerMove")
                 || (method.getName().equals("addPointerAdd"))) {
@@ -556,13 +583,15 @@ public class CalcProgramBuilderTest
                 "(?s).*Expected a register of Pointer type.*");
         }
 
-        args3 = new Object[] { out1, out0, in3 };
-        assertExceptionIsThrown("addPointerAdd",
+        args3 = new CalcProgramBuilder.Operand[] { out1, out0, in3 };
+        assertExceptionIsThrown(
+            CalcProgramBuilder.pointerAdd,
             args3,
             "(?s).*Expected a register of Pointer type.*");
 
-        args = new Object[] { out1, in1, in1 };
-        assertExceptionIsThrown("addPointerAdd",
+        args = new CalcProgramBuilder.Operand[] { out1, in1, in1 };
+        assertExceptionIsThrown(
+            CalcProgramBuilder.pointerAdd,
             args,
             "(?s).*Expected a register of Integer type.*");
     }
@@ -603,6 +632,32 @@ public class CalcProgramBuilderTest
                 fail(
                     "Unexpected message while invokig method "
                     + method.getName() + ". Actual:\n" + actualMsg
+                    + "\n\nExpected:\n" + expectedMsg);
+            }
+        }
+    }
+
+    void assertExceptionIsThrown(
+        CalcProgramBuilder.InstructionDef instr,
+        CalcProgramBuilder.Operand [] args,
+        String expectedMsg)
+        throws Exception
+    {
+        assertNotNull(instr);
+        try {
+            instr.add(builder, args);
+            fail(
+                "Exception was not thrown while invoking instruction "
+                + instr.name);
+        } catch (Exception e) {
+            String actualMsg = e.getMessage() + "\n";
+            if (null != e.getCause()) {
+                actualMsg += e.getCause().getMessage();
+            }
+            if (!actualMsg.matches(expectedMsg)) {
+                fail(
+                    "Unexpected message while invokig method "
+                    + instr.name + ". Actual:\n" + actualMsg
                     + "\n\nExpected:\n" + expectedMsg);
             }
         }

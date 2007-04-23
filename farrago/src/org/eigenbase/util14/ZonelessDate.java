@@ -37,7 +37,7 @@ public class ZonelessDate extends ZonelessDatetime
 
     //~ Instance fields --------------------------------------------------------
 
-    protected Date tempDate;
+    protected transient Date tempDate;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -69,9 +69,9 @@ public class ZonelessDate extends ZonelessDatetime
     }
 
     /**
-     * Converts this ZonelessDate to a java.sql.Date and formats it via the 
+     * Converts this ZonelessDate to a java.sql.Date and formats it via the
      * {@link java.sql.Date#toString() toString()} method of that class.
-     * 
+     *
      * @return the formatted date string
      */
     public String toString()
@@ -82,7 +82,7 @@ public class ZonelessDate extends ZonelessDatetime
 
     /**
      * Formats this ZonelessDate via a SimpleDateFormat
-     * 
+     *
      * @param format format string, as required by {@link SimpleDateFormat}
      * @return the formatted date string
      */
@@ -95,16 +95,16 @@ public class ZonelessDate extends ZonelessDatetime
 
     /**
      * Parses a string as a ZonelessDate.
-     * 
-     * @param s a string representing a date in ISO format, i.e. according 
+     *
+     * @param s a string representing a date in ISO format, i.e. according
      *   to the SimpleDateFormat string "yyyy-MM-dd"
      * @return the parsed date, or null if parsing failed
      */
     public static ZonelessDate parse(String s)
     {
         Calendar cal = DateTimeUtil.parseDateFormat(
-            s, 
-            DateTimeUtil.DateFormatStr, 
+            s,
+            DateTimeUtil.DateFormatStr,
             DateTimeUtil.gmtZone);
         if (cal == null) {
             return null;
@@ -128,4 +128,4 @@ public class ZonelessDate extends ZonelessDatetime
     }
 }
 
-// End GmtDate.java
+// End ZonelessDate.java

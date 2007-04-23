@@ -175,13 +175,13 @@ public abstract class RelDataTypeImpl
     // implement RelDataType
     public int getPrecision()
     {
-        throw Util.newInternal("attribute not applicable");
+        throw Util.newInternal("no precision: " + this);
     }
 
     // implement RelDataType
     public int getScale()
     {
-        throw Util.newInternal("attribute not applicable");
+        throw Util.newInternal("no scale: " + this);
     }
 
     // implement RelDataType

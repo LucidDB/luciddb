@@ -38,14 +38,14 @@ import java.util.*;
 public interface FarragoCacheVictimPolicy
 {
     //~ Methods ----------------------------------------------------------------
-    
+
     /**
      * Creates a new cache entry
-     * 
+     *
      * @param parentCache the cache this entry is associated with
      */
     public FarragoCacheEntry newEntry(FarragoObjectCache parentCache);
-    
+
     /**
      * Receives notification that a new entry is being added to the cache.
      *
@@ -59,10 +59,10 @@ public interface FarragoCacheVictimPolicy
      * @param entry entry to be removed
      */
     public void unregisterEntry(FarragoCacheEntry entry);
-    
+
     /**
      * Unregisters the current entry being accessed from the victim range
-     * 
+     *
      * @param victimRange iterator corresponding to the victim range
      */
     public void unregisterEntry(Iterator victimRange);
@@ -81,7 +81,7 @@ public interface FarragoCacheVictimPolicy
      *
      * @return iterator corresponding to cache victims
      */
-    public Iterator getVictimIterator();
+    public Iterator<FarragoCacheEntry> getVictimIterator();
 
     /**
      * Receives notification that all entries are being removed from the cache

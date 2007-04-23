@@ -847,7 +847,7 @@ public class FarragoJdbcTest
                 final Object expected = sqlType.getExpected(value);
                 String message =
                     "sqltype [" + sqlType.string + "], javatype ["
-                    + ((javaType == null) ? "?" : javaType.name)
+                    + ((javaType == null) ? "?" : javaType)
                     + "], expected [" + toString(expected)
                     + ((expected == null) ? "" : (" :" + expected.getClass()))
                     + "], actual [" + toString(actual)
@@ -873,7 +873,9 @@ public class FarragoJdbcTest
         int rows = checkResults(resultSet, javaType);
         assertEquals(res, rows);
         stmt.close();
-        connection.rollback();
+        if (!connection.getAutoCommit()) {
+            connection.rollback();
+        }
 
         // wipe out the array for the next test
         Arrays.fill(values, null);
@@ -970,13 +972,14 @@ public class FarragoJdbcTest
         int validity = sqlType.checkIsValid(value);
         Throwable throwable;
         tracer.fine(
-            "Call PreparedStmt.set" + javaType.name + "(" + column
+            "Call PreparedStmt.set" + javaType + "(" + column
             + ", " + value + "), validity is "
             + TestSqlType.validityName[validity]);
         try {
             javaType.setMethod.invoke(
                 preparedStmt,
-                new Object[] { new Integer(column), value });
+                column,
+                value);
             throwable = null;
         } catch (IllegalAccessException e) {
             throwable = e;
@@ -992,7 +995,7 @@ public class FarragoJdbcTest
             if (throwable != null) {
                 fail(
                     "Error received when none expected, javaType="
-                    + javaType.name + ", sqlType=" + sqlType.string
+                    + javaType + ", sqlType=" + sqlType.string
                     + ", value=" + value + ", throwable=" + throwable);
             }
             this.values[column] = value;
@@ -1007,7 +1010,7 @@ public class FarragoJdbcTest
             if (!okay) {
                 fail(
                     "Was expecting " + TestSqlType.validityName[validity]
-                    + " error, javaType=" + javaType.name
+                    + " error, javaType=" + javaType
                     + ", sqlType=" + sqlType.string + ", value=" + value
                     + ", throwable=" + throwable);
             }
@@ -2171,11 +2174,6 @@ public class FarragoJdbcTest
                 assertEquals(
                     timeNoDate.getTime(),
                     resultSet.getTime(TIME).getTime());
-
-                // FIXME: FNL-54
-                // SQL Spec Part 2 Section 4.6.2 Table 3 requires
-                // Time to Timestamp cast to set the date to current_date
-                // (currently stored in FarragoRuntimeContext)
                 assertEquals(
                     timeNoDate.getTime(),
                     resultSet.getTime(TIMESTAMP).getTime());
@@ -2192,14 +2190,17 @@ public class FarragoJdbcTest
                 assertEquals(
                     dateNoTime.getTime(),
                     resultSet.getTimestamp(DATE).getTime());
-                // FIXME: See Time to Timestamp note above
-                if (todo) {
+
+                // SQL Spec Part 2 Section 4.6.2 Table 3 requires
+                // Time to Timestamp cast to set the date to current_date
+                // (currently stored in FarragoRuntimeContext)
+                if (Bug.Fnl54Fixed) {
                     assertEquals(
-                        timestamp.getTime(),
+                        timestampNoPrec.getTime(),
                         resultSet.getTimestamp(TIME).getTime());
                 }
                 assertEquals(
-                    timestamp.getTime(),
+                    timestampNoPrec.getTime(),
                     resultSet.getTimestamp(TIMESTAMP).getTime());
                 break;
             case 119:
@@ -2265,7 +2266,7 @@ public class FarragoJdbcTest
                     timeNoDate,
                     resultSet.getObject(TIME));
                 assertEquals(
-                    timestamp,
+                    timestampNoPrec,
                     resultSet.getObject(TIMESTAMP));
                 break;
             default:
@@ -2279,7 +2280,9 @@ public class FarragoJdbcTest
         resultSet.close();
         resultSet = null;
 
-        connection.rollback();
+        if (!connection.getAutoCommit()) {
+            connection.rollback();
+        }
     }
 
     /**
@@ -3959,96 +3962,60 @@ public class FarragoJdbcTest
      * "Boolean" has {@link ResultSet#getBoolean(int)} and {@link
      * PreparedStatement#setBoolean(int,boolean)}.
      */
-    protected static class TestJavaType
+    protected enum TestJavaType
     {
-        private static final TestJavaType Boolean =
-            new TestJavaType("Boolean", boolean.class, true);
-        private static final TestJavaType Byte =
-            new TestJavaType("Byte", byte.class, true);
-        private static final TestJavaType Short =
-            new TestJavaType("Short", short.class, true);
-        private static final TestJavaType Int =
-            new TestJavaType("Int", int.class, true);
-        private static final TestJavaType Long =
-            new TestJavaType("Long", long.class, true);
-        private static final TestJavaType Float =
-            new TestJavaType("Float", float.class, true);
-        private static final TestJavaType Double =
-            new TestJavaType("Double", double.class, true);
-        private static final TestJavaType BigDecimal =
-            new TestJavaType("BigDecimal", BigDecimal.class, true);
-        private static final TestJavaType String =
-            new TestJavaType("String", String.class, true);
-        private static final TestJavaType Bytes =
-            new TestJavaType("Bytes", byte [].class, true);
+        Boolean(boolean.class, true),
+        Byte(byte.class, true),
+        Short(short.class, true),
+        Int(int.class, true),
+        Long(long.class, true),
+        Float(float.class, true),
+        Double(double.class, true),
+        BigDecimal(BigDecimal.class, true),
+        String(String.class, true),
+        Bytes(byte [].class, true),
 
         // Date, Time, Timestamp each have an additional set method, e.g.
         //   setXxx(int,Date,Calendar)
         // TODO: test this
-        private static final TestJavaType Date =
-            new TestJavaType("Date", Date.class, true);
-        private static final TestJavaType Time =
-            new TestJavaType("Time", Time.class, true);
-        private static final TestJavaType Timestamp =
-            new TestJavaType("Timestamp", Timestamp.class, true);
+        Date(Date.class, true),
+        Time(Time.class, true),
+        Timestamp(Timestamp.class, true),
 
         // Object has 2 extra 'setObject' methods:
         //   setObject(int,Object,int targetTestSqlType)
         //   setObject(int,Object,int targetTestSqlType,int scale)
         // TODO: test this
-        private static final TestJavaType Object =
-            new TestJavaType("Object", Object.class, true);
+        Object(Object.class, true),
 
         // next 4 are not regular, because their 'set' method has an extra
         // parameter, e.g. setAsciiStream(int,InputStream,int length)
-        private static final TestJavaType AsciiStream =
-            new TestJavaType("AsciiStream", InputStream.class, false);
-        private static final TestJavaType UnicodeStream =
-            new TestJavaType("UnicodeStream", InputStream.class, false);
-        private static final TestJavaType BinaryStream =
-            new TestJavaType("BinaryStream", InputStream.class, false);
-        private static final TestJavaType CharacterStream =
-            new TestJavaType("CharacterStream", Reader.class, false);
-        private static final TestJavaType Ref =
-            new TestJavaType("Ref", Ref.class, true);
-        private static final TestJavaType Blob =
-            new TestJavaType("Blob", Blob.class, true);
-        private static final TestJavaType Clob =
-            new TestJavaType("Clob", Clob.class, true);
-        private static final TestJavaType Array =
-            new TestJavaType("Array", Array.class, true);
-        private final String name;
-        private final Class clazz;
+        AsciiStream(InputStream.class, false),
+        UnicodeStream(InputStream.class, false),
+        BinaryStream(InputStream.class, false),
+        CharacterStream(Reader.class, false),
+        Ref(Ref.class, true),
+        Blob(Blob.class, true),
+        Clob(Clob.class, true),
+        Array(Array.class, true);
 
-        /**
-         * whether it has a setXxxx(int,xxx) method
-         */
-        private final boolean regular;
         private final Method setMethod;
-        TestJavaType [] all =
-            {
-                Boolean, Byte, Short, Int, Long, Float, Double, BigDecimal, String,
-                Bytes, Date, Time, Timestamp, Object, AsciiStream, UnicodeStream,
-                BinaryStream, CharacterStream, Ref, Blob, Clob, Array,
-            };
 
-        private TestJavaType(
-            String name,
+        TestJavaType(
             Class clazz,
             boolean regular)
         {
-            this.name = name;
-            this.clazz = clazz;
-
-            this.regular = regular;
+            Util.discard(clazz);
+            Util.discard(regular); // whether it has a setXxx(int, xxx) method
 
             // e.g. PreparedStatement.setBoolean(int,boolean)
             Method method = null;
             try {
                 method =
                     PreparedStatement.class.getMethod(
-                        "set" + name,
-                        new Class[] { int.class, clazz });
+                        "set" + name(),
+                        int.class,
+                        clazz);
             } catch (NoSuchMethodException e) {
             } catch (SecurityException e) {
             }

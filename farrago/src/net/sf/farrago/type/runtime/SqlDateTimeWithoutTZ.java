@@ -43,8 +43,9 @@ import org.eigenbase.util14.*;
  * This class interoperates with java.sql (Jdbc) types since they are
  * commonly used for external data.
  *
- * TODO: we can probably be smarter about how we allocate Java objects
- * TODO: precision and milliseconds for TIME and TIMESTAMP
+ * <p>TODO: we can probably be smarter about how we allocate Java objects
+ *
+ * <p>TODO: precision and milliseconds for TIME and TIMESTAMP
  *
  * @author lee
  * @version $Id$
@@ -64,6 +65,21 @@ public abstract class SqlDateTimeWithoutTZ
     private static final TimeZone defaultZone = DateTimeUtil.defaultZone;
 
     public static final String INTERNAL_TIME_FIELD_NAME = "internalTime";
+
+    /**
+     * Name of {@link #adjustPrecision(int)} method.
+     */
+    public static final String ADJUST_PRECISION_METHOD_NAME = "adjustPrecision";
+
+    /**
+     * Name of {@link #floor(int)} method.
+     */
+    public static final String FLOOR_METHOD_NAME = "floor";
+
+    /**
+     * Name of {@link #ceil(int)} method.
+     */
+    public static final String CEIL_METHOD_NAME = "ceil";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -344,6 +360,17 @@ public abstract class SqlDateTimeWithoutTZ
      */
     protected abstract String getTypeName();
 
+    /**
+     * Rounds this datetime value down to a unit of time. All smaller units
+     * of time are zeroed also.
+     *
+     * <p>For example, <code>floor(MINUTE)</code> applied to
+     * <code>TIMESTAMP '2006-07-03 12:34:56.7'</code> returns
+     * <code>TIMESTAMP '2006-07-03 12:00:00.0'</code>.
+     *
+     * @param timeUnitOrdinal Ordinal of time unit, as per
+     * {@link SqlIntervalQualifier.TimeUnit}.
+     */
     public void floor(int timeUnitOrdinal)
     {
         Calendar cal = getTempCal();
@@ -368,6 +395,17 @@ public abstract class SqlDateTimeWithoutTZ
         value.setZonelessTime(cal.getTimeInMillis());
     }
 
+    /**
+     * Rounds this datetime value up to a unit of time. All smaller units
+     * of time are zeroed.
+     *
+     * <p>For example, <code>ceil(MINUTE)</code> applied to
+     * <code>TIMESTAMP '2006-07-03 12:34:56.7'</code> returns
+     * <code>TIMESTAMP '2006-07-03 13:00:00.0'</code>.
+     *
+     * @param timeUnitOrdinal Ordinal of time unit, as per
+     * {@link SqlIntervalQualifier.TimeUnit}.
+     */
     public void ceil(int timeUnitOrdinal)
     {
         Calendar cal = getTempCal();
@@ -434,6 +472,55 @@ public abstract class SqlDateTimeWithoutTZ
             }
             value.setZonelessTime(cal.getTimeInMillis());
         }
+    }
+
+    /**
+     * Adjusts the precision of the value.
+     *
+     * <p>For example, <code>adjustPrecision(2)</code> applied to the value
+     * <code>TIME '12:34:56.789'</code> rounds to 10 milliseconds, and
+     * returns <code>TIME '12:34:56.79'</code>.
+     *
+     * @param precision Number of digits to keep the right of the decimal
+     * point in the seconds value
+     */
+    public void adjustPrecision(int precision)
+    {
+        int quantum;
+        switch (precision) {
+        case 0:
+            // Precision 0 rounds to the second.
+            quantum = 1000;
+            break;
+        case 1:
+            // Precision 1 rounds to the 1/10th second.
+            quantum = 100;
+            break;
+        case 2:
+            // Precision 2 rounds to the 1/100th second.
+            quantum = 10;
+            break;
+        default:
+            // Precision 3 or more rounds to the 1/1000th second - do not
+            // adjust the value.
+            return;
+        }
+        Calendar cal = getTempCal();
+        int millis = cal.get(Calendar.MILLISECOND);
+        int remainder = millis % quantum;
+        millis -= remainder;
+
+        // If we are in the upper half of the quantum, round up, and handle
+        // possible overflow into the seconds.
+        if (remainder > quantum / 2) {
+            millis += quantum;
+            if (millis >= 1000) {
+                cal.add(Calendar.SECOND, millis / 1000);
+            }
+            millis %= quantum;
+        }
+        cal.set(Calendar.MILLISECOND, millis);
+        value.setZonelessTime(cal.getTimeInMillis());
     }
 
     /**

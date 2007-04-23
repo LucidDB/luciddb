@@ -172,6 +172,8 @@ SqlStrToDate(char *src, int len)
 
 int64_t CurrentTime();
 int64_t CurrentTimestamp();
+int64_t LocalTime();
+int64_t LocalTimestamp();
 
 FENNEL_END_NAMESPACE
 
