@@ -398,10 +398,6 @@ public abstract class DiffTestCase
 
         // mask out different-length sqlline continuation prompts
         addDiffMask("^(\\.\\s?)+>");
-
-        // JFrost 2006-12s-5
-        // Temporary mask to be used until log files have been updated.
-        addDiffMask("^>");
     }
 
 }

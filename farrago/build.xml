@@ -133,6 +133,7 @@ require version '${required.ant.version}'."/>
   <!-- a fileset of all SQL unit tests -->
   <fileset dir="${unitsql.dir}" id="fileset.unitsql">
     <include name="**/*.sql"/>
+    <exclude name="runner/**/*.sql"/>
   </fileset>
   <pathconvert property="fileset.unitsql" refid="fileset.unitsql"
     pathsep="${line.separator}" dirsep="${file.separator}" />
