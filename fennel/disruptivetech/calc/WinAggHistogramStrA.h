@@ -110,7 +110,8 @@ public:
         }
     } StringDescCompare;
 
-    typedef multiset<StringDesc,StringDescCompare> WinAggData;
+    // REVIEW: jhyde, 2006/6/14: Use initcaps for type names.
+    typedef multiset<StringDesc,StringDescCompare> winAggData;
 
     typedef deque<StringDesc> WinAggQueue;
 
@@ -148,11 +149,8 @@ public:
     //! Returns NULL if the window is empty.
     void getLastValue(RegisterRef<char*>* node);
 
-protected:
-    void setReturnReg(RegisterRef<char*>* dest, const StringDesc& src);
-
 private:
-    WinAggData currentWindow;   // Holds the values currently in the window.
+    winAggData currentWindow;   // Holds the values currently in the window.
     int64_t nullRows;           // Couunt of null entries
 
     /// FIFO queue of values, to enable FIRST_VALUE/LAST_VALUE support.

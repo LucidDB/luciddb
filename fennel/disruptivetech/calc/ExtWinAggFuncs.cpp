@@ -76,7 +76,7 @@ void histogramAlloc(RegisterRef<char*>* result, RegisterReference* targetDataTyp
 //! node - Register with new data to be added to window
 //! aggDataBlock - Aggregation accumulator
 template <typename STDTYPE>
-inline void add(RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
+void add(RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
 {
     // cast otherData buffer pointer to our working structure
     TupleDatum *bind = aggDataBlock->getBinding(false);
@@ -88,18 +88,6 @@ inline void add(RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
     pAcc->addRow(node);
 }
 
-inline void add(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
-{
-    // cast otherData buffer pointer to our working structure
-    TupleDatum *bind = aggDataBlock->getBinding(false);
-    WinAggHistogramStrA *pAcc =
-        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
-
-    // Process the new node. 
-    pAcc->addRow(node);
-}
-
-
 //! drop - Template function that implements the DROP row function for the
 //! specified data type.
 //!
@@ -108,7 +96,7 @@ inline void add(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
 //!        data value must be the same one submitted to ADD
 //! aggDataBlock - Aggregation accumulator
 template <typename STDTYPE>
-inline void drop(RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
+void drop(RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
 {
     // cast otherData buffer pointer to our working structure
     TupleDatum *bind = aggDataBlock->getBinding(false);
@@ -119,15 +107,6 @@ inline void drop(RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
     pAcc->dropRow(node);
 }
 
-inline void drop(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
-{
-    TupleDatum *bind = aggDataBlock->getBinding(false);
-    WinAggHistogramStrA *pAcc =
-        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
-    
-    pAcc->dropRow(node);
-}
-
 //! min - Template function that returns the current MIN value for the window
 //! specified data type.
 //!
@@ -135,21 +114,13 @@ inline void drop(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
 //! result - Register returns the MIN value
 //! aggDataBlock - Aggregation accumulator
 template <typename STDTYPE>
-inline void min(RegisterRef<STDTYPE>* result, RegisterRef<char*>* aggDataBlock)
+void min(RegisterRef<STDTYPE>* result, RegisterRef<char*>* aggDataBlock)
 {
     // cast otherData buffer pointer to our working structure
     TupleDatum *bind = aggDataBlock->getBinding(false);
     WinAggHistogram<STDTYPE> *pAcc =
         *(reinterpret_cast<WinAggHistogram<STDTYPE>**>(const_cast<PBuffer>(bind->pData)));
     // return min value
-    pAcc->getMin(result);
-}
-
-inline void min(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBlock)
-{
-    TupleDatum *bind = aggDataBlock->getBinding(false);
-    WinAggHistogramStrA *pAcc =
-        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
     pAcc->getMin(result);
 }
 
@@ -160,7 +131,7 @@ inline void min(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBlock)
 //! result - Register returns the MAX value
 //! aggDataBlock - Aggregation accumulator
 template <typename STDTYPE>
-inline void max(RegisterRef<STDTYPE>* result, RegisterRef<char*>* aggDataBlock)
+void max(RegisterRef<STDTYPE>* result, RegisterRef<char*>* aggDataBlock)
 {
     // cast otherData buffer pointer to our working structure
     TupleDatum *bind = aggDataBlock->getBinding(false);
@@ -171,14 +142,6 @@ inline void max(RegisterRef<STDTYPE>* result, RegisterRef<char*>* aggDataBlock)
     pAcc->getMax(result);
 }
 
-inline void max(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBlock)
-{
-    TupleDatum *bind = aggDataBlock->getBinding(false);
-    WinAggHistogramStrA *pAcc =
-        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
-    pAcc->getMax(result);
-}
-
 //! avg - Template function that returns the current AVG value for the window
 //! specified data type.
 //!
@@ -186,7 +149,7 @@ inline void max(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBlock)
 //! result - Register returns the AVG value
 //! aggDataBlock - Aggregation accumulator
 template <typename STDTYPE>
-inline void avg(
+void avg(
     RegisterRef<STDTYPE>* result,
     RegisterRef<char*>* aggDataBlock)
 {
@@ -206,7 +169,7 @@ inline void avg(
 //! result - Register returns the SUM value
 //! aggDataBlock - Aggregation accumulator
 template <typename STDTYPE>
-inline void sum(
+void sum(
     RegisterRef<STDTYPE>* result,
     RegisterRef<char*>* aggDataBlock)
 {
@@ -226,7 +189,7 @@ inline void sum(
 //! result - Register returns the MIN value
 //! aggDataBlock - Aggregation accumulator
 template <typename STDTYPE>
-inline void count(
+void count(
     RegisterRef<STDTYPE>* result,
     RegisterRef<char*>* aggDataBlock)
 {
@@ -254,7 +217,7 @@ void WinAggInit(RegisterRef<char*>* result, RegisterRef<TDT>* targetDataType)
 //! result - Register returns the MIN value
 //! aggDataBlock - Aggregation accumulator
 template <typename STDTYPE>
-inline void firstValue(
+void firstValue(
     RegisterRef<STDTYPE>* result,
     RegisterRef<char*>* aggDataBlock)
 {
@@ -267,14 +230,6 @@ inline void firstValue(
     pAcc->getFirstValue(result);
 }
 
-inline void firstValue(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBlock)
-{
-    TupleDatum *bind = aggDataBlock->getBinding(false);
-    WinAggHistogramStrA *pAcc =
-        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
-    pAcc->getFirstValue(result);
-}
-
 //! lastValue - Template function that returns the last value which entered
 //! the window
 //!
@@ -282,7 +237,7 @@ inline void firstValue(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBl
 //! result - Register returns the MIN value
 //! aggDataBlock - Aggregation accumulator
 template <typename STDTYPE>
-inline void lastValue(
+void lastValue(
     RegisterRef<STDTYPE>* result,
     RegisterRef<char*>* aggDataBlock)
 {
@@ -292,14 +247,6 @@ inline void lastValue(
         *(reinterpret_cast<WinAggHistogram<STDTYPE>**>(const_cast<PBuffer>(bind->pData)));
     
     // return first value
-    pAcc->getLastValue(result);
-}
-
-inline void lastValue(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBlock)
-{
-    TupleDatum *bind = aggDataBlock->getBinding(false);
-    WinAggHistogramStrA *pAcc =
-        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
     pAcc->getLastValue(result);
 }
 
@@ -400,37 +347,70 @@ void WinAggLastValue(RegisterRef<double>* result, RegisterRef<char*>* aggDataBlo
 }
 
 //
-// Ascii interface  Note: Avg and Sum are not applicable to string data.
+// Ascii interface
+//
+
+// REVIEW: jhyde: 2006/7/28: Why are these functions so different from
+// WinAggAdd (etc.) for other datatypes? I know they need to use
+// WinAggHistogramStrA rather than WinAggHistogram, but WinAggAdd()
+// could still call an intermediate 'add()' function. If it helps,
+// note that you can 'override' template functions: you could provide
+// a specific implementation for 'add<char>()'.
 //
 void WinAggAdd(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
 {
-    add( node,aggDataBlock);
+    // cast otherData buffer pointer to our working structure
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinAggHistogramStrA *pAcc =
+        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
+
+    // Process the new node. 
+    pAcc->addRow(node);
 }
 
 void WinAggDrop(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
 {
-    drop( node,aggDataBlock);
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinAggHistogramStrA *pAcc =
+        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
+    
+    pAcc->dropRow(node);
 }
 
 
-void WinAggMin(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
+void WinAggMin(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBlock)
 {
-    min( node,aggDataBlock);
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinAggHistogramStrA *pAcc =
+        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
+    pAcc->getMin(result);
 }
 
-void WinAggMax(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
+void WinAggMax(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBlock)
 {
-    max( node,aggDataBlock);
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinAggHistogramStrA *pAcc =
+        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
+
+    pAcc->getMax(result);
 }
 
-void WinAggFirstValue(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
+void WinAggFirstValue(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBlock)
 {
-    firstValue(node, aggDataBlock);
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinAggHistogramStrA *pAcc =
+        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
+
+    pAcc->getFirstValue(result);
 }
 
-void WinAggLastValue(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
+void WinAggLastValue(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBlock)
 {
-    lastValue(node, aggDataBlock);
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinAggHistogramStrA *pAcc =
+        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
+
+    pAcc->getLastValue(result);
 }
 
 //

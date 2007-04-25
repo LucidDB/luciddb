@@ -31,7 +31,6 @@
 #include <utility>
 #include <set>
 #include <deque>
-#include <list>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -65,11 +64,12 @@ public:
     ~WinAggHistogram()
     {}
 
-    typedef multiset<STDTYPE> WinAggData;
+    // REVIEW: jhyde, 2006/6/14: Use initcaps for type names.
+    typedef multiset<STDTYPE> winAggData;
 
     // REVIEW: jhyde, 2006/6/14: We don't need a double-ended queue. We only
     // add to the tail, and remove from the head.
-    typedef list<STDTYPE> WinAggQueue;
+    typedef deque<STDTYPE> WinAggQueue;
 
     //! addRow - Adds new value to tree and updates
     //! the running sum for current values.
@@ -107,7 +107,7 @@ public:
             assert(0 != currentWindow.size());
             STDTYPE* pData = node->refer();
 
-            pair<typename WinAggData::iterator, typename WinAggData::iterator> entries =
+            pair<typename winAggData::iterator, typename winAggData::iterator> entries =
                 currentWindow.equal_range(*pData);
 
             assert(entries.first != entries.second);
@@ -206,7 +206,7 @@ public:
 
 private:
     
-    WinAggData currentWindow;   // Holds the values currently in the window.
+    winAggData currentWindow;   // Holds the values currently in the window.
     int64_t nullRows;           // Couunt of null entries
 
     // REVIEW (jhyde, 2006/6/14): We need to support char datatypes, so it's
