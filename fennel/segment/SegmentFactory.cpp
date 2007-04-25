@@ -88,10 +88,14 @@ SharedSegment SegmentFactory::newRandomAllocationSegment(
     RandomAllocationSegment *pRandomSegment = 
         new RandomAllocationSegment(delegateSegment);
     SharedSegment pSegment(pRandomSegment,ClosableObjectDestructor());
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment,"RandomAllocationSegment");
+    // Format the segment through the tracing segment so the operation
+    // is traced
     if (bFormat) {
-        pSegment->deallocatePageRange(NULL_PAGE_ID,NULL_PAGE_ID);
+        tracingSegment->deallocatePageRange(NULL_PAGE_ID,NULL_PAGE_ID);
     }
-    return newTracingSegment(pSegment,"RandomAllocationSegment");
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newVersionedRandomAllocationSegment(
@@ -102,10 +106,14 @@ SharedSegment SegmentFactory::newVersionedRandomAllocationSegment(
     VersionedRandomAllocationSegment *pVersionedRandomSegment = 
         new VersionedRandomAllocationSegment(delegateSegment, pTempSegment);
     SharedSegment pSegment(pVersionedRandomSegment, ClosableObjectDestructor());
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "VersionedRandomAllocationSegment");
+    // Format the segment through the tracing segment so the operation
+    // is traced
     if (bFormat) {
-        pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
+        tracingSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
     }
-    return newTracingSegment(pSegment, "VersionedRandomAllocationSegment");
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newSnapshotRandomAllocationSegment(
@@ -210,6 +218,9 @@ SharedSegment SegmentFactory::newTracingSegment(
     SharedSegment pTracingSegment(
         new TracingSegment(pSegment,pTraceTarget,sourceName),
         ClosableObjectDestructor());
+
+    pSegment->setTracingSegment(WeakSegment(pTracingSegment));
+
     return pTracingSegment;
 }
 

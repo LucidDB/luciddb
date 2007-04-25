@@ -38,11 +38,32 @@ Segment::Segment(SharedCache pCacheInit)
 
 Segment::~Segment()
 {
+    close();
 }
 
 void Segment::closeImpl()
 {
     checkpoint(CHECKPOINT_FLUSH_AND_UNMAP);
+}
+
+SharedSegment Segment::getTracingSegment()
+{
+    SharedSegment sharedPtr = pTracingSegment.lock();
+    if (sharedPtr && sharedPtr.get()) {
+        return sharedPtr;
+    } else {
+        return shared_from_this();
+    }
+}
+
+void Segment::setTracingSegment(WeakSegment pTracingSegmentInit)
+{
+    pTracingSegment = pTracingSegmentInit;
+}
+
+MappedPageListener *Segment::getTracingListener()
+{
+    return getTracingSegment().get();
 }
 
 void Segment::setUsablePageSize(uint cb)
@@ -88,7 +109,16 @@ bool Segment::isLinearPageIdAllocated(PageId pageId)
 
 void Segment::checkpoint(CheckpointType checkpointType)
 {
-    delegatedCheckpoint(*this,checkpointType);
+    // Note that we can't use getTracingSegment() here because that method
+    // references the shared ptr associated with this segment, and the
+    // shared segment may have already been freed during shutdown by the
+    // time this method is called.
+    SharedSegment sharedPtr = pTracingSegment.lock();
+    if (sharedPtr && sharedPtr.get()) {
+        delegatedCheckpoint(*(sharedPtr.get()),checkpointType);
+    } else {
+        delegatedCheckpoint(*this,checkpointType);
+    }
 }
 
 void Segment::delegatedCheckpoint(
@@ -126,7 +156,7 @@ MappedPageListener *Segment::getMappedPageListener(BlockId blockId)
 
 void Segment::discardCachePage(BlockId blockId)
 {
-    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     selfAccessor.pCacheAccessor->discardPage(blockId);
 }
 

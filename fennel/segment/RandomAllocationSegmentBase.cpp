@@ -91,7 +91,7 @@ void RandomAllocationSegmentBase::format()
     // format each SegAllocNode
     
     ExtentNum extentNum = 0;
-    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     SegAllocLock segAllocLock(selfAccessor);
     for (uint iSegAlloc = 0; iSegAlloc < nSegAllocPages; iSegAlloc++) {
 
@@ -175,6 +175,10 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
         }
 
         if (segAllocNode.nextSegAllocPageId != NULL_PAGE_ID) {
+            // since there's no space on the current SegAllocNode, indicate
+            // that we haven't modified it
+            undoSegAllocPageWrite(origSegAllocPageId);
+
             // try next SegAllocNode
             origSegAllocPageId = segAllocNode.nextSegAllocPageId;
             segAllocPageId = getSegAllocPageIdForWrite(origSegAllocPageId);
@@ -189,11 +193,17 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
             // Try to allocate a new extent.  The parameters to makePageNum
             // request just enough space to fit one more extent within the
             // current SegAllocNode.
-            if (!DelegatingSegment::ensureAllocatedSize(
-                    makePageNum(extentNum,nPagesPerExtent)))
-            {
-                // couldn't grow
-                return NULL_PAGE_ID;
+            try {
+                if (!DelegatingSegment::ensureAllocatedSize(
+                        makePageNum(extentNum,nPagesPerExtent)))
+                {
+                    // couldn't grow
+                    undoSegAllocPageWrite(origSegAllocPageId);
+                    return NULL_PAGE_ID;
+                }
+            } catch (...) {
+                undoSegAllocPageWrite(origSegAllocPageId);
+                throw;
             }
 
             segAllocNode.nExtents++;
@@ -206,6 +216,10 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
             
             return allocateFromNewExtent(extentNum, ownerId);
         }
+
+        // since there's no space on the current SegAllocNode, indicate
+        // that we haven't modified it
+        undoSegAllocPageWrite(origSegAllocPageId);
 
         // Have to allocate a whole new SegAllocNode.  The parameters to
         // makePageNum request enough space to fit the first extent of a new
@@ -282,7 +296,7 @@ void RandomAllocationSegmentBase::deallocatePageId(PageId pageId)
     // otherwise someone calling allocatePageId at the same time could fail
     freePageEntry(extentNum, iPageInExtent);
     
-    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     SegAllocLock segAllocLock(selfAccessor);
     PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
     segAllocLock.lockExclusive(segAllocPageId);

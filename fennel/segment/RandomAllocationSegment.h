@@ -39,6 +39,7 @@ class RandomAllocationSegment : public RandomAllocationSegmentBase
 {
     // implement RandomAllocationSegmentBase
     virtual PageId getSegAllocPageIdForWrite(PageId origSegAllocPageId);
+    virtual void undoSegAllocPageWrite(PageId segAllocPageId);
     virtual PageId getExtAllocPageIdForWrite(ExtentNum extentNum);
     virtual PageId allocateFromExtent(ExtentNum extentNum, PageOwnerId ownerId);
     virtual void formatPageExtents(

@@ -61,6 +61,13 @@ protected:
      */
     SharedCache pCache;
 
+    /**
+     * The tracing segment associated with this segment, if tracing is turned
+     * on.  A weak_ptr is used due to the circular shared pointers between
+     * this segment and its tracing segment.
+     */
+    WeakSegment pTracingSegment;
+
     explicit Segment(SharedCache);
     void setUsablePageSize(uint);
     PConstBuffer getReadableFooter(CachePage &page);
@@ -149,6 +156,19 @@ public:
      * @return number of pages allocated from this segment
      */
     virtual BlockNum getAllocatedSizeInPages() = 0;
+
+    /**
+     * @return tracing segment associated with this segment if tracing is turned
+     * on; otherwise, returns the segment itself
+     */
+    SharedSegment getTracingSegment();
+
+    /**
+     * Sets the tracing segment associated with this segment
+     *
+     * @param pTracingSegmentInit the tracing segment
+     */
+    void setTracingSegment(WeakSegment pTracingSegmentInit);
     
     /**
      * Checkpoints this segment.
@@ -293,6 +313,9 @@ public:
      * Obtains the linear page number from a linear PageId.
      */
     static BlockNum getLinearBlockNum(PageId pageId);
+
+    // implement MappedPageListener
+    virtual MappedPageListener *getTracingListener();
 };
 
 inline PageId Segment::getLinearPageId(BlockNum iPage)

@@ -129,10 +129,13 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      *
      * @param height is the current height of the btree.
      *
+     * @param infinityKey true if the entry being inserted corresponds to
+     * the rightmost entry in the btree
+     *
      * @return 0-based entry position on parent page corresponding
      * to searchKeyData
      */
-    uint lockParentPage(uint height);
+    uint lockParentPage(uint height, bool lastKey);
 
     /**
      * Attempts to perform an insertion without splitting, performing

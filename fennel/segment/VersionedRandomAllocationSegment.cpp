@@ -62,17 +62,18 @@ PageId VersionedRandomAllocationSegment::allocatePageId(PageOwnerId ownerId)
 PageId VersionedRandomAllocationSegment::getSegAllocPageIdForWrite(
     PageId origSegAllocPageId)
 {
-    // Note that there may be cases where we are accessing a
-    // SegmentAllocationNode for write, even though we don't actually update
-    // it.  This occurs when we're trying to allocate a new page.  We need
-    // to exclusively lock the the node and access it for write in case there
-    // is a free page available in an extent.  As a result, we may unnecessarily
-    // increment the updateCount on these pages, resulting in those pages
-    // never getting removed from the temp space.  However, that shouldn't
-    // waste too much space because in comparison to the number of extent
-    // allocation node pages, the number of SegmentAllocationNodes is small.
-
     return getTempAllocNodePage<SegAllocLock>(origSegAllocPageId);
+}
+
+void VersionedRandomAllocationSegment::undoSegAllocPageWrite(
+    PageId segAllocPageId)
+{
+    SXMutexExclusiveGuard mapGuard(mapMutex);
+
+    NodeMapConstIter iter = allocationNodeMap.find(segAllocPageId);
+    assert(iter != allocationNodeMap.end());
+    SharedModifiedAllocationNode pModAllocNode = iter->second;
+    pModAllocNode->updateCount--;
 }
 
 PageId VersionedRandomAllocationSegment::getSegAllocPageIdForRead(
@@ -109,7 +110,7 @@ PageId VersionedRandomAllocationSegment::findAllocPageIdForRead(
     NodeMapConstIter iter = allocationNodeMap.find(origAllocNodePageId);
     if (iter == allocationNodeMap.end()) {
         tempAllocNodePageId = origAllocNodePageId;
-        allocNodeSegment = shared_from_this();
+        allocNodeSegment = getTracingSegment();
     } else {
         tempAllocNodePageId = iter->second->tempPageId;
         allocNodeSegment = pTempSegment;
@@ -426,6 +427,21 @@ void VersionedRandomAllocationSegment::updateAllocNodes(
                 commit);
         }
     }
+
+    // Deallocate any temp allocation node pages that no longer contain
+    // any uncommitted updates
+    ModifiedAllocationNodeMap::iterator iter = allocationNodeMap.begin();
+    while (iter != allocationNodeMap.end()) {
+        SharedModifiedAllocationNode pModNode = iter->second;
+        if (pModNode->updateCount == 0) {
+            PageId pageId = iter->first;
+            iter++;
+            freeTempPage(pageId, pModNode->tempPageId);
+            allocationNodeMap.erase(pageId);
+        } else {
+            iter++;
+        }
+    }
 }
 
 void VersionedRandomAllocationSegment::updatePageEntry(
@@ -458,9 +474,6 @@ void VersionedRandomAllocationSegment::updatePageEntry(
     }
 
     pModNode->updateCount -= pModEntry->updateCount;
-    if (pModNode->updateCount == 0) {
-        freeTempPage(extentPageId, pModNode->tempPageId);
-    }
 }
 
 void VersionedRandomAllocationSegment::copyPageEntryFromTemp(
@@ -480,7 +493,7 @@ void VersionedRandomAllocationSegment::copyPageEntryFromTemp(
     VersionedPageEntry &tempPageEntry =
         tempExtentNode.getPageEntry(iPageInExtent);
 
-    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     VersionedExtentAllocLock extentAllocLock(selfAccessor);
     extentAllocLock.lockExclusive(origPageId);
     VersionedExtentAllocationNode &extentNode =
@@ -515,7 +528,7 @@ void VersionedRandomAllocationSegment::copyPageEntryToTemp(
     VersionedPageEntry &tempPageEntry =
         tempExtentNode.getPageEntry(iPageInExtent);
 
-    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     VersionedExtentAllocLock extentAllocLock(selfAccessor);
     extentAllocLock.lockShared(origPageId);
     VersionedExtentAllocationNode const &extentNode =
@@ -546,7 +559,7 @@ void VersionedRandomAllocationSegment::updateExtentEntry(
         SharedSegment allocNodeSegment;
         PageId segPageId;
         if (commit) {
-            allocNodeSegment = shared_from_this();
+            allocNodeSegment = getTracingSegment();
             segPageId = segAllocPageId;
         } else {
             allocNodeSegment = pTempSegment;
@@ -568,12 +581,6 @@ void VersionedRandomAllocationSegment::updateExtentEntry(
         }
 
         pModNode->updateCount -= allocationCount;
-        if (pModNode->updateCount == 0) {
-            // Unlock the SegementAllocationNode, in case it's the one we're
-            // going to be updating for the deallocation
-            segAllocLock.unlock();
-            freeTempPage(segAllocPageId, pModNode->tempPageId);
-        }
     }
 }
 
@@ -582,7 +589,7 @@ void VersionedRandomAllocationSegment::allocateAllocNodes(
     PageId nextPageId,
     ExtentNum extentNum)
 {
-    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     SegAllocLock segAllocLock(selfAccessor);
     PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
     segAllocLock.lockExclusive(segAllocPageId);
@@ -653,7 +660,7 @@ bool VersionedRandomAllocationSegment::validateFreePageCount(PageId pageId)
     assert(iPageInExtent);
 
     PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
-    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     SegAllocLock segAllocLock(selfAccessor);
     segAllocLock.lockShared(segAllocPageId);
     SegmentAllocationNode const &segAllocNode = segAllocLock.getNodeForRead();
@@ -704,7 +711,7 @@ bool VersionedRandomAllocationSegment::getOldPageIds(
     PageSet &oldPageSet)
 {
     uint numOldPages = 0;
-    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     SegAllocLock segAllocLock(selfAccessor);
 
     while (numOldPages < numPages) {
@@ -863,7 +870,7 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
         splitPageId(chainPageId, iSegAlloc, extentNum, iPageInExtent);
         assert(iPageInExtent);
         
-        SegmentAccessor selfAccessor(shared_from_this(), pCache);
+        SegmentAccessor selfAccessor(getTracingSegment(), pCache);
         PageId extentPageId = getExtentAllocPageId(extentNum);
         VersionedExtentAllocLock extentAllocLock(selfAccessor);
         extentAllocLock.lockShared(extentPageId);
@@ -973,7 +980,7 @@ void VersionedRandomAllocationSegment::deallocateSinglePage(
 {
     // Discard the page from the cache
     BlockId blockId = DelegatingSegment::translatePageId(pageId);
-    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     selfAccessor.pCacheAccessor->discardPage(blockId);
 
     RandomAllocationSegmentBase::deallocatePageRange(pageId, pageId);
@@ -1024,7 +1031,7 @@ void VersionedRandomAllocationSegment::deallocatePageChain(
     splitPageId(anchorPageId, iSegAlloc, extentNum, iPrevPageInExtent);
     assert(iPrevPageInExtent);
 
-    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     PageId prevExtentPageId = getExtentAllocPageId(extentNum);
     VersionedExtentAllocLock prevExtentAllocLock(selfAccessor);
     prevExtentAllocLock.lockExclusive(prevExtentPageId);

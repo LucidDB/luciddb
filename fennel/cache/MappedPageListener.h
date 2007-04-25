@@ -129,6 +129,14 @@ public:
      * otherwise, returns the listener that the page should be reset to
      */
     virtual MappedPageListener *notifyAfterPageCheckpointFlush(CachePage &page);
+
+    /**
+     * Retrieves the tracing wrapper corresponding to this listener if
+     * tracing is turned on.  Otherwise, returns this listener itself.
+     *
+     * @return tracing segment corresponding to a listener
+     */
+    virtual MappedPageListener *getTracingListener() = 0;
 };
 
 FENNEL_END_NAMESPACE

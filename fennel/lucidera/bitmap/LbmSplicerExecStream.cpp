@@ -379,7 +379,7 @@ void LbmSplicerExecStream::insertBitmapEntry()
             assert(match);
         }
         FENNEL_TRACE(TRACE_FINE, "delete Tuple from BTree");
-        FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(tempBTreeTupleData));
+        FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(bTreeTupleData));
 
         bTreeWriter->deleteCurrent();
         currExistingEntry = false;

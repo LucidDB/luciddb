@@ -146,7 +146,7 @@ void RandomAllocationSegmentBase::formatPageExtentsTemplate(
     SegmentAllocationNode &segAllocNode,
     ExtentNum &extentNum)
 {
-    SegmentAccessor selfAccessor(shared_from_this(), pCache);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     ExtentAllocLockT extentAllocLock(selfAccessor);
     uint startOffset = extentNum % nExtentsPerSegAlloc;
     for (uint i = startOffset; i < segAllocNode.nExtents; ++i, ++extentNum) {
@@ -220,7 +220,7 @@ void RandomAllocationSegmentBase::freePageEntryTemplate(
     ExtentNum extentNum,
     BlockNum iPageInExtent)
 {
-    SegmentAccessor segAccessor(shared_from_this(), pCache);
+    SegmentAccessor segAccessor(getTracingSegment(), pCache);
     ExtentAllocLockT extentAllocLock(segAccessor);
 
     extentAllocLock.lockExclusive(getExtentAllocPageId(extentNum));
@@ -283,7 +283,7 @@ void RandomAllocationSegmentBase::getPageEntryCopyTemplate(
     SharedSegment allocNodeSegment;
     PageId extentPageId;
     if (thisSegment) {
-        allocNodeSegment = shared_from_this();
+        allocNodeSegment = getTracingSegment();
         extentPageId = getExtentAllocPageId(extentNum);
     } else {
         extentPageId = getExtAllocPageIdForRead(extentNum, allocNodeSegment);
