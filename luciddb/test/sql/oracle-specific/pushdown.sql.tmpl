@@ -309,3 +309,11 @@ select datecol from test.datatype where datecol >= APPLIB.ADD_DAYS(timestampcol,
 explain plan for (
   select datecol from test.datatype where datecol >= APPLIB.ADD_DAYS(timestampcol, -100)
 );
+
+
+select datecol from test.datatype where datecol >= cast('2006-10-10 00:00:00' as TIMESTAMP);
+
+explain plan for (
+  select datecol from test.datatype where datecol >= cast('2006-10-10 00:00:00' as TIMESTAMP)
+);
+

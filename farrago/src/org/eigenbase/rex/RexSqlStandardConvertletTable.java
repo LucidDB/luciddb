@@ -233,6 +233,11 @@ public class RexSqlStandardConvertletTable
         RelNode relNode,
         RexCall call)
     {
+        if (get(call) == null) {
+            // No convertlet was suitable.
+            throw Util.needToImplement(call);
+        }
+        
         final SqlOperator op = call.getOperator();
         final RexNode [] operands = call.getOperands();
 
