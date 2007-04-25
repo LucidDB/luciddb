@@ -167,7 +167,6 @@
 </resultset>
 > 
 > -- filter which can be pushed down to foreign DBMS
-> -- (but we don't support that yet)
 > select dname 
 > from hsqldb_demo.sales.dept
 > where deptno=20;
@@ -354,7 +353,8 @@
 '    IteratorToFennelConverter'
 '      ResultSetToFarragoIteratorConverter'
 '        MedJdbcQueryRel(foreignSql=[SELECT *'
-'FROM "SALES"."DEPT"])'
+'FROM "SALES"."DEPT"'
+'WHERE "DEPTNO" = 20])'
 > 
 > -- join on pseudocolumn (FRG-69)
 > 

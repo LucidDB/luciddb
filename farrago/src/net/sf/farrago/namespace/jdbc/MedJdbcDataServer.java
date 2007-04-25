@@ -27,6 +27,7 @@ import java.lang.reflect.*;
 import java.sql.*;
 
 import java.util.*;
+import java.util.regex.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
@@ -76,6 +77,8 @@ public class MedJdbcDataServer
     public static final String PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER =
         "USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER";
     public static final String PROP_LENIENT = "LENIENT";
+    public static final String PROP_DISABLED_PUSHDOWN_REL_PATTERN =
+        "DISABLED_PUSHDOWN_REL_PATTERN";
 
     // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
@@ -85,6 +88,7 @@ public class MedJdbcDataServer
     public static final boolean DEFAULT_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER =
         false;
     public static final boolean DEFAULT_LENIENT = false;
+    public static final String DEFAULT_DISABLED_PUSHDOWN_REL_PATTERN = "";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -105,6 +109,7 @@ public class MedJdbcDataServer
     protected String validationQuery;
     protected boolean useSchemaNameAsForeignQualifier;
     protected boolean lenient;
+    protected Pattern disabledPushdownPattern;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -141,11 +146,17 @@ public class MedJdbcDataServer
                 props,
                 PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER,
                 DEFAULT_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER);
+
         lenient =
             getBooleanProperty(
                 props,
                 PROP_LENIENT,
                 DEFAULT_LENIENT);
+
+        disabledPushdownPattern = Pattern.compile(
+            props.getProperty(
+                PROP_DISABLED_PUSHDOWN_REL_PATTERN,
+                DEFAULT_DISABLED_PUSHDOWN_REL_PATTERN));
 
         String tableTypeString = props.getProperty(PROP_TABLE_TYPES);
         if (tableTypeString == null) {
@@ -252,6 +263,7 @@ public class MedJdbcDataServer
         props.remove(PROP_LOGIN_TIMEOUT);
         props.remove(PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER);
         props.remove(PROP_LENIENT);
+        props.remove(PROP_DISABLED_PUSHDOWN_REL_PATTERN);
     }
 
     // implement FarragoMedDataServer
@@ -381,6 +393,62 @@ public class MedJdbcDataServer
                     return true;
                 }
             });
+
+        // case 1: projection on top of a filter (with push down projection)
+        // ie: filtering on variables which are not in projection
+        MedJdbcPushDownRule r1 = new MedJdbcPushDownRule(
+            new RelOptRuleOperand(
+                ProjectRel.class, new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        FilterRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(ProjectRel.class,
+                                new RelOptRuleOperand[] {
+                                    new RelOptRuleOperand(
+                                        MedJdbcQueryRel.class, null) }) }) }),
+            "proj on filter on proj");
+
+        // case 2: filter with push down projection
+        // ie: proj only has values which are already in filter expression
+        MedJdbcPushDownRule r2 = new MedJdbcPushDownRule(
+            new RelOptRuleOperand(
+                FilterRel.class, new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(ProjectRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(
+                                MedJdbcQueryRel.class, null) }) }),
+            "filter on proj");
+
+        // case 3: filter with no projection to push down.
+        // ie: select *
+        MedJdbcPushDownRule r3 = new MedJdbcPushDownRule(
+            new RelOptRuleOperand(
+                FilterRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(MedJdbcQueryRel.class, null) }),
+            "filter");
+
+        // all pushdown rules
+        ArrayList<MedJdbcPushDownRule> pushdownRuleList =
+            new ArrayList<MedJdbcPushDownRule>();
+        pushdownRuleList.add(r1);
+        pushdownRuleList.add(r2);
+        pushdownRuleList.add(r3);
+
+        // add the non-disabled pushdown rules
+        for (MedJdbcPushDownRule rule : pushdownRuleList) {
+            boolean ruledOut = false;
+            for (RelOptRuleOperand op : rule.getOperands()) {
+                if (disabledPushdownPattern.matcher(
+                        op.getMatchedClass().getSimpleName()).matches()) {
+                    ruledOut = true;
+                    break;
+                }
+            }
+            if (!ruledOut) {
+                planner.addRule(rule);
+            }
+        }
     }
 
     // implement FarragoAllocation

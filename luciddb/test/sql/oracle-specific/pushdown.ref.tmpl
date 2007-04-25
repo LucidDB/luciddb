@@ -1,0 +1,635 @@
+0: jdbc:luciddb:> create schema test;
+0: jdbc:luciddb:> set schema 'test';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- DISABLED PUSHDOWN
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ORCL_SERVER_NO_PUSHDOWN
+. . . . . . . . > foreign data wrapper ORACLE
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     schema_name '@SCHEMA@',
+. . . . . . . . >     use_schema_name_as_foreign_qualifier 'true',
+. . . . . . . . >     lenient 'true',
+. . . . . . . . >     disabled_pushdown_rel_pattern '.*'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace foreign table DATATYPE (
+. . . . . . . . >   timestampcol timestamp,
+. . . . . . . . >   datecol timestamp,
+. . . . . . . . >   varcharcol varchar(1024)
+. . . . . . . . > ) server ORCL_SERVER_NO_PUSHDOWN
+. . . . . . . . > options
+. . . . . . . . > (object '@DATATYPE_TABLE@');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from orcl_server_no_pushdown.schoi.@DATATYPE_TABLE@ order by 1,2,3,4,5,6;
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|        DATECOL         |      TIMESTAMPCOL      | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|                        |                        | 99999.0          |                   | varchar     |          |          |
+|                        |                        | 99999.0          |                   | varchar     | 123      |          |
+|                        |                        | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  | 100.011          | 100.000           | varchar     |          |          |
+| 2006-10-31 23:59:59.0  |                        | 0.0              | 0.000             |             |          |          |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call applib.create_var('context1', null, 'context');
+0: jdbc:luciddb:> call applib.create_var('context1', 'last_extract_timestamp', 'appvariable');
+0: jdbc:luciddb:> call applib.set_var('context1', 'last_extract_timestamp', '2006-11-05 00:00:00');
+0: jdbc:luciddb:> call applib.set_var('context1', 'extraction_window', '5');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- >=
+0: jdbc:luciddb:> select * from test.datatype where datecol >=
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
++------------------------+------------------------+-------------+
+|                        | 2006-10-31 23:59:59.0  |             |
+| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where datecol >=
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                   column0                                                                                                                                                    |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                    |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                  |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_GE], filterOrdinals=[[1]], filterTuple=[[2006-10-31 00:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) TIMESTAMPCOL, TIMESTAMP(0) DATECOL, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" VARCHARCOL) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                              |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                  |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                                                                                                         |
+| FROM "SCHOI"."DATATYPES"])                                                                                                                                                                                                                                                                                   |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- ENABLED PUSHDOWN
+0: jdbc:luciddb:> -- standard operators: 
+0: jdbc:luciddb:> -- >=, >, <, <=, =, <>, [NOT] LIKE, [NOT] BETWEEN,
+0: jdbc:luciddb:> -- [NOT] IN, IS [NOT] NULL, AND, OR
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ORCL_SERVER_ALL_PUSHDOWN
+. . . . . . . . > foreign data wrapper ORACLE
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     schema_name '@SCHEMA@',
+. . . . . . . . >     use_schema_name_as_foreign_qualifier 'true',
+. . . . . . . . >     lenient 'true',
+. . . . . . . . >     disabled_pushdown_rel_pattern ''
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace foreign table DATATYPE (
+. . . . . . . . >   timestampcol timestamp,
+. . . . . . . . >   datecol timestamp,
+. . . . . . . . >   varcharcol varchar(1024)
+. . . . . . . . > ) server ORCL_SERVER_ALL_PUSHDOWN
+. . . . . . . . > options
+. . . . . . . . > (object '@DATATYPE_TABLE@');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- >=
+0: jdbc:luciddb:> select * from test.datatype where datecol >=
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
++------------------------+------------------------+-------------+
+|                        | 2006-10-31 23:59:59.0  |             |
+| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where datecol >=
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                   column0                                                                                                                                                    |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                    |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                  |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_GE], filterOrdinals=[[1]], filterTuple=[[2006-10-31 00:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) TIMESTAMPCOL, TIMESTAMP(0) DATECOL, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" VARCHARCOL) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                              |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                  |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                                                                                                         |
+| FROM "SCHOI"."DATATYPES"                                                                                                                                                                                                                                                                                     |
+| WHERE "DATECOL" >= TIMESTAMP '2006-10-31 00:00:00'])                                                                                                                                                                                                                                                         |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- >
+0: jdbc:luciddb:> select * from test.datatype where datecol >
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++---------------+------------------------+-------------+
+| TIMESTAMPCOL  |        DATECOL         | VARCHARCOL  |
++---------------+------------------------+-------------+
+|               | 2006-10-31 23:59:59.0  |             |
++---------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where datecol >
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                   column0                                                                                                                                                    |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                    |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                  |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[[2006-10-31 00:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) TIMESTAMPCOL, TIMESTAMP(0) DATECOL, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" VARCHARCOL) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                              |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                  |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                                                                                                         |
+| FROM "SCHOI"."DATATYPES"                                                                                                                                                                                                                                                                                     |
+| WHERE "DATECOL" > TIMESTAMP '2006-10-31 00:00:00'])                                                                                                                                                                                                                                                          |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- <=
+0: jdbc:luciddb:> select * from test.datatype where datecol <=
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
++------------------------+------------------------+-------------+
+| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where datecol <=
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                   column0                                                                                                                                                    |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                    |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                  |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_LE], filterOrdinals=[[1]], filterTuple=[[2006-10-31 00:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) TIMESTAMPCOL, TIMESTAMP(0) DATECOL, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" VARCHARCOL) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                              |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                  |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                                                                                                         |
+| FROM "SCHOI"."DATATYPES"                                                                                                                                                                                                                                                                                     |
+| WHERE "DATECOL" <= TIMESTAMP '2006-10-31 00:00:00'])                                                                                                                                                                                                                                                         |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- <
+0: jdbc:luciddb:> select * from test.datatype where datecol <
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++---------------+----------+-------------+
+| TIMESTAMPCOL  | DATECOL  | VARCHARCOL  |
++---------------+----------+-------------+
++---------------+----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where datecol <
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                   column0                                                                                                                                                    |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                    |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                  |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[2006-10-31 00:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) TIMESTAMPCOL, TIMESTAMP(0) DATECOL, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" VARCHARCOL) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                              |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                  |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                                                                                                         |
+| FROM "SCHOI"."DATATYPES"                                                                                                                                                                                                                                                                                     |
+| WHERE "DATECOL" < TIMESTAMP '2006-10-31 00:00:00'])                                                                                                                                                                                                                                                          |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- =
+0: jdbc:luciddb:> select * from test.datatype where datecol =
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
++------------------------+------------------------+-------------+
+| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where datecol =
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                   column0                                                                                                                                                    |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                    |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                  |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[2006-10-31 00:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) TIMESTAMPCOL, TIMESTAMP(0) DATECOL, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" VARCHARCOL) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                              |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                  |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                                                                                                         |
+| FROM "SCHOI"."DATATYPES"                                                                                                                                                                                                                                                                                     |
+| WHERE "DATECOL" = TIMESTAMP '2006-10-31 00:00:00'])                                                                                                                                                                                                                                                          |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- <>
+0: jdbc:luciddb:> select * from test.datatype where datecol <>
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++---------------+------------------------+-------------+
+| TIMESTAMPCOL  |        DATECOL         | VARCHARCOL  |
++---------------+------------------------+-------------+
+|               | 2006-10-31 23:59:59.0  |             |
++---------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where datecol <>
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++----------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                column0                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                              |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                            |
+|     IteratorToFennelConverter                                                                                                          |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[2006-10-31 00:00:00.0], expr#4=[<>($t1, $t3)], proj#0..2=[{exprs}], $condition=[$t4])  |
+|         ResultSetToFarragoIteratorConverter                                                                                            |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                   |
+| FROM "SCHOI"."DATATYPES"                                                                                                               |
+| WHERE "DATECOL" <> TIMESTAMP '2006-10-31 00:00:00'])                                                                                   |
++----------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- NOT LIKE
+0: jdbc:luciddb:> select * from test.datatype where varcharcol NOT LIKE '%char' order by 1,2,3;
++---------------+----------+-------------+
+| TIMESTAMPCOL  | DATECOL  | VARCHARCOL  |
++---------------+----------+-------------+
++---------------+----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . > select * from test.datatype where varcharcol NOT LIKE '%char' order by 1,2,3
+. . . . . . . . > );
++-----------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                    column0                                                                    |
++-----------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                     |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                   |
+|     IteratorToFennelConverter                                                                                                                 |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=['%char'], expr#4=[LIKE($t2, $t3)], expr#5=[NOT($t4)], proj#0..2=[{exprs}], $condition=[$t5])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                   |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                          |
+| FROM "SCHOI"."DATATYPES"                                                                                                                      |
+| WHERE NOT ("VARCHARCOL" LIKE '%char')])                                                                                                       |
++-----------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- LIKE
+0: jdbc:luciddb:> select * from test.datatype where varcharcol LIKE '%char' order by 1,2,3;
++------------------------+------------------------+-------------+
+|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
++------------------------+------------------------+-------------+
+|                        |                        | varchar     |
+|                        |                        | varchar     |
+|                        |                        | varchar     |
+| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . > select * from test.datatype where varcharcol LIKE '%char' order by 1,2,3
+. . . . . . . . > );
++----------------------------------------------------------------------------------------------------------------------------+
+|                                                          column0                                                           |
++----------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                  |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                |
+|     IteratorToFennelConverter                                                                                              |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=['%char'], expr#4=[LIKE($t2, $t3)], proj#0..2=[{exprs}], $condition=[$t4])  |
+|         ResultSetToFarragoIteratorConverter                                                                                |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                       |
+| FROM "SCHOI"."DATATYPES"                                                                                                   |
+| WHERE "VARCHARCOL" LIKE '%char'])                                                                                          |
++----------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- NOT BETWEEN
+0: jdbc:luciddb:> select * from test.datatype where datecol NOT BETWEEN
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >     -50)
+. . . . . . . . >   AND
+. . . . . . . . >   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
+. . . . . . . . > order by 1,2,3;
++---------------+----------+-------------+
+| TIMESTAMPCOL  | DATECOL  | VARCHARCOL  |
++---------------+----------+-------------+
++---------------+----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where datecol NOT BETWEEN
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >       (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >       -50)
+. . . . . . . . >     AND
+. . . . . . . . >     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                 column0                                                                                                                  |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                              |
+|     IteratorToFennelConverter                                                                                                                                                                                                            |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[2006-09-16 00:00:00.0], expr#4=[>=($t1, $t3)], expr#5=[2006-11-05 00:00:00.0], expr#6=[<=($t1, $t5)], expr#7=[AND($t4, $t6)], expr#8=[NOT($t7)], proj#0..2=[{exprs}], $condition=[$t8])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                              |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                                     |
+| FROM "SCHOI"."DATATYPES"                                                                                                                                                                                                                 |
+| WHERE NOT ("DATECOL" >= TIMESTAMP '2006-09-16 00:00:00' AND "DATECOL" <= TIMESTAMP '2006-11-05 00:00:00')])                                                                                                                              |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- BETWEEN
+0: jdbc:luciddb:> select * from test.datatype where datecol BETWEEN
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >     -50)
+. . . . . . . . >   AND
+. . . . . . . . >   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
++------------------------+------------------------+-------------+
+|                        | 2006-10-31 23:59:59.0  |             |
+| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where datecol BETWEEN
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >       (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >       -50)
+. . . . . . . . >     AND
+. . . . . . . . >     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                        column0                                                                                                        |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                             |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                           |
+|     IteratorToFennelConverter                                                                                                                                                                                         |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[2006-09-16 00:00:00.0], expr#4=[>=($t1, $t3)], expr#5=[2006-11-05 00:00:00.0], expr#6=[<=($t1, $t5)], expr#7=[AND($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                           |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                  |
+| FROM "SCHOI"."DATATYPES"                                                                                                                                                                                              |
+| WHERE "DATECOL" >= TIMESTAMP '2006-09-16 00:00:00' AND "DATECOL" <= TIMESTAMP '2006-11-05 00:00:00'])                                                                                                                 |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- NOT IN
+0: jdbc:luciddb:> select * from test.datatype where varcharcol NOT IN ('varchar2', 'varchar') order by 1,2,3;
++---------------+----------+-------------+
+| TIMESTAMPCOL  | DATECOL  | VARCHARCOL  |
++---------------+----------+-------------+
++---------------+----------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where varcharcol NOT IN ('varchar2', 'varchar') order by 1,2,3
+. . . . . . . . > );
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                    column0                                                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                      |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                    |
+|     IteratorToFennelConverter                                                                                                                                                                                  |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=['varchar2'], expr#4=[=($t2, $t3)], expr#5=['varchar'], expr#6=[=($t2, $t5)], expr#7=[OR($t4, $t6)], expr#8=[NOT($t7)], proj#0..2=[{exprs}], $condition=[$t8])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                    |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                           |
+| FROM "SCHOI"."DATATYPES"                                                                                                                                                                                       |
+| WHERE NOT ("VARCHARCOL" = 'varchar2' OR "VARCHARCOL" = 'varchar')])                                                                                                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- IN
+0: jdbc:luciddb:> select * from test.datatype where varcharcol IN ('varchar2', 'varchar') order by 1,2,3;
++------------------------+------------------------+-------------+
+|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
++------------------------+------------------------+-------------+
+|                        |                        | varchar     |
+|                        |                        | varchar     |
+|                        |                        | varchar     |
+| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where varcharcol IN ('varchar2', 'varchar') order by 1,2,3
+. . . . . . . . > );
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                           column0                                                                                           |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                   |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                 |
+|     IteratorToFennelConverter                                                                                                                                                               |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=['varchar2'], expr#4=[=($t2, $t3)], expr#5=['varchar'], expr#6=[=($t2, $t5)], expr#7=[OR($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                 |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                        |
+| FROM "SCHOI"."DATATYPES"                                                                                                                                                                    |
+| WHERE "VARCHARCOL" = 'varchar2' OR "VARCHARCOL" = 'varchar'])                                                                                                                               |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- IS NOT NULL
+0: jdbc:luciddb:> select * from test.datatype where varcharcol IS NOT NULL order by 1,2,3;
++------------------------+------------------------+-------------+
+|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
++------------------------+------------------------+-------------+
+|                        |                        | varchar     |
+|                        |                        | varchar     |
+|                        |                        | varchar     |
+| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where varcharcol IS NOT NULL order by 1,2,3
+. . . . . . . . > );
++------------------------------------------------------------------------------------------------------------+
+|                                                  column0                                                   |
++------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                  |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                |
+|     IteratorToFennelConverter                                                                              |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t2)], proj#0..2=[{exprs}], $condition=[$t3])  |
+|         ResultSetToFarragoIteratorConverter                                                                |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                       |
+| FROM "SCHOI"."DATATYPES"                                                                                   |
+| WHERE "VARCHARCOL" IS NOT NULL])                                                                           |
++------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- IS NULL
+0: jdbc:luciddb:> select * from test.datatype where varcharcol IS NULL order by 1,2,3;
++---------------+------------------------+-------------+
+| TIMESTAMPCOL  |        DATECOL         | VARCHARCOL  |
++---------------+------------------------+-------------+
+|               | 2006-10-31 23:59:59.0  |             |
++---------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where varcharcol IS NULL order by 1,2,3
+. . . . . . . . > );
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                           column0                                                                                                                                           |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                   |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                 |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[2]], filterTuple=[[null]], outputRowType=[RecordType(TIMESTAMP(0) TIMESTAMPCOL, TIMESTAMP(0) DATECOL, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" VARCHARCOL) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                             |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                 |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                                                                                        |
+| FROM "SCHOI"."DATATYPES"                                                                                                                                                                                                                                                                    |
+| WHERE "VARCHARCOL" IS NULL])                                                                                                                                                                                                                                                                |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- AND
+0: jdbc:luciddb:> select timestampcol, datecol, varcharcol from test.datatype
+. . . . . . . . > where 
+. . . . . . . . > varcharcol IS NOT NULL
+. . . . . . . . > AND
+. . . . . . . . > (datecol BETWEEN TIMESTAMP'2006-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
+. . . . . . . . >   AND
+. . . . . . . . > timestampcol < TIMESTAMP'2006-10-31 12:12:12')
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
++------------------------+------------------------+-------------+
+| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select timestampcol, datecol, varcharcol from test.datatype
+. . . . . . . . >   where 
+. . . . . . . . >   varcharcol IS NOT NULL
+. . . . . . . . >   AND
+. . . . . . . . >   (datecol BETWEEN TIMESTAMP'2006-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
+. . . . . . . . >     AND
+. . . . . . . . >   timestampcol < TIMESTAMP'2006-10-31 12:12:12')
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                                           column0                                                                                                                                                                            |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                    |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                                                                  |
+|     IteratorToFennelConverter                                                                                                                                                                                                                                                                                                                                |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t2)], expr#4=[2006-10-01 00:00:00.0], expr#5=[>=($t1, $t4)], expr#6=[2007-01-01 00:00:00.0], expr#7=[<=($t1, $t6)], expr#8=[AND($t5, $t7)], expr#9=[2006-10-31 12:12:12.0], expr#10=[<($t0, $t9)], expr#11=[AND($t8, $t10)], expr#12=[AND($t3, $t11)], proj#0..2=[{exprs}], $condition=[$t12])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                                                                  |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                                                                                                                                                         |
+| FROM "SCHOI"."DATATYPES"                                                                                                                                                                                                                                                                                                                                     |
+| WHERE "VARCHARCOL" IS NOT NULL AND ("DATECOL" >= TIMESTAMP '2006-10-01 00:00:00' AND "DATECOL" <= TIMESTAMP '2007-01-01 00:00:00' AND "TIMESTAMPCOL" < TIMESTAMP '2006-10-31 12:12:12')])                                                                                                                                                                    |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- OR
+0: jdbc:luciddb:> select timestampcol, datecol, varcharcol from test.datatype
+. . . . . . . . > where 
+. . . . . . . . > varcharcol IS NOT NULL
+. . . . . . . . > OR
+. . . . . . . . > (datecol BETWEEN TIMESTAMP'2006-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
+. . . . . . . . >   OR
+. . . . . . . . > timestampcol < TIMESTAMP'2006-10-31 12:12:12')
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
++------------------------+------------------------+-------------+
+|                        |                        | varchar     |
+|                        |                        | varchar     |
+|                        |                        | varchar     |
+|                        | 2006-10-31 23:59:59.0  |             |
+| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select timestampcol, datecol, varcharcol from test.datatype 
+. . . . . . . . >   where 
+. . . . . . . . >   varcharcol IS NOT NULL
+. . . . . . . . >   OR
+. . . . . . . . >   (datecol BETWEEN TIMESTAMP'2006-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
+. . . . . . . . >     OR
+. . . . . . . . >   timestampcol < TIMESTAMP'2006-10-31 12:12:12')
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                                          column0                                                                                                                                                                           |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                  |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                                                                |
+|     IteratorToFennelConverter                                                                                                                                                                                                                                                                                                                              |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t2)], expr#4=[2006-10-01 00:00:00.0], expr#5=[>=($t1, $t4)], expr#6=[2007-01-01 00:00:00.0], expr#7=[<=($t1, $t6)], expr#8=[AND($t5, $t7)], expr#9=[2006-10-31 12:12:12.0], expr#10=[<($t0, $t9)], expr#11=[OR($t8, $t10)], expr#12=[OR($t3, $t11)], proj#0..2=[{exprs}], $condition=[$t12])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                                                                |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                                                                                                                                                       |
+| FROM "SCHOI"."DATATYPES"                                                                                                                                                                                                                                                                                                                                   |
+| WHERE "VARCHARCOL" IS NOT NULL OR ("DATECOL" >= TIMESTAMP '2006-10-01 00:00:00' AND "DATECOL" <= TIMESTAMP '2007-01-01 00:00:00' OR "TIMESTAMPCOL" < TIMESTAMP '2006-10-31 12:12:12')])                                                                                                                                                                    |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- not mapped
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select datecol from test.datatype where datecol >= APPLIB.ADD_DAYS(timestampcol, -100);
++------------------------+
+|        DATECOL         |
++------------------------+
+| 2006-10-31 00:00:00.0  |
++------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select datecol from test.datatype where datecol >= APPLIB.ADD_DAYS(timestampcol, -100)
+. . . . . . . . > );
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                 column0                                                                                                  |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):TIMESTAMP(0)], expr#4=[-8640000000], expr#5=[+($t3, $t4)], expr#6=[CAST($t5):TIMESTAMP(0)], expr#7=[>=($t1, $t6)], DATECOL=[$t1], $condition=[$t7])  |
+|   ResultSetToFarragoIteratorConverter                                                                                                                                                                    |
+|     MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                           |
+| FROM "SCHOI"."DATATYPES"])                                                                                                                                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
