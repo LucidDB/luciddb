@@ -35,8 +35,8 @@
   <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
   <import file="${open.dir}/farrago/buildMacros.xml" />
 
-  <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
-  <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
+  <!-- directory where sql is generated -->
+  <property name="gensql.dir" value="${udp.dir}/gen" />
 
   <!-- directory where blackhawk output should go -->
   <property name="bh.log.basedir" value="${udp.dir}/testlog" />
@@ -44,6 +44,8 @@
   <!-- directory of csv files -->
   <property name="csv.copy.dir" value="${open.dir}/luciddb/test/sql/udr/udp/csv-copy" />
   <property name="data.dir" value="${open.dir}/luciddb/test/data" />
+  
+  <!-- directory where flatfiles are exported -->
   <property name="csv.exp.dir" value="${open.dir}/luciddb/test/sql/udr/udp/csv-exp" />
 
   <!-- classpath for running tests via ant -->
@@ -69,17 +71,18 @@
       </else>
     </if>
     <!-- generate sql -->
-    <copy todir="${udp.dir}" overwrite="true">
+    <copy todir="${gensql.dir}">
       <fileset dir="${udp.dir}" includes="*.tmpl"/>
       <filterset>
         <filter token="DIR" value="${csv.copy.dir}"/>
         <filter token="EXPDIR" value="${csv.exp.dir}"/>
+        <filter token="LOGDIR" value="${bh.log.basedir}"/>
       </filterset>
       <globmapper from="*.tmpl" to="*"/>
     </copy>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${udp.dir}"
       testscript="${testfile}"
@@ -100,20 +103,27 @@
   </target>
 
   <target name="clean-exp">
-    <delete dir="${csv.exp.dir}"/>
+    <delete dir="${csv.exp.dir}" quiet="true"/>
   </target>
 
-  <target name="clean">
-    <delete dir="${bh.log.basedir}"/>
-    <delete>
+  <target name="clean-test">
+  	<delete quiet="true" includeemptydirs="true">
+      <fileset dir="${gensql.dir}"/>
+      <fileset dir="${csv.exp.dir}"/>
+      <fileset dir="${bh.log.basedir}"/>
       <fileset dir="${udp.dir}">
-        <include name="*.err"/>
         <include name="*.log"/>
       </fileset>
     </delete>
-    <delete dir="${csv.copy.dir}"/>
-    <delete dir="${csv.exp.dir}"/>
-    <delete file="run.properties"/>
+  </target>
+  
+  <target name="clean" depends="clean-test">
+    <delete quiet="true" includeemptydirs="true">
+      <fileset dir="${csv.copy.dir}"/>
+      <fileset dir="${udp.dir}">
+        <include name="run.properties"/>
+      </fileset>
+    </delete>
   </target>
 
 </project>

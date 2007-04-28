@@ -201,6 +201,26 @@
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
 > 
+> -- exports tables in a schema to a delimited file
+> create or replace procedure export_schema_to_file(
+>   in cat varchar(128),
+>   in schma varchar(128),
+>   in exclude boolean, 
+>   in tlist varchar(65535),
+>   in tpattern varchar(65535),
+>   in dir varchar(65535),
+>   in bcp boolean,
+>   in delete_failed_file boolean,
+>   in field_delimiter varchar(2),
+>   in file_extension varchar(5),
+>   in date_format varchar(50),
+>   in time_format varchar(50),
+>   in timestamp_format varchar(50))
+> language java
+> reads sql data
+> called on null input
+> external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToFile';
+> 
 > -- Returns session parameters
 > create or replace function session_parameters ()
 > returns table(

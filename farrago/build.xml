@@ -405,6 +405,12 @@ require version '${required.ant.version}'."/>
       <fileset dir="${unitsql.dir}/syslib/depts_files">
         <include name="*"/>
       </fileset>
+      <fileset dir="${unitsql.dir}/syslib/dates_files">
+        <include name="*"/>
+      </fileset>
+      <fileset dir="${unitsql.dir}/syslib/sales_files">
+        <include name="*"/>
+      </fileset>
       <fileset dir="${unitlurql.dir}" includes="**/*.log"/>
       <fileset dir="${regressionsql.dir}" includes="**/*.log"/>
       <fileset dir="${unitsql.dir}/med/flatfiles">

@@ -33,6 +33,8 @@ import java.util.logging.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.trace.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.runtime.*;
 
 import org.eigenbase.util.*;
 
@@ -1070,8 +1072,19 @@ public abstract class FarragoExportSchemaUDR
         }
 
         // create export log file
+        File logDir = null;
+        FarragoSessionVariables sessionVariables = 
+            FarragoUdrRuntime.getSession().getSessionVariables();
+        try {
+            String logDirectory = sessionVariables.get("logDir");
+            logDir = new File(logDirectory);
+        } catch (IllegalArgumentException e) {
+            // logDir doesn't exist so use the same directory as csv
+            logDir = csvDir;
+        }
+
         logFile = new File(
-            csvDir,
+            logDir,
             LOGFILE_PREFIX + EXPORT_TYPES[expType]
             + "_" + getTimestampString() + ".log");
         String logFileName = logFile.toString();
