@@ -48,6 +48,9 @@
   <!-- directory where flatfiles are exported -->
   <property name="csv.exp.dir" value="${open.dir}/luciddb/test/sql/udr/udp/csv-exp" />
 
+  <!-- directory for error logs -->
+  <property name="errlog.dir" value="${open.dir}/luciddb/test/sql/udr/udp/logs" />
+
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
     <pathelement path="${open.dir}/luciddb/classes"/>
@@ -70,13 +73,17 @@
         <property file="run.properties"/>
       </else>
     </if>
+
+    <!-- create error log directory -->
+    <mkdir dir="${errlog.dir}"/>
+
     <!-- generate sql -->
     <copy todir="${gensql.dir}">
       <fileset dir="${udp.dir}" includes="*.tmpl"/>
       <filterset>
         <filter token="DIR" value="${csv.copy.dir}"/>
         <filter token="EXPDIR" value="${csv.exp.dir}"/>
-        <filter token="LOGDIR" value="${bh.log.basedir}"/>
+        <filter token="LOGDIR" value="${errlog.dir}"/>
       </filterset>
       <globmapper from="*.tmpl" to="*"/>
     </copy>
@@ -114,6 +121,7 @@
       <fileset dir="${udp.dir}">
         <include name="*.log"/>
       </fileset>
+      <fileset dir="${errlog.dir}"/>
     </delete>
   </target>
   

@@ -460,6 +460,7 @@ ${farrago.test.jvmargs}
     <ant dir="test/sql/calc" target="clean"/>
     <ant dir="test/sql/flatfile-specific" target="clean"/>
     <ant dir="test/sql/constraints" target="clean"/>
+    <ant dir="test/sql/udr/udp" target="clean"/>
     <delete file="run.properties"/>
   </target>
 
