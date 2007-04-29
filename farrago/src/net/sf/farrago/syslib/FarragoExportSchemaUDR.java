@@ -1075,11 +1075,16 @@ public abstract class FarragoExportSchemaUDR
         File logDir = null;
         FarragoSessionVariables sessionVariables = 
             FarragoUdrRuntime.getSession().getSessionVariables();
-        try {
-            String logDirectory = sessionVariables.get("logDir");
-            logDir = new File(logDirectory);
-        } catch (IllegalArgumentException e) {
-            // logDir doesn't exist so use the same directory as csv
+        String logDirVarName = FarragoSessionVariables.LOG_DIR;
+        if (sessionVariables.containsVariable(logDirVarName)) {
+            String logDirString = sessionVariables.get(logDirVarName);
+            if (logDirString != null) {
+                logDir = new File(logDirString);
+            }
+        }
+
+        if (logDir == null) {
+            // logDir isn't set so use the same directory as csv
             logDir = csvDir;
         }
 

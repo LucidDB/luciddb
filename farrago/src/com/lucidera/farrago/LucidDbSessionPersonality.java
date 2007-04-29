@@ -65,7 +65,7 @@ public class LucidDbSessionPersonality
 {
     //~ Static fields ----------------------------------------------------------
 
-    public static final String LOG_DIR = "logDir";
+    public static final String LOG_DIR = FarragoSessionVariables.LOG_DIR;
     public static final String[] LOG_DIR_DEFAULT = 
         { "log", "testlog", "trace" };
     public static final String ETL_PROCESS_ID = "etlProcessId";
