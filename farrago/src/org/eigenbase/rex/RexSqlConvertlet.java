@@ -37,7 +37,7 @@ public interface RexSqlConvertlet
     //~ Methods ----------------------------------------------------------------
 
     SqlNode convertCall(
-        RelNode relNode,
+        RexInputRefToSqlNodeConverter converter,
         RexCall call);
 }
 

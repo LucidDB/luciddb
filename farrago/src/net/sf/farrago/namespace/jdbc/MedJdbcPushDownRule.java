@@ -22,8 +22,11 @@
 
 package net.sf.farrago.namespace.jdbc;
 
+import java.sql.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -67,7 +70,8 @@ class MedJdbcPushDownRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         int relLength = call.rels.length;
-        MedJdbcQueryRel queryRel = (MedJdbcQueryRel) call.rels[relLength - 1];
+        final MedJdbcQueryRel queryRel =
+            (MedJdbcQueryRel) call.rels[relLength - 1];
 
         if (queryRel.isPushdownDone()) {
             return;
@@ -100,10 +104,32 @@ class MedJdbcPushDownRule extends RelOptRule
         SqlNode filterNode;
         try {
             filterNode =
-                exprConverter.convertCall(filter.getChild(), filterCall);
+                exprConverter.convertCall(
+                    new RexInputRefToSqlNodeConverter()
+                    {
+                        public SqlIdentifier convertInputRef(RexInputRef ref) {
+                            if (queryRel.columnSet.directory.server.lenient) {
+                                RelDataType fields =
+                                    queryRel.columnSet.getRowType();
+                                String fieldName = fields.getFieldList().
+                                    get(ref.getIndex()).getName();
+                                return new SqlIdentifier(
+                                    fieldName, SqlParserPos.ZERO);
+                            } else {
+                                RelDataType fields =
+                                    queryRel.columnSet.srcRowType;
+                                String fieldName = fields.getFieldList().
+                                    get(ref.getIndex()).getName();
+                                return new SqlIdentifier(
+                                    fieldName, SqlParserPos.ZERO);
+                            }
+                        }
+                    },
+                    filterCall);
         } catch (Exception e) {
             return;
         }
+
         SqlSelect selectWithFilter =
             SqlStdOperatorTable.selectOperator.createCall(
                 null,
@@ -115,6 +141,21 @@ class MedJdbcPushDownRule extends RelOptRule
                 null,
                 null,
                 SqlParserPos.ZERO);
+
+        MedJdbcDataServer server = queryRel.columnSet.directory.server;
+        SqlDialect dialect = new SqlDialect(server.databaseMetaData);
+        String sql = selectWithFilter.toSqlString(dialect);
+        sql = queryRel.columnSet.directory.normalizeQueryString(sql);
+
+        try {
+            PreparedStatement ps =
+                server.getConnection().prepareStatement(sql);
+            if (ps != null) {
+                ps.getMetaData();
+            }
+        } catch (SQLException ex) {
+//            return;
+        }
 
         RelNode rel =
             new MedJdbcQueryRel(

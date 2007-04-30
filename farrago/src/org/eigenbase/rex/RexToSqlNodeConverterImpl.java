@@ -49,11 +49,13 @@ public class RexToSqlNodeConverterImpl
 
     //~ Methods ----------------------------------------------------------------
 
-    public SqlNode convertCall(RelNode relNode, RexCall call)
+    public SqlNode convertCall(
+        RexInputRefToSqlNodeConverter converter,
+        RexCall call)
     {
         final RexSqlConvertlet convertlet = convertletTable.get(call);
         if (convertlet != null) {
-            return convertlet.convertCall(relNode, call);
+            return convertlet.convertCall(converter, call);
         }
         // No convertlet was suitable.
         throw Util.needToImplement(call);

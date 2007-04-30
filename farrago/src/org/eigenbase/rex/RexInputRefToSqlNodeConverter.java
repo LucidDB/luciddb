@@ -22,30 +22,22 @@
 package org.eigenbase.rex;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.rel.*;
 
 
 /**
- * Converts expressions from {@link RexNode} to {@link SqlNode}.
+ * Converts a {@link RexInputRef} to {@link SqlNode}.
  */
-public interface RexToSqlNodeConverter
+public interface RexInputRefToSqlNodeConverter
 {
 
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Converts a {@link RexCall} to a {@link SqlNode} expression.
+     * Converts a {@link RexInputRef} to a {@link SqlNode}
      */
-    SqlNode convertCall(
-        RexInputRefToSqlNodeConverter converter,
-        RexCall call);
+    SqlNode convertInputRef(
+        RexInputRef ref);
 
-    /**
-     * Converts a {@link RexLiteral} to a {@link SqlLiteral}.
-     */
-    SqlNode convertLiteral(
-        RelNode relNode,
-        RexLiteral literal);
 }
 
-// End RexToSqlNodeConverter.java
+// End RexInputRefToSqlNodeConverter.java
