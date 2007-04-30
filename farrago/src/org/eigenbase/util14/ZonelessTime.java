@@ -40,6 +40,9 @@ public class ZonelessTime extends ZonelessDatetime
     protected final int precision;
     protected transient Time tempTime;
 
+    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = 906156904798141861L;
+
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -39,6 +39,9 @@ public class ZonelessDate extends ZonelessDatetime
 
     protected transient Date tempDate;
 
+     /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = -6385775986251759394L;
+
     //~ Methods ----------------------------------------------------------------
 
     /**

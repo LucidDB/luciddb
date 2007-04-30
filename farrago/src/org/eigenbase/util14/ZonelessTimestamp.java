@@ -39,6 +39,9 @@ public class ZonelessTimestamp extends ZonelessDatetime
 
     protected transient Timestamp tempTimestamp;
 
+    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = -6829714640541648394L;
+
     //~ Methods ----------------------------------------------------------------
 
     /**

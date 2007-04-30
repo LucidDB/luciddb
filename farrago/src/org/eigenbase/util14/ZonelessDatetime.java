@@ -51,6 +51,9 @@ public abstract class ZonelessDatetime
     protected transient DateFormat tempFormatter;
     protected transient String lastFormat;
 
+    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = -1274713852537224763L;
+
     //~ Methods ----------------------------------------------------------------
 
     // implement BasicDatetime
