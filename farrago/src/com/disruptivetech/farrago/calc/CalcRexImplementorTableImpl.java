@@ -2525,10 +2525,20 @@ public class CalcRexImplementorTableImpl
             // O s8; V 0; T; MOVE O0, C0;
             assert call.operands.length == 1;
 
+            final CalcProgramBuilder.RegisterDescriptor desc =
+                translator.getCalcRegisterDescriptor(call);
+            final CalcProgramBuilder.OpType opType = desc.getType();
+            assert(opType.isNumeric());
+            final Object initValue;
+            if (opType.isExact()) {
+                initValue = 0;
+            } else {
+                initValue = 0.0;
+            }
             final CalcReg zeroReg =
                 translator.builder.newLiteral(
-                    translator.getCalcRegisterDescriptor(call),
-                    0);
+                    desc,
+                    initValue);
             CalcProgramBuilder.move.add(
                 translator.builder,
                 accumulatorRegister,
