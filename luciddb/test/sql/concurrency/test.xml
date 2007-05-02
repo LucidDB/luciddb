@@ -76,7 +76,7 @@
 
       <test name="insert-insert2" requiresSuccess="setup">
         <test-metadata>
-          <knownFailure>true</knownFailure>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/insert-insert2.mtsql"/>
