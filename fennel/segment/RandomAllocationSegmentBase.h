@@ -129,6 +129,13 @@ protected:
     virtual PageId getSegAllocPageIdForWrite(PageId origSegAllocPageId) = 0;
 
     /**
+     * Indicates that a SegmentAllocationNode was not written
+     *
+     * @param segAllocPageId SegmentAllocationNode pageId
+     */
+    virtual void undoSegAllocPageWrite(PageId segAllocPageId) = 0;
+
+    /**
      * Calculates the PageId of a particular extent allocation node.
      *
      * @param extentNum absolute 0-based extent number

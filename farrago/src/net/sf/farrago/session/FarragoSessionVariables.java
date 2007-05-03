@@ -53,6 +53,15 @@ public class FarragoSessionVariables
     implements Cloneable
 {
 
+    /**
+     * Name of session variable defining directory for log files; this is not
+     * currently used by the default Farrago personality, but it serves as a
+     * canonical name across all other personalities which need a similar
+     * concept.  It may be used by the default Farrago personality in the
+     * future.
+     */
+    public static final String LOG_DIR = "logDir";
+
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -225,6 +234,18 @@ public class FarragoSessionVariables
             throw new IllegalArgumentException();
         }
         return valueMap.get(name);
+    }
+
+    /**
+     * Tests whether a session variable is defined in this map.
+     *
+     * @param name variable name to check
+     *
+     * @return true if variable is defined
+     */
+    public boolean containsVariable(String name)
+    {
+        return valueMap.containsKey(name);
     }
 
     /**

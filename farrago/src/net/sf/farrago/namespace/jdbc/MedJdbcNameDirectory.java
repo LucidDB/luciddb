@@ -30,15 +30,12 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -132,9 +129,8 @@ class MedJdbcNameDirectory
         RelDataType mdRowType = null;
 
         SqlDialect dialect = new SqlDialect(server.databaseMetaData);
-        SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
         SqlSelect select =
-            opTab.selectOperator.createCall(
+            SqlStdOperatorTable.selectOperator.createCall(
                 null,
                 new SqlNodeList(
                     Collections.singletonList(
@@ -188,43 +184,44 @@ class MedJdbcNameDirectory
                 mdRowType = rowType;
             } else {
                 origRowType = rowType;
-                mdRowType = rowType;
-
+                mdRowType =
+                    typeFactory.createResultSetType(
+                        md,
+                        true,
+                        typeMapping);
                 // if LENIENT, map names
                 if (server.lenient) {
-                    origRowType = rowType;
-                    mdRowType =
-                        typeFactory.createResultSetType(
-                            md,
-                            shouldSubstituteTypes,
-                            typeMapping);
                     rowType = updateRowType(
                         typeFactory,
                         rowType,
                         mdRowType);
 
-                    List projList = new ArrayList();
+                    List<SqlIdentifier> projList =
+                        new ArrayList<SqlIdentifier>();
                     for (RelDataTypeField field : rowType.getFieldList()) {
                         projList.add(
                             new SqlIdentifier(
                                 field.getName(), SqlParserPos.ZERO));
                     }
-                    // push down projections
-                    select =
-                        opTab.selectOperator.createCall(
-                            null,
-                            new SqlNodeList(
-                                Collections.unmodifiableList(
-                                    projList),
-                                SqlParserPos.ZERO),
-                            new SqlIdentifier(
-                                foreignQualifiedName, SqlParserPos.ZERO),
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            SqlParserPos.ZERO);
+
+                    // push down projections, if any
+                    if (projList.size() > 0) {
+                        select =
+                            SqlStdOperatorTable.selectOperator.createCall(
+                                null,
+                                new SqlNodeList(
+                                    Collections.unmodifiableList(
+                                        projList),
+                                    SqlParserPos.ZERO),
+                                new SqlIdentifier(
+                                    foreignQualifiedName, SqlParserPos.ZERO),
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                SqlParserPos.ZERO);
+                    }
                 } else {
                     // Server is strict: make sure the inferred
                     // row type is compatible with the imposed row type
@@ -610,13 +607,14 @@ class MedJdbcNameDirectory
         RelDataType currRowType,
         RelDataType srcRowType)
     {
-        HashMap<String, RelDataType> srcMap = new HashMap();
+        HashMap<String, RelDataType> srcMap =
+            new HashMap<String, RelDataType>();
         for (RelDataTypeField srcField : srcRowType.getFieldList()) {
             srcMap.put(srcField.getName(), srcField.getType());
         }
 
-        ArrayList fieldsVector = new ArrayList();
-        ArrayList typesVector = new ArrayList();
+        ArrayList<String> fieldsVector = new ArrayList<String>();
+        ArrayList<RelDataType> typesVector = new ArrayList<RelDataType>();
 
         for (RelDataTypeField currField : currRowType.getFieldList()) {
             RelDataType type;

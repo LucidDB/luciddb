@@ -261,6 +261,12 @@ public class JdbcQuery
                 "executeQuery",
                 new ExpressionList(Literal.makeLiteral(queryString)));
     }
+
+    public SqlSelect getSql()
+    {
+        return this.sql;
+    }
+
 }
 
 // End JdbcQuery.java

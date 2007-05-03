@@ -111,7 +111,6 @@ order by
     param_name,exception_name;
 
 -- filter which can be pushed down to foreign DBMS
--- (but we don't support that yet)
 select dname 
 from hsqldb_demo.sales.dept
 where deptno=20;

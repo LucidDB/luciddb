@@ -131,10 +131,7 @@ public:
         }
         closeVersionedRandomSegment();
         if (pTempSegment) {
-            // Confirm that all temp pages have been freed.  Note that this
-            // check will fail if multiple SegmentAllocationNodes are required.
-            // See the note in
-            // VersionedRandomAllocationSegment::getSegAllocPageIdForWrite.
+            // Confirm that all temp pages have been freed.
             assert(pTempSegment->getAllocatedSizeInPages() == 0);
             assert(pTempSegment.unique());
             pTempSegment.reset();

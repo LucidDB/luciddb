@@ -52,13 +52,17 @@ void RandomAllocationSegment::formatPageExtents(
 
 PageId RandomAllocationSegment::allocatePageId(PageOwnerId ownerId)
 {
-    return allocatePageIdFromSegment(ownerId, shared_from_this());
+    return allocatePageIdFromSegment(ownerId, getTracingSegment());
 }
 
 PageId RandomAllocationSegment::getSegAllocPageIdForWrite(
     PageId origSegAllocPageId)
 {
     return origSegAllocPageId;
+}
+
+void RandomAllocationSegment::undoSegAllocPageWrite(PageId segAllocPageId)
+{
 }
 
 PageId RandomAllocationSegment::getExtAllocPageIdForWrite(ExtentNum extentNum)
@@ -70,7 +74,7 @@ PageId RandomAllocationSegment::getSegAllocPageIdForRead(
     PageId origSegAllocPageId,
     SharedSegment &allocNodeSegment)
 {
-    allocNodeSegment = shared_from_this();
+    allocNodeSegment = getTracingSegment();
     return origSegAllocPageId;
 }
 
@@ -78,7 +82,7 @@ PageId RandomAllocationSegment::getExtAllocPageIdForRead(
     ExtentNum extentNum,
     SharedSegment &allocNodeSegment)
 {
-    allocNodeSegment = shared_from_this();
+    allocNodeSegment = getTracingSegment();
     return getExtentAllocPageId(extentNum);
 }
 
@@ -106,7 +110,7 @@ PageId RandomAllocationSegment::allocateFromNewExtent(
                 PageEntry>(
             extentNum,
             ownerId,
-            shared_from_this());
+            getTracingSegment());
 }
 
 PageId RandomAllocationSegment::allocateFromExtent(
@@ -120,7 +124,7 @@ PageId RandomAllocationSegment::allocateFromExtent(
                 PageEntry>(
             extentNum,
             ownerId,
-            shared_from_this());
+            getTracingSegment());
 }
 
 void RandomAllocationSegment::freePageEntry(
@@ -150,7 +154,7 @@ void RandomAllocationSegment::setPageSuccessor(
     setPageSuccessorTemplate<ExtentAllocationNode, ExtentAllocLock>(
         pageId,
         successorId,
-        shared_from_this());
+        getTracingSegment());
 }
 
 PageOwnerId RandomAllocationSegment::getPageOwnerId(

@@ -22,8 +22,6 @@
 */
 package net.sf.farrago.namespace.jdbc;
 
-import java.sql.*;
-
 import net.sf.farrago.util.*;
 
 import openjava.mop.*;
@@ -51,7 +49,10 @@ class MedJdbcQueryRel
 
     //~ Instance fields --------------------------------------------------------
 
-    private MedJdbcColumnSet columnSet;
+    MedJdbcColumnSet columnSet;
+    RelOptConnection connection;
+    SqlDialect dialect;
+    boolean pushdownDone = false;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -71,6 +72,8 @@ class MedJdbcQueryRel
             sql,
             new JdbcDataSource(""));
         this.columnSet = columnSet;
+        this.connection = connection;
+        this.dialect = dialect;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -99,6 +102,15 @@ class MedJdbcQueryRel
                 "getResultSet",
                 new ExpressionList());
     }
-}
 
+    public void setPushdownDone() 
+    {
+        this.pushdownDone = true;
+    }
+
+    public boolean isPushdownDone()
+    {
+        return this.pushdownDone;
+    }
+}
 // End MedJdbcQueryRel.java

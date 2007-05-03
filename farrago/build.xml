@@ -133,6 +133,7 @@ require version '${required.ant.version}'."/>
   <!-- a fileset of all SQL unit tests -->
   <fileset dir="${unitsql.dir}" id="fileset.unitsql">
     <include name="**/*.sql"/>
+    <exclude name="runner/**/*.sql"/>
   </fileset>
   <pathconvert property="fileset.unitsql" refid="fileset.unitsql"
     pathsep="${line.separator}" dirsep="${file.separator}" />
@@ -402,6 +403,12 @@ require version '${required.ant.version}'."/>
       <fileset dir="${testlog.dir}" includes="*.history"/>
       <fileset dir="${unitsql.dir}" includes="**/*.log"/>
       <fileset dir="${unitsql.dir}/syslib/depts_files">
+        <include name="*"/>
+      </fileset>
+      <fileset dir="${unitsql.dir}/syslib/dates_files">
+        <include name="*"/>
+      </fileset>
+      <fileset dir="${unitsql.dir}/syslib/sales_files">
         <include name="*"/>
       </fileset>
       <fileset dir="${unitlurql.dir}" includes="**/*.log"/>

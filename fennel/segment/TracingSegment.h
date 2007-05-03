@@ -60,6 +60,7 @@ public:
     virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
     virtual void delegatedCheckpoint(
         Segment &delegatingSegment,CheckpointType checkpointType);
+    virtual MappedPageListener *getMappedPageListener(BlockId blockId);
 
     // delegate the MappedPageListener interface
     virtual void notifyPageMap(CachePage &page);
@@ -68,6 +69,7 @@ public:
     virtual void notifyPageDirty(CachePage &page,bool bDataValid);
     virtual void notifyBeforePageFlush(CachePage &page);
     virtual void notifyAfterPageFlush(CachePage &page);
+    virtual MappedPageListener *notifyAfterPageCheckpointFlush(CachePage &page);
 };
 
 FENNEL_END_NAMESPACE

@@ -457,7 +457,7 @@ void LbmMinusExecStreamTest::testChildrenLarger()
 
 void LbmMinusExecStreamTest::testEvens()
 {
-    uint nRows = 1000;
+    uint nRows = 100000;
     std::vector<int> repeatSeqValues;
     repeatSeqValues.push_back(1);
     repeatSeqValues.push_back(5);

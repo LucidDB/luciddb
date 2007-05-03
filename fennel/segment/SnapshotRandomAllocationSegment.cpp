@@ -389,7 +389,7 @@ MappedPageListener
         if (iter != modPageEntries.end()) {
             SharedModifiedPageEntry pModPageEntry = iter->second;
             if (pModPageEntry->lastModType == ModifiedPageEntry::ALLOCATED) {
-                return this;
+                return NULL;
             }
         } else {
             permAssert(false);

@@ -487,9 +487,11 @@ void CmdInterpreter::visit(ProxyCmdCommit &cmd)
         // don't need to flush the underlying versioned segment first since
         // the snapshot pages are all new and therefore, are never logged.
         // Pages in the underlying versioned segment will be flushed in the
-        // requestCheckpoint call further below.
+        // requestCheckpoint call further below.  Also note that the
+        // checkpoint is not initiated through the dynamically cast segment
+        // to ensure that the command is traced if tracing is turned on.
         if (txnBlocksCheckpoint) {
-            pSnapshotSegment->checkpoint(CHECKPOINT_FLUSH_ALL);
+            pTxnHandle->pSnapshotSegment->checkpoint(CHECKPOINT_FLUSH_ALL);
         }
     }
 

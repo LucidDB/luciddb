@@ -93,7 +93,7 @@ PageId VersionedRandomAllocationSegment::getTempAllocNodePage(
         AllocationLockT tempAllocLock(tempAccessor);
         tempNodePageId = tempAllocLock.allocatePage();
 
-        SegmentAccessor selfAccessor(shared_from_this(), pCache);
+        SegmentAccessor selfAccessor(getTracingSegment(), pCache);
         AllocationLockT allocLock(selfAccessor);
         allocLock.lockShared(origNodePageId);
 

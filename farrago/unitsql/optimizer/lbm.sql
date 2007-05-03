@@ -488,5 +488,34 @@ select * from null_uc_sk order by pkey, colbigint, colint;
 select * from null_uc_sk where pkey is null order by pkey, colbigint, colint;
 select * from null_uc_sk where pkey = 3 order by pkey, colbigint, colint;
 
+-- verify that minus stream restart works correctly when doing a keyonly scan
+-- on a composite index where only a partial key is read
+create table minus(a int, b int, c int);
+create index iminus on minus(a, b);
+insert into minus values(0,0,0);
+insert into minus values(0,1,1);
+insert into minus values(0,2,2);
+insert into minus values(0,3,3);
+insert into minus values(1,0,4);
+insert into minus values(1,1,5);
+insert into minus values(1,2,6);
+insert into minus values(1,3,7);
+insert into minus values(0,0,8);
+insert into minus values(0,1,9);
+insert into minus values(0,2,10);
+insert into minus values(0,3,11);
+insert into minus values(1,0,12);
+insert into minus values(1,1,13);
+insert into minus values(1,2,14);
+insert into minus values(1,3,15);
+insert into minus values(0,0,16);
+delete from minus where c in (1,16);
+-- fake stats so index is chosen
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'MINUS', 100);
+!set outputformat csv
+explain plan for select a, count(*) from minus group by a;
+!set outputformat table
+select a, count(*) from minus group by a;
+
 -- cleanup
 drop server test_data cascade;

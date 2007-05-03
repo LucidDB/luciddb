@@ -206,6 +206,17 @@ JDBC driver being used) which will return at least one row without
 error.
 </td>
 </tr>
+<tr>
+<td>DISABLED_PUSHDOWN_REL_PATTERN</td>
+<td>
+A regular expression matching the names of logical relational expressions
+for which pushdown to data source should be disabled.  To enable all
+pushdown, the value can be left as empty string (the default).  To
+disable all pushdown, the value can be set to a match-anything regular
+expression ('.*').  To disable a particular expression, the value can be
+set to the corresponding optimizer RelNode class name, e.g. 'FilterRel'.
+</td>
+</tr>
 </table>
 <p>
 
