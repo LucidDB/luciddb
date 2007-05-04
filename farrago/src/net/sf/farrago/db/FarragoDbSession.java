@@ -260,8 +260,9 @@ public class FarragoDbSession
             if (femUser == null) {
                 throw FarragoResource.instance().SessionLoginFailed.ex(
                     repos.getLocalizedObjectName(sessionUser));
-            }  else if (database.isAuthenticationEnabled() 
-                    && !remoteProtocol.equals("none")) {
+            }  else if (database.isAuthenticationEnabled()
+                && (database.isAuthenticateLocalConnections() 
+                    || !remoteProtocol.equals("none"))) {
                 // authenticate; use same SessionLoginFailed if fails
                 LoginContext lc;
                 CallbackHandler cbh = new FarragoNoninteractiveCallbackHandler(
