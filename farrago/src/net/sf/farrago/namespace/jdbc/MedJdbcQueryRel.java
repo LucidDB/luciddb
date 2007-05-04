@@ -52,7 +52,6 @@ class MedJdbcQueryRel
     MedJdbcColumnSet columnSet;
     RelOptConnection connection;
     SqlDialect dialect;
-    boolean pushdownDone = false;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -102,15 +101,6 @@ class MedJdbcQueryRel
                 "getResultSet",
                 new ExpressionList());
     }
-
-    public void setPushdownDone() 
-    {
-        this.pushdownDone = true;
-    }
-
-    public boolean isPushdownDone()
-    {
-        return this.pushdownDone;
-    }
 }
+
 // End MedJdbcQueryRel.java

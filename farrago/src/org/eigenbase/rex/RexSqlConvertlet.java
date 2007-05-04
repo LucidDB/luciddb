@@ -22,13 +22,12 @@
 package org.eigenbase.rex;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.rel.*;
 
 /**
  * Converts a {@link RexNode} expression into a {@link SqlNode}
  * expression.
  *
- * @author
+ * @author Sunny Choi
  * @version $Id$
  */
 public interface RexSqlConvertlet
@@ -36,8 +35,16 @@ public interface RexSqlConvertlet
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Converts a {@link RexCall} to a {@link SqlNode} expression.
+     *
+     * @param converter to use in translating
+     * @param call RexCall to translate
+     *
+     * @return SqlNode
+     */
     SqlNode convertCall(
-        RexInputRefToSqlNodeConverter converter,
+        RexToSqlNodeConverter converter,
         RexCall call);
 }
 

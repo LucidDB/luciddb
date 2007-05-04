@@ -1,0 +1,25 @@
+# properties
+
+########################
+# foreign data wrapper #
+########################
+
+DATA_LIBRARY=@open.dir@/luciddb/plugin/FarragoMedJdbc3p.jar
+
+##################
+# foreign server #
+##################
+
+SERVER=akela.lucidera.com
+PORT=1433
+USERNAME=sa
+PASSWORD=ketajo
+CATALOG_NAME=BENCHMARK
+SCHEMA=dbo
+## Comma-separated list of table types wanted, without spaces
+TABLE_TYPES=TABLE
+
+DRIVER_CLASS=net.sourceforge.jtds.jdbc.Driver
+URL=jdbc:jtds:sqlserver://@SERVER@:@PORT@
+
+DATATYPE_TABLE=TYPES

@@ -349,7 +349,7 @@
 > where deptno=20;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[20]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" DNAME) NOT NULL])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" DNAME) NOT NULL])'
 '    IteratorToFennelConverter'
 '      ResultSetToFarragoIteratorConverter'
 '        MedJdbcQueryRel(foreignSql=[SELECT *'
