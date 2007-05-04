@@ -2292,9 +2292,10 @@ public abstract class SqlOperatorTests
     public void testUpperFunc()
     {
         getTester().setFor(SqlStdOperatorTable.upperFunc);
-        getTester().checkString("upper('a')", "A", "todo: CHAR(1) NOT NULL");
-        getTester().checkString("upper('A')", "A", "todo: CHAR(1) NOT NULL");
-        getTester().checkString("upper('1')", "1", "todo: CHAR(1) NOT NULL");
+        getTester().checkString("upper('a')", "A", "CHAR(1) NOT NULL");
+        getTester().checkString("upper('A')", "A", "CHAR(1) NOT NULL");
+        getTester().checkString("upper('1')", "1", "CHAR(1) NOT NULL");
+        getTester().checkString("upper('aa')", "AA", "CHAR(2) NOT NULL");
         getTester().checkNull("upper(cast(null as varchar(1)))");
     }
 
@@ -2303,21 +2304,24 @@ public abstract class SqlOperatorTests
         getTester().setFor(SqlStdOperatorTable.lowerFunc);
 
         // SQL:2003 6.29.8 The type of lower is the type of its argument
-        getTester().checkString("lower('A')", "a", "todo: CHAR(1) NOT NULL");
-        getTester().checkString("lower('a')", "a", "todo: CHAR(1) NOT NULL");
-        getTester().checkString("lower('1')", "1", "todo: CHAR(1) NOT NULL");
+        getTester().checkString("lower('A')", "a", "CHAR(1) NOT NULL");
+        getTester().checkString("lower('a')", "a", "CHAR(1) NOT NULL");
+        getTester().checkString("lower('1')", "1", "CHAR(1) NOT NULL");
+        getTester().checkString("lower('AA')", "aa", "CHAR(2) NOT NULL");
         getTester().checkNull("lower(cast(null as varchar(1)))");
     }
 
     public void testInitcapFunc()
     {
+        // Note: the initcap function is an Oracle defined function and is not
+        // defined in the '03 standard
         getTester().setFor(SqlStdOperatorTable.initcapFunc);
-        getTester().checkString("initcap('aA')", "Aa", "todo:");
-        getTester().checkString("initcap('Aa')", "Aa", "todo:");
-        getTester().checkString("initcap('1a')", "1a", "todo:");
+        getTester().checkString("initcap('aA')", "Aa", "CHAR(2) NOT NULL");
+        getTester().checkString("initcap('Aa')", "Aa", "CHAR(2) NOT NULL");
+        getTester().checkString("initcap('1a')", "1a", "CHAR(2) NOT NULL");
         getTester().checkString("initcap('ab cd Ef 12')",
             "Ab Cd Ef 12",
-            "todo:");
+            "CHAR(11) NOT NULL");
         getTester().checkNull("initcap(cast(null as varchar(1)))");
 
         // dtbug 232
@@ -2501,10 +2505,10 @@ public abstract class SqlOperatorTests
             "3.4");
         getTester().checkString("nullif('a','bc')",
             "a",
-            "todo: VARCHAR(2) NOT NULL");
+            "CHAR(1)");
         getTester().checkString("nullif('a',cast(null as varchar(1)))",
             "a",
-            "todo: VARCHAR(1) NOT NULL");
+            "CHAR(1)");
         getTester().checkNull("nullif(cast(null as varchar(1)),'a')");
         getTester().checkNull("nullif(cast(null as numeric(4,3)), 4.3)");
 
@@ -2664,7 +2668,7 @@ public abstract class SqlOperatorTests
             "VARCHAR(3) NOT NULL");
         getTester().checkString("substring('abc' from 2)",
             "bc",
-            "todo: VARCHAR(3) NOT NULL");
+            "VARCHAR(3) NOT NULL");
 
         //substring reg exp not yet supported
         //getTester().checkString("substring('foobar' from '%#\"o_b#\"%' for
@@ -2730,7 +2734,7 @@ public abstract class SqlOperatorTests
         if (todo) {
             getTester().checkString("element(multiset['abc']))",
                 "abc",
-                "todo:");
+                "char(3) not null");
             getTester().checkNull("element(multiset[cast(null as integer)]))");
         }
     }
@@ -3071,7 +3075,7 @@ public abstract class SqlOperatorTests
         getTester().checkType("last_value('name')", "CHAR(4) NOT NULL");
         getTester().checkString("last_value('name')",
             "name",
-            "todo: CHAR(4) NOT NULL");
+            "CHAR(4) NOT NULL");
         }
     }
 
@@ -3086,7 +3090,7 @@ public abstract class SqlOperatorTests
         getTester().checkType("first_value('name')", "CHAR(4) NOT NULL");
         getTester().checkString("first_value('name')",
             "name",
-            "todo: CHAR(4) NOT NULL");
+            "CHAR(4) NOT NULL");
         }
     }
 

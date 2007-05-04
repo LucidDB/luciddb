@@ -370,22 +370,6 @@ public class SqlValidatorTest
         checkExp("exp(3.67)");
     }
 
-    public void testArithmeticOperatorsTypes()
-    {
-        // todo: move these tests to SqlOperatorTests
-        checkExpType("pow(2,3)", "todo: DOUBLE");
-        checkExpType("aBs(-2.3e-2)", "todo: DOUBLE");
-        checkExpType("aBs(5000000000)", "todo: BIGINT");
-        checkExpType("aBs(-interval '1-1' year to month)",
-            "todo: INTERVAL YEAR TO MONTH");
-        checkExpType("aBs(+interval '1:1' hour to minute)",
-            "todo: INTERVAL HOUR TO MINUTE");
-        checkExpType("MOD(5,2)", "todo: INTEGER");
-        checkExpType("ln(5.43  )", "todo: DOUBLE");
-        checkExpType("log10(- -.2  )", "todo: DOUBLE");
-        checkExpType("exp(3)", "todo: DOUBLE");
-    }
-
     public void testArithmeticOperatorsFails()
     {
         checkExpFails("pow(2,'abc')",
@@ -3433,11 +3417,18 @@ public class SqlValidatorTest
         }
     }
 
+    public void _testValuesWithAggFuncs()
+    {
+        checkFails("values(^count(1)^)",
+            "Call to xxx is invalid\\. Direct calls to aggregate functions not allowed in ROW definitions\\.");
+    }
+
     public void testNew()
     {
         // (To debug invidual statements, paste them into this method.)
         //            1         2         3         4         5         6
         //   12345678901234567890123456789012345678901234567890123456789012345
+//        check("SELECT count(0) FROM emp GROUP BY ()");
     }
 }
 

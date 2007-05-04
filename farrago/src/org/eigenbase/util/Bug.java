@@ -78,8 +78,6 @@ public abstract class Bug
      */
     public static final boolean Fn25Fixed = false;
 
-    public static final boolean Dt315Fixed = false;
-
     public static final boolean Dt464Fixed = false;
 
     public static final boolean Dt292Fixed = false;
@@ -87,6 +85,10 @@ public abstract class Bug
     public static final boolean Dt294Fixed = false;
 
     public static final boolean Dt591Fixed = false;
+
+    public static final boolean Dt1203Fixed = false;
+
+    public static final boolean Dt1204Fixed = false;
 
     // -----------------------------------------------------------------------
     // Developers should create new fields here, in their own section. This

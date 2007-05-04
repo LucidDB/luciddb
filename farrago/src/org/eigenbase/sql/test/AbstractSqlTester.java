@@ -167,10 +167,7 @@ public abstract class AbstractSqlTester
         double delta)
     {
         String sql = buildQuery(expression);
-        TypeChecker typeChecker =
-            (expectedType.startsWith("todo:")
-                && !Bug.Dt315Fixed) ? AnyTypeChecker
-            : new StringTypeChecker(expectedType);
+        TypeChecker typeChecker = new StringTypeChecker(expectedType);
         check(
             sql,
             typeChecker,
@@ -200,10 +197,7 @@ public abstract class AbstractSqlTester
         String expectedType)
     {
         String sql = buildQuery(expression);
-        TypeChecker typeChecker =
-            (expectedType.startsWith("todo:")
-                && !Bug.Dt315Fixed) ? AnyTypeChecker
-            : new StringTypeChecker(expectedType);
+        TypeChecker typeChecker = new StringTypeChecker(expectedType);
         check(sql, typeChecker, result, 0);
     }
 
