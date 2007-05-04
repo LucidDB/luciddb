@@ -61,17 +61,17 @@
   set schema 'concurrency';
 
   @sync
-  @sleep 1000
+  @sleep 2000
   alter table t1 rebuild;
   select * from t1 order by c;
   @sync
   @sync
-  @sleep 1000
+  @sleep 2000
   truncate table t1;
   select * from t1 order by c;
   @sync
   @sync
-  @sleep 1000
+  @sleep 2000
   -- should fail because write is in progress
   @err alter table t1 rebuild;
   @sync
