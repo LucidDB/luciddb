@@ -3106,6 +3106,103 @@ public class FarragoJdbcTest
         compareResultSet(refSet);
     }
 
+    protected void quietlyDropSchema(String schemaName)
+    {
+        String sql = "drop schema " +
+            schemaName +
+            " cascade";
+        try {
+            stmt.execute(sql);
+        } catch (SQLException ex) {
+            // ignore
+            Util.swallow(ex, tracer);
+        }
+    }
+
+    public void testFoo() throws SQLException
+    {
+        // cleanup
+        quietlyDropSchema("jdbc_test");
+
+        int n = stmt.executeUpdate("create schema jdbc_test");
+        assertEquals(0, n);
+
+        // Check DDL containing tab character. (Causes
+        // StringIndexOutOfBoundsException if we did not set tab-width to 1 in
+        // the parser.)
+        n = stmt.executeUpdate(
+            "create view jdbc_test.foo as select *\n\tfrom sales.emps");
+        assertEquals(0, n);
+
+        n = stmt.executeUpdate("drop view jdbc_test.foo");
+        assertEquals(0, n);
+
+        quietlyDropSchema("jdbc_test");
+        stmt.close();
+    }
+
+    public void testCreateView() throws SQLException
+    {
+        // cleanup
+        quietlyDropSchema("jdbc_test");
+
+        int n = stmt.executeUpdate("create schema jdbc_test");
+        assertEquals(0, n);
+
+        // Check DDL containing tab character. (Causes
+        // StringIndexOutOfBoundsException if we did not set tab-width to 1 in
+        // the parser.)
+        n = stmt.executeUpdate(
+            "create view jdbc_test.foo as select *\n\tfrom sales.emps");
+        assertEquals(0, n);
+
+        n = stmt.executeUpdate("drop view jdbc_test.foo");
+        assertEquals(0, n);
+
+        quietlyDropSchema("jdbc_test");
+
+        stmt.close();
+    }
+
+    /**
+     * Tests that a DDL statement fails because we have not specified a target
+     * schema.
+     *
+     * <p>Currently disabled because the DT testing infrastructure cannot
+     * handle failures.
+     */
+    public void testCreateViewNegative() throws SQLException
+    {
+        // expect creation to fail if we have not specified a target schema
+        try {
+            int n = stmt.executeUpdate(
+                "create view foo as select *\nfrom sales.emps");
+            Util.discard(n);
+            fail("expected error");
+        } catch (SQLException e) {
+            assertContains(
+                "No default schema specified; execute SET SCHEMA or use fully qualified names",
+                e.getMessage());
+        }
+        stmt.close();
+    }
+
+    /**
+     * Asserts that a given string contains a given substring.
+     * Throws {@link AssertionFailedError} if not.
+     *
+     * @param expected Expected substring
+     * @param actual String
+     */
+    protected static void assertContains(
+        String expected,
+        String actual)
+    {
+        if (actual.indexOf(expected) < 0) {
+            fail("Expected '" + actual + "' to contain '" + expected + "'");
+        }
+    }
+
     //~ Inner Interfaces -------------------------------------------------------
 
     public static interface JdbcTester

@@ -81,6 +81,12 @@ public class FarragoCacheEntry
     {
         parentCache.unpin(this);
     }
+
+    public String toString()
+    {
+        return "FarragoCacheEntry: key=" + key + ", value=" + value +
+            ", pinCount=" + pinCount;
+    }
 }
 
 // End FarragoCacheEntry.java

@@ -50,6 +50,7 @@ public class SqlParser
     public SqlParser(String s)
     {
         parser = new SqlParserImpl(new StringReader(s));
+        parser.setTabSize(1);
     }
 
     /**
@@ -58,6 +59,7 @@ public class SqlParser
     public SqlParser(Reader reader)
     {
         parser = new SqlParserImpl(reader);
+        parser.setTabSize(1);
     }
 
     //~ Methods ----------------------------------------------------------------

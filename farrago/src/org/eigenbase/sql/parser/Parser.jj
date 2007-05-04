@@ -68,6 +68,7 @@ public class SqlParserImpl extends SqlAbstractParserImpl
 
     private static Metadata metadata;
 
+    // implement SqlAbstractParserImpl
     public SqlParseException normalizeException(Throwable ex)
     {
         try {
@@ -80,6 +81,7 @@ public class SqlParserImpl extends SqlAbstractParserImpl
         }
     }
 
+    // implement SqlAbstractParserImpl
     public Metadata getMetadata()
     {
         synchronized (SqlParserImpl.class) {
@@ -89,6 +91,12 @@ public class SqlParserImpl extends SqlAbstractParserImpl
             }
             return metadata;
         }
+    }
+
+    // implement SqlAbstractParserImpl
+    public void setTabSize(int tabSize)
+    {
+        jj_input_stream.setTabSize(tabSize);
     }
 }
 

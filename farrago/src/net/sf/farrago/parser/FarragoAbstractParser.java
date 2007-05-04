@@ -24,11 +24,8 @@ package net.sf.farrago.parser;
 
 import java.io.*;
 
-import java.util.*;
-
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
@@ -97,6 +94,12 @@ public abstract class FarragoAbstractParser
         return stmtValidator;
     }
 
+    /**
+     * Factory method to instantiate a dialect-specific generated parser.
+     *
+     * @param reader Reader that provides the input to the parser
+     * @return Dialect-specific generated parser
+     */
     protected abstract FarragoAbstractParserImpl newParserImpl(Reader reader);
 
     // implement FarragoSessionParser
@@ -118,6 +121,7 @@ public abstract class FarragoAbstractParser
         this.ddlValidator = ddlValidator;
 
         parserImpl = newParserImpl(new StringReader(sql));
+        parserImpl.setTabSize(1);
         parserImpl.farragoParser = this;
         sourceString = sql;
 

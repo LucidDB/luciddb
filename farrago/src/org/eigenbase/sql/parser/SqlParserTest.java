@@ -1512,7 +1512,7 @@ public class SqlParserTest
             + "FROM (VALUES (ROW(1, 'two')), (ROW(3)), (ROW(4, 'five')))");
     }
 
-    
+
     public void testFromValuesWithoutParens()
     {
         checkFails("select 1 from ^values^('x')",
@@ -1526,7 +1526,7 @@ public class SqlParserTest
                 "    <QUOTED_IDENTIFIER> \\.\\.\\." + NL +
                 "    ");
     }
-    
+
     public void testEmptyValues()
     {
         checkFails("select * from (values())",
@@ -1592,7 +1592,7 @@ public class SqlParserTest
             "FROM `EMPS`))), 'name'))"
                 }));
     }
-    
+
     public void testCollectionTableWithColumnListParam()
     {
         check(
@@ -2103,13 +2103,13 @@ public class SqlParserTest
 
     public void testWindowInSubquery()
     {
-        check("select * from ( select sum(x) over w, sum(y) over w from s window w as (range interval '1' minute preceding))", 
-            TestUtil.fold("SELECT *\n" + 
+        check("select * from ( select sum(x) over w, sum(y) over w from s window w as (range interval '1' minute preceding))",
+            TestUtil.fold("SELECT *\n" +
             "FROM (SELECT (SUM(`X`) OVER `W`), (SUM(`Y`) OVER `W`)\n" +
             "FROM `S`\n" +
             "WINDOW `W` AS (RANGE INTERVAL '1' MINUTE PRECEDING))"));
     }
-    
+
     public void testWindowSpec()
     {
         // Correct syntax
@@ -2633,6 +2633,19 @@ public class SqlParserTest
         String jdbcKeywords = metadata.getJdbcKeywords();
         assertTrue(jdbcKeywords.indexOf(",COLLECT,") >= 0);
         assertTrue(jdbcKeywords.indexOf(",SELECT,") < 0);
+    }
+
+    public void testTabStop()
+    {
+        check("SELECT *\n\tFROM mytable",
+            TestUtil.fold(
+                "SELECT *\n"
+                    + "FROM `MYTABLE`"));
+
+        // make sure that the tab stops do not affect the placement of the
+        // error tokens
+        checkFails("SELECT *\tFROM mytable\t\tWHERE x ^=^ = y AND b = 1",
+            "(?s).*Encountered \"= =\" at line 1, column 32\\..*");
     }
 
     //~ Inner Interfaces -------------------------------------------------------

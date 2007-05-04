@@ -74,6 +74,7 @@ public class FarragoParserImpl extends FarragoAbstractParserImpl
 {
     private static Metadata metadata;
 
+    // implement FarragoAbstractParserImpl
     public SqlParserPos getCurrentPosition()
     {
         return new SqlParserPos(
@@ -81,6 +82,7 @@ public class FarragoParserImpl extends FarragoAbstractParserImpl
             token.beginColumn);
     }
 
+    // implement SqlAbstractParserImpl
     public SqlParseException normalizeException(Throwable ex)
     {
         try {
@@ -93,6 +95,7 @@ public class FarragoParserImpl extends FarragoAbstractParserImpl
         }
     }
 
+    // implement SqlAbstractParserImpl
     public Metadata getMetadata()
     {
         synchronized (FarragoParserImpl.class) {
@@ -102,6 +105,12 @@ public class FarragoParserImpl extends FarragoAbstractParserImpl
             }
             return metadata;
         }
+    }
+
+    // implement SqlAbstractParserImpl
+    public void setTabSize(int tabSize)
+    {
+        jj_input_stream.setTabSize(tabSize);
     }
 }
 
