@@ -257,6 +257,21 @@ ${farrago.test.jvmargs}
     <antcall target="gen-all-sql"/>
   </target>
 
+  <!-- temporarily added target for nightly test -->
+  <target name="test-nondb-concurrency" depends="gen-properties">
+    <property name="bh.filter.runDuration" value="short,medium,null"/>
+    <property name="foreign.db" value="nondb"/>
+    <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-nondb-concurrent"/>
+    <property file="run.properties"/>
+    <blackhawk.fork
+      dir="${luciddb.dir}"
+      basedir="${luciddb.dir}"
+      testscript="test-nightly-nondb-concurrent.xml"
+      classpathref="test.classpath"/>
+  </target>
+  <!-- end temporary target -->
+
   <target name="test-nondb" depends="gen-properties">
     <property name="bh.filter.runDuration" value="short,medium,null"/>
     <property name="foreign.db" value="nondb"/>

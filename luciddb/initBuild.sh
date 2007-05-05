@@ -137,6 +137,7 @@ fi
 nightlylog_dir=${luciddb_dir}/nightlylog
 nightly_test_list="\
 test-nondb \
+test-nondb-concurrency \
 test-flatfile \
 test-oracle \
 test-sqlserver \

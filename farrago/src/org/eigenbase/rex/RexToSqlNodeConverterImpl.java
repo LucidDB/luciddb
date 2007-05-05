@@ -21,15 +21,18 @@
 */
 package org.eigenbase.rex;
 
-import org.eigenbase.rel.*;
+import java.util.*;
+
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.SqlTypeFamily;
 import org.eigenbase.util.*;
 
 
 /**
  * Standard implementation of {@link RexToSqlNodeConverter}.
  *
- * @author
+ * @author Sunny Choi
  * @version $Id$
  */
 public class RexToSqlNodeConverterImpl
@@ -49,24 +52,62 @@ public class RexToSqlNodeConverterImpl
 
     //~ Methods ----------------------------------------------------------------
 
-    public SqlNode convertCall(
-        RexInputRefToSqlNodeConverter converter,
-        RexCall call)
+    public SqlNode convertCall(RexCall call)
     {
         final RexSqlConvertlet convertlet = convertletTable.get(call);
         if (convertlet != null) {
-            return convertlet.convertCall(converter, call);
+            return convertlet.convertCall(this, call);
         }
         // No convertlet was suitable.
         throw Util.needToImplement(call);
     }
 
-    public SqlNode convertLiteral(
-        RelNode relNode,
-        RexLiteral literal)
+    public SqlNode convertLiteral(RexLiteral literal)
     {
+        // Numeric
+        if (SqlTypeFamily.ExactNumeric.getTypeNames().contains(
+                literal.getTypeName())) {
+            return SqlLiteral.createExactNumeric(
+                literal.getValue().toString(),
+                SqlParserPos.ZERO);
+        }
+
+        if (SqlTypeFamily.ApproximateNumeric.getTypeNames().contains(
+                literal.getTypeName())) {
+            return SqlLiteral.createApproxNumeric(
+                literal.getValue().toString(),
+                SqlParserPos.ZERO);
+        }
+        // Timestamp
+        if (SqlTypeFamily.Timestamp.getTypeNames().contains(
+                literal.getTypeName())) {
+            return SqlLiteral.createTimestamp(
+                (Calendar)literal.getValue(),
+                0,
+                SqlParserPos.ZERO);
+        }
+        // Date
+        if (SqlTypeFamily.Date.getTypeNames().contains(
+                literal.getTypeName())) {
+            return SqlLiteral.createDate(
+                (Calendar)literal.getValue(),
+                SqlParserPos.ZERO);
+        }
+        // String
+        if (SqlTypeFamily.Character.getTypeNames().contains(
+                literal.getTypeName())) {
+            return SqlLiteral.createCharString(
+                ((NlsString)(literal.getValue())).getValue(),
+                SqlParserPos.ZERO);
+        }
         throw literal.getTypeName().unexpected();
     }
+
+    public SqlNode convertInputRef(RexInputRef ref)
+    {
+        throw Util.needToImplement(ref);
+    }
+
 
 }
 

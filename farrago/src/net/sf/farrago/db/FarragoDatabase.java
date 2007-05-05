@@ -87,6 +87,7 @@ public class FarragoDatabase
     private FarragoDdlLockManager ddlLockManager;
     private FarragoSessionTxnMgr txnMgr;
     private Configuration authenticationConfig;
+    private boolean authenticateLocalConnections = false;
 
     /**
      * Cache of all sorts of stuff; see <a
@@ -1117,6 +1118,22 @@ public class FarragoDatabase
         {
             userRepos = systemRepos;
         }
+    }
+
+    public boolean isAuthenticateLocalConnections()
+    {
+        return authenticateLocalConnections;
+    }
+
+    /**
+     * Turns on/off authentication for in-process jdbc sessions.
+     * NOTE: If set to off, the origin of the jdbc connection is determined 
+     * by the remoteProtocol attribute of the jdbc URL.
+     * @param authenticateLocalConnections
+     */
+    public void setAuthenticateLocalConnections(boolean authenticateLocalConnections)
+    {
+        this.authenticateLocalConnections = authenticateLocalConnections;
     }
 }
 

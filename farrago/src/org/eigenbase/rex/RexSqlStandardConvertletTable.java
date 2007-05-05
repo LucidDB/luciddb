@@ -21,14 +21,9 @@
 */
 package org.eigenbase.rex;
 
-import java.util.*;
-
-import org.eigenbase.rel.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.type.SqlTypeFamily;
 import org.eigenbase.util.*;
 
 /**
@@ -50,7 +45,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.greaterThanOrEqualOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertBinaryOp(
@@ -64,7 +59,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.greaterThanOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertBinaryOp(
@@ -78,7 +73,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.lessThanOrEqualOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertBinaryOp(
@@ -92,7 +87,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.lessThanOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertBinaryOp(
@@ -106,7 +101,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.equalsOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertBinaryOp(
@@ -120,7 +115,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.notEqualsOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertBinaryOp(
@@ -134,7 +129,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.inOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertBinaryOp(
@@ -148,7 +143,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.andOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertBinaryOp(
@@ -162,7 +157,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.orOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertBinaryOp(
@@ -176,7 +171,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.likeOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertBinaryOp(
@@ -190,7 +185,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.notLikeOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertBinaryOp(
@@ -204,7 +199,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.notOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertPrefixOp(
@@ -218,7 +213,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.isNotNullOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertPostfixOp(
@@ -232,7 +227,7 @@ public class RexSqlStandardConvertletTable
             SqlStdOperatorTable.isNullOperator,
             new RexSqlConvertlet() {
                 public SqlNode convertCall(
-                    RexInputRefToSqlNodeConverter converter,
+                    RexToSqlNodeConverter converter,
                     RexCall call)
                 {
                     return convertPostfixOp(
@@ -252,13 +247,13 @@ public class RexSqlStandardConvertletTable
      *
      * <p>Called automatically via reflection.
      *
-     * @param cx Context
+     * @param converter Converter
      * @param call Call
      *
      * @return Sql call
      */
     public SqlNode convertCall(
-        RexInputRefToSqlNodeConverter converter,
+        RexToSqlNodeConverter converter,
         RexCall call)
     {
         if (get(call) == null) {
@@ -279,51 +274,17 @@ public class RexSqlStandardConvertletTable
     /**
      * Converts an expression from {@link RexNode} to {@link SqlNode} format.
      *
+     * @param converter Converter
      * @param expr Expression to translate
      *
      * @return Converted expression
      */
     private SqlNode convertExpression(
-        RexInputRefToSqlNodeConverter converter,
+        RexToSqlNodeConverter converter,
         RexNode expr)
     {
         if (expr instanceof RexLiteral) {
-            // Numeric
-            if (SqlTypeFamily.ExactNumeric.getTypeNames().contains(
-                    ((RexLiteral)expr).getTypeName())) {
-                return SqlLiteral.createExactNumeric(
-                    ((RexLiteral)expr).getValue().toString(),
-                    SqlParserPos.ZERO);
-            }
-
-            if (SqlTypeFamily.ApproximateNumeric.getTypeNames().contains(
-                    ((RexLiteral)expr).getTypeName())) {
-                return SqlLiteral.createApproxNumeric(
-                    ((RexLiteral)expr).getValue().toString(),
-                    SqlParserPos.ZERO);
-            }
-            // Timestamp
-            if (SqlTypeFamily.Timestamp.getTypeNames().contains(
-                    ((RexLiteral)expr).getTypeName())) {
-                return SqlLiteral.createTimestamp(
-                    (Calendar)((RexLiteral)expr).getValue(),
-                    0,
-                    SqlParserPos.ZERO);
-            }
-            // Date
-            if (SqlTypeFamily.Date.getTypeNames().contains(
-                    ((RexLiteral)expr).getTypeName())) {
-                return SqlLiteral.createDate(
-                    (Calendar)((RexLiteral)expr).getValue(),
-                    SqlParserPos.ZERO);
-            }
-            // String
-            if (SqlTypeFamily.Character.getTypeNames().contains(
-                    ((RexLiteral)expr).getTypeName())) {
-                return SqlLiteral.createCharString(
-                    ((NlsString)(((RexLiteral)expr).getValue())).getValue(),
-                    SqlParserPos.ZERO);
-            }
+            return converter.convertLiteral((RexLiteral)expr);
         }
 
         if (expr instanceof RexInputRef) {
@@ -338,7 +299,7 @@ public class RexSqlStandardConvertletTable
     }
 
     private SqlNode [] convertExpressionList(
-        RexInputRefToSqlNodeConverter converter,
+        RexToSqlNodeConverter converter,
         RexNode [] nodes)
     {
         final SqlNode [] exprs = new SqlNode[nodes.length];
@@ -351,7 +312,7 @@ public class RexSqlStandardConvertletTable
 
     private SqlNode convertBinaryOp(
         SqlOperator operator,
-        RexInputRefToSqlNodeConverter converter,
+        RexToSqlNodeConverter converter,
         RexCall call)
     {
         SqlNode op0 = convertExpression(converter, call.operands[0]);
@@ -364,7 +325,7 @@ public class RexSqlStandardConvertletTable
 
     private SqlNode convertPrefixOp(
         SqlOperator operator,
-        RexInputRefToSqlNodeConverter converter,
+        RexToSqlNodeConverter converter,
         RexCall call)
     {
         SqlNode op0 = convertExpression(converter, call.operands[0]);
@@ -376,7 +337,7 @@ public class RexSqlStandardConvertletTable
 
     private SqlNode convertPostfixOp(
         SqlOperator operator,
-        RexInputRefToSqlNodeConverter converter,
+        RexToSqlNodeConverter converter,
         RexCall call)
     {
         SqlNode op0 = convertExpression(converter, call.operands[0]);

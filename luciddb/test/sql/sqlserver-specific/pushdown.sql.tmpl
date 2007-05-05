@@ -1,0 +1,379 @@
+create schema test;
+set schema 'test';
+
+-- DISABLED PUSHDOWN
+
+create server SQL_SERVER_NO_PUSHDOWN
+foreign data wrapper "SQL SERVER"
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    schema_name '@SCHEMA@',
+    qualifying_catalog_name '@CATALOG_NAME@',
+    table_types '@TABLE_TYPES@',
+    use_schema_name_as_foreign_qualifier 'true',
+    lenient 'true',
+    disabled_pushdown_rel_pattern '.*'
+);
+
+create or replace foreign table DATATYPE (
+  "c_timestamp" timestamp,
+  "c_date" timestamp,
+  "blah" integer,
+  "c_varchar" varchar(1024)
+) server SQL_SERVER_NO_PUSHDOWN
+options
+(object '@DATATYPE_TABLE@');
+
+select * from sql_server_no_pushdown.dbo.@DATATYPE_TABLE@ order by 1,2,3,4,5,6;
+
+call applib.create_var('context1', null, 'context');
+call applib.create_var('context1', 'last_extract_timestamp', 'appvariable');
+call applib.set_var('context1', 'last_extract_timestamp', '2005-10-12 03:00:00');
+call applib.set_var('context1', 'extraction_window', '5');
+
+-- >=
+select * from test.datatype where "c_date" >=
+  APPLIB.ADD_DAYS(
+   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+   - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+order by 1,2,3;
+
+explain plan for (
+  select * from test.datatype where "c_date" >=
+    APPLIB.ADD_DAYS(
+     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+     - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+  order by 1,2,3
+);
+
+
+-- ENABLED PUSHDOWN
+-- standard operators: 
+-- >=, >, <, <=, =, <>, [NOT] LIKE, [NOT] BETWEEN,
+-- [NOT] IN, IS [NOT] NULL, AND, OR
+
+
+create server SQL_SERVER_ALL_PUSHDOWN
+foreign data wrapper "SQL SERVER"
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    schema_name '@SCHEMA@',
+    qualifying_catalog_name '@CATALOG_NAME@',
+    table_types '@TABLE_TYPES@',
+    use_schema_name_as_foreign_qualifier 'true',
+    lenient 'true',
+    disabled_pushdown_rel_pattern ''
+);
+
+create or replace foreign table DATATYPE (
+  "c_timestamp" timestamp,
+  "c_date" timestamp,
+  "c_varchar" varchar(1024)
+) server SQL_SERVER_ALL_PUSHDOWN
+options
+(object '@DATATYPE_TABLE@');
+
+
+-- >=
+select * from test.datatype where "c_date" >=
+  APPLIB.ADD_DAYS(
+   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+   - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+order by 1,2,3;
+
+explain plan for (
+  select * from test.datatype where "c_date" >=
+    APPLIB.ADD_DAYS(
+     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+     - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+  order by 1,2,3
+);
+
+
+-- >
+select * from test.datatype where "c_date" >
+  APPLIB.ADD_DAYS(
+   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+   - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+order by 1,2,3;
+
+explain plan for (
+  select * from test.datatype where "c_date" >
+    APPLIB.ADD_DAYS(
+     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+     - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+  order by 1,2,3
+);
+
+
+-- <=
+select * from test.datatype where "c_date" <=
+  APPLIB.ADD_DAYS(
+   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+   - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+order by 1,2,3;
+
+explain plan for (
+  select * from test.datatype where "c_date" <=
+    APPLIB.ADD_DAYS(
+     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+     - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+  order by 1,2,3
+);
+
+
+-- <
+select * from test.datatype where "c_date" <
+  APPLIB.ADD_DAYS(
+   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+   - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+order by 1,2,3;
+
+explain plan for (
+  select * from test.datatype where "c_date" <
+    APPLIB.ADD_DAYS(
+     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+     - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+  order by 1,2,3
+);
+
+
+-- =
+select * from test.datatype where "c_date" =
+  APPLIB.ADD_DAYS(
+   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+   - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+order by 1,2,3;
+
+explain plan for (
+  select * from test.datatype where "c_date" =
+    APPLIB.ADD_DAYS(
+     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+     - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+  order by 1,2,3
+);
+
+
+-- <>
+select * from test.datatype where "c_date" <>
+  APPLIB.ADD_DAYS(
+   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+   - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+order by 1,2,3;
+
+explain plan for (
+  select * from test.datatype where "c_date" <>
+    APPLIB.ADD_DAYS(
+     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+     - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+  order by 1,2,3
+);
+
+
+-- NOT LIKE
+select "c_varchar", "c_timestamp" from test.datatype where "c_varchar" NOT LIKE '%char-02%' order by 1,2;
+
+explain plan for (
+select "c_varchar", "c_timestamp" from test.datatype where "c_varchar" NOT LIKE '%char-02%' order by 1,2
+);
+
+
+-- LIKE
+select "c_date" from test.datatype where "c_varchar" LIKE '%char-02' order by 1;
+
+explain plan for (
+select "c_date" from test.datatype where "c_varchar" LIKE '%char-02' order by 1
+);
+
+
+-- NOT BETWEEN
+select * from test.datatype where "c_date" NOT BETWEEN
+  APPLIB.ADD_DAYS(
+    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+    -50)
+  AND
+  (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
+order by 1,2,3;
+
+explain plan for (
+  select * from test.datatype where "c_date" NOT BETWEEN
+    APPLIB.ADD_DAYS(
+      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+      -50)
+    AND
+    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
+  order by 1,2,3
+);
+
+
+-- BETWEEN
+select * from test.datatype where "c_date" BETWEEN
+  APPLIB.ADD_DAYS(
+    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+    -50)
+  AND
+  (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
+order by 1,2,3;
+
+explain plan for (
+  select * from test.datatype where "c_date" BETWEEN
+    APPLIB.ADD_DAYS(
+      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+      -50)
+    AND
+    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
+  order by 1,2,3
+);
+
+
+-- NOT IN
+select "c_varchar" from test.datatype where "c_varchar" NOT IN ('varchar-02', 'varchar') order by 1;
+
+explain plan for (
+  select "c_varchar" from test.datatype where "c_varchar" NOT IN ('varchar-02', 'varchar') order by 1
+);
+
+
+-- IN
+select "c_varchar","c_date" from test.datatype where "c_varchar" IN ('varchar-02', 'varchar') order by 1,2;
+
+explain plan for (
+select "c_varchar","c_date" from test.datatype where "c_varchar" IN ('varchar-02', 'varchar') order by 1,2
+);
+
+
+-- IS NOT NULL
+select * from test.datatype where "c_varchar" IS NOT NULL order by 1,2,3;
+
+explain plan for (
+  select * from test.datatype where "c_varchar" IS NOT NULL order by 1,2,3
+);
+
+
+-- IS NULL
+select "c_varchar","c_date" from test.datatype where "c_varchar" IS NULL order by 1,2;
+
+explain plan for (
+  select "c_varchar","c_date" from test.datatype where "c_varchar" IS NULL order by 1,2
+);
+
+
+-- AND
+select "c_timestamp", "c_date", "c_varchar" from test.datatype
+where 
+"c_varchar" IS NOT NULL
+AND
+("c_date" BETWEEN TIMESTAMP'2005-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
+  AND
+"c_timestamp" < TIMESTAMP'2006-10-31 12:12:12')
+order by 1,2,3;
+
+explain plan for (
+  select "c_timestamp", "c_date", "c_varchar" from test.datatype
+  where 
+  "c_varchar" IS NOT NULL
+  AND
+  ("c_date" BETWEEN TIMESTAMP'2005-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
+    AND
+  "c_timestamp" < TIMESTAMP'2006-10-31 12:12:12')
+  order by 1,2,3
+);
+
+-- OR
+select "c_timestamp", "c_date", "c_varchar" from test.datatype
+where 
+"c_varchar" IS NOT NULL
+OR
+("c_date" BETWEEN TIMESTAMP'2005-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
+  OR
+"c_timestamp" < TIMESTAMP'2006-10-31 12:12:12')
+order by 1,2,3;
+
+explain plan for (
+  select "c_timestamp", "c_date", "c_varchar" from test.datatype 
+  where 
+  "c_varchar" IS NOT NULL
+  OR
+  ("c_date" BETWEEN TIMESTAMP'2005-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
+    OR
+  "c_timestamp" < TIMESTAMP'2006-10-31 12:12:12')
+  order by 1,2,3
+);
+
+
+-- not mapped
+
+select "c_date" from test.datatype where "c_date" >= APPLIB.ADD_DAYS("c_timestamp", -100) order by 1;
+
+explain plan for (
+  select "c_date" from test.datatype where "c_date" >= APPLIB.ADD_DAYS("c_timestamp", -100) order by 1
+);
+
+
+-- lenient = true && columns deleted
+
+create or replace foreign table DATATYPE (
+  "c_timestamp" timestamp,
+  "c_date" timestamp,
+  "deleted_column" integer,
+  "c_varchar" varchar(1024)
+) server SQL_SERVER_ALL_PUSHDOWN
+options
+(object '@DATATYPE_TABLE@');
+
+
+select "deleted_column" from test.datatype where "c_varchar" LIKE '%char%' order by 1;
+explain plan for select "deleted_column" from test.datatype where "c_varchar" LIKE '%char%' order by 1;
+
+select "deleted_column" from test.datatype where "deleted_column" > 10 order by 1;
+explain plan for select "deleted_column" from test.datatype where"deleted_column" > 10 order by 1;
+
+-- lenient = false
+
+create server SQL_SERVER_STRICT
+foreign data wrapper "SQL SERVER"
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    schema_name '@SCHEMA@',
+    qualifying_catalog_name '@CATALOG_NAME@',
+    table_types '@TABLE_TYPES@',
+    use_schema_name_as_foreign_qualifier 'true',
+    lenient 'false',
+    disabled_pushdown_rel_pattern ''
+);
+
+create or replace foreign table DATATYPE (
+  a varchar(10),
+  b varchar(20),
+  c numeric(10,4),
+  d integer,
+  e integer,
+  f integer,
+  g integer,
+  h real,
+  i double,
+  j boolean,
+  k date,
+  l timestamp,
+  m timestamp
+) server SQL_SERVER_STRICT
+options
+(object '@DATATYPE_TABLE@');
+
+select a from test.datatype where b = 'varchar-03' order by 1;
+explain plan for select a from test.datatype where b = '%varchar-03%' order by 1;
+
+select b from test.datatype where b = 'varchar-03' order by 1;
+explain plan for select b from test.datatype where b = 'varchar-03' order by 1;
+
+select m,b,a,c from test.datatype where b = 'varchar-03' OR d > 127 OR a like '%05%' order by 1,2,3,4;
+explain plan for select m,b,a,c from test.datatype where b = 'varchar-03' OR d > 127 OR a like '%05%' order by 1,2,3,4;

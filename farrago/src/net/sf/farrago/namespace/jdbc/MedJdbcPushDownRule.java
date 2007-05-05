@@ -23,10 +23,11 @@
 package net.sf.farrago.namespace.jdbc;
 
 import java.sql.*;
+import java.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -73,10 +74,6 @@ class MedJdbcPushDownRule extends RelOptRule
         final MedJdbcQueryRel queryRel =
             (MedJdbcQueryRel) call.rels[relLength - 1];
 
-        if (queryRel.isPushdownDone()) {
-            return;
-        }
-
         ProjectRel topProj = null;
         FilterRel filter = null;
         ProjectRel bottomProj = null;
@@ -91,41 +88,40 @@ class MedJdbcPushDownRule extends RelOptRule
             filter = (FilterRel) call.rels[relLength - 2];
         }
 
+        final FilterRel filterRel = filter;
         // push down filter
         RexCall filterCall = (RexCall) filter.getCondition();
 
         // convert the RexCall to SqlNode
-        // RexToSqlConverter
+        // using RexToSqlNodeConverter
         RexToSqlNodeConverter exprConverter =
             new RexToSqlNodeConverterImpl(
-                new RexSqlStandardConvertletTable());
+                new RexSqlStandardConvertletTable())
+            {
+                public SqlIdentifier convertInputRef(RexInputRef ref) {
+                    RelDataType fields = filterRel.getRowType();
+                    String fieldName =
+                        fields.getFieldList().get(ref.getIndex()).getName();
+                    if (!queryRel.columnSet.directory.server.lenient) {
+                        List<RelDataTypeField> fieldList =
+                            queryRel.columnSet.origRowType.getFieldList();
+                        for (int i= 0; i < fieldList.size(); i++) {
+                            if (fieldName.equals(fieldList.get(i).getName())) {
+                                fields = queryRel.columnSet.srcRowType;
+                                fieldName =
+                                    fields.getFieldList().get(i).getName();
+                                break;
+                            }
+                        }
+                    }
+                    return new SqlIdentifier(fieldName, SqlParserPos.ZERO);
+                }
+            };
 
         // Apply standard conversions.
         SqlNode filterNode;
         try {
-            filterNode =
-                exprConverter.convertCall(
-                    new RexInputRefToSqlNodeConverter()
-                    {
-                        public SqlIdentifier convertInputRef(RexInputRef ref) {
-                            if (queryRel.columnSet.directory.server.lenient) {
-                                RelDataType fields =
-                                    queryRel.columnSet.getRowType();
-                                String fieldName = fields.getFieldList().
-                                    get(ref.getIndex()).getName();
-                                return new SqlIdentifier(
-                                    fieldName, SqlParserPos.ZERO);
-                            } else {
-                                RelDataType fields =
-                                    queryRel.columnSet.srcRowType;
-                                String fieldName = fields.getFieldList().
-                                    get(ref.getIndex()).getName();
-                                return new SqlIdentifier(
-                                    fieldName, SqlParserPos.ZERO);
-                            }
-                        }
-                    },
-                    filterCall);
+            filterNode = exprConverter.convertCall(filterCall);
         } catch (Exception e) {
             return;
         }
@@ -146,15 +142,54 @@ class MedJdbcPushDownRule extends RelOptRule
         SqlDialect dialect = new SqlDialect(server.databaseMetaData);
         String sql = selectWithFilter.toSqlString(dialect);
         sql = queryRel.columnSet.directory.normalizeQueryString(sql);
+        String quotedSql = sql.replaceAll("\'", "\'\'");
 
+        // test if sql can be executed against source
+        ResultSet rs = null;
+        PreparedStatement ps = null;
+        Statement testStatement = null;
         try {
-            PreparedStatement ps =
-                server.getConnection().prepareStatement(sql);
-            if (ps != null) {
-                ps.getMetaData();
+            // Workaround for Oracle JDBC thin driver, where
+            // PreparedStatement.getMetaData does not actually get metadata
+            // before execution
+            if (dialect.isOracle()) {
+                String sqlTest =
+                    " DECLARE" +
+                    "   test_cursor integer;" +
+                    " BEGIN" +
+                    "   test_cursor := dbms_sql.open_cursor;" +
+                    "   dbms_sql.parse(test_cursor, '" + quotedSql + "', " +
+                    "   dbms_sql.native);" +
+                    "   dbms_sql.close_cursor(test_cursor);" +
+                    " EXCEPTION" +
+                    " WHEN OTHERS THEN" +
+                    "   dbms_sql.close_cursor(test_cursor);" +
+                    "   RAISE;" +
+                    " END;";
+                testStatement = server.getConnection().createStatement();
+                rs = testStatement.executeQuery(sqlTest);
+            } else {
+                ps = server.getConnection().prepareStatement(sql);
+                if (ps != null) {
+                    if (ps.getMetaData() == null) {
+                        return;
+                    }
+                }
             }
         } catch (SQLException ex) {
-//            return;
+            return;
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (testStatement != null) {
+                    testStatement.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+            } catch (SQLException sqe) {}
         }
 
         RelNode rel =
@@ -166,8 +201,6 @@ class MedJdbcPushDownRule extends RelOptRule
                 queryRel.dialect,
                 selectWithFilter);
 
-        ((MedJdbcQueryRel)rel).setPushdownDone();
-
         if (bottomProj != null) {
             rel = new ProjectRel(
                 bottomProj.getCluster(),
@@ -177,11 +210,6 @@ class MedJdbcPushDownRule extends RelOptRule
                 bottomProj.getFlags(),
                 bottomProj.getCollationList());
         }
-
-        rel = new FilterRel(
-            filter.getCluster(),
-            rel,
-            filter.getCondition());
 
         if (topProj != null) {
             rel = new ProjectRel(
