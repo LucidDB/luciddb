@@ -74,6 +74,8 @@ public class MedJdbcDataServer
     public static final String PROP_TYPE_MAPPING = "TYPE_MAPPING";
     public static final String PROP_LOGIN_TIMEOUT = "LOGIN_TIMEOUT";
     public static final String PROP_VALIDATION_QUERY = "VALIDATION_QUERY";
+    public static final String PROP_FETCH_SIZE = "FETCH_SIZE";
+    public static final String PROP_AUTOCOMMIT = "AUTOCOMMIT";
     public static final String PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER =
         "USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER";
     public static final String PROP_LENIENT = "LENIENT";
@@ -89,6 +91,8 @@ public class MedJdbcDataServer
         false;
     public static final boolean DEFAULT_LENIENT = false;
     public static final String DEFAULT_DISABLED_PUSHDOWN_REL_PATTERN = "";
+    public static final int DEFAULT_FETCH_SIZE = -1;
+    public static final boolean DEFAULT_AUTOCOMMIT = true;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -110,6 +114,8 @@ public class MedJdbcDataServer
     protected boolean useSchemaNameAsForeignQualifier;
     protected boolean lenient;
     protected Pattern disabledPushdownPattern;
+    private int fetchSize;
+    private boolean autocommit;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -173,6 +179,11 @@ public class MedJdbcDataServer
             }
         }
 
+        fetchSize =
+            getIntProperty(props, PROP_FETCH_SIZE, DEFAULT_FETCH_SIZE);
+        autocommit =
+            getBooleanProperty(props, PROP_AUTOCOMMIT, DEFAULT_AUTOCOMMIT);
+
         createConnection();
     }
 
@@ -221,6 +232,9 @@ public class MedJdbcDataServer
         } else {
             connection = DriverManager.getConnection(url, userName, password);
         }
+        if (!autocommit) {
+            connection.setAutoCommit(false);
+        }
         try {
             databaseMetaData = connection.getMetaData();
             supportsMetaData = true;
@@ -264,6 +278,8 @@ public class MedJdbcDataServer
         props.remove(PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER);
         props.remove(PROP_LENIENT);
         props.remove(PROP_DISABLED_PUSHDOWN_REL_PATTERN);
+        props.remove(PROP_FETCH_SIZE);
+        props.remove(PROP_AUTOCOMMIT);
     }
 
     // implement FarragoMedDataServer
@@ -329,6 +345,9 @@ public class MedJdbcDataServer
         FarragoStatementAllocation stmtAlloc =
             new FarragoStatementAllocation(stmt);
         try {
+            if (fetchSize != DEFAULT_FETCH_SIZE) {
+                stmt.setFetchSize(fetchSize);
+            }
             stmtAlloc.setResultSet(stmt.executeQuery(sql));
             stmt = null;
             return stmtAlloc;

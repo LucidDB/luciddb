@@ -579,5 +579,37 @@ Error: Number of fields in foreign table: '2'. Number of fields in external data
 > options(schema_name 'SALES', table_name 'DEPT');
 Error: Number of fields in foreign table: '4'. Number of fields in external data source: 3'. (state=,code=0)
 > 
+> create server hsqldb_opts1
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.hsqldb.jdbcDriver',
+>     url 'jdbc:hsqldb:testcases/hsqldb/scott',
+>     user_name 'SA',
+>     schema_name 'SALES',
+>     use_schema_name_as_foreign_qualifier 'true',
+>     table_types 'TABLE,VIEW',
+>     autocommit 'false',
+>     fetch_size '3');
+> 
+> select deptno from hsqldb_opts1.sales.dept order by deptno;
++---------+
+| DEPTNO  |
++---------+
+| 10      |
+| 20      |
+| 30      |
+| 40      |
++---------+
+> 
+> select dname from hsqldb_opts1.sales.dept order by dname;
++-------------+
+|    DNAME    |
++-------------+
+| ACCOUNTING  |
+| OPERATIONS  |
+| RESEARCH    |
+| SALES       |
++-------------+
+> 
 > 
 > !quit

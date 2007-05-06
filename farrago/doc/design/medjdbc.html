@@ -217,6 +217,24 @@ expression ('.*').  To disable a particular expression, the value can be
 set to the corresponding optimizer RelNode class name, e.g. 'FilterRel'.
 </td>
 </tr>
+<tr>
+<td>FETCH_SIZE</td>
+<td>
+An integer fetch size to set on cursors via Statement.setFetchSize.  Default
+is -1 (don't call setFetchSize at all).
+</td>
+</tr>
+<tr>
+<td>AUTOCOMMIT</td>
+<td>
+If set to 'TRUE' (the default), leave connection in autocommit mode.
+Otherwise, request transaction mode.  For read-only usage, this normally
+doesn't matter, since the wrapper closes cursors as soon as it is done
+with them, but some JDBC drivers are sensitive (e.g. the PostgreSQL driver,
+which requires an explicit FETCH_SIZE and non-autocommit to avoid
+exhausting memory for large result sets).
+</td>
+</tr>
 </table>
 <p>
 
@@ -246,6 +264,7 @@ definition:
 <ul>
 <li>DriverManager.getConnection
 <li>Connection.getMetaData (if supported)
+<li>Connection.setAutoCommit (only if <code>AUTOCOMMIT</code> is set to false)
 <li>DatabaseMetaData.XXX (various calls to test for supported features)
 </ul>
 
@@ -330,6 +349,7 @@ a foreign table:
 <ul>
 <li>Connection.createStatement
 <li>Statement.executeQuery
+<li>Statement.setFetchSize (only if FETCH_SIZE is set)
 <li>ResultSet.getXXX (where XXX depends on datatype of column queried)
 </ul>
 
@@ -428,9 +448,12 @@ default is DBMS-dependent.  This setting is ignored for distributed transactions
 <td>server or table (table overrides server)</td> 
 <td>
 Number of rows to modify before committing transaction and starting a
-new one.  Default is 1 (autocommit each row).  A setting of 0 means
-only commit once all rows have been processed.  This option is ignored
-when autocommit is disabled in the Farrago session.
+new one.  Default is 0 (only commit once all rows have been
+processed).  This option is ignored when autocommit is disabled in the
+Farrago session, because then the Farrago-level transaction governs
+the foreign transaction.  This option is also ignored when this
+wrapper's AUTOCOMMIT option is set to 'TRUE' (the default), because
+then every update is committed immediately.
 </td>
 </tr>
 <tr>
@@ -456,12 +479,10 @@ a foreign table:
 <li>Connection.setReadOnly (if supported)
 <li>Connection.setTransactionIsolation 
     (if <code>ISOLATION_LEVEL</code> specified)
-<li>Connection.setAutoCommit
-    (if <code>TRANSACTION_ROW_LIMIT</code> specified)
 <li>Connection.commit
-    (if <code>TRANSACTION_ROW_LIMIT</code> specified)
+    (if <code>AUTOCOMMIT</code> set to false)
 <li>Connection.rollback
-    (if <code>TRANSACTION_ROW_LIMIT</code> specified)
+    (if <code>AUTOCOMMIT</code> set to false)
 <li>DatabaseMetaData.getPrimaryKeys (for UPDATE/DELETE)
 </ul>
 

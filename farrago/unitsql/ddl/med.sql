@@ -350,3 +350,19 @@ create foreign table demo_schema.dept_extra_col(
 server hsqldb_demo
 options(schema_name 'SALES', table_name 'DEPT');
 
+create server hsqldb_opts1
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
+    user_name 'SA',
+    schema_name 'SALES',
+    use_schema_name_as_foreign_qualifier 'true',
+    table_types 'TABLE,VIEW',
+    autocommit 'false',
+    fetch_size '3');
+
+select deptno from hsqldb_opts1.sales.dept order by deptno;
+
+select dname from hsqldb_opts1.sales.dept order by dname;
+
