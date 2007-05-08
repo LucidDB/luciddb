@@ -12,6 +12,13 @@ values applib.str_replace('This shouldn''t change', 'f', 'yyyy');
 -- these should fail
 values applib.str_replace(3434, 3, 5);
 
+-- null input
+values applib.str_replace(cast(null as varchar(22)), 'null', 'new');
+values applib.str_replace(
+  'This is not a null value', cast(null as varchar(20)), 'nonono');
+values applib.str_replace(
+  'This is not a null value', 'is', cast(null as varchar(10)));
+
 -- create view with reference to applib.str_replace
 create view changedph (fname, phone, chphone)as
 select fname, phone, applib.str_replace(phone, '234', '###') 

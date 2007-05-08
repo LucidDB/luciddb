@@ -20,6 +20,12 @@ values applib.instr('nonon', 'no', 6, 1);
 values applib.instr('fds', 'sdfkdsl');
 values applib.instr('hello there!', '');
 
+-- null input
+values applib.instr(cast(null as varchar(20)), 'null');
+values applib.instr('this is a pen', cast(null as varchar(2)), -1, 3);
+values applib.instr('this is a pen', 'is', cast(null as integer), 1);
+values applib.instr('this is a isthmus', 'is', 2, cast(null as integer));
+
 -- view test
 create view flpview(flp, instr_flp) as 
 select fname||lname||phone, applib.instr(fname||lname||phone, '23')

@@ -42,6 +42,9 @@ options(
 
 select * from tab_server.bcp.example order by 1;
 
+-- wait 1 sec so log files don't collide
+select sys_boot.mgmt.sleep(1000) from (values(0));
+
 -- export with comma delimiter and .csv
 call sys_root.export_schema_to_file(null, 'EXPORTFILE', false, null, null, '@EXPDIR@/local/fdext', true, true, ',', '.csv');
 
@@ -79,6 +82,9 @@ options (
 
 import foreign schema bcp limit to ("dates")
 from server flatfile_server into exportfile;
+
+-- wait 1 sec so log files don't collide
+select sys_boot.mgmt.sleep(1000) from (values(0));
 
 -- export into csv files with datetime formats
 call sys_root.export_schema_to_file('LOCALDB', 'EXPORTFILE', false, 'dates', null, '@EXPDIR@/local/dt', true, false, ',', '.csv', 'MM/dd/yyyy', 'hh:mm:ss a', 'MM/dd/yyyy hh:mm:ss a');

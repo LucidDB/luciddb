@@ -35,6 +35,26 @@
 | 111111  |
 +---------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null values
+0: jdbc:luciddb:> values applib.char_replace(cast(null as varchar(9)), 'x', 'y');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.char_replace('BAbaBAbaBababab', cast(null as varchar(1)), 'x');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.char_replace('njdsf', 3, cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failures
 0: jdbc:luciddb:> values applib.char_replace('bbbbbbbb', 'b', 'AA');
 Error: Replacement character must be a single character (state=,code=0)
@@ -120,4 +140,5 @@ Error: Replacement character must be a single character (state=,code=0)
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view new_names;
 0: jdbc:luciddb:> drop view new_ages;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

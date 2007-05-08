@@ -23,6 +23,20 @@ Error: First month must be between 1 and 12 (state=,code=0)
 0: jdbc:luciddb:> values applib.fiscal_year('2005-12-1', 9);
 Error: From line 1, column 15 to line 1, column 41: No match found for function signature FISCAL_YEAR(<CHARACTER>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.fiscal_year(cast (null as timestamp), 2);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.fiscal_year(current_date, cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.fiscal_year
 0: jdbc:luciddb:> create view fyy(fm, fromdt, fromts) as
 . . . . . . . . > select fm, applib.fiscal_year(datecol, fm), applib.fiscal_year(tscol, fm)

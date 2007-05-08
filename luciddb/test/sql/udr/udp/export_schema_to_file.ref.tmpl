@@ -68,6 +68,14 @@ about these wonderous,
 carriage returns too                                              |
 +-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- wait 1 sec so log files don't collide
+0: jdbc:luciddb:> select sys_boot.mgmt.sleep(1000) from (values(0));
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- export with comma delimiter and .csv
 0: jdbc:luciddb:> call sys_root.export_schema_to_file(null, 'EXPORTFILE', false, null, null, '@EXPDIR@/local/fdext', true, true, ',', '.csv');
 0: jdbc:luciddb:> 
@@ -118,6 +126,14 @@ carriage returns too                                              |
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> import foreign schema bcp limit to ("dates")
 . . . . . . . . > from server flatfile_server into exportfile;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- wait 1 sec so log files don't collide
+0: jdbc:luciddb:> select sys_boot.mgmt.sleep(1000) from (values(0));
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- export into csv files with datetime formats
 0: jdbc:luciddb:> call sys_root.export_schema_to_file('LOCALDB', 'EXPORTFILE', false, 'dates', null, '@EXPDIR@/local/dt', true, false, ',', '.csv', 'MM/dd/yyyy', 'hh:mm:ss a', 'MM/dd/yyyy hh:mm:ss a');

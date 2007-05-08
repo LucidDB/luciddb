@@ -65,6 +65,26 @@ Error: Input phone number must contain equal number of digits as mask (state=,co
 0: jdbc:luciddb:> values applib.clean_phone('sdfjl92378sflkds', 'ph:999-999-9999', true);
 Error: Input phone number must contain equal number of digits as mask (state=,code=0)
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null parameters
+0: jdbc:luciddb:> values applib.clean_phone(cast (null as varchar(10)), '999-999-9999', true);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.clean_phone('123-232-2222', cast(null as varchar(8)), true);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.clean_phone('222-323-1111', cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with references to applib.clean_phone
 0: jdbc:luciddb:> create view fmtphone(fname, lname, phone1, phone2, phone3, phone4) as
 . . . . . . . . > select fname, lname, applib.clean_phone(phone), applib.clean_phone(phone, 0), applib.clean_phone(phone, 1, true), applib.clean_phone(phone, 'ph:999=& 99 !!99999', true)

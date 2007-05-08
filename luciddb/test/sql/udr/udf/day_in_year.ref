@@ -23,6 +23,20 @@
 | 143     |
 +---------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.day_in_year(cast (null as date));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.day_in_year(1929, cast(null as integer), 9);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.day_in_year
 0: jdbc:luciddb:> create view diy(fm, fromDt, fromTs, fromFm) as
 . . . . . . . . > select fm, applib.day_in_year(datecol), applib.day_in_year(tscol), applib.day_in_year(1999, fm, fm)
@@ -71,4 +85,5 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view diy;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

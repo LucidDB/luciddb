@@ -12,6 +12,10 @@ values applib.repeater('lola ', 1000000000);
 values applib.repeater(3, 3);
 values applib.repeater('lola ', X'02');
 
+-- null input
+values applib.repeater(cast(null as varchar(33)), 3);
+values applib.repeater('this', cast(null as integer));
+
 -- create view with reference to applib.repeater
 create view repview as
 select fname, lname, applib.repeater(sex, 2) 

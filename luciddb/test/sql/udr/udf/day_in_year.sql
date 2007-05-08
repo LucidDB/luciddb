@@ -8,6 +8,10 @@ values applib.day_in_year(date'2006-10-31');
 values applib.day_in_year(timestamp'2020-1-1 12:59:00');
 values applib.day_in_year(1988, 5, 22);
 
+-- null input
+values applib.day_in_year(cast (null as date));
+values applib.day_in_year(1929, cast(null as integer), 9);
+
 -- create view with reference to applib.day_in_year
 create view diy(fm, fromDt, fromTs, fromFm) as
 select fm, applib.day_in_year(datecol), applib.day_in_year(tscol), applib.day_in_year(1999, fm, fm)
