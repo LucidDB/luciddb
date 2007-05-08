@@ -72,18 +72,14 @@ case $LIBTOOL_VERSION in
 esac
 
 AUTOCONF_VERSION=$(autoconf --version | awk '{print $4; exit}')
-case $AUTOCONF_VERSION in
-2.57*) ;;
-2.58*) ;;
-2.59*) ;;
-2.60*) ;;
-*)
+VALID_AUTOCONF=`echo "$AUTOCONF_VERSION >= 2.57" | bc`
+if [ $VALID_AUTOCONF -ne 1 ]; then
     echo "Invalid autoconf version '$AUTOCONF_VERSION'."
+    echo "Autoconf version must be 2.57 or later."
     echo "To fix, please run 'make autoconf' under thirdparty,"
     echo "then as root, 'make install' under thirdparty/autoconf."
     exit -1
-    ;;
-esac
+fi
 
 # Unpack thirdparty components
 cd ../thirdparty
