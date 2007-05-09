@@ -215,7 +215,7 @@ public abstract class SqlDateTimeWithoutTZ
             value.setZonelessTime(sqlDate.value.getTime());
             // assuming we preserve Calendar of this object
         } else if (date instanceof String) {
-            attemptParse((String) date);
+            attemptParse((String) date, getFormat(), DateTimeUtil.gmtZone);
         } else {
             // REVIEW jvs 27-Aug-2004:  this is dangerous; should probably
             // require a specific interface instead
@@ -224,9 +224,37 @@ public abstract class SqlDateTimeWithoutTZ
                 isNull = true;
                 return;
             }
-            attemptParse(s);
+            attemptParse(s, getFormat(), DateTimeUtil.gmtZone);
             return;
         }
+    }
+
+    /**
+     * Assigns a value from a formatted string, optionally performing timezone
+     * translation.
+     *
+     * <p>If <code>format</code> is null, uses the default format string of
+     * this type, as per {@link #getFormat()}.
+     *
+     * <p>If <code>timeZone</code> is not null, performs translation assuming
+     * that the input string is in that time zone. For example,
+     * <code>assignFrom('06:00', 'HH:mm', TimeZone.PST)</code> returns the
+     * Time value '14:00', because '06:00 PST' equals '14:00 GMT'.
+     *
+     * <p><code>timeZone</code> is ignored for date values.
+     *
+     * @param date string
+     * @param format format string, as per {@link SimpleDateFormat}, or null
+     * @param timeZone target timezone
+     * @see #assignFrom(Object)
+     */
+    public void assignFrom(String date, String format, TimeZone timeZone)
+    {
+        if (format == null) {
+            format = getFormat();
+            assert format != null;
+        }
+        attemptParse((String) date, format, timeZone);
     }
 
     /**
@@ -245,12 +273,13 @@ public abstract class SqlDateTimeWithoutTZ
      * Attempts to parse the string, throwing an understandable exception
      * if an error was detected.
      */
-    private void attemptParse(String s) {
+    private void attemptParse(String s, String format, TimeZone timeZone) {
         try {
-            assignFromString(s.trim());
+            assert format != null;
+            assignFromString(s.trim(), format, timeZone);
         } catch (IllegalArgumentException ex) {
             String reason =
-                EigenbaseResource.instance().BadFormat.str(getFormat());
+                EigenbaseResource.instance().BadFormat.str(format);
 
             throw FarragoResource.instance().AssignFromFailed.ex(
                 s,
@@ -261,8 +290,15 @@ public abstract class SqlDateTimeWithoutTZ
 
     /**
      * Assigns the value from a string.
+     *
+     * @param s a string representing a datetime in the given format
+     * @param format format string as per {@link SimpleDateFormat}, not null
+     * @param timeZone target timezone
      */
-    protected abstract void assignFromString(String s);
+    protected abstract void assignFromString(
+        String s,
+        String format,
+        TimeZone timeZone);
 
     /**
      * Gets a calendar with the time and time zone of this value.
@@ -343,7 +379,7 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Returns a string in default format representing the datetime
+     * Returns a string in default format representing the datetime.
      */
     public String toString()
     {
@@ -351,12 +387,12 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Returns the format string for this type
+     * Returns the format string for this type.
      */
     protected abstract String getFormat();
 
     /**
-     * Returns the name of this type, DATE, TIME, or TIMESTAMP
+     * Returns the name of this type: DATE, TIME, or TIMESTAMP.
      */
     protected abstract String getTypeName();
 
@@ -560,9 +596,13 @@ public abstract class SqlDateTimeWithoutTZ
         }
 
         // implement SqlDateTimeWithoutTZ
-        protected void assignFromString(String s)
+        protected void assignFromString(
+            String s,
+            String format,
+            TimeZone timeZone)
         {
-            ZonelessDate date = ZonelessDate.parse(s);
+            assert format != null : "precondition failed";
+            ZonelessDate date = ZonelessDate.parse(s, format);
             if (date == null) {
                 throw new IllegalArgumentException();
             }
@@ -603,11 +643,18 @@ public abstract class SqlDateTimeWithoutTZ
         }
 
         // implement SqlDateTimeWithoutTZ
-        protected void assignFromString(String s)
+        protected void assignFromString(
+            String s, String format, TimeZone timeZone)
         {
-            ZonelessTime time = ZonelessTime.parse(s);
+            assert format != null : "precondition failed";
+            ZonelessTime time = ZonelessTime.parse(s, format);
             if (time == null) {
                 throw new IllegalArgumentException();
+            }
+            if (timeZone != null) {
+                long t = time.internalTime;
+                t -= timeZone.getRawOffset();
+                time.setZonelessTime(t);
             }
             value = time;
         }
@@ -685,13 +732,20 @@ public abstract class SqlDateTimeWithoutTZ
         }
 
         // implement SqlDateTimeWithoutTZ
-        protected void assignFromString(String s)
+        protected void assignFromString(
+            String s, String format, TimeZone timeZone)
         {
-            ZonelessTimestamp parsedDate = ZonelessTimestamp.parse(s);
-            if (parsedDate == null) {
+            assert format != null : "precondition failed";
+            ZonelessTimestamp timestamp = ZonelessTimestamp.parse(s, format);
+            if (timestamp == null) {
                 throw new IllegalArgumentException();
             }
-            value = parsedDate;
+            if (timeZone != null) {
+                long t = timestamp.internalTime;
+                t -= timeZone.getOffset(t);
+                timestamp.setZonelessTime(t);
+            }
+            value = timestamp;
         }
 
         // implement SqlDateTimeWithoutTZ

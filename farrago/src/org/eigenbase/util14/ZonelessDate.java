@@ -105,9 +105,22 @@ public class ZonelessDate extends ZonelessDatetime
      */
     public static ZonelessDate parse(String s)
     {
+        return parse(s, DateTimeUtil.DateFormatStr);
+    }
+
+    /**
+     * Parses a string as a ZonelessDate with a given format string.
+     *
+     * @param s a string representing a date in ISO format, i.e. according
+     *   to the SimpleDateFormat string "yyyy-MM-dd"
+     * @param format format string as per {@link SimpleDateFormat}
+     * @return the parsed date, or null if parsing failed
+     */
+    public static ZonelessDate parse(String s, String format)
+    {
         Calendar cal = DateTimeUtil.parseDateFormat(
             s,
-            DateTimeUtil.DateFormatStr,
+            format,
             DateTimeUtil.gmtZone);
         if (cal == null) {
             return null;

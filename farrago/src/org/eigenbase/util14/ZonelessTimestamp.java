@@ -54,7 +54,7 @@ public class ZonelessTimestamp extends ZonelessDatetime
 
     /**
      * Constructs a ZonelessTimestamp with precision.
-     * 
+     *
      * <p>The precision is the number of digits to the right of the decimal
      * point in the seconds value. For example, a <code>TIMESTAMP(3)</code> has
      * a precision to milliseconds.
@@ -107,8 +107,10 @@ public class ZonelessTimestamp extends ZonelessDatetime
     }
 
     /**
-     * Parses a string as a ZonelessTimestamp. This method's parsing is strict
-     * and may parse fractional seconds (as opposed to just milliseconds.)
+     * Parses a string as a ZonelessTimestamp.
+     *
+     * <p>This method's parsing is strict and may parse fractional seconds
+     * (as opposed to just milliseconds.)
      *
      * @param s a string representing a time in ISO format, i.e. according
      *   to the SimpleDateFormat string "yyyy-MM-dd HH:mm:ss"
@@ -116,10 +118,26 @@ public class ZonelessTimestamp extends ZonelessDatetime
      */
     public static ZonelessTimestamp parse(String s)
     {
+        return parse(s, DateTimeUtil.TimestampFormatStr);
+    }
+
+    /**
+     * Parses a string as a ZonelessTimestamp using a given format string.
+     *
+     * <p>This method's parsing is strict and may parse fractional seconds
+     * (as opposed to just milliseconds.)
+     *
+     * @param s a string representing a time in ISO format, i.e. according
+     *   to the SimpleDateFormat string "yyyy-MM-dd HH:mm:ss"
+     * @param format format string as per {@link SimpleDateFormat}
+     * @return the parsed timestamp, or null if parsing failed
+     */
+    public static ZonelessTimestamp parse(String s, String format)
+    {
         DateTimeUtil.PrecisionTime pt =
             DateTimeUtil.parsePrecisionDateTimeLiteral(
                 s,
-                DateTimeUtil.TimestampFormatStr,
+                format,
                 DateTimeUtil.gmtZone);
         if (pt == null) {
             return null;

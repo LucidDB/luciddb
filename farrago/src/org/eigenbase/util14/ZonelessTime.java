@@ -88,9 +88,9 @@ public class ZonelessTime extends ZonelessDatetime
     }
 
     /**
-     * Override ZonelessDatetime
+     * Override ZonelessDatetime.
      *
-     * NOTE: the returned timestamp is based on the current date of the
+     * <p>NOTE: the returned timestamp is based on the current date of the
      * specified time zone, rather than the context variable for current_date,
      * as specified by the SQL standard.
      */
@@ -141,15 +141,27 @@ public class ZonelessTime extends ZonelessDatetime
      * Parses a string as a ZonelessTime.
      *
      * @param s a string representing a time in ISO format, i.e. according
-     *   to the SimpleDateFormat string "HH:mm:ss"
+     *   to the {@link SimpleDateFormat} string "HH:mm:ss"
      * @return the parsed time, or null if parsing failed
      */
     public static ZonelessTime parse(String s)
     {
+        return parse(s, DateTimeUtil.TimeFormatStr);
+    }
+
+    /**
+     * Parses a string as a ZonelessTime using a given format string.
+     *
+     * @param s a string representing a time the given format
+     * @param format format string as per {@link SimpleDateFormat}
+     * @return the parsed time, or null if parsing failed
+     */
+    public static ZonelessTime parse(String s, String format)
+    {
         DateTimeUtil.PrecisionTime pt =
             DateTimeUtil.parsePrecisionDateTimeLiteral(
                 s,
-                DateTimeUtil.TimeFormatStr,
+                format,
                 DateTimeUtil.gmtZone);
         if (pt == null) {
             return null;
