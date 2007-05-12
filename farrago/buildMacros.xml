@@ -49,7 +49,7 @@ ${farrago.test.jvmargs}
 
 ]>
 
-<project name="farragoBuildMacros" default="unspecified">
+<project name="farragoBuildMacros" >
   <taskdef resource="net/sf/antcontrib/antlib.xml" />
 
   <!-- Project locations and properties -->
