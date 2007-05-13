@@ -36,25 +36,33 @@ public class GeneratedDdlStmt
 
     //~ Instance fields --------------------------------------------------------
 
-    private List<String> ddl = new ArrayList<String>();
-    private boolean replace = true;
-    private String newName;
+    private final List<String> ddl = new ArrayList<String>();
+    private final boolean replace;
+    private final String newName;
+    private boolean topLevel;
 
     //~ Constructors -----------------------------------------------------------
 
     public GeneratedDdlStmt()
     {
+        this(null, true);
     }
 
     public GeneratedDdlStmt(boolean replace)
     {
-        this.replace = replace;
+        this(null, replace);
     }
 
     public GeneratedDdlStmt(String newName)
     {
-        this.replace = true;
+        this(newName, true);
+    }
+
+    private GeneratedDdlStmt(String newName, boolean replace)
+    {
+        this.replace = replace;
         this.newName = newName;
+        clear();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -62,6 +70,7 @@ public class GeneratedDdlStmt
     public void clear()
     {
         ddl.clear();
+        this.topLevel = true;
     }
 
     public void addStmt(String stmt)
@@ -79,22 +88,50 @@ public class GeneratedDdlStmt
         return newName;
     }
 
-    public void setNewName(String newName)
+    /**
+     * Indicates whether the element is a top-level element, that is, it
+     * requires its own DDL statement.
+     *
+     * <p>For example, a regular index is top-level but a clustered index is
+     * not (it lives inside a CREATE TABLE statement).
+     *
+     * <p>The {@link #clear()} method resets the <code>topLevel</code>
+     * attribute to <code>true</code>.
+     *
+     * @param topLevel Whether element has its own DDL statement
+     */
+    public void setTopLevel(boolean topLevel)
     {
-        this.newName = newName;
+        this.topLevel = topLevel;
     }
 
-    public Iterator iterator()
+    /**
+     * Returns whether the element is a top-level element.
+     *
+     * @see #setTopLevel(boolean)
+     *
+     * @return whether the element is a top-level element
+     */
+    public boolean isTopLevel()
     {
-        return ddl.iterator();
+        return topLevel;
+    }
+
+    /**
+     * Returns the list of generated DDL strings.
+     *
+     * @return list of DDL statements
+     */
+    public List<String> getStatementList()
+    {
+        return ddl;
     }
 
     public String toString()
     {
-        StringBuffer sb = new StringBuffer();
-        Iterator i = iterator();
-        while (i.hasNext()) {
-            sb.append((String) i.next());
+        StringBuilder sb = new StringBuilder();
+        for (String s : ddl) {
+            sb.append(s);
         }
         return sb.toString();
     }

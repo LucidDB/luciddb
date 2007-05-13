@@ -28,6 +28,7 @@ import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.cwm.keysindexes.CwmIndexedFeature;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
@@ -44,7 +45,6 @@ import org.eigenbase.util.Util;
 public class FarragoDdlGenerator
     extends DdlGenerator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoDdlGenerator()
@@ -93,7 +93,7 @@ public class FarragoDdlGenerator
 
         sb.append(quote(view.getName()));
         addDescription(sb, view);
-        sb.append(" AS ");
+        sb.append(" AS");
         stmt.addStmt(sb.toString());
 
         sb = new StringBuilder();
@@ -299,7 +299,7 @@ public class FarragoDdlGenerator
             sb.append(literal(routine.getExternalName()));
             sb.append(NL);
         }
-        
+
         stmt.addStmt(sb.toString());
     }
 
@@ -368,6 +368,38 @@ public class FarragoDdlGenerator
         GeneratedDdlStmt stmt)
     {
         drop(plugin, "FOREIGN DATA WRAPPER", stmt);
+    }
+
+    public void create(
+        FemLocalIndex index,
+        GeneratedDdlStmt stmt)
+    {
+        if (index.isClustered()) {
+            stmt.setTopLevel(false);
+        }
+        StringBuilder sb = new StringBuilder();
+        createHeader(sb, index.isClustered() ? "CLUSTERED INDEX" : "INDEX", stmt);
+        sb.append(quote(index.getName()));
+        sb.append(" ON ");
+        sb.append(quote(index.getSpannedClass().getName()));
+        sb.append(" (");
+        int k = -1;
+        for (CwmIndexedFeature feature : index.getIndexedFeature()) {
+            if (++k > 0) {
+                sb.append(", ");
+            }
+            sb.append(quote(feature.getName()));
+        }
+        sb.append(")");
+        addDescription(sb, index);
+        stmt.addStmt(sb.toString());
+    }
+
+    public void drop(
+        FemLocalIndex index,
+        GeneratedDdlStmt stmt)
+    {
+        drop(index, "INDEX", stmt);
     }
 
     protected void addColumns(
@@ -489,10 +521,8 @@ public class FarragoDdlGenerator
         sb.append(NL);
         int k = 0;
         for (FemStorageOption option : options) {
-            for (int j = 0; j < indent; j++) {
-                sb.append("  ");
-            }
-            sb.append(option.getName());
+            indent(sb, indent * 2);
+            sb.append(quote(option.getName()));
             sb.append(" ");
             sb.append(literal(option.getValue()));
             if (++k < options.size()) {
@@ -501,10 +531,15 @@ public class FarragoDdlGenerator
             sb.append(NL);
         }
         sb.append(" ");
-        for (int j = 0; j < indent; j++) {
-            sb.append(" ");
-        }
+        indent(sb, indent);
         sb.append(")");
+    }
+
+    private static void indent(StringBuilder sb, int indent)
+    {
+        for (int j = 0; j < indent; j++) {
+            sb.append(' ');
+        }
     }
 
     private void addPrimaryKeyConstraint(

@@ -51,9 +51,10 @@ public abstract class DdlGenerator
 
     //~ Static fields/initializers ---------------------------------------------
 
-    protected static SqlDialect sqlDialect = SqlUtil.eigenbaseDialect;
-    protected static String VALUE_NULL = "NULL";
-    protected static String NL = System.getProperty("line.separator");
+    protected static final SqlDialect sqlDialect = SqlUtil.eigenbaseDialect;
+    protected static final String VALUE_NULL = "NULL";
+    protected static final String NL = System.getProperty("line.separator");
+    protected static final String SEP = ";" + NL + NL;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -62,7 +63,7 @@ public abstract class DdlGenerator
         if (schemaName != null) {
             StringBuilder sb = new StringBuilder();
             sb.append("SET SCHEMA ");
-            sb.append(DdlGenerator.literal(quote(schemaName)));
+            sb.append(literal(quote(schemaName)));
             stmt.addStmt(sb.toString());
         }
     }
@@ -77,7 +78,8 @@ public abstract class DdlGenerator
         generate("drop", e, stmt);
     }
 
-    private void generate(String method,
+    private void generate(
+        String method,
         CwmModelElement e,
         GeneratedDdlStmt stmt)
     {
@@ -86,15 +88,18 @@ public abstract class DdlGenerator
                 this.getClass(),
                 e.getClass(),
                 method,
-                Arrays.asList(new Class[] { GeneratedDdlStmt.class }));
+                Collections.singletonList((Class) GeneratedDdlStmt.class));
         if (m != null) {
             try {
                 m.invoke(
                     this,
-                    new Object[] { e, stmt });
-            } catch (Throwable t) {
-                //TODO: handle
-                t.printStackTrace();
+                    e, stmt);
+            } catch (InvocationTargetException e1) {
+                throw Util.newInternal(e1, "while exporting '" + e + "'");
+            } catch (IllegalAccessException e1) {
+                throw Util.newInternal(e1, "while exporting '" + e + "'");
+            } catch (RuntimeException e1) {
+                throw Util.newInternal(e1, "while exporting '" + e + "'");
             }
         }
     }
@@ -111,9 +116,9 @@ public abstract class DdlGenerator
 
     public static String unquoteLiteral(String str)
     {
-        return sqlDialect.unquoteStringLiteral(str);        
+        return sqlDialect.unquoteStringLiteral(str);
     }
-    
+
     protected static SqlTypeName getSqlTypeName(CwmClassifier classifier)
     {
         //REVIEW: make this work for UDTs
@@ -134,11 +139,9 @@ public abstract class DdlGenerator
         boolean result = false;
 
         if (col != null) {
-            Collection keyComponent = col.getKeyComponent();
+            Collection<FemKeyComponent> keyComponent = col.getKeyComponent();
             if (keyComponent != null) {
-                Iterator i = keyComponent.iterator();
-                while (i.hasNext()) {
-                    FemKeyComponent kc = (FemKeyComponent) i.next();
+                for (FemKeyComponent kc : keyComponent) {
                     if (kc.getKeyConstraint()
                         instanceof FemPrimaryKeyConstraint) {
                         result = true;
@@ -148,6 +151,38 @@ public abstract class DdlGenerator
             }
         }
         return result;
+    }
+
+    /**
+     * Converts a set of elements to a string using this generator.
+     *
+     * @param exportList List of elements to export
+     * @return DDL script
+     */
+    public String getExportText(
+        List<CwmModelElement> exportList)
+    {
+        StringBuilder outBuf = new StringBuilder();
+        GeneratedDdlStmt stmt = new GeneratedDdlStmt();
+        for (CwmModelElement elem : exportList) {
+            // proceed if a catalog object has an ddlgen error
+            try {
+                stmt.clear();
+                generateCreate(elem, stmt);
+                if (!stmt.isTopLevel()) {
+                    continue;
+                }
+                final String ddl = stmt.toString();
+                assert ddl != null && !ddl.equals("") :
+                    "Do not know how to generate DDL for " + elem.getClass();
+                outBuf.append(ddl);
+                outBuf.append(SEP);
+            } catch (RuntimeException e) {
+                throw Util.newInternal(
+                    e, "Error while exporting '" + elem + "'");
+            }
+        }
+        return outBuf.toString();
     }
 }
 
