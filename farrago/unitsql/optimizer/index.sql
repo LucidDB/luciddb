@@ -440,7 +440,8 @@ drop table ftrsemps cascade;
 -- Part 1. index created on empty column store table --
 -------------------------------------------------------
 -- Use LucidDB personality
-alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+alter session implementation set jar
+    sys_boot.sys_boot.luciddb_index_only_plugin;
 
 create table lbmemps(
     empno integer not null,
@@ -1030,6 +1031,13 @@ select *
 
 drop table t cascade;
 drop table smalltable cascade;
+
+-- Test to make sure index only scans aren't enabled by default.  Earlier, we
+-- verified that when index only scans are enabled, it is used with the
+-- following select query.
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+explain plan for
+    select deptno from lbmemps where deptno = 20 order by deptno;
 
 --------------
 -- Clean up --

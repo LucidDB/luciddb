@@ -596,7 +596,7 @@ public class FarragoUserDefinedRoutine
         return body.startsWith(RETURN_PREFIX);
     }
 
-    private boolean isDynamicFunction()
+    public boolean isDynamicFunction()
     {
         return getFemRoutine().isDynamicFunction();
     }

@@ -20,22 +20,19 @@
 */
 package com.lucidera.farrago;
 
-import java.util.*;
-
 import net.sf.farrago.db.*;
-import net.sf.farrago.defimpl.*;
 import net.sf.farrago.session.*;
 
 
 /**
- * LucidDbSessionFactory extends {@link FarragoDbSessionFactory} with
- * LucidDB-specific behavior.
+ * LucidDbIndexOnlySessionFactory extends {@link LucidDbSessionFactory}
+ * by enabling index only scans.
  *
- * @author John V. Sichi
+ * @author Zelaine Fong
  * @version $Id$
  */
-public class LucidDbSessionFactory
-    extends FarragoDefaultSessionFactory
+public class LucidDbIndexOnlySessionFactory
+    extends LucidDbSessionFactory
 {
 
     //~ Methods ----------------------------------------------------------------
@@ -48,23 +45,8 @@ public class LucidDbSessionFactory
         return new LucidDbSessionPersonality(
             (FarragoDbSession) session,
             defaultPersonality,
-            false);
-    }
-
-    // implement FarragoSessionFactory
-    public void applyFennelExtensionParameters(Properties map)
-    {
-        super.applyFennelExtensionParameters(map);
-
-        // Tell Fennel to checkpoint after each transaction.
-        map.put("forceTxns", "true");
-    }
-
-    // implement FarragoSessionFactory
-    public FarragoSessionTxnMgr newTxnMgr()
-    {
-        return new LucidDbTxnMgr();
+            true);
     }
 }
 
-// End LucidDbSessionFactory.java
+// End LucidDbIndexOnlySessionFactory.java

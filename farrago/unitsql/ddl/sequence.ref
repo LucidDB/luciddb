@@ -232,7 +232,7 @@ Error: Sequence generator limit exceeded for LOCALDB.SEQUENCE_DDL_TEST.S (state=
 > insert into t values (10, -10);
 > 
 > insert into s values (20, 20);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: insert value into field which is always generated (state=,code=0)
+Error: Cannot explicitly insert value into IDENTITY column 'D' which is ALWAYS GENERATED (state=,code=0)
 > 
 > ----------------------------------------------------------------------
 > -- VIEWS
@@ -245,5 +245,38 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: insert v
 | LOCALDB    | SEQUENCE_DDL_TEST  | T           | B            | 0          | -2         | -10       | 0         | true   | false    |
 | LOCALDB    | SEQUENCE_DDL_TEST  | S           | D            | 100        | 1          | 100       | 100       | true   | false    |
 +------------+--------------------+-------------+--------------+------------+------------+-----------+-----------+--------+----------+
+> 
+> ----------------------------------------------------------------------
+> -- INTERACTION WITH REBUILD (LDB-160)
+> ----------------------------------------------------------------------
+> 
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> create table cs(
+>     i int primary key,
+>     d decimal(10,0) generated always as identity
+>         (minvalue 20 maxvalue 100));
+> 
+> insert into cs (i) values (5);
+> insert into cs (i) values (10);
+> 
+> select * from cs order by i;
++-----+-----+
+|  I  |  D  |
++-----+-----+
+| 5   | 20  |
+| 10  | 21  |
++-----+-----+
+> 
+> alter table cs rebuild;
+> 
+> select * from cs order by i;
++-----+-----+
+|  I  |  D  |
++-----+-----+
+| 5   | 20  |
+| 10  | 21  |
++-----+-----+
+> 
 > 
 > !quit

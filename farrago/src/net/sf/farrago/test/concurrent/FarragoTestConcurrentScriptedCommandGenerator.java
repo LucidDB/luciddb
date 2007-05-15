@@ -406,7 +406,17 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                                 threadNamesTok.nextToken());
                         }
 
+                        // Since DDL commands are prepared and executed, defer
+                        // any DDL validation until execute time
                         order = 1;
+                        for (int i = threadId; i < nextThreadId; i++) {
+                            addDdlCommand(
+                                i,
+                                order,
+                                "alter session set \"validateDdlOnPrepare\" " +
+                                "= false");
+                        }
+                        order++;
                     } else if (REPEAT.equals(command)) {
                         repeatCount =
                             Integer.parseInt(

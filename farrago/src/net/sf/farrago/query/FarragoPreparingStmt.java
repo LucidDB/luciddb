@@ -209,6 +209,7 @@ public class FarragoPreparingStmt
         return true;
     }
 
+    // implement FarragoSessionPreparingStmt
     public void disableStatementCaching()
     {
         cachingDisabled = true;

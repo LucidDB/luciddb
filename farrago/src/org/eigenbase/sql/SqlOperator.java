@@ -710,6 +710,15 @@ public abstract class SqlOperator
     {
         return true;
     }
+    
+    /**
+     * @return true iff it is unsafe to cache query plans referencing this
+     * operator; false is assumed by default
+     */
+    public boolean isDynamicFunction()
+    {
+        return false;
+    }
 
     /**
      * Method to check if call requires expansion when it has decimal operands.

@@ -85,8 +85,9 @@ public class LcsIndexOptimizer
     private Set<SargColumnFilter> tmpResidualFilterSet;
     private Map<FemLocalIndex, SargColumnFilter> tmpIndex2LastFilterMap;
     
-    // Cache for costed index mappings and their cost
-    private Map<Filter2IndexMapping, Double> costMap;
+    // best index mappings and its cost
+    private Filter2IndexMapping bestMapping;
+    private Double bestCost;
     
     Logger tracer;
     
@@ -118,8 +119,6 @@ public class LcsIndexOptimizer
         tmpResidualFilterSet = new HashSet<SargColumnFilter> ();
         tmpIndex2LastFilterMap = 
             new HashMap<FemLocalIndex, SargColumnFilter> ();
-        
-        costMap = new HashMap<Filter2IndexMapping, Double> ();
         
         tracer = FarragoTrace.getOptimizerRuleTracer();        
         
@@ -178,6 +177,7 @@ public class LcsIndexOptimizer
                 tableRowCount/
                 (ByteLength * LcsIndexGuide.LbmBitmapSegMaxSize);
         }
+        bestMapping = new Filter2IndexMapping();
     }
 
     /**
@@ -480,10 +480,6 @@ public class LcsIndexOptimizer
         List<SargColumnFilter> pointList = filterLists.get(0);
         List<SargColumnFilter> intervalList = filterLists.get(1);
         
-        // prepare return parameters
-        Filter2IndexMapping candidateMapping = new Filter2IndexMapping();
-        Filter2IndexMapping bestMapping = new Filter2IndexMapping();
-        
         // If scanning a small table, skip index access analysis.
         // Use residual filters only.
         if (rowScanRelRowCount < SmallTableRowCount) {
@@ -492,24 +488,11 @@ public class LcsIndexOptimizer
         }
 
         if (useCost) {
-            // Calculate a base line with empty filter->index map. 
-            // The cost is computed using residual filters.
-            costIndexAccess(
-                pointList,
-                intervalList,
-                candidateMapping,
-                bestMapping);
-            
             // Enumerate through possible index combinations and cost each one
             // of them.
-            getBestIndex(
-                pointList,
-                intervalList,
-                candidateMapping,
-                bestMapping);
+            getBestIndex(pointList, intervalList);
         }
         
-        Double bestCost = costMap.get(bestMapping);
         if (bestCost != null) {        
             if (tracer.isLoggable(Level.FINEST)) {
                 String nl = System.getProperty("line.separator");
@@ -578,229 +561,168 @@ public class LcsIndexOptimizer
     }
 
     /**
-     * Find the best filter to index mapping based on cost.
+     * Find the set of indexes that gives the lowest access time for the query.
+     * This method greedily searchs for local optimum; it may end up picking 
+     * a sub-optimal set of indexes.
      * 
      * @param pointList list of point filters
      * @param intervalList list of interval filters
-     * @param candidateMapping the current mapping from filter to index
-     * @param bestMapping the mapping from filter to index with the best
-     * cost.
-     * 
      */
     private void getBestIndex(
         List<SargColumnFilter> pointList,
-        List<SargColumnFilter> intervalList,
-        Filter2IndexMapping candidateMapping,
-        Filter2IndexMapping bestMapping)        
-    {
-        boolean matchedAllPointFilters = true;
-        
-        // match point ranges
-        for (SargColumnFilter pointFilter : pointList) {
-            if (candidateMapping.filter2IndexMap.containsKey(pointFilter)) {
-                // if column filter is already mapped
-                continue;
-            }
-            
-            FemAbstractColumn pointColumn =
-                rowScanRel.getColumnForFieldAccess(pointFilter.columnPos);
-            
-            // for all indexes try fit this filter column in
-            for (FemLocalIndex index : usableIndexes) {
-                int matchedPos = getIndexColumnPos(index, pointColumn);
-                
-                if (matchedPos >= 0) {
-                    // find all filters mapped to this index
-                    tmpMappedPointColumns.clear();
-                    for (SargColumnFilter filter : 
-                        candidateMapping.filter2IndexMap.keySet()) {
-                        // only add point filters
-                        if (pointList.contains(filter) &&
-                            candidateMapping.filter2IndexMap.get(filter).
-                            equals(index)) {
-                            tmpMappedPointColumns.add(
-                                rowScanRel.getColumnForFieldAccess(
-                                    filter.columnPos));
-                        }
-                    }
-                    
-                    // Found a matched position.
-                    // now check all prior positions have been matched(and are
-                    // point filters) for this index
-                    int pos;
-                    for (pos = 0; pos < matchedPos; pos ++) {
-                        CwmStructuralFeature feature =
-                            index.getIndexedFeature().get(pos).getFeature();
-                        if (!tmpMappedPointColumns.contains(feature)) {
-                            break;
-                        }
-                    }
-                    
-                    if (pos == matchedPos) {
-                        Double combinedSelectivity =
-                            candidateMapping.getSelectivity(tableStats);
-                        
-                        if (combinedSelectivity != null &&        
-                            combinedSelectivity > IndexSearchSeletivityThreshold) {
-                            // all prior positions matched, keep going
-                            matchedAllPointFilters = false;
-                            
-                            // First cost the filters mapped so far.
-                            // The unmapped ones will be costed using residual filters
-                            // Compare this cost with the current bestMapping.
-                            costIndexAccess(
-                                pointList,
-                                intervalList,
-                                candidateMapping,
-                                bestMapping);
-                            
-                            candidateMapping.add(pointFilter, index);
-                            
-                            getBestIndex(
-                                pointList,
-                                intervalList,
-                                candidateMapping,
-                                bestMapping);
-                        }
-                    }
-                }
-                // Remove any existing filter->index mapping for this filter
-                candidateMapping.remove(pointFilter);
+        List<SargColumnFilter> intervalList)
+    {   
+        TreeSet<IndexFilterTuple> indexFilterSet = 
+            new TreeSet<IndexFilterTuple>(
+                new MappedFilterSelectivityComparator());
+        Set<SargColumnFilter> mappedIndexSet = new HashSet<SargColumnFilter>();
 
-                // Try the next index for the filter considered
-            }
-            // Try the next filter as the leading filter
+        // map each index to a list of matched filters
+        // add tuples <index, matched filters> to indexFilterSet
+        boolean disjoint = mapIndexToFilter(
+            usableIndexes,
+            pointList,
+            intervalList,
+            mappedIndexSet,
+            indexFilterSet);
+       
+        Double selectivity = 1.0;
+        Filter2IndexMapping currentMapping = new Filter2IndexMapping();
+        Filter2IndexMapping currBestMapping = new Filter2IndexMapping();
+        HashSet<IndexFilterTuple> toDelete = new HashSet<IndexFilterTuple>();
+        
+        bestCost = costIndexAccess(pointList, intervalList, currentMapping);
+
+        if (bestCost == null) {
+            return;
         }
         
-        // next try to match the rangeFilters if any
-        
-        // now we've matched every possible index in this recursion
-        // calculate the cost and update bestIndex2MatchedPosMap and bestCost
-        // if the new cost is lower
-        if (matchedAllPointFilters) {
-            // Note that if there exist point filters that can be mapped to
-            // indexes, this algorithm will always try to match some point
-            // filters before mapping the interval filters. A mapping with
-            // matches only interval filters to indexes is not generated, even
-            // though it is a legitimate candidate mapping. This limitation of
-            // cost space is fine because applying additional point filters via
-            // indexes should always reduce the cost of scan.
-            getBestIndexWithIntervalFilter(
-                pointList,
-                intervalList,
-                candidateMapping,
-                bestMapping);
+        while (!indexFilterSet.isEmpty() 
+            && (selectivity > IndexSearchSeletivityThreshold)) 
+        {
+            currBestMapping.copyFrom(bestMapping);
+            Double currentCost = bestCost;
+            toDelete.clear();
+            IndexFilterTuple bestTupThisRound = null;
+            
+            Iterator iter = indexFilterSet.iterator();
+            while (iter.hasNext()) {
+                IndexFilterTuple tup = (IndexFilterTuple) iter.next();
+                //add current mapping to currBestMapping and try to cost
+                currentMapping.copyFrom(currBestMapping);
+                currentMapping.add(tup);
+                if (tracer.isLoggable(Level.FINEST)) {
+                    String msg = "Index: "
+                        + tup.getIndex().getName()
+                        + " selectivity: " 
+                        + tup.getEffectiveSelectivity();
+                    tracer.finest(msg);
+                }
+                Double newCost = costIndexAccess(
+                    pointList, intervalList, currentMapping);
+                
+                if ((newCost != null) && (newCost < bestCost)) {
+                    bestCost = newCost;
+                    bestTupThisRound = tup;
+                    bestMapping.copyFrom(currentMapping);
+                } else if ((newCost == null) || (newCost >= currentCost)) {
+                    toDelete.add(tup);
+                }
+            }
+            if (bestTupThisRound != null) {
+                if (tracer.isLoggable(Level.FINEST)) {
+                    String msg = 
+                        "Found a new index in this round that reduces cost: "
+                        + bestTupThisRound.getIndex().getName();
+                    tracer.finest(msg);
+                }
+                selectivity *= bestTupThisRound.getEffectiveSelectivity();
+                toDelete.add(bestTupThisRound);
+            } else {
+                break;
+            }
+            // purge the tree to prepare for next round
+            indexFilterSet.removeAll(toDelete);
+            // rebuild the tree with changed selectivity and trim if desired
+            if (!(disjoint || indexFilterSet.isEmpty())) {
+                rebuildTreeSet(
+                    indexFilterSet, bestMapping.filter2IndexMap.keySet());
+            }
         }
     }
-
+    
     /**
-     * Find the best filter to index mapping based on cost, considering only
-     * interval filters.
+     * maps each index in the list of usable indexes to filters 
+     * satisfiable by the index and populates the indexFilterSet
+     * with tuples <index, satisfiable filters>.
+     * The set is ordered by effective selectivity of the index.
      * 
+     * @param usableIndexes list of indexes to be mapped
      * @param pointList list of point filters
      * @param intervalList list of interval filters
-     * @param candidateMapping the current mapping from filter to index
-     * @param bestMapping the mapping from filter to index with the best
-     * cost.
+     * @param mappedIndexSet
+     * @param indexFilterSet the tree set to be populated
+     * @return true if the sets of satisfiable filters are disjoint
      */
-    private void getBestIndexWithIntervalFilter(
+    private boolean mapIndexToFilter(
+        List<FemLocalIndex> usableIndexes,
         List<SargColumnFilter> pointList,
         List<SargColumnFilter> intervalList,
-        Filter2IndexMapping candidateMapping,
-        Filter2IndexMapping bestMapping)        
+        Set<SargColumnFilter> mappedIndexSet,      
+        TreeSet<IndexFilterTuple> indexFilterSet)
     {
-        boolean matchedAllIntervalFilters = true;
-        
-        // match interval filters
-        for (SargColumnFilter intervalFilter : intervalList) {
-            if (candidateMapping.filter2IndexMap.containsKey(intervalFilter)) {
-                // if column filter is already mapped
-                continue;
-            }
+        boolean disjoint = true;
+        Set<SargColumnFilter> mappedSoFar = new HashSet<SargColumnFilter>();
+       
+        for (FemLocalIndex index : usableIndexes) {
+            IndexFilterTuple tup = new IndexFilterTuple(
+                index, pointList, intervalList, mappedIndexSet);
             
-            FemAbstractColumn intervalColumn =
-                rowScanRel.getColumnForFieldAccess(intervalFilter.columnPos);
-
-            // for all indexes try fit this filter column in
-            for (FemLocalIndex index : usableIndexes) {
-                
-                int matchedPos = getIndexColumnPos(index, intervalColumn);
-                
-                if (matchedPos >= 0) {
-                    // find all filters mapped to this index
-                    tmpMappedPointColumns.clear();
-                    for (SargColumnFilter filter : 
-                        candidateMapping.filter2IndexMap.keySet()) {
-                        // only add point filters
-                        if (pointList.contains(filter) &&
-                            candidateMapping.filter2IndexMap.get(filter).
-                            equals(index)) {
-                            tmpMappedPointColumns.add(
-                                rowScanRel.getColumnForFieldAccess(
-                                    filter.columnPos));
-                        }
-                    }
-                    
-                    // Found a matched position.
-                    // now check all prior positions have been matched(and
-                    // are point filters) for this index
-                    int pos;
-                    for (pos = 0; pos < matchedPos; pos ++) {
-                        CwmStructuralFeature
-                        feature = 
-                            index.getIndexedFeature().get(pos).getFeature();
-                        if (!tmpMappedPointColumns.contains(feature)) {
-                            break;
-                        }
-                    }
-                    
-                    if (pos == matchedPos) {
-                        Double combinedSelectivity =
-                            candidateMapping.getSelectivity(tableStats);
-
-                        if (combinedSelectivity != null &&        
-                            combinedSelectivity > IndexSearchSeletivityThreshold) {
-                            // all prior positions matched, keep going
-                            matchedAllIntervalFilters = false;
-                            
-                            // First cost the filters mapped so far.
-                            // The unmapped ones will be costed using residual filters
-                            // Compare this cost with the current bestMapping.
-                            costIndexAccess(
-                                pointList,
-                                intervalList,
-                                candidateMapping,
-                                bestMapping);
-                            
-                            candidateMapping.add(intervalFilter, index);
-                            
-                            getBestIndexWithIntervalFilter(
-                                pointList,
-                                intervalList,
-                                candidateMapping,
-                                bestMapping);
-                        }
-                    }
+            if (! tup.getFilterList().isEmpty()) {
+                boolean added = indexFilterSet.add(tup);
+                if ((! added) && (tracer.isLoggable(Level.FINEST))) { 
+                    String msg =  "Failed to add " + tup.getIndex().getName();
+                    tracer.finest(msg);
                 }
-                
-                // Remove any existing filter->index mapping for this filter
-                candidateMapping.remove(intervalFilter);
-
-                // Try the next index for the filter considered
+                // check if any of newly added filters have already been mapped
+                List<SargColumnFilter> newFilters = tup.getFilterList();
+                for (SargColumnFilter filter : newFilters) {
+                    if (mappedSoFar.contains(filter)) {
+                        disjoint = false;
+                        break;
+                    }
+                }   
+                mappedSoFar.addAll(newFilters);
             }
-            // Try the next filter as the leading filter
         }
-        
-        if (matchedAllIntervalFilters) {            
-            costIndexAccess(
-                pointList,
-                intervalList,
-                candidateMapping,
-                bestMapping);            
-        }
-        return;
+        return disjoint;
     }
+    
+    /**
+     * recalculate effective selectivity and rebuild the tree set
+     * effective selectivity of an index may be changed if some other indexes
+     * has satisfied some of the filters 
+     * 
+     * @param indexFilterSet
+     * @param mappedFilters
+     */
+    private void rebuildTreeSet(
+        TreeSet<IndexFilterTuple> indexFilterSet,
+        Set<SargColumnFilter> mappedFilters)
+    {
+        TreeSet<IndexFilterTuple> newIndexFilterSet = 
+            new TreeSet<IndexFilterTuple>(
+                new MappedFilterSelectivityComparator());
 
+        Iterator iter = indexFilterSet.iterator();
+        while (iter.hasNext()) {
+            IndexFilterTuple tup = (IndexFilterTuple) iter.next();
+            tup.reCalculateEffectiveSelectivity(mappedFilters);
+            newIndexFilterSet.add(tup);
+        }
+        indexFilterSet = newIndexFilterSet;
+    }
+    
     /**
      * Calculate the cost of using index access and residual filtering with a 
      * row scan.
@@ -808,21 +730,13 @@ public class LcsIndexOptimizer
      * @param pointList list of point filters
      * @param intervalList list of interval filters
      * @param candidateMapping the candidate mapping from filter to index 
-     * annotated
-     * the newly calculated cost.
+     * @return cost of index access
      */
-    private void costIndexAccess(
+    private Double costIndexAccess(
         List<SargColumnFilter> pointList,
         List<SargColumnFilter> intervalList,
-        Filter2IndexMapping candidateMapping,
-        Filter2IndexMapping bestMapping)        
+        Filter2IndexMapping candidateMapping)   
     {
-        if (costMap.containsKey(candidateMapping)) {
-            // has been costed before
-            // just return
-            return;
-        }
-        
         Double cost = 0.0;    
         
         // residual list starts out having all the filters in it
@@ -855,14 +769,13 @@ public class LcsIndexOptimizer
                     index2MatchedPosMap,
                     tmpIndex2LastFilterMap);
             
-            if (indexSearchCost == null) {
-                costMap.put(candidateMapping, null);                
+            if (indexSearchCost == null) {                
                 if (tracer.isLoggable(Level.FINEST)) {
                     tracer.finest(
                         "Check if table is analyzed:" 
                         + rowScanRel.lcsTable.getName());
                 }
-                return;
+                return null;
             }
             
             cost += indexSearchCost;
@@ -878,17 +791,15 @@ public class LcsIndexOptimizer
                 tmpResidualFilterSet);
         
         if (residualScanCost == null) {
-            costMap.put(candidateMapping, null);
             if (tracer.isLoggable(Level.FINEST)) {
                 tracer.finest(
                     "Check if table is analyzed:" 
                     + rowScanRel.lcsTable.getName());
             }
-            return;
+            return null;
         }
         
         cost += residualScanCost;
-        costMap.put(candidateMapping, cost);
         
         if (tracer.isLoggable(Level.FINEST)) {
             String nl = System.getProperty("line.separator");
@@ -917,18 +828,13 @@ public class LcsIndexOptimizer
             
             tracer.finest(msg);
         }
-
-        Double bestCost = costMap.get(bestMapping);
         
         if (bestCost == null || bestCost > cost) {
-            bestMapping.copyFrom(candidateMapping);
-            costMap.put(bestMapping, cost);            
             if (tracer.isLoggable(Level.FINEST)) {
                 tracer.finest("New best cost is " + cost);
             }
-        }
-        
-        return;
+        }        
+        return cost;
     }
 
     /**
@@ -1176,6 +1082,8 @@ public class LcsIndexOptimizer
                 return null;
             }
 
+            String msg;
+            
             Double scanCost = 
                 getIndexBitmapScanCost(index, scannedBitmapCount);
             
@@ -1183,7 +1091,7 @@ public class LcsIndexOptimizer
                 getIndexBitmapBitOpCost(scannedBitmapCount.intValue());
             
             Double sortCost =
-                getIndexBitmapSortCost(scannedBitmapCount);
+                getIndexBitmapSortCost(scannedBitmapCount);            
             
             if (scanCost == null || mergeCost == null || sortCost == null) {
                 return null;
@@ -1475,7 +1383,7 @@ public class LcsIndexOptimizer
     }
 
     /**
-     * Calculate the cost of scanning a table with residula filters applied.
+     * Calculate the cost of scanning a table with residual filters applied.
      * 
      * @param indexSearchFilterList index search filters
      * @param residualFilterList residual column filters
@@ -2122,6 +2030,37 @@ public class LcsIndexOptimizer
                 index2MatchedPosMap.put(index, matchedPos+1);                
             }
         }
+        
+        /**
+         * adds a tuple(index,listOfFilters). a tuple (filter, index) is always
+         * added regardless the existence of the filter in the filter2IndexMap
+         * existing <filter,index> will be overridden, but the mapped position
+         * of the overridden index will not be changed
+         * 
+         * Example:
+         * with point filters on columns A,B,C
+         * Index X(A,B) and Y(B,C)
+         * generated tuples will be <X, A,B> and <Y, B,C>
+         * 
+         * adding first tuple:
+         * filter2IndexMap will have <A,X> and <B,X>
+         * index2MatchedPosMap will have <X,2>
+         * 
+         * adding second tuple:
+         * filter2IndexMap will have <A,X> and <B,Y> and <C,Y>
+         * index2MatchedPosMap will have <X,2> and <Y,2>
+         * 
+         * @param tup the tuple to add
+         */
+        void add(IndexFilterTuple tup) 
+        {
+            Iterator iter = tup.getFilterList().iterator();
+            SargColumnFilter filter;
+            while (iter.hasNext()) {
+                filter = (SargColumnFilter) iter.next();
+                add(filter, tup.getIndex());
+            }
+        }
 
         /**
          * Remove a filter from the current mapping.
@@ -2162,6 +2101,12 @@ public class LcsIndexOptimizer
             }
         }
         
+        void clear()
+        {
+            filter2IndexMap.clear();
+            index2MatchedPosMap.clear();
+        }
+        
         void copyFrom(Filter2IndexMapping srcMapping)
         {
             filter2IndexMap.clear();
@@ -2181,6 +2126,165 @@ public class LcsIndexOptimizer
         {
             return index2MatchedPosMap.hashCode();
         }
-    }    
+    }
+    
+    /*
+     * A tuple of <index, filters satisfiable by that index>
+     * Notes:
+     * Filter Map contains the ALL filters satisfiable by the index.
+     * Effective selectivity is the combined selectivity of filters
+     * satisfied by the index EXCLUDING those satisfied by other indexes that
+     * have been previously added to the candidate list
+     * 
+     * 
+     */
+    public class IndexFilterTuple 
+    {
+        private FemLocalIndex index;
+        private List<SargColumnFilter> filterList;
+        private Double effectiveSelectivity;
+        
+        /**
+         * Constructs a tuple <index, filters satisfiable by this index>
+         * for each indexed column, search in pointList and intervalList to see
+         * if that indexed column satisfies any filters. Uses prefix matching rule
+         * with one restriction: matching stops at the first matched range filter.
+         * Example:
+         * point filters  | range filters   | index on   | index satisfies
+         * A,B,C          |                 | (A,B,D,C)  | A,B
+         * B,C            |                 | (A,B,C)    | none
+         * B              | A               | (A,B,C)    | A
+         * A,C            | B               | (A,B,C)    | A,B
+         *                | A,B             | (A,B,C)    | A
+         * 
+         * @param index the index to be matched with filters
+         * @param pointList list of point filters
+         * @param intervalList list of interval filters
+         * @param mappedFilterSet set of filters previously mapped to some other indexes
+         */
+        public IndexFilterTuple(
+            FemLocalIndex index,
+            List<SargColumnFilter> pointList,
+            List<SargColumnFilter> intervalList,
+            Set<SargColumnFilter> mappedFilterSet)
+        {
+            this.index = index;
+            this.filterList = new LinkedList<SargColumnFilter>();
+
+            List<CwmIndexedFeature> indexedFeatures = 
+                index.getIndexedFeature();
+            boolean mappedToPointFilter = true;
+            
+            Iterator iter = indexedFeatures.iterator();
+            while (iter.hasNext() && mappedToPointFilter) {
+                CwmIndexedFeature indexedFeature = 
+                    (CwmIndexedFeature) iter.next();
+                mappedToPointFilter = false;
+                FemAbstractColumn col = 
+                    (FemAbstractColumn) indexedFeature.getFeature();
+                
+                for (SargColumnFilter pointFilter : pointList) {
+                    FemAbstractColumn pointColumn =
+                        rowScanRel.getColumnForFieldAccess(
+                            pointFilter.columnPos);
+                    if (col.equals(pointColumn)) {
+                        mappedToPointFilter = true;
+                        filterList.add(pointFilter);
+                        break;
+                    }
+                }
+                if (mappedToPointFilter) {
+                    continue;
+                }
+                for (SargColumnFilter intervalFilter : intervalList) {
+                    FemAbstractColumn intervalColumn =
+                        rowScanRel.getColumnForFieldAccess(
+                            intervalFilter.columnPos);
+                    if (col.equals(intervalColumn)) {
+                        filterList.add(intervalFilter);
+                    }
+                }
+            }
+
+            // compute selectivity excluding those in mappedFilterSet
+            if (filterList.isEmpty()) {
+                effectiveSelectivity = null;
+            } else if (mappedFilterSet == null || mappedFilterSet.isEmpty()) {
+                effectiveSelectivity =
+                    getCombinedSelectivity(
+                        new HashSet<SargColumnFilter>(filterList));                
+            } else {
+                reCalculateEffectiveSelectivity(mappedFilterSet);
+            }
+        }
+        
+        public FemLocalIndex getIndex() 
+        {
+            return index;
+        }
+        
+        public List<SargColumnFilter> getFilterList() 
+        {
+            return filterList;
+        }
+      
+        public Double getEffectiveSelectivity() 
+        {
+            return effectiveSelectivity;
+        }
+        
+        public void reCalculateEffectiveSelectivity(
+            Set<SargColumnFilter> mappedFilterSet)
+        {
+            HashSet<SargColumnFilter> difference =
+                new HashSet<SargColumnFilter>(filterList);
+            difference.removeAll(mappedFilterSet);
+            effectiveSelectivity =
+                getCombinedSelectivity(difference);           
+        }
+    }
+    
+    /*
+     * MappedFilterSelectivityComparator is used to sort IndexFilterTuple 
+     * by effective selectivity of the tuple. If either tuple has null
+     * selectivity or the two tuples have same selectivity, they will be
+     * sorted by StorageId of the index that constitute the tuple.
+     *
+     */
+    public static class MappedFilterSelectivityComparator 
+    implements Comparator<IndexFilterTuple>
+    {
+        public MappedFilterSelectivityComparator()
+        {
+        }
+ 
+        public int compare(IndexFilterTuple t1, IndexFilterTuple t2)
+        {
+            Double sel1 = t1.getEffectiveSelectivity();
+            Double sel2 = t2.getEffectiveSelectivity();
+            
+            int compRes = 0;
+            
+            if ((sel1 != null) && (sel2 != null)) {
+                if (sel1 > sel2) {
+                    compRes = 1;
+                } else if (sel1 < sel2) {
+                    compRes = -1;
+                }
+            }
+            
+            if (compRes == 0) {
+                compRes = t1.getIndex().getStorageId().compareTo(
+                    t2.getIndex().getStorageId());
+            }
+            
+            return compRes;
+        }
+        
+        public boolean equals(Object obj)
+        {
+            return (obj instanceof MappedFilterSelectivityComparator);
+        }
+    }
 }
 //End LcsIndexOptimizer.java

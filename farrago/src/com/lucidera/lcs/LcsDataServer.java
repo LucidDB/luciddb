@@ -206,11 +206,6 @@ class LcsDataServer
                             })
                     }),
                 "with merge child"));
-
-        // after join ordering, consider index only access. as above,
-        // multiple rules are required for various patterns
-        planner.addRule(LcsIndexOnlyAccessRule.instanceSearch);
-        planner.addRule(LcsIndexOnlyAccessRule.instanceMerge);
     }
 
     // implement FarragoMedLocalDataServer

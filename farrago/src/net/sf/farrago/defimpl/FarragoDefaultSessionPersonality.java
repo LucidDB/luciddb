@@ -77,6 +77,11 @@ public class FarragoDefaultSessionPersonality
 
     //~ Static fields ----------------------------------------------------------
 
+    // REVIEW jvs 8-May-2007:  These are referenced from various
+    // places where it seems like macker should prevent the dependency.
+    // Not sure why that is, but figure out a better place for them
+    // (probably FarragoSessionVariables), leaving these here as aliases.
+    
     /**
      * Numeric data from external data sources may have a greater precision 
      * than Farrago. Whether data of greater precision should be replaced 
@@ -89,6 +94,21 @@ public class FarragoDefaultSessionPersonality
      */
     public static final String CACHE_STATEMENTS = "cacheStatements";
     public static final String CACHE_STATEMENTS_DEFAULT = "true";
+    /**
+     * Whether DDL validation should be done at prepare time
+     */
+    public static final String VALIDATE_DDL_ON_PREPARE = "validateDdlOnPrepare";
+    public static final String VALIDATE_DDL_ON_PREPARE_DEFAULT = "true";
+    /**
+     * Whether the GENERATED ALWAYS option for identity columns should
+     * be enforced.  TODO jvs 8-May-2007:  This is only intended
+     * for use by the system during ALTER TABLE REBUILD; need to
+     * hide it from the user level.
+     */
+    public static final String ENFORCE_IDENTITY_GENERATED_ALWAYS =
+        "enforceIdentityGeneratedAlways";
+    public static final String ENFORCE_IDENTITY_GENERATED_ALWAYS_DEFAULT =
+        "true";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -106,6 +126,10 @@ public class FarragoDefaultSessionPersonality
             SQUEEZE_JDBC_NUMERIC, false);
         paramValidator.registerBoolParam(
             CACHE_STATEMENTS, false);
+        paramValidator.registerBoolParam(
+            VALIDATE_DDL_ON_PREPARE, false);
+        paramValidator.registerBoolParam(
+            ENFORCE_IDENTITY_GENERATED_ALWAYS, false);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -374,6 +398,12 @@ public class FarragoDefaultSessionPersonality
         variables.setDefault(
             CACHE_STATEMENTS,
             CACHE_STATEMENTS_DEFAULT);
+        variables.setDefault(
+            VALIDATE_DDL_ON_PREPARE,
+            VALIDATE_DDL_ON_PREPARE_DEFAULT);
+        variables.setDefault(
+            ENFORCE_IDENTITY_GENERATED_ALWAYS,
+            ENFORCE_IDENTITY_GENERATED_ALWAYS_DEFAULT);
     }
 
     // implement FarragoSessionPersonality

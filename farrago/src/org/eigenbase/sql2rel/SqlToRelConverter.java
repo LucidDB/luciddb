@@ -33,6 +33,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -2217,9 +2218,9 @@ public class SqlToRelConverter
             fieldNames[i] = targetRowType.getFields()[i].getName();
             if (sourceExps[i] != null) {
                 if (defaultValueFactory.isGeneratedAlways(targetTable, i)) {
-                    // TODO: throw a proper exception
-                    throw Util.needToImplement(
-                        "insert value into field which is always generated");
+                    throw EigenbaseResource.instance().
+                        InsertIntoAlwaysGenerated.ex(
+                            fieldNames[i]);
                 }
                 continue;
             }

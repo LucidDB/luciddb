@@ -116,6 +116,9 @@ public class DdlRebuildTableStmt
         session.getSessionVariables().set(
             FarragoDefaultSessionPersonality.CACHE_STATEMENTS, 
             Boolean.toString(false));
+        session.getSessionVariables().set(
+            FarragoDefaultSessionPersonality.ENFORCE_IDENTITY_GENERATED_ALWAYS, 
+            Boolean.toString(false));
         FarragoSessionStmtContext stmtContext =
             session.newStmtContext(null);
         stmtContext.prepare(getRebuildDml(writer), true);

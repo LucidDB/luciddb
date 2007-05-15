@@ -3626,22 +3626,22 @@ FROM `DEPTS2` (state=,code=0)
 > 
 > explain plan for 
 > select (select test1.b from test1 where test1.b = test2.a) from test2;
-+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                        column0                                                                         |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                              |
-|   FennelReshapeRel(projection=[[2]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])                                                              |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])                                                                                       |
-|       LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A]])                              |
-|       LhxAggRel(groupCount=[1], agg#0=[SINGLE_VALUE(1)])                                                                                               |
-|         FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER B) NOT NULL])                                    |
-|           LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])                                                                                |
-|             LcsRowScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST1$B]])                        |
-|             FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])                 |
-|               LcsIndexAggRel(groupCount=[1])                                                                                                           |
-|                 FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                                                        |
-|                   LcsIndexOnlyScanRel(table=[[LOCALDB, SALES, TEST2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TEST2], projection=[[0, 1, 2, 3]])  |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                 column0                                                                 |
++-----------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                               |
+|   FennelReshapeRel(projection=[[2]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])                                               |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])                                                                        |
+|       LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A]])               |
+|       LhxAggRel(groupCount=[1], agg#0=[SINGLE_VALUE(1)])                                                                                |
+|         FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER B) NOT NULL])                     |
+|           LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])                                                                 |
+|             LcsRowScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST1$B]])         |
+|             FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])  |
+|               LhxAggRel(groupCount=[1])                                                                                                 |
+|                 FennelRenameRel(fieldNames=[[$f0]])                                                                                     |
+|                   LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A]])   |
++-----------------------------------------------------------------------------------------------------------------------------------------+
 > 
 > explain plan for 
 > select (select test2.b from test1 where test1.a = test2.a) from test2;
@@ -3657,22 +3657,22 @@ FROM `DEPTS2` (state=,code=0)
 > 
 > explain plan for 
 > select (select test3.b from test3 where test3.b = test2.a) from test2;
-+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                        column0                                                                         |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                              |
-|   FennelReshapeRel(projection=[[2]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])                                                              |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])                                                                                       |
-|       LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A]])                              |
-|       LhxAggRel(groupCount=[1], agg#0=[SINGLE_VALUE(1)])                                                                                               |
-|         FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER B) NOT NULL])                                    |
-|           LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])                                                                                |
-|             LcsRowScanRel(table=[[LOCALDB, SALES, TEST3]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST3$B]])                        |
-|             FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])                 |
-|               LcsIndexAggRel(groupCount=[1])                                                                                                           |
-|                 FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                                                        |
-|                   LcsIndexOnlyScanRel(table=[[LOCALDB, SALES, TEST2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TEST2], projection=[[0, 1, 2, 3]])  |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                 column0                                                                 |
++-----------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                               |
+|   FennelReshapeRel(projection=[[2]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])                                               |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])                                                                        |
+|       LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A]])               |
+|       LhxAggRel(groupCount=[1], agg#0=[SINGLE_VALUE(1)])                                                                                |
+|         FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER B) NOT NULL])                     |
+|           LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])                                                                 |
+|             LcsRowScanRel(table=[[LOCALDB, SALES, TEST3]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST3$B]])         |
+|             FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])  |
+|               LhxAggRel(groupCount=[1])                                                                                                 |
+|                 FennelRenameRel(fieldNames=[[$f0]])                                                                                     |
+|                   LcsRowScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST2$A]])   |
++-----------------------------------------------------------------------------------------------------------------------------------------+
 > 
 > explain plan for 
 > select (select test4.b from test4 where test4.b = test2.a) from test2;

@@ -88,11 +88,17 @@ public class LucidDbSessionPersonality
      */
     private boolean defaultLucidDb;
     
+    /**
+     * If true, enable index only scan rules
+     */
+    private boolean enableIndexOnlyScans;
+    
     //~ Constructors -----------------------------------------------------------
 
     protected LucidDbSessionPersonality(
         FarragoDbSession session,
-        FarragoSessionPersonality defaultPersonality)
+        FarragoSessionPersonality defaultPersonality,
+        boolean enableIndexOnlyScans)
     {
         super(session);
         paramValidator.registerDirectoryParam(LOG_DIR, false);
@@ -105,6 +111,7 @@ public class LucidDbSessionPersonality
         paramValidator.registerLongParam(
             LAST_UPSERT_ROWS_INSERTED, true, 0, Long.MAX_VALUE);
         defaultLucidDb = (defaultPersonality == null);
+        this.enableIndexOnlyScans = enableIndexOnlyScans;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -193,10 +200,6 @@ public class LucidDbSessionPersonality
             fennelEnabled,
             calcVM);
 
-        planner.addRule(new PushSemiJoinPastFilterRule());
-        planner.addRule(new PushSemiJoinPastJoinRule());
-        planner.addRule(new ConvertMultiJoinRule());
-        planner.addRule(new LoptOptimizeJoinRule());
         planner.addRule(new CoerceInputsRule(LcsTableMergeRel.class, false));
 
         planner.removeRule(SwapJoinRule.instance);
@@ -342,8 +345,8 @@ public class LucidDbSessionPersonality
 
         // Convert filters to bitmap index searches and boolean operators.
         // Do this after LcsIndexSemiJoinRule 
-        builder.addRuleClass(LcsIndexAccessRule.class);
-
+        builder.addRuleClass(LcsIndexAccessRule.class);       
+        
         // TODO zfong 10/27/06 - This rule is currently a no-op because we
         // won't generate a semijoin if it can't be converted to physical
         // RelNodes.  But it's currently left in place in case of bugs.
@@ -362,6 +365,14 @@ public class LucidDbSessionPersonality
         // Apply physical projection to row scans, eliminating access
         // to clustered indexes we don't need.
         builder.addRuleInstance(new LcsTableProjectionRule());
+        
+        // Consider index only access.  Multiple rules are required
+        // for various patterns.  Apply these rules after we've pushed down
+        // all projections.
+        if (enableIndexOnlyScans) {
+            builder.addRuleInstance(LcsIndexOnlyAccessRule.instanceSearch);
+            builder.addRuleInstance(LcsIndexOnlyAccessRule.instanceMerge);
+        }
 
         // Eliminate UNION DISTINCT and trivial UNION.
         // REVIEW:  some of this may need to happen earlier as well.
@@ -409,8 +420,10 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(ReduceAggregatesRule.instance);
 
         // Bitmap aggregation is favored
-        builder.addRuleInstance(LcsIndexAggRule.instanceRenameRowScan);
-        builder.addRuleInstance(LcsIndexAggRule.instanceRenameNormalizer);
+        if (enableIndexOnlyScans) {
+            builder.addRuleInstance(LcsIndexAggRule.instanceRenameRowScan);
+            builder.addRuleInstance(LcsIndexAggRule.instanceRenameNormalizer);
+        }
 
         // Prefer hash aggregation over the standard Fennel aggregation.
         // Apply aggregation rules before the calc rules below so we can

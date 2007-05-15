@@ -29,6 +29,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
@@ -70,6 +71,15 @@ public class ReposDefaultValueFactory
         RelOptTable table,
         int iColumn)
     {
+        String generatedAlwaysProp =
+            FarragoDefaultSessionPersonality.ENFORCE_IDENTITY_GENERATED_ALWAYS;
+        boolean enforceGeneratedAlways =
+            farragoPreparingStmt.getSession().getSessionVariables().getBoolean(
+                generatedAlwaysProp);
+        if (!enforceGeneratedAlways) {
+            return false;
+        }
+                
         if (table instanceof FarragoQueryColumnSet) {
             FarragoQueryColumnSet queryColumnSet =
                 (FarragoQueryColumnSet) table;

@@ -240,6 +240,7 @@ public class FarragoStatsUtil
             List<FemColumnHistogramBar> bars =
                 createColumnHistogramBars(
                     repos,
+                    column,
                     sampleDistinctValues,
                     barCount,
                     rowsPerBar,
@@ -265,6 +266,7 @@ public class FarragoStatsUtil
 
     private static List<FemColumnHistogramBar> createColumnHistogramBars(
         FarragoRepos repos,
+        FemAbstractColumn column,
         long distinctValues,
         int barCount,
         long rowsPerBar,
@@ -272,6 +274,14 @@ public class FarragoStatsUtil
         int distributionType,
         String valueDigits)
     {
+        FemColumnHistogram origHistogram = column.getHistogram();
+        int origBarCount = 0;
+        List<FemColumnHistogramBar> origBars = null;
+        if (origHistogram != null) {
+            origBarCount = origHistogram.getBarCount();
+            origBars = origHistogram.getBar();
+        }
+        
         List<FemColumnHistogramBar> bars =
             new LinkedList<FemColumnHistogramBar>();
         List<Long> valueCounts =
@@ -279,8 +289,14 @@ public class FarragoStatsUtil
         List<String> values =
             createValues(barCount, valueDigits, distributionType, valueCounts);
         for (int i = 0; i < barCount; i++) {
-            FemColumnHistogramBar bar = repos.newFemColumnHistogramBar();
-            bar.setOrdinal(i);
+            FemColumnHistogramBar bar;
+            if (i < origBarCount) {
+                bar = origBars.get(i);
+                assert(bar.getOrdinal() == i);
+            } else {
+                bar = repos.newFemColumnHistogramBar();
+                bar.setOrdinal(i);
+            }
             bar.setStartingValue(values.get(i));
             bar.setValueCount(valueCounts.get(i));
             bars.add(bar);
