@@ -1848,6 +1848,9 @@ public abstract class SqlOperatorTests
         getTester().checkBoolean("interval '2' day <> interval '2' day", Boolean.FALSE);
         getTester().checkBoolean("interval '2:2:2' hour to second <> interval '2' hour", Boolean.TRUE);
         getTester().checkNull("cast(null as interval hour) <> interval '2' minute");
+
+        // "!=" is not an acceptable alternative to "<>"
+        getTester().checkFails("1 ^!^= 1", "(?s).*Encountered: \"!\" \\(33\\).*", false);
     }
 
     public void testOrOperator()

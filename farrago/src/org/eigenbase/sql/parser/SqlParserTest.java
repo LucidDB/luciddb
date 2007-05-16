@@ -296,6 +296,19 @@ public class SqlParserTest
             "(('abc' <> 123) = ('def' <> 456))");
     }
 
+    public void testBangEqualIsBad()
+    {
+        // Quoth www.ocelot.ca:
+        //   "Other relators besides '=' are what you'd expect if
+        //   you've used any programming language: > and >= and < and <=. The
+        //   only potential point of confusion is that the operator for 'not
+        //   equals' is <> as in BASIC. There are many texts which will tell
+        //   you that != is SQL's not-equals operator; those texts are false;
+        //   it's one of those unstampoutable urban myths."
+        checkFails("'abc'^!^=123",
+            "Lexical error at line 1, column 6\\.  Encountered: \"!\" \\(33\\), after : \"\"");
+    }
+
     public void testBetween()
     {
         check("select * from t where price between 1 and 2",
