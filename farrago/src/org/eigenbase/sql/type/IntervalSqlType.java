@@ -102,21 +102,25 @@ public class IntervalSqlType
         assert null != thisStart;
         assert null != thatStart;
 
-        int secondPrec = intervalQualifier.getStartPrecision();
+        int secondPrec =
+            this.intervalQualifier.getStartPrecisionPreservingDefault();
         int fracPrec =
-            Math.max(
-                this.intervalQualifier.getFractionalSecondPrecision(),
-                that.intervalQualifier.getFractionalSecondPrecision());
+            intervalQualifier.combineFractionalSecondPrecisionPreservingDefault(
+                this.intervalQualifier,
+                that.intervalQualifier
+            );
 
         if (thisStart.getOrdinal() > thatStart.getOrdinal()) {
             thisEnd = thisStart;
             thisStart = thatStart;
-            secondPrec = that.intervalQualifier.getStartPrecision();
+            secondPrec =
+                that.intervalQualifier.getStartPrecisionPreservingDefault();
         } else if (thisStart.getOrdinal() == thatStart.getOrdinal()) {
             secondPrec =
-                Math.max(
-                    secondPrec,
-                    that.intervalQualifier.getStartPrecision());
+                intervalQualifier.combineStartPrecisionPreservingDefault(
+                    this.intervalQualifier,
+                    that.intervalQualifier
+                );
         } else if ((null == thisEnd)
             || (thisEnd.getOrdinal() < thatStart.getOrdinal())) {
             thisEnd = thatStart;

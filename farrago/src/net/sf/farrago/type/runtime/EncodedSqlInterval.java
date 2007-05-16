@@ -30,8 +30,9 @@ import java.text.DecimalFormat;
 /**
  * Runtime type for interval values.
  *
- * TODO: Need to include start, end time unit and precision
+ * TODO: Need to include precision
  * TODO: Need to support casting from string, exact numerics
+ * TODO: both of above would be easier if we just get the SqlIntervalQualifier
  *
  * @author angel
  * @version $Id$
@@ -42,8 +43,12 @@ public abstract class EncodedSqlInterval
 {
     //~ Static fields/initializers ---------------------------------------------
 
+    // used for code generation
     public static final String GET_START_UNIT_METHOD_NAME = "getStartUnit";
+    public static final String GET_END_UNIT_METHOD_NAME = "getEndUnit";
 
+    // Beware: NumberFormat classes are not guaranteed threadsafe.
+    // Must use synchronization blocks around these
     protected static final NumberFormat NF2 = new DecimalFormat("00");
     protected static final NumberFormat NF3 = new DecimalFormat("000");
 
@@ -128,6 +133,7 @@ public abstract class EncodedSqlInterval
 
     // Implemented by code generation
     protected abstract SqlIntervalQualifier.TimeUnit getStartUnit();
+    protected abstract SqlIntervalQualifier.TimeUnit getEndUnit();
 
     public abstract static class EncodedSqlIntervalYM extends EncodedSqlInterval
     {
@@ -162,10 +168,27 @@ public abstract class EncodedSqlInterval
             long years = v/MONTHS_PER_YEAR;
             long months = v % MONTHS_PER_YEAR;
 
+            SqlIntervalQualifier.TimeUnit startUnit = getStartUnit();
+            SqlIntervalQualifier.TimeUnit endUnit = getEndUnit();
+
             strbuf.append(sign);
-            strbuf.append(NF2.format(years));
-            strbuf.append('-');
-            strbuf.append(NF2.format(months));
+
+            // Number formatter is not guaranteed threadsafe (though
+            // Sun's implementation actually is).  Therefore, be cautious
+            // and synchronize
+
+            if (startUnit == SqlIntervalQualifier.TimeUnit.Year) {
+                strbuf.append(years);
+                if (endUnit == SqlIntervalQualifier.TimeUnit.Month) {
+                    strbuf.append('-');
+                    synchronized(NF2) {
+                        strbuf.append(NF2.format(months));
+                    }
+                }
+            } else {
+                strbuf.append(months);
+            }
+                
             return strbuf.toString();
         }
     }
@@ -211,25 +234,90 @@ public abstract class EncodedSqlInterval
             v = v % MS_PER_MINUTE;
             long seconds = v/MS_PER_SECOND;
             v = v % MS_PER_SECOND;
+            long fractions = v;
 
-            // REVIEW jpham 2006-10-17: it doesn't seem thread-safe for all 
-            // time intervals to share the same number formatter
+
+            SqlIntervalQualifier.TimeUnit startUnit = getStartUnit();
+            SqlIntervalQualifier.TimeUnit endUnit = getEndUnit();
             strbuf.append(sign);
-            if (getStartUnit() == SqlIntervalQualifier.TimeUnit.Day) {
-                // Note: allow over 99 days and keep strings as short as possible
-                strbuf.append(days);
-                strbuf.append(' ');
-            }
-            strbuf.append(NF2.format(hours));
-            strbuf.append(':');
-            strbuf.append(NF2.format(minutes));
-            strbuf.append(':');
-            strbuf.append(NF2.format(seconds));
-            if (v > 0) {
-                strbuf.append('.');
-                strbuf.append(NF3.format(v));
-            }
+
+            // Number formatter is not guaranteed threadsafe (though
+            // Sun's implementation actually is).  Therefore, be cautious
+            // and synchronize.
+            //
+            // Also, don't enforce precision format on leading fields
+            synchronized(NF2) {
+                if (startUnit == SqlIntervalQualifier.TimeUnit.Day) {
+
+                    strbuf.append(days);
+
+                    if ( (endUnit != null) &&
+                         (endUnit != SqlIntervalQualifier.TimeUnit.Day)) {
+                        appendHours(strbuf, hours);
+                        if (endUnit != SqlIntervalQualifier.TimeUnit.Hour) {
+                            appendMinutes(strbuf, minutes);
+                            if (endUnit != SqlIntervalQualifier.TimeUnit.Minute) {
+                                appendSeconds(strbuf, seconds, fractions);
+                            }
+                        }
+                    }
+
+                } else if (getStartUnit() == SqlIntervalQualifier.TimeUnit.Hour) {
+
+                    strbuf.append(hours);
+
+                    if ( (endUnit != null) &&
+                         (endUnit != SqlIntervalQualifier.TimeUnit.Hour)) {
+                        appendMinutes(strbuf, minutes);
+                        if (endUnit != SqlIntervalQualifier.TimeUnit.Minute) {
+                            appendSeconds(strbuf, seconds, fractions);
+                        }
+                    }
+
+                } else if (getStartUnit() == SqlIntervalQualifier.TimeUnit.Minute) {
+
+                    strbuf.append(minutes);
+
+                    if ( (endUnit != null) &&
+                         (endUnit != SqlIntervalQualifier.TimeUnit.Minute)) {
+                        appendSeconds(strbuf, seconds, fractions);
+                    }
+
+                } else if (getStartUnit() == SqlIntervalQualifier.TimeUnit.Second) {
+
+                    strbuf.append(seconds);
+
+                    if (fractions > 0) {
+                        strbuf.append('.');
+                        strbuf.append(NF3.format(fractions));
+                    }
+                }
+            } //synchronized(NF2)
+
             return strbuf.toString();
+        }
+    }
+
+    private static void appendHours(StringBuffer buf, long hours)
+    {
+        buf.append(' ');
+        buf.append(NF2.format(hours));
+    }
+
+    private static void appendMinutes(StringBuffer buf, long minutes)
+    {
+        buf.append(':');
+        buf.append(NF2.format(minutes));
+    }
+
+    private static void appendSeconds(StringBuffer buf, long seconds, long fractions)
+    {
+        buf.append(':');
+        buf.append(NF2.format(seconds));
+
+        if (fractions > 0) {
+            buf.append('.');
+            buf.append(NF3.format(fractions));
         }
     }
 

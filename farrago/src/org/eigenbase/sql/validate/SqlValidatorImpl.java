@@ -100,7 +100,7 @@ public class SqlValidatorImpl
      */
     private final Map<SqlSelect, SqlValidatorScope> orderScopes =
         new HashMap<SqlSelect, SqlValidatorScope>();
-    
+
     /**
      * Maps a {@link SqlSelect} node that is the argument to a CURSOR
      * constructor to the scope of the result of that select node
@@ -121,17 +121,17 @@ public class SqlValidatorImpl
      * cursors as inputs to table functions.
      */
     private final Set<SqlNode> cursorSet = new HashSet<SqlNode>();
-    
+
     /**
      * Stack of cursor maps that map a cursor (based on its position relative
-     * to other cursor parameters within a function call) to the SELECT 
+     * to other cursor parameters within a function call) to the SELECT
      * associated with the cursor.  A stack is needed to handle nested function
      * calls.  The function call currently being validated is at the top of the
      * stack.
      */
     protected final Stack<Map<Integer, SqlSelect>> cursorMapStack =
         new Stack<Map<Integer, SqlSelect>>();
-
+    
     private int nextGeneratedId;
     protected final RelDataTypeFactory typeFactory;
     protected final RelDataType unknownType;
@@ -244,13 +244,13 @@ public class SqlValidatorImpl
     public void declareCursor(SqlSelect select, SqlValidatorScope parentScope)
     {
         cursorSet.add(select);
-        
+
         // add the cursor to a map that maps the cursor to its select based on
         // the position of the cursor relative to other cursors in that call
         Map<Integer, SqlSelect> cursorMap = cursorMapStack.peek();
         int numCursors = cursorMap.size();
         cursorMap.put(numCursors, select);
-        
+
         // create a namespace associated with the result of the select
         // that is the argument to the cursor constructor; register it
         // with a scope corresponding to the cursor
@@ -260,13 +260,13 @@ public class SqlValidatorImpl
         String alias = deriveAlias(select, nextGeneratedId++);
         registerNamespace(cursorScope, alias, selectNs, false);
     }
-    
+
     public void pushCursorMap()
     {
         Map<Integer, SqlSelect> cursorMap = new HashMap<Integer, SqlSelect>();
         cursorMapStack.push(cursorMap);
     }
-    
+
     public void popCursorMap()
     {
         cursorMapStack.pop();
@@ -609,7 +609,7 @@ public class SqlValidatorImpl
             namespace.getNode(),
             namespace.getRowType());
     }
-    
+
     public SqlValidatorScope getCursorScope(SqlSelect select)
     {
         return cursorScopes.get(select);
@@ -1044,7 +1044,7 @@ public class SqlValidatorImpl
     {
         setValidatedNodeTypeImpl(node, type);
     }
-    
+
     public void removeValidatedNodeType(SqlNode node)
     {
         nodeToTypeMap.remove(node);
@@ -1463,7 +1463,7 @@ public class SqlValidatorImpl
             final SqlNode left = join.getLeft();
             final SqlNode right = join.getRight();
             boolean rightIsLateral = false;
-            
+
             if (right.isA(SqlKind.Lateral)
                 || (
                     right.isA(SqlKind.As)
@@ -1471,7 +1471,7 @@ public class SqlValidatorImpl
                    )) {
                 rightIsLateral = true;
             }
-            
+
             boolean forceLeftNullable = forceNullable;
             boolean forceRightNullable = forceNullable;
             if (join.getJoinType() == SqlJoinOperator.JoinType.Left) {
@@ -1923,7 +1923,7 @@ public class SqlValidatorImpl
     {
     	return (aggFinder.findAgg(selectNode) != null);
     }
-    
+
     public boolean isConstant(SqlNode expr)
     {
         return
@@ -2075,13 +2075,18 @@ public class SqlValidatorImpl
                 SqlIntervalLiteral.IntervalValue interval =
                     (SqlIntervalLiteral.IntervalValue)
                     ((SqlIntervalLiteral) literal).getValue();
-                int [] values = SqlParserUtil.parseIntervalValue(interval);
+                SqlIntervalQualifier intervalQualifier =
+                    interval.getIntervalQualifier();
+                // ensure qualifier is good before attempting to validate literal
+                validateIntervalQualifier(intervalQualifier);
+                String intervalStr = interval.getIntervalLiteral();
+                int [] values = intervalQualifier.evaluateIntervalLiteral(intervalStr);
                 if (values == null) {
                     throw newValidationError(
                         literal,
                         EigenbaseResource.instance().UnsupportedIntervalLiteral
                         .ex(
-                            interval.toString(),
+                            "'" + interval.toString() + "'",
                             "INTERVAL "
                             + interval.getIntervalQualifier().toString()));
                 }
@@ -2109,7 +2114,57 @@ public class SqlValidatorImpl
 
     public void validateIntervalQualifier(SqlIntervalQualifier qualifier)
     {
-        // default is to do nothing
+        assert( qualifier != null );
+        boolean startPrecisionOutOfRange = false;
+        boolean fractionalSecondPrecisionOutOfRange = false;
+        
+        if (qualifier.isYearMonth()) {
+            if ( (qualifier.getStartPrecision() < 
+                     SqlTypeName.IntervalYearMonth.getMinPrecision() ) ||
+                  (qualifier.getStartPrecision() > 
+                     SqlTypeName.IntervalYearMonth.getMaxPrecision() ) 
+                 ){
+                startPrecisionOutOfRange = true;
+            } else if 
+                 ( (qualifier.getFractionalSecondPrecision() < 
+                        SqlTypeName.IntervalYearMonth.getMinScale()) ||
+                    (qualifier.getFractionalSecondPrecision() > 
+                        SqlTypeName.IntervalYearMonth.getMaxScale() ) 
+                  ){
+                fractionalSecondPrecisionOutOfRange = true;
+            }
+        } else {
+            if ( (qualifier.getStartPrecision() < 
+                    SqlTypeName.IntervalDayTime.getMinPrecision() ) ||
+                  (qualifier.getStartPrecision() > 
+                    SqlTypeName.IntervalDayTime.getMaxPrecision() ) 
+                ){
+               startPrecisionOutOfRange = true;
+            } else if 
+                 ( (qualifier.getFractionalSecondPrecision() < 
+                      SqlTypeName.IntervalDayTime.getMinScale()) ||
+                   (qualifier.getFractionalSecondPrecision() > 
+                      SqlTypeName.IntervalDayTime.getMaxScale() ) 
+                 ){
+                fractionalSecondPrecisionOutOfRange = true;
+            }
+       }
+
+        if (startPrecisionOutOfRange) {
+            throw newValidationError(
+                qualifier,
+                EigenbaseResource.instance().IntervalStartPrecisionOutOfRange.ex(
+                    Integer.toString(qualifier.getStartPrecision()),
+                    "INTERVAL " + qualifier.toString()));
+        }
+        else  if (fractionalSecondPrecisionOutOfRange) {
+            throw newValidationError(
+                qualifier,
+                EigenbaseResource.instance()
+                  .IntervalFractionalSecondPrecisionOutOfRange.ex(
+                      Integer.toString(qualifier.getFractionalSecondPrecision()),
+                      "INTERVAL " + qualifier.toString()));
+        }
     }
 
     /**
@@ -2829,7 +2884,7 @@ public class SqlValidatorImpl
     }
 
     public void validateMerge(SqlMerge call)
-    {   
+    {
         SqlSelect sqlSelect = call.getSourceSelect();
         // REVIEW zfong 5/25/06 - Does an actual type have to be passed into
         // validateSelect()?
@@ -3202,11 +3257,11 @@ public class SqlValidatorImpl
         }
         return newExpr;
     }
-    
+
     public void validateColumnListParams(
-        SqlFunction function,
-        RelDataType [] argTypes,
-        SqlNode [] operands)
+    SqlFunction function,
+    RelDataType [] argTypes,
+    SqlNode [] operands)
     {
         throw new UnsupportedOperationException();
     }
