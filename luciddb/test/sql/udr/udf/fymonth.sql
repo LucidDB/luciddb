@@ -11,6 +11,10 @@ values applib.fiscal_month(TIMESTAMP '2006-2-12 13:00:00', 3);
 values applib.fiscal_month(TIMESTAMP '1999-3-3 00:00:00', 3);
 values applib.fiscal_month(TIMESTAMP '2006-4-12 13:00:00', 3);
 
+-- null input
+values applib.fiscal_month(cast(null as date), 2);
+values applib.fiscal_month(current_timestamp, cast(null as integer));
+
 -- create view referencing applib.fiscal_month
 create view fiscal_months(fm, from_date, from_ts) as
 select fm, applib.fiscal_month(datecol, fm), applib.fiscal_month(tscol, fm)

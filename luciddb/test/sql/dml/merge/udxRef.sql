@@ -25,7 +25,7 @@ returns table( colname varchar(65535), coltype int, coltypename varchar(65535))
 language java
 parameter style system defined java
 no sql
-external name 'class com.lucidera.luciddb.test.udr.GetColumnTypesUdx.execute';
+external name 'applib.applibJar:com.lucidera.luciddb.applib.test.GetColumnTypesUdx.execute';
 
 -- gets UDX directly
 select * 

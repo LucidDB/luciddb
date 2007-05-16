@@ -122,6 +122,11 @@ public interface FarragoSessionPreparingStmt
      * statement has been prepared.
      */
     public boolean mayCacheImplementation();
+    
+    /**
+     * Disables caching for the statement
+     */
+    public void disableStatementCaching();
 
     /**
      * @return generic stmt validator

@@ -31,6 +31,7 @@ import java.util.regex.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fennel.*;
@@ -994,10 +995,7 @@ public class FarragoDbSession
         FarragoReposTxnContext reposTxnContext,
         boolean [] pRollback)
     {
-        // REVIEW: For !isExecDirect, maybe should disable all DDL
-        // validation: just parse, because the catalog may change by the
-        // time the statement is executed.  Also probably need to disallow
-        // some types of prepared DDL.
+        // REVIEW: May need to disallow some types of prepared DDL.
         FarragoSessionDdlValidator ddlValidator =
             personality.newDdlValidator(stmtValidator);
         FarragoSessionParser parser = stmtValidator.getParser();
@@ -1039,22 +1037,36 @@ public class FarragoDbSession
         }
 
         FarragoSessionDdlStmt ddlStmt = (FarragoSessionDdlStmt) parsedObj;
+    
+        // If !isExecDirect and we don't need to validate on prepare, then
+        // we only need to parse the statement
+        if (!isExecDirect &&
+            !stmtValidator.getSession().getSessionVariables().getBoolean(
+                FarragoDefaultSessionPersonality.VALIDATE_DDL_ON_PREPARE))
+        {
+            if (ddlStmt.requiresCommit()) {
+                commitImpl();
+            }
+            return null;
+        }
         
         if (ddlStmt.runsAsDml()) {
             markTableInUse(stmtContext, reposTxnContext, ddlStmt);
-        }
+        }   
 
         validateDdl(ddlValidator, stmtContext, reposTxnContext, ddlStmt);
 
         stmtValidator.getTimingTracer().traceTime("end DDL validation");
-
+        
+        // Now that we've validated, we shouldn't continue with execution
+        // when !isExecDirect
         if (!isExecDirect) {
             if (ddlStmt.requiresCommit()) {
                 commitImpl();
             }
             return null;
         }
-
+        
         executeDdl(ddlValidator, reposTxnContext, ddlStmt);
 
         stmtValidator.getTimingTracer().traceTime("end DDL execution");

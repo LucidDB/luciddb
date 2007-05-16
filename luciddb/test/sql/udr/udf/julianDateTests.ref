@@ -3,7 +3,7 @@
 0: jdbc:luciddb:> set schema 'jdt';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> -- day_from_julian_start tests
+0: jdbc:luciddb:> -- julian day tests
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> values applib.day_from_julian_start(DATE'2005-10-30');
 +----------+
@@ -36,8 +36,35 @@
 | 2299162  |
 +----------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values applib.julian_day_to_timestamp(
+. . . . . . . . >   applib.day_from_julian_start(
+. . . . . . . . >     cast(TIMESTAMP'2396-2-29 20:45:47' as DATE)));
++------------------------+
+|         EXPR$0         |
++------------------------+
+| 2396-02-29 00:00:00.0  |
++------------------------+
+0: jdbc:luciddb:> values applib.julian_day_to_date(-3452);
++-------------+
+|   EXPR$0    |
++-------------+
+| 4723-07-20  |
++-------------+
+0: jdbc:luciddb:>  
 0: jdbc:luciddb:> -- null input
 0: jdbc:luciddb:> values applib.day_from_julian_start(cast (null as DATE));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.julian_day_to_date(cast (null as integer));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.julian_day_to_timestamp(cast (null as integer));
 +---------+
 | EXPR$0  |
 +---------+
@@ -73,22 +100,28 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1582-10
 | 1997-10-01  | 2450723  |
 +-------------+----------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create view tempview as select applib.day_from_julian_start("TIME_KEY"), applib.day_from_julian_start("FIRST_DAY_OF_WEEK")
-. . . . . . . . > from table(applib.time_dimension(2001, 1, 30, 2001, 2, 5));
+0: jdbc:luciddb:> create view tempview as 
+. . . . . . . . >   select 
+. . . . . . . . >     "TIME_KEY",
+. . . . . . . . >     applib.day_from_julian_start("TIME_KEY") as jd,
+. . . . . . . . >     applib.day_from_julian_start("FIRST_DAY_OF_WEEK") as fdow_jd,
+. . . . . . . . >     applib.julian_day_to_date("DAY_NUMBER_OVERALL" + 2440588) as to_date,
+. . . . . . . . >     applib.julian_day_to_timestamp("DAY_NUMBER_OVERALL" + 2440588) as to_ts
+. . . . . . . . >   from table(applib.time_dimension(2001, 1, 30, 2001, 2, 5));
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from tempview
 . . . . . . . . > order by 1;
-+----------+----------+
-|  EXPR$0  |  EXPR$1  |
-+----------+----------+
-| 2451940  | 2451938  |
-| 2451941  | 2451938  |
-| 2451942  | 2451938  |
-| 2451943  | 2451938  |
-| 2451944  | 2451938  |
-| 2451945  | 2451945  |
-| 2451946  | 2451945  |
-+----------+----------+
++-------------+----------+----------+-------------+------------------------+
+|  TIME_KEY   |    JD    | FDOW_JD  |   TO_DATE   |         TO_TS          |
++-------------+----------+----------+-------------+------------------------+
+| 2001-01-30  | 2451940  | 2451938  | 2001-01-30  | 2001-01-30 00:00:00.0  |
+| 2001-01-31  | 2451941  | 2451938  | 2001-01-31  | 2001-01-31 00:00:00.0  |
+| 2001-02-01  | 2451942  | 2451938  | 2001-02-01  | 2001-02-01 00:00:00.0  |
+| 2001-02-02  | 2451943  | 2451938  | 2001-02-02  | 2001-02-02 00:00:00.0  |
+| 2001-02-03  | 2451944  | 2451938  | 2001-02-03  | 2001-02-03 00:00:00.0  |
+| 2001-02-04  | 2451945  | 2451945  | 2001-02-04  | 2001-02-04 00:00:00.0  |
+| 2001-02-05  | 2451946  | 2451945  | 2001-02-05  | 2001-02-05 00:00:00.0  |
++-------------+----------+----------+-------------+------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- in expressions
 0: jdbc:luciddb:> select applib.day_from_julian_start("TIME_KEY")+ applib.day_from_julian_start("FIRST_DAY_OF_WEEK") / 2
@@ -104,7 +137,6 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1582-10
 | 3677917.500000  |
 | 3677918.500000  |
 +-----------------+
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- current_date_in_julian test
@@ -122,7 +154,46 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1582-10
 +---------+
 | false   |
 +---------+
+0: jdbc:luciddb:> values (applib.julian_day_to_date(applib.current_date_in_julian()) = current_date);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- tests with fiscal_time_dimension udx around epoch and missing julian to 
+0: jdbc:luciddb:> -- gregorian dates
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select time_key, day_of_week, day_number_overall, day_from_julian,
+. . . . . . . . >   applib.julian_day_to_date(day_from_julian) as to_date, 
+. . . . . . . . >   applib.julian_day_to_timestamp(day_from_julian) as to_timestamp
+. . . . . . . . > from table( applib.fiscal_time_dimension (1969, 12, 29, 1970, 1, 4, 8) );
++-------------+--------------+---------------------+------------------+-------------+------------------------+
+|  TIME_KEY   | DAY_OF_WEEK  | DAY_NUMBER_OVERALL  | DAY_FROM_JULIAN  |   TO_DATE   |      TO_TIMESTAMP      |
++-------------+--------------+---------------------+------------------+-------------+------------------------+
+| 1969-12-29  | Monday       | -3                  | 2440585          | 1969-12-29  | 1969-12-29 00:00:00.0  |
+| 1969-12-30  | Tuesday      | -2                  | 2440586          | 1969-12-30  | 1969-12-30 00:00:00.0  |
+| 1969-12-31  | Wednesday    | -1                  | 2440587          | 1969-12-31  | 1969-12-31 00:00:00.0  |
+| 1970-01-01  | Thursday     | 0                   | 2440588          | 1970-01-01  | 1970-01-01 00:00:00.0  |
+| 1970-01-02  | Friday       | 1                   | 2440589          | 1970-01-02  | 1970-01-02 00:00:00.0  |
+| 1970-01-03  | Saturday     | 2                   | 2440590          | 1970-01-03  | 1970-01-03 00:00:00.0  |
+| 1970-01-04  | Sunday       | 3                   | 2440591          | 1970-01-04  | 1970-01-04 00:00:00.0  |
++-------------+--------------+---------------------+------------------+-------------+------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select time_key, day_of_week, day_number_overall, day_from_julian,
+. . . . . . . . >   applib.julian_day_to_date(day_from_julian) as to_date,
+. . . . . . . . >   applib.julian_day_to_timestamp(day_from_julian) as to_timestamp
+. . . . . . . . > from table( applib.fiscal_time_dimension (1582, 10, 2, 1582, 10, 16, 7) );
++-------------+--------------+---------------------+------------------+-------------+------------------------+
+|  TIME_KEY   | DAY_OF_WEEK  | DAY_NUMBER_OVERALL  | DAY_FROM_JULIAN  |   TO_DATE   |      TO_TIMESTAMP      |
++-------------+--------------+---------------------+------------------+-------------+------------------------+
+| 1582-10-02  | Tuesday      | -141430             | 2299158          | 1582-10-02  | 1582-10-02 00:00:00.0  |
+| 1582-10-03  | Wednesday    | -141429             | 2299159          | 1582-10-03  | 1582-10-03 00:00:00.0  |
+| 1582-10-04  | Thursday     | -141428             | 2299160          | 1582-10-04  | 1582-10-04 00:00:00.0  |
+| 1582-10-15  | Friday       | -141427             | 2299161          | 1582-10-15  | 1582-10-15 00:00:00.0  |
+| 1582-10-16  | Saturday     | -141426             | 2299162          | 1582-10-16  | 1582-10-16 00:00:00.0  |
++-------------+--------------+---------------------+------------------+-------------+------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view tempview;

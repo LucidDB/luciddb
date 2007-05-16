@@ -323,8 +323,6 @@ public class DdlAnalyzeStmt
         long barValueCount = 0;
         long barRowCount = 0;
 
-        RelDataType rowType = stmtContext.getPreparedRowType();
-        List fieldList = rowType.getFieldList();
         while (resultSet.next()) {
             Object o = resultSet.getObject(1);
             String nextValue;
@@ -369,13 +367,33 @@ public class DdlAnalyzeStmt
         }
         return bars;
     }
-
-    private FemColumnHistogramBar buildFemBar(ColumnHistogramBar bar)
+    
+    private void buildFemBars(
+        Histogram histogram,
+        List<FemColumnHistogramBar> femBars)
     {
-        FemColumnHistogramBar femBar = repos.newFemColumnHistogramBar();
-        femBar.setStartingValue(bar.startValue);
-        femBar.setValueCount(bar.valueCount);
-        return femBar;
+        // If possible, try to reuse the original histogram
+        FemColumnHistogram origHistogram = histogram.column.getHistogram();
+        int origBarCount = 0;
+        List<FemColumnHistogramBar> origBars = null;
+        if (origHistogram != null) {
+            origBarCount = origHistogram.getBarCount();
+            origBars = origHistogram.getBar();
+        }
+        
+        int count = 0;
+        for (ColumnHistogramBar bar : histogram.bars) {
+            FemColumnHistogramBar femBar;
+            if (count < origBarCount) {
+                femBar = origBars.get(count);
+            } else {
+                femBar = repos.newFemColumnHistogramBar();
+            }   
+            femBar.setStartingValue(bar.startValue);
+            femBar.setValueCount(bar.valueCount);
+            femBars.add(femBar);
+            count++;
+        }
     }
     
     /**
@@ -402,9 +420,7 @@ public class DdlAnalyzeStmt
             for (Histogram histogram : histograms) {               
                 List<FemColumnHistogramBar> femBars =
                     new LinkedList<FemColumnHistogramBar>();
-                for (ColumnHistogramBar bar : histogram.bars) {
-                    femBars.add(buildFemBar(bar));
-                }
+                buildFemBars(histogram, femBars);
                 FarragoCatalogUtil.updateHistogram(
                     repos,
                     histogram.column,

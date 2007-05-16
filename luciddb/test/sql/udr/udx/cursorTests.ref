@@ -20,7 +20,7 @@
 . . . . . . . . > language java
 . . . . . . . . > parameter style system defined java
 . . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.GetColumnTypesUdx.execute';
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.test.GetColumnTypesUdx.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from table(
 . . . . . . . . >   get_column_types(

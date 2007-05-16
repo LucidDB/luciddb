@@ -32,6 +32,10 @@ values (applib.get_var('context1', 'var1'));
 explain plan for values (applib.get_var('context1', 'var1'));
 !set outputformat xmlattr
 
+-- test null values
+values (applib.get_var(cast(null as varchar(10)), 'var1'));
+values (applib.get_var('context1', cast(null as varchar(10))));
+
 -- delete variable
 call applib.delete_var('context1', 'var1');
 

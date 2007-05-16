@@ -7,6 +7,10 @@ values applib.calendar_quarter(DATE'1896-1-11');
 values applib.calendar_quarter(TIMESTAMP'2001-5-9 9:57:59');
 values applib.calendar_quarter(DATE'1-1-1');
 
+-- null parameters
+values applib.calendar_quarter(cast(null as date));
+values applib.calendar_quarter(cast(null as timestamp));
+
 -- failures
 values applib.calendar_quarter(TIMESTAMP'2 12:59:21');
 

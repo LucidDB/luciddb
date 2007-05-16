@@ -169,12 +169,24 @@ select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
--- 2.6 note: sampling has not been implemented, only test syntax
+-- 2.6 delete some rows and then reanalyze; make sure old histograms have
+-- been removed
+--
+delete from emps where empno = 110;
+analyze table emps compute statistics for all columns;
+
+select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
+select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
+select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
+
+--
+-- 2.7 note: sampling has not been implemented, only test syntax
 --
 analyze table depts estimate statistics for all columns sample 10 percent;
 
 --
--- 2.7 analyze a foreign table
+-- 2.8 analyze a foreign table
 --
 drop schema stat cascade;
 create schema stat;
@@ -203,7 +215,7 @@ select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
 select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 
 --
--- 2.8 A few more rows than histogram bars
+-- 2.9 A few more rows than histogram bars
 --
 create table ten(i int primary key)
 server sys_column_store_data_server;

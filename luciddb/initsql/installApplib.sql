@@ -14,6 +14,7 @@ returns varchar(128)
 language java
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.CharReplaceUdf.execute';
 
 create or replace function applib.char_replace(str varchar(128), oldC integer, newC integer) 
@@ -22,6 +23,7 @@ language java
 specific char_replace_int
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.CharReplaceUdf.execute';
 
 -- define CleanPhoneInternational functions
@@ -30,6 +32,7 @@ returns varchar(128)
 language java
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneInternationalUdf.execute';
 
 -- define CleanPhone functions
@@ -39,6 +42,7 @@ language java
 specific clean_phone_no_format
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 
 create or replace function applib.clean_phone(inStr varchar(128), format integer)
@@ -47,6 +51,7 @@ language java
 specific clean_phone_int_format
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 
 create or replace function applib.clean_phone(inStr varchar(128), format integer, reject boolean)
@@ -55,6 +60,7 @@ language java
 specific clean_phone_int_format_rejectable
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 
 create or replace function applib.clean_phone(inStr varchar(128), format varchar(128), reject boolean)
@@ -63,6 +69,7 @@ language java
 specific clean_phone_str_format_rejectable
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 
 -- define ContainsNumber function
@@ -71,6 +78,7 @@ returns boolean
 language java
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.ContainsNumberUdf.execute';
 
 -- define CYQuarter functions
@@ -80,6 +88,7 @@ language java
 specific calendar_quarter_date
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.CalendarQuarterUdf.execute';
 
 create or replace function applib.calendar_quarter(ts timestamp)
@@ -88,6 +97,7 @@ language java
 specific calendar_quarter_ts
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.CalendarQuarterUdf.execute';
 
 -- define internalDate function (example function)
@@ -96,6 +106,7 @@ returns varchar(128)
 language java
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.contrib.InternalDateUdf.execute';
 
 -- define DAYINYEAR function
@@ -105,6 +116,7 @@ language java
 specific DAYINYEAR_DATE
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayInYearUdf.execute';
 
 create or replace function applib.day_in_year(ts timestamp)
@@ -113,6 +125,7 @@ language java
 specific DAYINYEAR_TS
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayInYearUdf.execute';
 
 create or replace function applib.day_in_year(yr integer, mth integer, dt integer)
@@ -121,6 +134,7 @@ language java
 specific DAYINYEAR_YMD
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayInYearUdf.execute';
 
 -- define dayNumberOverall functions
@@ -147,6 +161,7 @@ language java
 specific FYMONTH_DATE
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalMonthUdf.execute';
 
 create or replace function applib.fiscal_month(ts timestamp, fm integer)
@@ -155,6 +170,7 @@ language java
 specific FYMONTH_TS
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalMonthUdf.execute';
 
 -- define FYQuarter functions
@@ -164,6 +180,7 @@ language java
 specific FYQUARTER_YMFM
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalQuarterUdf.execute';
 
 create or replace function applib.fiscal_quarter(dt date, fm integer)
@@ -172,6 +189,7 @@ language java
 specific FYQUARTER_DATE
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalQuarterUdf.execute';
 
 create or replace function applib.fiscal_quarter(ts timestamp, fm integer)
@@ -180,6 +198,7 @@ language java
 specific FYQUARTER_TS
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalQuarterUdf.execute';
 
 -- define FYYear functions
@@ -189,6 +208,7 @@ language java
 specific FYYEAR_DATE
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalYearUdf.execute';
 
 create or replace function applib.fiscal_year(ts timestamp, fm integer)
@@ -197,6 +217,7 @@ language java
 specific FYYEAR_TS
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalYearUdf.execute';
 
 -- define leftN functions
@@ -205,6 +226,7 @@ returns varchar(128)
 language java
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.LeftNUdf.execute';
 
 -- define rand functions
@@ -221,6 +243,7 @@ returns varchar(128)
 language java
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.RepeaterUdf.execute';
 
 -- define rightn function
@@ -229,6 +252,7 @@ returns varchar(128)
 language java
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.RightNUdf.execute';
 
 -- define StrReplace function
@@ -374,12 +398,11 @@ return (
 -- the epoch Jan 1, 1970 
 create or replace function applib.day_from_julian_start(dt Date)
 returns integer
-language sql
+language java
 deterministic
-contains sql
-return (
-  applib.day_number_overall(dt) + 2440588
-);
+no sql
+returns null on null input
+external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertJulianDayUdf.dateToJulianDay';
 
 -- define current_date_in_julian
 -- 2440588 is the number of days from the Julian Calendar start date to 
@@ -387,10 +410,29 @@ return (
 create or replace function applib.current_date_in_julian()
 returns integer
 deterministic
+dynamic_function
 contains sql
 return (
-  applib.day_number_overall(CURRENT_DATE) + 2440588
+  applib.day_from_julian_start(CURRENT_DATE)
 );
+
+-- define julian_day_to_date
+create or replace function applib.julian_day_to_date(jd integer)
+returns date
+language java
+deterministic
+no sql
+returns null on null input
+external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertJulianDayUdf.julianDayToDate';
+
+-- define julian_day_to_timestamp
+create or replace function applib.julian_day_to_timestamp(jd integer)
+returns timestamp
+language java
+deterministic
+no sql
+returns null on null input
+external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertJulianDayUdf.julianDayToTimestamp';
 
 -- define padweeknumber
 create or replace function applib.padweeknumber(wk_num_as_yr integer)
@@ -412,6 +454,7 @@ language java
 specific instr_with_optional_vars
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.execute';
 
 create or replace function applib.instr(str varchar(65535), subStr varchar(65535))
@@ -420,6 +463,7 @@ language java
 specific instr_without_optional_vars
 deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.execute';
 
 

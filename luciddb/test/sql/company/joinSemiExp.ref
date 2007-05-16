@@ -23,9 +23,10 @@
 '        LhxJoinRel'
 '          LcsRowScanRel'
 '          FennelReshapeRel'
-'            LcsNormalizerRel'
-'              LcsIndexOnlyScanRel'
-'                FennelValuesRel'
+'            LcsRowScanRel'
+'              LcsIndexMergeRel'
+'                LcsIndexSearchRel'
+'                  FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select DEPT.DNAME 

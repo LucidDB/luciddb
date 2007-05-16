@@ -988,7 +988,8 @@
 > -- Part 1. index created on empty column store table --
 > -------------------------------------------------------
 > -- Use LucidDB personality
-> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> alter session implementation set jar
+>     sys_boot.sys_boot.luciddb_index_only_plugin;
 > 
 > create table lbmemps(
 >     empno integer not null,
@@ -2259,6 +2260,19 @@
 > 
 > drop table t cascade;
 > drop table smalltable cascade;
+> 
+> -- Test to make sure index only scans aren't enabled by default.  Earlier, we
+> -- verified that when index only scans are enabled, it is used with the
+> -- following select query.
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> explain plan for
+>     select deptno from lbmemps where deptno = 20 order by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMEMPS$DEPTNO]])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'        FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
 > 
 > --------------
 > -- Clean up --

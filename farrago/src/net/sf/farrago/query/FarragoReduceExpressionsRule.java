@@ -88,8 +88,12 @@ public class FarragoReduceExpressionsRule
         RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
 
         // Find reducible expressions.
+        FarragoSessionPlanner planner =
+            (FarragoSessionPlanner) rel.getCluster().getPlanner();
+        FarragoSessionPreparingStmt preparingStmt = planner.getPreparingStmt();
         List<RexNode> reducibleExps =
             findReducibleExps(
+                preparingStmt,
                 rel.getCluster().getTypeFactory(),
                 exps);
         if (reducibleExps.isEmpty()) {
@@ -170,11 +174,13 @@ public class FarragoReduceExpressionsRule
     }
 
     private List<RexNode> findReducibleExps(
+        FarragoSessionPreparingStmt preparingStmt,
         RelDataTypeFactory typeFactory,
         RexNode [] exps)
     {
         List<RexNode> result = new ArrayList<RexNode>();
         ConstantGardener gardener = new ConstantGardener(
+                preparingStmt,
                 typeFactory,
                 result);
         for (RexNode exp : exps) {
@@ -374,16 +380,22 @@ public class FarragoReduceExpressionsRule
             NON_CONSTANT, REDUCIBLE_CONSTANT, IRREDUCIBLE_CONSTANT
         }
 
+        private final FarragoSessionPreparingStmt preparingStmt;
+        
         private final RelDataTypeFactory typeFactory;
 
         private final List<Constancy> stack;
 
         private final List<RexNode> result;
 
-        ConstantGardener(RelDataTypeFactory typeFactory, List<RexNode> result)
+        ConstantGardener(
+            FarragoSessionPreparingStmt preparingStmt,
+            RelDataTypeFactory typeFactory,
+            List<RexNode> result)
         {
             // go deep
             super(true);
+            this.preparingStmt = preparingStmt;
             this.typeFactory = typeFactory;
             this.result = result;
             stack = new ArrayList<Constancy>();
@@ -471,11 +483,15 @@ public class FarragoReduceExpressionsRule
                     callConstancy = Constancy.NON_CONSTANT;
                 }
             }
-
+            
             // Even if all operands are constant, the call itself may
             // be non-deterministic.
             if (!call.getOperator().isDeterministic()) {
                 callConstancy = Constancy.NON_CONSTANT;
+            } else  if (call.getOperator().isDynamicFunction()) {
+                // We can reduce the call to a constant, but we can't
+                // cache the plan if the function is dynamic
+                preparingStmt.disableStatementCaching();
             }
 
             if (callConstancy == Constancy.NON_CONSTANT) {

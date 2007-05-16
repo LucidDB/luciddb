@@ -33,6 +33,14 @@ Error: This is not a phone number (state=,code=0)
 | dsf     |
 +---------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null parameters
+0: jdbc:luciddb:> values applib.clean_phone_international(cast(null as varchar(20)), true);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.clean_phone_international
 0: jdbc:luciddb:> create view internationalphone(before, after) as
 . . . . . . . . > select ph, applib.clean_phone_international(ph, true)

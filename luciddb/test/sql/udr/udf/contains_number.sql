@@ -9,6 +9,9 @@ values applib.contains_number('Ahsdkj6sadsal');
 values applib.contains_number('gsdfglksjf^%$^$%dslkfjskfjw~!@$EWFDZVcxvkjdsifio#@%^$_
 +@fdjgklfdirue');
 
+-- null parameters
+values applib.contains_number(cast(null as varchar(20)));
+
 -- create view with reference to applib.contains_number
 create view has_number(fname, fcol, phcol) as
 select fname, applib.contains_number(fname), applib.contains_number(phone) 

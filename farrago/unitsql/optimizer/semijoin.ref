@@ -1201,9 +1201,10 @@
 '          LhxAggRel(groupCount=[1])'
 '            FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
 '              LhxAggRel(groupCount=[1])'
-'                LcsNormalizerRel'
-'                  LcsIndexOnlyScanRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$CUSTOMER$ID], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])'
-'                    FennelValuesRel(tuples=[[{ '-', null, ')', 10 }]])'
+'                LcsRowScanRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$CUSTOMER$ID]])'
+'                  LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'                    LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$CUSTOMER$ID], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                      FennelValuesRel(tuples=[[{ '-', null, ')', 10 }]])'
 > 
 > !set outputformat table
 > select * from sales where customer in

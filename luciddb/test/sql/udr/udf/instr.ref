@@ -70,6 +70,32 @@ Error: InStrUdf: invalid argument: inStr=fds subStr=sdfkdsl startPos=1 nthAppear
 0: jdbc:luciddb:> values applib.instr('hello there!', '');
 Error: InStrUdf: invalid argument: inStr=hello there! subStr= startPos=1 nthAppearance=1 (state=,code=0)
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.instr(cast(null as varchar(20)), 'null');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.instr('this is a pen', cast(null as varchar(2)), -1, 3);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.instr('this is a pen', 'is', cast(null as integer), 1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.instr('this is a isthmus', 'is', 2, cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- view test
 0: jdbc:luciddb:> create view flpview(flp, instr_flp) as 
 . . . . . . . . > select fname||lname||phone, applib.instr(fname||lname||phone, '23')
@@ -106,4 +132,5 @@ Error: InStrUdf: invalid argument: inStr=hello there! subStr= startPos=1 nthAppe
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view flpview;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

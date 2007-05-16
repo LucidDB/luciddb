@@ -165,3 +165,24 @@ insert into s values (20, 20);
 ----------------------------------------------------------------------
 
 select * from sys_boot.mgmt.sequences_view;
+
+----------------------------------------------------------------------
+-- INTERACTION WITH REBUILD (LDB-160)
+----------------------------------------------------------------------
+
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+create table cs(
+    i int primary key,
+    d decimal(10,0) generated always as identity
+        (minvalue 20 maxvalue 100));
+
+insert into cs (i) values (5);
+insert into cs (i) values (10);
+
+select * from cs order by i;
+
+alter table cs rebuild;
+
+select * from cs order by i;
+

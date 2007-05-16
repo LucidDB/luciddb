@@ -27,6 +27,20 @@
 0: jdbc:luciddb:> values applib.leftN('Here''s another one', -3);
 Error: Length must be non-negative (state=,code=0)
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.leftn(cast(null as varchar(3)), 3);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.leftn('toot toot', cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.leftN
 0: jdbc:luciddb:> create view cutcust as 
 . . . . . . . . > select applib.leftN(fname, 5), applib.leftN(lname, 3), applib.leftN(phone, 7)

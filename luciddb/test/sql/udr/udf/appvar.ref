@@ -44,6 +44,12 @@
 '  IterOneRowRel'
 0: jdbc:luciddb:> !set outputformat xmlattr
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test null values
+0: jdbc:luciddb:> values (applib.get_var(cast(null as varchar(10)), 'var1'));
+Error: Application variable context 'null' has not been created (state=,code=0)
+0: jdbc:luciddb:> values (applib.get_var('context1', cast(null as varchar(10))));
+Error: Application variable id required for get/set request (state=,code=0)
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- delete variable
 0: jdbc:luciddb:> call applib.delete_var('context1', 'var1');
 0: jdbc:luciddb:> 

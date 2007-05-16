@@ -626,7 +626,8 @@
 > -- Part 5. Minus stream                                    --
 > -------------------------------------------------------------
 > 
-> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> alter session implementation set jar
+>     sys_boot.sys_boot.luciddb_index_only_plugin;
 > 
 > -- LER-3491
 > create table t(a int);

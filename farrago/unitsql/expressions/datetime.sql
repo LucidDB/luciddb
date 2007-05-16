@@ -146,6 +146,16 @@ insert into ts values (
 
 select * from ts order by 1;
 
+-- current_timestamp is converted to a constant during query optimization;
+-- make sure the statement is not cached and therefore the current_timestamp
+-- call returns unique values for each insert; use the select with the sleep
+-- in the where clause to ensure a time gap between the two inserts
+insert into ts values(current_timestamp);
+select * from sales.emps where empno = sys_boot.mgmt.sleep(1000);
+insert into ts values(current_timestamp);
+-- should return 4 rows
+select count(*) from ts;
+
 -- boundary cases
 values cast (timestamp'2006-09-27 00:00:00' as date);
 values cast (timestamp'2006-09-27 23:59:59' as date);
