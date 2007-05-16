@@ -591,7 +591,7 @@ public class SqlToRelConverterTest
             "${plan}");
     }
 
-    public void testInterval()
+    public void _testInterval()      // temporarily disabled per DTbug 1212
     {
         check("values(cast(interval '1' hour as interval hour to second))",
             "${plan}");
