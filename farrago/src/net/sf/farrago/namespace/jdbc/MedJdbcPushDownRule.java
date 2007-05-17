@@ -105,7 +105,7 @@ class MedJdbcPushDownRule extends RelOptRule
                     if (!queryRel.columnSet.directory.server.lenient) {
                         List<RelDataTypeField> fieldList =
                             queryRel.columnSet.origRowType.getFieldList();
-                        for (int i= 0; i < fieldList.size(); i++) {
+                        for (int i = 0; i < fieldList.size(); i++) {
                             if (fieldName.equals(fieldList.get(i).getName())) {
                                 fields = queryRel.columnSet.srcRowType;
                                 fieldName =
@@ -142,7 +142,6 @@ class MedJdbcPushDownRule extends RelOptRule
         SqlDialect dialect = new SqlDialect(server.databaseMetaData);
         String sql = selectWithFilter.toSqlString(dialect);
         sql = queryRel.columnSet.directory.normalizeQueryString(sql);
-        String quotedSql = sql.replaceAll("\'", "\'\'");
 
         // test if sql can be executed against source
         ResultSet rs = null;
@@ -153,6 +152,7 @@ class MedJdbcPushDownRule extends RelOptRule
             // PreparedStatement.getMetaData does not actually get metadata
             // before execution
             if (dialect.isOracle()) {
+                String quotedSql = sql.replaceAll("\'", "\'\'");
                 String sqlTest =
                     " DECLARE" +
                     "   test_cursor integer;" +
