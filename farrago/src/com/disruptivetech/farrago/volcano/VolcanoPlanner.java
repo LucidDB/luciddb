@@ -169,16 +169,16 @@ public class VolcanoPlanner
 
     //~ Methods ----------------------------------------------------------------
 
-    protected 
-        VolcanoPlannerPhaseRuleMappingInitializer 
+    protected
+        VolcanoPlannerPhaseRuleMappingInitializer
             getPhaseRuleMappingInitializer()
     {
         return new VolcanoPlannerPhaseRuleMappingInitializer() {
             public void initialize(
-                Map<VolcanoPlannerPhase, 
+                Map<VolcanoPlannerPhase,
                 Set<String>> phaseRuleMap)
             {
-                Set<String> preProcessMdrPhaseRules = 
+                Set<String> preProcessMdrPhaseRules =
                     phaseRuleMap.get(VolcanoPlannerPhase.PRE_PROCESS_MDR);
 
                 // Fire this rule early so we don't waste time fiddling with
@@ -189,8 +189,8 @@ public class VolcanoPlanner
                 preProcessMdrPhaseRules.add("ProjectToCalcRule");
                 preProcessMdrPhaseRules.add("FilterToCalcRule");
                 preProcessMdrPhaseRules.add("MergeCalcRule");
-                
-                Set<String> cleanupPhaseRules = 
+
+                Set<String> cleanupPhaseRules =
                     phaseRuleMap.get(VolcanoPlannerPhase.CLEANUP);
 
                 // Cleanup pass to remove trivial projects and merge calcs.
@@ -202,7 +202,7 @@ public class VolcanoPlanner
             }
         };
     }
-    
+
     // REVIEW: SWZ: 3/1/2005: No one calls this.  Remove?
     // todo: pre-compute
     public RelOptRuleOperand [] getConversionOperands(
@@ -462,30 +462,30 @@ public class VolcanoPlanner
     /**
      * Finds the most efficient expression to implement the query given
      * via {@link #setRoot(RelNode)}.
-     * 
+     *
      * <p>The algorithm executes repeatedly in a series of phases.  In each
      * phase the exact rules that may be fired varies.  The mapping of phases
      * to rule sets is maintained in the {@link #ruleQueue}.
-     * 
-     * <p>In each phase, the planner sets the initial importance of the 
+     *
+     * <p>In each phase, the planner sets the initial importance of the
      * existing RelSubSets ({@link #setInitialImportance()}).  The planner
      * then iterates over the rule matches presented by the rule queue until:
      * <ol>
      *   <li>The rule queue becomes empty.</li>
      *   <li>For ambitious planners: No improvements to the plan have been made
-     *       recently (specifically within a number of iterations that is 10% 
-     *       of the number of iterations necessary to first reach an 
+     *       recently (specifically within a number of iterations that is 10%
+     *       of the number of iterations necessary to first reach an
      *       implementable plan or 25 iterations whichever is larger).</li>
-     *   <li>For non-ambitious planners: When an implementable plan is 
+     *   <li>For non-ambitious planners: When an implementable plan is
      *   found.</li>
      * </ol>
-     * 
+     *
      * <p>Furthermore, after every 10 iterations without an implementable plan,
-     * RelSubSets that contain only logical RelNodes are given an importance 
+     * RelSubSets that contain only logical RelNodes are given an importance
      * boost via {@link #injectImportanceBoost()}.  Once an implementable plan
-     * is found, the artificially raised importances are cleared 
+     * is found, the artificially raised importances are cleared
      * ({@link #clearImportanceBoost()}).
-     * 
+     *
      *  @return the most efficient RelNode tree found for implementing the
      *          given query
      */
@@ -494,7 +494,7 @@ public class VolcanoPlanner
         int cumulativeTicks = 0;
         for(VolcanoPlannerPhase phase: VolcanoPlannerPhase.values()) {
             setInitialImportance();
-            
+
             RelOptCost targetCost = makeHugeCost();
             int tick = 0;
             int firstFiniteTick = -1;
@@ -507,13 +507,13 @@ public class VolcanoPlanner
                 if (root.bestCost.isLe(targetCost)) {
                     if (firstFiniteTick < 0) {
                         firstFiniteTick = cumulativeTicks;
-                        
+
                         clearImportanceBoost();
                     }
                     if (ambitious) {
-                        // Choose a slightly more ambitious target cost, and 
+                        // Choose a slightly more ambitious target cost, and
                         // try again. If it took us 1000 iterations to find our
-                        // first finite plan, give ourselves another 100 
+                        // first finite plan, give ourselves another 100
                         // iterations to reduce the cost by 10%.
                         targetCost = root.bestCost.multiplyBy(0.9);
                         ++splitCount;
@@ -524,8 +524,8 @@ public class VolcanoPlanner
                                 // to actually optimize it.
                                 giveUpTick = cumulativeTicks + 25;
                             } else {
-                                giveUpTick = 
-                                    cumulativeTicks + 
+                                giveUpTick =
+                                    cumulativeTicks +
                                     Math.max(firstFiniteTick / 10, 25);
                             }
                         }
@@ -538,27 +538,27 @@ public class VolcanoPlanner
                 } else if (root.bestCost.isInfinite() && tick % 10 == 0) {
                     injectImportanceBoost();
                 }
-                
+
                 if (!ruleQueue.hasNextMatch(phase)) {
                     break;
                 }
-                
+
                 if (tracer.isLoggable(Level.FINE)) {
                     tracer.fine(
-                        "PLANNER = " + this + 
+                        "PLANNER = " + this +
                         "; TICK = " + cumulativeTicks + "/" + tick +
                         "; PHASE = " + phase.toString() +
                         "; COST = " + root.bestCost);
                 }
-                
+
                 VolcanoRuleMatch match = ruleQueue.popMatch(phase);
                 match.onMatch();
-    
+
                 // The root may have been merged with another
                 // subset. Find the new root subset.
                 root = canonize(root);
             }
-            
+
             ruleQueue.phaseCompleted(phase);
         }
         if (tracer.isLoggable(Level.FINER)) {
@@ -576,9 +576,9 @@ public class VolcanoPlanner
         RelVisitor visitor = new RelVisitor()
         {
             int depth = 0;
-        
+
             HashSet<RelSubset> visitedSubsets = new HashSet<RelSubset>();
-            
+
             public void visit(
                 RelNode p,
                 int ordinal,
@@ -586,19 +586,19 @@ public class VolcanoPlanner
             {
                 if (p instanceof RelSubset) {
                     RelSubset subset = (RelSubset) p;
-                    
+
                     if (visitedSubsets.contains(subset)) {
                         return;
                     }
-                    
+
                     if (subset != root) {
                         Double importance = Math.pow(0.9, (double)depth);
-                        
+
                         ruleQueue.updateImportance(subset, importance);
                     }
-                    
+
                     visitedSubsets.add(subset);
-                    
+
                     depth++;
                     for(RelNode rel: subset.rels) {
                         visit(rel, -1, subset);
@@ -609,18 +609,18 @@ public class VolcanoPlanner
                 }
             }
         };
-        
+
         visitor.go(root);
     }
-    
+
     /**
-     * Finds RelSubsets in the plan that contain only rels of 
+     * Finds RelSubsets in the plan that contain only rels of
      * {@link CallingConvention#NONE} and boosts their importance by 25%.
      */
     private void injectImportanceBoost()
     {
         HashSet<RelSubset> requireBoost = new HashSet<RelSubset>();
-        
+
         SUBSET_LOOP:
             for(RelSubset subset: ruleQueue.subsetImportances.keySet()) {
                 for(RelNode rel: subset.rels) {
@@ -628,23 +628,23 @@ public class VolcanoPlanner
                         continue SUBSET_LOOP;
                     }
                 }
-                
-                requireBoost.add(subset);                
+
+                requireBoost.add(subset);
             }
-        
+
         ruleQueue.boostImportance(requireBoost, 1.25);
     }
-    
+
     /**
      * Clear all importance boosts.
      */
     private void clearImportanceBoost()
     {
         Collection<RelSubset> empty = Collections.emptySet();
-        
+
         ruleQueue.boostImportance(empty, 1.0);
     }
-    
+
     // implement Planner
     public RelOptCost makeCost(
         double dRows,
@@ -1048,7 +1048,7 @@ public class VolcanoPlanner
                 mapDigestToRel.put(
                     equivRel.getDigest(),
                     equivRel);
-                
+
                 RelSubset equivRelSubset = getSubset(equivRel);
                 ruleQueue.recompute(equivRelSubset, true);
 
@@ -1098,7 +1098,7 @@ public class VolcanoPlanner
         if ((equivRel != null) && (equivRel != rel)) {
             assert (equivRel.getClass() == rel.getClass());
             assert (equivRel.getTraits().equals(rel.getTraits()));
-            
+
             RelSubset equivRelSubset = getSubset(equivRel);
             ruleQueue.recompute(equivRelSubset, true);
             return;
@@ -1287,6 +1287,10 @@ public class VolcanoPlanner
         } else {
             assert (equivExp.getTraits().equals(traits)
                     && (equivExp.getClass() == rel.getClass()));
+            assert RelOptUtil.areRowTypesEqual(
+                equivExp.getRowType(),
+                rel.getRowType(),
+                false);
             RelSet equivSet = getSet(equivExp);
             if (equivSet != null) {
                 if (tracer.isLoggable(Level.FINER)) {
@@ -1354,13 +1358,13 @@ public class VolcanoPlanner
         mapRel2Subset.put(rel, subset);
         final RelNode xx = mapDigestToRel.put(digest, rel);
         assert ((xx == null) || (xx == rel));
-        
+
         if (tracer.isLoggable(Level.FINER)) {
             tracer.finer(
                 "Register " + rel.getDescription()
                 + " in " + subset.getDescription());
         }
-        
+
         // This relational expression may have been registered while we
         // recursively registered its children. If this is the case, we're done.
         if (xx != null) {
@@ -1396,7 +1400,7 @@ public class VolcanoPlanner
 
         // Make sure this rel's subset importance is updated
         ruleQueue.recompute(subset, true);
-        
+
         // Queue up all rules triggered by this relexp's creation.
         fireRules(rel, true);
 

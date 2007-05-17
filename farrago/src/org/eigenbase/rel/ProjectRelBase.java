@@ -29,6 +29,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.SqlExplainLevel;
 
 
 /**
@@ -158,25 +159,29 @@ public abstract class ProjectRelBase
         return planner.makeCost(dRows, dCpu, dIo);
     }
 
-    protected void defineTerms(String [] terms)
-    {
-        int i = 0;
-        terms[i++] = "child";
-        final RelDataTypeField [] fields = rowType.getFields();
-        for (int j = 0; j < fields.length; j++) {
-            String fieldName = fields[j].getName();
-            if (fieldName == null) {
-                fieldName = "field#" + j;
-            }
-            terms[i++] = fieldName;
-        }
-    }
-
     public void explain(RelOptPlanWriter pw)
     {
-        String [] terms = new String[1 + exps.length];
-        defineTerms(terms);
-        pw.explain(this, terms);
+        List<String> terms = new ArrayList<String>();
+        List<Object> values = new ArrayList<Object>();
+        terms.add("child");
+        for (RelDataTypeField field : rowType.getFields()) {
+            String fieldName = field.getName();
+            if (fieldName == null) {
+                fieldName = "field#" + (terms.size() - 1);
+            }
+            terms.add(fieldName);
+        }
+
+        // If we're generating a digest, include the rowtype. If two projects
+        // differ in return type, we don't want to regard them as equivalent,
+        // otherwise we will try to put rels of different types into the same
+        // planner equivalence set.
+        if (pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES && false) {
+            terms.add("type");
+            values.add(rowType);
+        }
+
+        pw.explain(this, terms, values);
     }
 
     /**

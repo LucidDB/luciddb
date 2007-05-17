@@ -50,7 +50,7 @@ public abstract class JmiMemFactory
     private final AtomicLong nextId;
     private final RefPackageImpl rootPackageImpl;
     private final Map<String, Relationship> relationshipMap;
-    private final Map<Class, RefObject> metaMap;
+    private final HashMap<Class<? extends RefBaseObject>, RefObject> metaMap;
     private final Map<RefObject, RefPackage> pluginPackageMap;
     private final Map<Class, RefClass> classMap;
     private static final Float FloatZero = Float.valueOf(0);
@@ -62,11 +62,10 @@ public abstract class JmiMemFactory
     {
         nextId = new AtomicLong(0);
         relationshipMap = new HashMap<String, Relationship>();
-        metaMap = new HashMap<Class, RefObject>();
+        metaMap = new HashMap<Class<? extends RefBaseObject>, RefObject>();
         pluginPackageMap = new HashMap<RefObject, RefPackage>();
         classMap = new HashMap<Class, RefClass>();
-
-        this.rootPackageImpl = newRootPackage();
+        rootPackageImpl = newRootPackage();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -150,14 +149,19 @@ public abstract class JmiMemFactory
      * interface.
      */
     protected ElementImpl createImpl(
-        Class clazz, RefPackageImpl immediatePkg, boolean preemptive)
+        Class<? extends RefBaseObject> clazz,
+        RefPackageImpl immediatePkg,
+        boolean preemptive)
     {
         if (RefClass.class.isAssignableFrom(clazz)) {
-            return new RefClassImpl(clazz, immediatePkg);
+            return new RefClassImpl(
+                (Class<? extends RefClass>) clazz, immediatePkg);
         } else if (RefPackage.class.isAssignableFrom(clazz)) {
-            return new RefPackageImpl(clazz, immediatePkg);
+            return new RefPackageImpl(
+                (Class<? extends RefPackage>) clazz, immediatePkg);
         } else if (RefAssociation.class.isAssignableFrom(clazz)) {
-            return new RefAssociationImpl(clazz, immediatePkg);
+            return new RefAssociationImpl(
+                (Class<? extends RefAssociation>) clazz, immediatePkg);
         } else {
             if (preemptive) {
                 return null;
@@ -190,7 +194,8 @@ public abstract class JmiMemFactory
      *
      * @return Name of backward relationship, or null if not found
      */
-    private Relationship lookupRelationship(Class fromClass, String fromName)
+    private Relationship lookupRelationship(
+        Class<? extends RefBaseObject> fromClass, String fromName)
     {
         Relationship relationship =
             relationshipMap.get(fromClass.getName() + ":" + fromName);
@@ -214,10 +219,10 @@ public abstract class JmiMemFactory
      * Creates a relationship definition
      */
     public void createRelationship(
-        Class fromClass,
+        Class<? extends RefObject> fromClass,
         String fromName,
         boolean fromMany,
-        Class toClass,
+        Class<? extends RefObject> toClass,
         String toName,
         boolean toMany)
     {
@@ -235,10 +240,12 @@ public abstract class JmiMemFactory
      * Defines a meta-object.
      *
      * @param iface Java interface to associate with meta-object
-     * @param metaObject meta-object to return for refMetaObject() from
-     * instances of iface
+     * @param metaObject meta-object to return for
+     * {@link RefBaseObject#refMetaObject} from instances of iface
      */
-    public void defineMetaObject(Class iface, RefObject metaObject)
+    public void defineMetaObject(
+        Class<? extends RefBaseObject> iface,
+        RefObject metaObject)
     {
         metaMap.put(iface, metaObject);
     }
@@ -247,10 +254,10 @@ public abstract class JmiMemFactory
      * Creates a relationship definition
      */
     public void createRelationship(
-        Class fromClass,
+        Class<? extends RefBaseObject> fromClass,
         String fromName,
         boolean fromMany,
-        Class toClass,
+        Class<? extends RefBaseObject> toClass,
         String toName,
         boolean toMany,
         boolean composite)
@@ -260,7 +267,8 @@ public abstract class JmiMemFactory
                 fromClass,
                 fromName,
                 fromMany);
-        Relationship relationship2 = new Relationship(
+        Relationship relationship2 =
+            new Relationship(
                 toClass,
                 toName,
                 toMany);
@@ -308,33 +316,122 @@ public abstract class JmiMemFactory
     //~ Inner Classes ----------------------------------------------------------
 
     /**
+     * Enumeration of common method names to be handled by the proxy.
+     */
+    private static enum MethodId
+    {
+        /** Method {@link Object#toString()}. */
+        toString,
+
+        /** Method {@link Object#hashCode()}. */
+        hashCode,
+
+        /** Method {@link Object#equals(Object)}. */
+        equals,
+
+        /** Method {@link Comparable#compareTo(Object)}. */
+        compareTo,
+
+        /** Method {@link RefBaseObject#refMofId()}. */
+        refMofId,
+
+        /** Method {@link Element#impl()}. */
+        impl,
+
+        /** Method {@link RefObject#refClass()}. */
+        refClass,
+
+        /** Method {@link RefPackage#refAllPackages()}. */
+        refImmediateComposite,
+
+        /** Method {@link RefObject#refImmediateComposite()}. */
+        refOutermostPackage,
+
+        /** Method {@link RefObject#refOutermostPackage()}. */
+        refImmediatePackage,
+
+        /** Method {@link RefObject#refImmediatePackage()}. */
+        refAllPackages,
+
+        /** Method {@link RefPackage#refAllClasses()}. */
+        refAllClasses,
+
+        /** Method {@link RefPackage#refAllAssociations()}. */
+        refAllAssociations,
+
+        /** Method {@link RefBaseObject#refMetaObject()}. */
+        refMetaObject,
+
+        /** Methods {@link RefClass#refGetEnum(RefObject, String)},
+         * {@link RefClass#refGetEnum(String, String)},
+         * {@link RefPackage#refGetEnum(RefObject, String)} and
+         * {@link RefPackage#refGetEnum(String, String)}. */
+        refGetEnum,
+
+        /** Methods {@link RefFeatured#refGetValue(RefObject)} and
+         * {@link RefFeatured#refGetValue(String)}. */
+        refGetValue,
+
+        /** Methods {@link RefFeatured#refSetValue(RefObject, Object)} and
+         * {@link RefFeatured#refSetValue(String, Object)}. */
+        refSetValue,
+
+        /** Methods {@link RefPackage#refPackage(RefObject)} and
+         * {@link RefPackage#refPackage(String)}. */
+        refPackage,
+
+        /** Methods {@link RefPackage#refAssociation(RefObject)} and
+         * {@link RefPackage#refAssociation(String)}. */
+        refAssociation,
+
+        /** Method {@link RefPackage#refDelete()}. */
+        refDelete,
+
+        /** Method {@link RefAssociation#refAllLinks()}. */
+        refAllLinks,
+
+        /** Methods {@link RefAssociation#refQuery(RefObject, RefObject)} and
+         * {@link RefAssociation#refQuery(String, RefObject)}. */
+        refQuery,
+
+        /** Method
+         * {@link RefAssociation#refLinkExists(RefObject, RefObject)}. */
+        refLinkExists,
+
+        /** Method {@link RefAssociation#refAddLink(RefObject, RefObject)}. */
+        refAddLink,
+
+        /** Method
+         * {@link RefAssociation#refRemoveLink(RefObject, RefObject)}. */
+        refRemoveLink,
+
+        /** Method {@link RefClass#refCreateInstance(List)}. */
+        refCreateInstance,
+
+        /** Method {@link RefObject#refIsInstanceOf(RefObject, boolean)}. */
+        refIsInstanceOf;
+    }
+
+    /**
      * Implementation of a {@link RefBaseObject} via an {@link
      * InvocationHandler} interface.
      *
      * <p>Attributes are held in a {@link TreeMap}. (Not a {@link HashMap},
      * because we want the attributes to be returned in a predictable order.)
-     *
-     * <p>The current implementation is not very efficient. Every time a method
-     * is called, the proxy has to figure out what kind of method this is
-     * (relationship accesor, property setter, et cetera) and do the right
-     * thing. It would be more efficient, and perhaps cleaner, to create a <dfn>
-     * handler map</dfn>: one handler per method. The handler map behaves the
-     * same way as a vtable. It is initialiazed once per class, and all that
-     * needs to be done when creating an instance is to store the handler map.
-     *
-     * <p>
      */
     protected class ElementImpl
         extends TreeMap<String, Object>
         implements InvocationHandler
     {
-        protected final Class clazz;
+        protected final Class<? extends RefBaseObject> clazz;
         private final long id;
         private final Object proxy;
         protected final RefPackageImpl immediatePkg;
         String persistentMofId;
 
-        ElementImpl(Class clazz, RefPackageImpl immediatePkg)
+        ElementImpl(
+            Class<? extends RefBaseObject> clazz,
+            RefPackageImpl immediatePkg)
         {
             this.clazz = clazz;
             this.immediatePkg = immediatePkg;
@@ -393,86 +490,83 @@ public abstract class JmiMemFactory
             Object [] args)
             throws Throwable
         {
-            String methodName = method.getName();
-            if (method.getDeclaringClass() == Object.class) {
+            // Rather than compare the name of the invoked method with a
+            // succession of candidate method names, we convert the method name
+            // into an enum and use that enum to switch.
+            String name = method.getName();
+            try {
+                MethodId methodId = MethodId.valueOf(MethodId.class, name);
+                switch (methodId) {
+                case toString:
                 // Intercept methods on Object. Otherwise we loop.
-                if (methodName.equals("toString")) {
+                    assert method.getDeclaringClass() == Object.class;
                     return clazz + ":" + System.identityHashCode(proxy);
-                } else if (methodName.equals("hashCode")) {
+                case hashCode:
+                    // Intercept methods on Object. Otherwise we loop.
+                    assert method.getDeclaringClass() == Object.class;
                     return new Integer(System.identityHashCode(proxy));
-                } else if (methodName.equals("equals")) {
+                case equals:
+                    // Intercept methods on Object. Otherwise we loop.
+                    assert method.getDeclaringClass() == Object.class;
                     return Boolean.valueOf(proxy == args[0]);
-                } else {
-                    throw new UnsupportedOperationException();
-                }
-            } else if (method.getDeclaringClass() == Comparable.class) {
-                assert methodName.equals("compareTo");
+                case compareTo:
+                    if (method.getDeclaringClass() == Comparable.class) {
+                        assert name.equals("compareTo");
                 assert args == null;
                 RefBaseObject that = (RefBaseObject) args[0];
                 String thisMofId = this.proxyRefMofId();
                 String thatMofId = that.refMofId();
                 return new Integer(thisMofId.compareTo(thatMofId));
-            } else if (methodName.equals("refMofId")) {
+                    }
+                    break;
+                case refMofId:
                 assert method.getDeclaringClass() == RefBaseObject.class;
                 assert args == null;
                 return proxyRefMofId();
-            } else if (methodName.equals("impl")) {
+                case impl:
                 assert method.getDeclaringClass() == Element.class;
                 assert args == null;
                 return proxyImpl();
-            } else if (parseGetter(methodName) != null) {
-                assert args == null;
-                return proxyGet(
-                        parseGetter(methodName),
-                        method,
-                        args);
-            } else if (methodName.startsWith("set")) {
-                return proxySet(
-                        methodName.substring(3),
-                        method,
-                        args);
-            } else if (methodName.startsWith("create")) {
-                return
-                    proxyCreate(
-                        methodName.substring(6),
-                        args,
-                        method.getReturnType());
-            } else if (methodName.equals("refClass") && (args == null)) {
+                case refClass:
+                    if (args == null) {
                 return classMap.get(clazz);
-            } else if (methodName.equals("refImmediateComposite")) {
+                    } else {
+                        return proxyRefByMoniker(args[0]);
+                    }
+                case refImmediateComposite:
                 return proxyImmediateComposite();
-            } else if (methodName.equals("refOutermostPackage")) {
+                case refOutermostPackage:
                 return rootPackageImpl.wrap();
-            } else if (methodName.equals("refImmediatePackage")) {
+                case refImmediatePackage:
                 return proxyRefImmediatePackage();
-            } else if (methodName.equals("refAllPackages")) {
+                case refAllPackages:
                 return proxyRefAllPackages();
-            } else if (methodName.equals("refAllClasses")) {
+                case refAllClasses:
                 return filterChildren(RefClass.class);
-            } else if (methodName.equals("refAllAssociations")) {
+                case refAllAssociations:
                 return filterChildren(RefAssociation.class);
-            } else if (methodName.equals("refMetaObject")) {
-                Object obj = metaMap.get(clazz);
-                assert (obj != null) : clazz;
+                case refMetaObject:
+                    RefObject obj = metaMap.get(clazz);
+                    if (obj != null) {
                 return obj;
-            } else if (methodName.equals("refGetEnum")) {
+                    }
+                    return createImpl(MofPackage.class, null, false).wrap();
+                case refGetEnum:
                 return proxyRefGetEnum(args[0], (String) args[1]);
-            } else if (methodName.equals("refGetValue")) {
+                case refGetValue:
                 return proxyRefByMoniker(args[0]);
-            } else if (methodName.equals("refSetValue")) {
+                case refSetValue:
                 return proxyRefSetValue(args[0], args[1]);
-            } else if (methodName.equals("refPackage")) {
+                case refPackage:
                 return proxyRefPackage(args[0]);
-            } else if (methodName.equals("refClass")) {
+                case refAssociation:
                 return proxyRefByMoniker(args[0]);
-            } else if (methodName.equals("refAssociation")) {
-                return proxyRefByMoniker(args[0]);
-            } else if (methodName.equals("refDelete")) {
+                case refDelete:
                 // REVIEW jvs 9-Mar-2006: this is to allow code to be reusable
                 // across persistent and mem repositories, but the behavior
                 // will be different!
                 return null;
-            } else if (methodName.equals("refAllLinks")) {
+                case refAllLinks:
                 // REVIEW jvs 30-Jan-2006:  To implement this, we
                 // would have to keep track of extents, which we don't
                 // want to do.  Instead of failing, return empty set
@@ -480,31 +574,51 @@ public abstract class JmiMemFactory
                 // does not contain an association without a corresponding
                 // reference on at least one side).
                 return Collections.EMPTY_SET;
-            } else if (methodName.equals("refQuery")) {
+                case refQuery:
                 // REVIEW: swz 20-Nov-2006: Same problem as refAllLinks:
                 // no extents, so we just return an empty collection.
                 return Collections.EMPTY_SET;
-            } else if (methodName.equals("refLinkExists")) {
+                case refLinkExists:
                 return
                     proxyRefLinkExists((RefObject) args[0],
                         (RefObject) args[1]);
-            } else if (methodName.equals("refAddLink")) {
+                case refAddLink:
                 return
                     proxyRefAddLink((RefObject) args[0], (RefObject) args[1]);
-            } else if (methodName.equals("refRemoveLink")) {
+                case refRemoveLink:
                 return
                     proxyRefRemoveLink((RefObject) args[0],
                         (RefObject) args[1]);
-            } else if (methodName.equals("refCreateInstance")) {
+                case refCreateInstance:
                 return proxyRefCreateInstance((List) args[0]);
-            } else if (methodName.equals("refIsInstanceOf")) {
+                case refIsInstanceOf:
                 return proxyRefIsInstanceOf(
                     (RefObject)args[0], (Boolean)args[1]);
-                
-            } else {
+                }
+            } catch (IllegalArgumentException e) {
+                // Method name is not one of the standard ones -- that's OK.
+                Util.swallow(e, null);
+            }
+            String getter = parseGetter(name);
+            if (getter != null) {
+                assert args == null;
+                return proxyGet(
+                    getter,
+                    method,
+                    args);
+            } else if (name.startsWith("set")) {
+                return proxySet(
+                    name.substring(3),
+                    method,
+                    args);
+            } else if (name.startsWith("create")) {
+                return proxyCreate(
+                    name.substring(6),
+                    args,
+                    method.getReturnType());
+            }
                 throw new UnsupportedOperationException(method.toString());
             }
-        }
 
         protected String proxyRefMofId()
         {
@@ -953,7 +1067,9 @@ public abstract class JmiMemFactory
     protected class RefClassImpl
         extends ElementImpl
     {
-        RefClassImpl(Class clazz, RefPackageImpl immediatePkg)
+        RefClassImpl(
+            Class<? extends RefClass> clazz,
+            RefPackageImpl immediatePkg)
         {
             super(clazz, immediatePkg);
 
@@ -988,7 +1104,9 @@ public abstract class JmiMemFactory
     protected class RefAssociationImpl
         extends ElementImpl
     {
-        RefAssociationImpl(Class clazz, RefPackageImpl immediatePkg)
+        RefAssociationImpl(
+            Class<? extends RefAssociation> clazz,
+            RefPackageImpl immediatePkg)
         {
             super(clazz, immediatePkg);
         }
@@ -1001,12 +1119,14 @@ public abstract class JmiMemFactory
     protected class RefPackageImpl
         extends ElementImpl
     {
-        public RefPackageImpl(Class clazz)
+        public RefPackageImpl(Class<? extends RefPackage> clazz)
         {
             this(clazz, null);
         }
         
-        public RefPackageImpl(Class clazz, RefPackageImpl immediatePkg)
+        public RefPackageImpl(
+            Class<? extends RefPackage> clazz,
+            RefPackageImpl immediatePkg)
         {
             super(clazz, immediatePkg);
 
@@ -1032,12 +1152,23 @@ public abstract class JmiMemFactory
         }
     }
 
+    protected class MofPackageImpl
+        extends ElementImpl
+    {
+        MofPackageImpl(
+            Class<? extends RefBaseObject> clazz,
+            RefPackageImpl immediatePkg)
+        {
+            super(clazz, immediatePkg);
+        }
+    }
+
     /**
      * Definition of a relationship.
      */
     static class Relationship
     {
-        final Class clazz;
+        final Class<? extends RefBaseObject> clazz;
         final String name;
         final boolean many;
 
@@ -1045,7 +1176,8 @@ public abstract class JmiMemFactory
         boolean compositeParent;
         boolean compositeChild;
 
-        Relationship(Class clazz, String name, boolean many)
+        Relationship(
+            Class<? extends RefBaseObject> clazz, String name, boolean many)
         {
             super();
             this.clazz = clazz;

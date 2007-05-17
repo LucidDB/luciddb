@@ -83,8 +83,8 @@ public class FarragoDefaultSessionPersonality
     // (probably FarragoSessionVariables), leaving these here as aliases.
     
     /**
-     * Numeric data from external data sources may have a greater precision 
-     * than Farrago. Whether data of greater precision should be replaced 
+     * Numeric data from external data sources may have a greater precision
+     * than Farrago. Whether data of greater precision should be replaced
      * with null when it overflows due to the greater precision.
      */
     public static final String SQUEEZE_JDBC_NUMERIC = "squeezeJdbcNumeric";
@@ -412,7 +412,7 @@ public class FarragoDefaultSessionPersonality
     {
         return variables.cloneVariables();
     }
-    
+ 
     // implement FarragoSessionPersonality
     public void validateSessionVariable(
         FarragoSessionDdlValidator ddlValidator,
@@ -499,7 +499,7 @@ public class FarragoDefaultSessionPersonality
         // that happens inside of FarragoPreparingStmt so that
         // this provider gets low priority.
     }
-    
+
     // implement FarragoSessionPersonality
     public void getRowCounts(
         ResultSet resultSet,
@@ -519,14 +519,14 @@ public class FarragoDefaultSessionPersonality
         }
         assert (!nextRowCount);
     }
-    
+
     protected boolean addRowCount(ResultSet resultSet, List<Long> rowCounts)
         throws SQLException
     {
         rowCounts.add(resultSet.getLong(1));
         return resultSet.next();
     }
-    
+
     // implement FarragoSessionPersonality
     public long updateRowCounts(
         FarragoSession session,
@@ -542,7 +542,7 @@ public class FarragoDefaultSessionPersonality
         }
         return count;
     }
-    
+
     // implement FarragoSessionPersonality
     public void resetRowCounts(FemAbstractColumnSet table)
     {

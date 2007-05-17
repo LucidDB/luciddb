@@ -73,6 +73,12 @@ public class RelOptPlanWriter
     }
 
     /**
+     * Prints the plan of a given relational expression to this writer.
+     *
+     * @param rel Relational expression
+     * @param terms Names of the attributes of the plan
+     * @param values Values of the attributes of the plan
+     *
      * @pre rel != null
      * @pre terms.length == rel.getChildExps().length + values.length
      * @pre values != null
@@ -142,6 +148,23 @@ public class RelOptPlanWriter
         explain(rel, terms, Util.emptyStringArray);
     }
 
+    /**
+     * Shorthand for {@link #explain(RelNode, String[], Object[])}.
+     *
+     * @param rel Relational expression
+     * @param termList List of names of the attributes of the plan
+     * @param valueList List of values of the attributes of the plan
+     */
+    public final void explain(
+        RelNode rel,
+        List<String> termList,
+        List<Object> valueList)
+    {
+        String[] terms = termList.toArray(new String[termList.size()]);
+        Object[] values = valueList.toArray(new Object[valueList.size()]);
+        explain(rel, terms, values);
+    }
+    
     /**
      * Special form used by {@link
      * com.disruptivetech.farrago.volcano.RelSubset}.

@@ -151,7 +151,7 @@ public class RexToCalcTranslator
                     fac.createSqlType(SqlTypeName.Varchar, 0),
                     CalcProgramBuilder.OpType.Varchar), new TypePair(
                     fac.createSqlType(SqlTypeName.Boolean),
-                    CalcProgramBuilder.OpType.Bool), 
+                    CalcProgramBuilder.OpType.Bool),
 
                 // FIXME: not right for T/w TZ.
                 new TypePair(
@@ -486,7 +486,7 @@ public class RexToCalcTranslator
                 CalcProgramBuilder.boolNativeIsNull.add(builder,
                     isNullRes,
                     res);
-                builder.addLabelJumpFalse(wasNotNull, isNullRes);
+                CalcProgramBuilder.jumpFalseInstruction.add(builder, new CalcProgramBuilder.Line(wasNotNull), isNullRes);
                 CalcProgramBuilder.raise.add(
                     builder,
                     builder.newVarcharLiteral(
@@ -861,7 +861,7 @@ public class RexToCalcTranslator
 
             //Check if we can make a short cut
             if (op.getKind().isA(SqlKind.And)) {
-                builder.addLabelJumpFalse(shortCut, reg0);
+                CalcProgramBuilder.jumpFalseInstruction.add(builder, new CalcProgramBuilder.Line(shortCut), reg0);
             } else {
                 builder.addLabelJumpTrue(shortCut, reg0);
             }

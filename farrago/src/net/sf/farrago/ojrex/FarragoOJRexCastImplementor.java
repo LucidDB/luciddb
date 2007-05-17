@@ -36,29 +36,29 @@ import org.eigenbase.sql.type.*;
 
 
 /**
- * FarragoOJRexCastImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for CAST expressions. 
- * 
- * <p>A cast is described in terms of an assignment: lhs = rhs, with 
- * "lhs" meaning the variable on the left hand side and "rhs" meaning 
+ * FarragoOJRexCastImplementor implements Farrago specifics of
+ * {@link org.eigenbase.oj.rex.OJRexImplementor} for CAST expressions.
+ *
+ * <p>A cast is described in terms of an assignment: lhs = rhs, with
+ * "lhs" meaning the variable on the left hand side and "rhs" meaning
  * the value right hand side. The general arguments are as follows:
- * 
+ *
  * <p><ul>
  *   <li>The left hand side always has a target type
- *   <li>The left hand side optionally specifies a target variable. If 
+ *   <li>The left hand side optionally specifies a target variable. If
  *     one is not specified, a new variable will usually be created.
- *   <li>The right hand side usually has a source type, but may not 
+ *   <li>The right hand side usually has a source type, but may not
  *     in the case of a UDX. If so, it can only be used for AssignableValues.
- *   <li>The right hand side usually has a value, but may be omitted for 
+ *   <li>The right hand side usually has a value, but may be omitted for
  *     dynamic parameters, such as those used for a UDX.
  *  </ul>
- * 
- * <p>The two main kinds of assignment are to "primitive" types and to 
- * "AssignableValue" types. If the target type is "primitive", it is 
- * represented by a primitive Java value in generated code, or a thin 
- * wrapper around one. Non-primitive types are expected to fulfill the 
+ *
+ * <p>The two main kinds of assignment are to "primitive" types and to
+ * "AssignableValue" types. If the target type is "primitive", it is
+ * represented by a primitive Java value in generated code, or a thin
+ * wrapper around one. Non-primitive types are expected to fulfill the
  * {@link AssignableValue} interface and are assigned using that interface.
- * 
+ *
  * @author John V. Sichi
  * @version $Id$
  */
@@ -127,7 +127,7 @@ public class FarragoOJRexCastImplementor
             }
         }
 
-        CastHelper helper = 
+        CastHelper helper =
             new CastHelper(
                 translator,
                 null,
@@ -136,15 +136,15 @@ public class FarragoOJRexCastImplementor
                 rhsType,
                 null,
                 rhsExp);
-        
+
         return helper.implement();
     }
 
     /**
      * Generates code to cast an OJ expression as another type. See class
      * description for an explanation of arguments.
-     * 
-     * @return resulting expression. If lhsExp was provided, assigns 
+     *
+     * @return resulting expression. If lhsExp was provided, assigns
      * this expression to lhsExp.
      */
     public Expression convertCastOrAssignment(
@@ -158,11 +158,11 @@ public class FarragoOJRexCastImplementor
     {
         CastHelper helper =
             new CastHelper(
-                translator, 
-                stmtList, 
-                targetName, 
-                lhsType, 
-                rhsType, 
+                translator,
+                stmtList,
+                targetName,
+                lhsType,
+                rhsType,
                 lhsExp,
                 rhsExp);
 
@@ -173,8 +173,8 @@ public class FarragoOJRexCastImplementor
      * Generates code to cast an OJ expression as another type.
      * The target type is limited to being an AssignableValue. See class
      * description for an explanation of the arguments.
-     * 
-     * @return resulting expression. If lhsExp was provided, assigns 
+     *
+     * @return resulting expression. If lhsExp was provided, assigns
      * this expression to lhsExp.
      */
     public Expression convertCastToAssignableValue(
@@ -187,11 +187,11 @@ public class FarragoOJRexCastImplementor
     {
         CastHelper helper =
             new CastHelper(
-                translator, 
-                stmtList, 
-                null, 
-                lhsType, 
-                rhsType, 
+                translator,
+                stmtList,
+                null,
+                lhsType,
+                rhsType,
                 lhsExp,
                 rhsExp);
 
@@ -212,10 +212,10 @@ public class FarragoOJRexCastImplementor
         private Expression lhsExp;
         private Expression rhsExp;
         private OJClass lhsClass;
-        
+
         /**
          * Constructs a new CastHelper
-         * 
+         *
          * @param translator translator for implementing Rex as Java code
          * @param stmtList statement list in which to insert statements
          * @param targetName the name of the target column or expression
@@ -234,7 +234,7 @@ public class FarragoOJRexCastImplementor
             Expression rhsExp)
         {
             assert(lhsType != null);
-            
+
             this.translator = translator;
             this.stmtList = stmtList;
             this.targetName = targetName;
@@ -243,21 +243,21 @@ public class FarragoOJRexCastImplementor
             this.lhsExp = lhsExp;
             this.rhsExp = rhsExp;
         }
-        
+
         /**
          * Implement the cast expression.
-         * 
+         *
          * <p>TODO: check for overflow
-         * 
+         *
          * @return the rhs expression casted as the lhs type
          */
         public Expression implement()
         {
-            // Check for invalid null assignment. Code generated afterwards 
+            // Check for invalid null assignment. Code generated afterwards
             // can assume null will never be assigned to a not null value.
             checkNotNull();
 
-            // Check for an explicit rhs null value. Code generated 
+            // Check for an explicit rhs null value. Code generated
             // afterwards need never check for an explicit null.
             if (rhsType.getSqlTypeName() == SqlTypeName.Null) {
                 if (lhsType.isNullable()) {
@@ -279,12 +279,12 @@ public class FarragoOJRexCastImplementor
                 }
                 return castToAssignableValue();
             }
-            
+
             // Case when left hand side is a not nullable primitive
             if (SqlTypeUtil.isJavaPrimitive(lhsType)) {
                 return castToNotNullPrimitive();
             }
-            
+
             // Case when left hand side is a structure
             if (lhsType.isStruct()) {
                 assert (rhsType.isStruct());
@@ -295,13 +295,13 @@ public class FarragoOJRexCastImplementor
 
                 return getDirectAssignment();
             }
-            
+
             // Default is to treat non-primitives as AssignableValue
             return castToAssignableValue();
         }
 
         /**
-         * Generates code to throw an exception when a NULL value is casted 
+         * Generates code to throw an exception when a NULL value is casted
          * to a NOT NULL type
          */
         private void checkNotNull()
@@ -320,9 +320,9 @@ public class FarragoOJRexCastImplementor
         }
 
         /**
-         * Gets the right hand expression as a simple Java 
-         * value. If the rhs is a more complex expression, then creates a 
-         * scratch variable and assigns the right hand expression to it. 
+         * Gets the right hand expression as a simple Java
+         * value. If the rhs is a more complex expression, then creates a
+         * scratch variable and assigns the right hand expression to it.
          * Then returns the scratch variable.
          */
         private Expression rhsAsJava()
@@ -339,17 +339,17 @@ public class FarragoOJRexCastImplementor
             }
             return rhsExp;
         }
-        
+
         /**
-         * Gets the right hand expression as a valid value to be 
-         * assigned to the left hand side. Usually returns the original rhs. 
-         * However, if the lhs is of a primitive type, and the rhs is an 
+         * Gets the right hand expression as a valid value to be
+         * assigned to the left hand side. Usually returns the original rhs.
+         * However, if the lhs is of a primitive type, and the rhs is an
          * explicit null, returns a primitive value instead.
          */
         private Expression rhsAsValue()
         {
             if (SqlTypeUtil.isJavaPrimitive(lhsType)
-                && rhsType.getSqlTypeName() == SqlTypeName.Null) 
+                && rhsType.getSqlTypeName() == SqlTypeName.Null)
             {
                 if (lhsType.getSqlTypeName() == SqlTypeName.Boolean) {
                     return Literal.constantFalse();
@@ -359,9 +359,9 @@ public class FarragoOJRexCastImplementor
             }
             return rhsExp;
         }
-        
+
         /**
-         * Implements a cast from NULL. Creates a scratch variable if 
+         * Implements a cast from NULL. Creates a scratch variable if
          * one was not provided and assigns NULL to it.
          */
         private Expression castFromNull()
@@ -373,9 +373,9 @@ public class FarragoOJRexCastImplementor
         }
 
         /**
-         * Implements a cast from any Java primitive to a nullable Java 
+         * Implements a cast from any Java primitive to a nullable Java
          * primitive as a simple assignment. i.e.
-         * 
+         *
          * <pre>
          * [NullablePrimitiveType] lhs;
          * lhs.[nullIndicator] = ...;
@@ -397,7 +397,7 @@ public class FarragoOJRexCastImplementor
             } else {
                 rhsIsNull = Literal.constantFalse();
             }
-            
+
             addStatement(
                 assign(
                     getNullIndicator(lhsExp),
@@ -428,21 +428,21 @@ public class FarragoOJRexCastImplementor
         }
 
         /**
-         * Casts the rhs to an {@link AssignableValue} using that interface's 
+         * Casts the rhs to an {@link AssignableValue} using that interface's
          * standard assignment method. i.e.
-         * 
+         *
          * <pre>
          * [AssignableValueType] lhs;
          * lhs.[assignMethod](rhs);
          * </pre>
-         * 
+         *
          * or perhaps a type-specific cast:
-         * 
+         *
          * <pre>
          * [AssignableValueType] lhs;
          * lhs.[castMethod](rhs, lhs.getPrecision());
          * </pre>
-         * 
+         *
          * <p>Code is also generated to pad and truncate values which need
          * special handling, such as date and time types.  Plus good old null
          * handling.
@@ -518,12 +518,12 @@ public class FarragoOJRexCastImplementor
                                 Literal.makeLiteral(
                                     lhsType.getPrecision())))));
             } else {
-                // Set current_date for casting time to timestamp. If 
-                // rhsType is null then we may have to be ready for anything. 
-                // But it will be null even for current_timestamp, so the 
+                // Set current_date for casting time to timestamp. If
+                // rhsType is null then we may have to be ready for anything.
+                // But it will be null even for current_timestamp, so the
                 // condition below seems a bit excessive.
                 if (lhsType.getSqlTypeName() == SqlTypeName.Timestamp
-                    && (rhsType == null 
+                    && (rhsType == null
                         || rhsType.getSqlTypeName() == SqlTypeName.Time))
                 {
                     addStatement(
@@ -539,6 +539,32 @@ public class FarragoOJRexCastImplementor
                             lhsExp,
                             AssignableValue.ASSIGNMENT_METHOD_NAME,
                             new ExpressionList(rhsExp))));
+            }
+
+            // Trim precision of datetime values.
+            //
+            if ((lhsType.getSqlTypeName() == SqlTypeName.Timestamp
+                || lhsType.getSqlTypeName() == SqlTypeName.Time)) {
+                if (rhsType != null &&
+                    // FIXME: JavaType(java.sql.Time) and
+                    // JavaType(java.sql.Timestamp) say they support precision
+                    // but do not.
+                    !rhsType.toString().startsWith("JavaType(") &&
+                    rhsType.getSqlTypeName().allowsPrec() &&
+                    lhsType.getPrecision() < rhsType.getPrecision()) {
+                    int lhsPrecision = lhsType.getPrecision();
+                    if (lhsPrecision == -1) {
+                        lhsPrecision = 0;
+                    }
+                    addStatement(
+                        new ExpressionStatement(
+                            new MethodCall(
+                                lhsExp,
+                                SqlDateTimeWithoutTZ.ADJUST_PRECISION_METHOD_NAME,
+                                new ExpressionList(
+                                    Literal.makeLiteral(
+                                        lhsPrecision)))));
+                }
             }
 
             boolean mayNeedPadOrTruncate = false;
@@ -634,23 +660,23 @@ public class FarragoOJRexCastImplementor
         }
 
         /**
-         * Casts the rhs to a non nullable primitive value. Non nullable 
+         * Casts the rhs to a non nullable primitive value. Non nullable
          * primitive values only have a single value field.
          */
         private Expression castToNotNullPrimitive()
         {
-            // If the left and the right types are the same, perform a 
+            // If the left and the right types are the same, perform a
             // trivial cast.
             if (lhsType == rhsType) {
                 return getDirectAssignment();
             }
-            
-            // Retrieve the value of the right side if it is a nullable 
+
+            // Retrieve the value of the right side if it is a nullable
             // primitive or a Datetime or an Interval type.
             // TODO: is Decimal a nullable primitive?
             if (translator.isNullablePrimitive(rhsType) ||
                 SqlTypeUtil.isDatetime(rhsType) ||
-                SqlTypeUtil.isInterval(rhsType)) 
+                SqlTypeUtil.isInterval(rhsType))
             {
                 rhsExp = getValue(rhsType, rhsExp);
             }
@@ -659,8 +685,8 @@ public class FarragoOJRexCastImplementor
             String numClassName = SqlTypeUtil.getNumericJavaClassName(lhsType);
             OJClass lhsClass = getLhsClass();
 
-            // When casting from a string (or binary) to a number, trim the 
-            // value and perform the cast by calling a class-specific parsing 
+            // When casting from a string (or binary) to a number, trim the
+            // value and perform the cast by calling a class-specific parsing
             // function.
             if ((numClassName != null)
                 && SqlTypeUtil.inCharOrBinaryFamilies(rhsType)
@@ -697,11 +723,11 @@ public class FarragoOJRexCastImplementor
                             rhsExp)));
                 rhsExp = outTemp;
 
-                // Note: this check for overflow should only be required 
+                // Note: this check for overflow should only be required
                 // when the string conversion does not perform a check.
                 checkOverflow();
             }
-            
+
             // Casting from string to boolean relies on the runtime type.
             // Note: string is trimmed by conversion method.
             else if ((lhsType.getSqlTypeName() == SqlTypeName.Boolean)
@@ -720,22 +746,22 @@ public class FarragoOJRexCastImplementor
                             NullablePrimitive.NullableBoolean.class),
                         "convertString",
                         new ExpressionList(str));
-            } 
-            
+            }
+
             // In general, check for overflow
             else {
                 checkOverflow();
             }
-            
+
             roundAsNeeded();
-            
+
             rhsExp = new CastExpression(lhsClass, rhsExp);
             return getDirectAssignment();
         }
 
         /**
-         * Directly assigns the right hand side to to an lhs variable and 
-         * returns the lhs variable. If no variable was provided, returns 
+         * Directly assigns the right hand side to to an lhs variable and
+         * returns the lhs variable. If no variable was provided, returns
          * the original rhs.
          */
         private Expression getDirectAssignment()
@@ -743,13 +769,13 @@ public class FarragoOJRexCastImplementor
             if (lhsExp == null) {
                 return rhsExp;
             }
-            
+
             addStatement(assign(lhsExp, rhsExp));
             return lhsExp;
         }
 
         /**
-         * Checks for overflow when assigning one primitive type to another. 
+         * Checks for overflow when assigning one primitive type to another.
          * Non-primitive types check for overflow during assignment.
          */
         private void checkOverflow()
@@ -764,7 +790,7 @@ public class FarragoOJRexCastImplementor
                 return;
             }
             // Approximate numerics have a wider range than exact numerics
-            if (SqlTypeUtil.isApproximateNumeric(lhsType) 
+            if (SqlTypeUtil.isApproximateNumeric(lhsType)
                 && SqlTypeUtil.isExactNumeric(rhsType))
             {
                 return;
@@ -772,8 +798,8 @@ public class FarragoOJRexCastImplementor
             // We can skip an error check if the left type is "larger"
             if (SqlTypeUtil.isIntType(lhsType)
                 && SqlTypeUtil.isIntType(rhsType)
-                && (SqlTypeUtil.maxValue(lhsType) 
-                    >= SqlTypeUtil.maxValue(rhsType))) 
+                && (SqlTypeUtil.maxValue(lhsType)
+                    >= SqlTypeUtil.maxValue(rhsType)))
             {
                 return;
             }
@@ -847,12 +873,12 @@ public class FarragoOJRexCastImplementor
         }
 
         /**
-         * Adds the statement to the statement list if it is not null. 
+         * Adds the statement to the statement list if it is not null.
          * Otherwise, adds the statement to the translator list.
-         * 
+         *
          * @param stmt the statement to be added
          */
-        private void addStatement(Statement stmt) 
+        private void addStatement(Statement stmt)
         {
             if (stmtList == null) {
                 translator.addStatement(stmt);
@@ -860,11 +886,11 @@ public class FarragoOJRexCastImplementor
                 stmtList.add(stmt);
             }
         }
-        
+
         /**
-         * Adds a list of statements according to 
+         * Adds a list of statements according to
          * {@link #addStatement(Statement)}
-         * 
+         *
          * @param list list of statements to be added
          */
         private void addStatementList(StatementList list)
@@ -873,11 +899,11 @@ public class FarragoOJRexCastImplementor
                 addStatement(list.get(i));
             }
         }
-        
+
         /**
-         * Borrows the active statement list, by temporarily setting it to 
+         * Borrows the active statement list, by temporarily setting it to
          * a new statement list. What is borrowed must be returned!
-         * 
+         *
          * <p>Example:
          * <pre>
          * StatementList block = new StatementList();
@@ -888,10 +914,10 @@ public class FarragoOJRexCastImplementor
          *     returnStmtList(oldList);
          * }
          * </pre>
-         * 
+         *
          * @param newList the new statement list
          * @return the old statement list
-         * 
+         *
          * @see {@link #returnStmtList(StatementList)}
          */
         private StatementList borrowStmtList(StatementList newList)
@@ -900,33 +926,33 @@ public class FarragoOJRexCastImplementor
             stmtList = newList;
             return oldList;
         }
-        
+
         /**
-         * Restores the active statement list. Called after borrowing a 
+         * Restores the active statement list. Called after borrowing a
          * statement list.
-         * 
+         *
          * @param oldList the previously active statement list.
-         * 
+         *
          * @see {@link #borrowStmtList(StatementList)}
          */
         private void returnStmtList(StatementList oldList)
         {
             stmtList = oldList;
         }
-        
+
         /**
          * Creates a simple assignment statement as in a = b.
          */
         private ExpressionStatement assign(Expression a, Expression b)
         {
-            return 
+            return
                 new ExpressionStatement(
                     new AssignmentExpression(
                         a,
                         AssignmentExpression.EQUALS,
                         b));
         }
-        
+
         /**
          * Creates a not expression as in !a.
          */
@@ -934,45 +960,45 @@ public class FarragoOJRexCastImplementor
         {
             return new UnaryExpression(UnaryExpression.NOT, a);
         }
-        
+
         /**
          * Creates a field access, as in expr.[nullIndicator]
          */
         private FieldAccess getNullIndicator(Expression expr)
         {
             return new FieldAccess(
-                expr, 
+                expr,
                 NullablePrimitive.NULL_IND_FIELD_NAME);
         }
-        
+
         /**
          * Creates a field access, as in expr.[value]
          */
-        private Expression getValue(RelDataType type, Expression expr) 
+        private Expression getValue(RelDataType type, Expression expr)
         {
-            FarragoTypeFactory factory = 
+            FarragoTypeFactory factory =
                 (FarragoTypeFactory) translator.getTypeFactory();
             return factory.getValueAccessExpression(type, expr);
         }
-        
+
         /**
-         * Rounds right hand side, if required. Rounding is required when 
+         * Rounds right hand side, if required. Rounding is required when
          * casting from an approximate numeric to an exact numeric.
          */
         private void roundAsNeeded()
         {
             if (SqlTypeUtil.isExactNumeric(lhsType)
-                && SqlTypeUtil.isApproximateNumeric(rhsType)) 
+                && SqlTypeUtil.isApproximateNumeric(rhsType))
             {
                 rhsExp = roundAway();
             }
         }
-        
+
         /**
-         * Generates code to round an expression according to the Farrago 
+         * Generates code to round an expression according to the Farrago
          * convention. The Farrago convention is to round away from zero.
          * Rounding is performed with the following algorithm.
-         * 
+         *
          * <pre>
          * in = rhs;
          * if (value < 0) {
@@ -983,16 +1009,16 @@ public class FarragoOJRexCastImplementor
          *     out = Math.round(in);
          * }
          * </pre>
-         * 
-         * <p>PRECONDITION: rhsExp must be an unwrapped (not null) Java 
+         *
+         * <p>PRECONDITION: rhsExp must be an unwrapped (not null) Java
          * primitive
-         * 
+         *
          * <p>TODO: account for overflow in both unary minus and round.
          */
         private Expression roundAway()
         {
             // Get the primitive part of right hand side
-            RelDataType inType = 
+            RelDataType inType =
                 translator.getTypeFactory()
                     .createTypeWithNullability(rhsType, false);
 
@@ -1007,7 +1033,7 @@ public class FarragoOJRexCastImplementor
             translator.addStatement(
                 declareStackVar(outClass, outTemp, null));
 
-            boolean isLong = 
+            boolean isLong =
                 translator.getFarragoTypeFactory()
                 .getClassForPrimitive(lhsType) == long.class;
 
@@ -1025,24 +1051,24 @@ public class FarragoOJRexCastImplementor
                         assign(outTemp, round(lhsClass, inTemp, isLong)))));
             return outTemp;
         }
-        
+
         /**
-         * Creates a unary minus, as in -expr. The type of the expression 
-         * returned is the same type as the the original expression. This 
+         * Creates a unary minus, as in -expr. The type of the expression
+         * returned is the same type as the the original expression. This
          * is required for situations such as byte:
-         * 
+         *
          * <pre>
          * byte b;
          * b = -b; // cannot cast int to byte
          * </pre>
-         * 
-         * The unary minus operator returns an integer value. Note that 
+         *
+         * The unary minus operator returns an integer value. Note that
          * unary minus potentially causes an overflow, because in most cases,
          * |MIN_VALUE| > |MAX_VALUE| (ex. |-128| > |127| for byte)
          */
         private Expression minus(OJClass clazz, Expression expr)
         {
-            return 
+            return
                 new CastExpression(
                     clazz,
                     new UnaryExpression(
@@ -1051,16 +1077,16 @@ public class FarragoOJRexCastImplementor
         }
 
         /**
-         * Generates code to round an expression up and cast it. Performs a 
-         * lenient rounding. Values less than target min or max become the 
+         * Generates code to round an expression up and cast it. Performs a
+         * lenient rounding. Values less than target min or max become the
          * min or max while, rounding (not a number) results in zero.
-         * 
+         *
          * @param clazz type to cast rounded expression as
          * @param expr expression to be rounded
          * @param isLong whether the result should have long precision
          */
         private Expression round(
-            OJClass clazz, Expression expr, boolean isLong) 
+            OJClass clazz, Expression expr, boolean isLong)
         {
             Expression arg = expr;
             if (isLong) {
@@ -1078,10 +1104,10 @@ public class FarragoOJRexCastImplementor
                     "round",
                     new ExpressionList(arg)));
         }
-        
+
         /**
          * Makes a statement to declare a stack variable
-         * 
+         *
          * @param clazz OJ class of the variable to declare
          * @param var the variable to be declared
          * @param init initial value for the declaration.

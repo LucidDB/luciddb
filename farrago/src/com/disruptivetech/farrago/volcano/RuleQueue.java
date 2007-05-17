@@ -91,7 +91,12 @@ class RuleQueue
      */
     private final 
         Map<VolcanoPlannerPhase, Set<String>> phaseRuleMapping;
-    
+
+    /**
+     * Largest value which is less than one.
+     */
+    private static final double OneMinusEpsilon = computeOneMinusEpsilon();
+
     //~ Constructors -----------------------------------------------------------
 
     RuleQueue(VolcanoPlanner planner)
@@ -101,7 +106,7 @@ class RuleQueue
         phaseRuleMapping = new HashMap<VolcanoPlannerPhase, Set<String>>();
 
         // init empty sets for all phases
-        for(VolcanoPlannerPhase phase: VolcanoPlannerPhase.values()) {
+        for (VolcanoPlannerPhase phase : VolcanoPlannerPhase.values()) {
             phaseRuleMapping.put(phase, new HashSet<String>());
         }
         
@@ -133,7 +138,7 @@ class RuleQueue
     }
     
     /**
-     * Computes the importance a set (which is that of its most important
+     * Computes the importance of a set (which is that of its most important
      * subset).
      */
     public double getImportance(RelSet set)
@@ -201,7 +206,7 @@ class RuleQueue
     }
     
     /**
-     * Artificially boost the importnace of the given RelSubsets by the
+     * Artificially boosts the importance of the given {@link RelSubset}s by a
      * given factor.
      * 
      * <p>Iterates over the currently boosted RelSubsets and removes their
@@ -218,9 +223,10 @@ class RuleQueue
      */
     public void boostImportance(Collection<RelSubset> subsets, double factor)
     {
+        tracer.finer("boostImportance(" + factor + ", " + subsets + ")");
         ArrayList<RelSubset> boostRemovals = new ArrayList<RelSubset>();
         Iterator<RelSubset> iter = boostedSubsets.iterator(); 
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             RelSubset subset = iter.next();
 
             if (!subsets.contains(subset)) {
@@ -237,30 +243,41 @@ class RuleQueue
                 {
                     int o1children = countChildren(o1);
                     int o2children = countChildren(o2);
-                    
-                    return o1children - o2children;
+                    int c = compare(o1children, o2children);
+                    if (c == 0) {
+                        // for determinism
+                        c = compare(o1.getId(), o2.getId());
+                    }
+                    return c;
                 }
-                
+
+                private int compare(int i1, int i2)
+                {
+                    return i1 < i2 ? -1 :
+                        i1 == i2 ? 0 :
+                        1;
+                }
+
                 private int countChildren(RelSubset subset)
                 {
                     int count = 0;
-                    for (RelNode rel: subset.rels) {
+                    for (RelNode rel : subset.rels) {
                         count += rel.getInputs().length;
                     }
                     return count;
                 }
             });
         
-        for(RelSubset subset: boostRemovals) {
+        for (RelSubset subset : boostRemovals) {
             subset.propagateBoostRemoval(planner);
         }
         
-        for(RelSubset subset: subsets) {
+        for (RelSubset subset : subsets) {
             double importance = subsetImportances.get(subset);
         
             updateImportance(
                 subset, 
-                Math.min(1.0 - Double.MIN_VALUE, importance * factor));
+                Math.min(OneMinusEpsilon, importance * factor));
             
             subset.boosted = true;
             boostedSubsets.add(subset);
@@ -271,11 +288,11 @@ class RuleQueue
     {
         subsetImportances.put(subset, importance);
         
-        for(PhaseMatchList matchList: matchListMap.values()) {
+        for (PhaseMatchList matchList : matchListMap.values()) {
             MultiMap<RelSubset, VolcanoRuleMatch> relMatchMap = 
                 matchList.matchMap;
             if (relMatchMap.containsKey(subset)) {
-                for(VolcanoRuleMatch match: relMatchMap.getMulti(subset)) {
+                for (VolcanoRuleMatch match : relMatchMap.getMulti(subset)) {
                     match.clearCachedImportance();
                 }
             }
@@ -419,11 +436,10 @@ class RuleQueue
             subsetImportances.keySet().toArray(
                 new RelSubset[subsetImportances.keySet().size()]);
         Arrays.sort(subsets, relImportanceComparator);
-        for (int i = 0; i < subsets.length; i++) {
-            RelSubset subset = subsets[i];
+        for (RelSubset subset : subsets) {
             pw.print(
                 " " + subset.toString() + "="
-                + subsetImportances.get(subset));
+                    + subsetImportances.get(subset));
         }
         pw.println("}");
     }
@@ -449,7 +465,7 @@ class RuleQueue
         if (tracer.isLoggable(Level.FINEST)) {
             StringBuilder b = new StringBuilder();
             b.append("Sorted rule queue:");
-            for(VolcanoRuleMatch match: matchList) {
+            for (VolcanoRuleMatch match : matchList) {
               final double importance = match.computeImportance();
               b.append("\n");
               b.append(match);
@@ -532,6 +548,16 @@ class RuleQueue
             }
         }
         return 0;
+    }
+
+    private static double computeOneMinusEpsilon()
+    {
+        if (true) return 1.0 - Double.MIN_VALUE;
+        double d = .5;
+        while ((1.0 - d) < 1.0) {
+            d /= 2.0;
+        }
+        return 1.0 - d * 2.0;
     }
 
     //~ Inner Classes ----------------------------------------------------------

@@ -249,7 +249,7 @@ public abstract class DdlHandler
             element.setCharacterSetName("");
             return;
         }
-        
+
         SqlDataTypeSpec dataType = (SqlDataTypeSpec) typeObj;
         if (dataType != null) {
             convertSqlToCatalogType(dataType, element);
@@ -545,18 +545,27 @@ public abstract class DdlHandler
         String defaultExpression)
     {
         String sql = "VALUES(" + defaultExpression + ")";
+        RelDataType rowType;
 
-        // null param def factory okay because we won't use dynamic params
-        FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
-        stmtContext.prepare(sql, false);
-        RelDataType rowType = stmtContext.getPreparedRowType();
-        assert (rowType.getFieldList().size() == 1);
+        FarragoSessionStmtContext stmtContext = null;
+        try {
+            // null param def factory okay because we won't use dynamic params
+            stmtContext = session.newStmtContext(null);
 
-        if (stmtContext.getPreparedParamType().getFieldList().size() > 0) {
-            throw validator.newPositionalError(
-                attribute,
-                res.ValidatorBadDefaultParam.ex(
-                    repos.getLocalizedObjectName(attribute)));
+            stmtContext.prepare(sql, false);
+            rowType = stmtContext.getPreparedRowType();
+            assert (rowType.getFieldList().size() == 1);
+
+            if (stmtContext.getPreparedParamType().getFieldList().size() > 0) {
+                throw validator.newPositionalError(
+                    attribute,
+                    res.ValidatorBadDefaultParam.ex(
+                        repos.getLocalizedObjectName(attribute)));
+            }
+        } finally {
+            if (stmtContext != null) {
+                stmtContext.closeAllocation();
+            }
         }
 
         // SQL standard is very picky about what can go in a DEFAULT clause

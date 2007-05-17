@@ -108,7 +108,7 @@ public class FarragoRexToOJTranslator
         this.memberList = memberList;
 
         this.localRefMap = localRefMap;
-        
+
         // keep a reference to the implementor for CAST, which
         // is needed for implementing assignments also
         castImplementor =
@@ -199,7 +199,7 @@ public class FarragoRexToOJTranslator
         if (refCount == 1) {
             return super.visitLocalRef(localRef);
         }
-        
+
         // See if we've already generated code for this common subexpression.
         String methodName = localRefMap.get(localRef.getIndex());
         if (methodName != null) {
@@ -223,7 +223,7 @@ public class FarragoRexToOJTranslator
             // don't bother with a separate method.
             return setTranslation(expr);
         }
-        
+
         methodName =
             "calc_cse_" + localRef.getIndex();
         localRefMap.put(localRef.getIndex(), methodName);
@@ -231,6 +231,9 @@ public class FarragoRexToOJTranslator
         methodBody.add(
             new ReturnStatement(expr));
 
+        // Wrap the expression as a method declaration. Allow the method to
+        // throw any Exception, because without analyzing the parse tree, it's
+        // difficult to know which exceptions the code will throw.
         MemberDeclaration methodDecl =
             new MethodDeclaration(
                 new ModifierList(
@@ -248,7 +251,7 @@ public class FarragoRexToOJTranslator
         return setTranslation(
             new MethodCall(methodName, new ExpressionList()));
     }
-    
+
     // implement RexVisitor
     public Expression visitDynamicParam(RexDynamicParam dynamicParam)
     {
@@ -333,7 +336,7 @@ public class FarragoRexToOJTranslator
         // null to represent uninitialized.  For better performance,
         // we should do this in a constructor or a top-level
         // static initializer.
-        
+
         final StatementList initStmtList = new StatementList();
         initStmtList.add(
             new ExpressionStatement(
@@ -357,7 +360,7 @@ public class FarragoRexToOJTranslator
             new IfStatement(
                 isNull(variable),
                 initStmtList));
-        
+
         return setTranslation(variable);
     }
 

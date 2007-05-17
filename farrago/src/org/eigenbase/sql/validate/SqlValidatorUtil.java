@@ -55,11 +55,14 @@ public class SqlValidatorUtil
      * @param schema Schema
      * @param datasetName Name of sample dataset to substitute, or null to use
      * the regular table
+     * @param usedDataset Output parameter which is set to true if a sample
+     *   dataset is found; may be null
      */
     public static RelOptTable getRelOptTable(
         SqlValidatorNamespace namespace,
         RelOptSchema schema,
-        String datasetName)
+        String datasetName,
+        boolean[] usedDataset)
     {
         if (namespace instanceof IdentifierNamespace) {
             IdentifierNamespace identifierNamespace =
@@ -68,8 +71,8 @@ public class SqlValidatorUtil
             if ((datasetName != null)
                 && (schema instanceof RelOptSchemaWithSampling)) {
                 return
-                    ((RelOptSchemaWithSampling) schema).getTableForMember(names,
-                        datasetName);
+                    ((RelOptSchemaWithSampling) schema).getTableForMember(
+                        names, datasetName, usedDataset);
             } else {
                 // Schema does not support substitution. Ignore the dataset,
                 // if any.

@@ -64,6 +64,7 @@
     <pattern name="fennel" class="net.sf.farrago.fennel.*" />
     <pattern name="fennel.tuple" class="net.sf.farrago.fennel.tuple.*" />
     <pattern name="session" class="net.sf.farrago.session.*" />
+    <pattern name="session.mock" class="net.sf.farrago.session.mock.*" />
     <pattern name="runtime" class="net.sf.farrago.runtime.*" />
     <pattern name="dynamic" class="net.sf.farrago.dynamic.*" />
     <pattern name="ojrex" class="net.sf.farrago.ojrex.*" />
@@ -136,6 +137,7 @@
       <include pattern="fennel"/>
       <include pattern="fennel.tuple" />
       <include pattern="session"/>
+      <include pattern="session.mock"/>
       <include pattern="runtime"/>
       <include pattern="dynamic"/>
       <include pattern="ojrex"/>
@@ -436,6 +438,22 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="session.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="session.mock.deps">
+      <include pattern="session.deps" />
+      <include pattern="session.mock" />
+    </pattern>
+
+    <access-rule>
+      <message>session.mock dependency violation</message>
+      <deny>
+        <from pattern="session.mock" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="session.mock.deps" />
         </allow>
       </deny>
     </access-rule>

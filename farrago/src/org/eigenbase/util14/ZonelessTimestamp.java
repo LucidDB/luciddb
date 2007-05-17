@@ -35,8 +35,12 @@ public class ZonelessTimestamp extends ZonelessDatetime
 
     //~ Instance fields --------------------------------------------------------
 
-    protected int precision;
-    protected Timestamp tempTimestamp;
+    protected final int precision;
+
+    protected transient Timestamp tempTimestamp;
+
+    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = -6829714640541648394L;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -45,6 +49,21 @@ public class ZonelessTimestamp extends ZonelessDatetime
      */
     public ZonelessTimestamp()
     {
+        this.precision = 0;
+    }
+
+    /**
+     * Constructs a ZonelessTimestamp with precision.
+     *
+     * <p>The precision is the number of digits to the right of the decimal
+     * point in the seconds value. For example, a <code>TIMESTAMP(3)</code> has
+     * a precision to milliseconds.
+     *
+     * @param precision Number of digits of precision
+     */
+    public ZonelessTimestamp(int precision)
+    {
+        this.precision = precision;
     }
 
     // implement ZonelessDatetime
@@ -54,29 +73,29 @@ public class ZonelessTimestamp extends ZonelessDatetime
     }
 
     /**
-     * Converts this ZonelessTimestamp to a java.sql.Timestamp and formats 
-     * it via the {@link java.sql.Timestamp#toString() toString()} method of 
+     * Converts this ZonelessTimestamp to a java.sql.Timestamp and formats
+     * it via the {@link java.sql.Timestamp#toString() toString()} method of
      * that class.
-     * 
+     *
      * <p>
-     * 
-     * Note: Jdbc formatting always includes a decimal point and at least 
-     * one digit of milliseconds precision. Trailing zeros, except for the 
+     *
+     * Note: Jdbc formatting always includes a decimal point and at least
+     * one digit of milliseconds precision. Trailing zeros, except for the
      * first one after the decimal point, do not appear in the output.
-     * 
+     *
      * @return the formatted time string
      */
     public String toString()
     {
-        Timestamp ts = 
+        Timestamp ts =
             getTempTimestamp(getJdbcTimestamp(DateTimeUtil.defaultZone));
         return ts.toString();
     }
 
     /**
-     * Formats this ZonelessTimestamp via a SimpleDateFormat. This method 
+     * Formats this ZonelessTimestamp via a SimpleDateFormat. This method
      * does not display milliseconds precision.
-     * 
+     *
      * @param format format string, as required by SimpleDateFormat
      * @return the formatted timestamp string
      */
@@ -88,31 +107,48 @@ public class ZonelessTimestamp extends ZonelessDatetime
     }
 
     /**
-     * Parses a string as a ZonelessTimestamp. This method's parsing is strict 
-     * and may parse fractional seconds (as opposed to just milliseconds.)
-     * 
-     * @param s a string representing a time in ISO format, i.e. according 
+     * Parses a string as a ZonelessTimestamp.
+     *
+     * <p>This method's parsing is strict and may parse fractional seconds
+     * (as opposed to just milliseconds.)
+     *
+     * @param s a string representing a time in ISO format, i.e. according
      *   to the SimpleDateFormat string "yyyy-MM-dd HH:mm:ss"
      * @return the parsed time, or null if parsing failed
      */
     public static ZonelessTimestamp parse(String s)
     {
+        return parse(s, DateTimeUtil.TimestampFormatStr);
+    }
+
+    /**
+     * Parses a string as a ZonelessTimestamp using a given format string.
+     *
+     * <p>This method's parsing is strict and may parse fractional seconds
+     * (as opposed to just milliseconds.)
+     *
+     * @param s a string representing a time in ISO format, i.e. according
+     *   to the SimpleDateFormat string "yyyy-MM-dd HH:mm:ss"
+     * @param format format string as per {@link SimpleDateFormat}
+     * @return the parsed timestamp, or null if parsing failed
+     */
+    public static ZonelessTimestamp parse(String s, String format)
+    {
         DateTimeUtil.PrecisionTime pt =
             DateTimeUtil.parsePrecisionDateTimeLiteral(
                 s,
-                DateTimeUtil.TimestampFormatStr,
+                format,
                 DateTimeUtil.gmtZone);
         if (pt == null) {
             return null;
         }
-        ZonelessTimestamp zt = new ZonelessTimestamp();
+        ZonelessTimestamp zt = new ZonelessTimestamp(pt.getPrecision());
         zt.setZonelessTime(pt.getCalendar().getTime().getTime());
-        zt.precision = pt.getPrecision();
         return zt;
     }
 
     /**
-     * Gets a temporary Timestamp object. The same object is returned 
+     * Gets a temporary Timestamp object. The same object is returned
      * every time.
      */
     protected Timestamp getTempTimestamp(long value)
@@ -126,4 +162,4 @@ public class ZonelessTimestamp extends ZonelessDatetime
     }
 }
 
-// End GmtTime.java
+// End ZonelessTimestamp.java

@@ -2513,7 +2513,7 @@ SqlLiteral IntervalLiteral() :
 }
 {
     <INTERVAL>
-    [ <MINUS> { sign = -1; } ]
+    [ <MINUS> { sign = -1; } | <PLUS> { sign = 1; } ]
     <QUOTED_STRING> { p = token.image; }
     intervalQualifier = IntervalQualifier()
     {
@@ -2525,8 +2525,8 @@ SqlIntervalQualifier IntervalQualifier() :
 {
     SqlIntervalQualifier.TimeUnit start;
     SqlIntervalQualifier.TimeUnit end = null;
-    int startPrec = 0;
-    int secondFracPrec = 0;
+    int startPrec = SqlIntervalQualifier.getDefaultPrecisionId();
+    int secondFracPrec = SqlIntervalQualifier.getDefaultPrecisionId();
 }
 {
     ( 
@@ -2548,7 +2548,7 @@ SqlIntervalQualifier IntervalQualifier() :
                 <HOUR> { end = SqlIntervalQualifier.TimeUnit.Hour; }
                 | <MINUTE> { end = SqlIntervalQualifier.TimeUnit.Minute; }
                 | <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
-                [ <LPAREN> secondFracPrec = IntLiteral() <RPAREN> ]
+                [ <LPAREN> secondFracPrec = UnsignedIntLiteral() <RPAREN> ]
             )
         ]
         { start = SqlIntervalQualifier.TimeUnit.Day; }
@@ -3033,7 +3033,7 @@ SqlNode BuiltinFunctionCall() :
         { SqlIntervalQualifier.TimeUnit unit; }
         <LPAREN>
         unit = TimeUnit()
-        { args = startList(new SqlIntervalQualifier(unit,0,null,0,getPos())); }
+        { args = startList(new SqlIntervalQualifier(unit, null,getPos())); }
         <FROM>
         e = Expression(EXPR_ACCEPT_SUBQUERY) { args.add(e); }
         <RPAREN>

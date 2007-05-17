@@ -33,7 +33,7 @@ import org.eigenbase.util14.*;
 /**
  * FarragoJdbcEngineTimeParamDef defines a time parameter.
  *
- * This class is JDK 1.4 compatible.
+ * <p>This class is JDK 1.4 compatible.
  *
  * @author Julian Hyde
  * @version $Id$
@@ -79,16 +79,28 @@ class FarragoJdbcTimeParamDef
             return zt;
         }
 
-        // Only java.sql.Time, java.sql.Timestamp are all OK.
-        // java.sql.Date is not okay (no time information)
-        if (!(x instanceof Timestamp) && !(x instanceof Time)) {
-            throw newInvalidType(x);
+        // Of the subtypes of java.util.Date,
+        // only java.sql.Timestamp and java.sql.Time are OK.
+        // java.sql.Date is not okay (no time information).
+        if (x instanceof Timestamp || x instanceof Time) {
+            java.util.Date timestamp = (java.util.Date) x;
+            ZonelessTimestamp zt = new ZonelessTimestamp();
+            zt.setZonedTime(timestamp.getTime(), DateTimeUtil.getTimeZone(cal));
+            return zt;
         }
 
-        java.util.Date d = (java.util.Date) x;
-        ZonelessTime zt = new ZonelessTime();
-        zt.setZonedTime(d.getTime(), DateTimeUtil.getTimeZone(cal));
-        return zt;
+        // ZonelessDatetime is not required by JDBC, but we allow it because
+        // it is a convenient format to serialize values over RMI.
+        // We disallow ZonelessTime for the same reasons we disallow
+        // java.sql.Time above.
+        if (x instanceof ZonelessTimestamp || x instanceof ZonelessTime) {
+            long time = ((ZonelessDatetime) x).getTime();
+            ZonelessTime zt = new ZonelessTime();
+            zt.setZonedTime(time, DateTimeUtil.getTimeZone(cal));
+            return zt;
+        }
+
+        throw newInvalidType(x);
     }
 }
 

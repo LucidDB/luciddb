@@ -128,11 +128,16 @@ public class FarragoDataWrapperCache
 
         wrapper = (FarragoMedDataWrapper) entry.getValue();
 
-        // if the share cache is invalid (mismatching library name or options),
+        // If the share cache is invalid (mismatching library name or options),
         // discard that entry and re-pin it (which will initialize a new entry
-        // in the shared cache with the wrapper factory
+        // in the shared cache with the wrapper factory.
+        //
+        // FIXME: If another user has pinned this entry, then discard will
+        // fail. We should make libraryName and options part of the key, so
+        // that cache entries are always valid.
         if (!options.equals(wrapper.getProperties())
             || !libraryName.equals(wrapper.getLibraryName())) {
+            getSharedCache().unpin(entry);
             getSharedCache().discard(mofId);
             entry = getSharedCache().pin(mofId, factory, true);
         }
@@ -285,7 +290,7 @@ public class FarragoDataWrapperCache
                     null),
                 ex);
         }
-        
+
         if (rowType != null) {
             assert (rowType.equals(loadedColumnSet.getRowType()));
         }

@@ -37,7 +37,10 @@ public class ZonelessDate extends ZonelessDatetime
 
     //~ Instance fields --------------------------------------------------------
 
-    protected Date tempDate;
+    protected transient Date tempDate;
+
+     /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = -6385775986251759394L;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -69,9 +72,9 @@ public class ZonelessDate extends ZonelessDatetime
     }
 
     /**
-     * Converts this ZonelessDate to a java.sql.Date and formats it via the 
+     * Converts this ZonelessDate to a java.sql.Date and formats it via the
      * {@link java.sql.Date#toString() toString()} method of that class.
-     * 
+     *
      * @return the formatted date string
      */
     public String toString()
@@ -82,7 +85,7 @@ public class ZonelessDate extends ZonelessDatetime
 
     /**
      * Formats this ZonelessDate via a SimpleDateFormat
-     * 
+     *
      * @param format format string, as required by {@link SimpleDateFormat}
      * @return the formatted date string
      */
@@ -95,16 +98,29 @@ public class ZonelessDate extends ZonelessDatetime
 
     /**
      * Parses a string as a ZonelessDate.
-     * 
-     * @param s a string representing a date in ISO format, i.e. according 
+     *
+     * @param s a string representing a date in ISO format, i.e. according
      *   to the SimpleDateFormat string "yyyy-MM-dd"
      * @return the parsed date, or null if parsing failed
      */
     public static ZonelessDate parse(String s)
     {
+        return parse(s, DateTimeUtil.DateFormatStr);
+    }
+
+    /**
+     * Parses a string as a ZonelessDate with a given format string.
+     *
+     * @param s a string representing a date in ISO format, i.e. according
+     *   to the SimpleDateFormat string "yyyy-MM-dd"
+     * @param format format string as per {@link SimpleDateFormat}
+     * @return the parsed date, or null if parsing failed
+     */
+    public static ZonelessDate parse(String s, String format)
+    {
         Calendar cal = DateTimeUtil.parseDateFormat(
-            s, 
-            DateTimeUtil.DateFormatStr, 
+            s,
+            format,
             DateTimeUtil.gmtZone);
         if (cal == null) {
             return null;
@@ -128,4 +144,4 @@ public class ZonelessDate extends ZonelessDatetime
     }
 }
 
-// End GmtDate.java
+// End ZonelessDate.java

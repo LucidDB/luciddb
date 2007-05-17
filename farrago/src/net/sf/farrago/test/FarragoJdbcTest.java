@@ -50,14 +50,22 @@ import org.eigenbase.util14.*;
 
 /**
  * FarragoJdbcTest tests specifics of the Farrago implementation of the JDBC
- * API. See also unitsql/jdbc/*.sql. todo: test: 1. string too long for
- * char/varchar field 2. value which converted to char/varchar is too long 3.
- * various numeric values out of range, e.g. put 65537 in a tinyint 4. assign
- * boolean to integer columns (becomes 0/1) 5. assign numerics to boolean
- * 5a.small enough 5b out of range (not 0 or 1) 6. assign string to everything
- * 6a invalid string format to boolean, numerics 6b valid datetime string to
- * date, time, timestamp 7. casting betwen incompatible types 8. set null for
- * nonnullable columns 9. invalid parameter index
+ * API. See also unitsql/jdbc/*.sql.
+ *
+ * <p>TODO: test:<ol>
+ * <li>string too long for char/varchar field
+ * <li>value which converted to char/varchar is too long
+ * <li>various numeric values out of range, e.g. put 65537 in a tinyint
+ * <li>assign boolean to integer columns (becomes 0/1)
+ * <li> assign numerics to boolean
+ * (a) small enough, (b)out of range (not 0 or 1)
+ * <li>assign string to everything
+ * (a) invalid string format to boolean, numerics
+ * (b) valid datetime string to date, time, timestamp
+ * <li>casting betwen incompatible types
+ * <li>set null for nonnullable columns
+ * <li>invalid parameter index
+ * </ol>
  *
  * @author Tim Leung
  * @author John V. Sichi
@@ -840,7 +848,7 @@ public class FarragoJdbcTest
                 final Object expected = sqlType.getExpected(value);
                 String message =
                     "sqltype [" + sqlType.string + "], javatype ["
-                    + ((javaType == null) ? "?" : javaType.name)
+                    + ((javaType == null) ? "?" : javaType)
                     + "], expected [" + toString(expected)
                     + ((expected == null) ? "" : (" :" + expected.getClass()))
                     + "], actual [" + toString(actual)
@@ -866,7 +874,9 @@ public class FarragoJdbcTest
         int rows = checkResults(resultSet, javaType);
         assertEquals(res, rows);
         stmt.close();
+        if (!connection.getAutoCommit()) {
         connection.rollback();
+        }
 
         // wipe out the array for the next test
         Arrays.fill(values, null);
@@ -963,13 +973,14 @@ public class FarragoJdbcTest
         int validity = sqlType.checkIsValid(value);
         Throwable throwable;
         tracer.fine(
-            "Call PreparedStmt.set" + javaType.name + "(" + column
+            "Call PreparedStmt.set" + javaType + "(" + column
             + ", " + value + "), validity is "
             + TestSqlType.validityName[validity]);
         try {
             javaType.setMethod.invoke(
                 preparedStmt,
-                new Object[] { new Integer(column), value });
+                column,
+                value);
             throwable = null;
         } catch (IllegalAccessException e) {
             throwable = e;
@@ -985,7 +996,7 @@ public class FarragoJdbcTest
             if (throwable != null) {
                 fail(
                     "Error received when none expected, javaType="
-                    + javaType.name + ", sqlType=" + sqlType.string
+                    + javaType + ", sqlType=" + sqlType.string
                     + ", value=" + value + ", throwable=" + throwable);
             }
             this.values[column] = value;
@@ -1000,7 +1011,7 @@ public class FarragoJdbcTest
             if (!okay) {
                 fail(
                     "Was expecting " + TestSqlType.validityName[validity]
-                    + " error, javaType=" + javaType.name
+                    + " error, javaType=" + javaType
                     + ", sqlType=" + sqlType.string + ", value=" + value
                     + ", throwable=" + throwable);
             }
@@ -2185,14 +2196,17 @@ public class FarragoJdbcTest
                 assertEquals(
                     dateNoTime.getTime(),
                     resultSet.getTimestamp(DATE).getTime());
-                // FIXME: See Time to Timestamp note above
-                if (todo) {
+
+                // SQL Spec Part 2 Section 4.6.2 Table 3 requires
+                // Time to Timestamp cast to set the date to current_date
+                // (currently stored in FarragoRuntimeContext)
+                if (Bug.Fnl54Fixed) {
                     assertEquals(
-                        timestamp.getTime(),
+                        timestampNoPrec.getTime(),
                         resultSet.getTimestamp(TIME).getTime());
                 }
                 assertEquals(
-                    timestamp.getTime(),
+                    timestampNoPrec.getTime(),
                     resultSet.getTimestamp(TIMESTAMP).getTime());
                 break;
             case 119:
@@ -2258,7 +2272,7 @@ public class FarragoJdbcTest
                     timeNoDate,
                     resultSet.getObject(TIME));
                 assertEquals(
-                    timestamp,
+                    timestampNoPrec,
                     resultSet.getObject(TIMESTAMP));
                 break;
             default:
@@ -2272,7 +2286,9 @@ public class FarragoJdbcTest
         resultSet.close();
         resultSet = null;
 
+        if (!connection.getAutoCommit()) {
         connection.rollback();
+    }
     }
 
     /**
@@ -3143,7 +3159,7 @@ public class FarragoJdbcTest
     }
 
     /**
-     * Tests {@link Statement.setMaxRows}.
+     * Tests {@link Statement#setMaxRows}.
      */
     public void testMaxRows()
         throws Exception
@@ -3164,6 +3180,103 @@ public class FarragoJdbcTest
         refSet.add("Marketing");
         refSet.add("Sales");
         compareResultSet(refSet);
+    }
+
+    protected void quietlyDropSchema(String schemaName)
+    {
+        String sql = "drop schema " +
+            schemaName +
+            " cascade";
+        try {
+            stmt.execute(sql);
+        } catch (SQLException ex) {
+            // ignore
+            Util.swallow(ex, tracer);
+        }
+    }
+
+    public void testFoo() throws SQLException
+    {
+        // cleanup
+        quietlyDropSchema("jdbc_test");
+
+        int n = stmt.executeUpdate("create schema jdbc_test");
+        assertEquals(0, n);
+
+        // Check DDL containing tab character. (Causes
+        // StringIndexOutOfBoundsException if we did not set tab-width to 1 in
+        // the parser.)
+        n = stmt.executeUpdate(
+            "create view jdbc_test.foo as select *\n\tfrom sales.emps");
+        assertEquals(0, n);
+
+        n = stmt.executeUpdate("drop view jdbc_test.foo");
+        assertEquals(0, n);
+
+        quietlyDropSchema("jdbc_test");
+        stmt.close();
+    }
+
+    public void testCreateView() throws SQLException
+    {
+        // cleanup
+        quietlyDropSchema("jdbc_test");
+
+        int n = stmt.executeUpdate("create schema jdbc_test");
+        assertEquals(0, n);
+
+        // Check DDL containing tab character. (Causes
+        // StringIndexOutOfBoundsException if we did not set tab-width to 1 in
+        // the parser.)
+        n = stmt.executeUpdate(
+            "create view jdbc_test.foo as select *\n\tfrom sales.emps");
+        assertEquals(0, n);
+
+        n = stmt.executeUpdate("drop view jdbc_test.foo");
+        assertEquals(0, n);
+
+        quietlyDropSchema("jdbc_test");
+
+        stmt.close();
+    }
+
+    /**
+     * Tests that a DDL statement fails because we have not specified a target
+     * schema.
+     *
+     * <p>Currently disabled because the DT testing infrastructure cannot
+     * handle failures.
+     */
+    public void testCreateViewNegative() throws SQLException
+    {
+        // expect creation to fail if we have not specified a target schema
+        try {
+            int n = stmt.executeUpdate(
+                "create view foo as select *\nfrom sales.emps");
+            Util.discard(n);
+            fail("expected error");
+        } catch (SQLException e) {
+            assertContains(
+                "No default schema specified; execute SET SCHEMA or use fully qualified names",
+                e.getMessage());
+        }
+        stmt.close();
+    }
+
+    /**
+     * Asserts that a given string contains a given substring.
+     * Throws {@link AssertionFailedError} if not.
+     *
+     * @param expected Expected substring
+     * @param actual String
+     */
+    protected static void assertContains(
+        String expected,
+        String actual)
+    {
+        if (actual.indexOf(expected) < 0) {
+            fail("Expected '" + actual + "' to contain '" + expected + "'");
+        }
     }
 
     //~ Inner Interfaces -------------------------------------------------------
@@ -4022,96 +4135,60 @@ public class FarragoJdbcTest
      * "Boolean" has {@link ResultSet#getBoolean(int)} and {@link
      * PreparedStatement#setBoolean(int,boolean)}.
      */
-    protected static class TestJavaType
+    protected enum TestJavaType
     {
-        private static final TestJavaType Boolean =
-            new TestJavaType("Boolean", boolean.class, true);
-        private static final TestJavaType Byte =
-            new TestJavaType("Byte", byte.class, true);
-        private static final TestJavaType Short =
-            new TestJavaType("Short", short.class, true);
-        private static final TestJavaType Int =
-            new TestJavaType("Int", int.class, true);
-        private static final TestJavaType Long =
-            new TestJavaType("Long", long.class, true);
-        private static final TestJavaType Float =
-            new TestJavaType("Float", float.class, true);
-        private static final TestJavaType Double =
-            new TestJavaType("Double", double.class, true);
-        private static final TestJavaType BigDecimal =
-            new TestJavaType("BigDecimal", BigDecimal.class, true);
-        private static final TestJavaType String =
-            new TestJavaType("String", String.class, true);
-        private static final TestJavaType Bytes =
-            new TestJavaType("Bytes", byte [].class, true);
+        Boolean(boolean.class, true),
+        Byte(byte.class, true),
+        Short(short.class, true),
+        Int(int.class, true),
+        Long(long.class, true),
+        Float(float.class, true),
+        Double(double.class, true),
+        BigDecimal(BigDecimal.class, true),
+        String(String.class, true),
+        Bytes(byte [].class, true),
 
         // Date, Time, Timestamp each have an additional set method, e.g.
         //   setXxx(int,Date,Calendar)
         // TODO: test this
-        private static final TestJavaType Date =
-            new TestJavaType("Date", Date.class, true);
-        private static final TestJavaType Time =
-            new TestJavaType("Time", Time.class, true);
-        private static final TestJavaType Timestamp =
-            new TestJavaType("Timestamp", Timestamp.class, true);
+        Date(Date.class, true),
+        Time(Time.class, true),
+        Timestamp(Timestamp.class, true),
 
         // Object has 2 extra 'setObject' methods:
         //   setObject(int,Object,int targetTestSqlType)
         //   setObject(int,Object,int targetTestSqlType,int scale)
         // TODO: test this
-        private static final TestJavaType Object =
-            new TestJavaType("Object", Object.class, true);
+        Object(Object.class, true),
 
         // next 4 are not regular, because their 'set' method has an extra
         // parameter, e.g. setAsciiStream(int,InputStream,int length)
-        private static final TestJavaType AsciiStream =
-            new TestJavaType("AsciiStream", InputStream.class, false);
-        private static final TestJavaType UnicodeStream =
-            new TestJavaType("UnicodeStream", InputStream.class, false);
-        private static final TestJavaType BinaryStream =
-            new TestJavaType("BinaryStream", InputStream.class, false);
-        private static final TestJavaType CharacterStream =
-            new TestJavaType("CharacterStream", Reader.class, false);
-        private static final TestJavaType Ref =
-            new TestJavaType("Ref", Ref.class, true);
-        private static final TestJavaType Blob =
-            new TestJavaType("Blob", Blob.class, true);
-        private static final TestJavaType Clob =
-            new TestJavaType("Clob", Clob.class, true);
-        private static final TestJavaType Array =
-            new TestJavaType("Array", Array.class, true);
-        private final String name;
-        private final Class clazz;
+        AsciiStream(InputStream.class, false),
+        UnicodeStream(InputStream.class, false),
+        BinaryStream(InputStream.class, false),
+        CharacterStream(Reader.class, false),
+        Ref(Ref.class, true),
+        Blob(Blob.class, true),
+        Clob(Clob.class, true),
+        Array(Array.class, true);
 
-        /**
-         * whether it has a setXxxx(int,xxx) method
-         */
-        private final boolean regular;
         private final Method setMethod;
-        TestJavaType [] all =
-            {
-                Boolean, Byte, Short, Int, Long, Float, Double, BigDecimal, String,
-                Bytes, Date, Time, Timestamp, Object, AsciiStream, UnicodeStream,
-                BinaryStream, CharacterStream, Ref, Blob, Clob, Array,
-            };
 
-        private TestJavaType(
-            String name,
+        TestJavaType(
             Class clazz,
             boolean regular)
         {
-            this.name = name;
-            this.clazz = clazz;
-
-            this.regular = regular;
+            Util.discard(clazz);
+            Util.discard(regular); // whether it has a setXxx(int, xxx) method
 
             // e.g. PreparedStatement.setBoolean(int,boolean)
             Method method = null;
             try {
                 method =
                     PreparedStatement.class.getMethod(
-                        "set" + name,
-                        new Class[] { int.class, clazz });
+                        "set" + name(),
+                        int.class,
+                        clazz);
             } catch (NoSuchMethodException e) {
             } catch (SecurityException e) {
             }

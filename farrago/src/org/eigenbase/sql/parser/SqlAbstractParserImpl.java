@@ -388,6 +388,13 @@ public abstract class SqlAbstractParserImpl
      */
     public abstract void ReInit(Reader reader);
 
+    /**
+     * Sets the tab stop size.
+     *
+     * @param tabSize Tab stop size
+     */
+    public abstract void setTabSize(int tabSize);
+
     //~ Inner Interfaces -------------------------------------------------------
 
     /**

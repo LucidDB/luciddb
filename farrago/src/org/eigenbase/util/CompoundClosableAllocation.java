@@ -62,6 +62,7 @@ public class CompoundClosableAllocation
     // implement ClosableAllocation
     public void closeAllocation()
     {
+//        try {
         // traverse in reverse order
         ListIterator<ClosableAllocation> iter =
             allocations.listIterator(allocations.size());
@@ -75,6 +76,9 @@ public class CompoundClosableAllocation
             allocation.closeAllocation();
         }
         allocations.clear();
+//        } catch (ConcurrentModificationException e) {
+//            throw Util.newInternal(e, "in " + getClass());
+//        }
     }
 
     /**

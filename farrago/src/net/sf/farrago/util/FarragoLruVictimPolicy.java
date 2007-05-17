@@ -27,7 +27,7 @@ import java.util.*;
 /**
  * FarragoLruVictimPolicy implements an LRU caching policy for the
  * FarragoObjectCache.
- * 
+ *
  * <p>This class assumes that synchronization is handled by its caller.
  *
  * @author Zelaine Fong
@@ -37,20 +37,20 @@ public class FarragoLruVictimPolicy
     implements FarragoCacheVictimPolicy
 {
     //~ Static fields/initializers --------------------------------------------
-    
+
     /**
      * LRU ordering of objects in the cache.  The linked list provides the LRU
      * ordering.
      */
     private final LinkedHashSet<FarragoCacheEntry> lruCacheOrder;
-    
+
     //~ Constructor -----------------------------------------------------------
-    
+
     public FarragoLruVictimPolicy()
     {
         lruCacheOrder = new LinkedHashSet<FarragoCacheEntry>();
     }
-    
+
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoCacheVictimPolicy
@@ -58,7 +58,7 @@ public class FarragoLruVictimPolicy
     {
         return new FarragoCacheEntry(parentCache);
     }
-    
+
     // implement FarragoCacheVictimPolicy
     public void registerEntry(FarragoCacheEntry entry)
     {
@@ -70,7 +70,7 @@ public class FarragoLruVictimPolicy
     {
         victimRange.remove();
     }
-    
+
     // implement FarragoCacheVictimPolicy
     public void unregisterEntry(FarragoCacheEntry entry)
     {
@@ -88,7 +88,7 @@ public class FarragoLruVictimPolicy
     }
 
     // implement FarragoCacheVictimPolicy
-    public Iterator getVictimIterator()
+    public Iterator<FarragoCacheEntry> getVictimIterator()
     {
         return lruCacheOrder.iterator();
     }

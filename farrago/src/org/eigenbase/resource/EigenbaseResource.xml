@@ -98,7 +98,7 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
 <exception id="100095" name="IllegalRowExpression">
     <text>ROW expression encountered in illegal context</text>
 </exception>
-
+    
 <!-- ====================================================================== -->
 <!-- Eigenbase Validator resources 121,000 - 130,000 -->
 <!-- ====================================================================== -->
@@ -438,6 +438,13 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Cannot use DISALLOW PARTIAL with window based on RANGE</text>
 </exception>
 
+<exception id="120690" name="IntervalStartPrecisionOutOfRange" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Interval leading field precision ''{0}'' out of range for {1}</text>
+</exception>
+
+<exception id="120695" name="IntervalFractionalSecondPrecisionOutOfRange" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Interval fractional second precision ''{0}'' out of range for {1}</text>
+</exception>
 
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->

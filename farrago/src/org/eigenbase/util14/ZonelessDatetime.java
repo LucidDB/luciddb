@@ -24,15 +24,17 @@ package org.eigenbase.util14;
 import java.text.*;
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.io.Serializable;
 
 /**
- * ZonelessDatetime is an abstract class for dates, times, or timestamps 
+ * ZonelessDatetime is an abstract class for dates, times, or timestamps
  * that contain a zoneless time value.
- * 
+ *
  * @author John Pham
  * @version $Id$
  */
-public abstract class ZonelessDatetime implements BasicDatetime
+public abstract class ZonelessDatetime
+    implements BasicDatetime, Serializable
 {
 
     //~ Instance fields --------------------------------------------------------
@@ -42,9 +44,15 @@ public abstract class ZonelessDatetime implements BasicDatetime
      * Java code generation.
      */
     public long internalTime;
-    protected Calendar tempCal;
-    protected DateFormat tempFormatter;
-    protected String lastFormat;
+
+    // The following fields are workspace and are not serialized.
+
+    protected transient Calendar tempCal;
+    protected transient DateFormat tempFormatter;
+    protected transient String lastFormat;
+
+    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = -1274713852537224763L;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -67,29 +75,26 @@ public abstract class ZonelessDatetime implements BasicDatetime
     }
 
     /**
-     * Gets the time portion of this zoneless datetime
+     * Gets the time portion of this zoneless datetime.
      */
     public long getTimeValue()
     {
-        return internalTime % DateTimeUtil.MILLIS_PER_DAY;
+        // Value must be non-negative, even for negative timestamps, and
+        // unfortunately the '%' operator returns a negative value if its LHS
+        // is negative.
+        long timePart = internalTime % DateTimeUtil.MILLIS_PER_DAY;
+        if (timePart < 0) {
+            timePart += DateTimeUtil.MILLIS_PER_DAY;
+        }
+        return timePart;
     }
 
     /**
-     * Gets the date portion of this zoneless datetime
+     * Gets the date portion of this zoneless datetime.
      */
     public long getDateValue()
     {
-        long timePart = internalTime % DateTimeUtil.MILLIS_PER_DAY;
-        if (internalTime < 0) {
-            // round away from zero rather than towards zero
-            // ex: -1 ms becomes -1 day
-            if (timePart == 0) {
-                return internalTime;
-            } else {
-                return internalTime - timePart - DateTimeUtil.MILLIS_PER_DAY;
-            }
-        }
-        return internalTime - timePart;
+        return internalTime - getTimeValue();
     }
 
     /**
@@ -109,9 +114,9 @@ public abstract class ZonelessDatetime implements BasicDatetime
     }
 
     /**
-     * Gets the value of this datetime as a milliseconds value for 
+     * Gets the value of this datetime as a milliseconds value for
      * {@link java.sql.Time}.
-     * 
+     *
      * @param zone time zone in which to generate a time value for
      */
     public long getJdbcTime(TimeZone zone)
@@ -121,16 +126,16 @@ public abstract class ZonelessDatetime implements BasicDatetime
     }
 
     /**
-     * Gets the value of this datetime as a milliseconds value for 
+     * Gets the value of this datetime as a milliseconds value for
      * {@link java.sql.Date}.
-     * 
+     *
      * @param zone time zone in which to generate a time value for
      */
     public long getJdbcDate(TimeZone zone)
     {
         Calendar cal = getCalendar(DateTimeUtil.gmtZone);
         cal.setTimeInMillis(getDateValue());
-        
+
         int year = cal.get(Calendar.YEAR);
         int doy = cal.get(Calendar.DAY_OF_YEAR);
 
@@ -142,16 +147,16 @@ public abstract class ZonelessDatetime implements BasicDatetime
     }
 
     /**
-     * Gets the value of this datetime as a milliseconds value for 
+     * Gets the value of this datetime as a milliseconds value for
      * {@link java.sql.Timestamp}.
-     * 
+     *
      * @param zone time zone in which to generate a time value for
      */
-    public long getJdbcTimestamp(TimeZone zone) 
+    public long getJdbcTimestamp(TimeZone zone)
     {
         Calendar cal = getCalendar(DateTimeUtil.gmtZone);
         cal.setTimeInMillis(internalTime);
-        
+
         int year = cal.get(Calendar.YEAR);
         int doy = cal.get(Calendar.DAY_OF_YEAR);
         int hour = cal.get(Calendar.HOUR_OF_DAY);
@@ -176,7 +181,7 @@ public abstract class ZonelessDatetime implements BasicDatetime
     public abstract Object toJdbcObject();
 
     /**
-     * Gets a temporary Calendar set to the specified time zone. The same 
+     * Gets a temporary Calendar set to the specified time zone. The same
      * Calendar is returned on subsequent calls.
      */
     protected Calendar getCalendar(TimeZone zone)
@@ -190,10 +195,10 @@ public abstract class ZonelessDatetime implements BasicDatetime
     }
 
     /**
-     * Gets a temporary formatter for a zoneless date time. The same 
+     * Gets a temporary formatter for a zoneless date time. The same
      * formatter is returned on subsequent calls.
-     * 
-     * @param format a {@link java.util.SimpleDateFormat} format string
+     *
+     * @param format a {@link java.text.SimpleDateFormat} format string
      */
     protected DateFormat getFormatter(String format)
     {

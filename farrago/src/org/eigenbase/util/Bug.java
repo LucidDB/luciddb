@@ -78,8 +78,6 @@ public abstract class Bug
      */
     public static final boolean Fn25Fixed = false;
 
-    public static final boolean Dt315Fixed = false;
-
     public static final boolean Dt464Fixed = false;
 
     public static final boolean Dt292Fixed = false;
@@ -87,6 +85,10 @@ public abstract class Bug
     public static final boolean Dt294Fixed = false;
 
     public static final boolean Dt591Fixed = false;
+
+    public static final boolean Dt1203Fixed = false;
+
+    public static final boolean Dt1204Fixed = false;
 
     // -----------------------------------------------------------------------
     // Developers should create new fields here, in their own section. This
@@ -164,6 +166,13 @@ public abstract class Bug
     public static final boolean Frg140Fixed = false;
 
     public static final boolean FrgIntegrationFixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FNL-54">issue
+     * FNL-54: cast time to timestamp should initialize date to current_date</a>
+     * is fixed.
+     */
+    public static final boolean Fnl54Fixed = false;
 
     // johnk
 

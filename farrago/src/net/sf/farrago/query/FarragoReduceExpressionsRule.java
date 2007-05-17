@@ -37,6 +37,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -127,7 +128,7 @@ public class FarragoReduceExpressionsRule
                 rexBuilder,
                 reducibleExps,
                 reducedValues,
-                (rel instanceof ProjectRel));
+                addCasts);
         for (int i = 0; i < exps.length; ++i) {
             exps[i] = replacer.apply(exps[i]);
         }
@@ -241,10 +242,19 @@ public class FarragoReduceExpressionsRule
                 return super.visitCall(call);
             }
             RexNode replacement = reducedValues.get(i);
-            if (addCasts && (replacement.getType() != call.getType())) {
+            if (addCasts
+                && (true
+                ? (replacement.getType() != call.getType())
+                : call.getOperator() != SqlStdOperatorTable.castFunc))
+            {
                 // Handle change from nullable to NOT NULL by claiming
                 // that the result is still nullable, even though
                 // we know it isn't.
+                //
+                // Also, we cannot reduce CAST('abc' AS VARCHAR(4)) to 'abc'.
+                // If we make 'abc' of type VARCHAR(4), we may later encounter
+                // the same expression in a ProjectRel's digest where it has
+                // type VARCHAR(3), and that's wrong.
                 replacement = rexBuilder.makeCast(
                         call.getType(),
                         replacement);

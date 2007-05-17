@@ -23,7 +23,6 @@ package net.sf.farrago.catalog;
 
 import net.sf.farrago.*;
 
-
 /**
  * Mock implementation of {@link FarragoMetadataFactory}.
  *
@@ -36,19 +35,18 @@ public class MockFarragoMetadataFactory
 
     //~ Instance fields --------------------------------------------------------
 
-    private final MockMetadataFactory helper = new FarragoHelper();
-
     //~ Constructors -----------------------------------------------------------
 
     public MockFarragoMetadataFactory()
     {
         super();
-        this.setRootPackage((FarragoPackage) helper.getRootPackage());
+        MockMetadataFactory factoryImpl = new FactoryImpl();
+        this.setRootPackage((FarragoPackage) factoryImpl.getRootPackage());
     }
 
     //~ Inner Classes ----------------------------------------------------------
 
-    private static class FarragoHelper
+    private static class FactoryImpl
         extends MockMetadataFactory
     {
         protected RefPackageImpl newRootPackage()

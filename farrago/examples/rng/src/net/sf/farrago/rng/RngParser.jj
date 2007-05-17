@@ -106,6 +106,12 @@ public class RngParser extends FarragoAbstractParserImpl
         }
     }
 
+    // implement SqlAbstractParserImpl
+    public void setTabSize(int tabSize)
+    {
+        jj_input_stream.setTabSize(tabSize);
+    }
+
     RngmodelPackage getRngModelPackage()
     {
         return FarragoRngUDR.getRngModelPackage(getRepos());

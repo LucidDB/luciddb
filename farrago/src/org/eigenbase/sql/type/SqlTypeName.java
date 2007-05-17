@@ -60,6 +60,9 @@ public class SqlTypeName
     public static final SqlTypeName [] EMPTY_ARRAY = new SqlTypeName[0];
 
     // Flags indicating precision/scale combinations
+    // Note: for intervals:
+    //  precision = start (leading field) precision
+    //  scale = fractional second precision
     private static final int PrecNoScaleNo = 1;
     private static final int PrecYesScaleNo = 2;
     private static final int PrecYesScaleYes = 4;
@@ -73,6 +76,16 @@ public class SqlTypeName
     public static final int MAX_NUMERIC_SCALE = 19;
     public static final int MAX_CHAR_LENGTH = 65536;
     public static final int MAX_BINARY_LENGTH = 65536;
+
+    // Minimum and default interval precisions are  defined by SQL2003
+    // Maximum interval precisions are implementation dependent,
+    //  but must be at least the default value
+    public static final int DEFAULT_INTERVAL_START_PRECISION = 2;
+    public static final int DEFAULT_INTERVAL_FRACTIONAL_SECOND_PRECISION = 6;
+    public static final int MIN_INTERVAL_START_PRECISION = 1;
+    public static final int MIN_INTERVAL_FRACTIONAL_SECOND_PRECISION = 1;
+    public static final int MAX_INTERVAL_START_PRECISION = 10;
+    public static final int MAX_INTERVAL_FRACTIONAL_SECOND_PRECISION = 9;
 
     // SQL Type Definitions ------------------
     public static final int Boolean_ordinal = 0;
@@ -119,12 +132,12 @@ public class SqlTypeName
     public static final SqlTypeName IntervalYearMonth =
         new SqlTypeName("IntervalYearMonth",
             IntervalYearMonth_ordinal,
-            PrecNoScaleNo);
+            PrecYesScaleYes);
     public static final int IntervalDayTime_ordinal = 13;
     public static final SqlTypeName IntervalDayTime =
         new SqlTypeName("IntervalDayTime",
             IntervalDayTime_ordinal,
-            PrecNoScaleNo);
+            PrecYesScaleYes);
     public static final int Char_ordinal = 14;
     public static final SqlTypeName Char =
         new SqlTypeName("CHAR", Char_ordinal, PrecNoScaleNo | PrecYesScaleNo);
@@ -170,7 +183,7 @@ public class SqlTypeName
     public static final int ColumnList_ordinal = 26;
     public static final SqlTypeName ColumnList =
         new SqlTypeName("COLUMN_LIST", ColumnList_ordinal, PrecNoScaleNo);
-
+    
     /**
      * Array of all allowable {@link SqlTypeName} values.
      */
@@ -238,11 +251,11 @@ public class SqlTypeName
     public static final SqlTypeName [] cursorTypes = {
             Cursor
         };
-    
+
     public static final SqlTypeName [] columnListTypes = {
             ColumnList
         };
-
+    
     /**
      * Enumeration of all allowable {@link SqlTypeName} values.
      */
@@ -492,6 +505,9 @@ public class SqlTypeName
             return 0;
         case Decimal_ordinal:
             return MAX_NUMERIC_PRECISION;
+        case IntervalYearMonth_ordinal:
+        case IntervalDayTime_ordinal:
+            return DEFAULT_INTERVAL_START_PRECISION;
         default:
             return -1;
         }
@@ -506,6 +522,9 @@ public class SqlTypeName
         switch (getOrdinal()) {
         case Decimal_ordinal:
             return 0;
+        case IntervalYearMonth_ordinal:
+        case IntervalDayTime_ordinal:
+            return DEFAULT_INTERVAL_FRACTIONAL_SECOND_PRECISION;
         default:
             return -1;
         }
@@ -879,6 +898,73 @@ public class SqlTypeName
         case Time_ordinal:
         case Timestamp_ordinal:
             return MAX_DATETIME_PRECISION;
+        case IntervalYearMonth_ordinal:
+        case IntervalDayTime_ordinal:
+            return MAX_INTERVAL_START_PRECISION;
+        default:
+            return -1;
+        }
+    }
+
+    /**
+     * Returns the maximum scale (or fractional second precision
+     * in the case of intervals) allowed for this type,
+     * or -1 if precision/length are not applicable for this type.
+     *
+     * @return Maximum allowed scale
+     */
+    public int getMaxScale()
+    {
+        switch (getOrdinal()) {
+        case Decimal_ordinal:
+            return MAX_NUMERIC_SCALE;
+        case IntervalYearMonth_ordinal:
+        case IntervalDayTime_ordinal:
+            return MAX_INTERVAL_FRACTIONAL_SECOND_PRECISION;
+        default:
+            return -1;
+        }
+    }
+
+    /**
+     * Returns the minimum precision (or length) allowed for this type,
+     * or -1 if precision/length are not applicable for this type.
+     *
+     * @return Minimum allowed precision
+     */
+    public int getMinPrecision()
+    {
+        switch (getOrdinal()) {
+        case Decimal_ordinal:
+        case Varchar_ordinal:
+        case Char_ordinal:
+        case Varbinary_ordinal:
+        case Binary_ordinal:
+        case Time_ordinal:
+        case Timestamp_ordinal:
+            return 1;
+        case IntervalYearMonth_ordinal:
+        case IntervalDayTime_ordinal:
+            return MIN_INTERVAL_START_PRECISION;
+        default:
+            return -1;
+        }
+    }
+    
+    /**
+     * Returns the minimum scale (or fractional second precision
+     * in the case of intervals) allowed for this type,
+     * or -1 if precision/length are not applicable for this type.
+     *
+     * @return Minimum allowed scale
+     */
+    public int getMinScale()
+    {
+        switch (getOrdinal()) {
+        //TODO: Minimum numeric scale for decimal
+        case IntervalYearMonth_ordinal:
+        case IntervalDayTime_ordinal:
+            return MIN_INTERVAL_FRACTIONAL_SECOND_PRECISION;
         default:
             return -1;
         }

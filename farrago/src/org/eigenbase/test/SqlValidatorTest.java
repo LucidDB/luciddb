@@ -29,6 +29,7 @@ import java.util.logging.*;
 import junit.framework.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
@@ -368,22 +369,6 @@ public class SqlValidatorTest
         checkExp("mod(5.1, 3)");
         checkExp("mod(2,5.1)");
         checkExp("exp(3.67)");
-    }
-
-    public void testArithmeticOperatorsTypes()
-    {
-        // todo: move these tests to SqlOperatorTests
-        checkExpType("pow(2,3)", "todo: DOUBLE");
-        checkExpType("aBs(-2.3e-2)", "todo: DOUBLE");
-        checkExpType("aBs(5000000000)", "todo: BIGINT");
-        checkExpType("aBs(-interval '1-1' year to month)",
-            "todo: INTERVAL YEAR TO MONTH");
-        checkExpType("aBs(+interval '1:1' hour to minute)",
-            "todo: INTERVAL HOUR TO MINUTE");
-        checkExpType("MOD(5,2)", "todo: INTEGER");
-        checkExpType("ln(5.43  )", "todo: DOUBLE");
-        checkExpType("log10(- -.2  )", "todo: DOUBLE");
-        checkExpType("exp(3)", "todo: DOUBLE");
     }
 
     public void testArithmeticOperatorsFails()
@@ -1200,7 +1185,7 @@ public class SqlValidatorTest
     }
 
     public void testIntervalMillisConversion()
-    {
+    {        
         checkIntervalConv("INTERVAL '1' DAY", "86400000");
         checkIntervalConv("INTERVAL '1' HOUR", "3600000");
         checkIntervalConv("INTERVAL '1' MINUTE", "60000");
@@ -1218,68 +1203,2295 @@ public class SqlValidatorTest
         checkIntervalConv("INTERVAL '1:05:03.12345' HOUR TO SECOND", "3903123");
     }
 
-    public void testIntervalLiteral()
+    /**
+     * Runs tests for INTERVAL... YEAR 
+     * that should pass both parser and validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalYearPositive()
     {
-        checkExpType("INTERVAL '1' DAY", "INTERVAL DAY NOT NULL");
-        checkExpType("INTERVAL '1' DAY(4)", "INTERVAL DAY(4) NOT NULL");
-        checkExpType("INTERVAL '1' HOUR", "INTERVAL HOUR NOT NULL");
-        checkExpType("INTERVAL '1' MINUTE", "INTERVAL MINUTE NOT NULL");
-        checkExpType("INTERVAL '1' SECOND", "INTERVAL SECOND NOT NULL");
-        checkExpType("INTERVAL '1' SECOND(3)", "INTERVAL SECOND(3) NOT NULL");
-        checkExpType("INTERVAL '1' SECOND(3, 4)",
-            "INTERVAL SECOND(3, 4) NOT NULL");
-        checkExpType("INTERVAL '1 2:3:4' DAY TO SECOND",
-            "INTERVAL DAY TO SECOND NOT NULL");
-        checkExpType("INTERVAL '1 2:3:4' DAY(4) TO SECOND(4)",
-            "INTERVAL DAY(4) TO SECOND(4) NOT NULL");
-        checkExpType("INTERVAL '-1 2:3:4' DAY TO SECOND",
-            "INTERVAL DAY TO SECOND NOT NULL");
-        checkExpType("INTERVAL '+1 2:3:4' DAY(4) TO SECOND(4)",
-            "INTERVAL DAY(4) TO SECOND(4) NOT NULL");
+        //default precision
+        checkExpType(
+            "INTERVAL '1' YEAR", 
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL '99' YEAR", 
+            "INTERVAL YEAR NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1' YEAR(2)", 
+            "INTERVAL YEAR(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' YEAR(2)", 
+            "INTERVAL YEAR(2) NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647' YEAR(10)", 
+            "INTERVAL YEAR(10) NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0' YEAR(1)", 
+            "INTERVAL YEAR(1) NOT NULL");
 
-        checkExpType("INTERVAL '1' YEAR", "INTERVAL YEAR NOT NULL");
-        checkExpType("INTERVAL '1' MONTH", "INTERVAL MONTH NOT NULL");
-        checkExpType("INTERVAL '1-2' YEAR TO MONTH",
-            "INTERVAL YEAR TO MONTH NOT NULL");
-        checkExpType("INTERVAL '-1-2' YEAR TO MONTH",
-            "INTERVAL YEAR TO MONTH NOT NULL");
-        checkExpType("INTERVAL '+1-2' YEAR TO MONTH",
-            "INTERVAL YEAR TO MONTH NOT NULL");
+        //alternate precision
+        checkExpType(
+            "INTERVAL '1234' YEAR(4)", 
+            "INTERVAL YEAR(4) NOT NULL");
+        
+        //sign
+        checkExpType(
+            "INTERVAL '+1' YEAR", 
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL '-1' YEAR", 
+            "INTERVAL YEAR NOT NULL");   
+        checkExpType(
+            "INTERVAL +'1' YEAR", 
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1' YEAR", 
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1' YEAR", 
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL -'1' YEAR", 
+            "INTERVAL YEAR NOT NULL");      
+        checkExpType(
+            "INTERVAL -'+1' YEAR", 
+            "INTERVAL YEAR NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1' YEAR", 
+            "INTERVAL YEAR NOT NULL");
+    }
 
-        // FIXME Error message should contain quotes:
-        //    Illegal interval literal format '1:2' for INTERVAL DAY TO HOUR
-        // FIXME Position is wrong
-        checkExpFails("INTERVAL '1.2' ^YEAR^",
-            "(?s).*Illegal interval literal format 1.2 for INTERVAL YEAR.*");
-        checkExpFails("INTERVAL '1-2' ^YEAR^",
-            "(?s).*Illegal interval literal format 1-2 for INTERVAL YEAR.*");
-        checkExpFails("INTERVAL '1-2' ^MONTH^",
-            "(?s).*Illegal interval literal format 1-2 for INTERVAL MONTH.*");
-        checkExpFails("INTERVAL '1.2' ^MONTH^",
-            "(?s).*Illegal interval literal format 1.2 for INTERVAL MONTH.*");
-        checkExpFails("interval 'wael was here' ^HOUR^",
-            "(?s).*Illegal interval literal format wael was here for INTERVAL HOUR.*");
-        checkExpFails("interval 'wael was here' ^MONTH^",
-            "(?s).*Illegal interval literal format wael was here for INTERVAL MONTH.*");
-        checkExpFails("interval '1.1' ^day^",
-            "Illegal interval literal format 1.1 for INTERVAL DAY");
-        checkExpFails("interval '1.1' ^hour^",
-            "Illegal interval literal format 1.1 for INTERVAL HOUR");
-        checkExpFails("interval '1.1' ^minute^",
-            "Illegal interval literal format 1.1 for INTERVAL MINUTE");
-        checkExpFails("interval '1' day to ^hour^",
-            "Illegal interval literal format 1 for INTERVAL DAY TO HOUR");
-        checkExpFails("interval '1 2' day to ^second^",
-            "Illegal interval literal format 1 2 for INTERVAL DAY TO SECOND");
-        checkExpFails("interval '1 2' hour to ^minute^",
-            "(?s).*Illegal interval literal format 1 2 for INTERVAL HOUR TO MINUTE.*");
-        checkExp("interval '1:2' minute to second");
-        checkExpFails("interval '-' ^day^",
-            "(?s).*Illegal interval literal format - for INTERVAL DAY.*");
-        checkExpFails("interval '1:x' hour to ^minute^",
-            "(?s).*Illegal interval literal format 1:x for INTERVAL HOUR TO MINUTE.*");
-        checkExpFails("interval '1:x:2' hour to ^second^",
-            "(?s).*Illegal interval literal format 1:x:2 for INTERVAL HOUR TO SECOND.*");
+    /**
+     * Runs tests for INTERVAL... YEAR TO MONTH
+     * that should pass both parser and validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalYearToMonthPositive( )
+    {
+
+        //default precision
+        checkExpType(
+            "INTERVAL '1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '99-11' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '99-0' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1-2' YEAR(2) TO MONTH",
+            "INTERVAL YEAR(2) TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '99-11' YEAR(2) TO MONTH",
+            "INTERVAL YEAR(2) TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '99-0' YEAR(2) TO MONTH",
+            "INTERVAL YEAR(2) TO MONTH NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647-11' YEAR(10) TO MONTH",
+            "INTERVAL YEAR(10) TO MONTH NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0-0' YEAR(1) TO MONTH",
+            "INTERVAL YEAR(1) TO MONTH NOT NULL");
+        
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2006-2' YEAR(4) TO MONTH",
+            "INTERVAL YEAR(4) TO MONTH NOT NULL");
+        
+        //sign 
+        checkExpType(
+            "INTERVAL '-1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '+1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL +'1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL -'1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... MONTH 
+     * that should pass both parser and validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalMonthPositive( )
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1' MONTH", 
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '99' MONTH", 
+            "INTERVAL MONTH NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1' MONTH(2)", 
+            "INTERVAL MONTH(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' MONTH(2)", 
+            "INTERVAL MONTH(2) NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647' MONTH(10)", 
+            "INTERVAL MONTH(10) NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0' MONTH(1)", 
+            "INTERVAL MONTH(1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '1234' MONTH(4)", 
+            "INTERVAL MONTH(4) NOT NULL");
+        
+        //sign
+        checkExpType(
+            "INTERVAL '+1' MONTH", 
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL '-1' MONTH", 
+            "INTERVAL MONTH NOT NULL");     
+        checkExpType(
+            "INTERVAL +'1' MONTH", 
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1' MONTH", 
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1' MONTH", 
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL -'1' MONTH", 
+            "INTERVAL MONTH NOT NULL");      
+        checkExpType(
+            "INTERVAL -'+1' MONTH", 
+            "INTERVAL MONTH NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1' MONTH", 
+            "INTERVAL MONTH NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY 
+     * that should pass both parser and validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalDayPositive( )
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1' DAY", 
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL '99' DAY", 
+            "INTERVAL DAY NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1' DAY(2)", 
+            "INTERVAL DAY(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' DAY(2)", 
+            "INTERVAL DAY(2) NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647' DAY(10)", 
+            "INTERVAL DAY(10) NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0' DAY(1)", 
+            "INTERVAL DAY(1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '1234' DAY(4)", 
+            "INTERVAL DAY(4) NOT NULL");
+        
+        //sign
+        checkExpType(
+            "INTERVAL '+1' DAY", 
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL '-1' DAY", 
+            "INTERVAL DAY NOT NULL");    
+        checkExpType(
+            "INTERVAL +'1' DAY", 
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1' DAY", 
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1' DAY", 
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL -'1' DAY", 
+            "INTERVAL DAY NOT NULL");      
+        checkExpType(
+            "INTERVAL -'+1' DAY", 
+            "INTERVAL DAY NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1' DAY", 
+            "INTERVAL DAY NOT NULL");
+    }
+    
+    public void subTestIntervalDayToHourPositive( )
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1 2' DAY(2) TO HOUR",
+            "INTERVAL DAY(2) TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23' DAY(2) TO HOUR",
+            "INTERVAL DAY(2) TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0' DAY(2) TO HOUR",
+            "INTERVAL DAY(2) TO HOUR NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647 23' DAY(10) TO HOUR",
+            "INTERVAL DAY(10) TO HOUR NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0 0' DAY(1) TO HOUR",
+            "INTERVAL DAY(1) TO HOUR NOT NULL");
+        
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2345 2' DAY(4) TO HOUR",
+            "INTERVAL DAY(4) TO HOUR NOT NULL");
+        
+        //sign 
+        checkExpType(
+            "INTERVAL '-1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '+1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL +'1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL -'1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1 2' DAY TO HOUR",
+            "INTERVAL DAY TO HOUR NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY TO MINUTE 
+     * that should pass both parser and validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalDayToMinutePositive( )
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23:59' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0:0' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1 2:3' DAY(2) TO MINUTE",
+            "INTERVAL DAY(2) TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23:59' DAY(2) TO MINUTE",
+            "INTERVAL DAY(2) TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0:0' DAY(2) TO MINUTE",
+            "INTERVAL DAY(2) TO MINUTE NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647 23:59' DAY(10) TO MINUTE",
+            "INTERVAL DAY(10) TO MINUTE NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0 0:0' DAY(1) TO MINUTE",
+            "INTERVAL DAY(1) TO MINUTE NOT NULL");
+        
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2345 6:7' DAY(4) TO MINUTE",
+            "INTERVAL DAY(4) TO MINUTE NOT NULL");
+        
+        //sign 
+        checkExpType(
+            "INTERVAL '-1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '+1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1 2:3' DAY TO MINUTE",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY TO SECOND 
+     * that should pass both parser and validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalDayToSecondPositive( )
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23:59:59' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0:0:0' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");    
+        checkExpType(
+            "INTERVAL '99 23:59:59.999999' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0:0:0.0' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1 2:3:4' DAY(2) TO SECOND",
+            "INTERVAL DAY(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23:59:59' DAY(2) TO SECOND",
+            "INTERVAL DAY(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0:0:0' DAY(2) TO SECOND",
+            "INTERVAL DAY(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99 23:59:59.999999' DAY TO SECOND(6)",
+            "INTERVAL DAY TO SECOND(6) NOT NULL");
+        checkExpType(
+            "INTERVAL '99 0:0:0.0' DAY TO SECOND(6)",
+            "INTERVAL DAY TO SECOND(6) NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647 23:59:59' DAY(10) TO SECOND",
+            "INTERVAL DAY(10) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '2147483647 23:59:59.999999999' DAY(10) TO SECOND(9)",
+            "INTERVAL DAY(10) TO SECOND(9) NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0 0:0:0' DAY(1) TO SECOND",
+            "INTERVAL DAY(1) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '0 0:0:0.0' DAY(1) TO SECOND(1)",
+            "INTERVAL DAY(1) TO SECOND(1) NOT NULL");
+        
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2345 6:7:8' DAY(4) TO SECOND",
+            "INTERVAL DAY(4) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '2345 6:7:8.9012' DAY(4) TO SECOND(4)",
+            "INTERVAL DAY(4) TO SECOND(4) NOT NULL");
+        
+        //sign 
+        checkExpType(
+            "INTERVAL '-1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '+1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'+1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... HOUR 
+     * that should pass both parser and validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalHourPositive( )
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1' HOUR", 
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '99' HOUR", 
+            "INTERVAL HOUR NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1' HOUR(2)", 
+            "INTERVAL HOUR(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' HOUR(2)", 
+            "INTERVAL HOUR(2) NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647' HOUR(10)", 
+            "INTERVAL HOUR(10) NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0' HOUR(1)", 
+            "INTERVAL HOUR(1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '1234' HOUR(4)", 
+            "INTERVAL HOUR(4) NOT NULL");
+        
+        //sign
+        checkExpType(
+            "INTERVAL '+1' HOUR", 
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL '-1' HOUR", 
+            "INTERVAL HOUR NOT NULL");     
+        checkExpType(
+            "INTERVAL +'1' HOUR", 
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1' HOUR", 
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1' HOUR", 
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL -'1' HOUR", 
+            "INTERVAL HOUR NOT NULL");      
+        checkExpType(
+            "INTERVAL -'+1' HOUR", 
+            "INTERVAL HOUR NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1' HOUR", 
+            "INTERVAL HOUR NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... HOUR TO MINUTE 
+     * that should pass both parser and validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalHourToMinutePositive( )
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '23:59' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '2:3' HOUR(2) TO MINUTE",
+            "INTERVAL HOUR(2) TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '23:59' HOUR(2) TO MINUTE",
+            "INTERVAL HOUR(2) TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0' HOUR(2) TO MINUTE",
+            "INTERVAL HOUR(2) TO MINUTE NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647:59' HOUR(10) TO MINUTE",
+            "INTERVAL HOUR(10) TO MINUTE NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0:0' HOUR(1) TO MINUTE",
+            "INTERVAL HOUR(1) TO MINUTE NOT NULL");
+        
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2345:7' HOUR(4) TO MINUTE",
+            "INTERVAL HOUR(4) TO MINUTE NOT NULL");
+        
+        //sign 
+        checkExpType(
+            "INTERVAL '-1:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '+1:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'-2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'+2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'-2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'+2:3' HOUR TO MINUTE",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... HOUR TO SECOND 
+     * that should pass both parser and validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalHourToSecondPositive( )
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '23:59:59' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0:0' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");    
+        checkExpType(
+            "INTERVAL '23:59:59.999999' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0:0.0' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '2:3:4' HOUR(2) TO SECOND",
+            "INTERVAL HOUR(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:59:59' HOUR(2) TO SECOND",
+            "INTERVAL HOUR(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0:0' HOUR(2) TO SECOND",
+            "INTERVAL HOUR(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:59:59.999999' HOUR TO SECOND(6)",
+            "INTERVAL HOUR TO SECOND(6) NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0:0.0' HOUR TO SECOND(6)",
+            "INTERVAL HOUR TO SECOND(6) NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647:59:59' HOUR(10) TO SECOND",
+            "INTERVAL HOUR(10) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '2147483647:59:59.999999999' HOUR(10) TO SECOND(9)",
+            "INTERVAL HOUR(10) TO SECOND(9) NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0:0:0' HOUR(1) TO SECOND",
+            "INTERVAL HOUR(1) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '0:0:0.0' HOUR(1) TO SECOND(1)",
+            "INTERVAL HOUR(1) TO SECOND(1) NOT NULL");
+        
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2345:7:8' HOUR(4) TO SECOND",
+            "INTERVAL HOUR(4) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '2345:7:8.9012' HOUR(4) TO SECOND(4)",
+            "INTERVAL HOUR(4) TO SECOND(4) NOT NULL");
+        
+        //sign 
+        checkExpType(
+            "INTERVAL '-2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '+2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'-2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'+2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'-2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'+2:3:4' HOUR TO SECOND",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... MINUTE 
+     * that should pass both parser and validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalMinutePositive( )
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1' MINUTE", 
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '99' MINUTE", 
+            "INTERVAL MINUTE NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1' MINUTE(2)", 
+            "INTERVAL MINUTE(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' MINUTE(2)", 
+            "INTERVAL MINUTE(2) NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647' MINUTE(10)", 
+            "INTERVAL MINUTE(10) NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0' MINUTE(1)", 
+            "INTERVAL MINUTE(1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '1234' MINUTE(4)", 
+            "INTERVAL MINUTE(4) NOT NULL");
+        
+        //sign
+        checkExpType(
+            "INTERVAL '+1' MINUTE", 
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL '-1' MINUTE", 
+            "INTERVAL MINUTE NOT NULL");    
+        checkExpType(
+            "INTERVAL +'1' MINUTE", 
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1' MINUTE", 
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1' MINUTE", 
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'1' MINUTE", 
+            "INTERVAL MINUTE NOT NULL");      
+        checkExpType(
+            "INTERVAL -'+1' MINUTE", 
+            "INTERVAL MINUTE NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1' MINUTE", 
+            "INTERVAL MINUTE NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... MINUTE TO SECOND 
+     * that should pass both parser and validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalMinuteToSecondPositive( )
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '2:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '59:59' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");    
+        checkExpType(
+            "INTERVAL '59:59.999999' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0.0' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '2:4' MINUTE(2) TO SECOND",
+            "INTERVAL MINUTE(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:59' MINUTE(2) TO SECOND",
+            "INTERVAL MINUTE(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0' MINUTE(2) TO SECOND",
+            "INTERVAL MINUTE(2) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99:59.999999' MINUTE TO SECOND(6)",
+            "INTERVAL MINUTE TO SECOND(6) NOT NULL");
+        checkExpType(
+            "INTERVAL '99:0.0' MINUTE TO SECOND(6)",
+            "INTERVAL MINUTE TO SECOND(6) NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647:59' MINUTE(10) TO SECOND",
+            "INTERVAL MINUTE(10) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '2147483647:59.999999999' MINUTE(10) TO SECOND(9)",
+            "INTERVAL MINUTE(10) TO SECOND(9) NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0:0' MINUTE(1) TO SECOND",
+            "INTERVAL MINUTE(1) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '0:0.0' MINUTE(1) TO SECOND(1)",
+            "INTERVAL MINUTE(1) TO SECOND(1) NOT NULL");
+        
+        //alternate precision
+        checkExpType(
+            "INTERVAL '2345:8' MINUTE(4) TO SECOND",
+            "INTERVAL MINUTE(4) TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '2345:7.8901' MINUTE(4) TO SECOND(4)",
+            "INTERVAL MINUTE(4) TO SECOND(4) NOT NULL");
+        
+        //sign 
+        checkExpType(
+            "INTERVAL '-3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '+3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'-3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'+3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'-3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'+3:4' MINUTE TO SECOND",
+            "INTERVAL MINUTE TO SECOND NOT NULL");
+    }
+
+    /**
+     * Runs tests for INTERVAL... SECOND 
+     * that should pass both parser and validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXPositive() tests.
+     */
+    public void subTestIntervalSecondPositive( )
+    {
+        //default precision
+        checkExpType(
+            "INTERVAL '1' SECOND", 
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '99' SECOND", 
+            "INTERVAL SECOND NOT NULL");
+        
+        //explicit precision equal to default
+        checkExpType(
+            "INTERVAL '1' SECOND(2)", 
+            "INTERVAL SECOND(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' SECOND(2)", 
+            "INTERVAL SECOND(2) NOT NULL");
+        checkExpType(
+            "INTERVAL '1' SECOND(2, 6)", 
+            "INTERVAL SECOND(2, 6) NOT NULL");
+        checkExpType(
+            "INTERVAL '99' SECOND(2, 6)", 
+            "INTERVAL SECOND(2, 6) NOT NULL");
+        
+        //max precision
+        checkExpType(
+            "INTERVAL '2147483647' SECOND(10)", 
+            "INTERVAL SECOND(10) NOT NULL");
+        checkExpType(
+            "INTERVAL '2147483647.999999999' SECOND(10, 9)", 
+            "INTERVAL SECOND(10, 9) NOT NULL");
+        
+        //min precision
+        checkExpType(
+            "INTERVAL '0' SECOND(1)", 
+            "INTERVAL SECOND(1) NOT NULL");
+        checkExpType(
+            "INTERVAL '0.0' SECOND(1, 1)", 
+            "INTERVAL SECOND(1, 1) NOT NULL");
+
+        //alternate precision
+        checkExpType(
+            "INTERVAL '1234' SECOND(4)", 
+            "INTERVAL SECOND(4) NOT NULL");
+        checkExpType(
+            "INTERVAL '1234.56789' SECOND(4, 5)", 
+            "INTERVAL SECOND(4, 5) NOT NULL");
+        
+        //sign
+        checkExpType(
+            "INTERVAL '+1' SECOND", 
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL '-1' SECOND", 
+            "INTERVAL SECOND NOT NULL");     
+        checkExpType(
+            "INTERVAL +'1' SECOND", 
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'+1' SECOND", 
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL +'-1' SECOND", 
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'1' SECOND", 
+            "INTERVAL SECOND NOT NULL");      
+        checkExpType(
+            "INTERVAL -'+1' SECOND", 
+            "INTERVAL SECOND NOT NULL");
+        checkExpType(
+            "INTERVAL -'-1' SECOND", 
+            "INTERVAL SECOND NOT NULL");
+    }
+  
+    /**
+     * Runs tests for INTERVAL... YEAR 
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalYearNegative( )
+    {  
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL '-' ^YEAR^",
+            "Illegal interval literal format '-' for INTERVAL YEAR.*");
+        checkExpFails( 
+            "INTERVAL '1-2' ^YEAR^",
+            "Illegal interval literal format '1-2' for INTERVAL YEAR.*");
+        checkExpFails(
+            "INTERVAL '1.2' ^YEAR^",
+            "Illegal interval literal format '1.2' for INTERVAL YEAR.*");
+        checkExpFails( 
+            "INTERVAL '1 2' ^YEAR^",
+            "Illegal interval literal format '1 2' for INTERVAL YEAR.*");  
+        checkExpFails( 
+            "INTERVAL '1-2' YEAR(2^)^",
+            "Illegal interval literal format '1-2' for INTERVAL YEAR\\(2\\)");   
+        checkExpFails(
+            "INTERVAL 'bogus text' ^YEAR^",
+            "Illegal interval literal format 'bogus text' for INTERVAL YEAR.*");  
+        
+        // negative field values
+        checkExpFails(
+            "INTERVAL '--1' ^YEAR^",
+            "Illegal interval literal format '--1' for INTERVAL YEAR.*");  
+        
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        checkExpFails( 
+            "INTERVAL '100' ^YEAR^",
+            "Illegal interval literal format '100' for INTERVAL YEAR.*");  
+        checkExpFails( 
+            "INTERVAL '100' YEAR(2^)^",
+            "Illegal interval literal format '100' for INTERVAL YEAR\\(2\\).*");   
+        checkExpFails( 
+            "INTERVAL '1000' YEAR(3^)^",
+            "Illegal interval literal format '1000' for INTERVAL YEAR\\(3\\).*");      
+        checkExpFails( 
+            "INTERVAL '-1000' YEAR(3^)^",
+            "Illegal interval literal format '-1000' for INTERVAL YEAR\\(3\\).*");    
+        checkExpFails( 
+            "INTERVAL '2147483648' YEAR(10^)^",
+            "Illegal interval literal format '2147483648' for INTERVAL YEAR\\(10\\).*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648' YEAR(10^)^",
+            "Illegal interval literal format '-2147483648' for INTERVAL YEAR\\(10\\).*");    
+        
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1' YEAR(11^)^",
+            "Interval leading field precision '11' out of range for INTERVAL YEAR\\(11\\)");     
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0' YEAR(0^)^", 
+            "Interval leading field precision '0' out of range for INTERVAL YEAR\\(0\\)");
+    }
+
+
+    /**
+     * Runs tests for INTERVAL... YEAR TO MONTH
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalYearToMonthNegative( )
+    {
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL '-' YEAR TO ^MONTH^",
+            "Illegal interval literal format '-' for INTERVAL YEAR TO MONTH");
+        checkExpFails( 
+            "INTERVAL '1' YEAR TO ^MONTH^",
+            "Illegal interval literal format '1' for INTERVAL YEAR TO MONTH");
+        checkExpFails( 
+            "INTERVAL '1:2' YEAR TO ^MONTH^",
+            "Illegal interval literal format '1:2' for INTERVAL YEAR TO MONTH");
+        checkExpFails(
+            "INTERVAL '1.2' YEAR TO ^MONTH^",
+            "Illegal interval literal format '1.2' for INTERVAL YEAR TO MONTH");
+        checkExpFails( 
+            "INTERVAL '1 2' YEAR TO ^MONTH^",
+            "Illegal interval literal format '1 2' for INTERVAL YEAR TO MONTH");     
+        checkExpFails( 
+                "INTERVAL '1:2' YEAR(2) TO ^MONTH^", 
+                "Illegal interval literal format '1:2' for INTERVAL YEAR\\(2\\) TO MONTH");        
+        checkExpFails(
+            "INTERVAL 'bogus text' YEAR TO ^MONTH^",
+            "Illegal interval literal format 'bogus text' for INTERVAL YEAR TO MONTH");  
+        
+
+        // negative field values
+        checkExpFails(
+            "INTERVAL '--1-2' YEAR TO ^MONTH^",
+            "Illegal interval literal format '--1-2' for INTERVAL YEAR TO MONTH");  
+        checkExpFails(
+            "INTERVAL '1--2' YEAR TO ^MONTH^",
+            "Illegal interval literal format '1--2' for INTERVAL YEAR TO MONTH");  
+        
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkExpFails( 
+            "INTERVAL '100-0' YEAR TO ^MONTH^",
+            "Illegal interval literal format '100-0' for INTERVAL YEAR TO MONTH.*");   
+        checkExpFails( 
+            "INTERVAL '100-0' YEAR(2) TO ^MONTH^",
+            "Illegal interval literal format '100-0' for INTERVAL YEAR\\(2\\) TO MONTH.*");   
+        checkExpFails( 
+            "INTERVAL '1000-0' YEAR(3) TO ^MONTH^",
+            "Illegal interval literal format '1000-0' for INTERVAL YEAR\\(3\\) TO MONTH.*");      
+        checkExpFails( 
+            "INTERVAL '-1000-0' YEAR(3) TO ^MONTH^",
+            "Illegal interval literal format '-1000-0' for INTERVAL YEAR\\(3\\) TO MONTH.*");    
+        checkExpFails( 
+            "INTERVAL '2147483648-0' YEAR(10) TO ^MONTH^",
+            "Illegal interval literal format '2147483648-0' for INTERVAL YEAR\\(10\\) TO MONTH.*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648-0' YEAR(10) TO ^MONTH^",
+            "Illegal interval literal format '-2147483648-0' for INTERVAL YEAR\\(10\\) TO MONTH.*");    
+        checkExpFails( 
+            "INTERVAL '1-12' YEAR TO ^MONTH^",
+            "Illegal interval literal format '1-12' for INTERVAL YEAR TO MONTH.*");  
+        
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1-1' YEAR(11) TO ^MONTH^",
+            "Interval leading field precision '11' out of range for INTERVAL YEAR\\(11\\) TO MONTH");
+        
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0-0' YEAR(0) TO ^MONTH^", 
+            "Interval leading field precision '0' out of range for INTERVAL YEAR\\(0\\) TO MONTH");
+    }
+
+    /**
+     * Runs tests for INTERVAL... MONTH 
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalMonthNegative()
+    {
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL '-' ^MONTH^",
+            "Illegal interval literal format '-' for INTERVAL MONTH.*");
+        checkExpFails( 
+            "INTERVAL '1-2' ^MONTH^",
+            "Illegal interval literal format '1-2' for INTERVAL MONTH.*");
+        checkExpFails(
+            "INTERVAL '1.2' ^MONTH^",
+            "Illegal interval literal format '1.2' for INTERVAL MONTH.*");
+        checkExpFails( 
+            "INTERVAL '1 2' ^MONTH^",
+            "Illegal interval literal format '1 2' for INTERVAL MONTH.*");     
+        checkExpFails( 
+            "INTERVAL '1-2' MONTH(2^)^",
+            "Illegal interval literal format '1-2' for INTERVAL MONTH\\(2\\)"); 
+        checkExpFails(
+            "INTERVAL 'bogus text' ^MONTH^",
+            "Illegal interval literal format 'bogus text' for INTERVAL MONTH.*");        
+
+        // negative field values
+        checkExpFails(
+            "INTERVAL '--1' ^MONTH^",
+            "Illegal interval literal format '--1' for INTERVAL MONTH.*");  
+        
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        checkExpFails( 
+            "INTERVAL '100' ^MONTH^",
+            "Illegal interval literal format '100' for INTERVAL MONTH.*");   
+        checkExpFails( 
+            "INTERVAL '100' MONTH(2^)^",
+            "Illegal interval literal format '100' for INTERVAL MONTH\\(2\\).*");   
+        checkExpFails( 
+            "INTERVAL '1000' MONTH(3^)^",
+            "Illegal interval literal format '1000' for INTERVAL MONTH\\(3\\).*");      
+        checkExpFails( 
+            "INTERVAL '-1000' MONTH(3^)^",
+            "Illegal interval literal format '-1000' for INTERVAL MONTH\\(3\\).*");    
+        checkExpFails( 
+            "INTERVAL '2147483648' MONTH(10^)^",
+            "Illegal interval literal format '2147483648' for INTERVAL MONTH\\(10\\).*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648' MONTH(10^)^",
+            "Illegal interval literal format '-2147483648' for INTERVAL MONTH\\(10\\).*");   
+        
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1' MONTH(11^)^",
+            "Interval leading field precision '11' out of range for INTERVAL MONTH\\(11\\)");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0' MONTH(0^)^",  
+            "Interval leading field precision '0' out of range for INTERVAL MONTH\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY 
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalDayNegative()
+    {
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL '-' ^DAY^",
+            "Illegal interval literal format '-' for INTERVAL DAY.*");
+        checkExpFails( 
+            "INTERVAL '1-2' ^DAY^",
+            "Illegal interval literal format '1-2' for INTERVAL DAY.*");
+        checkExpFails(
+            "INTERVAL '1.2' ^DAY^",
+            "Illegal interval literal format '1.2' for INTERVAL DAY.*");
+        checkExpFails( 
+            "INTERVAL '1 2' ^DAY^",
+            "Illegal interval literal format '1 2' for INTERVAL DAY.*");     
+        checkExpFails( 
+            "INTERVAL '1:2' ^DAY^",
+            "Illegal interval literal format '1:2' for INTERVAL DAY.*");     
+        checkExpFails( 
+            "INTERVAL '1-2' DAY(2^)^",
+            "Illegal interval literal format '1-2' for INTERVAL DAY\\(2\\)");      
+        checkExpFails(
+            "INTERVAL 'bogus text' ^DAY^",
+            "Illegal interval literal format 'bogus text' for INTERVAL DAY.*");  
+
+        // negative field values
+        checkExpFails(
+            "INTERVAL '--1' ^DAY^",
+            "Illegal interval literal format '--1' for INTERVAL DAY.*");  
+        
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        checkExpFails( 
+            "INTERVAL '100' ^DAY^",
+            "Illegal interval literal format '100' for INTERVAL DAY.*");   
+        checkExpFails( 
+            "INTERVAL '100' DAY(2^)^",
+            "Illegal interval literal format '100' for INTERVAL DAY\\(2\\).*");   
+        checkExpFails( 
+            "INTERVAL '1000' DAY(3^)^",
+            "Illegal interval literal format '1000' for INTERVAL DAY\\(3\\).*");      
+        checkExpFails( 
+            "INTERVAL '-1000' DAY(3^)^",
+            "Illegal interval literal format '-1000' for INTERVAL DAY\\(3\\).*");    
+        checkExpFails( 
+            "INTERVAL '2147483648' DAY(10^)^",
+            "Illegal interval literal format '2147483648' for INTERVAL DAY\\(10\\).*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648' DAY(10^)^",
+            "Illegal interval literal format '-2147483648' for INTERVAL DAY\\(10\\).*");   
+        
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1' DAY(11^)^",
+            "Interval leading field precision '11' out of range for INTERVAL DAY\\(11\\)");
+        
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0' DAY(0^)^", 
+            "Interval leading field precision '0' out of range for INTERVAL DAY\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY TO HOUR 
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalDayToHourNegative()
+    {
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL '-' DAY TO ^HOUR^",
+            "Illegal interval literal format '-' for INTERVAL DAY TO HOUR");
+        checkExpFails( 
+            "INTERVAL '1' DAY TO ^HOUR^",
+            "Illegal interval literal format '1' for INTERVAL DAY TO HOUR");
+        checkExpFails( 
+            "INTERVAL '1:2' DAY TO ^HOUR^",
+            "Illegal interval literal format '1:2' for INTERVAL DAY TO HOUR");
+        checkExpFails(
+            "INTERVAL '1.2' DAY TO ^HOUR^",
+            "Illegal interval literal format '1.2' for INTERVAL DAY TO HOUR");
+        checkExpFails(
+            "INTERVAL '1 x' DAY TO ^HOUR^",
+            "Illegal interval literal format '1 x' for INTERVAL DAY TO HOUR");
+        checkExpFails( 
+            "INTERVAL ' ' DAY TO ^HOUR^",
+            "Illegal interval literal format ' ' for INTERVAL DAY TO HOUR");     
+        checkExpFails( 
+                "INTERVAL '1:2' DAY(2) TO ^HOUR^",
+                "Illegal interval literal format '1:2' for INTERVAL DAY\\(2\\) TO HOUR");        
+        checkExpFails(
+            "INTERVAL 'bogus text' DAY TO ^HOUR^",
+            "Illegal interval literal format 'bogus text' for INTERVAL DAY TO HOUR");  
+
+        // negative field values
+        checkExpFails(
+            "INTERVAL '--1 1' DAY TO ^HOUR^",
+            "Illegal interval literal format '--1 1' for INTERVAL DAY TO HOUR");  
+        checkExpFails(
+            "INTERVAL '1 -1' DAY TO ^HOUR^",
+            "Illegal interval literal format '1 -1' for INTERVAL DAY TO HOUR");  
+            
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkExpFails( 
+            "INTERVAL '100 0' DAY TO ^HOUR^",
+            "Illegal interval literal format '100 0' for INTERVAL DAY TO HOUR.*");   
+        checkExpFails( 
+            "INTERVAL '100 0' DAY(2) TO ^HOUR^",
+            "Illegal interval literal format '100 0' for INTERVAL DAY\\(2\\) TO HOUR.*");   
+        checkExpFails( 
+            "INTERVAL '1000 0' DAY(3) TO ^HOUR^",
+            "Illegal interval literal format '1000 0' for INTERVAL DAY\\(3\\) TO HOUR.*");      
+        checkExpFails( 
+            "INTERVAL '-1000 0' DAY(3) TO ^HOUR^",
+            "Illegal interval literal format '-1000 0' for INTERVAL DAY\\(3\\) TO HOUR.*");    
+        checkExpFails( 
+            "INTERVAL '2147483648 0' DAY(10) TO ^HOUR^",
+            "Illegal interval literal format '2147483648 0' for INTERVAL DAY\\(10\\) TO HOUR.*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648 0' DAY(10) TO ^HOUR^",
+            "Illegal interval literal format '-2147483648 0' for INTERVAL DAY\\(10\\) TO HOUR.*");    
+        checkExpFails( 
+            "INTERVAL '1 24' DAY TO ^HOUR^",
+            "Illegal interval literal format '1 24' for INTERVAL DAY TO HOUR.*");    
+
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1 1' DAY(11) TO ^HOUR^",
+            "Interval leading field precision '11' out of range for INTERVAL DAY\\(11\\) TO HOUR");
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0 0' DAY(0) TO ^HOUR^", 
+            "Interval leading field precision '0' out of range for INTERVAL DAY\\(0\\) TO HOUR");
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY TO MINUTE
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalDayToMinuteNegative()
+    {
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL ' :' DAY TO ^MINUTE^",
+            "Illegal interval literal format ' :' for INTERVAL DAY TO MINUTE");
+        checkExpFails( 
+            "INTERVAL '1' DAY TO ^MINUTE^",
+            "Illegal interval literal format '1' for INTERVAL DAY TO MINUTE");
+        checkExpFails( 
+            "INTERVAL '1 2' DAY TO ^MINUTE^",
+            "Illegal interval literal format '1 2' for INTERVAL DAY TO MINUTE");
+        checkExpFails( 
+            "INTERVAL '1:2' DAY TO ^MINUTE^",
+            "Illegal interval literal format '1:2' for INTERVAL DAY TO MINUTE");
+        checkExpFails(
+            "INTERVAL '1.2' DAY TO ^MINUTE^",
+            "Illegal interval literal format '1.2' for INTERVAL DAY TO MINUTE");
+        checkExpFails( 
+            "INTERVAL 'x 1:1' DAY TO ^MINUTE^",
+            "Illegal interval literal format 'x 1:1' for INTERVAL DAY TO MINUTE");
+        checkExpFails( 
+            "INTERVAL '1 x:1' DAY TO ^MINUTE^",
+            "Illegal interval literal format '1 x:1' for INTERVAL DAY TO MINUTE");
+        checkExpFails( 
+            "INTERVAL '1 1:x' DAY TO ^MINUTE^",
+            "Illegal interval literal format '1 1:x' for INTERVAL DAY TO MINUTE");
+        checkExpFails( 
+            "INTERVAL '1 1:2:3' DAY TO ^MINUTE^",
+            "Illegal interval literal format '1 1:2:3' for INTERVAL DAY TO MINUTE");
+        checkExpFails(
+            "INTERVAL '1 1:1:1.2' DAY TO ^MINUTE^",
+            "Illegal interval literal format '1 1:1:1.2' for INTERVAL DAY TO MINUTE");
+        checkExpFails( 
+            "INTERVAL '1 1:2:3' DAY(2) TO ^MINUTE^",
+            "Illegal interval literal format '1 1:2:3' for INTERVAL DAY\\(2\\) TO MINUTE");  
+        checkExpFails( 
+            "INTERVAL '1 1' DAY(2) TO ^MINUTE^",
+            "Illegal interval literal format '1 1' for INTERVAL DAY\\(2\\) TO MINUTE");        
+        checkExpFails(
+            "INTERVAL 'bogus text' DAY TO ^MINUTE^",
+            "Illegal interval literal format 'bogus text' for INTERVAL DAY TO MINUTE");  
+
+        // negative field values
+        checkExpFails(
+            "INTERVAL '--1 1:1' DAY TO ^MINUTE^",
+            "Illegal interval literal format '--1 1:1' for INTERVAL DAY TO MINUTE");  
+        checkExpFails(
+            "INTERVAL '1 -1:1' DAY TO ^MINUTE^",
+            "Illegal interval literal format '1 -1:1' for INTERVAL DAY TO MINUTE");  
+        checkExpFails(
+            "INTERVAL '1 1:-1' DAY TO ^MINUTE^",
+            "Illegal interval literal format '1 1:-1' for INTERVAL DAY TO MINUTE");  
+        
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkExpFails( 
+            "INTERVAL '100 0:0' DAY TO ^MINUTE^",
+            "Illegal interval literal format '100 0:0' for INTERVAL DAY TO MINUTE.*");   
+        checkExpFails( 
+            "INTERVAL '100 0:0' DAY(2) TO ^MINUTE^",
+            "Illegal interval literal format '100 0:0' for INTERVAL DAY\\(2\\) TO MINUTE.*");   
+        checkExpFails( 
+            "INTERVAL '1000 0:0' DAY(3) TO ^MINUTE^",
+            "Illegal interval literal format '1000 0:0' for INTERVAL DAY\\(3\\) TO MINUTE.*");      
+        checkExpFails( 
+            "INTERVAL '-1000 0:0' DAY(3) TO ^MINUTE^",
+            "Illegal interval literal format '-1000 0:0' for INTERVAL DAY\\(3\\) TO MINUTE.*");    
+        checkExpFails( 
+            "INTERVAL '2147483648 0:0' DAY(10) TO ^MINUTE^",
+            "Illegal interval literal format '2147483648 0:0' for INTERVAL DAY\\(10\\) TO MINUTE.*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648 0:0' DAY(10) TO ^MINUTE^",
+            "Illegal interval literal format '-2147483648 0:0' for INTERVAL DAY\\(10\\) TO MINUTE.*");    
+        checkExpFails( 
+            "INTERVAL '1 24:1' DAY TO ^MINUTE^",
+            "Illegal interval literal format '1 24:1' for INTERVAL DAY TO MINUTE.*");    
+        checkExpFails( 
+            "INTERVAL '1 1:60' DAY TO ^MINUTE^",
+            "Illegal interval literal format '1 1:60' for INTERVAL DAY TO MINUTE.*");    
+        
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1 1:1' DAY(11) TO ^MINUTE^",
+            "Interval leading field precision '11' out of range for INTERVAL DAY\\(11\\) TO MINUTE");     
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0 0' DAY(0) TO ^MINUTE^",  
+            "Interval leading field precision '0' out of range for INTERVAL DAY\\(0\\) TO MINUTE");
+        
+    }
+
+    /**
+     * Runs tests for INTERVAL... DAY TO SECOND
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalDayToSecondNegative()
+    {
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL ' ::' DAY TO ^SECOND^",
+            "Illegal interval literal format ' ::' for INTERVAL DAY TO SECOND");
+        checkExpFails( 
+            "INTERVAL ' ::.' DAY TO ^SECOND^",
+            "Illegal interval literal format ' ::\\.' for INTERVAL DAY TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1' DAY TO ^SECOND^",
+            "Illegal interval literal format '1' for INTERVAL DAY TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1 2' DAY TO ^SECOND^",
+            "Illegal interval literal format '1 2' for INTERVAL DAY TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1:2' DAY TO ^SECOND^",
+            "Illegal interval literal format '1:2' for INTERVAL DAY TO SECOND");
+        checkExpFails(
+            "INTERVAL '1.2' DAY TO ^SECOND^",
+            "Illegal interval literal format '1\\.2' for INTERVAL DAY TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1 1:2' DAY TO ^SECOND^",
+            "Illegal interval literal format '1 1:2' for INTERVAL DAY TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1 1:2:x' DAY TO ^SECOND^",
+            "Illegal interval literal format '1 1:2:x' for INTERVAL DAY TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1:2:3' DAY TO ^SECOND^",
+            "Illegal interval literal format '1:2:3' for INTERVAL DAY TO SECOND");
+        checkExpFails(
+            "INTERVAL '1:1:1.2' DAY TO ^SECOND^",
+            "Illegal interval literal format '1:1:1\\.2' for INTERVAL DAY TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1 1:2' DAY(2) TO ^SECOND^",
+            "Illegal interval literal format '1 1:2' for INTERVAL DAY\\(2\\) TO SECOND");  
+        checkExpFails( 
+            "INTERVAL '1 1' DAY(2) TO ^SECOND^",
+            "Illegal interval literal format '1 1' for INTERVAL DAY\\(2\\) TO SECOND");        
+        checkExpFails(
+            "INTERVAL 'bogus text' DAY TO ^SECOND^",
+            "Illegal interval literal format 'bogus text' for INTERVAL DAY TO SECOND");  
+        checkExpFails(
+            "INTERVAL '2345 6:7:8901' DAY TO SECOND(4^)^",
+            "Illegal interval literal format '2345 6:7:8901' for INTERVAL DAY TO SECOND\\(4\\)");
+
+        // negative field values
+        checkExpFails(
+            "INTERVAL '--1 1:1:1' DAY TO ^SECOND^",
+            "Illegal interval literal format '--1 1:1:1' for INTERVAL DAY TO SECOND");  
+        checkExpFails(
+            "INTERVAL '1 -1:1:1' DAY TO ^SECOND^",
+            "Illegal interval literal format '1 -1:1:1' for INTERVAL DAY TO SECOND");  
+        checkExpFails(
+            "INTERVAL '1 1:-1:1' DAY TO ^SECOND^",
+            "Illegal interval literal format '1 1:-1:1' for INTERVAL DAY TO SECOND");  
+        checkExpFails(
+            "INTERVAL '1 1:1:-1' DAY TO ^SECOND^",
+            "Illegal interval literal format '1 1:1:-1' for INTERVAL DAY TO SECOND");  
+        checkExpFails(
+            "INTERVAL '1 1:1:1.-1' DAY TO ^SECOND^",
+            "Illegal interval literal format '1 1:1:1.-1' for INTERVAL DAY TO SECOND");  
+        
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkExpFails( 
+            "INTERVAL '100 0' DAY TO ^SECOND^",
+            "Illegal interval literal format '100 0' for INTERVAL DAY TO SECOND.*");   
+        checkExpFails( 
+            "INTERVAL '100 0' DAY(2) TO ^SECOND^",
+            "Illegal interval literal format '100 0' for INTERVAL DAY\\(2\\) TO SECOND.*");   
+        checkExpFails( 
+            "INTERVAL '1000 0' DAY(3) TO ^SECOND^",
+            "Illegal interval literal format '1000 0' for INTERVAL DAY\\(3\\) TO SECOND.*");      
+        checkExpFails( 
+            "INTERVAL '-1000 0' DAY(3) TO ^SECOND^",
+            "Illegal interval literal format '-1000 0' for INTERVAL DAY\\(3\\) TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '2147483648 0' DAY(10) TO ^SECOND^",
+            "Illegal interval literal format '2147483648 0' for INTERVAL DAY\\(10\\) TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648 0' DAY(10) TO ^SECOND^",
+            "Illegal interval literal format '-2147483648 0' for INTERVAL DAY\\(10\\) TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '1 24:1:1' DAY TO ^SECOND^",
+            "Illegal interval literal format '1 24:1:1' for INTERVAL DAY TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '1 1:60:1' DAY TO ^SECOND^",
+            "Illegal interval literal format '1 1:60:1' for INTERVAL DAY TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '1 1:1:60' DAY TO ^SECOND^",
+            "Illegal interval literal format '1 1:1:60' for INTERVAL DAY TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '1 1:1:1.0000001' DAY TO ^SECOND^",
+            "Illegal interval literal format '1 1:1:1\\.0000001' for INTERVAL DAY TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '1 1:1:1.0001' DAY TO SECOND(3^)^",
+            "Illegal interval literal format '1 1:1:1\\.0001' for INTERVAL DAY TO SECOND\\(3\\).*");  
+
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1 1' DAY(11) TO ^SECOND^",
+            "Interval leading field precision '11' out of range for INTERVAL DAY\\(11\\) TO SECOND");     
+        checkExpFails( 
+            "INTERVAL '1 1' DAY TO SECOND(10^)^",
+            "Interval fractional second precision '10' out of range for INTERVAL DAY TO SECOND\\(10\\)");  
+        
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0 0:0:0' DAY(0) TO ^SECOND^", 
+            "Interval leading field precision '0' out of range for INTERVAL DAY\\(0\\) TO SECOND");
+        checkExpFails(
+            "INTERVAL '0 0:0:0' DAY TO SECOND(0^)^",  
+            "Interval fractional second precision '0' out of range for INTERVAL DAY TO SECOND\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... HOUR 
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalHourNegative()
+    {
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL '-' ^HOUR^",
+            "Illegal interval literal format '-' for INTERVAL HOUR.*");
+        checkExpFails( 
+            "INTERVAL '1-2' ^HOUR^",
+            "Illegal interval literal format '1-2' for INTERVAL HOUR.*");
+        checkExpFails(
+            "INTERVAL '1.2' ^HOUR^",
+            "Illegal interval literal format '1.2' for INTERVAL HOUR.*");
+        checkExpFails( 
+            "INTERVAL '1 2' ^HOUR^",
+            "Illegal interval literal format '1 2' for INTERVAL HOUR.*");     
+        checkExpFails(
+            "INTERVAL '1:2' ^HOUR^",
+            "Illegal interval literal format '1:2' for INTERVAL HOUR.*");
+        checkExpFails(
+            "INTERVAL '1-2' HOUR(2^)^",
+            "Illegal interval literal format '1-2' for INTERVAL HOUR\\(2\\)");
+        checkExpFails(
+            "INTERVAL 'bogus text' ^HOUR^",
+            "Illegal interval literal format 'bogus text' for INTERVAL HOUR.*");  
+
+        // negative field values
+        checkExpFails(
+            "INTERVAL '--1' ^HOUR^",
+            "Illegal interval literal format '--1' for INTERVAL HOUR.*");  
+        
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        checkExpFails( 
+            "INTERVAL '100' ^HOUR^",
+            "Illegal interval literal format '100' for INTERVAL HOUR.*");   
+        checkExpFails( 
+            "INTERVAL '100' HOUR(2^)^",
+            "Illegal interval literal format '100' for INTERVAL HOUR\\(2\\).*");   
+        checkExpFails( 
+            "INTERVAL '1000' HOUR(3^)^",
+            "Illegal interval literal format '1000' for INTERVAL HOUR\\(3\\).*");      
+        checkExpFails( 
+            "INTERVAL '-1000' HOUR(3^)^",
+            "Illegal interval literal format '-1000' for INTERVAL HOUR\\(3\\).*");    
+        checkExpFails( 
+            "INTERVAL '2147483648' HOUR(10^)^",
+            "Illegal interval literal format '2147483648' for INTERVAL HOUR\\(10\\).*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648' HOUR(10^)^",
+            "Illegal interval literal format '-2147483648' for INTERVAL HOUR\\(10\\).*");    
+
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1' HOUR(11^)^",
+            "Interval leading field precision '11' out of range for INTERVAL HOUR\\(11\\)"); 
+        
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0' HOUR(0^)^",  
+            "Interval leading field precision '0' out of range for INTERVAL HOUR\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... HOUR TO MINUTE
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalHourToMinuteNegative()
+    {
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL ':' HOUR TO ^MINUTE^",
+            "Illegal interval literal format ':' for INTERVAL HOUR TO MINUTE");
+        checkExpFails( 
+            "INTERVAL '1' HOUR TO ^MINUTE^",
+            "Illegal interval literal format '1' for INTERVAL HOUR TO MINUTE");
+        checkExpFails( 
+            "INTERVAL '1:x' HOUR TO ^MINUTE^",
+            "Illegal interval literal format '1:x' for INTERVAL HOUR TO MINUTE");
+        checkExpFails(
+            "INTERVAL '1.2' HOUR TO ^MINUTE^",
+            "Illegal interval literal format '1.2' for INTERVAL HOUR TO MINUTE");
+        checkExpFails(
+            "INTERVAL '1 2' HOUR TO ^MINUTE^",
+            "Illegal interval literal format '1 2' for INTERVAL HOUR TO MINUTE");
+        checkExpFails( 
+            "INTERVAL '1:2:3' HOUR TO ^MINUTE^",
+            "Illegal interval literal format '1:2:3' for INTERVAL HOUR TO MINUTE");     
+        checkExpFails( 
+                "INTERVAL '1 2' HOUR(2) TO ^MINUTE^",
+                "Illegal interval literal format '1 2' for INTERVAL HOUR\\(2\\) TO MINUTE");        
+        checkExpFails(
+            "INTERVAL 'bogus text' HOUR TO ^MINUTE^",
+            "Illegal interval literal format 'bogus text' for INTERVAL HOUR TO MINUTE");  
+
+        // negative field values
+        checkExpFails(
+            "INTERVAL '--1:1' HOUR TO ^MINUTE^",
+            "Illegal interval literal format '--1:1' for INTERVAL HOUR TO MINUTE");  
+        checkExpFails(
+            "INTERVAL '1:-1' HOUR TO ^MINUTE^",
+            "Illegal interval literal format '1:-1' for INTERVAL HOUR TO MINUTE");  
+        
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkExpFails( 
+            "INTERVAL '100:0' HOUR TO ^MINUTE^",
+            "Illegal interval literal format '100:0' for INTERVAL HOUR TO MINUTE.*");   
+        checkExpFails( 
+            "INTERVAL '100:0' HOUR(2) TO ^MINUTE^",
+            "Illegal interval literal format '100:0' for INTERVAL HOUR\\(2\\) TO MINUTE.*");   
+        checkExpFails( 
+            "INTERVAL '1000:0' HOUR(3) TO ^MINUTE^",
+            "Illegal interval literal format '1000:0' for INTERVAL HOUR\\(3\\) TO MINUTE.*");      
+        checkExpFails( 
+            "INTERVAL '-1000:0' HOUR(3) TO ^MINUTE^",
+            "Illegal interval literal format '-1000:0' for INTERVAL HOUR\\(3\\) TO MINUTE.*");    
+        checkExpFails( 
+            "INTERVAL '2147483648:0' HOUR(10) TO ^MINUTE^",
+            "Illegal interval literal format '2147483648:0' for INTERVAL HOUR\\(10\\) TO MINUTE.*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648:0' HOUR(10) TO ^MINUTE^",
+            "Illegal interval literal format '-2147483648:0' for INTERVAL HOUR\\(10\\) TO MINUTE.*");    
+        checkExpFails( 
+            "INTERVAL '1:60' HOUR TO ^MINUTE^",
+            "Illegal interval literal format '1:60' for INTERVAL HOUR TO MINUTE.*");    
+        
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1:1' HOUR(11) TO ^MINUTE^",
+            "Interval leading field precision '11' out of range for INTERVAL HOUR\\(11\\) TO MINUTE");  
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0:0' HOUR(0) TO ^MINUTE^",  
+            "Interval leading field precision '0' out of range for INTERVAL HOUR\\(0\\) TO MINUTE");
+    }
+
+    /**
+     * Runs tests for INTERVAL... HOUR TO SECOND
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalHourToSecondNegative()
+    {
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL '::' HOUR TO ^SECOND^",
+            "Illegal interval literal format '::' for INTERVAL HOUR TO SECOND");
+        checkExpFails( 
+            "INTERVAL '::.' HOUR TO ^SECOND^",
+            "Illegal interval literal format '::\\.' for INTERVAL HOUR TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1' for INTERVAL HOUR TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1 2' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1 2' for INTERVAL HOUR TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1:2' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1:2' for INTERVAL HOUR TO SECOND");
+        checkExpFails(
+            "INTERVAL '1.2' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1\\.2' for INTERVAL HOUR TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1 1:2' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1 1:2' for INTERVAL HOUR TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1:2:x' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1:2:x' for INTERVAL HOUR TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1:x:3' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1:x:3' for INTERVAL HOUR TO SECOND");
+        checkExpFails(
+            "INTERVAL '1:1:1.x' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1:1:1\\.x' for INTERVAL HOUR TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1 1:2' HOUR(2) TO ^SECOND^",
+            "Illegal interval literal format '1 1:2' for INTERVAL HOUR\\(2\\) TO SECOND");  
+        checkExpFails( 
+            "INTERVAL '1 1' HOUR(2) TO ^SECOND^",
+            "Illegal interval literal format '1 1' for INTERVAL HOUR\\(2\\) TO SECOND");        
+        checkExpFails(
+            "INTERVAL 'bogus text' HOUR TO ^SECOND^",
+            "Illegal interval literal format 'bogus text' for INTERVAL HOUR TO SECOND");  
+        checkExpFails(
+            "INTERVAL '6:7:8901' HOUR TO SECOND(4^)^",
+            "Illegal interval literal format '6:7:8901' for INTERVAL HOUR TO SECOND\\(4\\)");
+
+        // negative field values 
+        checkExpFails(
+            "INTERVAL '--1:1:1' HOUR TO ^SECOND^",
+            "Illegal interval literal format '--1:1:1' for INTERVAL HOUR TO SECOND");  
+        checkExpFails(
+            "INTERVAL '1:-1:1' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1:-1:1' for INTERVAL HOUR TO SECOND");  
+        checkExpFails(
+            "INTERVAL '1:1:-1' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1:1:-1' for INTERVAL HOUR TO SECOND");  
+        checkExpFails(
+            "INTERVAL '1:1:1.-1' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1:1:1\\.-1' for INTERVAL HOUR TO SECOND");  
+        
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkExpFails( 
+            "INTERVAL '100:0:0' HOUR TO ^SECOND^",
+            "Illegal interval literal format '100:0:0' for INTERVAL HOUR TO SECOND.*");   
+        checkExpFails( 
+            "INTERVAL '100:0:0' HOUR(2) TO ^SECOND^",
+            "Illegal interval literal format '100:0:0' for INTERVAL HOUR\\(2\\) TO SECOND.*");   
+        checkExpFails( 
+            "INTERVAL '1000:0:0' HOUR(3) TO ^SECOND^",
+            "Illegal interval literal format '1000:0:0' for INTERVAL HOUR\\(3\\) TO SECOND.*");      
+        checkExpFails( 
+            "INTERVAL '-1000:0:0' HOUR(3) TO ^SECOND^",
+            "Illegal interval literal format '-1000:0:0' for INTERVAL HOUR\\(3\\) TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '2147483648:0:0' HOUR(10) TO ^SECOND^",
+            "Illegal interval literal format '2147483648:0:0' for INTERVAL HOUR\\(10\\) TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648:0:0' HOUR(10) TO ^SECOND^",
+            "Illegal interval literal format '-2147483648:0:0' for INTERVAL HOUR\\(10\\) TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '1:60:1' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1:60:1' for INTERVAL HOUR TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '1:1:60' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1:1:60' for INTERVAL HOUR TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '1:1:1.0000001' HOUR TO ^SECOND^",
+            "Illegal interval literal format '1:1:1\\.0000001' for INTERVAL HOUR TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '1:1:1.0001' HOUR TO SECOND(3^)^",
+            "Illegal interval literal format '1:1:1\\.0001' for INTERVAL HOUR TO SECOND\\(3\\).*"); 
+
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1:1:1' HOUR(11) TO ^SECOND^",
+            "Interval leading field precision '11' out of range for INTERVAL HOUR\\(11\\) TO SECOND");     
+        checkExpFails( 
+            "INTERVAL '1:1:1' HOUR TO SECOND(10^)^",
+            "Interval fractional second precision '10' out of range for INTERVAL HOUR TO SECOND\\(10\\)");     
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0:0:0' HOUR(0) TO ^SECOND^",  
+            "Interval leading field precision '0' out of range for INTERVAL HOUR\\(0\\) TO SECOND");
+        checkExpFails(
+            "INTERVAL '0:0:0' HOUR TO SECOND(0^)^",  
+            "Interval fractional second precision '0' out of range for INTERVAL HOUR TO SECOND\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... MINUTE 
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalMinuteNegative()
+    {
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL '-' ^MINUTE^",
+            "Illegal interval literal format '-' for INTERVAL MINUTE.*");
+        checkExpFails(         
+            "INTERVAL '1-2' ^MINUTE^",
+            "Illegal interval literal format '1-2' for INTERVAL MINUTE.*");
+        checkExpFails(
+            "INTERVAL '1.2' ^MINUTE^",
+            "Illegal interval literal format '1.2' for INTERVAL MINUTE.*");
+        checkExpFails(         
+            "INTERVAL '1 2' ^MINUTE^",
+            "Illegal interval literal format '1 2' for INTERVAL MINUTE.*");
+        checkExpFails(
+            "INTERVAL '1:2' ^MINUTE^",
+            "Illegal interval literal format '1:2' for INTERVAL MINUTE.*");
+        checkExpFails(
+            "INTERVAL '1-2' MINUTE(2^)^",
+            "Illegal interval literal format '1-2' for INTERVAL MINUTE\\(2\\)");
+        checkExpFails(
+            "INTERVAL 'bogus text' ^MINUTE^",
+            "Illegal interval literal format 'bogus text' for INTERVAL MINUTE.*");  
+
+        // negative field values
+        checkExpFails(
+            "INTERVAL '--1' ^MINUTE^",
+            "Illegal interval literal format '--1' for INTERVAL MINUTE.*");  
+        
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        checkExpFails( 
+            "INTERVAL '100' ^MINUTE^",
+            "Illegal interval literal format '100' for INTERVAL MINUTE.*");   
+        checkExpFails( 
+            "INTERVAL '100' MINUTE(2^)^",
+            "Illegal interval literal format '100' for INTERVAL MINUTE\\(2\\).*");   
+        checkExpFails( 
+            "INTERVAL '1000' MINUTE(3^)^",
+            "Illegal interval literal format '1000' for INTERVAL MINUTE\\(3\\).*");      
+        checkExpFails( 
+            "INTERVAL '-1000' MINUTE(3^)^",
+            "Illegal interval literal format '-1000' for INTERVAL MINUTE\\(3\\).*");    
+        checkExpFails( 
+            "INTERVAL '2147483648' MINUTE(10^)^",
+            "Illegal interval literal format '2147483648' for INTERVAL MINUTE\\(10\\).*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648' MINUTE(10^)^",
+            "Illegal interval literal format '-2147483648' for INTERVAL MINUTE\\(10\\).*"); 
+        
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1' MINUTE(11^)^",
+            "Interval leading field precision '11' out of range for INTERVAL MINUTE\\(11\\)");  
+        
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0' MINUTE(0^)^",  
+            "Interval leading field precision '0' out of range for INTERVAL MINUTE\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... MINUTE TO SECOND
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalMinuteToSecondNegative()
+    {
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL ':' MINUTE TO ^SECOND^",
+            "Illegal interval literal format ':' for INTERVAL MINUTE TO SECOND");
+        checkExpFails( 
+            "INTERVAL ':.' MINUTE TO ^SECOND^",
+            "Illegal interval literal format ':\\.' for INTERVAL MINUTE TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1' MINUTE TO ^SECOND^",
+            "Illegal interval literal format '1' for INTERVAL MINUTE TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1 2' MINUTE TO ^SECOND^",
+            "Illegal interval literal format '1 2' for INTERVAL MINUTE TO SECOND");
+        checkExpFails(
+            "INTERVAL '1.2' MINUTE TO ^SECOND^",
+            "Illegal interval literal format '1\\.2' for INTERVAL MINUTE TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1 1:2' MINUTE TO ^SECOND^",
+            "Illegal interval literal format '1 1:2' for INTERVAL MINUTE TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1:x' MINUTE TO ^SECOND^",
+            "Illegal interval literal format '1:x' for INTERVAL MINUTE TO SECOND");
+        checkExpFails( 
+            "INTERVAL 'x:3' MINUTE TO ^SECOND^",
+            "Illegal interval literal format 'x:3' for INTERVAL MINUTE TO SECOND");
+        checkExpFails(
+            "INTERVAL '1:1.x' MINUTE TO ^SECOND^",
+            "Illegal interval literal format '1:1\\.x' for INTERVAL MINUTE TO SECOND");
+        checkExpFails( 
+            "INTERVAL '1 1:2' MINUTE(2) TO ^SECOND^",
+            "Illegal interval literal format '1 1:2' for INTERVAL MINUTE\\(2\\) TO SECOND");  
+        checkExpFails( 
+            "INTERVAL '1 1' MINUTE(2) TO ^SECOND^",
+            "Illegal interval literal format '1 1' for INTERVAL MINUTE\\(2\\) TO SECOND");        
+        checkExpFails(
+            "INTERVAL 'bogus text' MINUTE TO ^SECOND^",
+            "Illegal interval literal format 'bogus text' for INTERVAL MINUTE TO SECOND");  
+        checkExpFails(
+            "INTERVAL '7:8901' MINUTE TO SECOND(4^)^",
+            "Illegal interval literal format '7:8901' for INTERVAL MINUTE TO SECOND\\(4\\)");  
+
+        // negative field values 
+        checkExpFails(
+            "INTERVAL '--1:1' MINUTE TO ^SECOND^",
+            "Illegal interval literal format '--1:1' for INTERVAL MINUTE TO SECOND");  
+        checkExpFails(
+            "INTERVAL '1:-1' MINUTE TO ^SECOND^",
+            "Illegal interval literal format '1:-1' for INTERVAL MINUTE TO SECOND");  
+        checkExpFails(
+            "INTERVAL '1:1.-1' MINUTE TO ^SECOND^",
+            "Illegal interval literal format '1:1.-1' for INTERVAL MINUTE TO SECOND");  
+        
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        //  plus >max value for mid/end fields
+        checkExpFails( 
+            "INTERVAL '100:0' MINUTE TO ^SECOND^",
+            "Illegal interval literal format '100:0' for" +
+            " INTERVAL MINUTE TO SECOND.*");   
+        checkExpFails( 
+            "INTERVAL '100:0' MINUTE(2) TO ^SECOND^",
+            "Illegal interval literal format '100:0' for" +
+            " INTERVAL MINUTE\\(2\\) TO SECOND.*");   
+        checkExpFails( 
+            "INTERVAL '1000:0' MINUTE(3) TO ^SECOND^",
+            "Illegal interval literal format '1000:0' for" +
+            " INTERVAL MINUTE\\(3\\) TO SECOND.*");      
+        checkExpFails( 
+            "INTERVAL '-1000:0' MINUTE(3) TO ^SECOND^",
+            "Illegal interval literal format '-1000:0' for" +
+            " INTERVAL MINUTE\\(3\\) TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '2147483648:0' MINUTE(10) TO ^SECOND^",
+            "Illegal interval literal format '2147483648:0' for" +
+            " INTERVAL MINUTE\\(10\\) TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648:0' MINUTE(10) TO ^SECOND^",
+            "Illegal interval literal format '-2147483648:0' for" +
+            " INTERVAL MINUTE\\(10\\) TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '1:60' MINUTE TO ^SECOND^",
+            "Illegal interval literal format '1:60' for" +
+            " INTERVAL MINUTE TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '1:1.0000001' MINUTE TO ^SECOND^",
+            "Illegal interval literal format '1:1\\.0000001' for" +
+            " INTERVAL MINUTE TO SECOND.*");    
+        checkExpFails( 
+            "INTERVAL '1:1:1.0001' MINUTE TO SECOND(3^)^",
+            "Illegal interval literal format '1:1:1\\.0001' for" +
+            " INTERVAL MINUTE TO SECOND\\(3\\).*");    
+        
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1:1' MINUTE(11) TO ^SECOND^",
+            "Interval leading field precision '11' out of range for" +
+            " INTERVAL MINUTE\\(11\\) TO SECOND");     
+        checkExpFails( 
+            "INTERVAL '1:1' MINUTE TO SECOND(10^)^",
+            "Interval fractional second precision '10' out of range for" +
+            " INTERVAL MINUTE TO SECOND\\(10\\)");     
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0:0' MINUTE(0) TO ^SECOND^",   
+            "Interval leading field precision '0' out of range for" +
+            " INTERVAL MINUTE\\(0\\) TO SECOND");
+        checkExpFails(
+            "INTERVAL '0:0' MINUTE TO SECOND(0^)^",  
+            "Interval fractional second precision '0' out of range for" +
+            " INTERVAL MINUTE TO SECOND\\(0\\)");
+    }
+
+    /**
+     * Runs tests for INTERVAL... SECOND 
+     * that should pass parser but fail validator.
+     * 
+     * A substantially identical set of tests exists in SqlParserTest,
+     * and any changes here should be synchronized there.
+     * Similarly, any changes to tests here should be echoed
+     * appropriately to each of the other 12
+     * subTestIntervalXXXNegative() tests.
+     */
+    public void subTestIntervalSecondNegative()
+    {
+        // Qualifier - field mismatches
+        checkExpFails( 
+            "INTERVAL ':' ^SECOND^",
+            "Illegal interval literal format ':' for INTERVAL SECOND.*");
+        checkExpFails( 
+            "INTERVAL '.' ^SECOND^",
+            "Illegal interval literal format '\\.' for INTERVAL SECOND.*");
+        checkExpFails( 
+            "INTERVAL '1-2' ^SECOND^",
+            "Illegal interval literal format '1-2' for INTERVAL SECOND.*");
+        checkExpFails(
+            "INTERVAL '1.x' ^SECOND^",
+            "Illegal interval literal format '1\\.x' for INTERVAL SECOND.*");
+        checkExpFails(
+            "INTERVAL 'x.1' ^SECOND^",
+            "Illegal interval literal format 'x\\.1' for INTERVAL SECOND.*");
+        checkExpFails( 
+            "INTERVAL '1 2' ^SECOND^",
+            "Illegal interval literal format '1 2' for INTERVAL SECOND.*");     
+        checkExpFails( 
+            "INTERVAL '1:2' ^SECOND^",
+            "Illegal interval literal format '1:2' for INTERVAL SECOND.*");  
+        checkExpFails( 
+            "INTERVAL '1-2' SECOND(2^)^",
+            "Illegal interval literal format '1-2' for INTERVAL SECOND\\(2\\)");      
+        checkExpFails(
+            "INTERVAL 'bogus text' ^SECOND^",
+            "Illegal interval literal format 'bogus text' for INTERVAL SECOND.*");  
+        
+        // negative field values
+        checkExpFails(
+            "INTERVAL '--1' ^SECOND^",
+            "Illegal interval literal format '--1' for INTERVAL SECOND.*");  
+        checkExpFails(
+            "INTERVAL '1.-1' ^SECOND^",
+            "Illegal interval literal format '1.-1' for INTERVAL SECOND.*");  
+        
+        // Field value out of range  
+        //  (default, explicit default, alt, neg alt, max, neg max)
+        checkExpFails( 
+            "INTERVAL '100' ^SECOND^",
+            "Illegal interval literal format '100' for INTERVAL SECOND.*");   
+        checkExpFails( 
+            "INTERVAL '100' SECOND(2^)^",
+            "Illegal interval literal format '100' for INTERVAL SECOND\\(2\\).*");   
+        checkExpFails( 
+            "INTERVAL '1000' SECOND(3^)^",
+            "Illegal interval literal format '1000' for INTERVAL SECOND\\(3\\).*");      
+        checkExpFails( 
+            "INTERVAL '-1000' SECOND(3^)^",
+            "Illegal interval literal format '-1000' for INTERVAL SECOND\\(3\\).*");    
+        checkExpFails( 
+            "INTERVAL '2147483648' SECOND(10^)^",
+            "Illegal interval literal format '2147483648' for" +
+            " INTERVAL SECOND\\(10\\).*");    
+        checkExpFails( 
+            "INTERVAL '-2147483648' SECOND(10^)^",
+            "Illegal interval literal format '-2147483648' for" +
+            " INTERVAL SECOND\\(10\\).*");    
+        checkExpFails( 
+            "INTERVAL '1.0000001' ^SECOND^",
+            "Illegal interval literal format '1\\.0000001' for INTERVAL SECOND.*");   
+        checkExpFails( 
+            "INTERVAL '1.0000001' SECOND(2^)^",
+            "Illegal interval literal format '1\\.0000001' for INTERVAL SECOND\\(2\\).*");   
+        checkExpFails( 
+            "INTERVAL '1.0001' SECOND(2, 3^)^",
+            "Illegal interval literal format '1\\.0001' for INTERVAL SECOND\\(2, 3\\).*");    
+        checkExpFails( 
+            "INTERVAL '1.0000000001' SECOND(2, 9^)^",
+            "Illegal interval literal format '1\\.0000000001' for" +
+            " INTERVAL SECOND\\(2, 9\\).*");   
+        
+        // precision > maximum
+        checkExpFails( 
+            "INTERVAL '1' SECOND(11^)^",
+            "Interval leading field precision '11' out of range for" +
+            " INTERVAL SECOND\\(11\\)");     
+        checkExpFails( 
+            "INTERVAL '1.1' SECOND(1, 10^)^",
+            "Interval fractional second precision '10' out of range for" +
+            " INTERVAL SECOND\\(1, 10\\)");  
+
+        // precision < minimum allowed)
+        // note: parser will catch negative values, here we
+        // just need to check for 0
+        checkExpFails(
+            "INTERVAL '0' SECOND(0^)^",  
+            "Interval leading field precision '0' out of range for" +
+            " INTERVAL SECOND\\(0\\)");
+        checkExpFails(
+            "INTERVAL '0' SECOND(1, 0^)^",  
+            "Interval fractional second precision '0' out of range for" +
+            " INTERVAL SECOND\\(1, 0\\)");
+    }
+     
+    public void testIntervalLiterals()
+    {
+
+        // First check that min, max, and defaults are what we expect
+        // (values used in subtests depend on these being true to 
+        // accurately test bounds)
+        assertTrue(
+            SqlTypeName.IntervalYearMonth.getMinPrecision() == 1);
+        assertTrue(
+            SqlTypeName.IntervalDayTime.getMinPrecision() == 1);
+        assertTrue(
+            SqlTypeName.IntervalYearMonth.getMaxPrecision() == 10);
+        assertTrue(
+            SqlTypeName.IntervalDayTime.getMaxPrecision() == 10);
+        assertTrue(
+            SqlTypeName.IntervalYearMonth.getDefaultPrecision() == 2);
+        assertTrue(
+            SqlTypeName.IntervalDayTime.getDefaultPrecision() == 2);
+        assertTrue(
+            SqlTypeName.IntervalYearMonth.getMinScale() == 1);
+        assertTrue(
+            SqlTypeName.IntervalDayTime.getMinScale() == 1);
+        assertTrue(
+            SqlTypeName.IntervalYearMonth.getMaxScale() == 9);
+        assertTrue(
+            SqlTypeName.IntervalDayTime.getMaxScale() == 9);
+        assertTrue(
+            SqlTypeName.IntervalYearMonth.getDefaultScale() == 6);
+        assertTrue(
+            SqlTypeName.IntervalDayTime.getDefaultScale() == 6);
+        
+        // Tests that should pass both parser and validator
+        subTestIntervalYearPositive();
+        subTestIntervalYearToMonthPositive();       
+        subTestIntervalMonthPositive();        
+        subTestIntervalDayPositive();
+        subTestIntervalDayToHourPositive();
+        subTestIntervalDayToMinutePositive();
+        subTestIntervalDayToSecondPositive();        
+        subTestIntervalHourPositive();
+        subTestIntervalHourToMinutePositive();
+        subTestIntervalHourToSecondPositive();     
+        subTestIntervalMinutePositive();
+        subTestIntervalMinuteToSecondPositive();
+        subTestIntervalSecondPositive();
+
+        // Tests that should pass parser but fail validator
+        subTestIntervalYearNegative();
+        subTestIntervalYearToMonthNegative();       
+        subTestIntervalMonthNegative();        
+        subTestIntervalDayNegative();
+        subTestIntervalDayToHourNegative();
+        subTestIntervalDayToMinuteNegative();
+        subTestIntervalDayToSecondNegative();        
+        subTestIntervalHourNegative();
+        subTestIntervalHourToMinuteNegative();
+        subTestIntervalHourToSecondNegative();     
+        subTestIntervalMinuteNegative();
+        subTestIntervalMinuteToSecondNegative();
+        subTestIntervalSecondNegative();     
     }
 
     public void testIntervalOperators()
@@ -1291,7 +3503,7 @@ public class SqlValidatorTest
         checkExpType("interval '1' day + interval '1' DAY(4)",
             "INTERVAL DAY(4) NOT NULL");
         checkExpType("interval '1' day(5) + interval '1' DAY",
-            "INTERVAL DAY(5) NOT NULL");
+            "INTERVAL DAY(5) NOT NULL"); 
         checkExpType("interval '1' day + interval '1' HOUR(10)",
             "INTERVAL DAY TO HOUR NOT NULL");
         checkExpType("interval '1' day + interval '1' MINUTE",
@@ -3028,8 +5240,7 @@ public class SqlValidatorTest
             "(?s).*Cannot apply '=' to arguments of type '<INTERVAL MONTH> = <INTERVAL DAY>'.*");
     }
 
-    // disabled(dtbug 334): works in farrago but not from aspen
-    public void _testOverlaps()
+    public void testOverlaps()
     {
         checkExpType(
             "(date '1-2-3', date '1-2-3') overlaps (date '1-2-3', date '1-2-3')",
@@ -3043,10 +5254,10 @@ public class SqlValidatorTest
 
         checkExpFails(
             "(timestamp '1-2-3 4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (time '4:5:6', interval '1 2:3:4.5' day to second)",
-            "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIMESTAMP.0.>, <TIMESTAMP.0.>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.*");
+            "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIMESTAMP>, <TIMESTAMP>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.*");
         checkExpFails(
             "(time '4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (time '4:5:6', interval '1 2:3:4.5' day to second)",
-            "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIME.0.>, <TIMESTAMP.0.>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.'.*");
+            "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIME.0.>, <TIMESTAMP>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.'.*");
         checkExpFails(
             "(time '4:5:6', time '4:5:6' ) overlaps (time '4:5:6', date '1-2-3')",
             "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIME.0.>, <TIME.0.>. OVERLAPS .<TIME.0.>, <DATE>.'.*");
@@ -3480,11 +5691,18 @@ public class SqlValidatorTest
         }
     }
 
+    public void _testValuesWithAggFuncs()
+    {
+        checkFails("values(^count(1)^)",
+            "Call to xxx is invalid\\. Direct calls to aggregate functions not allowed in ROW definitions\\.");
+    }
+
     public void testNew()
     {
         // (To debug invidual statements, paste them into this method.)
         //            1         2         3         4         5         6
         //   12345678901234567890123456789012345678901234567890123456789012345
+//        check("SELECT count(0) FROM emp GROUP BY ()");
     }
 }
 

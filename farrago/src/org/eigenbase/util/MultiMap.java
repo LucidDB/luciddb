@@ -50,6 +50,16 @@ public class MultiMap<K, V>
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns the number of keys in this MultiMap.
+     *
+     * @return number of keys in this MultiMap
+     */
+    public int size()
+    {
+        return map.size();
+    }
+
     private Object get(K key)
     {
         return map.get(key);

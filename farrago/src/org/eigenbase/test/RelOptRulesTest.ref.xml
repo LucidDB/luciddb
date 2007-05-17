@@ -9,18 +9,18 @@
 AggregateRel(groupCount=[2])
   UnionRel(all=[true])
     ProjectRel(DEPTNO=[$0], NAME=[$1])
-      TableAccessRel(table=[[SALES, DEPT]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
     ProjectRel(DEPTNO=[$0], NAME=[$1])
-      TableAccessRel(table=[[SALES, DEPT]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
         <Resource name="planBefore">
             <![CDATA[
 UnionRel(all=[false])
   ProjectRel(DEPTNO=[$0], NAME=[$1])
-    TableAccessRel(table=[[SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
   ProjectRel(DEPTNO=[$0], NAME=[$1])
-    TableAccessRel(table=[[SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
     </TestCase>
@@ -32,8 +32,8 @@ UnionRel(all=[false])
             <![CDATA[
 ProjectRel(EXPR$0=[1])
   JoinRel(condition=[=($7, $9)], joinType=[inner])
-    TableAccessRel(table=[[SALES, EMP]])
-    TableAccessRel(table=[[SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
         <Resource name="planAfter">
@@ -41,8 +41,8 @@ ProjectRel(EXPR$0=[1])
 ProjectRel(EXPR$0=[1])
   FilterRel(condition=[=($7, $9)])
     JoinRel(condition=[true], joinType=[inner])
-      TableAccessRel(table=[[SALES, EMP]])
-      TableAccessRel(table=[[SALES, DEPT]])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
     </TestCase>
@@ -54,8 +54,8 @@ ProjectRel(EXPR$0=[1])
             <![CDATA[
 ProjectRel(EXPR$0=[1])
   JoinRel(condition=[=($7, $9)], joinType=[inner])
-    TableAccessRel(table=[[SALES, EMP]])
-    TableAccessRel(table=[[SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
         <Resource name="planAfter">
@@ -63,9 +63,9 @@ ProjectRel(EXPR$0=[1])
 ProjectRel(EXPR$0=[1])
   JoinRel(condition=[=($7, $9)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
     SemiJoinRel(condition=[=($7, $9)], joinType=[inner])
-      TableAccessRel(table=[[SALES, EMP]])
-      TableAccessRel(table=[[SALES, DEPT]])
-    TableAccessRel(table=[[SALES, DEPT]])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
     </TestCase>
@@ -78,8 +78,8 @@ ProjectRel(EXPR$0=[1])
 ProjectRel(EXPR$0=[1])
   FilterRel(condition=[=($1, 'Charlie')])
     JoinRel(condition=[=($0, $9)], joinType=[left])
-      TableAccessRel(table=[[SALES, DEPT]])
-      TableAccessRel(table=[[SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
         <Resource name="planAfter">
@@ -87,8 +87,8 @@ ProjectRel(EXPR$0=[1])
 ProjectRel(EXPR$0=[1])
   JoinRel(condition=[=($0, $9)], joinType=[left])
     FilterRel(condition=[=($1, 'Charlie')])
-      TableAccessRel(table=[[SALES, DEPT]])
-    TableAccessRel(table=[[SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
     </TestCase>
@@ -101,7 +101,7 @@ ProjectRel(EXPR$0=[1])
 ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[$3])
   AggregateRel(groupCount=[1], agg#0=[MAX(0)], agg#1=[AVG(1)], agg#2=[MIN(0)])
     ProjectRel($f0=[$1], $f1=[$0])
-      TableAccessRel(table=[[SALES, DEPT]])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
         <Resource name="planAfter">
@@ -110,7 +110,7 @@ ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[$3])
   ProjectRel($f0=[$0], $f1=[$1], $f2=[CAST(/($2, $4)):INTEGER], $f3=[$3])
     AggregateRel(groupCount=[1], agg#0=[MAX(0)], agg#1=[SUM(1)], agg#2=[MIN(0)], agg#3=[COUNT(1)])
       ProjectRel($f0=[$1], $f1=[$0])
-        TableAccessRel(table=[[SALES, DEPT]])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
     </TestCase>
@@ -122,7 +122,7 @@ ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[$3])
             <![CDATA[
 ProjectRel(EXPR$0=[+($0, $7)])
   FilterRel(condition=[AND(=($5, *(10, $6)), =(UPPER($1), 'FOO'))])
-    TableAccessRel(table=[[SALES, EMP]])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
         <Resource name="planAfter">
@@ -130,7 +130,7 @@ ProjectRel(EXPR$0=[+($0, $7)])
 ProjectRel(EXPR$0=[+($0, $4)])
   FilterRel(condition=[AND(=($2, *(10, $3)), =(UPPER($1), 'FOO'))])
     ProjectRel(EMPNO=[$0], ENAME=[$1], SAL=[$5], COMM=[$6], DEPTNO=[$7])
-      TableAccessRel(table=[[SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
     </TestCase>
@@ -142,8 +142,8 @@ ProjectRel(EXPR$0=[+($0, $4)])
             <![CDATA[
 ProjectRel(EXPR$0=[+($5, $12)])
   JoinRel(condition=[AND(=($1, $9), =($7, 10))], joinType=[inner])
-    TableAccessRel(table=[[SALES, EMP]])
-    TableAccessRel(table=[[SALES, BONUS]])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
+    TableAccessRel(table=[[CATALOG, SALES, BONUS]])
 ]]>
         </Resource>
         <Resource name="planAfter">
@@ -151,9 +151,9 @@ ProjectRel(EXPR$0=[+($5, $12)])
 ProjectRel(EXPR$0=[+($1, $4)])
   JoinRel(condition=[AND(=($0, $3), =($2, 10))], joinType=[inner])
     ProjectRel(ENAME=[$1], SAL=[$5], DEPTNO=[$7])
-      TableAccessRel(table=[[SALES, EMP]])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
     ProjectRel(ENAME=[$0], COMM=[$3])
-      TableAccessRel(table=[[SALES, BONUS]])
+      TableAccessRel(table=[[CATALOG, SALES, BONUS]])
 ]]>
         </Resource>
     </TestCase>

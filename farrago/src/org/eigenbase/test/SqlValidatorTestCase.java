@@ -73,7 +73,7 @@ public class SqlValidatorTestCase
      *
      * <p/>todo: Set this to true, make all the tests succeed, then remove it.
      */
-    private static final boolean FailIfNoPosition = Bug.Dt315Fixed;
+    private static final boolean FailIfNoPosition = Bug.Dt1203Fixed;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -694,7 +694,7 @@ public class SqlValidatorTestCase
         {
             RelDataType actualType = getColumnType(sql);
             if (expected.startsWith("todo:")) {
-                Util.permAssert(!Bug.Dt315Fixed,
+                Util.permAssert(!Bug.Dt1204Fixed,
                     "After bug 315 is fixed, no type should start 'todo:'");
                 return; // don't check the type for now
             }
@@ -833,9 +833,7 @@ public class SqlValidatorTestCase
         {
             String sql = buildQuery(expression);
             TypeChecker typeChecker =
-                (expectedType.startsWith("todo:")
-                    && !Bug.Dt315Fixed) ? AbstractSqlTester.AnyTypeChecker
-                : new AbstractSqlTester.StringTypeChecker(expectedType);
+                new AbstractSqlTester.StringTypeChecker(expectedType);
             check(
                 sql,
                 typeChecker,
@@ -866,9 +864,7 @@ public class SqlValidatorTestCase
         {
             String sql = buildQuery(expression);
             TypeChecker typeChecker =
-                (expectedType.startsWith("todo:")
-                    && !Bug.Dt315Fixed) ? AbstractSqlTester.AnyTypeChecker
-                : new AbstractSqlTester.StringTypeChecker(expectedType);
+                new AbstractSqlTester.StringTypeChecker(expectedType);
             check(sql, typeChecker, result, 0);
         }
 
@@ -917,13 +913,6 @@ public class SqlValidatorTestCase
                 SqlNode n = parseAndValidate(validator, sql);
                 assertNotNull(n);
             } else {
-                // After bug 315 is fixed, take this assert out: the other
-                // assert will be sufficient.
-                if (!Bug.Dt315Fixed) {
-                    assertTrue(
-                        "All negative tests must contain an error location",
-                        expression.indexOf('^') >= 0);
-                }
                 SqlValidatorTestCase.this.checkFails(
                     buildQuery(expression),
                     expectedError);

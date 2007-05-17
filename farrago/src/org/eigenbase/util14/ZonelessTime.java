@@ -27,7 +27,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 /**
- * ZonelessTime is a time value without a time zone
+ * ZonelessTime is a time value without a time zone.
  *
  * @author John Pham
  * @version $Id$
@@ -37,8 +37,11 @@ public class ZonelessTime extends ZonelessDatetime
 
     //~ Instance fields --------------------------------------------------------
 
-    protected int precision;
-    protected Time tempTime;
+    protected final int precision;
+    protected transient Time tempTime;
+
+    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+    private static final long serialVersionUID = 906156904798141861L;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -47,6 +50,21 @@ public class ZonelessTime extends ZonelessDatetime
      */
     public ZonelessTime()
     {
+        precision = 0;
+    }
+
+    /**
+     * Constructs a ZonelessTime with precision.
+     *
+     * <p>The precision is the number of digits to the right of the decimal
+     * point in the seconds value. For example, a <code>TIME(6)</code> has
+     * a precision to microseconds.
+     *
+     * @param precision Number of digits of precision
+     */
+    public ZonelessTime(int precision)
+    {
+        this.precision = precision;
     }
 
     // override ZonelessDatetime
@@ -70,9 +88,9 @@ public class ZonelessTime extends ZonelessDatetime
     }
 
     /**
-     * Override ZonelessDatetime
-     * 
-     * NOTE: the returned timestamp is based on the current date of the 
+     * Override ZonelessDatetime.
+     *
+     * <p>NOTE: the returned timestamp is based on the current date of the
      * specified time zone, rather than the context variable for current_date,
      * as specified by the SQL standard.
      */
@@ -84,7 +102,7 @@ public class ZonelessTime extends ZonelessDatetime
         int minute = cal.get(Calendar.MINUTE);
         int second = cal.get(Calendar.SECOND);
         int millis = cal.get(Calendar.MILLISECOND);
-        
+
         cal.setTimeZone(zone);
         cal.setTimeInMillis(System.currentTimeMillis());
         cal.set(Calendar.HOUR_OF_DAY, hour);
@@ -95,9 +113,9 @@ public class ZonelessTime extends ZonelessDatetime
     }
 
     /**
-     * Converts this ZonelessTime to a java.sql.Time and formats it via the 
+     * Converts this ZonelessTime to a java.sql.Time and formats it via the
      * {@link java.sql.Time#toString() toString()} method of that class.
-     * 
+     *
      * @return the formatted time string
      */
     public String toString()
@@ -108,7 +126,7 @@ public class ZonelessTime extends ZonelessDatetime
 
     /**
      * Formats this ZonelessTime via a SimpleDateFormat
-     * 
+     *
      * @param format format string, as required by SimpleDateFormat
      * @return the formatted time string
      */
@@ -121,24 +139,35 @@ public class ZonelessTime extends ZonelessDatetime
 
     /**
      * Parses a string as a ZonelessTime.
-     * 
-     * @param s a string representing a time in ISO format, i.e. according 
-     *   to the SimpleDateFormat string "HH:mm:ss"
+     *
+     * @param s a string representing a time in ISO format, i.e. according
+     *   to the {@link SimpleDateFormat} string "HH:mm:ss"
      * @return the parsed time, or null if parsing failed
      */
     public static ZonelessTime parse(String s)
     {
+        return parse(s, DateTimeUtil.TimeFormatStr);
+    }
+
+    /**
+     * Parses a string as a ZonelessTime using a given format string.
+     *
+     * @param s a string representing a time the given format
+     * @param format format string as per {@link SimpleDateFormat}
+     * @return the parsed time, or null if parsing failed
+     */
+    public static ZonelessTime parse(String s, String format)
+    {
         DateTimeUtil.PrecisionTime pt =
             DateTimeUtil.parsePrecisionDateTimeLiteral(
                 s,
-                DateTimeUtil.TimeFormatStr,
+                format,
                 DateTimeUtil.gmtZone);
         if (pt == null) {
             return null;
         }
-        ZonelessTime zt = new ZonelessTime();
+        ZonelessTime zt = new ZonelessTime(pt.getPrecision());
         zt.setZonelessTime(pt.getCalendar().getTime().getTime());
-        zt.precision = pt.getPrecision();
         return zt;
     }
 
@@ -156,4 +185,4 @@ public class ZonelessTime extends ZonelessDatetime
     }
 }
 
-// End GmtTime.java
+// End ZonelessTime.java
