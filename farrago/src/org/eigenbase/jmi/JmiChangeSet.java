@@ -756,7 +756,7 @@ public class JmiChangeSet
 
                 // Avoid unnecessary updates in the case where ordinals
                 // are already correct.
-                if (oldOrdinal != newOrdinal) {
+                if (oldOrdinal.intValue() != newOrdinal.intValue()) {
                     target.refSetValue("ordinal", newOrdinal);
                 }
             }
