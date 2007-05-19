@@ -1050,7 +1050,8 @@ template <class PageT,class VictimPolicyT>
 inline FileSize CacheImpl<PageT,VictimPolicyT>
 ::getPageOffset(BlockId const &blockId)
 {
-    return CompoundId::getBlockNum(blockId)*cbPage;
+    return ((FileSize) CompoundId::getBlockNum(blockId))
+        * (FileSize) cbPage;
 }
 
 template <class PageT,class VictimPolicyT>
