@@ -860,6 +860,13 @@ require version '${required.ant.version}'."/>
     </farrago.generateParser>
   </target>
 
+  <target name="jjDoc" description="Converts parser to human-readable BNF form">
+    <jjdoc
+      target="${farrago.parser.sql.dir}/impl/CombinedParser.jj"
+      outputfile="doc/combinedParserBnf.html"
+      javacchome="${javacc.dir}"/>
+  </target>
+
   <!-- run all JUnit test cases (or a single test case chosen with -->
   <!-- property junit.class, normally from script junitSingle) -->
   <target name="junit" depends="cleanTestLogs">
