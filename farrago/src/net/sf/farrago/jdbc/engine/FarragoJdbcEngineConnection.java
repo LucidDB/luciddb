@@ -75,6 +75,7 @@ public class FarragoJdbcEngineConnection
     {
         this(sessionFactory.newSession(url, info));
         this.sessionFactory = sessionFactory;
+        initConnection(info);
     }
 
     private FarragoJdbcEngineConnection(
@@ -504,6 +505,21 @@ public class FarragoJdbcEngineConnection
         throws SQLException
     {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Performs additional setup based on connection property settings.
+     * @param info connection properties
+     * @throws SQLException
+     */
+    protected void initConnection(Properties info) throws SQLException
+    {
+        String initialSchema = info.getProperty("schema");
+        if (initialSchema != null) {
+            Statement stmt = this.createStatement();
+            ((FarragoJdbcEngineStatement)stmt).stmtContext.daemonize();
+            stmt.executeUpdate("set schema '" + initialSchema + "'");
+        }
     }
 
     protected void validateSession()
