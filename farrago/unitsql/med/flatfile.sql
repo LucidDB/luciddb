@@ -499,6 +499,7 @@ where cast(process_id as varchar(100))='101'
 order by error_count;
 
 -- make sure we receive a warning for DML
+!set showwarnings true
 create table surrey(
     author varchar(30),
     title varchar(45) not null,

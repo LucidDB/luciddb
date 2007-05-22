@@ -7,6 +7,8 @@
 -- keys
 --------------------------------------------------------------------------------
 
+!set showwarnings true
+
 create schema m;
 set schema 'm';
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;

@@ -789,6 +789,7 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 +-------------+--------------+--------------+---------------------------------+
 > 
 > -- make sure we receive a warning for DML
+> !set showwarnings true
 > create table surrey(
 >     author varchar(30),
 >     title varchar(45) not null,
