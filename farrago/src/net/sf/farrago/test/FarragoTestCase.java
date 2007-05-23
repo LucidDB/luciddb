@@ -218,9 +218,7 @@ public abstract class FarragoTestCase
         Cleanup cleanup = CleanupFactory.getFactory().newCleanup("cleanup");
         try {
             cleanup.setUp();
-            if (connection instanceof FarragoJdbcEngineConnection) {
-                cleanup.execute();
-            }
+            cleanup.execute();  // let overrides see this call!
         } finally {
             // NOTE:  bypass staticTearDown
             cleanup.tearDownImpl();
@@ -437,14 +435,16 @@ public abstract class FarragoTestCase
         super.setUp();
         stmt = connection.createStatement();
 
-        // discard any cached query plans (can't call
-        // sys_boot.mgmt.flush_code_cache because it may not exist yet,
-        // plus it's slow)
-        FarragoObjectCache codeCache =
-            ((FarragoDbSession) getSession()).getDatabase().getCodeCache();
-        long savedBytesMax = codeCache.getBytesMax();
-        codeCache.setMaxBytes(0);
-        codeCache.setMaxBytes(savedBytesMax);
+        if (connection instanceof FarragoJdbcEngineConnection) {
+            // discard any cached query plans (can't call
+            // sys_boot.mgmt.flush_code_cache because it may not exist yet,
+            // plus it's slow)
+            FarragoObjectCache codeCache =
+                ((FarragoDbSession) getSession()).getDatabase().getCodeCache();
+            long savedBytesMax = codeCache.getBytesMax();
+            codeCache.setMaxBytes(0);
+            codeCache.setMaxBytes(savedBytesMax);
+        }
 
         resultSet = null;
     }
@@ -685,11 +685,13 @@ public abstract class FarragoTestCase
         public void execute()
             throws Exception
         {
-            restoreCleanupParameters();
-            dropSchemas();
-            dropDataWrappers();
-            dropDataServers();
-            dropAuthIds();
+            if (connection instanceof FarragoJdbcEngineConnection) {
+                restoreCleanupParameters();
+                dropSchemas();
+                dropDataWrappers();
+                dropDataServers();
+                dropAuthIds();
+            }
         }
 
         public void saveCleanupParameters()
@@ -777,50 +779,60 @@ public abstract class FarragoTestCase
                 || name.equals(FarragoCatalogInit.SA_USER_NAME);
         }
 
-        private void dropSchemas()
+        protected void dropSchemas()
             throws Exception
         {
-            List<String> list = new ArrayList<String>();
+            final FarragoRepos repos = getRepos();
+            if (repos == null) {
+                //TODO: handle client driver case
+            } else {
+                List<String> list = new ArrayList<String>();
 
-            // NOTE:  don't use DatabaseMetaData.getSchemas since it doesn't
-            // work when Fennel is disabled
-            Iterator schemaIter =
-                getRepos().getSelfAsCatalog().getOwnedElement().iterator();
-            while (schemaIter.hasNext()) {
-                Object obj = schemaIter.next();
-                if (!(obj instanceof CwmSchema)) {
-                    continue;
+                // NOTE:  don't use DatabaseMetaData.getSchemas since it doesn't
+                // work when Fennel is disabled
+                Iterator schemaIter =
+                    repos.getSelfAsCatalog().getOwnedElement().iterator();
+                while (schemaIter.hasNext()) {
+                    Object obj = schemaIter.next();
+                    if (!(obj instanceof CwmSchema)) {
+                        continue;
+                    }
+                    CwmSchema schema = (CwmSchema) obj;
+                    String schemaName = schema.getName();
+                    if (!isBlessedSchema(schema)) {
+                        list.add(schemaName);
+                    }
                 }
-                CwmSchema schema = (CwmSchema) obj;
-                String schemaName = schema.getName();
-                if (!isBlessedSchema(schema)) {
-                    list.add(schemaName);
+                for (String name : list) {
+                    getStmt().execute("drop schema \"" + name + "\" cascade");
                 }
-            }
-            for (String name : list) {
-                getStmt().execute("drop schema \"" + name + "\" cascade");
             }
         }
 
         private void dropDataWrappers()
             throws Exception
         {
-            List<String> list = new ArrayList<String>();
-            for (FemDataWrapper wrapper
-                : getRepos().allOfClass(FemDataWrapper.class)) {
-                if (isBlessedWrapper(wrapper)) {
-                    continue;
+            final FarragoRepos repos = getRepos();
+            if (repos == null) {
+                //TODO: handle client driver case
+            } else {
+                List<String> list = new ArrayList<String>();
+                for (FemDataWrapper wrapper
+                    : repos.allOfClass(FemDataWrapper.class)) {
+                    if (isBlessedWrapper(wrapper)) {
+                        continue;
+                    }
+                    list.add(wrapper.isForeign() ? "foreign" : "local");
+                    list.add(wrapper.getName());
                 }
-                list.add(wrapper.isForeign() ? "foreign" : "local");
-                list.add(wrapper.getName());
-            }
-            Iterator<String> iter = list.iterator();
-            while (iter.hasNext()) {
-                String wrapperType = iter.next();
-                String name = iter.next();
-                getStmt().execute(
-                    "drop " + wrapperType + " data wrapper \"" + name
-                    + "\" cascade");
+                Iterator<String> iter = list.iterator();
+                while (iter.hasNext()) {
+                    String wrapperType = iter.next();
+                    String name = iter.next();
+                    getStmt().execute(
+                        "drop " + wrapperType + " data wrapper \"" + name
+                        + "\" cascade");
+                }
             }
         }
 
@@ -831,36 +843,46 @@ public abstract class FarragoTestCase
         private void dropDataServers()
             throws Exception
         {
-            List<String> list = new ArrayList<String>();
-            for (FemDataServer server
-                : getRepos().allOfClass(FemDataServer.class)) {
-                if (isBlessedServer(server)) {
-                    continue;
+            final FarragoRepos repos = getRepos();
+            if (repos == null) {
+                //TODO: handle client driver case
+            } else {
+                List<String> list = new ArrayList<String>();
+                for (FemDataServer server
+                    : repos.allOfClass(FemDataServer.class)) {
+                    if (isBlessedServer(server)) {
+                        continue;
+                    }
+                    list.add(server.getName());
                 }
-                list.add(server.getName());
-            }
-            for (String name : list) {
-                getStmt().execute(
-                    "drop server \"" + name
-                    + "\" cascade");
+                for (String name : list) {
+                    getStmt().execute(
+                        "drop server \"" + name
+                        + "\" cascade");
+                }
             }
         }
 
         private void dropAuthIds()
             throws Exception
         {
-            List<String> list = new ArrayList<String>();
-            for (FemAuthId authId : getRepos().allOfType(FemAuthId.class)) {
-                if (isBlessedAuthId(authId)) {
-                    continue;
+            final FarragoRepos repos = getRepos();
+            if (repos == null) {
+                //TODO: handle client driver case
+            } else {
+                List<String> list = new ArrayList<String>();
+                for (FemAuthId authId : repos.allOfType(FemAuthId.class)) {
+                    if (isBlessedAuthId(authId)) {
+                        continue;
+                    }
+                    list.add(
+                        ((authId instanceof FemRole) ? "ROLE" : "USER")
+                        + " "
+                        + authId.getName());
                 }
-                list.add(
-                    ((authId instanceof FemRole) ? "ROLE" : "USER")
-                    + " "
-                    + authId.getName());
-            }
-            for (String name : list) {
-                getStmt().execute("drop " + name);
+                for (String name : list) {
+                    getStmt().execute("drop " + name);
+                }
             }
         }
     }
