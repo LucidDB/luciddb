@@ -455,6 +455,9 @@ public class FarragoTypeFactoryImpl
                 typeOrdinal, precision, scale, dbSpecTypeName, typeMapping);
             SqlTypeName typeName =
                 SqlTypeName.getNameForJdbcType(sqlTypeInfo[0]);
+            if (isKnownUnsupportedJdbcType(typeName)) {
+                typeName = null;
+            }
             precision = sqlTypeInfo[1];
             scale = sqlTypeInfo[2];
 
@@ -1202,6 +1205,21 @@ public class FarragoTypeFactoryImpl
         return Integer.parseInt(scaleStr);
     }
 
+    // TODO: The following JDBC types cannot currently be mapped to a
+    // RelDataType
+    private boolean isKnownUnsupportedJdbcType(SqlTypeName type) 
+    {
+        if (type == null) {
+            return false;
+        }
+        if (type.equals(SqlTypeName.Distinct) ||
+            type.equals(SqlTypeName.Structured) ||
+            type.equals(SqlTypeName.Row) ||
+            type.equals(SqlTypeName.Cursor)) {
+            return true;
+        }
+        return false;
+    }
 
 }
 

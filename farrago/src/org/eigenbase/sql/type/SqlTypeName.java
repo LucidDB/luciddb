@@ -281,10 +281,8 @@ public class SqlTypeName
         setNameForJdbcType(Types.TIMESTAMP, Timestamp);
         setNameForJdbcType(Types.BIT, Boolean);
         setNameForJdbcType(Types.BOOLEAN, Boolean);
-
-        // TODO
-        // setNameForJdbcType(Types.DISTINCT, Distinct);
-        // setNameForJdbcType(Types.STRUCT, Structured);
+        setNameForJdbcType(Types.DISTINCT, Distinct);
+        setNameForJdbcType(Types.STRUCT, Structured);
     }
 
     //~ Instance fields --------------------------------------------------------

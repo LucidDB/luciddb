@@ -1,0 +1,79 @@
+0: jdbc:luciddb:> -- use default ORACLE wrapper
+0: jdbc:luciddb:> create server ORCL_SERVER_SCHEMA_MAPPING
+. . . . . . . . > foreign data wrapper ORACLE
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     schema_mapping 'SCHOI:X;SCOTT:X'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from orcl_server_schema_mapping.schoi.@DATATYPE_TABLE@ order by 1,2,3,4,5,6;
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|        DATECOL         |      TIMESTAMPCOL      | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|                        |                        | 99999.0          |                   | varchar     |          |          |
+|                        |                        | 99999.0          |                   | varchar     | 123      |          |
+|                        |                        | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  | 100.011          | 100.000           | varchar     |          |          |
+| 2006-10-31 23:59:59.0  |                        | 0.0              | 0.000             |             |          |          |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> select * from orcl_server_schema_mapping.scott.ADDR order by 1,2,3;
++---------+----------------+--------+
+| STREET  |      CITY      | STATE  |
++---------+----------------+--------+
+| 1st St  | San Francisco  | CA     |
+| 2nd St  | San Francisco  | CA     |
+| 4th St  | San Francisco  | CA     |
++---------+----------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- query directly using mapped schema name
+0: jdbc:luciddb:> select numericcolzerop from orcl_server_schema_mapping.x.@DATATYPE_TABLE@ order by 1;
++------------------+
+| NUMERICCOLZEROP  |
++------------------+
+| 0.0              |
+| 100.011          |
+| 99999.0          |
+| 99999.0          |
+| 99999.0          |
++------------------+
+0: jdbc:luciddb:> select street from orcl_server_schema_mapping.x.ADDR order by 1;
++---------+
+| STREET  |
++---------+
+| 1st St  |
+| 2nd St  |
+| 4th St  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema apps;
+0: jdbc:luciddb:> set schema 'apps';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- import tables from different schemas to one local schema
+0: jdbc:luciddb:> import foreign schema X LIMIT TO (@DATATYPE_TABLE@, ADDR) from server ORCL_SERVER_SCHEMA_MAPPING into apps;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from apps.ADDR order by 1,2,3;
++---------+----------------+--------+
+| STREET  |      CITY      | STATE  |
++---------+----------------+--------+
+| 1st St  | San Francisco  | CA     |
+| 2nd St  | San Francisco  | CA     |
+| 4th St  | San Francisco  | CA     |
++---------+----------------+--------+
+0: jdbc:luciddb:> select * from apps.@DATATYPE_TABLE@ order by 1,2,3,4,5,6;
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|        DATECOL         |      TIMESTAMPCOL      | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|                        |                        | 99999.0          |                   | varchar     |          |          |
+|                        |                        | 99999.0          |                   | varchar     | 123      |          |
+|                        |                        | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  | 100.011          | 100.000           | varchar     |          |          |
+| 2006-10-31 23:59:59.0  |                        | 0.0              | 0.000             |             |          |          |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema apps cascade;
+0: jdbc:luciddb:> drop server ORCL_SERVER_SCHEMA_MAPPING cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

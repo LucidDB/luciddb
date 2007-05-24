@@ -152,13 +152,13 @@ class MedJdbcPushDownRule extends RelOptRule
             // PreparedStatement.getMetaData does not actually get metadata
             // before execution
             if (dialect.isOracle()) {
-                String quotedSql = sql.replaceAll("\'", "\'\'");
+                String quotedSql = dialect.quoteStringLiteral(sql);
                 String sqlTest =
                     " DECLARE" +
                     "   test_cursor integer;" +
                     " BEGIN" +
                     "   test_cursor := dbms_sql.open_cursor;" +
-                    "   dbms_sql.parse(test_cursor, '" + quotedSql + "', " +
+                    "   dbms_sql.parse(test_cursor, " + quotedSql + ", " +
                     "   dbms_sql.native);" +
                     "   dbms_sql.close_cursor(test_cursor);" +
                     " EXCEPTION" +
