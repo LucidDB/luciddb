@@ -156,6 +156,22 @@ public class SqlStdOperatorTable
             SqlTypeStrategies.otcDivisionOperator);
 
     /**
+     * Internal integer arithmetic division operator, '<code>/INT</code>'.
+     * This is only used to adjust scale for numerics.  We distinguish it from
+     * user-requested division since some personalities want a floating-point
+     * computation, whereas for the internal scaling use of division, we always
+     * want integer division.
+     */
+    public static final SqlBinaryOperator divideIntegerOperator =
+        new SqlBinaryOperator("/INT",
+            SqlKind.Divide,
+            60,
+            true,
+            SqlTypeStrategies.rtiNullableIntegerQuotient,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcDivisionOperator);
+
+    /**
      * Dot operator, '<code>.</code>', used for referencing fields of records.
      */
     public static final SqlBinaryOperator dotOperator =

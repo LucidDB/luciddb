@@ -211,7 +211,8 @@ public class FarragoMetadataTest
         // c0 has a primary key on it
         groupKey.set(0);
         groupKey.set(4);
-        checkPopulation("select * from tab", groupKey, TAB_ROWCOUNT);
+        double expected = RelMdUtil.numDistinctVals(TAB_ROWCOUNT, TAB_ROWCOUNT);
+        checkPopulation("select * from tab", groupKey, expected);
     }
 
     public void testPopulationTabUniqueNotNull()
@@ -223,7 +224,8 @@ public class FarragoMetadataTest
         groupKey.set(1);
         groupKey.set(2);
         groupKey.set(3);
-        checkPopulation("select * from tab", groupKey, TAB_ROWCOUNT);
+        double expected = RelMdUtil.numDistinctVals(TAB_ROWCOUNT, TAB_ROWCOUNT);
+        checkPopulation("select * from tab", groupKey, expected);
     }
 
     public void testPopulationTabUniqueNull()
@@ -265,10 +267,11 @@ public class FarragoMetadataTest
         // c0 has a primary key on it
         groupKey.set(0);
         groupKey.set(4);
+        double expected = RelMdUtil.numDistinctVals(TAB_ROWCOUNT, TAB_ROWCOUNT);
         checkPopulation(
             "select * from tab order by c4",
             groupKey,
-            TAB_ROWCOUNT);
+            expected);
     }
 
     public void testPopulationJoin()
@@ -313,6 +316,7 @@ public class FarragoMetadataTest
             RelMdUtil.numDistinctVals(
                 2 * TAB_ROWCOUNT,
                 2 * TAB_ROWCOUNT);
+        expected = RelMdUtil.numDistinctVals(expected, 2 * TAB_ROWCOUNT);
         checkPopulation(
             "select * from (select * from tab union all select * from tab)",
             groupKey,
@@ -326,7 +330,7 @@ public class FarragoMetadataTest
         groupKey.set(0);
         groupKey.set(1);
         double expected = RelMdUtil.numDistinctVals(TAB_ROWCOUNT, TAB_ROWCOUNT);
-        expected = RelMdUtil.numDistinctVals(TAB_ROWCOUNT, expected);
+        expected = RelMdUtil.numDistinctVals(expected, expected);
         checkPopulation(
             "select c0, count(*) from tab group by c0",
             groupKey,

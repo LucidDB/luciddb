@@ -19,7 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 package org.eigenbase.sql.pretty;
 
 import java.io.*;
@@ -104,7 +104,7 @@ import org.eigenbase.util.*;
  * @since 2005/8/24
  */
 public class SqlPrettyWriter
-    implements SqlWriter
+implements SqlWriter
 {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -117,17 +117,17 @@ public class SqlPrettyWriter
     protected static final String NL = System.getProperty("line.separator");
 
     private static final String [] spaces =
-        {
-            "",
-            " ",
-            "  ",
-            "   ",
-            "    ",
-            "     ",
-            "      ",
-            "       ",
-            "        ",
-        };
+    {
+        "",
+        " ",
+        "  ",
+        "   ",
+        "    ",
+        "     ",
+        "      ",
+        "       ",
+        "        ",
+    };
 
     //~ Instance fields --------------------------------------------------------
 
@@ -145,11 +145,13 @@ public class SqlPrettyWriter
     private int indentation;
     private boolean clauseStartsLine;
     private boolean selectListItemsOnSeparateLines;
+    private boolean selectListExtraIndentFlag;
     private int currentIndent;
     private boolean windowDeclListNewline;
     private boolean updateSetListNewline;
     private boolean windowNewline;
     private SubqueryStyle subqueryStyle;
+    private boolean whereListItemsOnSeparateLines;
 
     private boolean caseClausesOnNewLines;
 
@@ -214,8 +216,8 @@ public class SqlPrettyWriter
     public boolean inQuery()
     {
         return
-            (frame == null) || (frame.frameType == FrameType.OrderBy)
-            || (frame.frameType == FrameType.Setop);
+        (frame == null) || (frame.frameType == FrameType.OrderBy)
+        || (frame.frameType == FrameType.Setop);
     }
 
     public boolean isQuoteAllIdentifiers()
@@ -233,6 +235,16 @@ public class SqlPrettyWriter
         return selectListItemsOnSeparateLines;
     }
 
+    public boolean isWhereListItemsOnSeparateLines()
+    {
+        return whereListItemsOnSeparateLines;
+    }
+
+    public boolean isSelectListExtraIndentFlag()
+    {
+        return selectListExtraIndentFlag;
+    }
+
     public boolean isKeywordsLowerCase()
     {
         return keywordsLowerCase;
@@ -244,6 +256,7 @@ public class SqlPrettyWriter
         indentation = 4;
         clauseStartsLine = true;
         selectListItemsOnSeparateLines = false;
+        selectListExtraIndentFlag = true;
         keywordsLowerCase = false;
         quoteAllIdentifiers = true;
         windowDeclListNewline = true;
@@ -251,6 +264,7 @@ public class SqlPrettyWriter
         windowNewline = false;
         subqueryStyle = SubqueryStyle.Hyde;
         alwaysUseParentheses = false;
+        whereListItemsOnSeparateLines = false;
     }
 
     public void reset()
@@ -345,12 +359,43 @@ public class SqlPrettyWriter
     }
 
     /**
+     * Sets whether to use a fix for SELECT list indentations. 
+     * If set to "false":
+     * SELECT 
+     *     A as A
+     *         B as B
+     *         C as C
+     *     D
+     * If set to "true":
+     * SELECT
+     *     A as A
+     *     B as B
+     *     C as C
+     *     D
+     */
+    public void setSelectListExtraIndentFlag(boolean b)
+    {
+        this.selectListExtraIndentFlag = b;
+    }
+
+    /**
      * Sets whether to print keywords (SELECT, AS, etc.) in lower-case. The
      * default is false: keywords are printed in upper-case.
      */
     public void setKeywordsLowerCase(boolean b)
     {
         this.keywordsLowerCase = b;
+    }
+
+    /**
+     * Sets whether to print a newline before each AND or OR  (whichever 
+     * is higher level) in WHERE clauses.
+     * NOTE: <i>Ignored when alwaysUseParentheses is set to true.</i>
+     */
+
+    public void setWhereListItemsOnSeparateLines(boolean b)
+    {
+        this.whereListItemsOnSeparateLines = b;
     }
 
     public void setAlwaysUseParentheses(boolean b)
@@ -419,105 +464,95 @@ public class SqlPrettyWriter
         switch (frameType.getOrdinal()) {
         case FrameType.WindowDeclList_ordinal:
             return
-                new FrameImpl(
-                    frameType,
-                    keyword,
-                    open,
-                    close,
-                    indentation,
-                    false,
-                    false,
-                    indentation,
-                    windowDeclListNewline,
-                    false,
-                    false);
+            new FrameImpl(
+                frameType,
+                keyword,
+                open,
+                close,
+                indentation,
+                false,
+                false,
+                indentation,
+                windowDeclListNewline,
+                false,
+                false);
 
         case FrameType.UpdateSetList_ordinal:
             return
-                new FrameImpl(
-                    frameType,
-                    keyword,
-                    open,
-                    close,
-                    indentation,
-                    false,
-                    updateSetListNewline,
-                    indentation,
-                    false,
-                    false,
-                    false);
+            new FrameImpl(
+                frameType,
+                keyword,
+                open,
+                close,
+                indentation,
+                false,
+                updateSetListNewline,
+                indentation,
+                false,
+                false,
+                false);
 
         case FrameType.SelectList_ordinal:
+            return
+            new FrameImpl(
+                frameType,
+                keyword,
+                open,
+                close,
+                selectListExtraIndentFlag ? indentation : 0,
+                    selectListItemsOnSeparateLines,
+                    false,
+                    indentation,
+                    selectListItemsOnSeparateLines,
+                    false,
+                    false);
         case FrameType.OrderByList_ordinal:
         case FrameType.GroupByList_ordinal:
             return
-                new FrameImpl(
-                    frameType,
-                    keyword,
-                    open,
-                    close,
-                    indentation,
-                    selectListItemsOnSeparateLines,
-                    false,
-                    indentation,
-                    selectListItemsOnSeparateLines,
-                    false,
-                    false);
+            new FrameImpl(
+                frameType,
+                keyword,
+                open,
+                close,
+                indentation,
+                selectListItemsOnSeparateLines,
+                false,
+                indentation,
+                selectListItemsOnSeparateLines,
+                false,
+                false);
 
         case FrameType.Subquery_ordinal:
             if (subqueryStyle == SubqueryStyle.Black) {
                 // Generate, e.g.:
-                //
-                // WHERE foo = bar IN
-                // (   SELECT ...
+                    //
+                    // WHERE foo = bar IN
+                    // (   SELECT ...
                 open = "(" + spaces(indentation - 1);
                 return
-                    new FrameImpl(
-                        frameType,
-                        keyword,
-                        open,
-                        close,
-                        0,
-                        false,
-                        true,
-                        indentation,
-                        false,
-                        false,
-                        false) {
-                        protected void _before()
-                        {
-                            newlineAndIndent();
-                        }
-                    };
+                new FrameImpl(
+                    frameType,
+                    keyword,
+                    open,
+                    close,
+                    0,
+                    false,
+                    true,
+                    indentation,
+                    false,
+                    false,
+                    false) {
+                    protected void _before()
+                    {
+                        newlineAndIndent();
+                    }
+                };
             } else if (subqueryStyle == SubqueryStyle.Hyde) {
                 // Generate, e.g.:
                 //
                 // WHERE foo IN (
                 //     SELECT ...
                 return
-                    new FrameImpl(
-                        frameType,
-                        keyword,
-                        open,
-                        close,
-                        0,
-                        false,
-                        true,
-                        0,
-                        false,
-                        false,
-                        false) {
-                        protected void _before()
-                        {
-                            nextWhitespace = NL;
-                        }
-                    };
-            } else {
-                throw subqueryStyle.unexpected();
-            }
-
-        case FrameType.OrderBy_ordinal:
-            return
                 new FrameImpl(
                     frameType,
                     keyword,
@@ -529,146 +564,184 @@ public class SqlPrettyWriter
                     0,
                     false,
                     false,
-                    false);
+                    false) {
+                    protected void _before()
+                    {
+                        nextWhitespace = NL;
+                    }
+                };
+            } else {
+                throw subqueryStyle.unexpected();
+            }
+
+        case FrameType.OrderBy_ordinal:
+            return
+            new FrameImpl(
+                frameType,
+                keyword,
+                open,
+                close,
+                0,
+                false,
+                true,
+                0,
+                false,
+                false,
+                false);
 
         case FrameType.Select_ordinal:
             return
-                new FrameImpl(
-                    frameType,
-                    keyword,
-                    open,
-                    close,
-                    indentation,
-                    false,
-                    isClauseStartsLine(), // newline before FROM, WHERE etc.
-                    0, // all clauses appear below SELECT
-                    false,
-                    false,
-                    false);
+            new FrameImpl(
+                frameType,
+                keyword,
+                open,
+                close,
+                indentation,
+                false,
+                isClauseStartsLine(), // newline before FROM, WHERE etc.
+                0, // all clauses appear below SELECT
+                false,
+                false,
+                false);
 
         case FrameType.Setop_ordinal:
             return
-                new FrameImpl(
-                    frameType,
-                    keyword,
-                    open,
-                    close,
-                    indentation,
-                    false,
-                    isClauseStartsLine(), // newline before UNION, EXCEPT
-                    0, // all clauses appear below SELECT
-                    isClauseStartsLine(), // newline after UNION, EXCEPT
-                    false,
-                    false);
+            new FrameImpl(
+                frameType,
+                keyword,
+                open,
+                close,
+                indentation,
+                false,
+                isClauseStartsLine(), // newline before UNION, EXCEPT
+                0, // all clauses appear below SELECT
+                isClauseStartsLine(), // newline after UNION, EXCEPT
+                false,
+                false);
 
         case FrameType.Window_ordinal:
             return
-                new FrameImpl(
-                    frameType,
-                    keyword,
-                    open,
-                    close,
-                    indentation,
-                    false,
-                    windowNewline,
-                    0,
-                    false,
-                    false,
-                    false);
+            new FrameImpl(
+                frameType,
+                keyword,
+                open,
+                close,
+                indentation,
+                false,
+                windowNewline,
+                0,
+                false,
+                false,
+                false);
 
         case FrameType.FunCall_ordinal:
             needWhitespace = false;
             return
-                new FrameImpl(
-                    frameType,
-                    keyword,
-                    open,
-                    close,
-                    indentation,
-                    false,
-                    false,
-                    indentation,
-                    false,
-                    false,
-                    false);
+            new FrameImpl(
+                frameType,
+                keyword,
+                open,
+                close,
+                indentation,
+                false,
+                false,
+                indentation,
+                false,
+                false,
+                false);
 
         case FrameType.Identifier_ordinal:
         case FrameType.Simple_ordinal:
             return
-                new FrameImpl(
-                    frameType,
-                    keyword,
-                    open,
-                    close,
-                    indentation,
-                    false,
-                    false,
-                    indentation,
-                    false,
-                    false,
-                    false);
+            new FrameImpl(
+                frameType,
+                keyword,
+                open,
+                close,
+                indentation,
+                false,
+                false,
+                indentation,
+                false,
+                false,
+                false);
+
+        case FrameType.WhereList_ordinal:
+            return
+            new FrameImpl(
+                frameType,
+                keyword,
+                open,
+                close,
+                indentation,
+                false,
+                whereListItemsOnSeparateLines,
+                0,
+                false,
+                false,
+                false);
 
         case FrameType.FromList_ordinal:
             return
-                new FrameImpl(
-                    frameType,
-                    keyword,
-                    open,
-                    close,
-                    indentation,
-                    false,
-                    isClauseStartsLine(), // newline before UNION, EXCEPT
-                    0, // all clauses appear below SELECT
-                    isClauseStartsLine(), // newline after UNION, EXCEPT
-                    false,
-                    false) {
-                    protected void sep(boolean printFirst, String sep)
-                    {
-                        boolean newlineBefore =
-                            newlineBeforeSep
-                            && !sep.equals(",");
-                        boolean newlineAfter =
-                            newlineAfterSep
-                            && sep.equals(",");
-                        if ((itemCount > 0) || printFirst) {
-                            if (newlineBefore && (itemCount > 0)) {
-                                pw.println();
-                                indent(currentIndent + sepIndent);
-                                needWhitespace = false;
-                            }
-                            keyword(sep);
-                            nextWhitespace = newlineAfter ? NL : " ";
+            new FrameImpl(
+                frameType,
+                keyword,
+                open,
+                close,
+                indentation,
+                false,
+                isClauseStartsLine(), // newline before UNION, EXCEPT
+                0, // all clauses appear below SELECT
+                isClauseStartsLine(), // newline after UNION, EXCEPT
+                false,
+                false) {
+                protected void sep(boolean printFirst, String sep)
+                {
+                    boolean newlineBefore =
+                        newlineBeforeSep
+                        && !sep.equals(",");
+                    boolean newlineAfter =
+                        newlineAfterSep
+                        && sep.equals(",");
+                    if ((itemCount > 0) || printFirst) {
+                        if (newlineBefore && (itemCount > 0)) {
+                            pw.println();
+                            indent(currentIndent + sepIndent);
+                            needWhitespace = false;
                         }
-                        ++itemCount;
+                        keyword(sep);
+                        nextWhitespace = newlineAfter ? NL : " ";
                     }
-                };
+                    ++itemCount;
+                }
+            };
 
         default:
             boolean newlineAfterOpen = false;
-            boolean newlineBeforeSep = false;
-            boolean newlineBeforeClose = false;
-            int sepIndent = indentation;
-            if (frameType.getName().equals("CASE")) {
-                if (caseClausesOnNewLines) {
-                    newlineAfterOpen = true;
-                    newlineBeforeSep = true;
-                    newlineBeforeClose = true;
-                    sepIndent = 0;
-                }
+        boolean newlineBeforeSep = false;
+        boolean newlineBeforeClose = false;
+        int sepIndent = indentation;
+        if (frameType.getName().equals("CASE")) {
+            if (caseClausesOnNewLines) {
+                newlineAfterOpen = true;
+                newlineBeforeSep = true;
+                newlineBeforeClose = true;
+                sepIndent = 0;
             }
-            return
-                new FrameImpl(
-                    frameType,
-                    keyword,
-                    open,
-                    close,
-                    indentation,
-                    newlineAfterOpen,
-                    newlineBeforeSep,
-                    sepIndent,
-                    false,
-                    newlineBeforeClose,
-                    false);
+        }
+        return
+        new FrameImpl(
+            frameType,
+            keyword,
+            open,
+            close,
+            indentation,
+            newlineAfterOpen,
+            newlineBeforeSep,
+            sepIndent,
+            false,
+            newlineBeforeClose,
+            false);
         }
     }
 
@@ -801,20 +874,20 @@ public class SqlPrettyWriter
     private static boolean needWhitespaceBefore(String s)
     {
         return
-            !(
-                s.equals(",")
-                || s.equals(".")
-                || s.equals(")")
-                || s.equals("]")
-                || s.equals("")
-             );
+        !(
+            s.equals(",")
+            || s.equals(".")
+            || s.equals(")")
+            || s.equals("]")
+            || s.equals("")
+        );
     }
 
     private static boolean needWhitespaceAfter(String s)
     {
         return !(s.equals("(")
-                || s.equals("[")
-                || s.equals("."));
+            || s.equals("[")
+            || s.equals("."));
     }
 
     protected void whiteSpace()
@@ -916,7 +989,7 @@ public class SqlPrettyWriter
      * Implementation of {@link Frame}.
      */
     protected class FrameImpl
-        implements Frame
+    implements Frame
     {
         final FrameType frameType;
         final String keyword;
@@ -964,7 +1037,7 @@ public class SqlPrettyWriter
             boolean newlineAfterSep,
             boolean newlineBeforeClose,
             boolean newlineAfterClose)
-        {
+            {
             this.frameType = frameType;
             this.keyword = keyword;
             this.open = open;
@@ -976,7 +1049,7 @@ public class SqlPrettyWriter
             this.newlineBeforeClose = newlineBeforeClose;
             this.newlineAfterClose = newlineAfterClose;
             this.sepIndent = sepIndent;
-        }
+            }
 
         protected void before()
         {
@@ -1025,24 +1098,24 @@ public class SqlPrettyWriter
                     && (method.getReturnType() == Void.class)
                     && (method.getParameterTypes().length == 1)) {
                     String attributeName = stripPrefix(
-                            method.getName(),
-                            3);
+                        method.getName(),
+                        3);
                     setterMethods.put(attributeName, method);
                 }
                 if (method.getName().startsWith("get")
                     && (method.getReturnType() != Void.class)
                     && (method.getParameterTypes().length == 0)) {
                     String attributeName = stripPrefix(
-                            method.getName(),
-                            3);
+                        method.getName(),
+                        3);
                     getterMethods.put(attributeName, method);
                 }
                 if (method.getName().startsWith("is")
                     && (method.getReturnType() == Boolean.class)
                     && (method.getParameterTypes().length == 0)) {
                     String attributeName = stripPrefix(
-                            method.getName(),
-                            2);
+                        method.getName(),
+                        2);
                     getterMethods.put(attributeName, method);
                 }
             }
@@ -1051,7 +1124,7 @@ public class SqlPrettyWriter
         private String stripPrefix(String name, int offset)
         {
             return name.substring(offset, offset + 1).toLowerCase()
-                + name.substring(offset + 1);
+            + name.substring(offset + 1);
         }
 
         public void set(String name, String value)
@@ -1073,8 +1146,8 @@ public class SqlPrettyWriter
             final Method method = getterMethods.get(name);
             try {
                 return method.invoke(
-                        o,
-                        new Object[0]);
+                    o,
+                    new Object[0]);
             } catch (IllegalAccessException e) {
                 throw Util.newInternal(e);
             } catch (InvocationTargetException e) {
@@ -1092,4 +1165,4 @@ public class SqlPrettyWriter
     }
 }
 
-// End SqlPrettyWriter.java
+//End SqlPrettyWriter.java

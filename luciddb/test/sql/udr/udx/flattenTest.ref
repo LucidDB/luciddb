@@ -428,7 +428,7 @@ Error: Graph has cycle(s) of '2' vertices; first 20 in loop(s): '2 1 ' (state=,c
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * 
 . . . . . . . . > from table(applib.flatten_recursive_hierarchy(cursor(select * from loop)));
-Error: Graph has cycle(s) of '4' vertices; first 20 in loop(s): 'a 2 b 1 ' (state=,code=0)
+Error: Graph has cycle(s) of '5' vertices; first 20 in loop(s): '3 a 2 b 1 ' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> truncate table loop;
 0: jdbc:luciddb:> 

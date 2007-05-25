@@ -19,12 +19,23 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- these should fail
 0: jdbc:luciddb:> values applib.fiscal_year(date'1000-4-4', 13);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-First month must be between 1 and 12 (state=,code=0)
+Error: First month must be between 1 and 12 (state=,code=0)
 0: jdbc:luciddb:> values applib.fiscal_year('2005-12-1', 9);
 Error: From line 1, column 15 to line 1, column 41: No match found for function signature FISCAL_YEAR(<CHARACTER>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.fiscal_year(cast (null as timestamp), 2);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.fiscal_year(current_date, cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.fiscal_year
 0: jdbc:luciddb:> create view fyy(fm, fromdt, fromts) as
@@ -45,13 +56,13 @@ Error: From line 1, column 15 to line 1, column 41: No match found for function 
 0: jdbc:luciddb:> select fm, applib.fiscal_year(datecol, fm) * fm + applib.fiscal_year(tscol, fm)/fm
 . . . . . . . . > from data_source
 . . . . . . . . > order by 1;
-+-----+---------+
-| FM  | EXPR$1  |
-+-----+---------+
-| 1   | 3855    |
-| 2   | 5013    |
-| 10  | 20146   |
-+-----+---------+
++-----+---------------+
+| FM  |    EXPR$1     |
++-----+---------------+
+| 1   | 3855.000000   |
+| 2   | 5013.000000   |
+| 10  | 20146.500000  |
++-----+---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view fyy;

@@ -59,6 +59,12 @@ MappedPageListener::~MappedPageListener()
 {
 }
 
+MappedPageListener *MappedPageListener::notifyAfterPageCheckpointFlush(
+    CachePage &page)
+{
+    return NULL;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End MappedPageListener.cpp

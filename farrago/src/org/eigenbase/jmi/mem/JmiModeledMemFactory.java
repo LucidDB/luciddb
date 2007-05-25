@@ -26,6 +26,7 @@ import javax.jmi.reflect.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
+import org.jgrapht.graph.DefaultEdge;
 
 
 /**
@@ -87,8 +88,7 @@ public abstract class JmiModeledMemFactory
     private void defineClasses()
         throws ClassNotFoundException
     {
-        for (Object vertexObj : modelGraph.vertexSet()) {
-            JmiClassVertex vertex = (JmiClassVertex) vertexObj;
+        for (JmiClassVertex vertex : modelGraph.vertexSet()) {
             Class ifaceClass =
                 JmiObjUtil.getJavaInterfaceForRefClass(vertex.getRefClass());
             Class ifaceObj =
@@ -161,19 +161,21 @@ public abstract class JmiModeledMemFactory
     private void defineAssociations()
         throws ClassNotFoundException
     {
-        for (Object edgeObj : modelGraph.getAssocGraph().edgeSet()) {
+        for (DefaultEdge edgeObj : modelGraph.getAssocGraph().edgeSet()) {
             JmiAssocEdge edge = (JmiAssocEdge) edgeObj;
 
-            Class ifaceAssoc =
+            Class<? extends RefBaseObject> ifaceAssoc =
                 JmiObjUtil.getJavaInterfaceForRefAssoc(
                     edge.getRefAssoc());
             defineMetaObject(
                 ifaceAssoc,
                 edge.getMofAssoc());
 
-            Class sourceInterface =
+            JmiClassVertex sourceClassVertex =
+                modelGraph.getAssocGraph().getEdgeSource(edge);
+            Class<? extends RefBaseObject> sourceInterface =
                 JmiObjUtil.getJavaInterfaceForRefObject(
-                    ((JmiClassVertex) edge.getSource()).getRefClass());
+                    sourceClassVertex.getRefClass());
             String targetAccessorName =
                 JmiObjUtil.getAccessorName(edge.getTargetEnd());
             Class [] ec = (Class []) null;
@@ -189,9 +191,11 @@ public abstract class JmiModeledMemFactory
             boolean targetMany =
                 (edge.getTargetEnd().getMultiplicity().getUpper() != 1);
 
+            JmiClassVertex targetClassVertex =
+                modelGraph.getAssocGraph().getEdgeTarget(edge);
             Class targetInterface =
                 JmiObjUtil.getJavaInterfaceForRefObject(
-                    ((JmiClassVertex) edge.getTarget()).getRefClass());
+                    targetClassVertex.getRefClass());
             String sourceAttrName = null;
             String sourceAccessorName =
                 JmiObjUtil.getAccessorName(edge.getSourceEnd());

@@ -62,10 +62,10 @@ public class SqlStringContextVariable
         return true;
     }
 
-    // Context variables are never deterministic
-    public boolean isDeterministic()
+    // Plans referencing context variables should never be cached
+    public boolean isDynamicFunction()
     {
-        return false;
+        return true;
     }
 }
 

@@ -1,6 +1,8 @@
 -- test more bugs  (range of numeric types)
 -- Was calc13.sql
 
+!set shownestederrs true
+
 set schema 's';
 
 create table numbers (a tinyint, b smallint, c numeric (7,3))

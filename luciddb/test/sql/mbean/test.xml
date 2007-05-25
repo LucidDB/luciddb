@@ -4,9 +4,10 @@
 
       <init-hook>
         <test-suite name="init">
-          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
-            <test-suite-modifier value="mbean"/>
-          </test-suite-call>
+          <custom-task>
+            <junit-utility testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+              methodnames="startLucidDb"/>
+          </custom-task>
         </test-suite>
       </init-hook>
 
@@ -45,13 +46,7 @@
           methodnames="testSystemParameters"/>
       </test>
 
-      <cleanup-hook>
-        <test-suite name="cleanup">
-          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
-            <test-suite-modifier value="mbean"/>
-          </test-suite-call>
-        </test-suite>
-      </cleanup-hook>
+      <cleanup-hook/>
 
     </test-suite>
   </target>

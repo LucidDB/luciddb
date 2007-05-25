@@ -49,14 +49,11 @@ LogicalTxnLog::LogicalTxnLog(
     // Set up cache accessor so that all page locks will be taken out
     // with a reserved TxnId.  Just for sanity-checking, set up a quota to make
     // sure logging never locks more than two pages at a time.
-    nextTxnId = FIRST_TXN_ID;
     logSegmentAccessor.pCacheAccessor = SharedCacheAccessor(
         new QuotaCacheAccessor(
             SharedQuotaCacheAccessor(),
             logSegmentAccessor.pCacheAccessor,
             2));
-    logSegmentAccessor.pCacheAccessor->setTxnId(nextTxnId);
-    ++nextTxnId;
     
     // TODO: Support an option to skip CRC's for optimized non-durable logging.
     // Also support a paranoid option for recording CRC's for long logs.
@@ -73,6 +70,13 @@ LogicalTxnLog::LogicalTxnLog(
 
     groupCommitInterval = pSegmentFactory->getConfigMap().getIntParam(
         "groupCommitInterval", 30);
+}
+
+void LogicalTxnLog::setNextTxnId(TxnId nextTxnIdInit)
+{
+    nextTxnId = nextTxnIdInit;
+    logSegmentAccessor.pCacheAccessor->setTxnId(nextTxnId);
+    nextTxnId++;
 }
 
 SharedLogicalTxnLog LogicalTxnLog::newLogicalTxnLog(
@@ -242,6 +246,7 @@ void LogicalTxnLog::checkpoint(
     }
     pOutputStream->getSegPos(memento.logPosition);
     memento.nUncommittedTxns = uncommittedTxns.size();
+    memento.nextTxnId = nextTxnId;
     std::for_each(
         uncommittedTxns.begin(),
         uncommittedTxns.end(),
@@ -303,6 +308,29 @@ void LogicalTxnLog::checkpointTxn(SharedLogicalTxn pTxn)
     memento.nParticipants = pTxn->participants.size();
     pOutputStream->writeValue(memento);
     pTxn->checkpointed = true;
+}
+
+TxnId LogicalTxnLog::getOldestActiveTxnId()
+{
+    StrictMutexGuard mutexGuard(mutex);
+    TxnId oldestTxnId = NULL_TXN_ID;
+    for (TxnListIter ppTxn = uncommittedTxns.begin();
+        ppTxn != uncommittedTxns.end();
+        ++ppTxn)
+    {
+        SharedLogicalTxn pTxn = *ppTxn;
+        if (oldestTxnId == NULL_TXN_ID || pTxn->getTxnId() < oldestTxnId) {
+            oldestTxnId = pTxn->getTxnId();
+        }
+    }
+
+    // If there are no active txns, return the txnId that will be assigned to
+    // the next, new txn
+    if (oldestTxnId == NULL_TXN_ID) {
+        return nextTxnId;
+    } else {
+        return oldestTxnId;
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

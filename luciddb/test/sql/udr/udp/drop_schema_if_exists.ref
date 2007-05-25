@@ -8,10 +8,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- try to provide some other option than 'RESTRICT' or 'CASCADE'. should give a nice error.
 0: jdbc:luciddb:> call applib.drop_schema_if_exists('TESTSCHEMA', 'CASTICT');
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Syntax error: parameter must be either 'RESTRICT' or 'CASCADE'. (state=,code=0)
+Error: Syntax error: parameter must be either 'RESTRICT' or 'CASCADE'. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- see that the schema and it's table is still there
 0: jdbc:luciddb:> select SCHEMA_NAME from SYS_ROOT.DBA_TABLES where SCHEMA_NAME = 'TESTSCHEMA';

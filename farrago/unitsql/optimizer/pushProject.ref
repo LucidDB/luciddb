@@ -139,7 +139,7 @@
 >         where ve.deptno = vd.deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..3=[{inputs}], expr#4=[UPPER($t0)], expr#5=[LOWER($t4)], expr#6=[2], expr#7=[*($t2, $t6)], expr#8=[/($t7, $t6)], EXPR$0=[$t5], EXPR$1=[$t8])'
+'  FennelCalcRel(expr#0..3=[{inputs}], expr#4=[UPPER($t0)], expr#5=[LOWER($t4)], expr#6=[2], expr#7=[*($t2, $t6)], expr#8=[CAST($t7):DOUBLE], expr#9=[CAST($t6):DOUBLE NOT NULL], expr#10=[/($t8, $t9)], expr#11=[1E6], expr#12=[*($t10, $t11)], expr#13=[CAST($t12):BIGINT], expr#14=[Reinterpret($t13)], EXPR$0=[$t5], EXPR$1=[$t14])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, PP, LCSEMPS]], projection=[[1, 2, 6]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$AGE, SYS$CLUSTERED_INDEX$LCSEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
 '      LcsRowScanRel(table=[[LOCALDB, PP, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
@@ -291,15 +291,15 @@
 | 41   | 402  | 4003  |
 +------+------+-------+
 > select vjc/1000, vja/10, vjb/100 from vjoin order by 1;
-+---------+---------+---------+
-| EXPR$0  | EXPR$1  | EXPR$2  |
-+---------+---------+---------+
-| 0       | 0       | 0       |
-| 1       | 1       | 1       |
-| 2       | 2       | 2       |
-| 3       | 3       | 3       |
-| 4       | 4       | 4       |
-+---------+---------+---------+
++-----------+-----------+-----------+
+|  EXPR$0   |  EXPR$1   |  EXPR$2   |
++-----------+-----------+-----------+
+| 0.003000  | 0.100000  | 0.020000  |
+| 1.003000  | 1.100000  | 1.020000  |
+| 2.003000  | 2.100000  | 2.020000  |
+| 3.003000  | 3.100000  | 3.020000  |
+| 4.003000  | 4.100000  | 4.020000  |
++-----------+-----------+-----------+
 > select count(*) from vjoin;
 +---------+
 | EXPR$0  |
@@ -343,7 +343,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..4=[{inputs}], expr#5=[1000], expr#6=[-($t4, $t5)], expr#7=[/($t6, $t5)], expr#8=[10], expr#9=[-($t0, $t8)], expr#10=[/($t9, $t8)], expr#11=[100], expr#12=[-($t2, $t11)], expr#13=[/($t12, $t11)], EXPR$0=[$t7], EXPR$1=[$t10], EXPR$2=[$t13])'
+'    FennelCalcRel(expr#0..4=[{inputs}], expr#5=[1000], expr#6=[-($t4, $t5)], expr#7=[CAST($t6):DOUBLE], expr#8=[CAST($t5):DOUBLE NOT NULL], expr#9=[/($t7, $t8)], expr#10=[1E6], expr#11=[*($t9, $t10)], expr#12=[CAST($t11):BIGINT], expr#13=[Reinterpret($t12)], expr#14=[10], expr#15=[-($t0, $t14)], expr#16=[CAST($t15):DOUBLE], expr#17=[CAST($t14):DOUBLE NOT NULL], expr#18=[/($t16, $t17)], expr#19=[*($t18, $t10)], expr#20=[CAST($t19):BIGINT], expr#21=[Reinterpret($t20)], expr#22=[100], expr#23=[-($t2, $t22)], expr#24=[CAST($t23):DOUBLE], expr#25=[CAST($t22):DOUBLE NOT NULL], expr#26=[/($t24, $t25)], expr#27=[*($t26, $t10)], expr#28=[CAST($t27):BIGINT], expr#29=[Reinterpret($t28)], EXPR$0=[$t13], EXPR$1=[$t21], EXPR$2=[$t29])'
 '      LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
 '        FennelReshapeRel(projection=[[1, 2, 3]], outputRowType=[RecordType(INTEGER T1B, INTEGER T2A, INTEGER T2C) NOT NULL])'
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'

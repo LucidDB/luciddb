@@ -645,7 +645,7 @@ public abstract class SqlOperatorTests
     {
         // Test cast for date/time/timestamp
         getTester().setFor(SqlStdOperatorTable.castFunc);
-        
+
         getTester().checkScalar(
             "cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIMESTAMP)",
             "1945-02-24 12:42:25.0",

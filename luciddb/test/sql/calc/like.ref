@@ -23,11 +23,16 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 | MONSTER  |
 | TESTER   |
 +----------+
+0: jdbc:luciddb:> !set shownestederrs true
 0: jdbc:luciddb:> select * from foo where x like '%*E*R%' escape '*'
 . . . . . . . . > ;
+Error: Invalid escape sequence: %*E*R% at 1 (state=,code=0)
 Error: Could not calculate condition for input:
 [TESTER]
 Messages: Invalid escape sequence: %*E*R% at 1 (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+0: jdbc:luciddb:> !set shownestederrs false
 0: jdbc:luciddb:> select * from foo where x like '%ER*%' escape '*'
 . . . . . . . . > ;
 +----+
@@ -51,7 +56,5 @@ Messages: Invalid escape sequence: %*E*R% at 1 (state=,code=0)
 0: jdbc:luciddb:> drop table foo
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- The following sequence was inspired by bug 6633,
-0: jdbc:luciddb:> -- which I could not reproduce in 2.0.
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

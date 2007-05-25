@@ -18,6 +18,7 @@ Error: From line 2, column 15 to line 2, column 35: Table '@name_prefix@_IS_SCHE
 0: jdbc:luciddb:> INSERT INTO blobtypes
 . . . . . . . . > SELECT c_binary,c_varbinary
 . . . . . . . . > FROM @name_prefix@_ft_schema.blobtypes_explicit;
+Error: From line 3, column 6 to line 3, column 37: Table '@name_prefix@_FT_SCHEMA.BLOBTYPES_EXPLICIT' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO blobtypes
 . . . . . . . . > SELECT * FROM @name_prefix@_ft_schema.blobtypes_nonexplicit;
@@ -37,6 +38,6 @@ Error: From line 2, column 15 to line 2, column 34: Table '@name_prefix@_IS_SCHE
 +---------+
 | EXPR$0  |
 +---------+
-| 11      |
+| 0       |
 +---------+
 0: jdbc:luciddb:> !quit

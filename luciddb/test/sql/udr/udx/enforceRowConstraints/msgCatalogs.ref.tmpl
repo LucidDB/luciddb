@@ -1,0 +1,218 @@
+0: jdbc:luciddb:> create schema msgcat;
+0: jdbc:luciddb:> set schema 'msgcat';
+0: jdbc:luciddb:> alter session set "logDir" = '@LOGDIR@';
+0: jdbc:luciddb:> alter session set "etlProcessId" = 'MsgCatalogs';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- missing apps message jar
+0: jdbc:luciddb:> alter session set "etlActionId" = 'MissingMsgJar';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when LOCID = 'HQ' then 'RejHQErr'
+. . . . . . . . >       else cast(null as varchar(128)) end as loccheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(loccheck),
+. . . . . . . . >   'BogusMsgCatalog',
+. . . . . . . . >   'MC1'))
+. . . . . . . . > order by EMPNO;
+Error: Message Catalog Jar 'BogusMsgCatalog' could not be found at '@PLUGINDIR@/BogusMsgCatalog.jar' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."MsgCatalogs_MissingMsgJar_MC1"
+. . . . . . . . > order by EMPNO, LE_ERROR_CODE;
+Error: From line 2, column 6 to line 2, column 50: Table 'LOGSERVER.BCP.MsgCatalogs_MissingMsgJar_MC1' not found (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- missing error code
+0: jdbc:luciddb:> alter session set "etlActionId" = 'MissingErrCode';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when LOCID = 'HQ' then 'BogusHQErrCode'
+. . . . . . . . >       else cast(null as varchar(128)) end as loccheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(loccheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'MC2'))
+. . . . . . . . > order by EMPNO;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+-----------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |    LOCCHECK     |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+-----------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          | BogusHQErrCode  |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |                 |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |                 |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |                 |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          | BogusHQErrCode  |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       | BogusHQErrCode  |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         |                 |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  | BogusHQErrCode  |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |                |                 |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                |                 |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |                |                 |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."MsgCatalogs_MissingErrCode_MC2"
+. . . . . . . . > order by EMPNO, LE_ERROR_CODE;
++-----------+-----------------+----------------------------------------------------------------------+-------------------+--------+
+| LE_LEVEL  |  LE_ERROR_CODE  |                             LE_EXCEPTION                             | LE_TARGET_COLUMN  | EMPNO  |
++-----------+-----------------+----------------------------------------------------------------------+-------------------+--------+
+| Warning   | BogusHQErrCode  | Error code 'BogusHQErrCode' not found in message catalog 'TestMsgs'  | LOCCHECK          | 100    |
+| Warning   | BogusHQErrCode  | Error code 'BogusHQErrCode' not found in message catalog 'TestMsgs'  | LOCCHECK          | 104    |
+| Warning   | BogusHQErrCode  | Error code 'BogusHQErrCode' not found in message catalog 'TestMsgs'  | LOCCHECK          | 105    |
+| Warning   | BogusHQErrCode  | Error code 'BogusHQErrCode' not found in message catalog 'TestMsgs'  | LOCCHECK          | 107    |
++-----------+-----------------+----------------------------------------------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- missing error code severity (2 ways)
+0: jdbc:luciddb:> alter session set "etlActionId" = 'MissingErrSev1';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when LOCID = 'SF' then 'NoSevErr1'
+. . . . . . . . >       else cast(null as varchar(128)) end as sfcheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(sfcheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'MC3'))
+. . . . . . . . > order by EMPNO;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |  SFCHECK   |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |            |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |            |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |            |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |            |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          |            |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |            |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         | NoSevErr1  |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |            |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |                | NoSevErr1  |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                | NoSevErr1  |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |                |            |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."MsgCatalogs_MissingErrSev1_MC3"
+. . . . . . . . > order by EMPNO, LE_ERROR_CODE;
++-----------+----------------+----------------------------------------------------------------------------------------------------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |                                                        LE_EXCEPTION                                                        | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+----------------------------------------------------------------------------------------------------------------------------+-------------------+--------+
+| Warning   | NoSevErr1      | Severity for error code 'NoSevErr1' not found in message catalog 'TestMsgs' Message: No severity message 1 hobby - Karate  | SFCHECK           | 106    |
+| Warning   | NoSevErr1      | Severity for error code 'NoSevErr1' not found in message catalog 'TestMsgs' Message: No severity message 1 hobby - null    | SFCHECK           | 108    |
+| Warning   | NoSevErr1      | Severity for error code 'NoSevErr1' not found in message catalog 'TestMsgs' Message: No severity message 1 hobby - null    | SFCHECK           | 109    |
++-----------+----------------+----------------------------------------------------------------------------------------------------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "etlActionId" = 'MissingErrSev2';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when LOCID = 'SF' then 'NoSevErr2'
+. . . . . . . . >       else cast(null as varchar(128)) end as sfcheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(sfcheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'MC4'))
+. . . . . . . . > order by EMPNO;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |  SFCHECK   |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |            |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |            |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |            |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |            |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          |            |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |            |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         | NoSevErr2  |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |            |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |                | NoSevErr2  |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                | NoSevErr2  |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |                |            |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."MsgCatalogs_MissingErrSev2_MC4"
+. . . . . . . . > order by EMPNO, LE_ERROR_CODE;
++-----------+----------------+----------------------------------------------------------------------------------------------------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |                                                        LE_EXCEPTION                                                        | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+----------------------------------------------------------------------------------------------------------------------------+-------------------+--------+
+| Warning   | NoSevErr2      | Severity for error code 'NoSevErr2' not found in message catalog 'TestMsgs' Message: No severity message 2 hobby - Karate  | SFCHECK           | 106    |
+| Warning   | NoSevErr2      | Severity for error code 'NoSevErr2' not found in message catalog 'TestMsgs' Message: No severity message 2 hobby - null    | SFCHECK           | 108    |
+| Warning   | NoSevErr2      | Severity for error code 'NoSevErr2' not found in message catalog 'TestMsgs' Message: No severity message 2 hobby - null    | SFCHECK           | 109    |
++-----------+----------------+----------------------------------------------------------------------------------------------------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- missing error code message (2 ways)
+0: jdbc:luciddb:> alter session set "etlActionId" = 'MissingErrMsg1';
+0: jdbc:luciddb:> alter session set "errorMax" = 3;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when LOCID = 'SF' then 'NoMsgErr1'
+. . . . . . . . >       else cast(null as varchar(128)) end as sfcheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(sfcheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'MC5'))
+. . . . . . . . > order by EMPNO;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+----------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      | SFCHECK  |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+----------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |          |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |          |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |          |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |          |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          |          |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |          |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |          |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |                |          |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."MsgCatalogs_MissingErrMsg1_MC5"
+. . . . . . . . > order by EMPNO, LE_ERROR_CODE;
++-----------+----------------+-----------------------------------------------------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |                                LE_EXCEPTION                                 | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+-----------------------------------------------------------------------------+-------------------+--------+
+| Error     | NoMsgErr1      | Message for error code 'NoMsgErr1' not found in message catalog 'TestMsgs'  | SFCHECK           | 106    |
+| Error     | NoMsgErr1      | Message for error code 'NoMsgErr1' not found in message catalog 'TestMsgs'  | SFCHECK           | 108    |
+| Error     | NoMsgErr1      | Message for error code 'NoMsgErr1' not found in message catalog 'TestMsgs'  | SFCHECK           | 109    |
++-----------+----------------+-----------------------------------------------------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter session set "etlActionId" = 'MissingErrMsg2';
+0: jdbc:luciddb:> alter session set "errorMax" = 0;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(rc.enforce_row_constraints(
+. . . . . . . . >   cursor(select *,
+. . . . . . . . >     case when LOCID = 'SF' then 'NoMsgErr2'
+. . . . . . . . >       else cast(null as varchar(128)) end as sfcheck
+. . . . . . . . >     from ffserver.bcp.EMP),
+. . . . . . . . >   row(sfcheck),
+. . . . . . . . >   'TestMsgs',
+. . . . . . . . >   'MC6'))
+. . . . . . . . > order by EMPNO;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |  SFCHECK   |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |            |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |            |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |            |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |            |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          |            |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |            |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         | NoMsgErr2  |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |            |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |                | NoMsgErr2  |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                | NoMsgErr2  |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |                |            |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+. . . . . . . . > from logserver.bcp."MsgCatalogs_MissingErrMsg2_MC6"
+. . . . . . . . > order by EMPNO, LE_ERROR_CODE;
++-----------+----------------+-----------------------------------------------------------------------------+-------------------+--------+
+| LE_LEVEL  | LE_ERROR_CODE  |                                LE_EXCEPTION                                 | LE_TARGET_COLUMN  | EMPNO  |
++-----------+----------------+-----------------------------------------------------------------------------+-------------------+--------+
+| Warning   | NoMsgErr2      | Message for error code 'NoMsgErr2' not found in message catalog 'TestMsgs'  | SFCHECK           | 106    |
+| Warning   | NoMsgErr2      | Message for error code 'NoMsgErr2' not found in message catalog 'TestMsgs'  | SFCHECK           | 108    |
+| Warning   | NoMsgErr2      | Message for error code 'NoMsgErr2' not found in message catalog 'TestMsgs'  | SFCHECK           | 109    |
++-----------+----------------+-----------------------------------------------------------------------------+-------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

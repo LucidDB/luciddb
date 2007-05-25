@@ -48,13 +48,9 @@ Error: Cast function cannot convert value of type BIGINT to type BOOLEAN (state=
 0: jdbc:luciddb:> -- SELECT t1, CAST (t1 AS long varbinary) FROM CST.alltypes;
 0: jdbc:luciddb:> -- SELECT t1, CAST (t1 AS long varchar) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t1, CAST (t1 AS numeric(8,4)) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[124429]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t1, CAST (t1 AS numeric(6,2)) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[124429]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t1, CAST (t1 AS real) FROM CST.alltypes;
 +---------+-----------+
 |   T1    |  EXPR$1   |
@@ -62,13 +58,9 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 | 124429  | 124429.0  |
 +---------+-----------+
 0: jdbc:luciddb:> SELECT t1, CAST (t1 AS smallint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[124429]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t1, CAST (t1 AS tinyint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[124429]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t1, CAST (t1 AS varbinary(10)) FROM CST.alltypes;
 Error: Cast function cannot convert value of type BIGINT to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t1, CAST (t1 AS varchar(23)) FROM CST.alltypes;
@@ -125,14 +117,10 @@ Error: Cast function cannot convert value of type BOOLEAN to type VARBINARY(10) 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- t3 char(21)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS bigint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[v lesu rodilas       ]
-Messages: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> -- SELECT t3, CAST (t3 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS boolean) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[v lesu rodilas       ]
-Messages: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS char(21)) FROM CST.alltypes;
 +------------------------+------------------------+
 |           T3           |         EXPR$1         |
@@ -140,43 +128,25 @@ Messages: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormat
 | v lesu rodilas         | v lesu rodilas         |
 +------------------------+------------------------+
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS decimal) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[v lesu rodilas       ]
-Messages: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS double) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[v lesu rodilas       ]
-Messages: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS float) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[v lesu rodilas       ]
-Messages: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS integer) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[v lesu rodilas       ]
-Messages: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> -- SELECT t3, CAST (t3 AS long varbinary) FROM CST.alltypes;
 0: jdbc:luciddb:> -- SELECT t3, CAST (t3 AS long varchar) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS numeric(8,4)) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[v lesu rodilas       ]
-Messages: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS numeric(6,2)) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[v lesu rodilas       ]
-Messages: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS real) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[v lesu rodilas       ]
-Messages: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS smallint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[v lesu rodilas       ]
-Messages: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS tinyint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[v lesu rodilas       ]
-Messages: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS varbinary(10)) FROM CST.alltypes;
 Error: Cast function cannot convert value of type CHAR(21) to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS varchar(23)) FROM CST.alltypes;
@@ -334,9 +304,7 @@ Error: Cast function cannot convert value of type DOUBLE to type BOOLEAN (state=
 | 134.23321  | 134     |
 +------------+---------+
 0: jdbc:luciddb:> SELECT t6, CAST (t6 AS tinyint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[134.23321]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t6, CAST (t6 AS varbinary(10)) FROM CST.alltypes;
 Error: Cast function cannot convert value of type DOUBLE to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t6, CAST (t6 AS varchar(23)) FROM CST.alltypes;
@@ -413,9 +381,7 @@ Error: Cast function cannot convert value of type DOUBLE to type BOOLEAN (state=
 | 223.1123  | 223     |
 +-----------+---------+
 0: jdbc:luciddb:> SELECT t7, CAST (t7 AS tinyint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[223.1123]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t7, CAST (t7 AS varbinary(10)) FROM CST.alltypes;
 Error: Cast function cannot convert value of type DOUBLE to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t7, CAST (t7 AS varchar(23)) FROM CST.alltypes;
@@ -468,13 +434,9 @@ Error: Cast function cannot convert value of type INTEGER to type BOOLEAN (state
 0: jdbc:luciddb:> -- SELECT t8, CAST (t8 AS long varbinary) FROM CST.alltypes;
 0: jdbc:luciddb:> -- SELECT t8, CAST (t8 AS long varchar) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS numeric(8,4)) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[1324259]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS numeric(6,2)) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[1324259]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS real) FROM CST.alltypes;
 +----------+------------+
 |    T8    |   EXPR$1   |
@@ -482,13 +444,9 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 | 1324259  | 1324259.0  |
 +----------+------------+
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS smallint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[1324259]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS tinyint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[1324259]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS varbinary(10)) FROM CST.alltypes;
 Error: Cast function cannot convert value of type INTEGER to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS varchar(23)) FROM CST.alltypes;
@@ -768,9 +726,7 @@ Error: Cast function cannot convert value of type REAL to type BOOLEAN (state=,c
 | 1232.4581  | 1232    |
 +------------+---------+
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS tinyint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[1232.4581]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS varbinary(10)) FROM CST.alltypes;
 Error: Cast function cannot convert value of type REAL to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS varchar(23)) FROM CST.alltypes;
@@ -981,14 +937,10 @@ Error: Cast function cannot convert value of type VARBINARY(10) to type VARCHAR(
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- t18 varchar(23)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS bigint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[zimoy i letom stroynaya]
-Messages: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> -- SELECT t18, CAST (t18 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS boolean) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[zimoy i letom stroynaya]
-Messages: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS char(21)) FROM CST.alltypes;
 +--------------------------+------------------------+
 |           T18            |         EXPR$1         |
@@ -996,43 +948,25 @@ Messages: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberForm
 | zimoy i letom stroynaya  | zimoy i letom stroyna  |
 +--------------------------+------------------------+
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS decimal) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[zimoy i letom stroynaya]
-Messages: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS double) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[zimoy i letom stroynaya]
-Messages: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS float) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[zimoy i letom stroynaya]
-Messages: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS integer) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[zimoy i letom stroynaya]
-Messages: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> -- SELECT t18, CAST (t18 AS long varbinary) FROM CST.alltypes;
 0: jdbc:luciddb:> -- SELECT t18, CAST (t18 AS long varchar) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS numeric(8,4)) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[zimoy i letom stroynaya]
-Messages: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS numeric(6,2)) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[zimoy i letom stroynaya]
-Messages: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS real) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[zimoy i letom stroynaya]
-Messages: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS smallint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[zimoy i letom stroynaya]
-Messages: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS tinyint) FROM CST.alltypes;
-Error: Could not calculate result column 2 for the following row:
-[zimoy i letom stroynaya]
-Messages: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS varbinary(10)) FROM CST.alltypes;
 Error: Cast function cannot convert value of type VARCHAR(23) to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS varchar(23)) FROM CST.alltypes;

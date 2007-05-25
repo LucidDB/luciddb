@@ -20,7 +20,7 @@
 */
 package com.lucidera.lurql;
 
-import org._3pq.jgrapht.edge.*;
+import org.jgrapht.graph.*;
 
 /**
  * LurqlPlanEdge is a follow edge in a LURQL plan graph. (TODO: factor out
@@ -30,7 +30,7 @@ import org._3pq.jgrapht.edge.*;
  * @version $Id$
  */
 public class LurqlPlanEdge
-    extends DirectedEdge<LurqlPlanVertex>
+    extends DefaultEdge
 {
 
     //~ Instance fields --------------------------------------------------------
@@ -40,25 +40,30 @@ public class LurqlPlanEdge
      */
     protected String stringRep;
 
+    private final LurqlPlanVertex source;
+    
+    private final LurqlPlanVertex target;
+
     //~ Constructors -----------------------------------------------------------
 
     LurqlPlanEdge(
         LurqlPlanVertex source,
         LurqlPlanVertex target)
     {
-        super(source, target);
+        this.source = source;
+        this.target = target;
     }
 
     //~ Methods ----------------------------------------------------------------
 
     public LurqlPlanVertex getPlanSource()
     {
-        return (LurqlPlanVertex) getSource();
+        return source;
     }
 
     public LurqlPlanVertex getPlanTarget()
     {
-        return (LurqlPlanVertex) getTarget();
+        return target;
     }
 
     public String toString()

@@ -31,9 +31,6 @@
 #include "fennel/lucidera/flatfile/FlatFileBinding.h"
 #include "fennel/lucidera/flatfile/FlatFileExecStreamImpl.h"
 
-#include "fennel/disruptivetech/calc/CalcCommon.h"
-#include "fennel/disruptivetech/xo/CalcExcn.h"
-
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 FlatFileExecStream *FlatFileExecStream::newFlatFileExecStream()
@@ -73,83 +70,7 @@ void FlatFileExecStreamImpl::prepare(
                       params.trim));
 
     numRowsScan = params.numRowsScan;
-
-    if (params.calcProgram.size() == 0) {
-        textDesc = params.outputTupleDesc;
-        return;
-    }
-    
-    // Initialize calculator if a program was specified
-    try {
-        // Force instantiation of the calculator's instruction tables.
-        (void) CalcInit::instance();
-
-        pCalc.reset(new Calculator(pDynamicParamManager.get()));
-        if (isTracing()) {
-            pCalc->initTraceSource(getSharedTraceTarget(), "calc");
-        }
-
-        pCalc->assemble(params.calcProgram.c_str());
-
-        FENNEL_TRACE(
-            TRACE_FINER,
-            "calc program = "
-            << std::endl << params.calcProgram);
-
-        FENNEL_TRACE(
-            TRACE_FINER,
-            "calc input TupleDescriptor = "
-            << pCalc->getInputRegisterDescriptor());
-
-        textDesc = pCalc->getInputRegisterDescriptor();
-        FENNEL_TRACE(
-            TRACE_FINER,
-            "xo input TupleDescriptor = "
-            << textDesc);
-
-        FENNEL_TRACE(
-            TRACE_FINER,
-            "calc output TupleDescriptor = "
-            << pCalc->getOutputRegisterDescriptor());
-
-        FENNEL_TRACE(
-            TRACE_FINER,
-            "xo output TupleDescriptor = "
-            << params.outputTupleDesc);
-
-        assert(textDesc.storageEqual(pCalc->getInputRegisterDescriptor()));
-
-        TupleDescriptor outputDesc = pCalc->getOutputRegisterDescriptor();
-
-        if (!params.outputTupleDesc.empty()) {
-            assert(outputDesc.storageEqual(params.outputTupleDesc));
-
-            // if the plan specifies an output descriptor with different
-            // nullability, use that instead
-            outputDesc = params.outputTupleDesc;
-        }
-        pOutAccessor->setTupleShape(
-            outputDesc,
-            pOutAccessor->getTupleFormat());
-
-        textTuple.compute(textDesc);
-
-        dataTuple.compute(outputDesc);
-
-        // bind calculator to tuple data (tuple data may later change)
-        pCalc->bind(&textTuple,&dataTuple);
-
-        // Set calculator to return immediately on exception as a
-        // workaround.  Prevents indeterminate results from an instruction
-        // that throws an exception from causing non-deterministic
-        // behavior later in program execution.
-        pCalc->continueOnException(false);
-
-    } catch (FennelExcn e) {
-        FENNEL_TRACE(TRACE_SEVERE, "error preparing calculator: "
-            << e.getMessage());
-        throw e;
-    }
+    textDesc = params.outputTupleDesc;
 }
 
 void FlatFileExecStreamImpl::getResourceRequirements(
@@ -296,15 +217,8 @@ ExecStreamResult FlatFileExecStreamImpl::execute(
                 pBuffer->setReadPtr(lastResult.next);
                 continue;
             case FlatFileRowParseResult::NO_STATUS:
-                try {
-                    handleTuple(lastResult, dataTuple);
-                    pBuffer->setReadPtr(lastResult.next);
-                } catch (CalcExcn e) {
-                    logError(e.getMessage(), lastResult);
-                    nRowErrors++;
-                    pBuffer->setReadPtr(lastResult.next);
-                    continue;
-                }
+                handleTuple(lastResult, dataTuple);
+                pBuffer->setReadPtr(lastResult.next);
                 break;
             default:
                 permAssert(false);
@@ -371,15 +285,7 @@ void FlatFileExecStreamImpl::handleTuple(
     FlatFileRowParseResult &result,
     TupleData &tuple)
 {
-    TupleData *pTupleData = NULL;
-    if (pCalc) {
-        // NOTE: bind calc inputs for real implementation
-        // (output tuple is already bound)
-        pTupleData = &textTuple;
-    } else {
-        // NOTE: just return text tuple for fake implementation
-        pTupleData = &tuple;
-    }
+    TupleData *pTupleData = &tuple;
 
     // Describe array is initialized here, because describe requires
     // an unbounded scan, and the number of fields are not known
@@ -415,19 +321,6 @@ void FlatFileExecStreamImpl::handleTuple(
         // quietly truncate long columns
         (*pTupleData)[i].cbData =
             std::min(result.getColumnSize(i), textDesc[i].cbStorage);
-    }
-
-    if (pCalc) {
-        try {
-            pCalc->exec();
-        } catch (FennelExcn e) {
-            FENNEL_TRACE(TRACE_SEVERE,
-                "error executing calculator: " << e.getMessage());
-            throw e;
-        }
-        if (pCalc->mWarnings.begin() != pCalc->mWarnings.end()) {
-            throw CalcExcn(pCalc->warnings(), textDesc, textTuple);
-        }    
     }
 
     if (mode != FLATFILE_MODE_DESCRIBE) {

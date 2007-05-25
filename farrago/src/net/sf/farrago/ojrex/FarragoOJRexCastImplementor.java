@@ -444,20 +444,66 @@ public class FarragoOJRexCastImplementor
          * </pre>
          *
          * <p>Code is also generated to pad and truncate values which need
-         * special handling, such as date and time types.
+         * special handling, such as date and time types.  Plus good old null
+         * handling.
          */
         private Expression castToAssignableValue()
         {
             ensureLhs();
+
+            if (requiresSpecializedCast() && rhsType.isNullable()) {
+                assert(lhsType.isNullable());
+                // propagate null value; normally, we can rely on
+                // assignFrom to do it for us, but for specialized casts,
+                // we can't
+                Expression nullTest =
+                    new MethodCall(
+                        rhsExp,
+                        NullableValue.NULL_IND_ACCESSOR_NAME,
+                        new ExpressionList());
+                addStatement(
+                    new ExpressionStatement(
+                        new MethodCall(
+                            lhsExp,
+                            NullableValue.NULL_IND_MUTATOR_NAME,
+                            new ExpressionList(nullTest))));
+                StatementList ifStmtList = new StatementList();
+                addStatement(
+                    new IfStatement(
+                        not(nullTest),
+                        ifStmtList));
+                borrowStmtList(ifStmtList);
+                try {
+                    return castToAssignableValueImpl();
+                } finally {
+                    returnStmtList(ifStmtList);
+                }
+            } else {
+                return castToAssignableValueImpl();
+            }
+        }
+
+        private boolean requiresSpecializedCast()
+        {
             if ((rhsType != null)
                 && (
                     SqlTypeUtil.isNumeric(rhsType)
                     || (rhsType.getSqlTypeName() == SqlTypeName.Boolean)
                    )
                 && SqlTypeUtil.inCharOrBinaryFamilies(lhsType)
-                && !SqlTypeUtil.isLob(lhsType)) {
+                && !SqlTypeUtil.isLob(lhsType))
+            {
                 // Boolean or Numeric to String.
                 // sometimes the Integer got slipped by.
+                return true;
+            } else {
+                return false;
+            }
+        }
+        
+        private Expression castToAssignableValueImpl()
+        {
+            if (requiresSpecializedCast()) {
                 if (rhsType.isNullable()
                     && (!SqlTypeUtil.isDecimal(rhsType))) {
                     rhsExp = getValue(rhsType, rhsExp);
@@ -608,6 +654,8 @@ public class FarragoOJRexCastImplementor
                                 needPadExp,
                                 padByteExp))));
             }
+
+            
             return lhsExp;
         }
 
@@ -854,7 +902,7 @@ public class FarragoOJRexCastImplementor
 
         /**
          * Borrows the active statement list, by temporarily setting it to
-         * the a new statement list. What is borrowed must be returned!
+         * a new statement list. What is borrowed must be returned!
          *
          * <p>Example:
          * <pre>

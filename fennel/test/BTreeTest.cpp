@@ -45,9 +45,16 @@ class BTreeTest : virtual public SegStorageTestBase
         iValueMax = 1000000000
     };
 
+    enum InsertType {
+        MONOTONIC,
+        SEQUENTIAL,
+        RANDOM
+    };
+
     struct Record 
     {
         int32_t key;
+        int32_t secondKey;
         int32_t value;
     };
 
@@ -60,7 +67,9 @@ class BTreeTest : virtual public SegStorageTestBase
     boost::scoped_array<FixedBuffer> recordBuf;
 
     int32_t readKey();
+    int32_t readSecondKey();
     int32_t readValue();
+    int32_t readMultiKeyValue();
     void verifyTree(uint nRecordsExpected,uint nLevelsExpected);
     
     void testBulkLoadOneLevelNewRoot()
@@ -96,11 +105,30 @@ class BTreeTest : virtual public SegStorageTestBase
         bool deletion);
     void testSearch(SharedByteInputStream,uint nRecords,bool leastUpper);
     void testSearchLast();
-    void testMonotonicInsert();
+
+    void testSequentialInserts()
+    {
+        testInserts(SEQUENTIAL);
+    }
+
+    void testRandomInserts()
+    {
+        testInserts(RANDOM);
+    }
+
+    void testMonotonicInserts()
+    {
+        testInserts(MONOTONIC);
+    }
+
+    void testInserts(InsertType insertType);
 
     void marshalRecord();
+    void marshalMultiKeyRecord();
     void unmarshalRecord(SharedByteInputStream pInputStream);
     
+    void testMultiKeySearches();
+
 public:
     explicit BTreeTest()
     {
@@ -109,7 +137,14 @@ public:
         FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadTwoLevelsNewRoot);
         FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadTwoLevelsReuseRoot);
         FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadThreeLevels);
-        FENNEL_UNIT_TEST_CASE(BTreeTest,testMonotonicInsert);
+        FENNEL_UNIT_TEST_CASE(BTreeTest,testSequentialInserts);
+        FENNEL_UNIT_TEST_CASE(BTreeTest,testRandomInserts);
+        FENNEL_UNIT_TEST_CASE(BTreeTest,testMonotonicInserts);
+
+        // Since this testcase converts the single key descriptor into a
+        // multi-key descriptor, any tests that require the single key
+        // descriptor should run before this one.
+        FENNEL_UNIT_TEST_CASE(BTreeTest,testMultiKeySearches);
         
         StandardTypeDescriptorFactory stdTypeFactory;
         TupleAttributeDescriptor attrDesc(
@@ -145,6 +180,14 @@ void BTreeTest::marshalRecord()
 {
     tupleData[0].pData = reinterpret_cast<PBuffer>(&record.key);
     tupleData[1].pData = reinterpret_cast<PBuffer>(&record.value);
+    tupleAccessor.marshal(tupleData, recordBuf.get());
+}
+
+void BTreeTest::marshalMultiKeyRecord()
+{
+    tupleData[0].pData = reinterpret_cast<PBuffer>(&record.key);
+    tupleData[1].pData = reinterpret_cast<PBuffer>(&record.secondKey);
+    tupleData[2].pData = reinterpret_cast<PBuffer>(&record.value);
     tupleAccessor.marshal(tupleData, recordBuf.get());
 }
 
@@ -364,13 +407,25 @@ int32_t BTreeTest::readKey()
         tupleData[0].pData);
 }
 
+int32_t BTreeTest::readSecondKey()
+{
+    return *reinterpret_cast<int32_t const *>(
+        tupleData[1].pData);
+}
+
 int32_t BTreeTest::readValue()
 {
     return *reinterpret_cast<int32_t const *>(
         tupleData[1].pData);
 }
 
-void BTreeTest::testMonotonicInsert()
+int32_t BTreeTest::readMultiKeyValue()
+{
+    return *reinterpret_cast<int32_t const *>(
+        tupleData[2].pData);
+}
+
+void BTreeTest::testInserts(InsertType insertType)
 {
     uint nRecords = 200000;
     descriptor.rootPageId = NULL_PAGE_ID;
@@ -388,12 +443,22 @@ void BTreeTest::testMonotonicInsert()
         pCache,
         1);
 
-    BTreeWriter writer(descriptor,scratchAccessor,true);
+    bool monotonic = (insertType == MONOTONIC);
+    BTreeWriter writer(descriptor,scratchAccessor,monotonic);
 
-    // insert the records monotonically and then read them back to make sure
+    std::vector<int32_t> keys;
+    for (uint i = 0; i < nRecords; i++) {
+        keys.push_back(i);
+    }
+    if (insertType == RANDOM) {
+        std::random_shuffle(keys.begin(), keys.end());
+    }
+
+    // insert the records and then read them back to make sure
     // they got inserted
     for (uint i = 0; i < nRecords; i++) {
-        record.key = i;
+        record.key = keys[i];
+        record.value = -keys[i];
         marshalRecord();
         writer.insertTupleFromBuffer(
             recordBuf.get(), DUP_FAIL);
@@ -402,11 +467,157 @@ void BTreeTest::testMonotonicInsert()
     BTreeReader reader(descriptor);
     for (uint i = 0; i < nRecords; ++i) {
         record.key = i;
+        record.value = -i;
         if (!reader.searchForKey(keyData,DUP_SEEK_ANY)) {
             BOOST_FAIL("Could not find key #" << i << ":  " << record.key);
         }
         reader.getTupleAccessorForRead().unmarshal(tupleData);
         BOOST_CHECK_EQUAL(record.key,readKey());
+        BOOST_CHECK_EQUAL(record.value,readValue());
+    }
+}
+
+void BTreeTest::testMultiKeySearches()
+{
+    // Add one additional key
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_32));
+    descriptor.tupleDescriptor.push_back(attrDesc);
+    descriptor.keyProjection.push_back(1);
+
+    tupleAccessor.compute(descriptor.tupleDescriptor);
+    recordBuf.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
+
+    // 800 records should be large enough to create several leaf pages.
+    // The first index key will contain 200 distinct values with the second
+    // key sequencing from 0-3.
+    uint nKey1 = 200;
+    uint nKey2 = 4;
+    descriptor.rootPageId = NULL_PAGE_ID;
+    BTreeBuilder builder(descriptor,pRandomSegment);
+    
+    tupleData.compute(descriptor.tupleDescriptor);
+
+    builder.createEmptyRoot();
+    descriptor.rootPageId = builder.getRootPageId();
+
+    SegmentAccessor scratchAccessor = pSegmentFactory->newScratchSegment(
+        pCache,
+        1);
+
+    BTreeWriter writer(descriptor,scratchAccessor,false);
+
+    for (uint i = 0; i < nKey1; i++) {
+        for (uint j = 0; j < nKey2; j++) {
+            record.key = i;
+            record.secondKey = j;
+            record.value = i + j;
+            marshalMultiKeyRecord();
+            writer.insertTupleFromBuffer(recordBuf.get(), DUP_FAIL);
+        }
+    }
+
+    // Search based on only the first key
+    TupleDescriptor searchKeyDesc;
+    searchKeyDesc.push_back(attrDesc);
+    keyData.compute(searchKeyDesc);
+    keyData[0].pData = reinterpret_cast<PConstBuffer>(&record.key);
+
+    // First, try searching using DUP_SEEK_BEGIN, then DUP_SEEK_END mode
+    BTreeReader reader(descriptor);
+    for (uint i = 0; i < nKey1; ++i) {
+        record.key = i;
+
+        if (!reader.searchForKey(keyData,DUP_SEEK_BEGIN)) {
+            BOOST_FAIL("Could not find begin key #" << i);
+        }
+        reader.getTupleAccessorForRead().unmarshal(tupleData);
+        BOOST_CHECK_EQUAL(i,readKey());
+        BOOST_CHECK_EQUAL(0,readSecondKey());
+        BOOST_CHECK_EQUAL(i,readMultiKeyValue());
+
+        if (!reader.searchForKey(keyData,DUP_SEEK_END)) {
+            BOOST_FAIL("Could not find end key #" << i);
+        }
+        if (i == nKey1 - 1) {
+            if (!reader.isSingular()) {
+                BOOST_FAIL(
+                    "Should have reached end of tree for end key #" << i);
+            }
+        } else {
+            reader.getTupleAccessorForRead().unmarshal(tupleData);
+            BOOST_CHECK_EQUAL(i+1,readKey());
+            BOOST_CHECK_EQUAL(0,readSecondKey());
+            BOOST_CHECK_EQUAL(i+1,readMultiKeyValue());
+        }
+    }
+    reader.endSearch();
+
+    // Test the scenario where we delete the last key on a leaf page and
+    // then reinsert it with a larger second key value forcing it into the 
+    // next leaf page.  Since we don't know which key is at the end of a
+    // leaf page, delete/reinsert all of them.
+    //
+    // To make sure we can find the relocated keys, do the following types
+    // of search:
+    // 1) partial begin search
+    // 2) partial end search
+    // 3) end search on a non-existent full key
+
+    TupleData multiKeyData;
+    multiKeyData.compute(builder.getKeyDescriptor());
+    multiKeyData[0].pData = reinterpret_cast<PConstBuffer>(&record.key);
+    multiKeyData[1].pData = reinterpret_cast<PConstBuffer>(&record.secondKey);
+    for (uint i = 0; i < nKey1; i++) {
+        for (uint j = 0; j < nKey2; j++) {
+            record.key = i;
+            record.secondKey = j;
+            if (!writer.searchForKey(multiKeyData,DUP_SEEK_ANY)) {
+                BOOST_FAIL("Could not find key #" << i);
+            }
+            writer.deleteCurrent();
+
+            record.secondKey = j + nKey2;
+            record.value = i + j + nKey2;
+            marshalMultiKeyRecord();
+            writer.insertTupleFromBuffer(recordBuf.get(), DUP_FAIL);
+        }
+    }
+    writer.endSearch();
+    for (uint i = 0; i < nKey1; i++) {
+        record.key = i;
+        if (!reader.searchForKey(keyData,DUP_SEEK_BEGIN)) {
+            BOOST_FAIL("Could not find begin key #" << i);
+        }
+        reader.getTupleAccessorForRead().unmarshal(tupleData);
+        BOOST_CHECK_EQUAL(i,readKey());
+        BOOST_CHECK_EQUAL(nKey2,readSecondKey());
+        BOOST_CHECK_EQUAL(i+nKey2,readMultiKeyValue());
+
+        if (!reader.searchForKey(keyData,DUP_SEEK_END)) {
+            BOOST_FAIL("Could not find end key #" << i);
+        }
+        if (i == nKey1 - 1) {
+            if (!reader.isSingular()) {
+                BOOST_FAIL(
+                    "Should have reached end of tree for end key #" << i);
+            }
+        } else {
+            reader.getTupleAccessorForRead().unmarshal(tupleData);
+            BOOST_CHECK_EQUAL(i+1,readKey());
+            BOOST_CHECK_EQUAL(nKey2,readSecondKey());
+            BOOST_CHECK_EQUAL(i+1+nKey2,readMultiKeyValue());
+        }
+
+        record.secondKey = 0;
+        if (reader.searchForKey(multiKeyData,DUP_SEEK_END)) {
+            BOOST_FAIL("Should not have found multikey #" << i);
+        }
+        reader.getTupleAccessorForRead().unmarshal(tupleData);
+        BOOST_CHECK_EQUAL(i,readKey());
+        BOOST_CHECK_EQUAL(nKey2,readSecondKey());
+        BOOST_CHECK_EQUAL(i+nKey2,readMultiKeyValue());
     }
 }
 

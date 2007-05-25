@@ -1774,4 +1774,46 @@
 '      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$K]])'
 > 
+> -------------------
+> -- misc outer joins
+> -------------------
+> -- LER-4650 -- outer join condition doesn't reference the null-generating
+> -- table
+> !set outputformat csv
+> explain plan for
+>     select * from
+>         (select * from A, B, C where a = b) X
+>         left outer join D on X.a = X.c;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 4, 5, 2, 3, 7, 8]], outputRowType=[RecordType(INTEGER K, INTEGER NOT NULL A, INTEGER K0, INTEGER NOT NULL B, INTEGER K1, INTEGER NOT NULL C, INTEGER K, INTEGER D) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[6]], rightKeys=[[2]], joinType=[LEFT])'
+'      FennelCalcRel(expr#0..5=[{inputs}], expr#6=[=($t1, $t3)], proj#0..6=[{exprs}])'
+'        LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
+'          FennelCartesianProductRel(leftouterjoin=[false])'
+'            LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
+'            LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C, SYS$CLUSTERED_INDEX$C$K]])'
+'          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B, SYS$CLUSTERED_INDEX$B$K]])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], proj#0..2=[{exprs}])'
+'        LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D, SYS$CLUSTERED_INDEX$D$K]])'
+> !set outputformat table
+> select * from
+>     (select * from A, B, C where a = b) X
+>     left outer join D on X.a = X.c
+> order by d, c;
++----+----+-----+----+-----+----+-----+----+
+| K  | A  | K0  | B  | K1  | C  | K2  | D  |
++----+----+-----+----+-----+----+-----+----+
+| 3  | 3  | 2   | 3  | 1   | 2  |     |    |
+| 2  | 2  | 1   | 2  | 2   | 3  |     |    |
+| 3  | 3  | 2   | 3  | 3   | 4  |     |    |
+| 2  | 2  | 1   | 2  | 3   | 4  |     |    |
+| 2  | 2  | 1   | 2  | 1   | 2  | 1   | 3  |
+| 3  | 3  | 2   | 3  | 2   | 3  | 1   | 3  |
+| 2  | 2  | 1   | 2  | 1   | 2  | 2   | 4  |
+| 3  | 3  | 2   | 3  | 2   | 3  | 2   | 4  |
+| 2  | 2  | 1   | 2  | 1   | 2  | 3   | 5  |
+| 3  | 3  | 2   | 3  | 2   | 3  | 3   | 5  |
++----+----+-----+----+-----+----+-----+----+
+> 
 > !quit

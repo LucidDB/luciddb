@@ -796,3 +796,19 @@ explain plan for
 -- no keys from null generating factor
 explain plan for
     select A.* from A left outer join B on a = A.k;
+
+-------------------
+-- misc outer joins
+-------------------
+-- LER-4650 -- outer join condition doesn't reference the null-generating
+-- table
+!set outputformat csv
+explain plan for
+    select * from
+        (select * from A, B, C where a = b) X
+        left outer join D on X.a = X.c;
+!set outputformat table
+select * from
+    (select * from A, B, C where a = b) X
+    left outer join D on X.a = X.c
+order by d, c;

@@ -101,6 +101,7 @@ inline bool BTreeReader::searchForKeyTemplate(
     pageId = getRootPageId();
     LockMode lockMode = rootLockMode;
     bool lockCoupling = false;
+    bool foundKeyAndMovedRight = false;
     for (;;) {
         if (leafLockCoupling && lockCoupling) {
             pageLock.lockPageWithCoupling(pageId,lockMode);
@@ -118,14 +119,23 @@ inline bool BTreeReader::searchForKeyTemplate(
         
         bool found;
         uint iKeyBound = binarySearch(node,dupSeek,leastUpper,found);
+        if (foundKeyAndMovedRight && !found) {
+            // if we previously located our desired key on the page to
+            // the left of this one and had to search to the right because
+            // we're doing a DUP_SEEK_END search, but the key doesn't
+            // exist on the current page, then we should revert back to the
+            // prior "found" status, since we did find the key
+            assert(iKeyBound == 0);
+            found = true;
+        }
 
         // if we're searching for the greatest lower bound, we didn't
         // find an exact match, and we're positioned at the rightmost
         // key entry, need to search the first key in the right sibling
         // to be sure we have the correct glb
         if (!leastUpper && !found && iKeyBound == node.nEntries - 1 &&
-                node.rightSibling != NULL_PAGE_ID) {
-
+            node.rightSibling != NULL_PAGE_ID)
+        {
             // not currently handling leaf lock coupling for reads,
             // which is the only time we're searching for glb
             assert(leafLockCoupling == false);
@@ -152,6 +162,7 @@ inline bool BTreeReader::searchForKeyTemplate(
             } else {
                 // switch over to the right sibling
                 pageId = node.rightSibling;
+                foundKeyAndMovedRight = false;
                 continue;
             }
         }
@@ -171,6 +182,7 @@ inline bool BTreeReader::searchForKeyTemplate(
                 }
             } else {
                 // have to search right
+                foundKeyAndMovedRight = found;
                 pageId = node.rightSibling;
                 if (leafLockCoupling && !node.height) {
                     lockCoupling = true;
@@ -196,18 +208,29 @@ inline bool BTreeReader::searchForKeyTemplate(
         
         // we'll continue search on child
         pageId = getChildForCurrent();
+        foundKeyAndMovedRight = false;
 
-        // record the successor child as a terminator for rightward
-        // searches once we descend to the child level
-        if (iKeyBound < (node.nEntries - 1)) {
-            rightSearchTerminator = getChild(node,iKeyBound + 1);
-        } else {
-            // have to consult our own sibling to find the successor
-            // child
-            // need to get the pageId first, then unlock.
-            PageId rightSiblingPageId = node.rightSibling;
-            pageLock.unlock();
-            rightSearchTerminator = getFirstChild(rightSiblingPageId);
+        // Record the successor child as a terminator for rightward
+        // searches once we descend to the child level, unless we're doing
+        // a partial key search or a DUP_SEEK_END search.  In those 
+        // exception cases, when the last key value in a parent does not
+        // exist in the leaf, we have to continue reading to the right.
+        // That condition occurs if the last key was deleted from the leaf.
+        // Because we didn't make a corresponding update in the parent node,
+        // we find a match in the parent, but not the leaf.
+        if ((*pSearchKey).size() == keyDescriptor.size() &&
+            dupSeek != DUP_SEEK_END)
+        {
+            if (iKeyBound < (node.nEntries - 1)) {
+                rightSearchTerminator = getChild(node,iKeyBound + 1);
+            } else {
+                // have to consult our own sibling to find the successor
+                // child
+                // need to get the pageId first, then unlock.
+                PageId rightSiblingPageId = node.rightSibling;
+                pageLock.unlock();
+                rightSearchTerminator = getFirstChild(rightSiblingPageId);
+            }
         }
     }
 }

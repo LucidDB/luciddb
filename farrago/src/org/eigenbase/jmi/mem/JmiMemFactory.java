@@ -32,7 +32,7 @@ import javax.jmi.reflect.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
-import org._3pq.jgrapht.DirectedGraph;
+import org.jgrapht.DirectedGraph;
 
 /**
  * JmiMemFactory creates objects for use in an in-memory repository
@@ -498,7 +498,7 @@ public abstract class JmiMemFactory
                 MethodId methodId = MethodId.valueOf(MethodId.class, name);
                 switch (methodId) {
                 case toString:
-                    // Intercept methods on Object. Otherwise we loop.
+                // Intercept methods on Object. Otherwise we loop.
                     assert method.getDeclaringClass() == Object.class;
                     return clazz + ":" + System.identityHashCode(proxy);
                 case hashCode:
@@ -512,88 +512,88 @@ public abstract class JmiMemFactory
                 case compareTo:
                     if (method.getDeclaringClass() == Comparable.class) {
                         assert name.equals("compareTo");
-                        assert args == null;
-                        RefBaseObject that = (RefBaseObject) args[0];
-                        String thisMofId = this.proxyRefMofId();
-                        String thatMofId = that.refMofId();
-                        return new Integer(thisMofId.compareTo(thatMofId));
+                assert args == null;
+                RefBaseObject that = (RefBaseObject) args[0];
+                String thisMofId = this.proxyRefMofId();
+                String thatMofId = that.refMofId();
+                return new Integer(thisMofId.compareTo(thatMofId));
                     }
                     break;
                 case refMofId:
-                    assert method.getDeclaringClass() == RefBaseObject.class;
-                    assert args == null;
-                    return proxyRefMofId();
+                assert method.getDeclaringClass() == RefBaseObject.class;
+                assert args == null;
+                return proxyRefMofId();
                 case impl:
-                    assert method.getDeclaringClass() == Element.class;
-                    assert args == null;
-                    return proxyImpl();
+                assert method.getDeclaringClass() == Element.class;
+                assert args == null;
+                return proxyImpl();
                 case refClass:
                     if (args == null) {
-                        return classMap.get(clazz);
+                return classMap.get(clazz);
                     } else {
                         return proxyRefByMoniker(args[0]);
                     }
                 case refImmediateComposite:
-                    return proxyImmediateComposite();
+                return proxyImmediateComposite();
                 case refOutermostPackage:
-                    return rootPackageImpl.wrap();
+                return rootPackageImpl.wrap();
                 case refImmediatePackage:
-                    return proxyRefImmediatePackage();
+                return proxyRefImmediatePackage();
                 case refAllPackages:
-                    return proxyRefAllPackages();
+                return proxyRefAllPackages();
                 case refAllClasses:
-                    return filterChildren(RefClass.class);
+                return filterChildren(RefClass.class);
                 case refAllAssociations:
-                    return filterChildren(RefAssociation.class);
+                return filterChildren(RefAssociation.class);
                 case refMetaObject:
                     RefObject obj = metaMap.get(clazz);
                     if (obj != null) {
-                        return obj;
+                return obj;
                     }
                     return createImpl(MofPackage.class, null, false).wrap();
                 case refGetEnum:
-                    return proxyRefGetEnum(args[0], (String) args[1]);
+                return proxyRefGetEnum(args[0], (String) args[1]);
                 case refGetValue:
-                    return proxyRefByMoniker(args[0]);
+                return proxyRefByMoniker(args[0]);
                 case refSetValue:
-                    return proxyRefSetValue(args[0], args[1]);
+                return proxyRefSetValue(args[0], args[1]);
                 case refPackage:
-                    return proxyRefPackage(args[0]);
+                return proxyRefPackage(args[0]);
                 case refAssociation:
-                    return proxyRefByMoniker(args[0]);
+                return proxyRefByMoniker(args[0]);
                 case refDelete:
-                    // REVIEW jvs 9-Mar-2006: this is to allow code to be reusable
-                    // across persistent and mem repositories, but the behavior
-                    // will be different!
-                    return null;
+                // REVIEW jvs 9-Mar-2006: this is to allow code to be reusable
+                // across persistent and mem repositories, but the behavior
+                // will be different!
+                return null;
                 case refAllLinks:
-                    // REVIEW jvs 30-Jan-2006:  To implement this, we
-                    // would have to keep track of extents, which we don't
-                    // want to do.  Instead of failing, return empty set
-                    // so that XMI export can work (assuming the model
-                    // does not contain an association without a corresponding
-                    // reference on at least one side).
-                    return Collections.EMPTY_SET;
+                // REVIEW jvs 30-Jan-2006:  To implement this, we
+                // would have to keep track of extents, which we don't
+                // want to do.  Instead of failing, return empty set
+                // so that XMI export can work (assuming the model
+                // does not contain an association without a corresponding
+                // reference on at least one side).
+                return Collections.EMPTY_SET;
                 case refQuery:
-                    // REVIEW: swz 20-Nov-2006: Same problem as refAllLinks:
-                    // no extents, so we just return an empty collection.
-                    return Collections.EMPTY_SET;
+                // REVIEW: swz 20-Nov-2006: Same problem as refAllLinks:
+                // no extents, so we just return an empty collection.
+                return Collections.EMPTY_SET;
                 case refLinkExists:
-                    return
-                        proxyRefLinkExists((RefObject) args[0],
-                            (RefObject) args[1]);
+                return
+                    proxyRefLinkExists((RefObject) args[0],
+                        (RefObject) args[1]);
                 case refAddLink:
-                    return
-                        proxyRefAddLink((RefObject) args[0], (RefObject) args[1]);
+                return
+                    proxyRefAddLink((RefObject) args[0], (RefObject) args[1]);
                 case refRemoveLink:
-                    return
-                        proxyRefRemoveLink((RefObject) args[0],
-                            (RefObject) args[1]);
+                return
+                    proxyRefRemoveLink((RefObject) args[0],
+                        (RefObject) args[1]);
                 case refCreateInstance:
-                    return proxyRefCreateInstance((List) args[0]);
+                return proxyRefCreateInstance((List) args[0]);
                 case refIsInstanceOf:
-                    return proxyRefIsInstanceOf(
-                        (RefObject)args[0], (Boolean)args[1]);
+                return proxyRefIsInstanceOf(
+                    (RefObject)args[0], (Boolean)args[1]);
                 }
             } catch (IllegalArgumentException e) {
                 // Method name is not one of the standard ones -- that's OK.
@@ -617,8 +617,8 @@ public abstract class JmiMemFactory
                     args,
                     method.getReturnType());
             }
-            throw new UnsupportedOperationException(method.toString());
-        }
+                throw new UnsupportedOperationException(method.toString());
+            }
 
         protected String proxyRefMofId()
         {
@@ -775,14 +775,14 @@ public abstract class JmiMemFactory
                 return children;
             }
         }
-
+        
         protected RefPackage proxyRefImmediatePackage()
         {
             if (immediatePkg == null) {
                 // Outermost package
                 return null;
             }
-
+            
             // Have to cast RefPackageImpl to ElementImpl to get at the
             // proxy field.  (Eclipse, at least, doesn't allow this otherwise.)
             return (RefPackage)((ElementImpl)immediatePkg).proxy;
@@ -809,7 +809,7 @@ public abstract class JmiMemFactory
         {
             if (moniker instanceof String) {
                 String name = (String)moniker;
-
+                
                 return "get" + Character.toUpperCase(name.charAt(0)) +
                     name.substring(1);
             } else {
@@ -831,7 +831,7 @@ public abstract class JmiMemFactory
             Field field = enumClass.getField(JmiObjUtil.getEnumFieldName(name));
             return field.get(null);
         }
-
+        
         protected Boolean proxyRefLinkExists(
             RefObject firstEnd,
             RefObject secondEnd)
@@ -980,23 +980,23 @@ public abstract class JmiMemFactory
             RefObject refObject, boolean considerSubTypes)
         {
             RefObject thisMofClass = classMap.get(clazz).refMetaObject();
-
+            
             return isInstanceOf(thisMofClass, refObject, considerSubTypes);
         }
-
+        
         private boolean isInstanceOf(
             RefObject mofClass, RefObject refObject, boolean considerSubTypes)
         {
             if (refObject.equals(mofClass)) {
                 return true;
             }
-
+            
             if (!considerSubTypes) {
                 return false;
             }
-
+            
             JmiModelGraph modelGraph = getModelGraph();
-
+            
             // Some tests simply use JmiMemFactory directly, in which case
             // there's no model graph to be had.  However, these tests all
             // worked before this method was implemented, so they clearly
@@ -1005,27 +1005,27 @@ public abstract class JmiMemFactory
             // test case to use JmiModeledMemFactory (see JmiMemTest).
             assert(modelGraph != null);
 
-            JmiClassVertex mofClassVertex =
+            JmiClassVertex mofClassVertex = 
                 modelGraph.getVertexForMofClass((MofClass)refObject);
 
             // Traverse up refObject's inheritance chain and see if we find
             // a match.
-            DirectedGraph<JmiClassVertex, JmiInheritanceEdge> inheritanceGraph =
-                modelGraph.getInheritanceGraph();
-
-            List<JmiInheritanceEdge> edges =
+            DirectedGraph<JmiClassVertex, JmiInheritanceEdge>
+                inheritanceGraph = modelGraph.getInheritanceGraph();
+            
+            Set<JmiInheritanceEdge> edges = 
                 inheritanceGraph.outgoingEdgesOf(mofClassVertex);
-            for(JmiInheritanceEdge edge: edges) {
+            for (JmiInheritanceEdge edge : edges) {
                 mofClass = edge.getSuperClass().getMofClass();
-
+                
                 if (isInstanceOf(mofClass, refObject, true)) {
                     return true;
                 }
             }
-
+                
             return false;
         }
-
+        
         protected <T> Collection<T> filterChildren(Class<T> iface)
         {
             List<T> list = new ArrayList<T>();
@@ -1123,7 +1123,7 @@ public abstract class JmiMemFactory
         {
             this(clazz, null);
         }
-
+        
         public RefPackageImpl(
             Class<? extends RefPackage> clazz,
             RefPackageImpl immediatePkg)
@@ -1216,13 +1216,13 @@ public abstract class JmiMemFactory
             elementImpl.put(relationship.inverse.name, element.proxy);
             return super.add(o);
         }
-
+        
         public boolean addAll(Collection<? extends Object> c)
         {
             for(Object o: c) {
                 this.add(o);
             }
-
+            
             return c.size() > 0;
         }
     }
@@ -1262,13 +1262,13 @@ public abstract class JmiMemFactory
             }
             return super.add(o);
         }
-
+        
         public boolean addAll(Collection<? extends Object> c)
         {
             for(Object o: c) {
                 this.add(o);
             }
-
+            
             return c.size() > 0;
         }
 

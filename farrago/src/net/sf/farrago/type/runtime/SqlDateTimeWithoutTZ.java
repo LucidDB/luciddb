@@ -383,6 +383,9 @@ public abstract class SqlDateTimeWithoutTZ
      */
     public String toString()
     {
+        if (isNull) {
+            return null;
+        }
         return value.toString();
     }
 
@@ -607,7 +610,7 @@ public abstract class SqlDateTimeWithoutTZ
                 throw new IllegalArgumentException();
             }
             value = date;
-        }
+            }
 
         // implement SqlDateTimeWithoutTZ
         protected String getFormat()
@@ -746,7 +749,7 @@ public abstract class SqlDateTimeWithoutTZ
                 timestamp.setZonelessTime(t);
             }
             value = timestamp;
-        }
+            }
 
         // implement SqlDateTimeWithoutTZ
         protected String getFormat()

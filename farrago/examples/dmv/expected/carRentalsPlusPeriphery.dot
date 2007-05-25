@@ -1,0 +1,26 @@
+digraph G {
+    graph [bgcolor=gray]
+    node [shape=record, style=filled, fillcolor=white, fontsize=10.0]
+    edge [fontsize=10.0]
+    subgraph cluster12072347 {
+        bgcolor=white;
+        label="LocalSchema:ACCOUNTS";
+        29853907[label="{LocalTable|CUSTOMERS}"];
+    }
+    subgraph cluster15196112 {
+        bgcolor=white;
+        label="LocalSchema:CAR_RENTALS";
+        18284893[label="{LocalTable|CARS}"];
+        22717992[label="{LocalTable|CONTRACTS}"];
+        5410519[label="{LocalView|CUSTOMER_RENTALS}"];
+    }
+    subgraph cluster2082417 {
+        bgcolor=white;
+        label="LocalSchema:BILLING";
+        1925978[label="{LocalView|EVENTS}"];
+    }
+    29853907->5410519[];
+    18284893->5410519[];
+    22717992->5410519[];
+    5410519->1925978[];
+}

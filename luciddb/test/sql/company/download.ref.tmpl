@@ -76,4 +76,8 @@
 0: jdbc:luciddb:> analyze table LOCATION estimate statistics for all columns SAMPLE 100 PERCENT;
 0: jdbc:luciddb:> analyze table DEPT estimate statistics for all columns SAMPLE 100 PERCENT;
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- fake row count to use index access
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'S', 'LOCATION', 10);
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'S', 'DEPT', 10);
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

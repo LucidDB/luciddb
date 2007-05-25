@@ -36,7 +36,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.pretty.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
 
@@ -70,20 +69,16 @@ public class DdlAnalyzeStmt
     private SqlPrettyWriter writer;
     private SqlIdentifier tableName;
     private FarragoRepos repos;
-
+    
     //~ Constructors -----------------------------------------------------------
 
-    public DdlAnalyzeStmt()
+    public DdlAnalyzeStmt(CwmTable table)
     {
-        super(null);
+        super(table, true);
+        this.table = table;
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    public void setTable(CwmTable table)
-    {
-        this.table = table;
-    }
 
     /**
      * Sets the list of columns to be analyzed
@@ -169,24 +164,31 @@ public class DdlAnalyzeStmt
                 femTable.getName());
         }
 
-        // Update statistics
-        updateRowCount();
+        // Compute row counts and column histograms
+        long rowCount = computeRowCount();
+        List<Histogram> histograms = new ArrayList<Histogram>();
         for (FemAbstractColumn column : femColumnList) {
-            updateColumnStats(column);
+            computeColumnStats(histograms, column, rowCount);
         }
 
-        // Update index page counts
+        // Compute index page counts
+        Map<FemLocalIndex, Long> indexPageCounts =
+            new HashMap<FemLocalIndex, Long>();
         for (FemLocalIndex index :
             FarragoCatalogUtil.getTableIndexes(repos, table))
         {
-            ddlValidator.getIndexMap().computeIndexStats(
+            long pageCount = ddlValidator.getIndexMap().computeIndexStats(
                 ddlValidator.getDataWrapperCache(),
                 index,
                 estimate);
+            indexPageCounts.put(index, pageCount);
         }
+        
+        // Update stats computed above
+        updateStats(repos, rowCount, histograms, indexPageCounts);
     }
 
-    private void updateRowCount()
+    private long computeRowCount()
         throws SQLException
     {
         String sql = getRowCountQuery();
@@ -199,8 +201,8 @@ public class DdlAnalyzeStmt
         assert (gotRow);
         long rowCount = resultSet.getLong(1);
         resultSet.close();
-
-        FarragoCatalogUtil.updateRowCount(femTable, rowCount);
+        
+        return rowCount;   
     }
 
     private String getRowCountQuery()
@@ -220,7 +222,10 @@ public class DdlAnalyzeStmt
         assert (SqlTypeUtil.isExactNumeric(type)) : "row count invalid type";
     }
 
-    private void updateColumnStats(FemAbstractColumn column)
+    private void computeColumnStats(
+        List<Histogram> histograms,       
+        FemAbstractColumn column,
+        long tableRowCount)
         throws SQLException
     {
         String sql = getColumnDistributionQuery(column);
@@ -229,7 +234,9 @@ public class DdlAnalyzeStmt
 
         stmtContext.execute();
         ResultSet resultSet = stmtContext.getResultSet();
-        buildHistogram(column, resultSet);
+        Histogram columnHistogram =
+            buildHistogram(column, tableRowCount, resultSet);
+        histograms.add(columnHistogram);
         resultSet.close();
     }
 
@@ -260,12 +267,12 @@ public class DdlAnalyzeStmt
         assert (SqlTypeUtil.isExactNumeric(type)) : "column query invalid type";
     }
 
-    private void buildHistogram(
+    private Histogram buildHistogram(
         FemAbstractColumn column,
+        long tableRowCount,
         ResultSet resultSet)
         throws SQLException
     {
-        long tableRowCount = femTable.getRowCount();
         int defaultBarCount = DEFAULT_HISTOGRAM_BAR_COUNT;
 
         int barCount;
@@ -287,40 +294,35 @@ public class DdlAnalyzeStmt
             }
         }
 
-        List<FemColumnHistogramBar> bars = buildBars(resultSet, rowsPerBar);
+        List<ColumnHistogramBar> bars = buildBars(resultSet, rowsPerBar);
 
         // for compute statistics, total cardinality is sum of bar values
         long distinctValues = 0;
-        for (FemColumnHistogramBar bar : bars) {
-            distinctValues += bar.getValueCount();
+        for (ColumnHistogramBar bar : bars) {
+            distinctValues += bar.valueCount;
         }
 
-        FarragoCatalogUtil.updateHistogram(
-            repos,
+        return new Histogram(
             column,
             distinctValues,
-            100,
             bars.size(),
             rowsPerBar,
             rowsLastBar,
             bars);
     }
 
-    private List<FemColumnHistogramBar> buildBars(
+    private List<ColumnHistogramBar> buildBars(
         ResultSet resultSet,
         long rowsPerBar)
         throws SQLException
     {
-        List<FemColumnHistogramBar> bars =
-            new LinkedList<FemColumnHistogramBar>();
+        List<ColumnHistogramBar> bars =
+            new LinkedList<ColumnHistogramBar>();
         boolean newBar = true;
         String barStartValue = null;
         long barValueCount = 0;
         long barRowCount = 0;
 
-        RelDataType rowType = stmtContext.getPreparedRowType();
-        List fieldList = rowType.getFieldList();
-        RelDataType type = ((RelDataTypeField) fieldList.get(0)).getType();
         while (resultSet.next()) {
             Object o = resultSet.getObject(1);
             String nextValue;
@@ -344,8 +346,8 @@ public class DdlAnalyzeStmt
             barRowCount += nextRows;
 
             while (barRowCount >= rowsPerBar) {
-                FemColumnHistogramBar bar =
-                    buildBar(barStartValue, barValueCount);
+                ColumnHistogramBar bar =
+                    new ColumnHistogramBar(barStartValue, barValueCount);
                 bars.add(bar);
 
                 barRowCount -= rowsPerBar;
@@ -361,17 +363,130 @@ public class DdlAnalyzeStmt
 
         // build partial last bars
         if (barRowCount > 0) {
-            bars.add(buildBar(barStartValue, barValueCount));
+            bars.add(new ColumnHistogramBar(barStartValue, barValueCount));
         }
         return bars;
     }
-
-    private FemColumnHistogramBar buildBar(String startValue, long valueCount)
+    
+    private void buildFemBars(
+        Histogram histogram,
+        List<FemColumnHistogramBar> femBars)
     {
-        FemColumnHistogramBar bar = repos.newFemColumnHistogramBar();
-        bar.setStartingValue(startValue);
-        bar.setValueCount(valueCount);
-        return bar;
+        // If possible, try to reuse the original histogram
+        FemColumnHistogram origHistogram = histogram.column.getHistogram();
+        int origBarCount = 0;
+        List<FemColumnHistogramBar> origBars = null;
+        if (origHistogram != null) {
+            origBarCount = origHistogram.getBarCount();
+            origBars = origHistogram.getBar();
+        }
+        
+        int count = 0;
+        for (ColumnHistogramBar bar : histogram.bars) {
+            FemColumnHistogramBar femBar;
+            if (count < origBarCount) {
+                femBar = origBars.get(count);
+            } else {
+                femBar = repos.newFemColumnHistogramBar();
+            }   
+            femBar.setStartingValue(bar.startValue);
+            femBar.setValueCount(bar.valueCount);
+            femBars.add(femBar);
+            count++;
+        }
+    }
+    
+    /**
+     * Updates catalog records with new statistical data, all within a single
+     * MDR write txn
+     * 
+     * @param repos repository
+     * @param rowCount table rowcount
+     * @param histograms column histogram
+     * @param indexPageCounts index page counts
+     */
+    private void updateStats(
+        FarragoRepos repos,
+        long rowCount,
+        List<Histogram> histograms,
+        Map<FemLocalIndex, Long> indexPageCounts)
+    {
+        FarragoReposTxnContext txn = repos.newTxnContext();
+
+        try {
+            txn.beginWriteTxn();
+            FarragoCatalogUtil.updateRowCount(femTable, rowCount);
+        
+            for (Histogram histogram : histograms) {               
+                List<FemColumnHistogramBar> femBars =
+                    new LinkedList<FemColumnHistogramBar>();
+                buildFemBars(histogram, femBars);
+                FarragoCatalogUtil.updateHistogram(
+                    repos,
+                    histogram.column,
+                    histogram.distinctValues,
+                    100,
+                    histogram.barCount,
+                    histogram.rowsPerBar,
+                    histogram.rowsLastBar,
+                    femBars);
+            }
+            
+            Set<FemLocalIndex> indexes = indexPageCounts.keySet();
+            for (FemLocalIndex index : indexes) {
+                FarragoCatalogUtil.updatePageCount(
+                    index, indexPageCounts.get(index));
+            }
+            
+            txn.commit();
+        } finally {
+            txn.rollback();
+        }    
+    }
+    
+    /**
+     * Class used to store column histogram information
+     */
+    private class Histogram
+    {
+        FemAbstractColumn column;
+        long distinctValues;
+        int barCount;
+        long rowsPerBar;
+        long rowsLastBar;
+        List<ColumnHistogramBar> bars;
+        
+        Histogram(
+            FemAbstractColumn column,
+            Long distinctValues,
+            int barCount,
+            long rowsPerBar,
+            long rowsLastBar,
+            List<ColumnHistogramBar> bars)
+        {
+            this.column = column;
+            this.distinctValues = distinctValues;
+            this.barCount = barCount;
+            this.rowsPerBar = rowsPerBar;
+            this.rowsLastBar = rowsLastBar;
+            this.bars = bars;
+        }
+    }
+    
+    /**
+     * Class used to store column histogram bar information
+     */
+    private class ColumnHistogramBar
+    {
+        String startValue;
+        long valueCount;
+        
+        ColumnHistogramBar(String startValue, long valueCount)
+        {
+            this.startValue = startValue;
+            this.valueCount = valueCount;
+        }
+        
     }
 }
 

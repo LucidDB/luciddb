@@ -11,6 +11,10 @@ values applib.leftN('', 3);
 -- failures
 values applib.leftN('Here''s another one', -3);
 
+-- null input
+values applib.leftn(cast(null as varchar(3)), 3);
+values applib.leftn('toot toot', cast(null as integer));
+
 -- create view with reference to applib.leftN
 create view cutcust as 
 select applib.leftN(fname, 5), applib.leftN(lname, 3), applib.leftN(phone, 7)

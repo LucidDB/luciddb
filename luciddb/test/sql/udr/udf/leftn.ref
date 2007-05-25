@@ -25,10 +25,21 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failures
 0: jdbc:luciddb:> values applib.leftN('Here''s another one', -3);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Length must be non-negative (state=,code=0)
+Error: Length must be non-negative (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.leftn(cast(null as varchar(3)), 3);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.leftn('toot toot', cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.leftN
 0: jdbc:luciddb:> create view cutcust as 

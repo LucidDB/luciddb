@@ -7,6 +7,14 @@
 0: jdbc:luciddb:> create schema dist;
 0: jdbc:luciddb:> set schema 'dist';
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function dist.diffdiv10(int1 integer, int2 integer)
+. . . . . . . . > returns integer
+. . . . . . . . > language sql
+. . . . . . . . > contains sql
+. . . . . . . . > return case when int1 < int2
+. . . . . . . . > then cast(ceil((int1-int2)/10) as integer)
+. . . . . . . . > else cast(floor((int1-int2)/10) as integer) end;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create function dist.eq1(int1 integer, int2 integer)
 . . . . . . . . > returns integer
 . . . . . . . . > language sql
@@ -23,7 +31,7 @@
 . . . . . . . . > returns integer
 . . . . . . . . > language sql
 . . . . . . . . > contains sql
-. . . . . . . . > return (18-(((int1-int2)/10)*((int1-int2)/10)));
+. . . . . . . . > return (18-((dist.diffdiv10(int1,int2))*(dist.diffdiv10(int1,int2))));
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create function dist.eq4(int1 integer)
 . . . . . . . . > returns integer
@@ -31,8 +39,8 @@
 . . . . . . . . > contains sql
 . . . . . . . . > return (
 . . . . . . . . > case 
-. . . . . . . . >   when (((int1 - 250000)/10) > 46340) then 2147395600
-. . . . . . . . >   else (((int1 - 250000)/10)*((int1 - 250000)/10))
+. . . . . . . . >   when ((dist.diffdiv10(int1,250000)) > 46340) then 2147395600
+. . . . . . . . >   else ((dist.diffdiv10(int1,250000))*(dist.diffdiv10(int1,250000)))
 . . . . . . . . > end);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set schema 'ff_schema';
@@ -204,4 +212,6 @@
 0: jdbc:luciddb:> drop routine dist.eq2;
 0: jdbc:luciddb:> drop routine dist.eq3;
 0: jdbc:luciddb:> drop routine dist.eq4;
+0: jdbc:luciddb:> drop routine dist.diffdiv10;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

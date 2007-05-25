@@ -99,6 +99,16 @@ class MedMockColumnSet
 
         assert (executorImpl.equals(MedMockDataServer.PROPVAL_JAVA));
 
+        // Example for how to post a warning
+        long nRowsActual = nRows;
+        if (nRowsActual < 0) {
+            nRowsActual = 0;
+            FarragoWarningQueue warningQueue = 
+                getPreparingStmt().getStmtValidator().getWarningQueue();
+            warningQueue.postWarning(
+                new SQLWarning("slow down:  mock turtle crossing"));
+        }
+
         if (udxSpecificName == null) {
             // Use boring Java iterator.
             return new MedMockIterRel(this, cluster, connection);

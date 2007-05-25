@@ -15,6 +15,7 @@ DATA_STORE=sys_column_store_data_server
 
 DATA_WRAPPER_NAME=@name_prefix@_JDBC
 DATA_LIBRARY=@open.dir@/luciddb/plugin/FarragoMedJdbc3p.jar
+TYPE_MAPPING=DECIMAL(2,0):BOOLEAN
 
 ##################
 # foreign server #

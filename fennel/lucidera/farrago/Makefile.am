@@ -13,7 +13,6 @@ libfarrago_lu_la_LIBADD = \
 	-L$(top_builddir)/libfennel \
 	-L$(top_builddir)/farrago \
 	-L$(top_builddir)/lucidera/libfennel_lu \
-	-L$(top_builddir)/disruptivetech/libfennel_dt \
 	-lfennel_lu_hashexe \
 	-lfennel_lu_flatfile \
 	-lfennel_lu_colstore \
@@ -28,8 +27,6 @@ libfarrago_lu_la_LIBADD = \
 	-lfennel_segment \
 	-lfennel_cache \
 	-lfennel_device \
-	-lfennel_common \
-	-lfennel_dt_calc \
-	-lfennel_dt_xo
+	-lfennel_common
 
 LDADD = -Wl,--no-undefined

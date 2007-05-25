@@ -55,6 +55,11 @@ public class LurqlFilter
 
     public static final LurqlFilter [] EMPTY_ARRAY = new LurqlFilter[0];
 
+    /**
+     * Sentinel object distinguishing NULL from any real value.
+     */
+    public static final Object NULL_VALUE = new Object();
+
     //~ Instance fields --------------------------------------------------------
 
     private final String attributeName;
@@ -235,6 +240,8 @@ public class LurqlFilter
     {
         if (value instanceof LurqlDynamicParam) {
             ((LurqlDynamicParam) value).unparse(pw);
+        } else if (value == NULL_VALUE) {
+            pw.print("null");
         } else {
             StackWriter.printSqlStringLiteral(
                 pw,

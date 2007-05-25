@@ -67,6 +67,8 @@ public:
     virtual AllocationOrder getAllocationOrder() const;
     virtual void delegatedCheckpoint(
         Segment &delegatingSegment,CheckpointType checkpointType);
+    virtual PageId updatePage(PageId pageId, bool needsTranslation = false);
+    virtual void discardCachePage(BlockId blockId);
 
     // delegate the MappedPageListener interface
     virtual void notifyPageMap(CachePage &page);

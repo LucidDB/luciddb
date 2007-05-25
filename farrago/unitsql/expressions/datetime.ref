@@ -366,6 +366,25 @@ Error: At line 0, column 0: Cannot assign to target field 'TS' of type TIMESTAMP
 | 2006-09-27 19:31:00.0  |
 +------------------------+
 > 
+> -- current_timestamp is converted to a constant during query optimization;
+> -- make sure the statement is not cached and therefore the current_timestamp
+> -- call returns unique values for each insert; use the select with the sleep
+> -- in the where clause to ensure a time gap between the two inserts
+> insert into ts values(current_timestamp);
+> select * from sales.emps where empno = sys_boot.mgmt.sleep(1000);
++--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
+| EMPNO  | NAME  | DEPTNO  | GENDER  | CITY  | EMPID  | AGE  | PUBLIC_KEY  | SLACKER  | MANAGER  |
++--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
++--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
+> insert into ts values(current_timestamp);
+> -- should return 4 rows
+> select count(*) from ts;
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+> 
 > -- boundary cases
 > values cast (timestamp'2006-09-27 00:00:00' as date);
 +-------------+

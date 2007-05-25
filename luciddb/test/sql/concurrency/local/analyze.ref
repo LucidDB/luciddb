@@ -1,0 +1,76 @@
+-- setup
+> set schema 's';
+0 rows affected.
+> select count(*) from bench1m;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1000000             |
++---------------------+
+
+-- end of setup
+
+-- thread cleanup
+> set schema 's';
+0 rows affected.
+> select count(*) from bench1m;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1000000             |
++---------------------+
+
+-- end of thread cleanup
+
+-- thread analyze
+> set schema 's';
+0 rows affected.
+> analyze table bench1m compute statistics for all columns;
+0 rows affected.
+-- end of thread analyze
+
+-- thread insert
+> set schema 's';
+0 rows affected.
+> insert into bench1m("kseq") values(-1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.S.BENCH1M
+-- end of thread insert
+
+-- thread delete
+> set schema 's';
+0 rows affected.
+> delete from bench1m where "kseq" = -1;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.S.BENCH1M
+-- end of thread delete
+
+-- thread drop
+> set schema 's';
+0 rows affected.
+> drop table bench1m;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Cannot drop table "S"."BENCH1M" because it is currently in use by a statement
+-- end of thread drop
+
+-- thread select1
+> set schema 's';
+0 rows affected.
+> select count(*) from bench100;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+-- end of thread select1
+
+-- thread select2
+> set schema 's';
+0 rows affected.
+> select count(*) from bench1m;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1000000             |
++---------------------+
+
+-- end of thread select2
+

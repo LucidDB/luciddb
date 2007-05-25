@@ -63,6 +63,8 @@ public class FarragoReposTxnContext
     };
 
     private State state;
+    private int lockLevel;
+
 
     //~ Constructors -----------------------------------------------------------
 
@@ -75,6 +77,7 @@ public class FarragoReposTxnContext
     {
         this.repos = repos;
         state = State.NO_TXN;
+        lockLevel = 0;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -152,6 +155,44 @@ public class FarragoReposTxnContext
         
         state = State.NO_TXN;
         repos.endReposTxn(true);
+    }
+    
+    /**
+     * Acquires a repository lock and begins a matching MDR transaction (shared
+     * lock for read, or exclusive lock for write).  Typical usage is start of
+     * SQL statement preparation (e.g.  readOnly=true for DML or query, false
+     * for DDL).
+     * 
+     * @param readOnly if true, a shared lock is acquired on the
+     * catalog; otherwise, an exclusive lock is acquired
+     */
+    public void beginLockedTxn(boolean readOnly)
+    {
+        lockLevel = (readOnly) ? 1 : 2;
+
+        // TODO jvs 24-Jan-2007:  Get rid of downcast here and below by
+        // making all creation of FarragoReposTxnContext go through
+        // factory method interface on FarragoRepos.
+        
+        ((FarragoReposImpl) repos).lockRepos(lockLevel);
+        
+        if (readOnly) {
+            beginReadTxn();
+        } else {
+            beginWriteTxn();
+        }
+    }
+    
+    /**
+     * Releases lock acquired by beginLockedTxn.  Caller should
+     * already have ended transaction with either commit or rollback.
+     */
+    public void unlockAfterTxn()
+    {
+        if (lockLevel != 0) {
+            ((FarragoReposImpl) repos).unlockRepos(lockLevel);
+            lockLevel = 0;
+        }       
     }
 }
 

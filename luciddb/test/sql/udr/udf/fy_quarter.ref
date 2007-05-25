@@ -37,6 +37,26 @@ Error: From line 1, column 15 to line 1, column 44: No match found for function 
 0: jdbc:luciddb:> values applib.fiscal_quarter(timestamp'1800-13-01 12:45:38', 1);
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '1800-13-01 12:45:38' at line 1, column 39: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.fiscal_quarter(cast (null as timestamp), 3);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.fiscal_quarter(cast (null as date), 2);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.fiscal_quarter(2002, cast(null as integer), 8);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.fiscal_quarter
 0: jdbc:luciddb:> create view fiscal(fm, fromdt, fromts) as
 . . . . . . . . > select fm, applib.fiscal_quarter(datecol, fm), applib.fiscal_quarter(tscol, fm)

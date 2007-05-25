@@ -134,7 +134,7 @@ Object FarragoSqlStmtEof() :
                     farragoParser.getStmtValidator().getReposTxnContext();
 
                 if (!reposTxnContext.isReadTxnInProgress()) {
-                    reposTxnContext.beginReadTxn();
+                    reposTxnContext.beginLockedTxn(true);
                 }
             }
             obj = SqlStmtEof()
@@ -163,7 +163,7 @@ DdlStmt DdlStmtEof() :
         (
             <CREATE>
             {
-                reposTxnContext.beginWriteTxn();
+                reposTxnContext.beginLockedTxn(false);
             }
             [
                 ( <OR> <REPLACE> )
@@ -202,7 +202,7 @@ DdlStmt DdlStmtEof() :
         (
             <DROP>
             {
-                reposTxnContext.beginWriteTxn();
+                reposTxnContext.beginLockedTxn(false);
 
                 // assume RESTRICT; CascadeOption() may override
                 dropRestrict = true;
@@ -246,7 +246,7 @@ DdlStmt DdlStmtEof() :
         (
             <TRUNCATE>
             {
-                reposTxnContext.beginWriteTxn();
+                reposTxnContext.beginLockedTxn(true);
             }
             (
                 <TABLE> modelElement = TableIdentifier()
@@ -259,7 +259,7 @@ DdlStmt DdlStmtEof() :
         (
             <SET>
             {
-                reposTxnContext.beginWriteTxn();
+                reposTxnContext.beginLockedTxn(false);
             }
             (
                 <CATALOG> expr = Expression(EXPR_ACCEPT_NONQUERY)
@@ -278,34 +278,45 @@ DdlStmt DdlStmtEof() :
         )
         |
         <ALTER>
-        {
-            reposTxnContext.beginWriteTxn();
-        }
         (
             <SYSTEM>
+            {
+                reposTxnContext.beginLockedTxn(false);
+            }
             (
                 <SET> ddlStmt = SystemParamAssignment()
                 |
                 <ADD> ddlStmt = CatalogExtension()
                 |
                 <REPLACE> ddlStmt = CatalogReplace()
+                |
+                <DEALLOCATE> ddlStmt = DeallocateOld()
             )
             |
             <SESSION>
+            {
+                reposTxnContext.beginLockedTxn(false);
+            }
             (
                 <IMPLEMENTATION> ddlStmt = SessionImplementation()
                 |
                 <SET> ddlStmt = SessionParamAssignment()
             )
             |
-            <TABLE> ddlStmt = AlterTableStmt()
+            <TABLE>
+            {
+                ddlStmt = AlterTableStmt();
+            }
             |
-            ddlStmt = ExtensionModelAlter()
+            {
+                reposTxnContext.beginLockedTxn(false);
+                ddlStmt = ExtensionModelAlter();
+            }
         )
         |
         <GRANT>
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
         }
         (
             ddlStmt = GrantRoleStmt()
@@ -315,45 +326,48 @@ DdlStmt DdlStmtEof() :
         |
         <CHECKPOINT>
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
 
             ddlStmt = new DdlCheckpointStmt();
         }
         |
         <COMMIT>
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
 
             ddlStmt = new DdlCommitStmt();
         }
         |
         <ROLLBACK> 
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
         }
         ddlStmt = Rollback()
         |
         <SAVEPOINT> 
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
         }
         ddlStmt = Savepoint()
         |
         <RELEASE> <SAVEPOINT> 
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
         }
         ddlStmt = ReleaseSavepoint()
         |
         <IMPORT> 
         {
-            reposTxnContext.beginWriteTxn();
+            reposTxnContext.beginLockedTxn(false);
         }
         ddlStmt = ImportForeignSchemaStmt()
         |
         <ANALYZE> 
         {
-            reposTxnContext.beginWriteTxn();
+            // During the initial prepare of an analyze statement, we only
+            // need to acquire shared locks since we're only reading from the
+            // catalogs.  During catalog update, we'll start a new write xact
+            reposTxnContext.beginLockedTxn(true);
         }
         ddlStmt = AnalyzeStmt()
     )
@@ -1464,6 +1478,16 @@ DdlStmt CatalogReplace() :
     }
 }
 
+DdlStmt DeallocateOld() :
+{
+}
+{
+    <OLD>
+    {
+        return new DdlDeallocateOldStmt();
+    }
+}
+
 DdlStmt SessionImplementation() :
 {
     SqlIdentifier jarName = null;
@@ -1488,17 +1512,21 @@ DdlStmt AlterTableStmt() :
 {
     DdlStmt ddlStmt;
     CwmTable table;
+    FarragoReposTxnContext reposTxnContext = 
+        farragoParser.getStmtValidator().getReposTxnContext();
 }
 {
     table = TableIdentifier()
     (
         <ALTER> <COLUMN> ddlStmt = AlterColumnStmt(table)
         {
+            reposTxnContext.beginLockedTxn(false);
             return ddlStmt;
         }
         |
         <REBUILD>
         {
+            reposTxnContext.beginLockedTxn(true);
             return new DdlRebuildTableStmt(table);
         }
     )
@@ -2074,10 +2102,21 @@ void RoutineCharacteristics(FemRoutine routine) :
         {
             routine.setDeterministic(true);
         }
-        | <NOT> <DETERMINISTIC>
+        | <DYNAMIC_FUNCTION>
         {
-            routine.setDeterministic(false);
-        }
+            routine.setDynamicFunction(true);
+        }        
+        | <NOT>
+        (
+            <DETERMINISTIC>
+            {
+                routine.setDeterministic(false);
+            }
+            | <DYNAMIC_FUNCTION>
+            {
+                routine.setDynamicFunction(false);
+            }
+        )
         | <NO> <SQL>
         {
             routine.setDataAccess(RoutineDataAccessEnum.RDA_NO_SQL);
@@ -2855,7 +2894,7 @@ DdlStmt GrantRoleStmt() :
  */
 DdlStmt AnalyzeStmt() :
 {
-    DdlAnalyzeStmt stmt = new DdlAnalyzeStmt();
+    DdlAnalyzeStmt stmt;
     CwmTable table;
     List columnNameList;
     int percent;
@@ -2863,7 +2902,7 @@ DdlStmt AnalyzeStmt() :
 {
     <TABLE> table = TableIdentifier()
     {
-        stmt.setTable(table);
+        stmt = new DdlAnalyzeStmt(table);
     }
     (
         <COMPUTE>

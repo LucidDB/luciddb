@@ -137,6 +137,11 @@ public class DdlVisitor
     public void visit(DdlAnalyzeStmt stmt)
     {
     }
+
+    // visitor dispatch
+    public void visit(DdlDeallocateOldStmt stmt)
+    {
+    }
 }
 
 // End DdlVisitor.java

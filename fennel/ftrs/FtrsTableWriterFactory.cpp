@@ -104,7 +104,8 @@ void FtrsTableWriterFactory::loadIndex(
         params.tupleDesc.projectFrom(clusteredTupleDesc,params.inputProj);
     }
     params.pCacheAccessor = pCacheAccessor;
-    params.pSegment = pSegmentMap->getSegmentById(params.segmentId);
+    SharedSegment pSegment;
+    params.pSegment = pSegmentMap->getSegmentById(params.segmentId, pSegment);
     params.scratchAccessor = scratchAccessor;
 }
 
@@ -113,6 +114,6 @@ LogicalTxnClassId FtrsTableWriterFactory::getParticipantClassId()
     return LogicalTxnClassId(0xaa6576b8efadbcdcLL);
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/ftrs/FtrsTableWriterFactory.cpp#5 $");
 
 // End FtrsTableWriterFactory.cpp

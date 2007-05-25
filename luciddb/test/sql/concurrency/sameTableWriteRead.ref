@@ -1,6 +1,11 @@
 -- setup
 -- end of setup
 
+-- thread cleanup
+> delete from concurrency.test where i = 0;
+1 row affected.
+-- end of thread cleanup
+
 -- thread writer
 > insert into concurrency.test select sys_boot.mgmt.sleep(20000) from (values(0));
 1 row affected.
@@ -15,6 +20,11 @@
 +------------+
 
 > select * from concurrency.test;
-net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.CONCURRENCY.TEST
++------------+
+| I          |
++------------+
+| 42         |
++------------+
+
 -- end of thread reader
 

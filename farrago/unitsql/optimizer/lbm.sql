@@ -328,6 +328,28 @@ insert into multimulti
         where a1 = 11 and b1 = 12;
 select * from multimulti order by a1, b1, c1, a2, b2, c2, a3, b3, c3;
 
+-- Test for residual filter bug
+-- force plan without index access
+-- and use only residual filters
+drop index multimulti_mixed_a;
+drop index multimulti_mixed_b;
+drop index multimulti_mixed_c;
+
+explain plan for
+select count(*) from multimulti where a1 = 11 and b1 = 12;
+
+select count(*) from multimulti where a1 = 11 and b1 = 12;
+
+explain plan for
+select count(*) from multimulti where a1 = 21 and a2 = 24;
+
+select count(*) from multimulti where a1 = 21 and a2 = 24;
+
+explain plan for
+select count(*) from multimulti where a1 = 31 and a3 = 37;
+
+select count(*) from multimulti where a1 = 31 and a3 = 37;
+
 drop table multimulti;
 
 
@@ -415,7 +437,8 @@ select * from typed_src;
 -- Part 5. Minus stream                                    --
 -------------------------------------------------------------
 
-alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+alter session implementation set jar
+    sys_boot.sys_boot.luciddb_index_only_plugin;
 
 -- LER-3491
 create table t(a int);
@@ -426,6 +449,74 @@ delete from t where a = 10;
 
 select a, count(*) from t group by a having a = 10;
 
+-------------------------------------------------------------
+-- Part 6. Misc tests for bugfixes
+-------------------------------------------------------------
+
+-- FNL-63 -- multiple nulls in a unique constraint column
+create table null_src(
+  pkey int,
+  colbigint bigint,
+  colvar varchar(20),
+  colchar char(20),
+  colint int
+);
+
+insert into null_src values
+(null, null, null, null, null),
+(3, null, 'three2', 'three2', 32),
+(1, 10000, 'one', 'ten-thousand', 10000),
+(2, 30, 'two', 'thirty', 60),
+(3, null, 'three', null, null),
+(2, 30, 'two', 'forty', 80),
+(null, 10, null, 'ten', null),
+(4, 40, 'four', 'forty', 160);
+
+alter session set "errorMax"=5;
+alter session set "logDir" = 'testlog';
+
+create table null_uc_sk(
+  pkey int,
+  colbigint bigint,
+  colvar varchar(20),
+  colchar char(20),
+  colint int,
+  constraint n_pkey_unique UNIQUE(pkey, colbigint)
+);
+
+insert into null_uc_sk select * from null_src;
+select * from null_uc_sk order by pkey, colbigint, colint;
+select * from null_uc_sk where pkey is null order by pkey, colbigint, colint;
+select * from null_uc_sk where pkey = 3 order by pkey, colbigint, colint;
+
+-- verify that minus stream restart works correctly when doing a keyonly scan
+-- on a composite index where only a partial key is read
+create table minus(a int, b int, c int);
+create index iminus on minus(a, b);
+insert into minus values(0,0,0);
+insert into minus values(0,1,1);
+insert into minus values(0,2,2);
+insert into minus values(0,3,3);
+insert into minus values(1,0,4);
+insert into minus values(1,1,5);
+insert into minus values(1,2,6);
+insert into minus values(1,3,7);
+insert into minus values(0,0,8);
+insert into minus values(0,1,9);
+insert into minus values(0,2,10);
+insert into minus values(0,3,11);
+insert into minus values(1,0,12);
+insert into minus values(1,1,13);
+insert into minus values(1,2,14);
+insert into minus values(1,3,15);
+insert into minus values(0,0,16);
+delete from minus where c in (1,16);
+-- fake stats so index is chosen
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'MINUS', 100);
+!set outputformat csv
+explain plan for select a, count(*) from minus group by a;
+!set outputformat table
+select a, count(*) from minus group by a;
 
 -- cleanup
 drop server test_data cascade;

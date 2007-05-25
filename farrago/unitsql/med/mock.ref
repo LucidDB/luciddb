@@ -36,6 +36,11 @@
 > server mock_foreign_server
 > options (executor_impl 'JAVA', row_count '3');
 > 
+> create foreign table mock_java_table_with_warning(
+>     id int not null)
+> server mock_foreign_server
+> options (executor_impl 'JAVA', row_count '-2');
+> 
 > create function ramp(n int)
 > returns table(i int)
 > language java
@@ -112,6 +117,13 @@ Error: Mock foreign object "BACH_TABLE" not found (state=,code=0)
 | 0   |
 | 0   |
 | 0   |
++-----+
+> 
+> select * from mock_java_table_with_warning;
+Warning: slow down:  mock turtle crossing (state=,code=0)
++-----+
+| ID  |
++-----+
 +-----+
 > 
 > select * from mock_ramp_udx_table;

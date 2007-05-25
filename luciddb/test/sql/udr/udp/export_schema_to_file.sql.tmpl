@@ -1,3 +1,5 @@
+alter session set "logDir"='@LOGDIR@';
+
 create schema exportfile;
 set schema 'exportfile';
 
@@ -40,6 +42,9 @@ options(
 
 select * from tab_server.bcp.example order by 1;
 
+-- wait 1 sec so log files don't collide
+select sys_boot.mgmt.sleep(1000) from (values(0));
+
 -- export with comma delimiter and .csv
 call sys_root.export_schema_to_file(null, 'EXPORTFILE', false, null, null, '@EXPDIR@/local/fdext', true, true, ',', '.csv');
 
@@ -78,6 +83,9 @@ options (
 import foreign schema bcp limit to ("dates")
 from server flatfile_server into exportfile;
 
+-- wait 1 sec so log files don't collide
+select sys_boot.mgmt.sleep(1000) from (values(0));
+
 -- export into csv files with datetime formats
 call sys_root.export_schema_to_file('LOCALDB', 'EXPORTFILE', false, 'dates', null, '@EXPDIR@/local/dt', true, false, ',', '.csv', 'MM/dd/yyyy', 'hh:mm:ss a', 'MM/dd/yyyy hh:mm:ss a');
 
@@ -95,6 +103,25 @@ options (
 select * from exp_server.bcp."dates" order by 1,2,3;
 
 select * from exportfile."dates" order by 1,2,3;
+
+-- log files should be created in logDir
+create or replace server flatfile_server
+foreign data wrapper "FLAT FILE"
+options (
+  directory '@LOGDIR@',
+  log_directory '@LOGDIR@',
+  file_extension 'log',
+  field_delimiter '\t'
+);
+
+create schema lschema;
+import foreign schema bcp
+limit to table_name like 'Export%'
+from server flatfile_server
+into lschema;
+
+-- one log file per schema export should exist (3)
+select count(*) from sys_root.dba_tables where schema_name='LSCHEMA';
 
 -- cleanup 
 drop server flatfile_server cascade;

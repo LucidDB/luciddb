@@ -37,9 +37,6 @@ import net.sf.farrago.release.*;
  *
  * @author John V. Sichi
  * @version $Id$
- *
- * @author John V. Sichi
- * @version $Id$
  */
 public abstract class FarragoUnregisteredVjdbcClientDriver
     extends FarragoAbstractJdbcDriver

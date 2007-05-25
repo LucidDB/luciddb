@@ -239,8 +239,15 @@ void BTreeWriter::splitCurrentNode(
             pLockForNewTuple = &pageLock;
         }
     }
+    bool infinityKey = monotonic;
     if (pLockForNewTuple == &newPageLock) {
         iNewTuple -= node.nEntries;
+        BTreeNodeAccessor &nodeAccessor = getNodeAccessor(newNode);
+        if (newNode.rightSibling == NULL_PAGE_ID &&
+            iNewTuple == nodeAccessor.getKeyCount(newNode))
+        {
+            infinityKey = true;
+        }
     }
     // NOTE:  After this,  either the node or newNode reference may be
     // invalid, so don't use them.
@@ -293,7 +300,7 @@ void BTreeWriter::splitCurrentNode(
 
     // Now, lock parent page and find the position of the entry pointing
     // to the original node (pre-split).
-    uint iPosition = lockParentPage(leftNode.height);
+    uint iPosition = lockParentPage(leftNode.height, infinityKey);
 
     // TODO jvs 12-Feb-2006: The code below uses getEntryForRead, even though
     // we're actually going to write; should either rename that method or add a
@@ -333,7 +340,7 @@ void BTreeWriter::splitCurrentNode(
     splitCurrentNode(splitTupleBuffer.get(),cbTuple,iPosition);
 }
 
-uint BTreeWriter::lockParentPage(uint height)
+uint BTreeWriter::lockParentPage(uint height, bool infinityKey)
 {
     assert(!pageStack.empty());
     pageId = pageStack.back();
@@ -401,10 +408,9 @@ uint BTreeWriter::lockParentPage(uint height)
         BTreeNode const &node = pageLock.getNodeForRead();
 
         BTreeNodeAccessor &nodeAccessor = getNodeAccessor(node);
-        if (monotonic) {
-            // For monotonic insertion, we're guaranteed to be on
-            // the rightmost fringe, so getKeyCount will return the
-            // position of the +infinity entry.
+        if (infinityKey) {
+            // If the new key corresponds to the infinity entry, return the
+            // the position of the rightmost entry.
             iPosition = nodeAccessor.getKeyCount(node);
             break;
         }

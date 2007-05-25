@@ -43,6 +43,8 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 >         sys_cwm."Core"."ModelElement" me
 > on      g."Element" = me."mofId";
 > 
+> create user "MockLoginModuleTestUser" authorization 'Unknown';
+> 
 > -------------------------------------------------------------------------
 > -- Test 1: 
 > -- Create User U1, 
@@ -219,6 +221,20 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 > !closeall
 sqlline> !connect jdbc:farrago: BOBO tiger
 Error: Login failed for "BOBO": invalid username/password combination (state=,code=0)
+> 
+> -- should succeed:  local driver, user with wrong password
+> !closeall
+sqlline> !connect jdbc:farrago: "MockLoginModuleTestUser" blah
+> 
+> -- should fail:  spoof remote driver, user with wrong password
+> !closeall
+sqlline> !connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" blah
+Error: Login failed for "MockLoginModuleTestUser": invalid username/password combination (state=,code=0)
+> 
+> -- should succeed:  spoof remote driver, user with correct password
+> !closeall
+sqlline> !connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" secret
+> 
 > 
 > -------------------------------------------------------------------------
 > -- Test 4:

@@ -379,6 +379,31 @@ public class JmiMemTest
         assertTrue(table.refIsInstanceOf(femLocalTableClass, true));
         assertTrue(table.refIsInstanceOf(femLocalTableClass, false));        
     }
+
+    public void testClone()
+    {
+        FarragoMemFactory factory =
+            new FarragoMemFactory(
+                repos.getModelGraph());
+        
+        FemLocalView view = factory.newFemLocalView();
+        view.setName(TABLE_NAME);
+        view.setQueryExpression(factory.newCwmQueryExpression());
+
+        RefObject clone = JmiObjUtil.newClone(view);
+
+        SortedMap<String, Object> origAttrs =
+            JmiObjUtil.getAttributeValues(view);
+        SortedMap<String, Object> cloneAttrs =
+            JmiObjUtil.getAttributeValues(clone);
+
+        // Filter out cloned query expression, since that's cloned by
+        // value rather than by reference to avoid composition violation
+        origAttrs.remove("queryExpression");
+        cloneAttrs.remove("queryExpression");
+
+        assertEquals(origAttrs, cloneAttrs);
+    }
     
     //~ Inner Classes ----------------------------------------------------------
 

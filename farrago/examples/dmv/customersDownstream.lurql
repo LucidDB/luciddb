@@ -1,0 +1,10 @@
+select *
+from class ColumnSet where name='CUSTOMERS' then (
+    recursively (
+        follow origin end supplier then (
+            follow destination end client destination class ColumnSet
+        )
+    ) then (
+        follow composite backward destination class LocalSchema
+    )
+);

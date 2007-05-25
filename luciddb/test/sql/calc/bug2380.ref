@@ -29,6 +29,9 @@
 . . . . . . . . > -- HAVING (n4 - n3) < (SELECT AVG(n1) FROM qrysrcnum qsn)  
 . . . . . . . . > HAVING (n4 - n3) < (SELECT SUM(n1) FROM qrysrcnum qsn)  
 . . . . . . . . > ;
-
++-----+-----+-----+-----+
+| N1  | N2  | N3  | N4  |
++-----+-----+-----+-----+
++-----+-----+-----+-----+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -88,28 +88,17 @@
       </test>
 
       <test name="null" requiresSuccess="download">
-        <!-- TODO: FRG-167 DESC not implemented yet -->
-        <!-- LDB-121 -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
+        <!-- LDB-121, FRG-167 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/null.sql"/>
       </test>
 
       <test name="order" requiresSuccess="download">
-        <!-- TODO: FRG-167 DESC, ASC not implemented yet -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
+        <!-- FRG-167 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/order.sql"/>
       </test>
 
       <test name="scalarSubquery" requiresSuccess="download">
         <!-- FRG-144 -->
-        <!-- some subqueries not implemented yet -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/scalarSubquery.sql"/>
       </test>
 

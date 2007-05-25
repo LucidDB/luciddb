@@ -246,6 +246,9 @@ public class LoptOptimizeJoinRule
         // transform the selected plans; note that we wait till then the end
         // to transform everything so any intermediate RelNodes we create
         // are not converted to RelSubsets
+        // The HEP planner will choose the join subtree with the best cumulative
+        // cost. Volcano planner keeps the alternative join subtrees and cost the
+        // final plan to pick the best one. 
         for (RelNode plan : plans) {
             call.transformTo(plan);
         }
@@ -414,7 +417,7 @@ public class LoptOptimizeJoinRule
                         tmp.andNot(factorsAdded);
                         if (tmp.cardinality() != 0) {
                             continue;
-                        }                       
+                        }
                     }
                     // determine the best weight between the current factor
                     // under consideration and the factors that have already
@@ -453,7 +456,11 @@ public class LoptOptimizeJoinRule
             // add the factor; pass in a bitmap representing the factors
             // this factor joins with that have already been added to
             // the tree
-            BitSet factorsNeeded = multiJoin.getFactorsRefByFactor(nextFactor);
+            BitSet factorsNeeded =
+                (BitSet) multiJoin.getFactorsRefByFactor(nextFactor).clone();
+            if (multiJoin.isNullGenerating(nextFactor)) {
+                factorsNeeded.or(multiJoin.getOuterJoinFactors(nextFactor));
+            }
             factorsNeeded.and(factorsAdded);
             joinTree =
                 addFactorToTree(

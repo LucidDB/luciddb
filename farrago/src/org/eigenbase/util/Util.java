@@ -1066,13 +1066,13 @@ public class Util
             // not to do so.
             try {
                 awtToolkit = Toolkit.getDefaultToolkit();
-            } catch (HeadlessException ex) {
-                // I'm not sure if this can actually happen, but if it does,
-                // just suppress it so that a headless server doesn't fail
-                // on startup.
+            } catch (Throwable ex) {
+                // Suppress problems so that a headless server doesn't fail on
+                // startup.  If AWT is actually needed, the same exception will
+                // show up later, which is fine.
                 
-                // REVIEW: SWZ: 18-Sept-2006: If this exception occurs, we'll
-                // retry the AWT load on each loadLibrary call.  Probably okay,
+                // NOTE jvs 27-Mar-2007: If this exception occurs, we'll
+                // retry the AWT load on each loadLibrary call.  That's okay,
                 // since there are only a few libraries and they're loaded
                 // via static initializers.
             }
@@ -1162,6 +1162,29 @@ public class Util
             }
         }
         return false;
+    }
+
+    /**
+     * Reads all remaining contents from a {@link java.io.Reader} and returns
+     * them as a string.
+     *
+     * @param reader reader to read from
+     *
+     * @return reader contents as string
+     */
+    public static String readAllAsString(Reader reader)
+        throws IOException
+    {
+        StringBuilder sb = new StringBuilder();
+        char [] buf = new char[4096];
+        for (;;) {
+            int n = reader.read(buf);
+            if (n == -1) {
+                break;
+            }
+            sb.append(buf, 0, n);
+        }
+        return sb.toString();
     }
 
     /**

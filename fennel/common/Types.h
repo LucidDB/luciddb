@@ -26,6 +26,8 @@
 
 #include "fennel/common/SharedTypes.h"
 
+#include <set>
+
 FENNEL_BEGIN_NAMESPACE
 
 // use these symbols when you want to indicate that a variable points to
@@ -192,8 +194,13 @@ typedef char const * const ParamName;
 typedef char const * const ParamVal;
 
 // PageOwnerId is a 64-bit integer identifying the owner of a page allocated
-// from a segment.
+// from a segment.  Only the low 63 bits should be used (with the exception
+// of ANON_PAGE_OWNER_ID), as the high order bit may be used to flag special
+// settings.
 DEFINE_OPAQUE_INTEGER(PageOwnerId,uint64_t);
+
+#define VALID_PAGE_OWNER_ID(pageOwnerId) \
+    (!(opaqueToInt(pageOwnerId) & 0x8000000000000000LL))
 
 // DeviceID is an integer identifying a device.
 DEFINE_OPAQUE_INTEGER(DeviceId,uint);
@@ -212,7 +219,8 @@ DEFINE_OPAQUE_INTEGER(PageId,uint64_t);
 // particular segment.
 DEFINE_OPAQUE_INTEGER(SegByteId,uint64_t);
 
-// TxnId is the 64-bit identifier for a transaction.
+// TxnId is the 64-bit identifier for a transaction.  Only the low 63 bits
+// should be used, as the high order bit may be used to flag special settings.
 DEFINE_OPAQUE_INTEGER(TxnId,uint64_t);
 
 // TxnId is an integer identifier for a txn-relative savepoint.
@@ -233,6 +241,10 @@ DEFINE_OPAQUE_INTEGER(DynamicParamId,uint);
 // system-defined actions.
 typedef int LogicalActionType;
 
+// Set of pageIds
+typedef std::set<PageId> PageSet;
+typedef PageSet::const_iterator PageSetConstIter;
+    
 /**
  * Sentinel value for an invalid PageId.
  */

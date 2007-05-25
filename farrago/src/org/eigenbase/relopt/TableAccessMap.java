@@ -25,7 +25,6 @@ package org.eigenbase.relopt;
 import java.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 
 
 // TODO jvs 9-Mar-2006:  move this class to another package; it
@@ -96,6 +95,18 @@ public class TableAccessMap
         RelOptUtil.go(
             new TableRelVisitor(),
             rel);
+    }
+    
+    /**
+     * Constructs a TableAccessMap for a single table
+     * 
+     * @param table fully qualified name of the table, represented as a list
+     * @param mode access mode for the table
+     */
+    public TableAccessMap(List<String> table, Mode mode)
+    {
+        accessMap = new HashMap<List<String>, Mode>();
+        accessMap.put(table, mode);
     }
 
     //~ Methods ----------------------------------------------------------------

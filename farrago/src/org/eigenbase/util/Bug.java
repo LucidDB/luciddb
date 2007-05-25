@@ -190,6 +190,12 @@ public abstract class Bug
     // jpham
 
     // jvs
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-254">issue
+     * FRG-254: environment-dependent failure for
+     * SqlOperatorTest.testPrefixPlusOperator</a> is fixed.
+     */
+    public static final boolean Frg254Fixed = false;
 
     // kkrueger
 

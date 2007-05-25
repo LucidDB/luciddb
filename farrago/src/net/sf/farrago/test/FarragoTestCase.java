@@ -36,6 +36,7 @@ import junit.framework.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.core.CwmModelElement;
 import net.sf.farrago.db.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
@@ -48,6 +49,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util.property.*;
+import org.eigenbase.sql.SqlUtil;
 
 import sqlline.SqlLine;
 
@@ -337,6 +339,13 @@ public abstract class FarragoTestCase
             savedFennelConfig =
                 JmiUtil.getAttributeValues(
                     repos.getCurrentConfig().getFennelConfig());
+
+            // NOTE jvs 15-Mar-2007:  special case for these parameters
+            // which doesn't take effect until restart anyway;
+            // let the change be permanent (test must know what it is doing)
+            savedFarragoConfig.remove("serverRmiRegistryPort");
+            savedFarragoConfig.remove("serverSingleListenerPort");
+            savedFennelConfig.remove("resourceDir");
         } finally {
             reposTxn.commit();
         }
@@ -790,10 +799,9 @@ public abstract class FarragoTestCase
 
                 // NOTE:  don't use DatabaseMetaData.getSchemas since it doesn't
                 // work when Fennel is disabled
-                Iterator schemaIter =
-                    repos.getSelfAsCatalog().getOwnedElement().iterator();
-                while (schemaIter.hasNext()) {
-                    Object obj = schemaIter.next();
+                for (CwmModelElement obj :
+                    repos.getSelfAsCatalog().getOwnedElement())
+                {
                     if (!(obj instanceof CwmSchema)) {
                         continue;
                     }
@@ -804,7 +812,9 @@ public abstract class FarragoTestCase
                     }
                 }
                 for (String name : list) {
-                    getStmt().execute("drop schema \"" + name + "\" cascade");
+                    getStmt().execute("drop schema "
+                        + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
+                        + " cascade");
                 }
             }
         }
@@ -830,8 +840,9 @@ public abstract class FarragoTestCase
                     String wrapperType = iter.next();
                     String name = iter.next();
                     getStmt().execute(
-                        "drop " + wrapperType + " data wrapper \"" + name
-                        + "\" cascade");
+                        "drop " + wrapperType + " data wrapper "
+                        + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
+                        + " cascade");
                 }
             }
         }
@@ -857,8 +868,9 @@ public abstract class FarragoTestCase
                 }
                 for (String name : list) {
                     getStmt().execute(
-                        "drop server \"" + name
-                        + "\" cascade");
+                        "drop server "
+                        + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
+                        + " cascade");
                 }
             }
         }
@@ -878,7 +890,8 @@ public abstract class FarragoTestCase
                     list.add(
                         ((authId instanceof FemRole) ? "ROLE" : "USER")
                         + " "
-                        + authId.getName());
+                        + SqlUtil.eigenbaseDialect.quoteIdentifier(
+                            authId.getName()));
                 }
                 for (String name : list) {
                     getStmt().execute("drop " + name);

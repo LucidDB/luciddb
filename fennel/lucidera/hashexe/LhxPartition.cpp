@@ -98,7 +98,6 @@ void LhxPartitionWriter::close()
     }
     destPartition->segStream->endWrite();
     pSegOutputStream->close();
-    releaseResources();
 }
 
 void LhxPartitionWriter::marshalTuple(TupleData const &inputTuple)
@@ -422,6 +421,17 @@ void LhxPartitionInfo::close()
 
     for (uint i = 0; i < numWriters; i ++) {
         writerList[i]->close();
+    }
+
+    /*
+     * Partial aggregate hash tables used inside the writers(one HT
+     * for each writer) share the same scratch buffer space.
+     * Release the buffer pages used by these hash tables at the end,
+     * after all writers have been closed(so that there will be no more 
+     * scratch page alloc calls).
+     */
+    for (uint i = 0; i < numWriters; i ++) {
+        writerList[i]->releaseResources();
     }
 }
 
@@ -931,6 +941,18 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo,
         for (i = 0; i < LhxChildPartCount; i ++) {
             writerList[i].close();
         }
+
+        /*
+         * Partial aggregate hash tables used inside the writers(one HT
+         * for each writer) share the same scratch buffer space.
+         * Release the buffer pages used by these hash tables at the end,
+         * after all writers have been closed(so that there will be no more 
+         * scratch page alloc calls).
+         */
+        for (i = 0; i < LhxChildPartCount; i ++) {
+            writerList[i].releaseResources();
+        }
+
         reader.close();
     }
 

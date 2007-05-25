@@ -30,6 +30,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
@@ -90,12 +91,13 @@ class LcsDataServer
         planner.addRule(new LcsTableDeleteRule());
         planner.addRule(new LcsTableProjectionRule());
         planner.addRule(new LcsIndexBuilderRule());
-        planner.addRule(new LcsIndexAccessRule());
 
         // multiple sub-rules need to be specified for this rule
         // because we need to distinguish the cases where there are
         // children below the rowscan; note that the rule is very
         // specific to speed up matching
+        
+        // IndexSemiJoin rules
         planner.addRule(
             new LcsIndexSemiJoinRule(
                 new RelOptRuleOperand(
@@ -103,7 +105,7 @@ class LcsDataServer
                     new RelOptRuleOperand[] {
                         new RelOptRuleOperand(LcsRowScanRel.class, null)
                     }),
-                "without child"));
+                "without index child"));
         planner.addRule(
             new LcsIndexSemiJoinRule(
                 new RelOptRuleOperand(
@@ -150,10 +152,60 @@ class LcsDataServer
                     }),
                 "with merge child"));
 
-        // after join ordering, consider index only access. as above,
-        // multiple rules are required for various patterns
-        planner.addRule(LcsIndexOnlyAccessRule.instanceSearch);
-        planner.addRule(LcsIndexOnlyAccessRule.instanceMerge);
+        // IndexAccess rules
+        planner.addRule(
+            new LcsIndexAccessRule(
+                new RelOptRuleOperand(
+                    FilterRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(LcsRowScanRel.class, null)
+                    }),
+                "without index child"));
+        planner.addRule(
+            new LcsIndexAccessRule(
+                new RelOptRuleOperand(
+                    FilterRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(
+                            LcsRowScanRel.class,
+                            new RelOptRuleOperand[] {
+                                new RelOptRuleOperand(
+                                    LcsIndexIntersectRel.class,
+                                    null)
+                            })
+                    }),
+                "with intersect child"));
+        planner.addRule(
+            new LcsIndexAccessRule(
+                new RelOptRuleOperand(
+                    FilterRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(
+                            LcsRowScanRel.class,
+                            new RelOptRuleOperand[] {
+                                new RelOptRuleOperand(LcsIndexSearchRel.class,
+                                    null)
+                            })
+                    }),
+                "with index search child"));
+        planner.addRule(
+            new LcsIndexAccessRule(
+                new RelOptRuleOperand(
+                    FilterRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(
+                            LcsRowScanRel.class,
+                            new RelOptRuleOperand[] {
+                                new RelOptRuleOperand(
+                                    LcsIndexMergeRel.class,
+                                    new RelOptRuleOperand[] {
+                                        new RelOptRuleOperand(
+                                            LcsIndexSearchRel.class,
+                                            null)
+                                    })
+                            })
+                    }),
+                "with merge child"));
     }
 
     // implement FarragoMedLocalDataServer
@@ -360,23 +412,6 @@ class LcsDataServer
         FemLocalIndex index)
     {
         return index.isClustered();
-    }
-    
-    // implement MedAbstractFennelDataServer
-    public void dropIndex(
-        FemLocalIndex index,
-        long rootPageId,
-        boolean truncate)
-    {
-        FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
-        // if the truncate is being called for an alter table rebuild on
-        // the deletion index, don't reset the rowcounts because this 
-        // will wipe out the rowcounts that were just updated for the newly
-        // rebuilt table
-        if (truncate && !FarragoCatalogUtil.isDeletionIndex(index)) {
-            FarragoCatalogUtil.resetRowCounts((FemAbstractColumnSet) table);
-        }
-        super.dropIndex(index, rootPageId, truncate);
     }
 }
 

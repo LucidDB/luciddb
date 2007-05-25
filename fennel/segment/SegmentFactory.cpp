@@ -29,6 +29,9 @@
 #include "fennel/segment/VersionedSegment.h"
 #include "fennel/segment/ScratchSegment.h"
 #include "fennel/segment/RandomAllocationSegment.h"
+#include "fennel/segment/SnapshotRandomAllocationSegment.h"
+#include "fennel/segment/VersionedRandomAllocationSegment.h"
+#include "fennel/segment/DynamicDelegatingSegment.h"
 #include "fennel/segment/CircularSegment.h"
 #include "fennel/segment/SegmentAccessor.h"
 #include "fennel/common/ConfigMap.h"
@@ -85,10 +88,55 @@ SharedSegment SegmentFactory::newRandomAllocationSegment(
     RandomAllocationSegment *pRandomSegment = 
         new RandomAllocationSegment(delegateSegment);
     SharedSegment pSegment(pRandomSegment,ClosableObjectDestructor());
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment,"RandomAllocationSegment");
+    // Format the segment through the tracing segment so the operation
+    // is traced
     if (bFormat) {
-        pSegment->deallocatePageRange(NULL_PAGE_ID,NULL_PAGE_ID);
+        tracingSegment->deallocatePageRange(NULL_PAGE_ID,NULL_PAGE_ID);
     }
-    return newTracingSegment(pSegment,"RandomAllocationSegment");
+    return tracingSegment;
+}
+
+SharedSegment SegmentFactory::newVersionedRandomAllocationSegment(
+    SharedSegment delegateSegment,
+    SharedSegment pTempSegment,
+    bool bFormat)
+{
+    VersionedRandomAllocationSegment *pVersionedRandomSegment = 
+        new VersionedRandomAllocationSegment(delegateSegment, pTempSegment);
+    SharedSegment pSegment(pVersionedRandomSegment, ClosableObjectDestructor());
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "VersionedRandomAllocationSegment");
+    // Format the segment through the tracing segment so the operation
+    // is traced
+    if (bFormat) {
+        tracingSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
+    }
+    return tracingSegment;
+}
+
+SharedSegment SegmentFactory::newSnapshotRandomAllocationSegment(
+    SharedSegment delegateSegment,
+    SharedSegment versionedSegment,
+    TxnId snapshotCsn)
+{
+    SnapshotRandomAllocationSegment *pSnapshotSegment =
+        new SnapshotRandomAllocationSegment(
+            delegateSegment,
+            versionedSegment,
+            snapshotCsn);
+    SharedSegment pSegment(pSnapshotSegment, ClosableObjectDestructor());
+    return newTracingSegment(pSegment, "SnapshotRandomAllocationSegment");
+}
+
+SharedSegment SegmentFactory::newDynamicDelegatingSegment(
+    SharedSegment delegateSegment)
+{
+    DynamicDelegatingSegment *pDelegatingSegment =
+        new DynamicDelegatingSegment(WeakSegment(delegateSegment));
+    SharedSegment pSegment(pDelegatingSegment, ClosableObjectDestructor());
+    return newTracingSegment(pSegment, "DynamicDelegatingSegment");
 }
 
 SharedSegment SegmentFactory::newWALSegment(
@@ -170,6 +218,9 @@ SharedSegment SegmentFactory::newTracingSegment(
     SharedSegment pTracingSegment(
         new TracingSegment(pSegment,pTraceTarget,sourceName),
         ClosableObjectDestructor());
+
+    pSegment->setTracingSegment(WeakSegment(pTracingSegment));
+
     return pTracingSegment;
 }
 

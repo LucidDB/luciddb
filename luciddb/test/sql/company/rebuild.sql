@@ -73,3 +73,9 @@ alter table sales rebuild;
 
 select count(*) from sales;
 select max(lcs_rid(custid)) from sales;
+-- verify table row counts
+select table_name, current_row_count, deleted_row_count
+    from sys_boot.mgmt.dba_stored_tables_internal1
+    where table_name = 'SALES'
+order by 1;
+

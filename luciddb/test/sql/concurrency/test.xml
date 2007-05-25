@@ -89,6 +89,16 @@
           file="${open.dir}/luciddb/test/sql/concurrency/delete-insert.mtsql"/>
       </test>
 
+      <test name="insert-analyze" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-analyze.mtsql"/>
+      </test>
+
+      <test name="alterTruncate" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/alterTruncate.mtsql"/>
+      </test>
+
       <test name="cretdrp-read" requiresSuccess="setup">
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-read.mtsql"/>
@@ -102,6 +112,16 @@
       <test name="failthread" requiresSuccess="setup">
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/failthread.mtsql"/>
+      </test>
+
+      <test name="snapshots" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/snapshots.mtsql"/>
+      </test>
+
+      <test name="concurrentMerges">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/concurrentMerges.mtsql"/>
       </test>
 
 
@@ -177,6 +197,14 @@
 
       <test name="large-delete2" requiresSuccess="preparedata">
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/delete2.mtsql"/>
+      </test>
+
+      <test name="large-analyze" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/analyze.mtsql"/>
+      </test>
+
+      <test name="large-alter" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/alterRebuild.mtsql"/>
       </test>
 
         <!-- REVIEW jvs 9-Dec-2006:  tests below used to hang due to

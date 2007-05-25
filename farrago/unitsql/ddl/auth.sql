@@ -43,6 +43,8 @@ inner join
         sys_cwm."Core"."ModelElement" me
 on      g."Element" = me."mofId";
 
+create user "MockLoginModuleTestUser" authorization 'Unknown';
+
 -------------------------------------------------------------------------
 -- Test 1: 
 -- Create User U1, 
@@ -148,6 +150,19 @@ order by grantee;
 -- should fail:  unknown user
 !closeall
 !connect jdbc:farrago: BOBO tiger
+
+-- should succeed:  local driver, user with wrong password
+!closeall
+!connect jdbc:farrago: "MockLoginModuleTestUser" blah
+
+-- should fail:  spoof remote driver, user with wrong password
+!closeall
+!connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" blah
+
+-- should succeed:  spoof remote driver, user with correct password
+!closeall
+!connect jdbc:farrago:;remoteProtocol="HTTP" "MockLoginModuleTestUser" secret
+
 
 -------------------------------------------------------------------------
 -- Test 4:

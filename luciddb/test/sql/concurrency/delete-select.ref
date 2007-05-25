@@ -45,7 +45,12 @@
 +------------+
 
 > select * from t1 where c=1;
-net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.CONCURRENCY.T1
++------------+
+| C          |
++------------+
+| 1          |
++------------+
+
 -- end of thread reader1
 
 -- thread reader2

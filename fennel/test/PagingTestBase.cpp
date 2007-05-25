@@ -132,6 +132,8 @@ char const *PagingTestBase::getOpName(OpType opType)
         return "read no-wait";
     case OP_WRITE_NOWAIT:
         return "write no-wait";
+    case OP_WRITE_SKIP:
+        return "write every n pages";
     default:
         permAssert(false);
     }
@@ -154,6 +156,8 @@ LockMode PagingTestBase::getLockMode(OpType opType)
         return LOCKMODE_S_NOWAIT;
     case OP_WRITE_NOWAIT:
         return LOCKMODE_X_NOWAIT;
+    case OP_WRITE_SKIP:
+        return LOCKMODE_X;
     default:
         permAssert(false);
     }
@@ -186,6 +190,19 @@ void PagingTestBase::testRandomOp(OpType opType)
     BOOST_MESSAGE(
         "completed " << n << " " << getOpName(opType) << " ops");
     
+}
+
+void PagingTestBase::testSkipOp(OpType opType, uint n)
+{
+    uint numOps = 0;
+    for (uint i = 0; i < nDiskPages; i += n) {
+        if (testOp(opType,i,true)) {
+            numOps++;
+        }
+    }
+    StrictMutexGuard mutexGuard(logMutex);
+    BOOST_MESSAGE(
+        "completed " << numOps << " " << getOpName(opType) << " ops");
 }
 
 void PagingTestBase::testScratch()
@@ -253,6 +270,11 @@ void PagingTestBase::testRandomWrite()
     testRandomOp(OP_WRITE_RAND);
 }
 
+void PagingTestBase::testSkipWrite(uint n)
+{
+    testSkipOp(OP_WRITE_SKIP, n);
+}
+
 void PagingTestBase::testAllocate()
 {
     permAssert(false);
@@ -317,6 +339,8 @@ PagingTestBase::PagingTestBase()
         "readNoWaitThreads",-1);
     threadCounts[OP_WRITE_NOWAIT] = configMap.getIntParam(
         "writeNoWaitThreads",-1);
+    threadCounts[OP_WRITE_SKIP] = configMap.getIntParam(
+        "writeSkipThreads",-1);
     threadCounts[OP_SCRATCH] = configMap.getIntParam(
         "scratchThreads",-1);
     threadCounts[OP_PREFETCH] = configMap.getIntParam(
@@ -369,6 +393,10 @@ bool PagingTestBase::testThreadedOp(int iOp)
     case PagingTestBase::OP_READ_RAND:
     case PagingTestBase::OP_READ_NOWAIT:
         testRandomOp(op);
+        break;
+    case PagingTestBase::OP_WRITE_SKIP:
+        checkpointSharedGuard.lock();
+        testSkipOp(op, 5);
         break;
     case PagingTestBase::OP_SCRATCH:
         testScratch();

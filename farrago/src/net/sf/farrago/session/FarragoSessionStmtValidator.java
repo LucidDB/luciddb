@@ -123,6 +123,20 @@ public interface FarragoSessionStmtValidator
     public FarragoDdlLockManager getDdlLockManager();
 
     /**
+     * Gets the warning queue to be used by this validator
+     *
+     * @return warning queue
+     */
+    public FarragoWarningQueue getWarningQueue();
+    
+    /**
+     * Sets the warning queue to be used by this validator
+     *
+     * @param warningQueue target queue to use
+     */
+    public void setWarningQueue(FarragoWarningQueue warningQueue);
+    
+    /**
      * Submits a request for access from the current user and/or role to a
      * catalog object via this validator's privilege checker. Actual checking of
      * the request may be deferred.

@@ -8,6 +8,10 @@ values applib.rightN('The test string - chop off this portion', 15);
 values applib.rightN('and this?', 0);
 values applib.rightN('', 3);
 
+-- null input
+values applib.rightn(cast(null as varchar(20)), 4);
+values applib.rightn('this is the right one!', cast(null as integer));
+
 -- create view with reference to applib.rightN
 create view cutcust as
 select applib.rightN(fname, 5), applib.rightN(lname, 3), applib.rightN(phone, 7)

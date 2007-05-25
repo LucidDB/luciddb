@@ -1,0 +1,6 @@
+9.0
+4
+1       SQLCHAR         0       10      "t"     1       EXTRA1     ""
+2       SQLCHAR         0       10      "rn"    2       EXTRA2     ""
+3       SQLCHAR         0       7       "t"     3       ID      ""
+4       SQLCHAR         0       50      "t"     4       NAME    SQL_Latin1_General_CP1_CI_AS

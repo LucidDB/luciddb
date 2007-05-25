@@ -57,7 +57,19 @@ public class LucidDbMonitor
             monitor.startPollingThread();
             System.out.println(
                 "Now running; close moodss window to shut down.");
-            process.waitFor();
+            int rc = process.waitFor();
+            if (rc != 0) {
+                InputStream errStream = process.getErrorStream();
+                InputStreamReader errReader = new InputStreamReader(errStream);
+                LineNumberReader lineReader = new LineNumberReader(errReader);
+                for (;;) {
+                    String err = lineReader.readLine();
+                    if (err == null) {
+                        break;
+                    }
+                    System.err.println(err);
+                }
+            }
             System.out.println("Shutting down...");
             monitor.stopPollingThread();
         } finally {

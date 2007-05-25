@@ -28,16 +28,14 @@ import java.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -117,20 +115,22 @@ class MedJdbcNameDirectory
         }
 
         String [] foreignQualifiedName;
-        if (server.schemaName != null) {
+        if (server.schemaName != null &&
+            !server.useSchemaNameAsForeignQualifier) {
             foreignQualifiedName = new String[] { foreignName };
         } else if (server.catalogName != null) {
             foreignQualifiedName = new String[] {
-                    server.catalogName, schemaName, foreignName
-                };
+                server.catalogName, schemaName, foreignName
+            };
         } else {
             foreignQualifiedName = new String[] { schemaName, foreignName };
         }
+        RelDataType origRowType = null;
+        RelDataType mdRowType = null;
 
         SqlDialect dialect = new SqlDialect(server.databaseMetaData);
-        SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
         SqlSelect select =
-            opTab.selectOperator.createCall(
+            SqlStdOperatorTable.selectOperator.createCall(
                 null,
                 new SqlNodeList(
                     Collections.singletonList(
@@ -144,56 +144,105 @@ class MedJdbcNameDirectory
                 null,
                 SqlParserPos.ZERO);
 
-        if (rowType == null) {
-            String sql = select.toSqlString(dialect);
-            sql = normalizeQueryString(sql);
+        String sql = select.toSqlString(dialect);
+        sql = normalizeQueryString(sql);
 
-            PreparedStatement ps = null;
+        PreparedStatement ps = null;
+        try {
+            ps = server.getConnection().prepareStatement(sql);
+        } catch (Exception ex) {
+            // Some drivers don't support prepareStatement
+        }
+        Statement stmt = null;
+        ResultSet rs = null;
+        try {
+            ResultSetMetaData md = null;
             try {
-                ps = server.getConnection().prepareStatement(sql);
-            } catch (Exception ex) {
-                // Some drivers don't support prepareStatement
+                if (ps != null) {
+                    md = ps.getMetaData();
+                }
+            } catch (SQLException ex) {
+                // Some drivers can't return metadata before execution. Fall
+                // through to recovery below.
             }
-            Statement stmt = null;
-            ResultSet rs = null;
-            try {
-                ResultSetMetaData md = null;
-                try {
-                    if (ps != null) {
-                        md = ps.getMetaData();
-                    }
-                } catch (SQLException ex) {
-                    // Some drivers can't return metadata before execution. Fall
-                    // through to recovery below.
+            if (md == null) {
+                if (ps != null) {
+                    rs = ps.executeQuery();
+                } else {
+                    stmt = server.getConnection().createStatement();
+                    rs = stmt.executeQuery(sql);
                 }
-                if (md == null) {
-                    if (ps != null) {
-                        rs = ps.executeQuery();
-                    } else {
-                        stmt = server.getConnection().createStatement();
-                        rs = stmt.executeQuery(sql);
-                    }
-                    md = rs.getMetaData();
-                }
+                md = rs.getMetaData();
+            }
+            if (rowType == null) {
                 rowType =
                     typeFactory.createResultSetType(
                         md,
                         shouldSubstituteTypes,
                         typeMapping);
-            } finally {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (stmt != null) {
-                    stmt.close();
-                }
-                if (ps != null) {
-                    ps.close();
+                origRowType = rowType;
+                mdRowType = rowType;
+            } else {
+                origRowType = rowType;
+                mdRowType =
+                    typeFactory.createResultSetType(
+                        md,
+                        true,
+                        typeMapping);
+                // if LENIENT, map names
+                if (server.lenient) {
+                    rowType = updateRowType(
+                        typeFactory,
+                        rowType,
+                        mdRowType);
+
+                    List<SqlIdentifier> projList =
+                        new ArrayList<SqlIdentifier>();
+                    for (RelDataTypeField field : rowType.getFieldList()) {
+                        projList.add(
+                            new SqlIdentifier(
+                                field.getName(), SqlParserPos.ZERO));
+                    }
+
+                    // push down projections, if any
+                    if (projList.size() > 0) {
+                        select =
+                            SqlStdOperatorTable.selectOperator.createCall(
+                                null,
+                                new SqlNodeList(
+                                    Collections.unmodifiableList(
+                                        projList),
+                                    SqlParserPos.ZERO),
+                                new SqlIdentifier(
+                                    foreignQualifiedName, SqlParserPos.ZERO),
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                SqlParserPos.ZERO);
+                    }
+                } else {
+                    // Server is strict: make sure the inferred
+                    // row type is compatible with the imposed row type
+                    validateRowType(
+                        rowType,
+                        typeFactory.createResultSetType(
+                            md,
+                            true,
+                            typeMapping));
                 }
             }
-        } else {
-            // REVIEW:  should we at least check to see if the inferred
-            // row type is compatible with the imposed row type?
+        } finally {
+            if (rs != null) {
+                rs.close();
+            }
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (ps != null) {
+                ps.close();
+            }
         }
 
         return
@@ -203,7 +252,9 @@ class MedJdbcNameDirectory
                 localName,
                 select,
                 dialect,
-                rowType);
+                rowType,
+                origRowType,
+                mdRowType);
     }
 
     String normalizeQueryString(String sql)
@@ -502,7 +553,8 @@ class MedJdbcNameDirectory
 
     private String getSchemaPattern()
     {
-        if (server.schemaName != null) {
+        if (server.schemaName != null &&
+            !server.useSchemaNameAsForeignQualifier) {
             // schemaName is fake; don't use it
             return null;
         } else {
@@ -550,6 +602,69 @@ class MedJdbcNameDirectory
         }
     }
 
+    private RelDataType updateRowType(
+        FarragoTypeFactory typeFactory,
+        RelDataType currRowType,
+        RelDataType srcRowType)
+    {
+        HashMap<String, RelDataType> srcMap =
+            new HashMap<String, RelDataType>();
+        for (RelDataTypeField srcField : srcRowType.getFieldList()) {
+            srcMap.put(srcField.getName(), srcField.getType());
+        }
+
+        ArrayList<String> fieldsVector = new ArrayList<String>();
+        ArrayList<RelDataType> typesVector = new ArrayList<RelDataType>();
+
+        for (RelDataTypeField currField : currRowType.getFieldList()) {
+            RelDataType type;
+            if (((type =
+                     srcMap.get(currField.getName())) != null) &&
+                SqlTypeUtil.canCastFrom(
+                    currField.getType(), type, true))
+            {
+                fieldsVector.add(currField.getName());
+                typesVector.add(currField.getType());
+            }
+        }
+
+        typesVector.trimToSize();
+        fieldsVector.trimToSize();
+        RelDataType[] types = (RelDataType[])
+            typesVector.toArray(new RelDataType[typesVector.size()]);
+        String[] fields =
+            (String[]) fieldsVector.toArray(new String[fieldsVector.size()]);
+
+        RelDataType rowType = typeFactory.createStructType(types, fields);
+        return rowType;
+    }
+
+    private void validateRowType(RelDataType rowType, RelDataType srcRowType)
+    {
+        RelDataTypeField[] fieldList = rowType.getFields();
+        RelDataTypeField[] srcFieldList = srcRowType.getFields();
+
+        // check that the number of fields match
+        if (fieldList.length != srcFieldList.length) {
+            throw FarragoResource.instance().NumberOfColumnsMismatch.ex(
+                Integer.toString(fieldList.length),
+                Integer.toString(srcFieldList.length));
+        }
+
+        // check that types of fields are compatible
+        for (int i = 0; i < fieldList.length; i++) {
+            if (!SqlTypeUtil.canCastFrom(
+                    fieldList[i].getType(),
+                    srcFieldList[i].getType(),
+                    true)) {
+                throw FarragoResource.instance().TypesOfColumnsMismatch.ex(
+                    srcFieldList[i].getName(),
+                    srcFieldList[i].getType().toString(),
+                    fieldList[i].getType().toString(),
+                    fieldList[i].getName());
+            }
+        }
+    }
 }
 
 // End MedJdbcNameDirectory.java

@@ -26,12 +26,11 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
+import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.*;
-import net.sf.farrago.plugin.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
-import net.sf.farrago.util.*;
 
 /**
  * FarragoJdbcEngineDriver implements the Farrago engine/server side of the
@@ -105,21 +104,7 @@ public abstract class FarragoUnregisteredJdbcEngineDriver
     // implement FarragoJdbcServerDriver
     public FarragoSessionFactory newSessionFactory()
     {
-        String libraryName =
-            FarragoProperties.instance().defaultSessionFactoryLibraryName.get();
-        try {
-            FarragoPluginClassLoader classLoader =
-                new FarragoPluginClassLoader();
-            Class c =
-                classLoader.loadClassFromLibraryManifest(
-                    libraryName,
-                    "SessionFactoryClassName");
-            return (FarragoSessionFactory) classLoader.newPluginInstance(c);
-        } catch (Throwable ex) {
-            throw FarragoResource.instance().PluginInitFailed.ex(
-                libraryName,
-                ex);
-        }
+        return FarragoDatabase.newSessionFactory();
     }
 
     /**

@@ -1,0 +1,14 @@
+digraph G {
+    graph [bgcolor=gray]
+    node [shape=record, style=filled, fillcolor=white, fontsize=10.0]
+    edge [fontsize=10.0]
+    28060855[label="{LocalSchema|ACCOUNTS}"];
+    11254222[label="{LocalSchema|CAR_RENTALS}"];
+    3376320[label="{LocalSchema|LODGING}"];
+    5277309[label="{LocalSchema|BILLING}"];
+    28060855->11254222[];
+    28060855->3376320[];
+    11254222->5277309[];
+    3376320->5277309[];
+    28060855->5277309[];
+}

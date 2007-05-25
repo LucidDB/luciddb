@@ -19,7 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 package org.eigenbase.sql;
 
 import org.eigenbase.util.*;
@@ -212,7 +212,7 @@ public interface SqlWriter
      * Style of formatting subqueries.
      */
     static class SubqueryStyle
-        extends EnumeratedValues.BasicValue
+    extends EnumeratedValues.BasicValue
     {
         /**
          * Julian's style of subquery nesting. Like this:
@@ -248,7 +248,7 @@ public interface SqlWriter
      * Enumerates the types of frame.
      */
     static class FrameType
-        extends EnumeratedValues.BasicValue
+    extends EnumeratedValues.BasicValue
     {
         public static final int Simple_ordinal = 0;
         public static final int Select_ordinal = 1;
@@ -265,6 +265,7 @@ public interface SqlWriter
         public static final int Subquery_ordinal = 12;
         public static final int Setop_ordinal = 13;
         public static final int Identifier_ordinal = 14;
+        public static final int WhereList_ordinal = 15;
 
         /**
          * SELECT query (or UPDATE or DELETE). The items in the list are the
@@ -376,6 +377,12 @@ public interface SqlWriter
             new FrameType("From", FromList_ordinal);
 
         /**
+         * WHERE clause.
+         */
+        public static final FrameType WhereList =
+            new FrameType("Where", WhereList_ordinal);
+
+        /**
          * Compound identifier.
          *
          * <p>Example:
@@ -388,19 +395,20 @@ public interface SqlWriter
             new EnumeratedValues(
                 new EnumeratedValues.Value[] {
                     Select,
-                Simple,
-                SelectList,
-                WindowDeclList,
-                UpdateSetList,
-                FunDecl,
-                FunCall,
-                Window,
-                OrderBy,
-                OrderByList,
-                GroupByList,
-                Setop,
-                FromList,
-                Identifier,
+                    Simple,
+                    SelectList,
+                    WindowDeclList,
+                    UpdateSetList,
+                    FunDecl,
+                    FunCall,
+                    Window,
+                    OrderBy,
+                    OrderByList,
+                    GroupByList,
+                    Setop,
+                    FromList,
+                    Identifier,
+                    WhereList,
                 });
 
         private static int nextOrdinal = enumeration.getMax() + 1;
@@ -436,4 +444,4 @@ public interface SqlWriter
     }
 }
 
-// End SqlWriter.java
+//End SqlWriter.java

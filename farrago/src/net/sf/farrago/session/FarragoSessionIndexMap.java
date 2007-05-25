@@ -128,12 +128,14 @@ public interface FarragoSessionIndexMap
         boolean truncate);
 
     /**
-     * Verifies an index and records its page count to the catalog
+     * Verifies an index and records returns page count for the index
      *
      * @param wrapperCache cache for looking up data wrappers
      * @param index the index to verify
+     * 
+     * @return page count for the index
      */
-    public void computeIndexStats(
+    public long computeIndexStats(
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index,
         boolean estimate);
@@ -142,6 +144,17 @@ public interface FarragoSessionIndexMap
      * Commit hook
      */
     public void onCommit();
+    
+    /**
+     * Versions an index root page
+     * 
+     * @param oldIndexRoots list of current index root ids
+     * @param newIndexRoots list of new index root ids
+     */
+    public void versionIndexRoot(
+        FarragoDataWrapperCache wrapperCache,
+        FemLocalIndex index,
+        Long newRoot);
 }
 
 // End FarragoSessionIndexMap.java

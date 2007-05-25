@@ -7,6 +7,14 @@
 create schema dist;
 set schema 'dist';
 
+create function dist.diffdiv10(int1 integer, int2 integer)
+returns integer
+language sql
+contains sql
+return case when int1 < int2
+then cast(ceil((int1-int2)/10) as integer)
+else cast(floor((int1-int2)/10) as integer) end;
+
 create function dist.eq1(int1 integer, int2 integer)
 returns integer
 language sql
@@ -23,7 +31,7 @@ create function dist.eq3(int1 integer, int2 integer)
 returns integer
 language sql
 contains sql
-return (18-(((int1-int2)/10)*((int1-int2)/10)));
+return (18-((dist.diffdiv10(int1,int2))*(dist.diffdiv10(int1,int2))));
 
 create function dist.eq4(int1 integer)
 returns integer
@@ -31,8 +39,8 @@ language sql
 contains sql
 return (
 case 
-  when (((int1 - 250000)/10) > 46340) then 2147395600
-  else (((int1 - 250000)/10)*((int1 - 250000)/10))
+  when ((dist.diffdiv10(int1,250000)) > 46340) then 2147395600
+  else ((dist.diffdiv10(int1,250000))*(dist.diffdiv10(int1,250000)))
 end);
 
 set schema 'ff_schema';
@@ -204,3 +212,4 @@ drop routine dist.eq1;
 drop routine dist.eq2;
 drop routine dist.eq3;
 drop routine dist.eq4;
+drop routine dist.diffdiv10;

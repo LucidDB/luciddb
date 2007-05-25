@@ -40,6 +40,7 @@
 #include "fennel/txn/LogicalTxnLog.h"
 #include "fennel/tuple/StoredTypeDescriptorFactory.h"
 #include "fennel/segment/SegmentFactory.h"
+#include "fennel/segment/SnapshotRandomAllocationSegment.h"
 #include "fennel/exec/DfsTreeExecStreamScheduler.h"
 #include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/farrago/ExecStreamFactory.h"
@@ -193,12 +194,18 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     // on a fatal error, echo the backtrace to the log file:
     AutoBacktrace::setTraceTarget(pDbHandle->pTraceTarget);
 
-    SharedDatabase pDb = Database::newDatabase(
-        pCache,
-        configMap,
-        openMode,
-        pDbHandle->pTraceTarget,
-        SharedPseudoUuidGenerator(new JniPseudoUuidGenerator()));
+    SharedDatabase pDb;
+    try {
+        pDb = Database::newDatabase(
+            pCache,
+            configMap,
+            openMode,
+            pDbHandle->pTraceTarget,
+            SharedPseudoUuidGenerator(new JniPseudoUuidGenerator()));
+    } catch (...) {
+        AutoBacktrace::setTraceTarget();
+        throw;
+    }
 
     pDbHandle->pDb = pDb;
 
@@ -311,11 +318,11 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
 void CmdInterpreter::getBTreeForIndexCmd(
     ProxyIndexCmd &cmd,PageId rootPageId,BTreeDescriptor &treeDescriptor)
 {
-    SharedDatabase pDatabase = getDbHandle(cmd.getDbHandle())->pDb;
+    TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     
     readTupleDescriptor(
         treeDescriptor.tupleDescriptor,
-        *(cmd.getTupleDesc()),pDatabase->getTypeFactory());
+        *(cmd.getTupleDesc()),pTxnHandle->pDb->getTypeFactory());
     
     CmdInterpreter::readTupleProjection(
         treeDescriptor.keyProjection,cmd.getKeyProj());
@@ -323,17 +330,19 @@ void CmdInterpreter::getBTreeForIndexCmd(
     treeDescriptor.pageOwnerId = PageOwnerId(cmd.getIndexId());
     treeDescriptor.segmentId = SegmentId(cmd.getSegmentId());
     treeDescriptor.segmentAccessor.pSegment =
-        pDatabase->getSegmentById(treeDescriptor.segmentId);
-    treeDescriptor.segmentAccessor.pCacheAccessor = pDatabase->getCache();
+        pTxnHandle->pDb->getSegmentById(
+            treeDescriptor.segmentId,
+            pTxnHandle->pSnapshotSegment);
+    treeDescriptor.segmentAccessor.pCacheAccessor = pTxnHandle->pDb->getCache();
     treeDescriptor.rootPageId = rootPageId;
 }
 
 void CmdInterpreter::visit(ProxyCmdCreateIndex &cmd)
 {
     // block checkpoints during this method
-    SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
+    TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SXMutexSharedGuard actionMutexGuard(
-        pDb->getCheckpointThread()->getActionMutex());
+        pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
     
     BTreeDescriptor treeDescriptor;
     getBTreeForIndexCmd(cmd,NULL_PAGE_ID,treeDescriptor);
@@ -355,9 +364,9 @@ void CmdInterpreter::visit(ProxyCmdDropIndex &cmd)
 void CmdInterpreter::visit(ProxyCmdVerifyIndex &cmd)
 {
     // block checkpoints during this method
-    SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
+    TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SXMutexSharedGuard actionMutexGuard(
-        pDb->getCheckpointThread()->getActionMutex());
+        pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
     
     BTreeDescriptor treeDescriptor;
     getBTreeForIndexCmd(cmd,PageId(cmd.getRootPageId()),treeDescriptor);
@@ -384,9 +393,9 @@ void CmdInterpreter::dropOrTruncateIndex(
     ProxyCmdDropIndex &cmd, bool drop)
 {
     // block checkpoints during this method
-    SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
+    TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SXMutexSharedGuard actionMutexGuard(
-        pDb->getCheckpointThread()->getActionMutex());
+        pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
     
     BTreeDescriptor treeDescriptor;
     getBTreeForIndexCmd(cmd,PageId(cmd.getRootPageId()),treeDescriptor);
@@ -406,22 +415,9 @@ void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
     SharedDatabase pDb = pDbHandle->pDb;
     bool readOnly = cmd.isReadOnly();
 
-    // block checkpoints during this method (but if we're going to
-    // do that for the duration of the txn, avoid taking a second lock, since
-    // double-locking can lead to deadlock)
-    bool txnBlocksCheckpoint = !readOnly && pDb->shouldForceTxns();
     SXMutexSharedGuard actionMutexGuard(
-        pDb->getCheckpointThread()->getActionMutex(), !txnBlocksCheckpoint);
+        pDb->getCheckpointThread()->getActionMutex());
     
-    if (txnBlocksCheckpoint) {
-        // We're equating transactions with checkpoints, so take
-        // out an extra lock to block checkpoints for the duration
-        // of the transaction.  But we don't need to do this for
-        // queries because checkpoints only care about dirty
-        // persistent pages.
-        pDb->getCheckpointThread()->getActionMutex().waitFor(LOCKMODE_S);
-    }
-
     std::auto_ptr<TxnHandle> pTxnHandle(newTxnHandle());
     JniUtil::incrementHandleCount(TXNHANDLE_TRACE_TYPE_STR, pTxnHandle.get());
     pTxnHandle->pDb = pDb;
@@ -440,6 +436,15 @@ void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
             pDb->getCache(),
             pDb->getTypeFactory(),
             scratchAccessor));
+
+    if (pDb->areSnapshotsEnabled()) {
+        pTxnHandle->pSnapshotSegment =
+            pDb->getSegmentFactory()->newSnapshotRandomAllocationSegment(
+                pDb->getDataSegment(),
+                pDb->getDataSegment(),
+                pTxnHandle->pTxn->getTxnId());
+    }
+
     setTxnHandle(cmd.getResultHandle(),pTxnHandle.release());
 }
 
@@ -461,13 +466,35 @@ void CmdInterpreter::visit(ProxyCmdCommit &cmd)
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SharedDatabase pDb = pTxnHandle->pDb;
 
-    // block checkpoints during this method (but if we already
-    // did that for the duration of the txn, avoid that, since
-    // double-locking can lead to deadlock)
+    // block checkpoints during this method
     bool txnBlocksCheckpoint = !pTxnHandle->readOnly && pDb->shouldForceTxns();
     SXMutexSharedGuard actionMutexGuard(
-        pDb->getCheckpointThread()->getActionMutex(), !txnBlocksCheckpoint);
+        pDb->getCheckpointThread()->getActionMutex());
     
+    if (pDb->areSnapshotsEnabled()) {
+        // Commit the current txn, and start a new one so the versioned
+        // pages that we're now going to commit will be marked with a txnId
+        // corresponding to the time of the commit.  At present, those pages
+        // are marked with a txnId corresponding to the start of the txn.
+        pTxnHandle->pTxn->commit();
+        pTxnHandle->pTxn = pDb->getTxnLog()->newLogicalTxn(pDb->getCache());
+        SnapshotRandomAllocationSegment *pSnapshotSegment =
+            SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
+                pTxnHandle->pSnapshotSegment);
+        pSnapshotSegment->commitChanges(pTxnHandle->pTxn->getTxnId());
+
+        // Flush pages associated with the snapshot segment.  Note that we
+        // don't need to flush the underlying versioned segment first since
+        // the snapshot pages are all new and therefore, are never logged.
+        // Pages in the underlying versioned segment will be flushed in the
+        // requestCheckpoint call further below.  Also note that the
+        // checkpoint is not initiated through the dynamically cast segment
+        // to ensure that the command is traced if tracing is turned on.
+        if (txnBlocksCheckpoint) {
+            pTxnHandle->pSnapshotSegment->checkpoint(CHECKPOINT_FLUSH_ALL);
+        }
+    }
+
     if (cmd.getSvptHandle()) {
         SavepointId svptId = getSavepointId(cmd.getSvptHandle());
         pTxnHandle->pTxn->commitSavepoint(svptId);
@@ -475,9 +502,8 @@ void CmdInterpreter::visit(ProxyCmdCommit &cmd)
         pTxnHandle->pTxn->commit();
         deleteAndNullify(pTxnHandle);
         if (txnBlocksCheckpoint) {
-            // release the checkpoint lock acquired at BeginTxn
-            pDb->getCheckpointThread()->getActionMutex().release(
-                LOCKMODE_S);
+            // release the checkpoint lock acquired above
+            actionMutexGuard.unlock();
             // force a checkpoint now to flush all data modified by transaction
             // to disk; wait for it to complete before reporting the
             // transaction as committed
@@ -491,27 +517,30 @@ void CmdInterpreter::visit(ProxyCmdRollback &cmd)
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SharedDatabase pDb = pTxnHandle->pDb;
 
-    // block checkpoints during this method (but if we already
-    // did that for the duration of the txn, avoid that, since
-    // double-locking can lead to deadlock)
+    // block checkpoints during this method
     bool txnBlocksCheckpoint = !pTxnHandle->readOnly && pDb->shouldForceTxns();
     SXMutexSharedGuard actionMutexGuard(
-        pDb->getCheckpointThread()->getActionMutex(), !txnBlocksCheckpoint);
-    
+        pDb->getCheckpointThread()->getActionMutex());
+
+    if (pDb->areSnapshotsEnabled()) {
+        SnapshotRandomAllocationSegment *pSegment =
+            SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
+                pTxnHandle->pSnapshotSegment);
+        pSegment->rollbackChanges();
+    }
+
     if (cmd.getSvptHandle()) {
         SavepointId svptId = getSavepointId(cmd.getSvptHandle());
         pTxnHandle->pTxn->rollback(&svptId);
     } else {
         pTxnHandle->pTxn->rollback();
         deleteAndNullify(pTxnHandle);
-        if (txnBlocksCheckpoint) {
-            // implement rollback by simulating crash recovery,
-            // reverting all pages modified by transaction
+        if (txnBlocksCheckpoint && !pDb->areSnapshotsEnabled()) {
+            // Implement rollback by simulating crash recovery,
+            // reverting all pages modified by transaction.  No need
+            // to do this when snapshots are in use because no permanent
+            // pages were modfied.
             pDb->recoverOnline();
-            
-            // release the checkpoint lock acquired at BeginTxn
-            pDb->getCheckpointThread()->getActionMutex().release(
-                LOCKMODE_S);
         }
     }
 }
@@ -524,6 +553,7 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
         << minfo.uordblks << " bytes" << std::endl;
 #endif
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
+    SharedDatabase pDb = pTxnHandle->pDb;
     SharedExecStreamGraph pGraph =
         ExecStreamGraph::newExecStreamGraph();
     pGraph->setTxn(pTxnHandle->pTxn);
@@ -537,9 +567,18 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
     pStreamGraphHandle->pExecStreamGraph = pGraph;
     pStreamGraphHandle->pExecStreamFactory.reset(
         new ExecStreamFactory(
-            pTxnHandle->pDb,
+            pDb,
             pTxnHandle->pFtrsTableWriterFactory,
             pStreamGraphHandle.get()));
+    // When snapshots are enabled, allocate a DynamicDelegatingSegment for the
+    // stream graph so if the stream graph is executed in different txns,
+    // we can reset the delegate to whatever is the snapshot segment associated
+    // with the current txn.
+    if (pDb->areSnapshotsEnabled()) {
+        pStreamGraphHandle->pSegment =
+            pDb->getSegmentFactory()->newDynamicDelegatingSegment(
+                pTxnHandle->pSnapshotSegment);
+    }
     setStreamGraphHandle(
         cmd.getResultHandle(),
         pStreamGraphHandle.release());
@@ -629,6 +668,32 @@ void CmdInterpreter::readTupleProjection(
     for (; pAttr; ++pAttr) {
         tupleProj.push_back(pAttr->getAttributeIndex());
     }
+}
+
+void CmdInterpreter::visit(ProxyCmdAlterSystemDeallocate &cmd)
+{
+    DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
+    SharedDatabase pDb = pDbHandle->pDb;
+    if (!pDb->areSnapshotsEnabled()) {
+        // Nothing to do if snapshots aren't enabled
+        return;
+    } else {
+        pDb->deallocateOldPages();
+    }
+}
+
+void CmdInterpreter::visit(ProxyCmdVersionIndexRoot &cmd)
+{
+    TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
+    SharedDatabase pDb = pTxnHandle->pDb;
+    assert(pDb->areSnapshotsEnabled());
+
+    SnapshotRandomAllocationSegment *pSnapshotSegment =
+        SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
+            pTxnHandle->pSnapshotSegment);
+    pSnapshotSegment->versionPage(
+        PageId(cmd.getOldRootPageId()),
+        PageId(cmd.getNewRootPageId()));
 }
 
 FENNEL_END_CPPFILE("$Id$");

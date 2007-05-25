@@ -22,8 +22,6 @@
 */
 package net.sf.farrago.ddl;
 
-import java.sql.*;
-
 import java.util.*;
 import java.util.logging.*;
 
@@ -776,17 +774,6 @@ public class DdlValidator
                + ", type="+event.getType()); assert(false);
              */
         }
-    }
-
-    // implement FarragoSessionDdlValidator
-    public void scheduleTruncation(CwmModelElement modelElement)
-    {
-        assert (!validatedMap.containsKey(modelElement));
-        assert (!schedulingMap.containsKey(modelElement.refMofId()));
-        schedulingMap.put(
-            modelElement.refMofId(),
-            VALIDATE_TRUNCATION);
-        mapParserPosition(modelElement);
     }
 
     // implement FarragoSessionDdlValidator

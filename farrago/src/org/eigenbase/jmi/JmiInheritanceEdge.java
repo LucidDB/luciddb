@@ -23,7 +23,7 @@ package org.eigenbase.jmi;
 
 import javax.jmi.model.*;
 
-import org._3pq.jgrapht.edge.*;
+import org.jgrapht.graph.*;
 
 
 /**
@@ -34,8 +34,10 @@ import org._3pq.jgrapht.edge.*;
  * @version $Id$
  */
 public class JmiInheritanceEdge
-    extends DirectedEdge<JmiClassVertex>
+    extends DefaultEdge
 {
+    private final JmiClassVertex superClass;
+    private final JmiClassVertex subClass;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -43,7 +45,8 @@ public class JmiInheritanceEdge
         JmiClassVertex superClass,
         JmiClassVertex subClass)
     {
-        super(superClass, subClass);
+        this.superClass = superClass;
+        this.subClass = subClass;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -53,7 +56,7 @@ public class JmiInheritanceEdge
      */
     public JmiClassVertex getSuperClass()
     {
-        return (JmiClassVertex) getSource();
+        return superClass;
     }
 
     /**
@@ -61,7 +64,7 @@ public class JmiInheritanceEdge
      */
     public JmiClassVertex getSubClass()
     {
-        return (JmiClassVertex) getTarget();
+        return subClass;
     }
 
     // implement Object

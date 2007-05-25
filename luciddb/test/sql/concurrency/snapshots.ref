@@ -1,0 +1,142 @@
+-- setup
+> set schema 'concurrency';
+0 rows affected.
+> create table snapshot(a int unique, b int);
+0 rows affected.
+> insert into snapshot values(1, 0);
+1 row affected.
+-- end of setup
+
+-- thread cleanup
+> set schema 'concurrency';
+0 rows affected.
+> select * from snapshot;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
+| 2          | 0          |
+| 3          | 0          |
+| 4          | 0          |
+| 5          | 0          |
+| 6          | 0          |
++------------+------------+
+
+> drop table snapshot;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread inserter
+> set schema 'concurrency';
+0 rows affected.
+> insert into snapshot values(2, sys_boot.mgmt.sleep(5000));
+1 row affected.
+> insert into snapshot values(3, sys_boot.mgmt.sleep(5000));
+1 row affected.
+> insert into snapshot select a + 3, sys_boot.mgmt.sleep(1500) from snapshot;
+3 rows affected.
+> insert into snapshot select 10 - a, sys_boot.mgmt.sleep(1500) from snapshot;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Unique constraint violation
+-- end of thread inserter
+
+-- thread reader
+> set schema 'concurrency';
+0 rows affected.
+> select * from snapshot;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
++------------+------------+
+
+> select * from snapshot where a >= 0;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
++------------+------------+
+
+> select * from snapshot;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
+| 2          | 0          |
++------------+------------+
+
+> select * from snapshot where a >= 0;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
+| 2          | 0          |
++------------+------------+
+
+> select * from snapshot;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
+| 2          | 0          |
+| 3          | 0          |
++------------+------------+
+
+> select * from snapshot where a >= 0;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
+| 2          | 0          |
+| 3          | 0          |
++------------+------------+
+
+> select * from snapshot;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
+| 2          | 0          |
+| 3          | 0          |
+| 4          | 0          |
+| 5          | 0          |
+| 6          | 0          |
++------------+------------+
+
+> select * from snapshot where a >= 0;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
+| 2          | 0          |
+| 3          | 0          |
+| 4          | 0          |
+| 5          | 0          |
+| 6          | 0          |
++------------+------------+
+
+> select * from snapshot;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
+| 2          | 0          |
+| 3          | 0          |
+| 4          | 0          |
+| 5          | 0          |
+| 6          | 0          |
++------------+------------+
+
+> select * from snapshot where a >= 0;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
+| 2          | 0          |
+| 3          | 0          |
+| 4          | 0          |
+| 5          | 0          |
+| 6          | 0          |
++------------+------------+
+
+-- end of thread reader
+

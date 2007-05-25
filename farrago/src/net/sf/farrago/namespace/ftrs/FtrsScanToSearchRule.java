@@ -107,9 +107,9 @@ class FtrsScanToSearchRule
 
         // and make the rest residual for now
         RexNode residualRexNode =
-            rexAnalyzer.getResidualSargRexNode(sargBindingList);
+            rexAnalyzer.getSargBindingListToRexNode(sargBindingList);
 
-        RexNode postFilterRexNode = rexAnalyzer.getPostFilterRexNode();
+        RexNode postFilterRexNode = rexAnalyzer.getNonSargFilterRexNode();
 
         if ((residualRexNode != null) && (postFilterRexNode != null)) {
             extraFilter =

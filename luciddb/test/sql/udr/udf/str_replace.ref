@@ -33,6 +33,28 @@
 0: jdbc:luciddb:> values applib.str_replace(3434, 3, 5);
 Error: From line 1, column 15 to line 1, column 37: No match found for function signature STR_REPLACE(<NUMERIC>, <NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.str_replace(cast(null as varchar(22)), 'null', 'new');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.str_replace(
+. . . . . . . . >   'This is not a null value', cast(null as varchar(20)), 'nonono');
++---------------------------+
+|          EXPR$0           |
++---------------------------+
+| This is not a null value  |
++---------------------------+
+0: jdbc:luciddb:> values applib.str_replace(
+. . . . . . . . >   'This is not a null value', 'is', cast(null as varchar(10)));
++-------------------------------+
+|            EXPR$0             |
++-------------------------------+
+| Thnull null not a null value  |
++-------------------------------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.str_replace
 0: jdbc:luciddb:> create view changedph (fname, phone, chphone)as
 . . . . . . . . > select fname, phone, applib.str_replace(phone, '234', '###') 

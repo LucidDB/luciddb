@@ -343,7 +343,7 @@ public class FarragoObjectCache
                         "Detaching entry " + entry.key.toString()
                         + ", size " + entry.memoryUsage);
                 }
-                assert (entry.pinCount == 1) : entry.pinCount;
+                assert (entry.pinCount == 1) : entry;
                 mapKeyToEntry.removeMulti(
                     entry.getKey(),
                     entry);
@@ -388,10 +388,11 @@ public class FarragoObjectCache
     {
         tracer.fine("discarding all entries");
         synchronized (mapKeyToEntry) {
-            Iterator iter = mapKeyToEntry.entryIterMulti();
+            Iterator<Map.Entry<Object, FarragoCacheEntry>> iter =
+                mapKeyToEntry.entryIterMulti();
             while (iter.hasNext()) {
-                Map.Entry mapEntry = (Map.Entry) iter.next();
-                FarragoCacheEntry entry = (FarragoCacheEntry) mapEntry.getValue();
+                Map.Entry<Object, FarragoCacheEntry> mapEntry = iter.next();
+                FarragoCacheEntry entry = mapEntry.getValue();
                 discardEntry(entry);
             }
             mapKeyToEntry.clear();
@@ -409,11 +410,11 @@ public class FarragoObjectCache
             }
 
             assert (entry.pinCount == 0) :
-                "cache entry " + entry + " has pin count " + entry.pinCount;
+                "expected pin-count=0 for entry " + entry;
             assert (entry.constructionThread == null) : entry;
 
             if (entry.value instanceof FarragoAllocation) {
-                ((FarragoAllocation) (entry.value)).closeAllocation();
+                ((FarragoAllocation) entry.value).closeAllocation();
             }
         }
 
@@ -426,13 +427,7 @@ public class FarragoObjectCache
     public void closeAllocation()
     {
         discardAll();
-
-        // Temporarily disable assert. We would like there to be an invariant
-        // 'bytesUsed == sum of entry memoryUsage' which holds when
-        // mapKeyToEntry is locked, but this isn't so.
-        if (Util.deprecated(false, false)) {
         assert (bytesUsed == 0);
-        }
     }
 
     //~ Inner Interfaces -------------------------------------------------------

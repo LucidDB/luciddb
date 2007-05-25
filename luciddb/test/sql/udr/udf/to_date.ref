@@ -13,23 +13,27 @@
 . . . . . . . . > ('GOOD', '1995.01.05', 'YYYY.MM.DD'),
 . . . . . . . . > ('GOOD', '8 67 1', 'm yy d');
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failures
 0: jdbc:luciddb:> values applib.convert_date('JAN, 23 2009', 'mmm, dd yyyy');
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Invalid digit input string: caMask=MMM, DD YYYY caIn=JAN, 23 2009 (state=,code=0)
+Error: Invalid digit input string: caMask=MMM, DD YYYY caIn=JAN, 23 2009 (state=,code=0)
 0: jdbc:luciddb:> values applib.convert_date('12m, 9d, 1004y', 'mmm, 23m, 1004y');
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Invalid digit input string: caMask=MMM, 23M, 1004Y caIn=12M, 9D, 1004Y (state=,code=0)
+Error: Invalid digit input string: caMask=MMM, 23M, 1004Y caIn=12M, 9D, 1004Y (state=,code=0)
 0: jdbc:luciddb:> values applib.convert_date('7-9-97', 'DD-MM-YY');
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Invalid digit input string: caMask=DD-MM-YY caIn=7-9-97 (state=,code=0)
+Error: Invalid digit input string: caMask=DD-MM-YY caIn=7-9-97 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.convert_date(cast(null as varchar(22)), 'mm.dd.yyyy');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.convert_date('jan 23, 2003', cast(null as varchar(10)));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference
 0: jdbc:luciddb:> create view td as

@@ -26,6 +26,7 @@
 #include "fennel/cache/CachePage.h"
 #include "fennel/cache/PagePredicate.h"
 #include "fennel/segment/Segment.h"
+#include "fennel/segment/SegmentAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -37,11 +38,32 @@ Segment::Segment(SharedCache pCacheInit)
 
 Segment::~Segment()
 {
+    close();
 }
 
 void Segment::closeImpl()
 {
     checkpoint(CHECKPOINT_FLUSH_AND_UNMAP);
+}
+
+SharedSegment Segment::getTracingSegment()
+{
+    SharedSegment sharedPtr = pTracingSegment.lock();
+    if (sharedPtr && sharedPtr.get()) {
+        return sharedPtr;
+    } else {
+        return shared_from_this();
+    }
+}
+
+void Segment::setTracingSegment(WeakSegment pTracingSegmentInit)
+{
+    pTracingSegment = pTracingSegmentInit;
+}
+
+MappedPageListener *Segment::getTracingListener()
+{
+    return getTracingSegment().get();
 }
 
 void Segment::setUsablePageSize(uint cb)
@@ -87,7 +109,16 @@ bool Segment::isLinearPageIdAllocated(PageId pageId)
 
 void Segment::checkpoint(CheckpointType checkpointType)
 {
-    delegatedCheckpoint(*this,checkpointType);
+    // Note that we can't use getTracingSegment() here because that method
+    // references the shared ptr associated with this segment, and the
+    // shared segment may have already been freed during shutdown by the
+    // time this method is called.
+    SharedSegment sharedPtr = pTracingSegment.lock();
+    if (sharedPtr && sharedPtr.get()) {
+        delegatedCheckpoint(*(sharedPtr.get()),checkpointType);
+    } else {
+        delegatedCheckpoint(*this,checkpointType);
+    }
 }
 
 void Segment::delegatedCheckpoint(
@@ -111,6 +142,22 @@ bool Segment::ensureAllocatedSize(BlockNum nPages)
         }
     }
     return true;
+}
+
+PageId Segment::updatePage(PageId pageId, bool needsTranslation)
+{
+    return NULL_PAGE_ID;
+}
+
+MappedPageListener *Segment::getMappedPageListener(BlockId blockId)
+{
+    return this;
+}
+
+void Segment::discardCachePage(BlockId blockId)
+{
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
+    selfAccessor.pCacheAccessor->discardPage(blockId);
 }
 
 FENNEL_END_CPPFILE("$Id$");

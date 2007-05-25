@@ -45,16 +45,10 @@
       </test>
 
       <test name="cursorTests">
-        <!-- TODO: FRG-141, test also commented out in file so locking -->
-        <!-- problem doesn't endure -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/cursorTests.sql"/>
       </test>
 
       <test name="flatten">
-        <!-- LDB-125: update ref file after bug fix -->
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/flattenTest.sql"/>
       </test>
 
@@ -66,6 +60,11 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/deriveEffectiveToTimestampTests.sql"/>
       </test>
 
+      <test name="splitStringsTest">
+        <junit-sql
+        file="${open.dir}/luciddb/test/sql/udr/udx/splitStringsTest.sql"/>
+      </test>
+
       <test name="collapseRows">
         <!-- UNRESOLVED ISSUE: FRG-209 -->
         <test-metadata>
@@ -73,6 +72,8 @@
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/collapseRows.sql"/>
       </test>
+
+      <test-suite-call testfile="enforceRowConstraints/test.xml"/>
 
       <cleanup-hook>
         <test-suite name="cleanup">

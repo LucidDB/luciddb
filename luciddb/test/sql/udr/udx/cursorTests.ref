@@ -20,7 +20,7 @@
 . . . . . . . . > language java
 . . . . . . . . > parameter style system defined java
 . . . . . . . . > no sql
-. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.GetColumnTypesUdx.execute';
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.test.GetColumnTypesUdx.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from table(
 . . . . . . . . >   get_column_types(
@@ -134,7 +134,7 @@
 | cachePagesMax                   | 5000                                |
 | calcVirtualMachine              | CALCVM_JAVA                         |
 | checkpointInterval              | 0                                   |
-| codeCacheMaxBytes               | 0                                   |
+| codeCacheMaxBytes               | 2000000                             |
 | databaseIncrementSize           | 1000                                |
 | databaseInitSize                | 1000                                |
 | databaseMaxSize                 | 0                                   |
@@ -247,7 +247,7 @@
 +---------------------------+-------------------------------------+----------+--------------+
 | calcVirtualMachine        | CALCVM_JAVA                         | 12       | VARCHAR      |
 | checkpointInterval        | 0                                   | 4        | INTEGER      |
-| codeCacheMaxBytes         | 0                                   | -5       | BIGINT       |
+| codeCacheMaxBytes         | 2000000                             | -5       | BIGINT       |
 | fennelDisabled            | false                               | 16       | BOOLEAN      |
 | javaCompilerClassName     | org.eigenbase.javac.JaninoCompiler  | 12       | VARCHAR      |
 | name                      | Current                             | 12       | VARCHAR      |
@@ -293,5 +293,18 @@ Error: hey, hey, it's an exception (state=,code=0)
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from ct.mytable order by 1;
--- Error: Failed to acquire lock on LOCALDB.CT.MYTABLE (state=,code=0)
++---------------------------+-------------------------------------+
+|        PARAM_NAME         |             PARAM_VALUE             |
++---------------------------+-------------------------------------+
+| calcVirtualMachine        | CALCVM_JAVA                         |
+| checkpointInterval        | 0                                   |
+| codeCacheMaxBytes         | 2000000                             |
+| fennelDisabled            | false                               |
+| javaCompilerClassName     | org.eigenbase.javac.JaninoCompiler  |
+| name                      | Current                             |
+| serverRmiRegistryPort     | -1                                  |
+| serverSingleListenerPort  | -1                                  |
+| userCatalogEnabled        | false                               |
++---------------------------+-------------------------------------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -1,3 +1,5 @@
+0: jdbc:luciddb:> alter session set "logDir"='@LOGDIR@';
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create schema exportfile;
 0: jdbc:luciddb:> set schema 'exportfile';
 0: jdbc:luciddb:> 
@@ -66,6 +68,14 @@ about these wonderous,
 carriage returns too                                              |
 +-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- wait 1 sec so log files don't collide
+0: jdbc:luciddb:> select sys_boot.mgmt.sleep(1000) from (values(0));
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- export with comma delimiter and .csv
 0: jdbc:luciddb:> call sys_root.export_schema_to_file(null, 'EXPORTFILE', false, null, null, '@EXPDIR@/local/fdext', true, true, ',', '.csv');
 0: jdbc:luciddb:> 
@@ -117,6 +127,14 @@ carriage returns too                                              |
 0: jdbc:luciddb:> import foreign schema bcp limit to ("dates")
 . . . . . . . . > from server flatfile_server into exportfile;
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- wait 1 sec so log files don't collide
+0: jdbc:luciddb:> select sys_boot.mgmt.sleep(1000) from (values(0));
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- export into csv files with datetime formats
 0: jdbc:luciddb:> call sys_root.export_schema_to_file('LOCALDB', 'EXPORTFILE', false, 'dates', null, '@EXPDIR@/local/dt', true, false, ',', '.csv', 'MM/dd/yyyy', 'hh:mm:ss a', 'MM/dd/yyyy hh:mm:ss a');
 0: jdbc:luciddb:> 
@@ -150,6 +168,30 @@ carriage returns too                                              |
 | 2004-02-29  | 12:00:00    | 2004-02-29 12:00:00.0  |
 | 2007-01-01  |             | 2006-04-22 14:30:00.0  |
 +-------------+-------------+------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- log files should be created in logDir
+0: jdbc:luciddb:> create or replace server flatfile_server
+. . . . . . . . > foreign data wrapper "FLAT FILE"
+. . . . . . . . > options (
+. . . . . . . . >   directory '@LOGDIR@',
+. . . . . . . . >   log_directory '@LOGDIR@',
+. . . . . . . . >   file_extension 'log',
+. . . . . . . . >   field_delimiter '\t'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema lschema;
+0: jdbc:luciddb:> import foreign schema bcp
+. . . . . . . . > limit to table_name like 'Export%'
+. . . . . . . . > from server flatfile_server
+. . . . . . . . > into lschema;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- one log file per schema export should exist (3)
+0: jdbc:luciddb:> select count(*) from sys_root.dba_tables where schema_name='LSCHEMA';
++---------+
+| EXPR$0  |
++---------+
+| 3       |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup 
 0: jdbc:luciddb:> drop server flatfile_server cascade;

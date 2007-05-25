@@ -146,6 +146,10 @@ public class OJRexImplementorTableImpl
             BinaryExpression.DIVIDE);
 
         registerBinaryOperator(
+            SqlStdOperatorTable.divideIntegerOperator,
+            BinaryExpression.DIVIDE);
+
+        registerBinaryOperator(
             SqlStdOperatorTable.andOperator,
             BinaryExpression.LOGICAL_AND);
 

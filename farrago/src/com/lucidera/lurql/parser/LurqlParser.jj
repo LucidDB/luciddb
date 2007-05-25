@@ -419,6 +419,16 @@ String StringLiteral() :
     }
 }
 
+Object NullLiteral() :
+{
+}
+{
+    <NULL>
+    {
+        return LurqlFilter.NULL_VALUE;
+    }
+}
+
 void FilterValueList(Collection collection) :
 {
     Object s;
@@ -467,6 +477,7 @@ Object FilterValue() :
     (
         obj = DynamicParameter()
         | obj = StringLiteral()
+        | obj = NullLiteral()
     )
     {
         return obj;
@@ -510,6 +521,7 @@ TOKEN :
     | < PARENT: "parent" >
     | < IN: "in" >
     | < MATCHES: "matches" >
+    | < NULL: "null" >
     | < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
     | < S_QUOTED_STRING: <SQUOTE> ( (~["'","\n","\r"]) | ("''"))* <SQUOTE> >
     | < D_QUOTED_STRING: <DQUOTE> ( (~["\"","\n","\r"]) | ("\"\""))* <DQUOTE> >

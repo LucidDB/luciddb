@@ -23,6 +23,20 @@
 | 143     |
 +---------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.day_in_year(cast (null as date));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.day_in_year(1929, cast(null as integer), 9);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.day_in_year
 0: jdbc:luciddb:> create view diy(fm, fromDt, fromTs, fromFm) as
 . . . . . . . . > select fm, applib.day_in_year(datecol), applib.day_in_year(tscol), applib.day_in_year(1999, fm, fm)
@@ -53,13 +67,13 @@
 0: jdbc:luciddb:> select fm, (applib.day_in_year(datecol) + applib.day_in_year(tscol)) / applib.day_in_year(1999, fm, fm) 
 . . . . . . . . > from data_source
 . . . . . . . . > order by 1;
-+-----+---------+
-| FM  | EXPR$1  |
-+-----+---------+
-| 1   | 583     |
-| 2   | 5       |
-| 10  | 1       |
-+-----+---------+
++-----+-------------+
+| FM  |   EXPR$1    |
++-----+-------------+
+| 1   | 583.000000  |
+| 2   | 5.787879    |
+| 10  | 1.314488    |
++-----+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- nested
 0: jdbc:luciddb:> values (applib.day_in_year(2006, applib.day_in_year(date'1800-01-12'), applib.day_in_year(timestamp'1976-01-05 10:50:45')));
@@ -71,4 +85,5 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view diy;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

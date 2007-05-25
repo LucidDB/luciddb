@@ -111,6 +111,7 @@ void LbmSplicerExecStream::open(bool restart)
 
         bTreeWriter = SharedBTreeWriter(
             new BTreeWriter(writeBTreeDesc, scratchAccessor, false));
+        bTreeWriterMoved = true;
 
         if (opaqueToInt(writeRowCountParamId) > 0) {
             pDynamicParamManager->createParam(
@@ -211,7 +212,12 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
         }
 
         if (uniqueRequired(inputTuple)) {
-
+            if (currEntry) {
+                // Write out the current entry before we insert the unique
+                // key.
+                insertBitmapEntry();
+                currEntry = false;
+            }
             upsertSingleton(inputTuple);
         } else if (!currEntry) {
 
@@ -254,7 +260,9 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
 
 void LbmSplicerExecStream::closeImpl()
 {
-    bTreeWriter->endSearch();
+    if (bTreeWriter) {
+        bTreeWriter->endSearch();
+    }
     deletionReader.endSearch();
     DiffluenceExecStream::closeImpl();
     bitmapBuffer.reset();
@@ -371,7 +379,7 @@ void LbmSplicerExecStream::insertBitmapEntry()
             assert(match);
         }
         FENNEL_TRACE(TRACE_FINE, "delete Tuple from BTree");
-        FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(tempBTreeTupleData));
+        FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(bTreeTupleData));
 
         bTreeWriter->deleteCurrent();
         currExistingEntry = false;

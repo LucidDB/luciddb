@@ -22,6 +22,20 @@
 | Q1CY01  |
 +---------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null parameters
+0: jdbc:luciddb:> values applib.calendar_quarter(cast(null as date));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.calendar_quarter(cast(null as timestamp));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failures
 0: jdbc:luciddb:> values applib.calendar_quarter(TIMESTAMP'2 12:59:21');
 Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '2 12:59:21' at line 1, column 41: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)

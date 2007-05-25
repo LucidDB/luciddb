@@ -47,29 +47,23 @@ import org.eigenbase.util.*;
 class LucidDbTxnMgr
     extends FarragoDbNullTxnMgr
 {
+    // TODO jvs 15-Mar-2006:  start a new LucidDbTrace.java file?
+    private static final Logger tracer =
+        Logger.getLogger(LucidDbTxnMgr.class.getName());
 
     //~ Instance fields --------------------------------------------------------
 
     private final LockManager2 lockMgr;
 
-    private final String dbWriteLock;
-
     //~ Constructors -----------------------------------------------------------
 
     LucidDbTxnMgr()
     {
-        // TODO jvs 15-Mar-2006:  start a new LucidDbTrace.java file?
-        LoggerFacade loggerFacade =
-            new Jdk14Logger(
-                Logger.getLogger(LucidDbTxnMgr.class.getName()));
+        // NOTE jvs 8-Feb-2007:  This does nothing unless someone
+        // actually enables the corresponding log4j settings AND
+        // java.util.logging settings
+        LoggerFacade loggerFacade = new Jdk14Logger(tracer);
         lockMgr = new GenericLockManager(2, loggerFacade);
-
-        // This represents a lock which can be acquired on the entire database.
-        // It prevents concurrent writes, but does not prevent reads; for that
-        // we use table-level locking.  By declaring this non-static and using
-        // new String(), this allows for the rather theoretical possibility of
-        // two LucidDB instances running in the same JVM.
-        dbWriteLock = new String(FarragoCatalogInit.LOCALDB_CATALOG_NAME);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -94,16 +88,8 @@ class LucidDbTxnMgr
                 SqlParserPos.ZERO);
         String renderedTableName = sqlId.toString();
 
-        if (accessType == TableAccessMap.Mode.READ_ACCESS) {
-            // S-lock only the table; readers don't care about
-            // the database lock
-            acquireLock(txnId, localTableName, renderedTableName, 1);
-        } else {
-            // X-lock the database to exclude other writers but
-            // not readers
-            acquireLock(txnId, dbWriteLock, dbWriteLock, 2);
-
-            // X-lock the table to exclude readers
+        if (accessType != TableAccessMap.Mode.READ_ACCESS) {
+            // X-lock the table to exclude writers on the same table
             acquireLock(txnId, localTableName, renderedTableName, 2);
         }
     }
@@ -114,6 +100,8 @@ class LucidDbTxnMgr
         FarragoSessionTxnEnd endType)
     {
         super.endTxn(txnId, endType);
+        tracer.fine(
+            "Transaction " + txnId + " releasing all table and database locks");
         lockMgr.releaseAll(txnId);
     }
 
@@ -123,7 +111,14 @@ class LucidDbTxnMgr
         String renderedName,
         int lockLevel)
     {
+        tracer.fine(
+            "Transaction " + txnId + " attempting to acquire " +
+            ((lockLevel == 1) ? "shared" : "exclusive")
+            + " lock on "
+            + renderedName);
         if (lockMgr.tryLock(txnId, resourceId, lockLevel, true)) {
+            tracer.fine(
+                "Transaction " + txnId + " acquired lock successfully");
             return;
         }
         throw FarragoResource.instance().LockDenied.ex(

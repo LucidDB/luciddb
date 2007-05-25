@@ -30,6 +30,7 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.FarragoUdrRuntime;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -198,7 +199,7 @@ public abstract class MedAbstractColumnSet
         // TODO jvs 13-Oct-2006:  phase out these vestigial parameters
         assert(cluster == getPreparingStmt().getRelOptCluster());
         assert(connection == getPreparingStmt());
-        
+
         return FarragoJavaUdxRel.newUdxRel(
             getPreparingStmt(),
             getRowType(),
@@ -206,6 +207,90 @@ public abstract class MedAbstractColumnSet
             serverMofId,
             args,
             RelNode.emptyArray);
+    }
+
+    /**
+     * Converts one RelNode to another RelNode with specified RowType.
+     * New columns are filled with nulls.
+     *
+     * @param cluster same as for toRel
+     * @param child original RelNode
+     * @param targetRowType RowType to map to
+     * @param srcRowType RowType of external data source
+     */
+    protected RelNode toLenientRel(
+        RelOptCluster cluster,
+        RelNode child,
+        RelDataType targetRowType,
+        RelDataType srcRowType)
+    {
+        ArrayList<RexNode> rexNodeList = new ArrayList();
+        RexBuilder rexBuilder = cluster.getRexBuilder();
+        FarragoWarningQueue warningQueue =
+            getPreparingStmt().getStmtValidator().getWarningQueue();
+        String objectName = this.localName[this.localName.length-1];
+
+        HashMap<String, RelDataType> srcMap = new HashMap();
+        for (RelDataTypeField srcField : srcRowType.getFieldList()) {
+            srcMap.put(srcField.getName(), srcField.getType());
+        }
+
+        ArrayList<String> allTargetFields = new ArrayList();
+        int index = 0;
+        for (RelDataTypeField targetField : targetRowType.getFieldList()) {
+            allTargetFields.add(targetField.getName());
+            RelDataType type;
+            // target field is in child
+            if ((index = child.getRowType().getFieldOrdinal(
+                     targetField.getName())) != -1) {
+                if ((type = srcMap.get(targetField.getName())) !=
+                    targetField.getType()) {
+                    // field type has been cast
+                    warningQueue.postWarning(
+                        FarragoResource.instance().TypeChangeWarning.ex(
+                            objectName, targetField.getName(), type.toString(),
+                            targetField.getType().toString()));
+                }
+                rexNodeList.add(new RexInputRef(index, targetField.getType()));
+            } else { // target field is not in child
+                rexNodeList.add(
+                    rexBuilder.makeCast(
+                        targetField.getType(),
+                        rexBuilder.constantNull()));
+                // check if type-incompatibility between source and target
+                if ((type = srcMap.get(targetField.getName())) != null) {
+                    warningQueue.postWarning(FarragoResource.instance().
+                        IncompatibleTypeChangeWarning.ex(
+                            objectName, targetField.getName(), type.toString(),
+                            targetField.getType().toString()));
+                } else {
+                    // field in target has been deleted in source
+                    warningQueue.postWarning(
+                        FarragoResource.instance().DeletedFieldWarning.ex(
+                            objectName, targetField.getName()));
+                }
+            }
+        }
+
+        // check if data source has added fields
+        for (String srcField : srcMap.keySet()) {
+            if (!allTargetFields.contains(srcField)) {
+                warningQueue.postWarning(
+                    FarragoResource.instance().AddedFieldWarning.ex(
+                        objectName, srcField));
+            }
+        }
+
+        // create a new RelNode.
+        RelNode calcRel = CalcRel.createProject(
+            child,
+            rexNodeList,
+            null);
+
+        return RelOptUtil.createCastRel(
+            calcRel,
+            targetRowType,
+            true);
     }
 }
 

@@ -1,6 +1,8 @@
 create foreign data wrapper @DATA_WRAPPER_NAME@
 library '@DATA_LIBRARY@'
-language java;
+language java
+options( type_mapping '@TYPE_MAPPING@')
+;
 
 create server @SERVER_NAME@
 foreign data wrapper @DATA_WRAPPER_NAME@

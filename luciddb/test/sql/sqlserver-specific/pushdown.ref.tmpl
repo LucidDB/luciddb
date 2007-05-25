@@ -1,0 +1,808 @@
+0: jdbc:luciddb:> create schema test;
+0: jdbc:luciddb:> set schema 'test';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- DISABLED PUSHDOWN
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server SQL_SERVER_NO_PUSHDOWN
+. . . . . . . . > foreign data wrapper "SQL SERVER"
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     schema_name '@SCHEMA@',
+. . . . . . . . >     qualifying_catalog_name '@CATALOG_NAME@',
+. . . . . . . . >     table_types '@TABLE_TYPES@',
+. . . . . . . . >     use_schema_name_as_foreign_qualifier 'true',
+. . . . . . . . >     lenient 'true',
+. . . . . . . . >     disabled_pushdown_rel_pattern '.*'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace foreign table DATATYPE (
+. . . . . . . . >   "c_timestamp" timestamp,
+. . . . . . . . >   "c_date" timestamp,
+. . . . . . . . >   "blah" integer,
+. . . . . . . . >   "c_varchar" varchar(1024)
+. . . . . . . . > ) server SQL_SERVER_NO_PUSHDOWN
+. . . . . . . . > options
+. . . . . . . . > (object '@DATATYPE_TABLE@');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from sql_server_no_pushdown.dbo.@DATATYPE_TABLE@ order by 1,2,3,4,5,6;
++-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+------------------------+------------------------+------------------------+
+|   c_char    |  c_varchar  | c_decimal  | c_tinyint  | c_smallint  |  c_integer  |       c_bigint       | c_real  |   c_double    | c_boolean  |         c_date         |         c_time         |      c_timestamp       |
++-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+------------------------+------------------------+------------------------+
+| thisChar01  | varchar-01  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | true       | 2005-10-12 00:00:00.0  | 1899-12-30 12:00:00.0  | 2005-10-12 12:00:00.0  |
+| thisChar02  | varchar-02  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | false      | 2005-10-12 00:00:00.0  | 1899-12-30 12:00:00.0  | 2005-10-12 12:00:00.0  |
+| thisChar03  | varchar-03  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | true       | 2005-10-12 00:00:00.0  | 1899-12-30 12:00:00.0  | 2005-10-12 12:00:00.0  |
+| thisChar04  | varchar-04  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | false      | 2005-10-12 00:00:00.0  | 1899-12-30 12:00:00.0  | 2005-10-12 12:00:00.0  |
+| thisChar05  | varchar-05  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | true       | 2005-10-12 00:00:00.0  | 1899-12-30 12:00:00.0  | 2005-10-12 12:00:00.0  |
++-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+------------------------+------------------------+------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call applib.create_var('context1', null, 'context');
+0: jdbc:luciddb:> call applib.create_var('context1', 'last_extract_timestamp', 'appvariable');
+0: jdbc:luciddb:> call applib.set_var('context1', 'last_extract_timestamp', '2005-10-12 03:00:00');
+0: jdbc:luciddb:> call applib.set_var('context1', 'extraction_window', '5');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- >=
+0: jdbc:luciddb:> select * from test.datatype where "c_date" >=
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------+-------------+
+|      c_timestamp       |         c_date         | blah  |  c_varchar  |
++------------------------+------------------------+-------+-------------+
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  |       | varchar-01  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  |       | varchar-02  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  |       | varchar-03  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  |       | varchar-04  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  |       | varchar-05  |
++------------------------+------------------------+-------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where "c_date" >=
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                    column0                                                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                      |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                    |
+|     IteratorToFennelConverter                                                                                                                                                                                  |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[2005-10-07 03:00:00.0], expr#4=[>=($t1, $t3)], expr#5=[null], expr#6=[CAST($t5):INTEGER], proj#0..1=[{exprs}], blah=[$t6], c_varchar=[$t2], $condition=[$t4])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                    |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                              |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- ENABLED PUSHDOWN
+0: jdbc:luciddb:> -- standard operators: 
+0: jdbc:luciddb:> -- >=, >, <, <=, =, <>, [NOT] LIKE, [NOT] BETWEEN,
+0: jdbc:luciddb:> -- [NOT] IN, IS [NOT] NULL, AND, OR
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server SQL_SERVER_ALL_PUSHDOWN
+. . . . . . . . > foreign data wrapper "SQL SERVER"
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     schema_name '@SCHEMA@',
+. . . . . . . . >     qualifying_catalog_name '@CATALOG_NAME@',
+. . . . . . . . >     table_types '@TABLE_TYPES@',
+. . . . . . . . >     use_schema_name_as_foreign_qualifier 'true',
+. . . . . . . . >     lenient 'true',
+. . . . . . . . >     disabled_pushdown_rel_pattern ''
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace foreign table DATATYPE (
+. . . . . . . . >   "c_timestamp" timestamp,
+. . . . . . . . >   "c_date" timestamp,
+. . . . . . . . >   "c_varchar" varchar(1024)
+. . . . . . . . > ) server SQL_SERVER_ALL_PUSHDOWN
+. . . . . . . . > options
+. . . . . . . . > (object '@DATATYPE_TABLE@');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- >=
+0: jdbc:luciddb:> select * from test.datatype where "c_date" >=
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      c_timestamp       |         c_date         |  c_varchar  |
++------------------------+------------------------+-------------+
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-01  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-02  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-03  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-04  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-05  |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where "c_date" >=
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                  column0                                                                                                                                                  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                 |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                               |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_GE], filterOrdinals=[[1]], filterTuple=[[2005-10-07 03:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) c_timestamp, TIMESTAMP(0) c_date, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                           |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                         |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- >
+0: jdbc:luciddb:> select * from test.datatype where "c_date" >
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      c_timestamp       |         c_date         |  c_varchar  |
++------------------------+------------------------+-------------+
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-01  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-02  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-03  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-04  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-05  |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where "c_date" >
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                  column0                                                                                                                                                  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                 |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                               |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[[2005-10-07 03:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) c_timestamp, TIMESTAMP(0) c_date, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                           |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                         |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- <=
+0: jdbc:luciddb:> select * from test.datatype where "c_date" <=
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++--------------+---------+------------+
+| c_timestamp  | c_date  | c_varchar  |
++--------------+---------+------------+
++--------------+---------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where "c_date" <=
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                  column0                                                                                                                                                  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                 |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                               |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_LE], filterOrdinals=[[1]], filterTuple=[[2005-10-07 03:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) c_timestamp, TIMESTAMP(0) c_date, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                           |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                         |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- <
+0: jdbc:luciddb:> select * from test.datatype where "c_date" <
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++--------------+---------+------------+
+| c_timestamp  | c_date  | c_varchar  |
++--------------+---------+------------+
++--------------+---------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where "c_date" <
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                  column0                                                                                                                                                  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                 |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                               |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[2005-10-07 03:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) c_timestamp, TIMESTAMP(0) c_date, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                           |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                         |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- =
+0: jdbc:luciddb:> select * from test.datatype where "c_date" =
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++--------------+---------+------------+
+| c_timestamp  | c_date  | c_varchar  |
++--------------+---------+------------+
++--------------+---------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where "c_date" =
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                  column0                                                                                                                                                  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                 |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                               |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[2005-10-07 03:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) c_timestamp, TIMESTAMP(0) c_date, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                           |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                         |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- <>
+0: jdbc:luciddb:> select * from test.datatype where "c_date" <>
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      c_timestamp       |         c_date         |  c_varchar  |
++------------------------+------------------------+-------------+
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-01  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-02  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-03  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-04  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-05  |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where "c_date" <>
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++----------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                column0                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                              |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                            |
+|     IteratorToFennelConverter                                                                                                          |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[2005-10-07 03:00:00.0], expr#4=[<>($t1, $t3)], proj#0..2=[{exprs}], $condition=[$t4])  |
+|         ResultSetToFarragoIteratorConverter                                                                                            |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                      |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- NOT LIKE
+0: jdbc:luciddb:> select "c_varchar", "c_timestamp" from test.datatype where "c_varchar" NOT LIKE '%char-02%' order by 1,2;
++-------------+------------------------+
+|  c_varchar  |      c_timestamp       |
++-------------+------------------------+
+| varchar-01  | 2005-10-12 12:00:00.0  |
+| varchar-03  | 2005-10-12 12:00:00.0  |
+| varchar-04  | 2005-10-12 12:00:00.0  |
+| varchar-05  | 2005-10-12 12:00:00.0  |
++-------------+------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . > select "c_varchar", "c_timestamp" from test.datatype where "c_varchar" NOT LIKE '%char-02%' order by 1,2
+. . . . . . . . > );
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                             column0                                                                                              |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                        |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                                                                                         |
+|     FennelReshapeRel(projection=[[2, 0]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar, TIMESTAMP(0) c_timestamp) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                      |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                |
+| FROM "BENCHMARK"."dbo"."TYPES"                                                                                                                                                                   |
+| WHERE NOT ("c_varchar" LIKE '%char-02%')])                                                                                                                                                       |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- LIKE
+0: jdbc:luciddb:> select "c_date" from test.datatype where "c_varchar" LIKE '%char-02' order by 1;
++------------------------+
+|         c_date         |
++------------------------+
+| 2005-10-12 00:00:00.0  |
++------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . > select "c_date" from test.datatype where "c_varchar" LIKE '%char-02' order by 1
+. . . . . . . . > );
++---------------------------------------------------------------------------------------------------+
+|                                              column0                                              |
++---------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                         |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                             |
+|     FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(TIMESTAMP(0) c_date) NOT NULL])  |
+|       IteratorToFennelConverter                                                                   |
+|         ResultSetToFarragoIteratorConverter                                                       |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                 |
+| FROM "BENCHMARK"."dbo"."TYPES"                                                                    |
+| WHERE "c_varchar" LIKE '%char-02'])                                                               |
++---------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- NOT BETWEEN
+0: jdbc:luciddb:> select * from test.datatype where "c_date" NOT BETWEEN
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >     -50)
+. . . . . . . . >   AND
+. . . . . . . . >   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
+. . . . . . . . > order by 1,2,3;
++--------------+---------+------------+
+| c_timestamp  | c_date  | c_varchar  |
++--------------+---------+------------+
++--------------+---------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where "c_date" NOT BETWEEN
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >       (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >       -50)
+. . . . . . . . >     AND
+. . . . . . . . >     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                 column0                                                                                                                  |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                              |
+|     IteratorToFennelConverter                                                                                                                                                                                                            |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[2005-08-23 03:00:00.0], expr#4=[>=($t1, $t3)], expr#5=[2005-10-12 03:00:00.0], expr#6=[<=($t1, $t5)], expr#7=[AND($t4, $t6)], expr#8=[NOT($t7)], proj#0..2=[{exprs}], $condition=[$t8])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                              |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                        |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                         |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- BETWEEN
+0: jdbc:luciddb:> select * from test.datatype where "c_date" BETWEEN
+. . . . . . . . >   APPLIB.ADD_DAYS(
+. . . . . . . . >     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >     -50)
+. . . . . . . . >   AND
+. . . . . . . . >   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      c_timestamp       |         c_date         |  c_varchar  |
++------------------------+------------------------+-------------+
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-01  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-02  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-03  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-04  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-05  |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where "c_date" BETWEEN
+. . . . . . . . >     APPLIB.ADD_DAYS(
+. . . . . . . . >       (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
+. . . . . . . . >       -50)
+. . . . . . . . >     AND
+. . . . . . . . >     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                        column0                                                                                                        |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                             |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                           |
+|     IteratorToFennelConverter                                                                                                                                                                                         |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[2005-08-23 03:00:00.0], expr#4=[>=($t1, $t3)], expr#5=[2005-10-12 03:00:00.0], expr#6=[<=($t1, $t5)], expr#7=[AND($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                           |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                     |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                      |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- NOT IN
+0: jdbc:luciddb:> select "c_varchar" from test.datatype where "c_varchar" NOT IN ('varchar-02', 'varchar') order by 1;
++-------------+
+|  c_varchar  |
++-------------+
+| varchar-01  |
+| varchar-03  |
+| varchar-04  |
+| varchar-05  |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select "c_varchar" from test.datatype where "c_varchar" NOT IN ('varchar-02', 'varchar') order by 1
+. . . . . . . . > );
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                               column0                                                                               |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                           |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                               |
+|     FennelReshapeRel(projection=[[2]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                     |
+|         ResultSetToFarragoIteratorConverter                                                                                                                         |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                   |
+| FROM "BENCHMARK"."dbo"."TYPES"                                                                                                                                      |
+| WHERE NOT ("c_varchar" = 'varchar-02' OR "c_varchar" = 'varchar')])                                                                                                 |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- IN
+0: jdbc:luciddb:> select "c_varchar","c_date" from test.datatype where "c_varchar" IN ('varchar-02', 'varchar') order by 1,2;
++-------------+------------------------+
+|  c_varchar  |         c_date         |
++-------------+------------------------+
+| varchar-02  | 2005-10-12 00:00:00.0  |
++-------------+------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . > select "c_varchar","c_date" from test.datatype where "c_varchar" IN ('varchar-02', 'varchar') order by 1,2
+. . . . . . . . > );
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                           column0                                                                                           |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                   |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                                                                                    |
+|     FennelReshapeRel(projection=[[2, 1]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar, TIMESTAMP(0) c_date) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                             |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                 |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                           |
+| FROM "BENCHMARK"."dbo"."TYPES"                                                                                                                                                              |
+| WHERE "c_varchar" = 'varchar-02' OR "c_varchar" = 'varchar'])                                                                                                                               |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- IS NOT NULL
+0: jdbc:luciddb:> select * from test.datatype where "c_varchar" IS NOT NULL order by 1,2,3;
++------------------------+------------------------+-------------+
+|      c_timestamp       |         c_date         |  c_varchar  |
++------------------------+------------------------+-------------+
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-01  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-02  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-03  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-04  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-05  |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select * from test.datatype where "c_varchar" IS NOT NULL order by 1,2,3
+. . . . . . . . > );
++----------------------------------------------------------------------------------+
+|                                     column0                                      |
++----------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                        |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                      |
+|     IteratorToFennelConverter                                                    |
+|       ResultSetToFarragoIteratorConverter                                        |
+|         MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"  |
+| FROM "BENCHMARK"."dbo"."TYPES"                                                   |
+| WHERE "c_varchar" IS NOT NULL])                                                  |
++----------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- IS NULL
+0: jdbc:luciddb:> select "c_varchar","c_date" from test.datatype where "c_varchar" IS NULL order by 1,2;
++------------+---------+
+| c_varchar  | c_date  |
++------------+---------+
++------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select "c_varchar","c_date" from test.datatype where "c_varchar" IS NULL order by 1,2
+. . . . . . . . > );
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                           column0                                                                                           |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                   |
+|   FennelSortRel(key=[[0, 1]], discardDuplicates=[false])                                                                                                                                    |
+|     FennelReshapeRel(projection=[[2, 1]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar, TIMESTAMP(0) c_date) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                             |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                 |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                           |
+| FROM "BENCHMARK"."dbo"."TYPES"                                                                                                                                                              |
+| WHERE "c_varchar" IS NULL])                                                                                                                                                                 |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- AND
+0: jdbc:luciddb:> select "c_timestamp", "c_date", "c_varchar" from test.datatype
+. . . . . . . . > where 
+. . . . . . . . > "c_varchar" IS NOT NULL
+. . . . . . . . > AND
+. . . . . . . . > ("c_date" BETWEEN TIMESTAMP'2005-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
+. . . . . . . . >   AND
+. . . . . . . . > "c_timestamp" < TIMESTAMP'2006-10-31 12:12:12')
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      c_timestamp       |         c_date         |  c_varchar  |
++------------------------+------------------------+-------------+
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-01  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-02  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-03  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-04  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-05  |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select "c_timestamp", "c_date", "c_varchar" from test.datatype
+. . . . . . . . >   where 
+. . . . . . . . >   "c_varchar" IS NOT NULL
+. . . . . . . . >   AND
+. . . . . . . . >   ("c_date" BETWEEN TIMESTAMP'2005-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
+. . . . . . . . >     AND
+. . . . . . . . >   "c_timestamp" < TIMESTAMP'2006-10-31 12:12:12')
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                                           column0                                                                                                                                                                            |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                    |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                                                                  |
+|     IteratorToFennelConverter                                                                                                                                                                                                                                                                                                                                |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t2)], expr#4=[2005-10-01 00:00:00.0], expr#5=[>=($t1, $t4)], expr#6=[2007-01-01 00:00:00.0], expr#7=[<=($t1, $t6)], expr#8=[AND($t5, $t7)], expr#9=[2006-10-31 12:12:12.0], expr#10=[<($t0, $t9)], expr#11=[AND($t8, $t10)], expr#12=[AND($t3, $t11)], proj#0..2=[{exprs}], $condition=[$t12])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                                                                  |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                                                                            |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                                                                             |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- OR
+0: jdbc:luciddb:> select "c_timestamp", "c_date", "c_varchar" from test.datatype
+. . . . . . . . > where 
+. . . . . . . . > "c_varchar" IS NOT NULL
+. . . . . . . . > OR
+. . . . . . . . > ("c_date" BETWEEN TIMESTAMP'2005-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
+. . . . . . . . >   OR
+. . . . . . . . > "c_timestamp" < TIMESTAMP'2006-10-31 12:12:12')
+. . . . . . . . > order by 1,2,3;
++------------------------+------------------------+-------------+
+|      c_timestamp       |         c_date         |  c_varchar  |
++------------------------+------------------------+-------------+
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-01  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-02  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-03  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-04  |
+| 2005-10-12 12:00:00.0  | 2005-10-12 00:00:00.0  | varchar-05  |
++------------------------+------------------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select "c_timestamp", "c_date", "c_varchar" from test.datatype 
+. . . . . . . . >   where 
+. . . . . . . . >   "c_varchar" IS NOT NULL
+. . . . . . . . >   OR
+. . . . . . . . >   ("c_date" BETWEEN TIMESTAMP'2005-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
+. . . . . . . . >     OR
+. . . . . . . . >   "c_timestamp" < TIMESTAMP'2006-10-31 12:12:12')
+. . . . . . . . >   order by 1,2,3
+. . . . . . . . > );
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                                          column0                                                                                                                                                                           |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                  |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                                                                |
+|     IteratorToFennelConverter                                                                                                                                                                                                                                                                                                                              |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t2)], expr#4=[2005-10-01 00:00:00.0], expr#5=[>=($t1, $t4)], expr#6=[2007-01-01 00:00:00.0], expr#7=[<=($t1, $t6)], expr#8=[AND($t5, $t7)], expr#9=[2006-10-31 12:12:12.0], expr#10=[<($t0, $t9)], expr#11=[OR($t8, $t10)], expr#12=[OR($t3, $t11)], proj#0..2=[{exprs}], $condition=[$t12])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                                                                |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                                                                          |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                                                                           |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- not mapped
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "c_date" from test.datatype where "c_date" >= APPLIB.ADD_DAYS("c_timestamp", -100) order by 1;
++------------------------+
+|         c_date         |
++------------------------+
+| 2005-10-12 00:00:00.0  |
+| 2005-10-12 00:00:00.0  |
+| 2005-10-12 00:00:00.0  |
+| 2005-10-12 00:00:00.0  |
+| 2005-10-12 00:00:00.0  |
++------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for (
+. . . . . . . . >   select "c_date" from test.datatype where "c_date" >= APPLIB.ADD_DAYS("c_timestamp", -100) order by 1
+. . . . . . . . > );
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                    column0                                                                                                    |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                     |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                                                                         |
+|     IteratorToFennelConverter                                                                                                                                                                                 |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):TIMESTAMP(0)], expr#4=[-8640000000], expr#5=[+($t3, $t4)], expr#6=[CAST($t5):TIMESTAMP(0)], expr#7=[>=($t1, $t6)], c_date=[$t1], $condition=[$t7])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                   |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                             |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                              |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- lenient = true && columns deleted
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace foreign table DATATYPE (
+. . . . . . . . >   "c_timestamp" timestamp,
+. . . . . . . . >   "c_date" timestamp,
+. . . . . . . . >   "deleted_column" integer,
+. . . . . . . . >   "c_varchar" varchar(1024)
+. . . . . . . . > ) server SQL_SERVER_ALL_PUSHDOWN
+. . . . . . . . > options
+. . . . . . . . > (object 'TYPES');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "deleted_column" from test.datatype where "c_varchar" LIKE '%char%' order by 1;
++-----------------+
+| deleted_column  |
++-----------------+
+|                 |
+|                 |
+|                 |
+|                 |
+|                 |
++-----------------+
+0: jdbc:luciddb:> explain plan for select "deleted_column" from test.datatype where "c_varchar" LIKE '%char%' order by 1;
++-----------------------------------------------------------------------------------------------------------+
+|                                                  column0                                                  |
++-----------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                 |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                     |
+|     IteratorToFennelConverter                                                                             |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[null], expr#4=[CAST($t3):INTEGER], deleted_column=[$t4])  |
+|         ResultSetToFarragoIteratorConverter                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                         |
+| FROM "BENCHMARK"."dbo"."TYPES"                                                                            |
+| WHERE "c_varchar" LIKE '%char%'])                                                                         |
++-----------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "deleted_column" from test.datatype where "deleted_column" > 10 order by 1;
++-----------------+
+| deleted_column  |
++-----------------+
++-----------------+
+0: jdbc:luciddb:> explain plan for select "deleted_column" from test.datatype where"deleted_column" > 10 order by 1;
++----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                            column0                                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                      |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                          |
+|     IteratorToFennelConverter                                                                                                                                  |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[null], expr#4=[CAST($t3):INTEGER], expr#5=[10], expr#6=[>($t4, $t5)], deleted_column=[$t4], $condition=[$t6])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                    |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                              |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- lenient = false
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server SQL_SERVER_STRICT
+. . . . . . . . > foreign data wrapper "SQL SERVER"
+. . . . . . . . > options(
+. . . . . . . . >     url 'jdbc:jtds:sqlserver://akela.lucidera.com:1433',
+. . . . . . . . >     user_name 'sa',
+. . . . . . . . >     password 'ketajo',
+. . . . . . . . >     driver_class 'net.sourceforge.jtds.jdbc.Driver',
+. . . . . . . . >     schema_name 'dbo',
+. . . . . . . . >     qualifying_catalog_name 'BENCHMARK',
+. . . . . . . . >     table_types 'TABLE',
+. . . . . . . . >     use_schema_name_as_foreign_qualifier 'true',
+. . . . . . . . >     lenient 'false',
+. . . . . . . . >     disabled_pushdown_rel_pattern ''
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace foreign table DATATYPE (
+. . . . . . . . >   a varchar(10),
+. . . . . . . . >   b varchar(20),
+. . . . . . . . >   c numeric(10,4),
+. . . . . . . . >   d integer,
+. . . . . . . . >   e integer,
+. . . . . . . . >   f integer,
+. . . . . . . . >   g integer,
+. . . . . . . . >   h real,
+. . . . . . . . >   i double,
+. . . . . . . . >   j boolean,
+. . . . . . . . >   k date,
+. . . . . . . . >   l timestamp,
+. . . . . . . . >   m timestamp
+. . . . . . . . > ) server SQL_SERVER_STRICT
+. . . . . . . . > options
+. . . . . . . . > (object 'TYPES');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select a from test.datatype where b = 'varchar-03' order by 1;
++-------------+
+|      A      |
++-------------+
+| thisChar03  |
++-------------+
+0: jdbc:luciddb:> explain plan for select a from test.datatype where b = '%varchar-03%' order by 1;
++-----------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                          column0                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                 |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                     |
+|     FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" A) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                           |
+|         ResultSetToFarragoIteratorConverter                                                                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT *                                                                                                            |
+| FROM "BENCHMARK"."dbo"."TYPES"                                                                                                                            |
+| WHERE "c_varchar" = '%varchar-03%'])                                                                                                                      |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select b from test.datatype where b = 'varchar-03' order by 1;
++-------------+
+|      B      |
++-------------+
+| varchar-03  |
++-------------+
+0: jdbc:luciddb:> explain plan for select b from test.datatype where b = 'varchar-03' order by 1;
++-----------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                          column0                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                 |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                     |
+|     FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                           |
+|         ResultSetToFarragoIteratorConverter                                                                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT *                                                                                                            |
+| FROM "BENCHMARK"."dbo"."TYPES"                                                                                                                            |
+| WHERE "c_varchar" = 'varchar-03'])                                                                                                                        |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select m,b,a,c from test.datatype where b = 'varchar-03' OR d > 127 OR a like '%05%' order by 1,2,3,4;
++------------------------+-------------+-------------+-----------+
+|           M            |      B      |      A      |     C     |
++------------------------+-------------+-------------+-----------+
+| 2005-10-12 12:00:00.0  | varchar-03  | thisChar03  | 123.1230  |
+| 2005-10-12 12:00:00.0  | varchar-05  | thisChar05  | 123.1230  |
++------------------------+-------------+-------------+-----------+
+0: jdbc:luciddb:> explain plan for select m,b,a,c from test.datatype where b = 'varchar-03' OR d > 127 OR a like '%05%' order by 1,2,3,4;
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                      column0                                                                                                                                       |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                          |
+|   FennelSortRel(key=[[0, 1, 2, 3]], discardDuplicates=[false])                                                                                                                                                                                                                     |
+|     FennelReshapeRel(projection=[[12, 1, 0, 2]], outputRowType=[RecordType(TIMESTAMP(0) M, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" A, DECIMAL(10, 4) C) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                    |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                        |
+|           MedJdbcQueryRel(foreignSql=[SELECT *                                                                                                                                                                                                                                     |
+| FROM "BENCHMARK"."dbo"."TYPES"                                                                                                                                                                                                                                                     |
+| WHERE "c_varchar" = 'varchar-03' OR "c_tinyint" > 127 OR "c_char" LIKE '%05%'])                                                                                                                                                                                                    |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

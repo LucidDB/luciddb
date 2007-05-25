@@ -1,0 +1,10 @@
+select *
+from class ColumnSet where name='EVENTS' then (
+    recursively (
+        follow origin end client then (
+            follow destination end supplier destination class ColumnSet
+        )
+    )
+) gather with parent then (
+    follow composite backward destination class LocalSchema
+);

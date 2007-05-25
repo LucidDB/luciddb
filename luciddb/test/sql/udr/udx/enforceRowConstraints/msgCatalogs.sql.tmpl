@@ -1,0 +1,106 @@
+create schema msgcat;
+set schema 'msgcat';
+alter session set "logDir" = '@LOGDIR@';
+alter session set "etlProcessId" = 'MsgCatalogs';
+
+-- missing apps message jar
+alter session set "etlActionId" = 'MissingMsgJar';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when LOCID = 'HQ' then 'RejHQErr'
+      else cast(null as varchar(128)) end as loccheck
+    from ffserver.bcp.EMP),
+  row(loccheck),
+  'BogusMsgCatalog',
+  'MC1'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."MsgCatalogs_MissingMsgJar_MC1"
+order by EMPNO, LE_ERROR_CODE;
+
+-- missing error code
+alter session set "etlActionId" = 'MissingErrCode';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when LOCID = 'HQ' then 'BogusHQErrCode'
+      else cast(null as varchar(128)) end as loccheck
+    from ffserver.bcp.EMP),
+  row(loccheck),
+  'TestMsgs',
+  'MC2'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."MsgCatalogs_MissingErrCode_MC2"
+order by EMPNO, LE_ERROR_CODE;
+
+-- missing error code severity (2 ways)
+alter session set "etlActionId" = 'MissingErrSev1';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when LOCID = 'SF' then 'NoSevErr1'
+      else cast(null as varchar(128)) end as sfcheck
+    from ffserver.bcp.EMP),
+  row(sfcheck),
+  'TestMsgs',
+  'MC3'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."MsgCatalogs_MissingErrSev1_MC3"
+order by EMPNO, LE_ERROR_CODE;
+
+alter session set "etlActionId" = 'MissingErrSev2';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when LOCID = 'SF' then 'NoSevErr2'
+      else cast(null as varchar(128)) end as sfcheck
+    from ffserver.bcp.EMP),
+  row(sfcheck),
+  'TestMsgs',
+  'MC4'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."MsgCatalogs_MissingErrSev2_MC4"
+order by EMPNO, LE_ERROR_CODE;
+
+-- missing error code message (2 ways)
+alter session set "etlActionId" = 'MissingErrMsg1';
+alter session set "errorMax" = 3;
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when LOCID = 'SF' then 'NoMsgErr1'
+      else cast(null as varchar(128)) end as sfcheck
+    from ffserver.bcp.EMP),
+  row(sfcheck),
+  'TestMsgs',
+  'MC5'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."MsgCatalogs_MissingErrMsg1_MC5"
+order by EMPNO, LE_ERROR_CODE;
+
+alter session set "etlActionId" = 'MissingErrMsg2';
+alter session set "errorMax" = 0;
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when LOCID = 'SF' then 'NoMsgErr2'
+      else cast(null as varchar(128)) end as sfcheck
+    from ffserver.bcp.EMP),
+  row(sfcheck),
+  'TestMsgs',
+  'MC6'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."MsgCatalogs_MissingErrMsg2_MC6"
+order by EMPNO, LE_ERROR_CODE;

@@ -20,15 +20,11 @@
 */
 package com.lucidera.farrago;
 
-// TODO jvs 9-Apr-2006:  eliminate this once we stop depending on
-// Fennel calc, or make it dynamic for GPL version only.
-
-import com.disruptivetech.farrago.rel.*;
-
 import com.lucidera.lcs.*;
 import com.lucidera.opt.*;
 import com.lucidera.runtime.*;
 import com.lucidera.type.*;
+import com.lucidera.farrago.fennel.*;
 
 import java.io.*;
 import java.sql.*;
@@ -38,7 +34,9 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.config.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
@@ -67,7 +65,7 @@ public class LucidDbSessionPersonality
 {
     //~ Static fields ----------------------------------------------------------
 
-    public static final String LOG_DIR = "logDir";
+    public static final String LOG_DIR = FarragoSessionVariables.LOG_DIR;
     public static final String[] LOG_DIR_DEFAULT = 
         { "log", "testlog", "trace" };
     public static final String ETL_PROCESS_ID = "etlProcessId";
@@ -82,9 +80,25 @@ public class LucidDbSessionPersonality
         "lastUpsertRowsInserted";
     public static final String LAST_UPSERT_ROWS_INSERTED_DEFAULT = null;
     
+    //~ Instance fields --------------------------------------------------------
+    
+    /**
+     * If true, this session's default personality is LucidDb, as opposed to one
+     * that was switched from some other personality to LucidDb
+     */
+    private boolean defaultLucidDb;
+    
+    /**
+     * If true, enable index only scan rules
+     */
+    private boolean enableIndexOnlyScans;
+    
     //~ Constructors -----------------------------------------------------------
 
-    protected LucidDbSessionPersonality(FarragoDbSession session)
+    protected LucidDbSessionPersonality(
+        FarragoDbSession session,
+        FarragoSessionPersonality defaultPersonality,
+        boolean enableIndexOnlyScans)
     {
         super(session);
         paramValidator.registerDirectoryParam(LOG_DIR, false);
@@ -95,7 +109,9 @@ public class LucidDbSessionPersonality
         paramValidator.registerIntParam(
             ERROR_LOG_MAX, true, 0, Integer.MAX_VALUE);
         paramValidator.registerLongParam(
-            LAST_UPSERT_ROWS_INSERTED, true, 0, Long.MAX_VALUE); 
+            LAST_UPSERT_ROWS_INSERTED, true, 0, Long.MAX_VALUE);
+        defaultLucidDb = (defaultPersonality == null);
+        this.enableIndexOnlyScans = enableIndexOnlyScans;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -179,17 +195,11 @@ public class LucidDbSessionPersonality
         planner.addRelTraitDef(CallingConventionTraitDef.instance);
         RelOptUtil.registerAbstractRels(planner);
 
-        // TODO jvs 9-Apr-2006: Need to break this up, since we don't want to
-        // be depending on rules from non-LucidEra yellow zones.
-        FarragoDefaultPlanner.addStandardRules(
+        FarragoStandardPlannerRules.addDefaultRules(
             planner,
             fennelEnabled,
             calcVM);
 
-        planner.addRule(new PushSemiJoinPastFilterRule());
-        planner.addRule(new PushSemiJoinPastJoinRule());
-        planner.addRule(new ConvertMultiJoinRule());
-        planner.addRule(new LoptOptimizeJoinRule());
         planner.addRule(new CoerceInputsRule(LcsTableMergeRel.class, false));
 
         planner.removeRule(SwapJoinRule.instance);
@@ -320,10 +330,6 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(new LoptOptimizeJoinRule()); 
         builder.addMatchOrder(HepMatchOrder.ARBITRARY);
 
-        // Convert filters to bitmap index searches and boolean operators.  We
-        // didn't do this earlier to make join costing easier.
-        builder.addRuleByDescription("LcsIndexAccessRule");
-
         // Push semijoins down to tables.  (The join part is a NOP for now,
         // but once we start taking more kinds of join factors, it won't be.)
         builder.addGroupBegin();
@@ -333,8 +339,14 @@ public class LucidDbSessionPersonality
         builder.addGroupEnd();
 
         // Convert semijoins to physical index access.
+        // Do this immediately after LopOptimizeJoinRule and the PushSemiJoin
+        // rules.
         builder.addRuleClass(LcsIndexSemiJoinRule.class);
 
+        // Convert filters to bitmap index searches and boolean operators.
+        // Do this after LcsIndexSemiJoinRule 
+        builder.addRuleClass(LcsIndexAccessRule.class);       
+        
         // TODO zfong 10/27/06 - This rule is currently a no-op because we
         // won't generate a semijoin if it can't be converted to physical
         // RelNodes.  But it's currently left in place in case of bugs.
@@ -353,6 +365,14 @@ public class LucidDbSessionPersonality
         // Apply physical projection to row scans, eliminating access
         // to clustered indexes we don't need.
         builder.addRuleInstance(new LcsTableProjectionRule());
+        
+        // Consider index only access.  Multiple rules are required
+        // for various patterns.  Apply these rules after we've pushed down
+        // all projections.
+        if (enableIndexOnlyScans) {
+            builder.addRuleInstance(LcsIndexOnlyAccessRule.instanceSearch);
+            builder.addRuleInstance(LcsIndexOnlyAccessRule.instanceMerge);
+        }
 
         // Eliminate UNION DISTINCT and trivial UNION.
         // REVIEW:  some of this may need to happen earlier as well.
@@ -400,8 +420,10 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(ReduceAggregatesRule.instance);
 
         // Bitmap aggregation is favored
-        builder.addRuleInstance(LcsIndexAggRule.instanceRenameRowScan);
-        builder.addRuleInstance(LcsIndexAggRule.instanceRenameNormalizer);
+        if (enableIndexOnlyScans) {
+            builder.addRuleInstance(LcsIndexAggRule.instanceRenameRowScan);
+            builder.addRuleInstance(LcsIndexAggRule.instanceRenameNormalizer);
+        }
 
         // Prefer hash aggregation over the standard Fennel aggregation.
         // Apply aggregation rules before the calc rules below so we can
@@ -462,7 +484,7 @@ public class LucidDbSessionPersonality
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use Fennel for calculating expressions
             assert (fennelEnabled);
-            builder.addRuleInstance(FennelCalcRule.instance);
+            builder.addRuleByDescription("FennelCalcRule");
             builder.addRuleInstance(new FennelOneRowRule());
         } else if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
             // use Java code generation for calculating expressions
@@ -481,12 +503,12 @@ public class LucidDbSessionPersonality
             builder.addConverters(false);
 
             // Split remaining expressions into Fennel part and Java part
-            builder.addRuleInstance(FarragoAutoCalcRule.instance);
+            builder.addRuleByDescription("FarragoAutoCalcRule");
 
             // Convert expressions, giving preference to Java
             builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
-            builder.addRuleInstance(FennelCalcRule.instance);
+            builder.addRuleByDescription("FennelCalcRule");
         }
 
         // Finally, add generic converters as necessary.
@@ -821,6 +843,35 @@ public class LucidDbSessionPersonality
     public void resetRowCounts(FemAbstractColumnSet table)
     {
         FarragoCatalogUtil.resetRowCounts(table);
+    }
+    
+    // implement FarragoStreamFactoryProvider
+    public void registerStreamFactories(long hStreamGraph)
+    {
+        // REVIEW jvs 22-Mar-2007:  We override FarragoDefaultSessionPersonality
+        // here to prevent dependency on DisruptiveTechJni unless
+        // explicitly requested via calc system parameter.
+        final CalcVirtualMachine calcVM =
+            database.getSystemRepos().getCurrentConfig().getCalcVirtualMachine();
+        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
+            LucidEraJni.registerStreamFactory(hStreamGraph);
+        } else {
+            super.registerStreamFactories(hStreamGraph);
+        }
+    }
+
+    //  implement FarragoSessionPersonality
+    public void updateIndexRoot(
+        FemLocalIndex index,
+        FarragoDataWrapperCache wrapperCache,
+        FarragoSessionIndexMap baseIndexMap,
+        Long newRoot)
+    {
+        if (defaultLucidDb) {
+            baseIndexMap.versionIndexRoot(wrapperCache, index, newRoot);
+        } else {
+            super.updateIndexRoot(index, wrapperCache, baseIndexMap, newRoot);
+        }
     }
 }
 

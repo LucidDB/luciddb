@@ -1050,10 +1050,18 @@ public abstract class FarragoCatalogUtil
         histogram.setRowsPerBar(rowsPerBar);
         histogram.setRowsLastBar(rowsLastBar);
 
+        // only delete the original bars that are in excess of the
+        // new number of bars since we're reusing the original bars
         List<FemColumnHistogramBar> oldBars = histogram.getBar();
-        for (FemColumnHistogramBar bar : oldBars) {
-            bar.refDelete();
+        int oldBarsCount = oldBars.size();
+        if (oldBarsCount > barCount) {
+            Iterator iter = oldBars.listIterator(barCount);
+            while (iter.hasNext()) {
+                FemColumnHistogramBar bar = (FemColumnHistogramBar) iter.next();
+                bar.refDelete();
+            }
         }
+        
         int ordinal = 0;
         for (FemColumnHistogramBar bar : bars) {
             bar.setHistogram(histogram);

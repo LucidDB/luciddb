@@ -1,0 +1,5 @@
+9.0
+3
+1       SQLCHAR         0       5       ","     1       COL1      ""
+2       SQLCHAR         0       5       ","     2       COL2    SQL_Latin1_General_CP1_CI_AS
+3       SQLCHAR         0       5       "rn"    3       COL3     ""
