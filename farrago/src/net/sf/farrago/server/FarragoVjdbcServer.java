@@ -121,6 +121,13 @@ public class FarragoVjdbcServer
             throws SQLException
         {
             try {
+                // set remoteProtocol to RMI to tell engine driver that
+                // this is a remote connection
+                
+                // NOTE: if basing authentication on whether a connection is
+                // remote or not, it is VITAL that the remoteProtocol is 
+                // overwritten here. Otherwise this is a potential security hole!
+                props.setProperty("remoteProtocol", "RMI");
                 return jdbcDriver.connect(jdbcDriver.getBaseUrl(), props);
             } catch (Throwable t) {
                 throw SQLExceptionHelper.wrap(t);

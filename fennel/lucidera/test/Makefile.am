@@ -52,7 +52,6 @@ LDADD = \
 	-L$(top_builddir)/test \
 	-L$(top_builddir)/libfennel \
 	-L$(top_builddir)/lucidera/libfennel_lu \
-	-L$(top_builddir)/disruptivetech/libfennel_dt \
 	-l$(TEST_LIB) \
 	-lfennel_lu_hashexe \
 	-lfennel_lu_colstore \
@@ -68,8 +67,6 @@ LDADD = \
 	-lfennel_cache \
 	-lfennel_device \
 	-lfennel_common \
-	-lfennel_dt_calc \
-	-lfennel_dt_xo \
 	-l$(STLPORT_LIB) \
 	$(EXTRA_LDFLAGS)
 

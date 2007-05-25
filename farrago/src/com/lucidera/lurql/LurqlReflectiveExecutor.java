@@ -27,8 +27,8 @@ import java.util.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.traverse.*;
+import org.jgrapht.*;
+import org.jgrapht.traverse.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
@@ -125,8 +125,7 @@ public class LurqlReflectiveExecutor
         Iterator<LurqlPlanVertex> vertexIter = 
             new TopologicalOrderIterator<
                 LurqlPlanVertex,
-                LurqlPlanEdge,
-                Object>(graph);
+                LurqlPlanEdge>(graph);
         while (vertexIter.hasNext()) {
             LurqlPlanVertex planVertex = vertexIter.next();
             Set<RefObject> result = getResultSet(planVertex);
@@ -160,9 +159,8 @@ public class LurqlReflectiveExecutor
             Util.toList(
                 new TopologicalOrderIterator<
                     LurqlPlanVertex,
-                    LurqlPlanEdge,
-                    Object>(
-                    rootVertex.getRecursionSubgraph()));
+                    LurqlPlanEdge>(
+                        rootVertex.getRecursionSubgraph()));
 
         Set<RefObject> recursionResult = getResultSet(rootVertex);
         Set stashResult = getResultSet(vertexToStashMap, rootVertex);
@@ -363,7 +361,7 @@ outer:
                 }
             }
             for (int i = 0; i < filters.length; ++i) {
-                String value;
+                Object value;
                 if (filters[i].isMofId()) {
                     value = refObj.refMofId();
                 } else {
@@ -371,9 +369,8 @@ outer:
                         refObj.refGetValue(
                             filters[i].getAttributeName());
                     if (objValue == null) {
-                        continue outer;
-                    }
-                    if (objValue instanceof RefObject) {
+                        value = LurqlFilter.NULL_VALUE;
+                    } else if (objValue instanceof RefObject) {
                         value = ((RefObject) objValue).refMofId();
                     } else {
                         value = objValue.toString();
@@ -384,7 +381,7 @@ outer:
                     assert(filterValues.size() == 1);
                     boolean match = filters[i].patternMatch(
                         (String) filterValues.iterator().next(),
-                        value);
+                        (String) value);
                     if (!match) {
                         continue outer;
                     }

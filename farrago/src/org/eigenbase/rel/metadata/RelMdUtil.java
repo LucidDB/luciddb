@@ -97,32 +97,69 @@ public class RelMdUtil
         return bd.doubleValue();
     }
 
+    
     /**
      * Computes the selectivity of a semijoin filter if it is applied on a fact
      * table. The computation is based on the selectivity of the dimension
      * table/columns and the number of distinct values in the fact table
      * columns.
-     *
+     * 
+     * @param rel semijoin rel
+     * @return calculated selectivity 
+     */
+    public static double computeSemiJoinSelectivity(
+        SemiJoinRel rel)
+    {
+        return computeSemiJoinSelectivity(
+            rel.getLeft(), rel.getRight(),
+            rel.getLeftKeys(), rel.getRightKeys());
+    }
+
+    /**
+     * Computes the selectivity of a semijoin filter if it is applied on a fact
+     * table. The computation is based on the selectivity of the dimension
+     * table/columns and the number of distinct values in the fact table
+     * columns.
+     * 
      * @param factRel fact table participating in the semijoin
      * @param dimRel dimension table participating in the semijoin
-     * @param rel RelNode corresponding to the semijoin; used to access the
-     * semijoin keys; the left and right children may be different from the fact
-     * and dimension table parameters passed into this method if semijoins are
-     * being chained together
-     *
-     * @return calculated selectivity
+     * @param rel semijoin rel
+     * @return calculated selectivity 
      */
     public static double computeSemiJoinSelectivity(
         RelNode factRel,
         RelNode dimRel,
         SemiJoinRel rel)
     {
+        return computeSemiJoinSelectivity(
+            factRel, dimRel,
+            rel.getLeftKeys(), rel.getRightKeys());
+    }
+
+    /**
+     * Computes the selectivity of a semijoin filter if it is applied on a fact
+     * table. The computation is based on the selectivity of the dimension
+     * table/columns and the number of distinct values in the fact table
+     * columns.
+     * 
+     * @param factRel fact table participating in the semijoin
+     * @param dimRel dimension table participating in the semijoin
+     * @param factKeyList LHS keys used in the filter
+     * @param dimKeyList RHS keys used in the filter
+     * @return calculated selectivity 
+     */
+    public static double computeSemiJoinSelectivity(
+        RelNode factRel,
+        RelNode dimRel,
+        List<Integer> factKeyList,
+        List<Integer> dimKeyList)
+    {
         BitSet factKeys = new BitSet();
-        for (int factCol : rel.getLeftKeys()) {
+        for (int factCol : factKeyList) {
             factKeys.set(factCol);
         }
         BitSet dimKeys = new BitSet();
-        for (int dimCol : rel.getRightKeys()) {
+        for (int dimCol : dimKeyList) {
             dimKeys.set(dimCol);
         }
 
@@ -251,19 +288,23 @@ public class RelMdUtil
         if ((domainSize == null) || (numSelected == null)) {
             return null;
         }
-        if (domainSize == numSelected) {
-            return domainSize;
-        }
 
         // The formula for this is:
         // 1. Assume we pick 80 random values between 1 and 100.
         // 2. The chance we skip any given value is .99 ^ 80
         // 3. Thus on average we will skip .99 ^ 80 percent of the values
         //    in the domain
-        // 4. generalized, we skip ( (n-k)/n ) ^ n values where n is the
+        // 4. Generalized, we skip ( (n-1)/n ) ^ k values where n is the
         //    number of possible values and k is the number we are selecting
-        // 5. Solving this we convert it to e ^ log( ( n-k)/n ) and after
-        //    a lot of math we get the formula below.
+        // 5. This can be rewritten via approximation (if you want to
+        //    know why approximation is called for here, ask Bill Keese):
+        //  ((n-1)/n) ^ k
+        //  = e ^ ln( ((n-1)/n) ^ k )
+        //  = e ^ (k * ln ((n-1)/n))
+        //  = e ^ (k * ln (1-1/n))
+        // ~= e ^ (k * (-1/n))  because ln(1+x) ~= x for small x
+        //  = e ^ (-k/n)
+        // 6. Flipping it from number skipped to number visited, we get:
         double res =
             (domainSize > 0)
             ? ((1.0 - Math.exp(-1 * numSelected / domainSize)) * domainSize)

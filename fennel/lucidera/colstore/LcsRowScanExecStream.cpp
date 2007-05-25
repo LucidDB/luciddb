@@ -100,13 +100,14 @@ void LcsRowScanExecStream::prepareResidualFilters(
                         filter.upperBoundProj.push_back(3);
                         filter.readerKeyData.computeAndAllocate(
                             filter.inputKeyDesc);
-
+                        
                         break;
                     }
                 }
-                break;
+                // Continue with the same cluster for more filters
             }
         }
+        // Look for filters in the next cluster; modify cluster boundaries
         clusterStart = clusterEnd + 1;
         realClusterStart += pClusters[i]->nColsToRead;
     }

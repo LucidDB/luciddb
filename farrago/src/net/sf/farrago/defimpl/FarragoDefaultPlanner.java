@@ -105,101 +105,26 @@ public class FarragoDefaultPlanner
         boolean fennelEnabled,
         CalcVirtualMachine calcVM)
     {
-        planner.addRule(new RemoveDistinctRule());
-        planner.addRule(RemoveDistinctAggregateRule.instance);
-        planner.addRule(ExtractJoinFilterRule.instance);
-        planner.addRule(new UnionToDistinctRule());
-        planner.addRule(new UnionEliminatorRule());
-
-        // for set operations, we coerce names to match so that
-        // Java implementations can pass row objects through without
-        // copying
-        planner.addRule(new CoerceInputsRule(UnionRel.class, true));
-        planner.addRule(new CoerceInputsRule(IntersectRel.class, true));
-        planner.addRule(new CoerceInputsRule(MinusRel.class, true));
-
-        // for DML, name coercion isn't helpful
-        planner.addRule(
-            new CoerceInputsRule(TableModificationRel.class, false));
-        planner.addRule(new SwapJoinRule());
-        planner.addRule(RemoveTrivialProjectRule.instance);
-        planner.addRule(RemoveTrivialCalcRule.instance);
+        FarragoStandardPlannerRules.addDefaultRules(
+            planner, fennelEnabled, calcVM);
         planner.addRule(new FarragoMultisetSplitterRule());
-        planner.addRule(FarragoJavaUdxRule.instance);
-
-        planner.addRule(new IterRules.HomogeneousUnionToIteratorRule());
-        planner.addRule(new IterRules.OneRowToIteratorRule());
-
-        planner.addRule(new ReduceDecimalsRule());
-
-        planner.addRule(new FarragoReduceExpressionsRule(FilterRel.class));
-        planner.addRule(new FarragoReduceExpressionsRule(ProjectRel.class));
-        planner.addRule(new FarragoReduceExpressionsRule(JoinRel.class));
-
-        planner.addRule(ReduceAggregatesRule.instance);
-
-        // NOTE zfong 9/27/06: PullUpProjectsAboveJoinRule has not been 
-        // added because together with PushProjectPastJoinRule, it causes
-        // Volcano to go into an infinite loop
-        
-        planner.addRule(new PushFilterPastJoinRule());
-        planner.addRule(new PushFilterPastSetOpRule());
-        planner.addRule(new MergeFilterRule());
-        planner.addRule(new PushFilterPastProjectRule());
-        planner.addRule(new PushProjectPastFilterRule());
-        planner.addRule(new PushProjectPastJoinRule());
-        planner.addRule(new PushProjectPastSetOpRule());
-        planner.addRule(new MergeProjectRule());
-
         if (fennelEnabled) {
-            planner.addRule(new FennelSortRule());
             planner.addRule(new FennelCollectRule());
             planner.addRule(new FennelUncollectRule());
-            planner.addRule(new FennelDistinctSortRule());
-            planner.addRule(new FennelRenameRule());
-            planner.addRule(new FennelCartesianJoinRule());
             planner.addRule(new FennelCorrelatorRule());
-            planner.addRule(new FennelOneRowRule());
-            planner.addRule(new FennelValuesRule());
-            planner.addRule(new FennelAggRule());
-            planner.addRule(new FennelReshapeRule());
         }
+    }
 
-        // Add the rule to introduce FennelCalcRel's only if the fennel
-        // calculator is enabled.
-        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
-            // use Fennel for calculating expressions
-            assert fennelEnabled;
-            planner.addRule(FennelCalcRule.instance);
-
-            // REVIEW jvs 13-Nov-2005: I put FennelUnionRule here instead of in
-            // fennelEnabled block above because I want to be able to test both
-            // implementations, and currently the only way to control that is
-            // via the calc parameter.  Probably need a more general parameter
-            // controlling all rels in case of overlap, not just calc.
-            planner.addRule(FennelUnionRule.instance);
-        }
-
-        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)
-            || calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)) {
-            // use Java code generation for calculating expressions
-            planner.addRule(IterRules.IterCalcRule.instance);
-        }
-
-        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)
-            && fennelEnabled) {
-            // add rule for pure calculator usage plus rule for
-            // decomposing rels into mixed Java/Fennel impl
-            planner.addRule(FennelCalcRule.instance);
+    // NOTE jvs 22-Mar-2007: separate method from
+    // FarragoStandardPlannerRules.addStandardRules to avoid direct dependency
+    // on com.disruptivetech from there
+    static void addFennelCalcRules(
+        FarragoSessionPlanner planner,
+        boolean auto)
+    {
+        planner.addRule(FennelCalcRule.instance);
+        if (auto) {
             planner.addRule(FarragoAutoCalcRule.instance);
-
-            // see REVIEW 13-Nov-2005 comment above
-            planner.addRule(FennelUnionRule.instance);
-        }
-
-        if (fennelEnabled) {
-            FennelToIteratorConverter.register(planner);
-            IteratorToFennelConverter.register(planner);
         }
     }
 

@@ -27,6 +27,7 @@ import java.lang.reflect.*;
 import java.sql.*;
 
 import java.util.*;
+import java.util.regex.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
@@ -66,17 +67,33 @@ public class MedJdbcDataServer
     public static final String PROP_CATALOG_NAME = "QUALIFYING_CATALOG_NAME";
     public static final String PROP_SCHEMA_NAME = "SCHEMA_NAME";
     public static final String PROP_TABLE_NAME = "TABLE_NAME";
+    public static final String PROP_OBJECT = "OBJECT";
     public static final String PROP_TABLE_TYPES = "TABLE_TYPES";
     public static final String PROP_EXT_OPTIONS = "EXTENDED_OPTIONS";
     public static final String PROP_TYPE_SUBSTITUTION = "TYPE_SUBSTITUTION";
     public static final String PROP_TYPE_MAPPING = "TYPE_MAPPING";
     public static final String PROP_LOGIN_TIMEOUT = "LOGIN_TIMEOUT";
     public static final String PROP_VALIDATION_QUERY = "VALIDATION_QUERY";
+    public static final String PROP_FETCH_SIZE = "FETCH_SIZE";
+    public static final String PROP_AUTOCOMMIT = "AUTOCOMMIT";
+    public static final String PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER =
+        "USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER";
+    public static final String PROP_LENIENT = "LENIENT";
+    public static final String PROP_DISABLED_PUSHDOWN_REL_PATTERN =
+        "DISABLED_PUSHDOWN_REL_PATTERN";
+    public static final String PROP_SCHEMA_MAPPING = "SCHEMA_MAPPING";
 
     // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
     public static final String PROP_NAME = "NAME";
     public static final String PROP_TYPE = "TYPE";
+
+    public static final boolean DEFAULT_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER =
+        false;
+    public static final boolean DEFAULT_LENIENT = false;
+    public static final String DEFAULT_DISABLED_PUSHDOWN_REL_PATTERN = "";
+    public static final int DEFAULT_FETCH_SIZE = -1;
+    public static final boolean DEFAULT_AUTOCOMMIT = true;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -95,6 +112,12 @@ public class MedJdbcDataServer
     protected DatabaseMetaData databaseMetaData;
     protected boolean validateConnection = false;
     protected String validationQuery;
+    protected boolean useSchemaNameAsForeignQualifier;
+    protected boolean lenient;
+    protected Pattern disabledPushdownPattern;
+    private int fetchSize;
+    private boolean autocommit;
+    protected HashMap schemaMaps;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -120,11 +143,29 @@ public class MedJdbcDataServer
         catalogName = props.getProperty(PROP_CATALOG_NAME);
         loginTimeout = props.getProperty(PROP_LOGIN_TIMEOUT);
         validationQuery = props.getProperty(PROP_VALIDATION_QUERY);
+        schemaMaps = new HashMap<String, HashMap>();
 
         if (getBooleanProperty(props, PROP_EXT_OPTIONS, false)) {
             connectProps = (Properties) props.clone();
             removeNonDriverProps(connectProps);
         }
+
+        useSchemaNameAsForeignQualifier =
+            getBooleanProperty(
+                props,
+                PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER,
+                DEFAULT_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER);
+
+        lenient =
+            getBooleanProperty(
+                props,
+                PROP_LENIENT,
+                DEFAULT_LENIENT);
+
+        disabledPushdownPattern = Pattern.compile(
+            props.getProperty(
+                PROP_DISABLED_PUSHDOWN_REL_PATTERN,
+                DEFAULT_DISABLED_PUSHDOWN_REL_PATTERN));
 
         String tableTypeString = props.getProperty(PROP_TABLE_TYPES);
         if (tableTypeString == null) {
@@ -141,7 +182,18 @@ public class MedJdbcDataServer
             }
         }
 
+        fetchSize =
+            getIntProperty(props, PROP_FETCH_SIZE, DEFAULT_FETCH_SIZE);
+        autocommit =
+            getBooleanProperty(props, PROP_AUTOCOMMIT, DEFAULT_AUTOCOMMIT);
+
         createConnection();
+
+        // schema mapping
+        String schemaMapping = props.getProperty(PROP_SCHEMA_MAPPING);
+        if (schemaMapping != null) {
+            createSchemaMaps(schemaMapping);
+        }
     }
 
     protected void createConnection()
@@ -149,14 +201,22 @@ public class MedJdbcDataServer
     {
         if (connection != null && !connection.isClosed()) {
             if (validateConnection && validationQuery != null) {
-                Statement testConnection = connection.createStatement();
+                Statement testStatement = connection.createStatement();
                 try {
-                    testConnection.executeQuery(validationQuery);
+                    testStatement.executeQuery(validationQuery);
                 } catch (Exception ex) {
                     // need to re-create connection
                     closeAllocation();
                     connection = null;
                     validateConnection = false;
+                } finally {
+                    if (testStatement != null) {
+                        try {
+                            testStatement.close();
+                        } catch (SQLException ex) {
+                            // do nothing
+                        }
+                    }
                 }
             } else {
                 return;
@@ -180,6 +240,9 @@ public class MedJdbcDataServer
             connection = DriverManager.getConnection(url);
         } else {
             connection = DriverManager.getConnection(url, userName, password);
+        }
+        if (!autocommit) {
+            connection.setAutoCommit(false);
         }
         try {
             databaseMetaData = connection.getMetaData();
@@ -221,6 +284,12 @@ public class MedJdbcDataServer
         props.remove(PROP_TYPE_MAPPING);
         props.remove(PROP_TABLE_TYPES);
         props.remove(PROP_LOGIN_TIMEOUT);
+        props.remove(PROP_USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER);
+        props.remove(PROP_LENIENT);
+        props.remove(PROP_DISABLED_PUSHDOWN_REL_PATTERN);
+        props.remove(PROP_FETCH_SIZE);
+        props.remove(PROP_AUTOCOMMIT);
+        props.remove(PROP_SCHEMA_MAPPING);
     }
 
     // implement FarragoMedDataServer
@@ -251,7 +320,7 @@ public class MedJdbcDataServer
         String tableSchemaName = tableProps.getProperty(PROP_SCHEMA_NAME);
         if (tableSchemaName == null) {
             tableSchemaName = schemaName;
-        } else if (schemaName != null) {
+        } else if (schemaName != null && !useSchemaNameAsForeignQualifier) {
             if (!tableSchemaName.equals(schemaName)) {
                 throw FarragoResource.instance().MedPropertyMismatch.ex(
                     schemaName,
@@ -259,8 +328,12 @@ public class MedJdbcDataServer
                     PROP_SCHEMA_NAME);
             }
         }
-        requireProperty(tableProps, PROP_TABLE_NAME);
-        String tableName = tableProps.getProperty(PROP_TABLE_NAME);
+
+        String tableName = tableProps.getProperty(PROP_OBJECT);
+        if (tableName == null) {
+            requireProperty(tableProps, PROP_TABLE_NAME);
+            tableName = tableProps.getProperty(PROP_TABLE_NAME);
+        }
         MedJdbcNameDirectory directory =
             new MedJdbcNameDirectory(this, tableSchemaName);
         return
@@ -282,6 +355,9 @@ public class MedJdbcDataServer
         FarragoStatementAllocation stmtAlloc =
             new FarragoStatementAllocation(stmt);
         try {
+            if (fetchSize != DEFAULT_FETCH_SIZE) {
+                stmt.setFetchSize(fetchSize);
+            }
             stmtAlloc.setResultSet(stmt.executeQuery(sql));
             stmt = null;
             return stmtAlloc;
@@ -346,6 +422,62 @@ public class MedJdbcDataServer
                     return true;
                 }
             });
+
+        // case 1: projection on top of a filter (with push down projection)
+        // ie: filtering on variables which are not in projection
+        MedJdbcPushDownRule r1 = new MedJdbcPushDownRule(
+            new RelOptRuleOperand(
+                ProjectRel.class, new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        FilterRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(ProjectRel.class,
+                                new RelOptRuleOperand[] {
+                                    new RelOptRuleOperand(
+                                        MedJdbcQueryRel.class, null) }) }) }),
+            "proj on filter on proj");
+
+        // case 2: filter with push down projection
+        // ie: proj only has values which are already in filter expression
+        MedJdbcPushDownRule r2 = new MedJdbcPushDownRule(
+            new RelOptRuleOperand(
+                FilterRel.class, new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(ProjectRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(
+                                MedJdbcQueryRel.class, null) }) }),
+            "filter on proj");
+
+        // case 3: filter with no projection to push down.
+        // ie: select *
+        MedJdbcPushDownRule r3 = new MedJdbcPushDownRule(
+            new RelOptRuleOperand(
+                FilterRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(MedJdbcQueryRel.class, null) }),
+            "filter");
+
+        // all pushdown rules
+        ArrayList<MedJdbcPushDownRule> pushdownRuleList =
+            new ArrayList<MedJdbcPushDownRule>();
+        pushdownRuleList.add(r1);
+        pushdownRuleList.add(r2);
+        pushdownRuleList.add(r3);
+
+        // add the non-disabled pushdown rules
+        for (MedJdbcPushDownRule rule : pushdownRuleList) {
+            boolean ruledOut = false;
+            for (RelOptRuleOperand op : rule.getOperands()) {
+                if (disabledPushdownPattern.matcher(
+                        op.getMatchedClass().getSimpleName()).matches()) {
+                    ruledOut = true;
+                    break;
+                }
+            }
+            if (!ruledOut) {
+                planner.addRule(rule);
+            }
+        }
     }
 
     // implement FarragoAllocation
@@ -364,6 +496,52 @@ public class MedJdbcDataServer
     public void releaseResources()
     {
         validateConnection = true;
+    }
+
+    private void createSchemaMaps(String mapping)
+        throws SQLException
+    {
+        String[] allMapping = mapping.split(";");
+
+        for (String s : allMapping) {
+            String[] map = s.split(":");
+            // not a valid mapping
+            if (map.length != 2) {
+                continue;
+            }
+            String key = map[0].trim();
+            String value = map[1].trim();
+
+            if (!key.equals("") && !value.equals("")) {
+                HashMap h = new HashMap();
+                if (schemaMaps.get(value) != null) {
+                    h = (HashMap)schemaMaps.get(value);
+                }
+                ResultSet resultSet = null;
+                try {
+                    resultSet =
+                        databaseMetaData.getTables(
+                            catalogName,
+                            key,
+                            null,
+                            tableTypes);
+                    if (resultSet == null) {
+                        continue;
+                    }
+                    while (resultSet.next()) {
+                        h.put(resultSet.getString(3), key);
+                    }
+                    schemaMaps.put(value, h);
+                } catch (Throwable ex) {
+                    // assume unsupported
+                    continue;
+                } finally {
+                    if (resultSet != null) {
+                        resultSet.close();
+                    }
+                }
+            }
+        }
     }
 }
 

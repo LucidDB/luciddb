@@ -23,7 +23,10 @@ package com.lucidera.luciddb.test.mbean;
 import java.lang.management.*;
 import javax.management.*;
 import junit.framework.*;
+import org.junit.*;
 
+import com.lucidera.farrago.*;
+import com.lucidera.jdbc.*;
 import com.lucidera.luciddb.mbean.*;
 import com.lucidera.luciddb.mbean.server.*;
 import com.lucidera.luciddb.mbean.sysviews.*;
@@ -38,11 +41,26 @@ public class LucidDbMBeansTest extends TestCase
 {
 
     MBeanServer server = null;
+    static LucidDbServer lserver = null;
 
     public LucidDbMBeansTest(String method)
     {
         super(method);
         server = ManagementFactory.getPlatformMBeanServer();
+    }
+
+    @BeforeClass
+    public static void startLucidDb()
+        throws Exception
+    {
+        lserver = new LucidDbServer();
+        lserver.start(new LucidDbLocalDriver());
+    }
+
+    @AfterClass
+    public static void shutdownLucidDb() {
+        lserver.stopHard();
+        lserver = null;
     }
 
     public void testPingServer()

@@ -1,0 +1,28 @@
+digraph G {
+    graph [bgcolor=gray]
+    node [shape=record, style=filled, fillcolor=white, fontsize=10.0]
+    edge [fontsize=10.0]
+    subgraph cluster1779545 {
+        bgcolor=white;
+        label="LocalSchema:ACCOUNTS";
+        11818906[label="{LocalTable|CUSTOMERS}"];
+    }
+    subgraph cluster31678629 {
+        bgcolor=white;
+        label="LocalSchema:LODGING";
+        14561851[label="{LocalTable|HOTELS}"];
+        28562547[label="{LocalTable|CABINS}"];
+        21025824[label="{LocalView|LOCATIONS}"];
+        19301003[label="{LocalView|REGISTRATIONS}"];
+    }
+    subgraph cluster21266054 {
+        bgcolor=white;
+        label="LocalSchema:BILLING";
+        30316875[label="{LocalView|EVENTS}"];
+    }
+    14561851->21025824[];
+    28562547->21025824[];
+    11818906->19301003[];
+    21025824->19301003[];
+    19301003->30316875[];
+}

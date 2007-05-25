@@ -497,6 +497,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>''{0}'' is not a valid datetime format</text>
 </exception>
 
+<exception id="130120" name="InsertIntoAlwaysGenerated">
+    <text>Cannot explicitly insert value into IDENTITY column ''{0}'' which is ALWAYS GENERATED</text>
+</exception>
+
 <exception id="421080" name="ArgumentMustHaveScaleZero">
 <text>Argument to function ''{0}'' must have a scale of 0</text>
 </exception>

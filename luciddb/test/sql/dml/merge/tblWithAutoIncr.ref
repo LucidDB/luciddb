@@ -205,9 +205,7 @@
 . . . . . . . . >   update set m2=0
 . . . . . . . . > when not matched then
 . . . . . . . . >   insert (m2) values (n1);
-Error: Could not calculate result column M1 for the following row:
-[3, null, null, null]
-Messages: Sequence generator limit exceeded for LOCALDB.MERGETEST.T2 (state=,code=0)
+Error: Sequence generator limit exceeded for LOCALDB.MERGETEST.T2 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table t1;
 0: jdbc:luciddb:> drop table t2; 
@@ -263,9 +261,7 @@ Messages: Sequence generator limit exceeded for LOCALDB.MERGETEST.T2 (state=,cod
 . . . . . . . . >   update set m2=-1
 . . . . . . . . > when not matched then
 . . . . . . . . >   insert (m2) values (n1);
-Error: Could not calculate result column M1 for the following row:
-[1, null, null, null]
-Messages: Sequence generator limit exceeded for LOCALDB.MERGETEST.T2 (state=,code=0)
+Error: Sequence generator limit exceeded for LOCALDB.MERGETEST.T2 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table t1;

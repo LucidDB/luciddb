@@ -246,6 +246,9 @@ public class LoptOptimizeJoinRule
         // transform the selected plans; note that we wait till then the end
         // to transform everything so any intermediate RelNodes we create
         // are not converted to RelSubsets
+        // The HEP planner will choose the join subtree with the best cumulative
+        // cost. Volcano planner keeps the alternative join subtrees and cost the
+        // final plan to pick the best one. 
         for (RelNode plan : plans) {
             call.transformTo(plan);
         }
@@ -283,7 +286,7 @@ public class LoptOptimizeJoinRule
             // locate the join factor in the new join ordering
             int fieldStart = 0;
             for (int pos = 0; pos < nJoinFactors; pos++) {
-                if (newJoinOrder.get(pos) == currFactor) {
+                if (newJoinOrder.get(pos).intValue() == currFactor) {
                     break;
                 }
                 fieldStart +=
@@ -414,7 +417,7 @@ public class LoptOptimizeJoinRule
                         tmp.andNot(factorsAdded);
                         if (tmp.cardinality() != 0) {
                             continue;
-                        }                       
+                        }
                     }
                     // determine the best weight between the current factor
                     // under consideration and the factors that have already
@@ -453,7 +456,11 @@ public class LoptOptimizeJoinRule
             // add the factor; pass in a bitmap representing the factors
             // this factor joins with that have already been added to
             // the tree
-            BitSet factorsNeeded = multiJoin.getFactorsRefByFactor(nextFactor);
+            BitSet factorsNeeded =
+                (BitSet) multiJoin.getFactorsRefByFactor(nextFactor).clone();
+            if (multiJoin.isNullGenerating(nextFactor)) {
+                factorsNeeded.or(multiJoin.getOuterJoinFactors(nextFactor));
+            }
             factorsNeeded.and(factorsAdded);
             joinTree =
                 addFactorToTree(
@@ -905,10 +912,11 @@ public class LoptOptimizeJoinRule
             int nFieldsOld = 0;
 
             // no need to make any adjustments on the newly added factor
-            if (newJoinOrder.get(newPos) != factorAdded) {
+            if (newJoinOrder.get(newPos).intValue() != factorAdded) {
                 for (int oldPos = 0; oldPos < origJoinOrder.size(); oldPos++) {
-                    if (newJoinOrder.get(newPos)
-                        == origJoinOrder.get(oldPos)) {
+                    if (newJoinOrder.get(newPos).intValue()
+                        == origJoinOrder.get(oldPos).intValue())
+                    {
                         break;
                     }
                     nFieldsOld +=

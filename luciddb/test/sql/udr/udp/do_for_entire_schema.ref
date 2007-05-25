@@ -9,10 +9,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- try to do a select; should fail
 0: jdbc:luciddb:> call applib.do_for_entire_schema('select * from %TABLE_NAME%', 'TESTSCHEMA', 'TABLES_AND_VIEWS');
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Can't executeUpdate a query:  select * from "TESTSCHEMA"."T1" (state=,code=0)
+Error: Can't executeUpdate a query:  select * from "TESTSCHEMA"."T1" (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- connect as new user and try to do select on tables. should fail.
 0: jdbc:luciddb:> !connect jdbc:luciddb: MONDRIAN_USER NOPE
@@ -60,9 +57,6 @@ sqlline> !connect jdbc:luciddb: sa sa
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- if schema doesn't exist, it should give a nice error (LER-2608)
 0: jdbc:luciddb:> call applib.do_for_entire_schema('select * from %TABLE_NAME%', 'IMAGINARY_SCHEMA', 'TABLES');
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Schema 'IMAGINARY_SCHEMA' could not be found (state=,code=0)
+Error: Schema 'IMAGINARY_SCHEMA' could not be found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

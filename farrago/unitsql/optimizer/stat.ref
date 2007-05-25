@@ -820,12 +820,95 @@
 +------------+--------------+-------------+--------------+----------+----------------+--------------+
 > 
 > --
-> -- 2.6 note: sampling has not been implemented, only test syntax
+> -- 2.6 delete some rows and then reanalyze; make sure old histograms have
+> -- been removed
+> --
+> delete from emps where empno = 110;
+> analyze table emps compute statistics for all columns;
+> 
+> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
++------------+--------------+-------------+-------------------------------------------------+--------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
++------------+--------------+-------------+-------------------------------------------------+--------+
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS_UNIQUE_NAME          | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS      | 1      |
+| LOCALDB    | STAT         | EMPS        | EMPS_UX                                         | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID  | 1      |
++------------+--------------+-------------+-------------------------------------------------+--------+
+> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
++------------+--------------+-------------+------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
++------------+--------------+-------------+------------+
+| LOCALDB    | STAT         | DEPTS       | 3          |
+| LOCALDB    | STAT         | EMPS        | 3          |
++------------+--------------+-------------+------------+
+> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | AGE          | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | CITY         | 1            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 2            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 2            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | NAME         | 3            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 2            | 100              | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 2            | 100              | 3          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 0        | 10           | 1            |
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 1        | 20           | 1            |
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 2        | 30           | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 0        | Accounts     | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 1        | Marketing    | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 2        | Sales        | 1            |
+| LOCALDB    | STAT         | EMPS        | AGE          | 0        | 25           | 1            |
+| LOCALDB    | STAT         | EMPS        | AGE          | 1        | 50           | 1            |
+| LOCALDB    | STAT         | EMPS        | AGE          | 2        | 55           | 1            |
+| LOCALDB    | STAT         | EMPS        | CITY         | 0        |              | 1            |
+| LOCALDB    | STAT         | EMPS        | CITY         | 1        |              | 0            |
+| LOCALDB    | STAT         | EMPS        | CITY         | 2        |              | 0            |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 0        | 10           | 1            |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 1        | 10           | 0            |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 2        | 20           | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 0        | 1            | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 1        | 11           | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 2        | 30           | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 0        | 100          | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 1        | 120          | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 2        | 130          | 1            |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 0        |              | 1            |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 1        | F            | 1            |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 2        | M            | 1            |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 0        | false        | 1            |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 1        | true         | 1            |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 2        | true         | 0            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 0        | Barney       | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 1        | Fred         | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 2        | Wilma        | 1            |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 0        |              | 1            |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 1        |              | 0            |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 2        | 41626320     | 1            |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 0        |              | 1            |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 1        | true         | 1            |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 2        | true         | 0            |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+> 
+> --
+> -- 2.7 note: sampling has not been implemented, only test syntax
 > --
 > analyze table depts estimate statistics for all columns sample 10 percent;
 > 
 > --
-> -- 2.7 analyze a foreign table
+> -- 2.8 analyze a foreign table
 > --
 > drop schema stat cascade;
 > create schema stat;
@@ -892,7 +975,7 @@
 +------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
 > 
 > --
-> -- 2.8 A few more rows than histogram bars
+> -- 2.9 A few more rows than histogram bars
 > --
 > create table ten(i int primary key)
 > server sys_column_store_data_server;

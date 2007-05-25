@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.logging.*;
 
 import javax.jmi.reflect.RefPackage;
+import javax.jmi.model.*;
 
 import net.sf.farrago.*;
 import net.sf.farrago.fem.config.*;
@@ -134,6 +135,7 @@ public class FarragoMdrReposImpl
         }
 
         super.setRootPackage(farragoPackage);
+        checkModelTimestamp();
 
         mdrRepository = modelLoader.getMdrRepos();
 
@@ -156,6 +158,26 @@ public class FarragoMdrReposImpl
 
     //~ Methods ----------------------------------------------------------------
 
+    private void checkModelTimestamp()
+    {
+        String prefix = "TIMESTAMP = ";
+        
+        MofPackage pkg = (MofPackage) getFarragoPackage().refMetaObject();
+        String storedTimestamp = pkg.getAnnotation();
+        String compiledTimestamp = prefix + getCompiledModelTimestamp();
+        if ((storedTimestamp == null) || !storedTimestamp.startsWith(prefix)) {
+            // first time:  add timestamp 
+            pkg.setAnnotation(compiledTimestamp);
+        } else {
+            // on reload:  verify timestamps
+            if (!storedTimestamp.equals(compiledTimestamp)) {
+                throw FarragoResource.instance().
+                    CatalogModelTimestampCheckFailed.ex(
+                        storedTimestamp, compiledTimestamp);
+            }
+        }
+    }
+    
     // implement FarragoRepos
     public MDRepository getMdrRepos()
     {

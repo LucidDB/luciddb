@@ -20,7 +20,7 @@ returns table( colname varchar(65535), coltype int, coltypename varchar(65535))
 language java
 parameter style system defined java
 no sql
-external name 'class com.lucidera.luciddb.test.udr.GetColumnTypesUdx.execute';
+external name 'applib.applibJar:com.lucidera.luciddb.applib.test.GetColumnTypesUdx.execute';
 
 select * from table(
   get_column_types(
@@ -151,12 +151,11 @@ parameter style system defined java
 modifies sql data
 external name 'class com.lucidera.luciddb.test.udr.CreateTableAsSelectUdx.execute';
 
--- TODO: FRG-141, commented out so we don't have lock problems
--- select * from table(
---   create_table_as_select(
---     'CT', 
---     'MYTABLE', 
---     cursor(select * from farrago_params)
--- ));
+select * from table(
+  create_table_as_select(
+    'CT', 
+    'MYTABLE', 
+    cursor(select * from farrago_params)
+));
 
--- select * from ct.mytable order by 1;
+select * from ct.mytable order by 1;

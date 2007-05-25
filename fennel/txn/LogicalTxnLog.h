@@ -134,6 +134,13 @@ public:
     virtual ~LogicalTxnLog();
     
     /**
+     * Sets and increments the nextTxnId
+     *
+     * @param nextTxnIdInit nextTxnId to be set
+     */
+    void setNextTxnId(TxnId nextTxnIdInit);
+
+    /**
      * Starts a new LogicalTxn.
      *
      * @param pCacheAccessor CacheAccessor to use for cache access to log data
@@ -170,6 +177,14 @@ public:
     void deallocateCheckpointedLog(
         LogicalTxnLogCheckpointMemento const &memento,
         CheckpointType checkpointType = CHECKPOINT_FLUSH_ALL);
+
+    /**
+     * Returns the transaction id of the oldest, active transaction
+     *
+     * @return txnId of the oldest, active txn; if there are no active
+     * transactions, returns the current transaction id
+     */
+    TxnId getOldestActiveTxnId();
 };
 
 FENNEL_END_NAMESPACE

@@ -38,6 +38,7 @@ import java.util.regex.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.trace.*;
 
 import org.eigenbase.util.*;
@@ -874,7 +875,7 @@ public class FarragoJdbcTest
         assertEquals(res, rows);
         stmt.close();
         if (!connection.getAutoCommit()) {
-            connection.rollback();
+        connection.rollback();
         }
 
         // wipe out the array for the next test
@@ -1483,19 +1484,19 @@ public class FarragoJdbcTest
                     stringValue,
                     resultSet.getString(BIGINT));
                 assertEquals(
-
+                    
 
                     /*stringValue,*/
                 "0.0",
                     resultSet.getString(REAL));
                 assertEquals(
-
+                    
 
                     /*stringValue,*/
                 "0.0",
                     resultSet.getString(FLOAT));
                 assertEquals(
-
+                    
 
                     /*stringValue,*/
                 "0.0",
@@ -1507,7 +1508,7 @@ public class FarragoJdbcTest
                     "0.000",
                     resultSet.getString(DECIMAL73));
                 assertEquals(
-
+                    
 
                     /*stringValue,*/
                 "false",
@@ -2174,6 +2175,11 @@ public class FarragoJdbcTest
                 assertEquals(
                     timeNoDate.getTime(),
                     resultSet.getTime(TIME).getTime());
+
+                // FIXME: FNL-54
+                // SQL Spec Part 2 Section 4.6.2 Table 3 requires 
+                // Time to Timestamp cast to set the date to current_date
+                // (currently stored in FarragoRuntimeContext)
                 assertEquals(
                     timeNoDate.getTime(),
                     resultSet.getTime(TIMESTAMP).getTime());
@@ -2281,8 +2287,8 @@ public class FarragoJdbcTest
         resultSet = null;
 
         if (!connection.getAutoCommit()) {
-            connection.rollback();
-        }
+        connection.rollback();
+    }
     }
 
     /**
@@ -2853,12 +2859,20 @@ public class FarragoJdbcTest
      * Verifies that DDL statements are validated at prepare time, not just
      * execution time.
      */
-    public void testDdlPreparation()
+    public void testDdlValidateOnPrepare()
     {
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
+        boolean origSetting =
+            farragoConnection.getSession().getSessionVariables().getBoolean(
+                "validateDdlOnPrepare");
+        setValidateOnPrepare(origSetting, true);
+        
         // test error:  exceed timestamp precision
         String ddl =
             "create table sales.bad_tbl("
             + "ts timestamp(100) not null primary key)";
+        boolean failed = false;
         try {
             preparedStmt = connection.prepareStatement(ddl);
         } catch (SQLException ex) {
@@ -2867,9 +2881,71 @@ public class FarragoJdbcTest
                 "Expected message about precision but got '"
                 + ex.getMessage() + "'",
                 ex.getMessage().indexOf("Precision") > -1);
-            return;
+            failed = true;
+        } finally {
+            setValidateOnPrepare(true, origSetting);
+            if (!failed) {
+                fail("Expected failure due to invalid DDL");
+            }
         }
-        fail("Expected failure due to invalid DDL");
+    }
+
+    /**
+     * Verifies that DDL statements are not validated at prepare time, 
+     * but at execution time
+     */
+    public void testDdlNoValidateOnPrepare()
+    {
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
+        boolean origSetting =
+            farragoConnection.getSession().getSessionVariables().getBoolean(
+                "validateDdlOnPrepare");
+        setValidateOnPrepare(origSetting, false);
+        
+        // test error:  exceed timestamp precision
+        String ddl =
+            "create table sales.bad_tbl("
+            + "ts timestamp(100) not null primary key)";
+        try {
+            preparedStmt = connection.prepareStatement(ddl);
+        } catch (SQLException ex) {
+            setValidateOnPrepare(false, origSetting);
+            fail("Validation should not have occurred during prepare");
+        }
+        boolean failed = false;
+        try {
+            preparedStmt.execute();
+        } catch (SQLException ex) {
+            // expected; verify that the message refers to precision
+            Assert.assertTrue(
+                "Expected message about precision but got '"
+                + ex.getMessage() + "'",
+                ex.getMessage().indexOf("Precision") > -1);
+            failed = true;
+        } finally {
+            setValidateOnPrepare(false, origSetting);
+            if (!failed) {
+                fail("Expected failure due to invalid DDL");
+            }
+        }
+    }
+        
+    private void setValidateOnPrepare(boolean currSetting, boolean newSetting)
+    {
+        if (currSetting != newSetting) {
+            String sql = "alter session set \"validateDdlOnPrepare\" =";
+            if (newSetting) {
+                sql += "true";
+            } else {
+                sql += "false";
+            }
+            try {
+                stmt.execute(sql);
+            } catch (SQLException ex) {
+                fail("alter session failed");
+            }
+        }
     }
 
     // TODO:  re-execute DDL, DML

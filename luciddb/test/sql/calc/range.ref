@@ -1,6 +1,8 @@
 0: jdbc:luciddb:> -- test more bugs  (range of numeric types)
 0: jdbc:luciddb:> -- Was calc13.sql
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !set shownestederrs true
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set schema 's';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create table numbers (a tinyint, b smallint, c numeric (7,3))
@@ -11,14 +13,28 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:> insert into numbers values (130, 66000, 12345.123)
 . . . . . . . . > ;
+Error: Overflow during calculation or cast. (state=,code=0)
 Error: Could not calculate result column A for the following row:
 [130, 66000, 12345.123]
 Messages: Overflow during calculation or cast. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
 0: jdbc:luciddb:> insert into numbers values (-130, -66000, -12345.123)
 . . . . . . . . > ;
+Error: Overflow during calculation or cast. (state=,code=0)
 Error: Could not calculate result column A for the following row:
 [-130, -66000, -12345.123]
 Messages: Overflow during calculation or cast. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
+Error: DML statement execution failed. (state=,code=0)
 0: jdbc:luciddb:> select * from numbers order by 1
 . . . . . . . . > ;
 +-------+---------+------------+

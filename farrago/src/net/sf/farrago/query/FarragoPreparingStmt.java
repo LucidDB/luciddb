@@ -209,6 +209,7 @@ public class FarragoPreparingStmt
         return true;
     }
 
+    // implement FarragoSessionPreparingStmt
     public void disableStatementCaching()
     {
         cachingDisabled = true;
@@ -315,15 +316,15 @@ public class FarragoPreparingStmt
     protected void initClassDecl()
     {
         if (implementingClassDecl == null) {
-            implementingArgs = new Argument[] {
+        implementingArgs = new Argument[] {
                 new Argument(
                     connectionVariable,
                     getSession().getPersonality().getRuntimeContextClass(
                         this),
                     this)
             };
-            implementingClassDecl = super.init(implementingArgs);
-        }
+        implementingClassDecl = super.init(implementingArgs);
+    }
     }
 
     protected ClassDeclaration getImplementingClassDecl()
@@ -413,10 +414,7 @@ public class FarragoPreparingStmt
         // reflection, which would be bad for UDF performance.  What to do?
         // Also, need to implement jar paths.
 
-        // REVIEW jhyde, 2006/6/3: Mystical two-stage copy designed to preserve
-        // order of set?
-        List<URL> jarUrlList = new ArrayList<URL>(jarUrlSet);
-        URL [] urls = jarUrlList.toArray(new URL[jarUrlList.size()]);
+        URL [] urls = jarUrlSet.toArray(new URL[jarUrlSet.size()]);
         URLClassLoader urlClassLoader =
             URLClassLoader.newInstance(
                 urls,
@@ -453,7 +451,7 @@ public class FarragoPreparingStmt
             // a previous run.
             new FarragoFileAllocation(packageDir).closeAllocation();
         }
-
+        
         // Normally, we want to make sure all generated code gets cleaned up.
         // To disable this for debugging, you can explicitly set
         // net.sf.farrago.dynamic.level=FINE.  (This is not inherited via
@@ -463,7 +461,7 @@ public class FarragoPreparingStmt
         }
 
         packageDir.mkdir();
-
+        
         BoundMethod boundMethod =
             super.compileAndBind(decl, parseTree, arguments);
 
@@ -495,7 +493,7 @@ public class FarragoPreparingStmt
             Util.discard(clazz);
         }
     }
-
+    
     protected boolean treeContainsJava(RelNode rootRel)
     {
         // if the topmost node isn't a FennelToIteratorConverter, then
@@ -529,7 +527,7 @@ public class FarragoPreparingStmt
                     relImplementor.visitFennelChild((FennelRel) rootRel);
                 streamName = streamDef.getName();
             }
-
+            
             String xmiFennelPlan = null;
             Set<FemExecutionStreamDef> streamDefSet =
                 relImplementor.getStreamDefSet();
@@ -544,7 +542,7 @@ public class FarragoPreparingStmt
                         Collections.singleton(cmdPrepareStream));
                 streamGraphTracer.fine(xmiFennelPlan);
             }
-
+           
             assert (tableAccessMap != null);
             if (containsJava) {
                 OJClass ojRowClass =
@@ -748,7 +746,7 @@ public class FarragoPreparingStmt
                     rootRel,
                     false,
                     SqlExplainLevel.EXPPLAN_ATTRIBUTES));
-        }
+        }        
 
         RelNode newRootRel =
             getSqlToRelConverter().flattenTypes(rootRel, restructure);
@@ -763,7 +761,7 @@ public class FarragoPreparingStmt
                     newRootRel,
                     false,
                     SqlExplainLevel.EXPPLAN_ATTRIBUTES));
-        }
+        }        
         return newRootRel;
     }
 
@@ -772,7 +770,7 @@ public class FarragoPreparingStmt
         RelNode rootRel)
     {
         boolean dumpPlan = planDumpTracer.isLoggable(Level.FINE);
-
+        
         // Now that all plugins have been seen (flattening above expanded
         // views), finalize the relational expression metadata query providers
         // to use during decorrelation.
@@ -898,7 +896,7 @@ public class FarragoPreparingStmt
         // so any further access to it is an error.
         relMetadataProvider = null;
     }
-
+    
     protected RelDataType getParamRowType()
     {
         return
@@ -1148,8 +1146,8 @@ public class FarragoPreparingStmt
                 if (usedDataset != null) {
                     assert usedDataset.length == 1;
                     usedDataset[0] = true;
-                }
             }
+        }
         }
 
         if (columnSet instanceof FemLocalTable) {
@@ -1465,7 +1463,7 @@ public class FarragoPreparingStmt
     {
         return packageDir;
     }
-
+    
     // override OJPreparingStmt
     protected String getClassRoot()
     {

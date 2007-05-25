@@ -118,7 +118,7 @@ select * from sys_root.dba_system_parameters
 
 <message name="AlterSystemQuery">
 <text>
-alter system set "?"  = \'?\'
+alter system set "{0}"  = ''{1}''
 </text>
 </message>
 

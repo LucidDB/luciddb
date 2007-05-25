@@ -73,6 +73,10 @@
     <text>Unique constraint violation</text>
   </message>
 
+  <message id="440090" name="incompatibleDataFormat">
+    <text>Incompatible data format encountered</text>
+  </message>
+
   <!-- message id range 441000-441999 reserved for external data wrapper -->
 
   <!-- message id range 441900-441999 reserved for flatfile data wrapper -->

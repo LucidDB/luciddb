@@ -45,3 +45,7 @@ analyze table SALES estimate statistics for all columns SAMPLE 100 PERCENT;
 analyze table CUSTOMERS estimate statistics for all columns SAMPLE 100 PERCENT;
 analyze table LOCATION estimate statistics for all columns SAMPLE 100 PERCENT;
 analyze table DEPT estimate statistics for all columns SAMPLE 100 PERCENT;
+
+-- fake row count to use index access
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'S', 'LOCATION', 10);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'S', 'DEPT', 10);

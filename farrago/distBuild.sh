@@ -140,8 +140,7 @@ cp csvjdbc/license.txt $LIB_DIR/csvjdbc.license.txt
 cp sqlline.jar $LIB_DIR
 cp sqlline/LICENSE $LIB_DIR/sqlline.license
 cp jline.jar $LIB_DIR
-cp jgrapht/jgrapht-*.jar $LIB_DIR
-cp jgrapht7/jgrapht7-jdk1.5.jar $LIB_DIR
+cp jgrapht/jgrapht-jdk1.5.jar $LIB_DIR
 cp jgrapht/license-LGPL.txt $LIB_DIR/jgrapht.license.txt
 cp jgrapht/license-LGPL.txt $LIB_DIR/vjdbc.license.txt
 cp jgrapht/license-LGPL.txt $LIB_DIR/RmiJdbc.license.txt
@@ -153,9 +152,10 @@ fi
 cp commons-transaction-1.1.jar $LIB_DIR
 cp vjdbc/lib/vjdbc.jar $LIB_DIR
 cp vjdbc/lib/vjdbc_server.jar $LIB_DIR
-cp vjdbc/lib/commons-logging.jar $LIB_DIR
-cp vjdbc/lib/commons-pool-1.2.jar $LIB_DIR
+cp vjdbc/lib/commons-logging-1.1.jar $LIB_DIR
+cp vjdbc/lib/commons-pool-1.3.jar $LIB_DIR
 cp vjdbc/lib/commons-dbcp-1.2.1.jar $LIB_DIR
+cp vjdbc/lib/commons-digester-1.7.jar $LIB_DIR
 cp stlport/README $LIB_DIR/fennel/stlport.README.txt
 # get rid of this dangling symlink; it causes trouble for cp
 rm -f stlport/lib/libstlport_gcc_debug.so
@@ -215,6 +215,7 @@ if [ -e dist/README ]; then
     cp dist/README $RELEASE_DIR
 fi
 cp dist/farrago.jar $LIB_DIR
+cp dist/vjdbc_servlet.war $LIB_DIR
 cp dist/plugin/*.jar $PLUGIN_DIR
 
 # copy other farrago artifacts

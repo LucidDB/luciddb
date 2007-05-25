@@ -21,10 +21,7 @@ sqlline> !connect jdbc:luciddb: sa sa
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should print error if schema doesn't exist, LER-2608
 0: jdbc:luciddb:> call applib.grant_select_for_schema('IMAGINARY_SCHEMA', 'MONDRIAN_USER');
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Schema 'IMAGINARY_SCHEMA' could not be found (state=,code=0)
+Error: Schema 'IMAGINARY_SCHEMA' could not be found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- try again. should succeed.
 0: jdbc:luciddb:> !connect jdbc:luciddb: MONDRIAN_USER NOPE

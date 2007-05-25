@@ -1,0 +1,3 @@
+set schema 's';
+
+SELECT n1, ABS(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;

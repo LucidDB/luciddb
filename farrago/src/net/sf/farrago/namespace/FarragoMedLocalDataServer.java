@@ -85,9 +85,11 @@ public interface FarragoMedLocalDataServer
      *
      * @param index definition of the index to create
      *
+     * @param txnContext Fennel txn context
+     * 
      * @return root PageId of index
      */
-    public long createIndex(FemLocalIndex index)
+    public long createIndex(FemLocalIndex index, FennelTxnContext txnContext)
         throws SQLException;
 
     /**
@@ -97,24 +99,30 @@ public interface FarragoMedLocalDataServer
      * @param rootPageid root PageId of index
      * @param truncate if true, only truncate storage; if false, drop storage
      * entirely
+     * @param txnContext Fennel txn context
      */
     public void dropIndex(
         FemLocalIndex index,
         long rootPageId,
-        boolean truncate)
+        boolean truncate,
+        FennelTxnContext txnContext)
         throws SQLException;
 
     /**
-     * Verifies an index and records its page count.
+     * Verifies an index and returns its page count.
      *
      * @param index definition of the index to verify
      * @param rootPageid root PageId of index
      * @param estimate whether to estimate statistics for a quicker result
+     * @param txnContext Fennel txn context
+     *
+     * @return page count for the specified index
      */
-    public void computeIndexStats(
+    public long computeIndexStats(
         FemLocalIndex index,
         long rootPageId,
-        boolean estimate)
+        boolean estimate,
+        FennelTxnContext txnContext)
         throws SQLException;
 
     /**
@@ -135,6 +143,19 @@ public interface FarragoMedLocalDataServer
         RelOptTable table,
         FemLocalIndex index,
         RelOptCluster cluster);
+    
+    /**
+     * Versions the root page of an index
+     * 
+     * @param oldRoot original root page
+     * @param newRoot new versioned, root page
+     * @param txnContext Fennel txn context
+     */
+    public void versionIndexRoot(
+        Long oldRoot,
+        Long newRoot,
+        FennelTxnContext txnContext)
+        throws SQLException;
 }
 
 // End FarragoMedLocalDataServer.java

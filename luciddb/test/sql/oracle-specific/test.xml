@@ -14,6 +14,18 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/oracle-specific/gen/substitutions.sql"/>
       </test>
 
+      <test name="lenient">
+        <junit-sql file="${open.dir}/luciddb/test/sql/oracle-specific/gen/lenient.sql"/>
+      </test>
+
+      <test name="pushdown">
+        <junit-sql file="${open.dir}/luciddb/test/sql/oracle-specific/gen/pushdown.sql"/>
+      </test>
+
+      <test name="mapping">
+        <junit-sql file="${open.dir}/luciddb/test/sql/oracle-specific/gen/mapping.sql"/>
+      </test>
+
       <cleanup-hook>
         <test-suite name="cleanup">
           <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">

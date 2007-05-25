@@ -1,0 +1,83 @@
+-- setup
+> set schema 'concurrency';
+0 rows affected.
+> delete from t1;
+0 rows affected.
+> insert into t1 values (1);
+1 row affected.
+> insert into t1 values (2);
+1 row affected.
+-- end of setup
+
+-- thread cleanup
+> delete from concurrency.t1;
+1 row affected.
+-- end of thread cleanup
+
+-- thread reader
+> set schema 'concurrency';
+0 rows affected.
+> select * from t1 where (c >= 1 + sys_boot.mgmt.sleep(3000)) order by c;
++------------+
+| C          |
++------------+
+| 1          |
+| 2          |
++------------+
+
+> select * from t1;
++------------+
+| C          |
++------------+
+| 1          |
+| 2          |
++------------+
+
+> select * from t1 where (c >= 1 + sys_boot.mgmt.sleep(3000)) order by c;
++------------+
+| C          |
++------------+
+| 1          |
+| 2          |
++------------+
+
+> select * from t1;
++------------+
+| C          |
++------------+
++------------+
+
+-- end of thread reader
+
+-- thread writer
+> set schema 'concurrency';
+0 rows affected.
+> insert into t1 values (sys_boot.mgmt.sleep(5000));
+1 row affected.
+-- end of thread writer
+
+-- thread alter
+> set schema 'concurrency';
+0 rows affected.
+> alter table t1 rebuild;
+0 rows affected.
+> select * from t1 order by c;
++------------+
+| C          |
++------------+
+| 1          |
+| 2          |
++------------+
+
+> truncate table t1;
+0 rows affected.
+> select * from t1 order by c;
++------------+
+| C          |
++------------+
++------------+
+
+> alter table t1 rebuild;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.CONCURRENCY.T1
+-- end of thread alter
+

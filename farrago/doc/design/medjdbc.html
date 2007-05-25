@@ -92,17 +92,35 @@ to eliminate this repackaging burden.)</td>
 <td>Password for login to foreign server</td>
 </tr>
 <tr>
+<td>USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER</td> 
+<td>If set to 'TRUE', then for tables without a table-level SCHEMA_NAME
+specified, the server-level SCHEMA_NAME is used. The default is 'FALSE'.
+</td>
+</tr>
+<tr>
+<tr>
 <td>SCHEMA_NAME</td> 
-<td>Artificial foreign schema name.  This option is only required for
+<td> If USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER is set to 'FALSE':<br>
+Artificial foreign schema name.  This option is only required for
 servers which don't support schemas.  When specified, the plugin will
 accept this schema name as a foreign qualifier when importing foreign tables
 or accessing them directly, but will omit all schema references when
 sending SQL to the foreign server.  For servers that support schemas,
 this option should never be specified; reference the real foreign schema names 
-instead.
+instead. <br>
+If USE_SCHEMA_NAME_AS_FOREIGN_QUALIFIER is set to 'TRUE':<br>
+Server must support schemas. This SCHEMA_NAME will be used if the table-level
+SCHEMA_NAME is not set.
 </td>
 </tr>
 <tr>
+<td>SCHEMA_MAPPING</td>
+<td>
+Semicolon-separated list of schema_name:mapped_schema_name pairs.  This
+option is only valid for servers which support schemas.  This allows for
+a single schema view of tables spanning multiple schemas.
+</td>
+</tr>
 <td>QUALIFYING_CATALOG_NAME</td> 
 <td>Foreign catalog name to which this server should correspond.  This
 option should only be used for servers which support multiple
@@ -161,6 +179,25 @@ before TYPE_SUBSTITUTION and does not depend on TYPE_SUBSTITUTION.
 </td>
 </tr>
 <tr>
+<td>LENIENT</td>
+<td>
+If set to 'TRUE', match target columns specified in the foreign table
+definition with data source columns using case-sensitive string
+comparison on column name.  Specified target columns which are missing
+in the source are filled in with null. Likewise, specified target
+columns with types that are cast-incompatible from matching source
+columns are filled in with null.  Other matching columns are cast to
+the target type (either the type specified explicitly, or the type
+stored in the catalog when the foreign table descriptor is created
+with implicit column types).  The default is 'FALSE', meaning columns
+are mapped by position rather than name, and mismatches in the mapping
+may lead to runtime errors.
+<p>
+Lenience makes the foreign table definition resilient to changes
+in the data source; strictness ensures that data is not accidentally
+lost or fabricated due to a mismapping.
+</td>
+<tr>
 <td>LOGIN_TIMEOUT</td>
 <td>
 The maximum time in seconds to wait while attempting to connect to
@@ -175,6 +212,35 @@ cache. If not specified, no connection validation will be done.  If
 specified, must be a query (in a dialect understood by the foreign
 JDBC driver being used) which will return at least one row without
 error.
+</td>
+</tr>
+<tr>
+<td>DISABLED_PUSHDOWN_REL_PATTERN</td>
+<td>
+A regular expression matching the names of logical relational expressions
+for which pushdown to data source should be disabled.  To enable all
+pushdown, the value can be left as empty string (the default).  To
+disable all pushdown, the value can be set to a match-anything regular
+expression ('.*').  To disable a particular expression, the value can be
+set to the corresponding optimizer RelNode class name, e.g. 'FilterRel'.
+</td>
+</tr>
+<tr>
+<td>FETCH_SIZE</td>
+<td>
+An integer fetch size to set on cursors via Statement.setFetchSize.  Default
+is -1 (don't call setFetchSize at all).
+</td>
+</tr>
+<tr>
+<td>AUTOCOMMIT</td>
+<td>
+If set to 'TRUE' (the default), leave connection in autocommit mode.
+Otherwise, request transaction mode.  For read-only usage, this normally
+doesn't matter, since the wrapper closes cursors as soon as it is done
+with them, but some JDBC drivers are sensitive (e.g. the PostgreSQL driver,
+which requires an explicit FETCH_SIZE and non-autocommit to avoid
+exhausting memory for large result sets).
 </td>
 </tr>
 </table>
@@ -206,13 +272,14 @@ definition:
 <ul>
 <li>DriverManager.getConnection
 <li>Connection.getMetaData (if supported)
+<li>Connection.setAutoCommit (only if <code>AUTOCOMMIT</code> is set to false)
 <li>DatabaseMetaData.XXX (various calls to test for supported features)
 </ul>
 
 <h2>JDBC Foreign Table Definition</h2>
 
 The only option always required when defining a JDBC foreign
-table is <code>TABLE_NAME</code>:
+table is <code>TABLE_NAME</code> (or <code>OBJECT</code>):
 
 <pre><code>
 create schema ora_sales;
@@ -290,6 +357,7 @@ a foreign table:
 <ul>
 <li>Connection.createStatement
 <li>Statement.executeQuery
+<li>Statement.setFetchSize (only if FETCH_SIZE is set)
 <li>ResultSet.getXXX (where XXX depends on datatype of column queried)
 </ul>
 
@@ -388,9 +456,12 @@ default is DBMS-dependent.  This setting is ignored for distributed transactions
 <td>server or table (table overrides server)</td> 
 <td>
 Number of rows to modify before committing transaction and starting a
-new one.  Default is 1 (autocommit each row).  A setting of 0 means
-only commit once all rows have been processed.  This option is ignored
-when autocommit is disabled in the Farrago session.
+new one.  Default is 0 (only commit once all rows have been
+processed).  This option is ignored when autocommit is disabled in the
+Farrago session, because then the Farrago-level transaction governs
+the foreign transaction.  This option is also ignored when this
+wrapper's AUTOCOMMIT option is set to 'TRUE' (the default), because
+then every update is committed immediately.
 </td>
 </tr>
 <tr>
@@ -416,12 +487,10 @@ a foreign table:
 <li>Connection.setReadOnly (if supported)
 <li>Connection.setTransactionIsolation 
     (if <code>ISOLATION_LEVEL</code> specified)
-<li>Connection.setAutoCommit
-    (if <code>TRANSACTION_ROW_LIMIT</code> specified)
 <li>Connection.commit
-    (if <code>TRANSACTION_ROW_LIMIT</code> specified)
+    (if <code>AUTOCOMMIT</code> set to false)
 <li>Connection.rollback
-    (if <code>TRANSACTION_ROW_LIMIT</code> specified)
+    (if <code>AUTOCOMMIT</code> set to false)
 <li>DatabaseMetaData.getPrimaryKeys (for UPDATE/DELETE)
 </ul>
 

@@ -10,6 +10,11 @@ values applib.char_replace('111111', 49, 51);
 values applib.char_replace('//////', 47, 42);
 values applib.char_replace('******', 42, 49);
 
+-- null values
+values applib.char_replace(cast(null as varchar(9)), 'x', 'y');
+values applib.char_replace('BAbaBAbaBababab', cast(null as varchar(1)), 'x');
+values applib.char_replace('njdsf', 3, cast(null as integer));
+
 -- failures
 values applib.char_replace('bbbbbbbb', 'b', 'AA');
 

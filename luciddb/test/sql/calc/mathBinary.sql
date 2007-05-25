@@ -1,6 +1,6 @@
 -- test binary math operations in calculator
 -- Was calc6.sql
-
+!set shownestederrs true
 set schema 's';
 
 select 10 + 100 + 1000 + n1 + n2 + n3 from boris

@@ -77,14 +77,19 @@ public class LcsRowScanRel
      * Types of scans to perform.
      */
     boolean isFullScan;
-    boolean hasExtraFilter;
+    boolean hasResidualFilter;
     
     /**
      * Array of 0-based flattened filter column ordinals.
      */
     final Integer [] residualColumns;
 
-
+    /**
+     * Selectivity from filtering using the inputs.
+     * Possible inputs are index searches and residual filter values.
+     */
+    double inputSelectivity;
+    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -109,8 +114,9 @@ public class LcsRowScanRel
         RelOptConnection connection,
         Integer [] projectedColumns,
         boolean isFullScan,
-        boolean hasExtraFilter,
-        Integer [] resCols)
+        boolean hasResidualFilter,
+        Integer [] resCols,
+        double inputSelectivity)
     {
         super(cluster, children);
         this.lcsTable = lcsTable;
@@ -118,13 +124,14 @@ public class LcsRowScanRel
         this.projectedColumns = projectedColumns;
         this.connection = connection;
         this.isFullScan = isFullScan;
-        this.hasExtraFilter = hasExtraFilter;
+        this.hasResidualFilter = hasResidualFilter;
         this.residualColumns = resCols;
 
         assert (lcsTable.getPreparingStmt()
                 == FennelRelUtil.getPreparingStmt(this));
 
         repos = FennelRelUtil.getRepos(this);
+        this.inputSelectivity = inputSelectivity;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -141,8 +148,9 @@ public class LcsRowScanRel
                 connection,
                 projectedColumns,
                 isFullScan,
-                hasExtraFilter,
-                residualColumns);
+                hasResidualFilter,
+                residualColumns,
+                inputSelectivity);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -158,13 +166,8 @@ public class LcsRowScanRel
     // overwrite SingleRel
     public double getRows()
     {
-        if (inputs.length == 0) {
-            // full table scan.
-            return lcsTable.getRowCount();
-        } else {
-            // table scan from an input RID stream.
-            return RelMetadataQuery.getRowCount(inputs[0]);
-        }
+        double tableRowCount = lcsTable.getRowCount();
+        return tableRowCount * inputSelectivity;
     }
 
     // implement RelNode
@@ -313,7 +316,7 @@ public class LcsRowScanRel
             newInputs = new RelNode[inputs.length + 1];
             System.arraycopy(inputs, 0, newInputs, 1, inputs.length);
             LcsIndexSearchRel delIndexScan =
-                indexGuide.createDeletionIndexScan(
+                getIndexGuide().createDeletionIndexScan(
                     this,
                     lcsTable,
                     null,
@@ -326,14 +329,14 @@ public class LcsRowScanRel
                 System.arraycopy(inputs, 1, newInputs, 1, inputs.length-1);
             }
             newInputs[0] =
-                indexGuide.createMinusOfDeletionIndex(
+                getIndexGuide().createMinusOfDeletionIndex(
                     this,
                     lcsTable,
                     inputs[0]);
         }
 
         FemLcsRowScanStreamDef scanStream =
-            indexGuide.newRowScan(this, projectedColumns, residualColumns);
+            getIndexGuide().newRowScan(this, projectedColumns, residualColumns);
 
         for (int i = 0; i < newInputs.length; i++) {
             FemExecutionStreamDef inputStream =
@@ -413,6 +416,23 @@ public class LcsRowScanRel
     }
 
     /**
+     * Gets the original column pos(relative to the table) at projOrdinal
+     *
+     * @param projOrdinal 0-based ordinal of an output field of the scan
+     *
+     * @return if table has projection, return the original column pos relative
+     * to the table. Otherwise, return the same value as the input.
+     */
+    public int getOriginalColumnOrdinal(int projOrdinal)
+    {
+        int origOrdinal = projOrdinal;
+        if (projectedColumns != null) {
+            origOrdinal = projectedColumns[projOrdinal];
+        }
+        return origOrdinal;
+    }
+
+    /**
      * Returns the projected column ordinal for a given column ordinal, relative
      * to this scan.
      *
@@ -446,16 +466,6 @@ public class LcsRowScanRel
     public RelOptConnection getConnection()
     {
         return connection;
-    }
-
-    public boolean isFullScan()
-    {
-        return isFullScan;
-    }
-
-    public boolean hasExtraFilter()
-    {
-        return hasExtraFilter;
     }
 
     public RelFieldCollation [] getCollations()

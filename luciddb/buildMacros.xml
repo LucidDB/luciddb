@@ -49,6 +49,9 @@ ${farrago.test.jvmargs}
   <property environment="env" />
   <property name="open.dir" location="${luciddb.dir}/.." />
 
+  <!-- luciddb plugin directory -->
+  <property name="luciddb.plugin.dir" location="${luciddb.dir}/plugin"/>
+
   <!-- directory for luciddb initialization scripts -->
   <property name="luciddb.initsql.dir" location="${luciddb.dir}/initsql" />
 

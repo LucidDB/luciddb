@@ -8,7 +8,8 @@
 >   url 'jdbc:oracle:thin:@machineName:port:SID',
 >   type_mapping 'DATE:TIMESTAMP;DECIMAL(22,0):DOUBLE;BINARY:CHAR;VARBINARY:VARCHAR',
 >   login_timeout '10',
->   validation_query 'select 1 from dual'
+>   validation_query 'select 1 from dual',
+>   lenient 'true'
 > );
 > 
 > -- create sql server jdbc wrapper with browse_connect
@@ -20,7 +21,8 @@
 >   driver_class 'net.sourceforge.jtds.jdbc.Driver',
 >   url 'jdbc:jtds:sqlserver://server:port',
 >   login_timeout '10',
->   validation_query 'select 1'
+>   validation_query 'select 1',
+>   lenient 'true'
 > );
 > 
 > -- create flat file wrapper with browse_connect

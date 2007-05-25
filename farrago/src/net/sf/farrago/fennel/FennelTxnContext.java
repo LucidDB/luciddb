@@ -118,7 +118,7 @@ public class FennelTxnContext
         return hTxn;
     }
 
-    private FemTxnHandle getTxnHandle()
+    public FemTxnHandle getTxnHandle()
     {
         getTxnHandleLong();
         FemTxnHandle newHandle = metadataFactory.newFemTxnHandle();

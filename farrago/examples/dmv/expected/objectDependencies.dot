@@ -1,0 +1,30 @@
+digraph G {
+    graph [bgcolor=gray]
+    node [shape=record, style=filled, fillcolor=white, fontsize=10.0]
+    edge [fontsize=10.0]
+    28830939[label="{LocalTable|CUSTOMERS}"];
+    2049991[label="{LocalTable|ADDRESSES}"];
+    27351783[label="{LocalView|CUSTOMER_ADDRESSES}"];
+    5709462[label="{LocalTable|CARS}"];
+    26807578[label="{LocalTable|CONTRACTS}"];
+    19613595[label="{LocalView|CUSTOMER_RENTALS}"];
+    6956340[label="{LocalTable|HOTELS}"];
+    11566659[label="{LocalTable|CABINS}"];
+    20021468[label="{LocalView|LOCATIONS}"];
+    16975564[label="{LocalView|REGISTRATIONS}"];
+    28532345[label="{LocalView|EVENTS}"];
+    16744380[label="{LocalView|ALL_ADDRESSES}"];
+    28830939->27351783[];
+    2049991->27351783[];
+    28830939->19613595[];
+    5709462->19613595[];
+    26807578->19613595[];
+    6956340->20021468[];
+    11566659->20021468[];
+    28830939->16975564[];
+    20021468->16975564[];
+    19613595->28532345[];
+    16975564->28532345[];
+    2049991->16744380[];
+    20021468->16744380[];
+}

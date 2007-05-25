@@ -988,7 +988,8 @@
 > -- Part 1. index created on empty column store table --
 > -------------------------------------------------------
 > -- Use LucidDB personality
-> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> alter session implementation set jar
+>     sys_boot.sys_boot.luciddb_index_only_plugin;
 > 
 > create table lbmemps(
 >     empno integer not null,
@@ -1034,6 +1035,9 @@
 '110','Eric','20'
 '120','Wilma','20'
 '120','Wilma','20'
+> 
+> -- fake row count so that index access is considered
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'LBMEMPS', 100);
 > 
 > -- the most simple case
 > explain plan for
@@ -1208,11 +1212,11 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBMEMPS$ENAME]])'
-'      LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[3])'
+'      LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[3])'
+'        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[3], ridLimitParamId=[1])'
 '          LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '            FennelValuesRel(tuples=[[{ '[', 10, ']', 10 }, { '[', 20, ']', 20 }]])'
-'        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[4])'
+'        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[3], ridLimitParamId=[4])'
 '          LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[EMPNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '            FennelValuesRel(tuples=[[{ '[', 110, ']', 110 }, { '[', 120, ']', 120 }]])'
 > 
@@ -1278,10 +1282,10 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBMEMPS$ENAME]])'
-'      LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[ENAME_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'      LcsIndexIntersectRel(startRidParamId=[1], rowLimitParamId=[2])'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[ENAME_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '          FennelValuesRel(tuples=[[{ '[', 'Fred', ']', 'Fred' }]])'
-'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '          FennelValuesRel(tuples=[[{ '[', 10, ']', 10 }]])'
 > 
 > select * from lbmemps where deptno = 10 and ename = 'Fred' order by empno;
@@ -1340,10 +1344,10 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBMEMPS$ENAME]])'
-'      LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'      LcsIndexIntersectRel(startRidParamId=[1], rowLimitParamId=[2])'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '          FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
-'        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[3])'
+'        LcsIndexMergeRel(consumerSridParamId=[1], segmentLimitParamId=[2], ridLimitParamId=[3])'
 '          LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[EMPNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '            FennelValuesRel(tuples=[[{ '[', 100, ']', 200 }]])'
 > 
@@ -1364,12 +1368,12 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBMEMPS$ENAME]])'
-'      LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[ENAME_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'      LcsIndexIntersectRel(startRidParamId=[1], rowLimitParamId=[2])'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[ENAME_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '          FennelValuesRel(tuples=[[{ '[', 'Eric', ']', 'Eric' }]])'
-'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '          FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
-'        LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[1], ridLimitParamId=[3])'
+'        LcsIndexMergeRel(consumerSridParamId=[1], segmentLimitParamId=[2], ridLimitParamId=[3])'
 '          LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[EMPNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '            FennelValuesRel(tuples=[[{ '[', 100, ']', 200 }]])'
 > 
@@ -1408,6 +1412,9 @@
 > insert into multikey values (1, 4);
 > insert into multikey values (2, 2);
 > create index imultikey on multikey(a, b);
+> 
+> -- fake row count so that index access is considered
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'MULTIKEY', 100);
 > 
 > !set outputformat csv
 > explain plan for select * from multikey where a = 1 and b > 1;
@@ -1462,6 +1469,9 @@
 >     age int)
 > server sys_column_store_data_server
 > create index age_idx on person(age);
+> 
+> -- fake row count so that index access is considered
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'PERSON', 100);
 > 
 > -- index search
 > explain plan for
@@ -1518,19 +1528,19 @@
 > -- agg with index search
 > explain plan for 
 > select avg(age) from person where age > 30;
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                              column0                                                                               |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                          |
-|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                                           |
-|     IteratorToFennelConverter                                                                                                                                      |
-|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], $f0=[$t3])                                                               |
-|         FennelToIteratorConverter                                                                                                                                  |
-|           LcsIndexAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                                         |
-|             FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                                                                        |
-|               LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
-|                 FennelValuesRel(tuples=[[{ '(', 30, '+', null }]])                                                                                                 |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                                                                                                       column0                                                                                                                                                                                                                                        |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|     IteratorToFennelConverter                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t0):DOUBLE], expr#3=[CAST($t1):DOUBLE NOT NULL], expr#4=[/($t2, $t3)], expr#5=[1E6], expr#6=[*($t4, $t5)], expr#7=[CAST($t6):BIGINT], expr#8=[Reinterpret($t7)], expr#9=[Reinterpret($t8)], expr#10=[0], expr#11=[>($t9, $t10)], expr#12=[500000], expr#13=[+($t9, $t12)], expr#14=[-($t9, $t12)], expr#15=[CASE($t11, $t13, $t14)], expr#16=[1000000], expr#17=[/INT($t15, $t16)], expr#18=[CAST($t17):INTEGER], $f0=[$t18])  |
+|         FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|           LcsIndexAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                                                                                                                                                                                                                                                                                                                                                           |
+|             FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                                                                                                                                                                                                                                                                                                                                                                                          |
+|               LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])                                                                                                                                                                                                                                                                                                                    |
+|                 FennelValuesRel(tuples=[[{ '(', 30, '+', null }]])                                                                                                                                                                                                                                                                                                                                                                                                                   |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 > 
 > -- multikey
 > explain plan for 
@@ -1619,39 +1629,39 @@
 > -- TODO: implement interposed calc when we have sort order propagation
 > explain plan for 
 > select avg(age+1) from person;
-+------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                 column0                                                                  |
-+------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                |
-|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                 |
-|     IteratorToFennelConverter                                                                                                            |
-|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], $f0=[$t3])                                     |
-|         FennelToIteratorConverter                                                                                                        |
-|           FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                 |
-|             IteratorToFennelConverter                                                                                                    |
-|               IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[+($t0, $t1)], $f0=[$t2])                                                |
-|                 FennelToIteratorConverter                                                                                                |
-|                   LcsRowScanRel(table=[[LOCALDB, LBM, PERSON]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PERSON$AGE]])  |
-+------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                                                                                                       column0                                                                                                                                                                                                                                        |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|     IteratorToFennelConverter                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t0):DOUBLE], expr#3=[CAST($t1):DOUBLE NOT NULL], expr#4=[/($t2, $t3)], expr#5=[1E6], expr#6=[*($t4, $t5)], expr#7=[CAST($t6):BIGINT], expr#8=[Reinterpret($t7)], expr#9=[Reinterpret($t8)], expr#10=[0], expr#11=[>($t9, $t10)], expr#12=[500000], expr#13=[+($t9, $t12)], expr#14=[-($t9, $t12)], expr#15=[CASE($t11, $t13, $t14)], expr#16=[1000000], expr#17=[/INT($t15, $t16)], expr#18=[CAST($t17):INTEGER], $f0=[$t18])  |
+|         FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|           FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                                                                                                                                                                                                                                                                                                                                                             |
+|             IteratorToFennelConverter                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|               IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[+($t0, $t1)], $f0=[$t2])                                                                                                                                                                                                                                                                                                                                                                                            |
+|                 FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|                   LcsRowScanRel(table=[[LOCALDB, LBM, PERSON]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PERSON$AGE]])                                                                                                                                                                                                                                                                                                                                              |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 > 
 > explain plan for 
 > select avg(age+1) from person where age = 30;
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                 column0                                                                                  |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                |
-|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                                                 |
-|     IteratorToFennelConverter                                                                                                                                            |
-|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], $f0=[$t3])                                                                     |
-|         FennelToIteratorConverter                                                                                                                                        |
-|           FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                                                 |
-|             IteratorToFennelConverter                                                                                                                                    |
-|               IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[+($t0, $t1)], $f0=[$t2])                                                                                |
-|                 FennelToIteratorConverter                                                                                                                                |
-|                   LcsNormalizerRel                                                                                                                                       |
-|                     LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
-|                       FennelValuesRel(tuples=[[{ '[', 30, ']', 30 }]])                                                                                                   |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                                                                                                       column0                                                                                                                                                                                                                                        |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|     IteratorToFennelConverter                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t0):DOUBLE], expr#3=[CAST($t1):DOUBLE NOT NULL], expr#4=[/($t2, $t3)], expr#5=[1E6], expr#6=[*($t4, $t5)], expr#7=[CAST($t6):BIGINT], expr#8=[Reinterpret($t7)], expr#9=[Reinterpret($t8)], expr#10=[0], expr#11=[>($t9, $t10)], expr#12=[500000], expr#13=[+($t9, $t12)], expr#14=[-($t9, $t12)], expr#15=[CASE($t11, $t13, $t14)], expr#16=[1000000], expr#17=[/INT($t15, $t16)], expr#18=[CAST($t17):INTEGER], $f0=[$t18])  |
+|         FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|           FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                                                                                                                                                                                                                                                                                                                                                             |
+|             IteratorToFennelConverter                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|               IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[+($t0, $t1)], $f0=[$t2])                                                                                                                                                                                                                                                                                                                                                                                            |
+|                 FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|                   LcsNormalizerRel                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|                     LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])                                                                                                                                                                                                                                                                                                              |
+|                       FennelValuesRel(tuples=[[{ '[', 30, ']', 30 }]])                                                                                                                                                                                                                                                                                                                                                                                                               |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 > 
 > ----------------------------------------------------------
 > -- Tests to exercise using startrid in bitmap index search
@@ -1680,28 +1690,28 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$A, SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$B, SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$FAKERID]])'
-'    LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'    LcsIndexIntersectRel(startRidParamId=[1], rowLimitParamId=[2])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '        FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '        FennelValuesRel(tuples=[[{ '[', 0, ']', 0 }]])'
 > explain plan for select * from ridsearchtable where b = 0 and a = 3;
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$A, SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$B, SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$FAKERID]])'
-'    LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'    LcsIndexIntersectRel(startRidParamId=[1], rowLimitParamId=[2])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '        FennelValuesRel(tuples=[[{ '[', 3, ']', 3 }]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '        FennelValuesRel(tuples=[[{ '[', 0, ']', 0 }]])'
 > explain plan for select * from ridsearchtable where b = 0 and a = 1;
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$A, SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$B, SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$FAKERID]])'
-'    LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'    LcsIndexIntersectRel(startRidParamId=[1], rowLimitParamId=[2])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '        FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '        FennelValuesRel(tuples=[[{ '[', 0, ']', 0 }]])'
 > 
 > !set outputformat table
@@ -1760,28 +1770,28 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$A, SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$B, SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$FAKERID]])'
-'    LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'    LcsIndexIntersectRel(startRidParamId=[1], rowLimitParamId=[2])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '        FennelValuesRel(tuples=[[{ '[', 0, ']', 0 }]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '        FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
 > explain plan for select * from ridsearchtable where b = 0 and a = 3;
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$A, SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$B, SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$FAKERID]])'
-'    LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'    LcsIndexIntersectRel(startRidParamId=[1], rowLimitParamId=[2])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '        FennelValuesRel(tuples=[[{ '[', 0, ']', 0 }]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '        FennelValuesRel(tuples=[[{ '[', 3, ']', 3 }]])'
 > explain plan for select * from ridsearchtable where b = 0 and a = 1;
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$A, SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$B, SYS$CLUSTERED_INDEX$RIDSEARCHTABLE$FAKERID]])'
-'    LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[1])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'    LcsIndexIntersectRel(startRidParamId=[1], rowLimitParamId=[2])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '        FennelValuesRel(tuples=[[{ '[', 0, ']', 0 }]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[2], rowLimitParamId=[1])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, RIDSEARCHTABLE]], index=[I_A], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[1], rowLimitParamId=[2])'
 '        FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])'
 > 
 > !set outputformat table
@@ -1835,11 +1845,12 @@
 > select * from lbmdepts, lbmemps where lbmemps.deptno = 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelCartesianProductRel(leftouterjoin=[false])'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMDEPTS$DEPTNO]])'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBMEMPS$ENAME]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'        FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
+'  FennelReshapeRel(projection=[[3, 0, 1, 2]], outputRowType=[RecordType(INTEGER DEPTNO, INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO0) NOT NULL])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBMEMPS$ENAME]])'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'          FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
+'      LcsRowScanRel(table=[[LOCALDB, LBM, LBMDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMDEPTS$DEPTNO]])'
 > 
 > select * from lbmdepts, lbmemps where lbmemps.deptno = 2;
 'DEPTNO','EMPNO','ENAME','DEPTNO0'
@@ -1850,12 +1861,12 @@
 >               (select * from lbmemps where lbmemps.deptno = 2) view;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[DEPTNO, EMPNO, ENAME, DEPTNO]])'
+'  FennelReshapeRel(projection=[[3, 0, 1, 2]], outputRowType=[RecordType(INTEGER DEPTNO, INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO) NOT NULL])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
-'      LcsRowScanRel(table=[[LOCALDB, LBM, LBMDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMDEPTS$DEPTNO]])'
 '      LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBMEMPS$ENAME]])'
 '        LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '          FennelValuesRel(tuples=[[{ '[', 2, ']', 2 }]])'
+'      LcsRowScanRel(table=[[LOCALDB, LBM, LBMDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMDEPTS$DEPTNO]])'
 > 
 > select * from lbmdepts, 
 >               (select * from lbmemps where lbmemps.deptno = 2) view;
@@ -1878,6 +1889,390 @@
 +----+----+----+-----+-----+-----+
 | 1  | 2  | 3  | 1   | 2   | 3   |
 +----+----+----+-----+-----+-----+
+> drop table t cascade;
+> 
+> ----------------------------------------
+> -- Test for cost based index access   --
+> -- 1.1 Single table index access path --
+> --     with stats                     --
+> ----------------------------------------
+> !set outputformat csv
+> 
+> -- analyze table
+> create table test(a int, b int, c int, d int);
+> 
+> insert into test values(10,20,30,40);
+> insert into test values(11,21,31,41);
+> insert into test values(12,22,32,42);
+> insert into test values(13,23,33,43);
+> insert into test values(14,24,34,44);
+> insert into test values(15,25,35,45);
+> insert into test values(10,20,30,40);
+> insert into test values(11,21,31,41);
+> insert into test values(12,22,32,42);
+> insert into test values(13,23,33,43);
+> insert into test values(14,24,34,44);
+> insert into test values(15,25,35,45);
+> insert into test values(10,20,30,40);
+> insert into test values(11,21,31,41);
+> insert into test values(12,22,32,42);
+> insert into test values(13,23,33,43);
+> insert into test values(14,24,34,44);
+> insert into test values(15,25,35,45);
+> 
+> -- create index test_ab on test(a, b);
+> create index test_cb on test(c, b);
+> create index test_b on test(b);
+> create index test_ba on test(b, a);
+> 
+> -- plan without analyze
+> explain plan for
+> select * from test
+> where a = 10 and b = 20 and c > 30;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LBM, TEST]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST$A, SYS$CLUSTERED_INDEX$TEST$B, SYS$CLUSTERED_INDEX$TEST$C, SYS$CLUSTERED_INDEX$TEST$D]])'
+'    LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[3])'
+'      LcsIndexMergeRel(consumerSridParamId=[2], segmentLimitParamId=[3], ridLimitParamId=[1])'
+'        LcsIndexSearchRel(table=[[LOCALDB, LBM, TEST]], index=[TEST_CB], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'          FennelValuesRel(tuples=[[{ '(', 30, '+', null }]])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, TEST]], index=[TEST_BA], projection=[*], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]], startRidParamId=[2], rowLimitParamId=[3])'
+'        FennelValuesRel(tuples=[[{ '[', 20, 10, ']', 20, 10 }]])'
+> 
+> explain plan for
+> select * from test
+> where b = 20;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LBM, TEST]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST$A, SYS$CLUSTERED_INDEX$TEST$B, SYS$CLUSTERED_INDEX$TEST$C, SYS$CLUSTERED_INDEX$TEST$D]])'
+'    LcsIndexSearchRel(table=[[LOCALDB, LBM, TEST]], index=[TEST_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'      FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
+> 
+> select * from test
+> where a = 10 and b = 20 and c > 10
+> order by a;
+'A','B','C','D'
+'10','20','30','40'
+'10','20','30','40'
+'10','20','30','40'
+> 
+> select * from test
+> where b = 20
+> order by a;
+'A','B','C','D'
+'10','20','30','40'
+'10','20','30','40'
+'10','20','30','40'
+> 
+> -- plan with analyze
+> analyze table test compute statistics for all columns;
+> 
+> explain plan for
+> select * from test
+> where a = 10 and b = 20 and c > 30;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LBM, TEST]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST$A, SYS$CLUSTERED_INDEX$TEST$B, SYS$CLUSTERED_INDEX$TEST$C, SYS$CLUSTERED_INDEX$TEST$D]], residual columns=[[2]])'
+'    LcsIndexSearchRel(table=[[LOCALDB, LBM, TEST]], index=[TEST_BA], projection=[*], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]], startRidParamId=[0], rowLimitParamId=[0])'
+'      FennelValuesRel(tuples=[[{ '[', 20, 10, ']', 20, 10 }]])'
+'    FennelValuesRel(tuples=[[{ '(', 30, '+', null }]])'
+> 
+> explain plan for
+> select * from test
+> where b = 20;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LBM, TEST]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TEST$A, SYS$CLUSTERED_INDEX$TEST$B, SYS$CLUSTERED_INDEX$TEST$C, SYS$CLUSTERED_INDEX$TEST$D]])'
+'    LcsIndexSearchRel(table=[[LOCALDB, LBM, TEST]], index=[TEST_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'      FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
+> 
+> select * from test
+> where a = 10 and b = 20 and c > 10
+> order by a;
+'A','B','C','D'
+'10','20','30','40'
+'10','20','30','40'
+'10','20','30','40'
+> 
+> select * from test
+> where b = 20
+> order by a;
+'A','B','C','D'
+'10','20','30','40'
+'10','20','30','40'
+'10','20','30','40'
+> 
+> drop table test cascade;
+> 
+> ----------------------------------------
+> -- Test for cost based index access   --
+> -- 1.2 Single table index access path --
+> --     with fake stats                --
+> ----------------------------------------
+> create table t(a varchar(20), b char(20), c varchar(20), d varchar(20));
+> 
+> create index t_abcd on t(a,b,c,d);
+> create index t_a on t(a);
+> create index t_b on t(b);
+> 
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'T', 100000);
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'LBM', 'T', 'A', 2, 100, 2, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'LBM', 'T', 'B', 3, 100, 3, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'LBM', 'T', 'C', 200, 100, 200, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'LBM', 'T', 'D', 300, 100, 300, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> 
+> -- deletion index
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$DELETION_INDEX$T', 2);
+> 
+> -- clustered index
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$A', 2);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$B', 3);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$C', 200);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$D', 300);
+> 
+> -- unclustered index
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'T_ABCD', 1000);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'T_A', 2);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'T_B', 2);
+> 
+> 
+> explain plan for
+> select * from t
+> where a= 'a' and b= 'b';
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LBM, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A, SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$C, SYS$CLUSTERED_INDEX$T$D]], residual columns=[[0]])'
+'    LcsIndexSearchRel(table=[[LOCALDB, LBM, T]], index=[T_B], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'      FennelValuesRel(tuples=[[{ '[', 'b                   ', ']', 'b                   ' }]])'
+'    FennelValuesRel(tuples=[[{ '[', 'a', ']', 'a' }]])'
+> 
+> -- change stats and try again
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'T', 100000);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$C', 20);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$D', 30);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'T_ABCD', 20);
+> 
+> explain plan for
+> select * from t
+> where a= 'a' and b= 'b';
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, LBM, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A, SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$C, SYS$CLUSTERED_INDEX$T$D]], residual columns=[[0, 1]])'
+'    FennelValuesRel(tuples=[[{ '[', 'a', ']', 'a' }]])'
+'    FennelValuesRel(tuples=[[{ '[', 'b                   ', ']', 'b                   ' }]])'
+> 
+> drop table t cascade;
+> 
+> ----------------------------------------
+> -- Test for cost based index access   --
+> -- 2. Semijoin index access path      --
+> --     with fake stats                --
+> ----------------------------------------
+> create table t(b char(20), d varchar(20) not null);
+> 
+> create index it_b on t(b);
+> create index it_bd on t(b, d);
+> create index it_d on t(d);
+> create index it_db on t(d, b);
+> 
+> insert into t values('abcdef', 'this is row 1');
+> insert into t values('abcdef', 'this is row 2');
+> insert into t values('abcdef', 'this is row 3');
+> insert into t values(null, 'this is row 4');
+> insert into t values(null, 'no match');
+> 
+> -- although this table has the same number of rows as t, we will force this
+> -- to be the dimension table in the semijoin by putting a dummy filter on
+> -- the table
+> 
+> create table smalltable(s1 varchar(128) not null, s3 varchar(128) not null);
+> 
+> insert into smalltable values('this is row 1', 'abcdef');
+> insert into smalltable values('this is row 2', 'abcdef');
+> insert into smalltable values('this is row 3', 'abcdef');
+> insert into smalltable values('this is row 4', 'abcdef');
+> insert into smalltable values('this is row 5', 'abcdef');
+> 
+> -- plan without stats
+> explain plan for
+> select *
+>     from t inner join smalltable s
+>     on t.b = s.s3 and s.s1 = 'this is row 1' 
+>     order by d;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[1]], discardDuplicates=[false])'
+'    FennelReshapeRel(projection=[[0, 1, 3, 4]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[2]], rightKeys=[[2]], joinType=[INNER])'
+'        FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, LBM, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$D]])'
+'        FennelReshapeRel(projection=[[0, 1, 1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, LBM, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[0]])'
+'            FennelValuesRel(tuples=[[{ '[', 'this is row 1', ']', 'this is row 1' }]])'
+> 
+> explain plan for 
+> select *
+>     from t inner join smalltable s
+>     on t.d = s.s1 where s.s3 = 'abcdef' order by d;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[1]], discardDuplicates=[false])'
+'    FennelReshapeRel(projection=[[0, 1, 3, 4]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], proj#0..2=[{exprs}])'
+'            FennelToIteratorConverter'
+'              LcsRowScanRel(table=[[LOCALDB, LBM, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$D]])'
+'        LcsRowScanRel(table=[[LOCALDB, LBM, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
+'          FennelValuesRel(tuples=[[{ '[', 'abcdef', ']', 'abcdef' }]])'
+> 
+> select *
+>     from t inner join smalltable s
+>     on t.b = s.s3 and s.s1 = 'this is row 1' 
+>     order by d;
+'B','D','S1','S3'
+'abcdef              ','this is row 1','this is row 1','abcdef'
+'abcdef              ','this is row 2','this is row 1','abcdef'
+'abcdef              ','this is row 3','this is row 1','abcdef'
+> 
+> select *
+>     from t inner join smalltable s
+>     on t.d = s.s1 where s.s3 = 'abcdef' order by d;
+'B','D','S1','S3'
+'abcdef              ','this is row 1','this is row 1','abcdef'
+'abcdef              ','this is row 2','this is row 2','abcdef'
+'abcdef              ','this is row 3','this is row 3','abcdef'
+'','this is row 4','this is row 4','abcdef'
+> 
+> -- Create fake statistics.  The stats do not match the actual data in the
+> -- tables and are meant to force the optimizer to choose semijoins
+> 
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'T', 10000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'SMALLTABLE', 10);
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'LBM', 'T', 'B', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'LBM', 'T', 'D', 10, 100, 10, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'LBM', 'SMALLTABLE', 'S1', 10, 100, 10, 1,
+>     'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'LBM', 'SMALLTABLE', 'S3', 10, 100, 10, 1,
+>     'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> 
+> -- deletion index
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$DELETION_INDEX$T', 2);
+> 
+> -- clustered index
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$B', 2);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$T$D', 2);
+> 
+> -- unclustered index
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'IT_B', 10);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'IT_BD', 20);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'IT_D', 1);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'IT_DB', 2);
+> 
+> -- deletion index
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$DELETION_INDEX$SMALLTABLE', 2);
+> 
+> -- clustered index
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$SMALLTABLE$S1', 2);
+> call sys_boot.mgmt.stat_set_page_count('LOCALDB', 'LBM', 'SYS$CLUSTERED_INDEX$SMALLTABLE$S3', 2);
+> 
+> explain plan for
+> select *
+>     from t inner join smalltable s
+>     on t.b = s.s3 and s.s1 = 'this is row 1' 
+>     order by d;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[1]], discardDuplicates=[false])'
+'    FennelReshapeRel(projection=[[0, 1, 3, 4]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[2]], rightKeys=[[2]], joinType=[INNER])'
+'        FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, LBM, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$D]])'
+'            LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'              LcsIndexSearchRel(table=[[LOCALDB, LBM, T]], index=[IT_B], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                  LhxAggRel(groupCount=[1])'
+'                    IteratorToFennelConverter'
+'                      IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t1])'
+'                        FennelToIteratorConverter'
+'                          LcsRowScanRel(table=[[LOCALDB, LBM, SMALLTABLE]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[0]])'
+'                            FennelValuesRel(tuples=[[{ '[', 'this is row 1', ']', 'this is row 1' }]])'
+'        FennelReshapeRel(projection=[[0, 1, 1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, LBM, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[0]])'
+'            FennelValuesRel(tuples=[[{ '[', 'this is row 1', ']', 'this is row 1' }]])'
+> 
+> explain plan for 
+> select *
+>     from t inner join smalltable s
+>     on t.d = s.s1 where s.s3 = 'abcdef' order by d;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[1]], discardDuplicates=[false])'
+'    FennelReshapeRel(projection=[[0, 1, 3, 4]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL D, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S1, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL S3) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], proj#0..2=[{exprs}])'
+'            FennelToIteratorConverter'
+'              LcsRowScanRel(table=[[LOCALDB, LBM, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$B, SYS$CLUSTERED_INDEX$T$D]])'
+'                LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'                  LcsIndexSearchRel(table=[[LOCALDB, LBM, T]], index=[IT_D], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                    FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                      LhxAggRel(groupCount=[1])'
+'                        IteratorToFennelConverter'
+'                          IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], S1=[$t1])'
+'                            FennelToIteratorConverter'
+'                              LcsRowScanRel(table=[[LOCALDB, LBM, SMALLTABLE]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
+'                                FennelValuesRel(tuples=[[{ '[', 'abcdef', ']', 'abcdef' }]])'
+'        LcsRowScanRel(table=[[LOCALDB, LBM, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SMALLTABLE$S3]], residual columns=[[1]])'
+'          FennelValuesRel(tuples=[[{ '[', 'abcdef', ']', 'abcdef' }]])'
+> 
+> select *
+>     from t inner join smalltable s
+>     on t.b = s.s3 and s.s1 = 'this is row 1' 
+>     order by d;
+'B','D','S1','S3'
+'abcdef              ','this is row 1','this is row 1','abcdef'
+'abcdef              ','this is row 2','this is row 1','abcdef'
+'abcdef              ','this is row 3','this is row 1','abcdef'
+> 
+> select *
+>     from t inner join smalltable s
+>     on t.d = s.s1 where s.s3 = 'abcdef' order by d;
+'B','D','S1','S3'
+'abcdef              ','this is row 1','this is row 1','abcdef'
+'abcdef              ','this is row 2','this is row 2','abcdef'
+'abcdef              ','this is row 3','this is row 3','abcdef'
+'','this is row 4','this is row 4','abcdef'
+> 
+> drop table t cascade;
+> drop table smalltable cascade;
+> 
+> -- Test to make sure index only scans aren't enabled by default.  Earlier, we
+> -- verified that when index only scans are enabled, it is used with the
+> -- following select query.
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> explain plan for
+>     select deptno from lbmemps where deptno = 20 order by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LBMEMPS$DEPTNO]])'
+'      LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'        FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
 > 
 > --------------
 > -- Clean up --

@@ -86,28 +86,17 @@
       </test>
 
       <test name="null" requiresSuccess="download">
-        <!-- unresolved issue: FRG-167 DESC not implemented yet -->
-        <!-- FRG-208 -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
+        <!-- FRG-208, FRG-167 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/null.sql"/>
       </test>
 
       <test name="order" requiresSuccess="download">
-        <!-- TODO: FRG-167 DESC, ASC not implemented yet -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
+        <!-- FRG-167  -->
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/order.sql"/>
       </test>
 
       <test name="scalarSubquery" requiresSuccess="download">
         <!--  FRG-114 -->
-        <!-- Subqueries not completely supported -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/scalarSubquery.sql"/>
       </test>
 

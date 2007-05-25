@@ -383,6 +383,9 @@ public abstract class SqlDateTimeWithoutTZ
      */
     public String toString()
     {
+        if (isNull) {
+            return null;
+        }
         return value.toString();
     }
 
@@ -594,7 +597,7 @@ public abstract class SqlDateTimeWithoutTZ
         {
             return new Date(value.getJdbcDate(defaultZone));
         }
-
+        
         // implement SqlDateTimeWithoutTZ
         protected void assignFromString(
             String s,
@@ -607,7 +610,7 @@ public abstract class SqlDateTimeWithoutTZ
                 throw new IllegalArgumentException();
             }
             value = date;
-        }
+            }
 
         // implement SqlDateTimeWithoutTZ
         protected String getFormat()
@@ -746,7 +749,7 @@ public abstract class SqlDateTimeWithoutTZ
                 timestamp.setZonelessTime(t);
             }
             value = timestamp;
-        }
+            }
 
         // implement SqlDateTimeWithoutTZ
         protected String getFormat()

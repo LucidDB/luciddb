@@ -90,7 +90,7 @@ public:
         VersionedSegment *pVersionedSegment =
             SegmentFactory::dynamicCast<VersionedSegment *>(pLinearSegment);
         assert(pVersionedSegment);
-        pVersionedSegment->recover(firstLogPageId);
+        pVersionedSegment->recover(pLinearSegment, firstLogPageId);
         testSequentialRead();
         closeStorage();
         firstLogPageId = NULL_PAGE_ID;

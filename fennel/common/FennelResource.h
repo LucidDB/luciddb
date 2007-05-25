@@ -86,6 +86,11 @@ class FennelResource : ResourceBundle
     std::string uniqueConstraintViolated() const;
 
     /**
+     * <code>incompatibleDataFormat</code> is 'Incompatible data format encountered'
+     */
+    std::string incompatibleDataFormat() const;
+
+    /**
      * <code>readDataFailed</code> is 'Could not read data file {0}'
      */
     std::string readDataFailed(const std::string &p0) const;
@@ -170,6 +175,7 @@ class FennelResource : ResourceBundle
     ResourceDefinition _scalarQueryReturnedMultipleRows;
     ResourceDefinition _scratchMemExhausted;
     ResourceDefinition _uniqueConstraintViolated;
+    ResourceDefinition _incompatibleDataFormat;
     ResourceDefinition _readDataFailed;
     ResourceDefinition _dataTransferFailed;
     ResourceDefinition _writeLogFailed;

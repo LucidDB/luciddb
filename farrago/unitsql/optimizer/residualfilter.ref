@@ -197,7 +197,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[2], expr#3=[/($t1, $t2)], expr#4=[>($t3, $t2)], A=[$t0], $condition=[$t4])'
+'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[2], expr#3=[CAST($t1):DOUBLE], expr#4=[CAST($t2):DOUBLE NOT NULL], expr#5=[/($t3, $t4)], expr#6=[1E6], expr#7=[*($t5, $t6)], expr#8=[CAST($t7):BIGINT], expr#9=[Reinterpret($t8)], expr#10=[Reinterpret($t9)], expr#11=[1000000], expr#12=[*($t2, $t11)], expr#13=[>($t10, $t12)], A=[$t0], $condition=[$t13])'
 '      LcsRowScanRel(table=[[LOCALDB, RES, T1]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A, SYS$CLUSTERED_INDEX$T1$C]], residual columns=[[0]])'
 '        FennelValuesRel(tuples=[[{ '(', 5, '+', null }]])'
 > 

@@ -426,16 +426,6 @@ public class DdlRelationalHandler
     }
 
     // implement FarragoSessionDdlHandler
-    public void validateTruncation(FemLocalTable table)
-    {
-        for (FemLocalIndex index :
-            FarragoCatalogUtil.getTableIndexes(repos, table))
-        {
-            validator.scheduleTruncation(index);
-        }
-    }
-
-    // implement FarragoSessionDdlHandler
     public void executeCreation(FemLocalIndex index)
     {
         if (FarragoCatalogUtil.isIndexTemporary(index)) {
@@ -488,15 +478,6 @@ public class DdlRelationalHandler
             validator.getDataWrapperCache(),
             index,
             false);
-    }
-
-    // implement FarragoSessionDdlHandler
-    public void executeTruncation(FemLocalIndex index)
-    {
-        validator.getIndexMap().dropIndexStorage(
-            validator.getDataWrapperCache(),
-            index,
-            true);
     }
 
     protected boolean isReplacingType(CwmModelElement obj)

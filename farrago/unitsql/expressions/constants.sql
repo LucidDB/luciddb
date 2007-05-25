@@ -36,5 +36,8 @@ alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
 
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 alter session set "errorMax" = 25;
+!set shownestederrs true
 
 select cast('xyz' as int)+2 from (values(0));
+
+!set shownestederrs false

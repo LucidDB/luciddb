@@ -445,6 +445,11 @@ public class CalcRexImplementorTableImpl
                 CalcProgramBuilder.nativeDiv));
 
         register(
+            SqlStdOperatorTable.divideIntegerOperator,
+            new BinaryNumericMakeSametypeImplementor(
+                CalcProgramBuilder.nativeDiv));
+
+        register(
             SqlStdOperatorTable.caseOperator,
             new CaseImplementor());
 

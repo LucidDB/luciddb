@@ -28,7 +28,9 @@
 #include "fennel/common/CompoundId.h"
 #include "fennel/common/ClosableObject.h"
 
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/utility.hpp>
+#include <hash_map>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -41,7 +43,8 @@ FENNEL_BEGIN_NAMESPACE
 class Segment
     : public MappedPageListener,
         public boost::noncopyable,
-        public ClosableObject
+        public ClosableObject,
+        public boost::enable_shared_from_this<Segment>
 {
     /**
      * Number of usable bytes on each page before footer.
@@ -49,10 +52,21 @@ class Segment
     uint cbUsablePerPage;
 
 protected:
+
+    typedef std::hash_map<PageId,PageId> PageMap;
+    typedef PageMap::const_iterator PageMapConstIter;
+
     /**
      * Cache managing pages of this segment.
      */
     SharedCache pCache;
+
+    /**
+     * The tracing segment associated with this segment, if tracing is turned
+     * on.  A weak_ptr is used due to the circular shared pointers between
+     * this segment and its tracing segment.
+     */
+    WeakSegment pTracingSegment;
 
     explicit Segment(SharedCache);
     void setUsablePageSize(uint);
@@ -142,6 +156,19 @@ public:
      * @return number of pages allocated from this segment
      */
     virtual BlockNum getAllocatedSizeInPages() = 0;
+
+    /**
+     * @return tracing segment associated with this segment if tracing is turned
+     * on; otherwise, returns the segment itself
+     */
+    SharedSegment getTracingSegment();
+
+    /**
+     * Sets the tracing segment associated with this segment
+     *
+     * @param pTracingSegmentInit the tracing segment
+     */
+    void setTracingSegment(WeakSegment pTracingSegmentInit);
     
     /**
      * Checkpoints this segment.
@@ -249,6 +276,35 @@ public:
     virtual bool isPageIdAllocated(PageId pageId) = 0;
     
     /**
+     * Determines whether a page can be updated in-place.
+     *
+     * @param pageId pageId of the page being modified
+     *
+     * @param needsTranslation true if the pageId needs to be mapped to the
+     * appropriate update page; defaults to false
+     *
+     * @return NULL_PAGE_ID if the page can be updated in place; otherwise, the
+     * pageId of the page that should be used when updates are made to the page
+     */
+    virtual PageId updatePage(PageId pageId, bool needsTranslation = false);
+
+    /**
+     * Returns the mapped page listener corresponding to a page
+     *
+     * @param blockId blockId of the page whose page listener we are returning
+     *
+     * @return segment corresponding to mapped page listener
+     */
+    virtual MappedPageListener *getMappedPageListener(BlockId blockId);
+
+    /**
+     * Discards a page from the cache
+     *
+     * @param blockId block Id corresponding to the page to be discarded
+     */
+    virtual void discardCachePage(BlockId blockId);
+
+    /**
      * Constructs a linear PageId based on a linear page number.
      */
     static PageId getLinearPageId(BlockNum iPage);
@@ -257,6 +313,9 @@ public:
      * Obtains the linear page number from a linear PageId.
      */
     static BlockNum getLinearBlockNum(PageId pageId);
+
+    // implement MappedPageListener
+    virtual MappedPageListener *getTracingListener();
 };
 
 inline PageId Segment::getLinearPageId(BlockNum iPage)

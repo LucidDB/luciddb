@@ -1,0 +1,15 @@
+select *
+from class LocalSchema
+where name = 'CAR_RENTALS' then (
+    follow composite forward destination class ColumnSet then (
+        follow origin end client then (
+            follow destination end supplier destination class ColumnSet
+        )
+        union
+        follow origin end supplier then (
+            follow destination end client destination class ColumnSet
+        )
+    ) gather with parent then (
+        follow composite backward destination class LocalSchema
+    )
+);

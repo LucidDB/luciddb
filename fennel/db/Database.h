@@ -94,6 +94,8 @@ class Database
 
     bool forceTxns;
 
+    bool disableSnapshots;
+
     bool recoveryRequired;
 
     DeviceMode openMode;
@@ -129,6 +131,8 @@ class Database
 // ----------------------------------------------------------------------
 // internal helper methods
 // ----------------------------------------------------------------------
+
+    void init();
 
     void createTxnLog(DeviceMode);
     
@@ -167,6 +171,7 @@ public:
     static ParamName paramDatabaseDir;
     static ParamName paramResourceDir;
     static ParamName paramForceTxns;
+    static ParamName paramDisableSnapshots;
     static ParamName paramDatabasePrefix;
     static ParamName paramTempPrefix;
     static ParamName paramShadowLogPrefix;
@@ -203,7 +208,9 @@ public:
     SharedCheckpointThread getCheckpointThread() const;
 
     // implement SegmentMap
-    virtual SharedSegment getSegmentById(SegmentId segmentId);
+    virtual SharedSegment getSegmentById(
+        SegmentId segmentId,
+        SharedSegment pDataSegment);
 
     // implement StatsSource
     virtual void writeStats(StatsTarget &target);
@@ -215,6 +222,8 @@ public:
     bool isRecoveryRequired() const;
 
     bool shouldForceTxns() const;
+
+    bool areSnapshotsEnabled() const;
 
     void recoverOnline();
 
@@ -235,6 +244,12 @@ public:
     void requestCheckpoint(
         CheckpointType checkpointType,
         bool async);
+
+    /**
+     * Deallocates old snapshot pages that are no longer referenced by
+     * any active transactions
+     */
+    void deallocateOldPages();
 };
 
 FENNEL_END_NAMESPACE

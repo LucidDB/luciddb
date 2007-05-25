@@ -1,4 +1,4 @@
-LucidDB Binary Release 0.6.0
+LucidDB Binary Release 0.7.0
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -20,11 +20,58 @@ http://docs.eigenbase.org/LucidDbBuildFromSourceDistribution
 RELEASE NOTES
 
 This binary release is intended for use by anyone who wants to run
-LucidDB without having to build anything.  
+LucidDB without having to build anything.
+
+LucidDB packaging does not yet support upgrade, so install this
+release in a fresh location; do not attempt to unpack over an existing
+installation!
 
 Please report issues at Eigenbase JIRA:
 
 http://issues.eigenbase.org
+
+----------------------------------------------------------------------
+CHANGE HISTORY
+
+Changes since 0.6.0 include
+
+- read/write concurrency with snapshot consistency
+- cost-based index selection
+- new options for JDBC foreign data wrapper (FRG-267)
+- pushdown of filters into JDBC foreign data servers
+- fix for integer division behavior (round instead of truncate)
+- logging for export schema procedure now uses logDir parameter if set
+- pluggable authentication support via JAAS
+- new http option for client/server JDBC
+- fixes for out-of-disk exception handling
+- fix for btree split bug in incremental load
+- fixes for certain btree search bugs visible after upsert
+- disablement of suboptimal index-only scans
+- fix for LDB-125 (flattened hierarchy cycle reporting)
+- fix for an obscure outer join optimization bug
+- fix for cast of null values to/from certain datatypes
+- new applib routines (split strings, enforce row constraints)
+- fix for error message localization setup
+- fix for row filtering bug with clusters on multiple columns
+- upgrades of miscellaneous thirdparty libraries
+- new check on startup for incompatible catalog version
+- mbeans for management and monitoring of LucidDB via JMX
+- new DYNAMIC_FUNCTION qualifier on UDR's
+- full error stack tracing for UDR invocation and scalar expression
+  exceptions
+- new warnings for SQL/MED source metadata changes
+- refined fix for LDB-90
+- improved SQL pretty printing (FRG-190, FRG-232, FRG-234)
+- fix to flatfile reader when source column count < target column
+  count
+- moodss integration improvements
+- fixes for null value btree insertion order FNL-63)
+- fix for segfault in hash aggregate on large data sets
+- fix for segfault in error handling during load
+- fixes for calendar generation regarding leap year, week start/end
+  dates
+- fix lingering table lock after executing DDL from within a UDR (FRG-141)
+- fix hang on abrupt shutdown during DML (LDB-150)
 
 ----------------------------------------------------------------------
 LICENSE
@@ -33,5 +80,5 @@ Copyright (C) 1999-2007 The Eigenbase Project and others
 
 This distribution of Eigenbase is licensed under the GNU General Public
 License; see file COPYING for details.  To obtain the source code
-from which this distribution was built, please visit 
+from which this distribution was built, please visit
 http://www.eigenbase.org/download.html.

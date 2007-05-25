@@ -502,6 +502,12 @@ public class FarragoRexToOJTranslatorTest
         checkTranslation("cast(x'00112233445566778899AABB' as varbinary(10))");
     }
 
+    public void testCastIntToVarchar()
+        throws Exception
+    {
+        checkTranslation("cast(cast(null as tinyint) as varchar(30))");
+    }
+    
     // TODO jvs 22-June-2004:  figure out a way to test codegen for
     // assignment of nullable value to NOT NULL field
 

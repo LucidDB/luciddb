@@ -168,6 +168,44 @@ void TracingSegment::delegatedCheckpoint(
     DelegatingSegment::delegatedCheckpoint(delegatingSegment,checkpointType);
 }
 
+MappedPageListener *TracingSegment::getMappedPageListener(BlockId blockId)
+{
+    // We need to retrieve the listener associated with the delegating
+    // segment, and then map the return value back to the parent tracing
+    // segment.
+    MappedPageListener *pListener =
+        getDelegateSegment()->getMappedPageListener(blockId);
+    FENNEL_TRACE(
+        TRACE_FINEST,
+        "getMappedPageListener for blockId " << std::hex << blockId
+            << " = " << std::hex << pListener);
+
+    return pListener->getTracingListener();
+}
+
+MappedPageListener *TracingSegment::notifyAfterPageCheckpointFlush(
+    CachePage &page)
+{
+    // We need to retrieve the listener associated with the delegating
+    // segment, and then map the return value back to the parent tracing
+    // segment.
+    MappedPageListener *pListener =
+        getDelegateSegment()->notifyAfterPageCheckpointFlush(page);
+    if (pListener == NULL) {
+        FENNEL_TRACE(
+            TRACE_FINER,
+            "notifyAfterPageCheckpointFlush for blockId " << std::hex <<
+                page.getBlockId() << " = NULL");
+        return pListener;
+    } else {
+        FENNEL_TRACE(
+            TRACE_FINER,
+            "notifyAfterPageCheckpointFlush for blockId " << std::hex <<
+                page.getBlockId() << " = " << std::hex << pListener);
+        return pListener->getTracingListener();
+    }
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End TracingSegment.cpp

@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <?xml-stylesheet type="text/xsl"
  href="http://eigenbase.sourceforge.net/resgen/Resource.xsl" ?>
-<!-- 
+<!--
   $Id$
   Farrago is an extensible data management system.
   Copyright (C) 2005-2005 The Eigenbase Project
@@ -92,8 +92,12 @@
 <text>Failed reading boot URL list</text>
 </exception>
 
-<exception id="400110" name="CatalogBootUrlUpdateFailed">
+<exception id="400120" name="CatalogBootUrlUpdateFailed">
 <text>Failed to modify boot URL list</text>
+</exception>
+
+<exception id="400130" name="CatalogModelTimestampCheckFailed">
+<text>Stored catalog model timestamp ''{0}'' does not match compiled catalog timestamp ''{1}''</text>
 </exception>
 
 <message name="CatalogBootstrapObjDescription">
@@ -832,6 +836,38 @@ Messages: {1}</text>
 <text>Retryable communication failure</text>
 </exception>
 
+<exception id="460160" name="DeletedFieldWarning"
+    className="java.sql.SQLWarning">
+<text>''{0}'' field ''{1}'' does not exist in external data source. It will be filled in with nulls.</text>
+</exception>
+
+<exception id="460170" name="TypeChangeWarning"
+    className="java.sql.SQLWarning">
+<text>''{0}'' field ''{1}'' has datatype ''{2}'' in external data source; it will be cast to datatype ''{3}''.</text>
+</exception>
+
+<exception id="460180" name="IncompatibleTypeChangeWarning"
+    className="java.sql.SQLWarning">
+<text>''{0}'' field ''{1}'' has datatype ''{2}'' in external data source which cannot be cast to datatype ''{3}''. It will be filled in with nulls.</text>
+</exception>
+
+<exception id="460190" name="AddedFieldWarning"
+    className="java.sql.SQLWarning">
+<text>''{0}'' has field ''{1}'' added in external data source.</text>
+</exception>
+
+<exception id="460200" name="NumberOfColumnsMismatch">
+<text>Number of fields in foreign table: ''{0}''. Number of fields in external data source: {1}''.</text>
+</exception>
+
+<exception id="460210" name="TypesOfColumnsMismatch">
+<text>External data source field ''{0}'' has datatype ''{1}'' which cannot be cast to datatype ''{2}'' of foreign table field ''{3}''.</text>
+</exception>
+
+<exception id="460220" name="DataServerIndexVersionFailed">
+<text>Failed to version index root page for {0}</text>
+</exception>
+
 <!-- NOTE:  Mock resources don't really need localization; this one is
      just here as an example of how to do i18n for wrapper properties.  -->
 
@@ -905,6 +941,10 @@ Messages: {1}</text>
 
 <exception id="469100" name="FlatFileMappedRequiresWithHeader">
 <text>Mapping source columns in data files to target columns specified by control files requires column names to be provided by data file headers.</text>
+</exception>
+
+<exception id="469110" name="FlatFileMappedRequiresLenient">
+<text>Mapping source columns in data files to target columns specified by control files requires server to be lenient.</text>
 </exception>
 
 <message name="MedFlatFile_DIRECTORY_Description">
@@ -1021,6 +1061,10 @@ Messages: {1}</text>
 
 <exception id="470100" name="SessionLoginFailed">
 <text>Login failed for {0}: invalid username/password combination</text>
+</exception>
+
+<exception id="470101" name="SessionLogoutFailed">
+<text>There was an error when logging out user {0}</text>
 </exception>
 
 <exception id="470110" name="SessionOptimizerFailed">
@@ -1409,7 +1453,7 @@ Messages: {1}</text>
 
 <exception id="520006" name="ExportSchemaNoTablesImported">
 <text>No tables to export for foreign_server={0} foreign_schema={1} exclude={2} table_list={3} table_pattern={4} temp schema={5}</text>
-</exception>  
+</exception>
 
 <exception id="520007" name="ExportSchemaCreateDirFailed">
 <text>Failed to create export directory {0}: {1}</text>

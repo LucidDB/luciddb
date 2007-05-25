@@ -21,34 +21,19 @@
 */
 package net.sf.farrago.session.mock;
 
-import java.util.List;
-
 import net.sf.farrago.catalog.FarragoRepos;
 import net.sf.farrago.catalog.FarragoReposTxnContext;
 import net.sf.farrago.cwm.core.CwmModelElement;
-import net.sf.farrago.cwm.relational.CwmCatalog;
-import net.sf.farrago.cwm.relational.CwmColumn;
-import net.sf.farrago.cwm.relational.CwmNamedColumnSet;
-import net.sf.farrago.cwm.relational.CwmSqldataType;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.ProcedureType;
 import net.sf.farrago.fem.med.FemDataServer;
 import net.sf.farrago.fem.med.FemDataWrapper;
-import net.sf.farrago.fem.sql2003.FemJar;
-import net.sf.farrago.fem.sql2003.FemLocalSchema;
-import net.sf.farrago.fem.sql2003.FemRoutine;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.FennelDbHandle;
 import net.sf.farrago.namespace.util.FarragoDataWrapperCache;
-import net.sf.farrago.session.FarragoSession;
-import net.sf.farrago.session.FarragoSessionIndexMap;
-import net.sf.farrago.session.FarragoSessionParser;
-import net.sf.farrago.session.FarragoSessionPrivilegeChecker;
-import net.sf.farrago.session.FarragoSessionResolvedObject;
-import net.sf.farrago.session.FarragoSessionStmtValidator;
-import net.sf.farrago.session.FarragoSessionVariables;
+import net.sf.farrago.session.*;
 import net.sf.farrago.type.FarragoTypeFactory;
-import net.sf.farrago.util.FarragoDdlLockManager;
-import net.sf.farrago.util.FarragoObjectCache;
-
+import net.sf.farrago.util.*;
 import org.eigenbase.resgen.ResourceDefinition;
 import org.eigenbase.sql.SqlDataTypeSpec;
 import org.eigenbase.sql.SqlIdentifier;
@@ -58,26 +43,28 @@ import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.trace.EigenbaseTimingTracer;
 import org.eigenbase.util.ClosableAllocation;
 
+import java.util.List;
+
 /**
- * MockSessionStmtValidator provides a bare-bones implementation of 
+ * MockSessionStmtValidator provides a bare-bones implementation of
  * FarragoSessionStmtValidator.  It primarily exists to support the
  * retrieval of a MockReposTxnContext in the SQL parser.
- * 
+ *
  * @author stephan/jack
  * @since Dec 8, 2006
  * @version $Id$
  */
-public class MockSessionStmtValidator 
+public class MockSessionStmtValidator
     implements FarragoSessionStmtValidator
 {
     FarragoSessionParser parser;
     FarragoReposTxnContext reposTxnContext;
-    
+
     public void setParser(FarragoSessionParser parser)
     {
         this.parser = parser;
     }
-    
+
     public FarragoSessionParser getParser()
     {
         return parser;
@@ -149,7 +136,7 @@ public class MockSessionStmtValidator
     }
 
     public void requestPrivilege(CwmModelElement obj, String action)
-    {            
+    {
     }
 
     public CwmColumn findColumn(
@@ -216,7 +203,7 @@ public class MockSessionStmtValidator
         return null;
     }
 
-    public <T extends CwmModelElement> FarragoSessionResolvedObject<T> 
+    public <T extends CwmModelElement> FarragoSessionResolvedObject<T>
     resolveSchemaObjectName(String[] names, Class<T> clazz)
     {
         return null;
@@ -260,5 +247,16 @@ public class MockSessionStmtValidator
 
     public void closeAllocation()
     {
-    }        
+    }
+
+    public void setWarningQueue(FarragoWarningQueue queue)
+    {
+    }
+
+    public FarragoWarningQueue getWarningQueue()
+    {
+        return null;
+    }
 }
+
+// End MockSessionStmtValidator.java

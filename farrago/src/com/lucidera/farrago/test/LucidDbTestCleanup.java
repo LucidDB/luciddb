@@ -94,7 +94,7 @@ public class LucidDbTestCleanup
             || name.equals("FLAT FILE")
             || name.equals("LUCIDDB LOCAL")
             || name.equals("SALESFORCE")
-            || name.equals("NETSUITE")
+            || name.contains("NETSUITE")
             || super.isBlessedWrapper(wrapper);
     }
 
@@ -117,6 +117,13 @@ public class LucidDbTestCleanup
         }
         LucidDbTestCleanup cleanup = newCleanup();
         cleanup.execute();
+    }
+    
+    public void execute()
+        throws Exception
+    {
+        super.execute();
+        ldbStmt.executeUpdate("alter system deallocate old");       
     }
 
     private static LucidDbTestCleanup newCleanup()

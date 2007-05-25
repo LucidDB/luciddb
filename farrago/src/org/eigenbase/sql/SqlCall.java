@@ -49,7 +49,7 @@ public class SqlCall
 
     //~ Constructors -----------------------------------------------------------
 
-    protected SqlCall(
+    public SqlCall(
         SqlOperator operator,
         SqlNode [] operands,
         SqlParserPos pos)

@@ -12,21 +12,27 @@ options(0);
 create or replace function applib.char_replace(str varchar(128), oldC varchar(128), newC varchar(128)) 
 returns varchar(128)
 language java
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.CharReplaceUdf.execute';
 
 create or replace function applib.char_replace(str varchar(128), oldC integer, newC integer) 
 returns varchar(128)
 language java
 specific char_replace_int
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.CharReplaceUdf.execute';
 
 -- define CleanPhoneInternational functions
 create or replace function applib.clean_phone_international(str varchar(128), b boolean)
 returns varchar(128)
 language java
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneInternationalUdf.execute';
 
 -- define CleanPhone functions
@@ -34,35 +40,45 @@ create or replace function applib.clean_phone(str varchar(128))
 returns varchar(128)
 language java
 specific clean_phone_no_format
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 
 create or replace function applib.clean_phone(inStr varchar(128), format integer)
 returns varchar(128)
 language java
 specific clean_phone_int_format
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 
 create or replace function applib.clean_phone(inStr varchar(128), format integer, reject boolean)
 returns varchar(128)
 language java
 specific clean_phone_int_format_rejectable
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 
 create or replace function applib.clean_phone(inStr varchar(128), format varchar(128), reject boolean)
 returns varchar(128)
 language java
 specific clean_phone_str_format_rejectable
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 
 -- define ContainsNumber function
 create or replace function applib.contains_number(str varchar(128))
 returns boolean
 language java
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.ContainsNumberUdf.execute';
 
 -- define CYQuarter functions
@@ -70,21 +86,27 @@ create or replace function applib.calendar_quarter(dt date)
 returns varchar(128)
 language java
 specific calendar_quarter_date
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.CalendarQuarterUdf.execute';
 
 create or replace function applib.calendar_quarter(ts timestamp)
 returns varchar(128)
 language java
 specific calendar_quarter_ts
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.CalendarQuarterUdf.execute';
 
 -- define internalDate function (example function)
 create or replace function applib.internal_date(indate bigint)
 returns varchar(128)
 language java
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.contrib.InternalDateUdf.execute';
 
 -- define DAYINYEAR function
@@ -92,21 +114,27 @@ create or replace function applib.day_in_year(dt date)
 returns integer
 language java
 specific DAYINYEAR_DATE
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayInYearUdf.execute';
 
 create or replace function applib.day_in_year(ts timestamp)
 returns integer
 language java
 specific DAYINYEAR_TS
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayInYearUdf.execute';
 
 create or replace function applib.day_in_year(yr integer, mth integer, dt integer)
 returns integer
 language java
 specific DAYINYEAR_YMD
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayInYearUdf.execute';
 
 -- define dayNumberOverall functions
@@ -114,6 +142,7 @@ create or replace function applib.day_number_overall(dt Date)
 returns integer
 language java
 specific DAYNUMBEROVERALL_DATE
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayNumberOverallUdf.execute';
 
@@ -121,6 +150,7 @@ create or replace function applib.day_number_overall(ts timestamp)
 returns integer
 language java
 specific DAYNUMBEROVERALL_TS
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DayNumberOverallUdf.execute';
 
@@ -129,14 +159,18 @@ create or replace function applib.fiscal_month(dt date, fm integer)
 returns integer
 language java
 specific FYMONTH_DATE
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalMonthUdf.execute';
 
 create or replace function applib.fiscal_month(ts timestamp, fm integer)
 returns integer
 language java
 specific FYMONTH_TS
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalMonthUdf.execute';
 
 -- define FYQuarter functions
@@ -144,21 +178,27 @@ create or replace function applib.fiscal_quarter(yr integer, mth integer, fm int
 returns varchar(10)
 language java
 specific FYQUARTER_YMFM
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalQuarterUdf.execute';
 
 create or replace function applib.fiscal_quarter(dt date, fm integer)
 returns varchar(10)
 language java
 specific FYQUARTER_DATE
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalQuarterUdf.execute';
 
 create or replace function applib.fiscal_quarter(ts timestamp, fm integer)
 returns varchar(10)
 language java
 specific FYQUARTER_TS
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalQuarterUdf.execute';
 
 -- define FYYear functions
@@ -166,21 +206,27 @@ create or replace function applib.fiscal_year(dt date, fm integer)
 returns integer
 language java
 specific FYYEAR_DATE
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalYearUdf.execute';
 
 create or replace function applib.fiscal_year(ts timestamp, fm integer)
 returns integer
 language java
 specific FYYEAR_TS
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalYearUdf.execute';
 
 -- define leftN functions
 create or replace function applib.leftn(str varchar(128), len integer)
 returns varchar(128)
 language java
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.LeftNUdf.execute';
 
 -- define rand functions
@@ -195,20 +241,25 @@ external name 'applib.applibJar:com.lucidera.luciddb.applib.numeric.RandUdf.exec
 create or replace function applib.REPEATER(str varchar(128), times integer)
 returns varchar(128)
 language java
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.RepeaterUdf.execute';
 
 -- define rightn function
 create or replace function applib.RIGHTN(str varchar(128), len integer)
 returns varchar(128)
 language java
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.RightNUdf.execute';
 
 -- define StrReplace function
 create or replace function applib.str_replace(inStr varchar(128), oldStr varchar(128), newStr varchar(128))
 returns varchar(128)
 language java
+deterministic
 no sql
 external name "applib.applibJar:com.lucidera.luciddb.applib.string.StrReplaceUdf.execute";
 
@@ -217,6 +268,7 @@ create or replace function applib.convert_date(str varchar(128), mask varchar(50
 returns date
 language java
 specific convert_date_rejectable
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertDateUdf.execute';
 
@@ -224,6 +276,7 @@ create or replace function applib.convert_date(str varchar(128), mask varchar(50
 returns date
 language java
 specific convert_date_not_rejectable
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertDateUdf.execute';
 
@@ -232,6 +285,7 @@ create or replace function applib.char_to_date(format varchar(50), dateString va
 returns date
 language java
 specific applib_std_char_to_date
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_date';
 
@@ -239,6 +293,7 @@ create or replace function applib.char_to_time(format varchar(50), timeString va
 returns time
 language java
 specific applib_std_char_to_time
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_time';
 
@@ -247,6 +302,7 @@ create or replace function applib.char_to_timestamp(
 returns timestamp
 language java
 specific applib_std_char_to_timestamp
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_timestamp';
 
@@ -255,6 +311,7 @@ create or replace function applib.date_to_char(format varchar(50), d date)
 returns varchar(128)
 language java
 specific applib_std_date_to_char
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.date_to_char';
 
@@ -262,6 +319,7 @@ create or replace function applib.time_to_char(format varchar(50), t time)
 returns varchar(128)
 language java
 specific applib_std_time_to_char
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.time_to_char';
 
@@ -269,6 +327,7 @@ create or replace function applib.timestamp_to_char(format varchar(50), ts times
 returns varchar(128)
 language java
 specific applib_std_timestamp_to_char
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.timestamp_to_char';
 
@@ -276,6 +335,7 @@ external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertD
 create or replace function applib.add_days(d date, n int)
 returns date
 specific add_days_date
+deterministic
 contains sql
 return (
   d + cast(cast(n as bigint)*24*60*60*1000 as interval day)
@@ -285,6 +345,7 @@ return (
 create or replace function applib.add_days(ts timestamp, n int)
 returns timestamp
 specific add_days_timestamp
+deterministic
 contains sql
 return (
   ts + cast(cast(n as bigint)*24*60*60*1000 as interval day)
@@ -294,6 +355,7 @@ return (
 create or replace function applib.add_hours(ts timestamp, n int)
 returns timestamp
 specific add_hours_timestamp
+deterministic
 contains sql
 return (
   ts + cast(cast(n as bigint)*60*60*1000 as interval day to hour));
@@ -302,6 +364,7 @@ return (
 create or replace function applib.days_diff(d1 date, d2 date)
 returns bigint
 specific days_diff_dates
+deterministic
 contains sql
 return (
   extract( day from ((d1 - d2) day) )
@@ -312,6 +375,7 @@ return (
 create or replace function applib.days_diff(ts1 timestamp, ts2 timestamp)
 returns bigint
 specific days_diff_timestamps
+deterministic
 contains sql
 return (
   extract( day from ((ts1 - ts2) day) )
@@ -322,6 +386,7 @@ return (
 create or replace function applib.hours_diff(ts1 timestamp, ts2 timestamp)
 returns bigint
 specific hours_diff_timestamps
+deterministic
 contains sql
 return (
   extract( day from ((ts1 - ts2) day)) * 24  +
@@ -333,26 +398,47 @@ return (
 -- the epoch Jan 1, 1970 
 create or replace function applib.day_from_julian_start(dt Date)
 returns integer
-language sql
-contains sql
-return (
-  applib.day_number_overall(dt) + 2440588
-);
+language java
+deterministic
+no sql
+returns null on null input
+external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertJulianDayUdf.dateToJulianDay';
 
 -- define current_date_in_julian
 -- 2440588 is the number of days from the Julian Calendar start date to 
 -- the epoch Jan 1, 1970 
 create or replace function applib.current_date_in_julian()
 returns integer
+deterministic
+dynamic_function
 contains sql
 return (
-  applib.day_number_overall(CURRENT_DATE) + 2440588
+  applib.day_from_julian_start(CURRENT_DATE)
 );
+
+-- define julian_day_to_date
+create or replace function applib.julian_day_to_date(jd integer)
+returns date
+language java
+deterministic
+no sql
+returns null on null input
+external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertJulianDayUdf.julianDayToDate';
+
+-- define julian_day_to_timestamp
+create or replace function applib.julian_day_to_timestamp(jd integer)
+returns timestamp
+language java
+deterministic
+no sql
+returns null on null input
+external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertJulianDayUdf.julianDayToTimestamp';
 
 -- define padweeknumber
 create or replace function applib.padweeknumber(wk_num_as_yr integer)
 returns varchar(16)
 language sql
+deterministic
 contains sql
 return (
   case 
@@ -366,14 +452,18 @@ create or replace function applib.instr(str varchar(65535), subStr varchar(65535
 returns int
 language java
 specific instr_with_optional_vars
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.execute';
 
 create or replace function applib.instr(str varchar(65535), subStr varchar(65535))
 returns int
 language java
 specific instr_without_optional_vars
+deterministic
 no sql
+returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.execute';
 
 
@@ -435,6 +525,7 @@ create or replace function applib.get_var(
 returns varchar(65535)
 language java
 deterministic
+dynamic_function
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeGet';
 
@@ -488,8 +579,9 @@ returns table(
   FISCAL_YEAR_START_DATE date,
   FISCAL_YEAR_END_DATE date)
 language java
-specific time_dimension_fm
 parameter style system defined java
+specific time_dimension_fm
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensionUdx.execute';
 
@@ -514,8 +606,9 @@ returns table(
   CALENDAR_QUARTER varchar(6),
   FIRST_DAY_OF_WEEK date)
 language java
-specific time_dimension
 parameter style system defined java
+specific time_dimension
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensionUdx.execute';
 
@@ -570,6 +663,7 @@ returns table(
   FISCAL_YEAR_END_DATE date)
 language java
 parameter style system defined java
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalTimeDimensionUdx.execute';
 
@@ -584,6 +678,7 @@ returns table(
         effective_to_timestamp timestamp)
 language java
 parameter style system defined java
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.DeriveEffectiveToTimestampUdx.execute';
 
@@ -644,6 +739,7 @@ create or replace function generate_crc(c cursor)
 returns table(c.*, crc_value bigint)
 language java
 parameter style system defined java
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateCrcUdx.execute';
 
@@ -655,6 +751,7 @@ create or replace function generate_crc(
 returns table(c.*, crc_value bigint)
 language java
 parameter style system defined java
+deterministic
 no sql
 specific generate_crc_for_column_subset
 external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateCrcUdx.execute';
@@ -664,6 +761,7 @@ create or replace function pivot_columns_to_rows(c cursor)
 returns table(col_name varchar(65535), col_value varchar(65535))
 language java
 parameter style system defined java
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PivotColumnsToRowsUdx.execute';
 
@@ -675,8 +773,86 @@ returns table(
   collapsed_row_count integer)
 language java
 parameter style system defined java
+deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.CollapseRowsUdx.execute';
+
+-- split strings
+create or replace function applib.split_string_to_rows(
+       IN_STRING varchar(65535), 
+       SEPARATOR_CHAR char(1), 
+       ESCAPE_CHAR char(1),
+       TRIM_TOKENS boolean)
+returns table(OUT_STRINGS varchar(65535))
+language java
+parameter style system defined java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.execute';
+
+create or replace function applib.split_rows(
+       IN_CURSOR cursor, 
+       SEPARATOR_CHAR char(1), 
+       ESCAPE_CHAR char(1), 
+       TRIM_TOKENS boolean)
+returns table(IN_CURSOR.*)
+language java
+specific split_strings_singlecol
+parameter style system defined java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.execute';
+
+create or replace function applib.split_rows(
+       IN_CURSOR cursor, 
+       COL_NAME select from IN_CURSOR, 
+       SEPARATOR_CHAR char(1), 
+       ESCAPE_CHAR char(1), 
+       TRIM_TOKENS boolean)
+returns table(IN_CURSOR.*)
+language java
+specific split_strings_multicol
+parameter style system defined java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.execute';
+
+-- enforce row constraints, default message catalog
+create or replace function enforce_row_constraints(c cursor, r select from c)
+returns table(c.*)
+language java
+parameter style system defined java
+not deterministic
+no sql
+specific enforce_row_constraints_default_msg_jar
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.EnforceRowConstraintsUdx.execute';
+
+-- enforce row constraints with msg jar
+create or replace function enforce_row_constraints(
+  c cursor,
+  r select from c,
+  msgJarName varchar(128))
+returns table(c.*)
+language java
+parameter style system defined java
+not deterministic
+no sql
+specific enforce_row_constraints_with_msg_jar
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.EnforceRowConstraintsUdx.execute';
+
+-- enforce row constraints with tag for logging
+create or replace function enforce_row_constraints(
+  c cursor,
+  r select from c,
+  msgJarName varchar(128),
+  tag varchar(128))
+returns table(c.*)
+language java
+parameter style system defined java
+not deterministic
+no sql
+specific enforce_row_constraints_with_tag
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.EnforceRowConstraintsUdx.execute';
 
 ----
 -- System procedures

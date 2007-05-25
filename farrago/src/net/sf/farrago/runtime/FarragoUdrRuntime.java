@@ -153,10 +153,40 @@ public abstract class FarragoUdrRuntime
         String tag,
         boolean isWarning)
     {
+        return handleRowError(
+            columnNames, columnValues, ex, columnIndex, tag, isWarning, null,
+            null);
+    }
+
+    /** 
+     * Forwards error to runtime context, if error code is non-null, 
+     * exceptions will be defered until all errors have been processed/logged
+     * for a row
+     */
+    public static Object handleRowError(
+        String[] columnNames,
+        Object[] columnValues,
+        RuntimeException ex,
+        int columnIndex,
+        String tag,
+        boolean isWarning,
+        String errorCode,
+        String columnName)
+    {
         FarragoUdrInvocationFrame frame =
             FarragoRuntimeContext.getUdrInvocationFrame();
         return frame.context.handleRowError(
-            columnNames, columnValues, ex, columnIndex, tag, isWarning);
+            columnNames, columnValues, ex, columnIndex, tag, isWarning,
+            errorCode, columnName);
+    }
+
+    public static void handleRowErrorCompletion(
+        RuntimeException ex,
+        String tag)
+    {
+        FarragoUdrInvocationFrame frame =
+            FarragoRuntimeContext.getUdrInvocationFrame();
+        frame.context.handleRowErrorCompletion(ex, tag);
     }
 }
 

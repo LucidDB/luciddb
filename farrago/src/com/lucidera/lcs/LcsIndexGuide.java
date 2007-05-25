@@ -21,10 +21,8 @@
 package com.lucidera.lcs;
 
 import com.lucidera.farrago.*;
-import com.lucidera.query.*;
 
 import java.math.*;
-
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -61,7 +59,7 @@ public class LcsIndexGuide
 
     //~ Static fields/initializers ---------------------------------------------
 
-    protected static final int LbmBitmapSegMaxSize = 512;
+    public static final int LbmBitmapSegMaxSize = 512;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -78,8 +76,6 @@ public class LcsIndexGuide
     private int [] flatteningMap;
 
     private List<FemLocalIndex> clusteredIndexes;
-
-    private List<FemLocalIndex> unclusteredIndexes;
 
     private List<Integer> clusterMap;
 
@@ -118,8 +114,6 @@ public class LcsIndexGuide
         numFlattenedCols = flattenedRowType.getFieldList().size();
 
         this.clusteredIndexes = clusteredIndexes;
-        this.unclusteredIndexes =
-            FarragoCatalogUtil.getUnclusteredIndexes(repos, table);
 
         createClusterMap(clusteredIndexes);
     }
@@ -798,8 +792,8 @@ public class LcsIndexGuide
             computeProjectedColumns(projectedColumns);
         scanStream.setOutputProj(
             FennelRelUtil.createTupleProjection(repos, clusterProjection));
-        scanStream.setFullScan(rel.isFullScan());
-        scanStream.setHasExtraFilter(rel.hasExtraFilter());       
+        scanStream.setFullScan(rel.isFullScan);
+        scanStream.setHasExtraFilter(rel.hasResidualFilter);       
         Integer [] clusterResidualColumns =
             computeProjectedColumns(residualColumns);
         
@@ -1531,149 +1525,8 @@ public class LcsIndexGuide
         return keyInput;
     }
 
-    public Map<CwmColumn, SargIntervalSequence> getCol2SeqMap(
-        LcsRowScanRel origRowScan,
-        List<SargBinding> sargBindingList)
-    {
-        Map<CwmColumn, SargIntervalSequence> colMap =
-            new HashMap<CwmColumn, SargIntervalSequence>();
 
-        for (int i = 0; i < sargBindingList.size(); i++) {
-            SargBinding sargBinding = sargBindingList.get(i);
-            RexInputRef fieldAccess = sargBinding.getInputRef();
-            FemAbstractColumn filterColumn =
-                origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
-            if (filterColumn != null) {
-                SargIntervalSequence sargSeq =
-                    FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
-
-                colMap.put(filterColumn, sargSeq);
-            }
-        }
-
-        return colMap;
-    }
-
-    /**
-     * This is the algorithm that maps indexes to search key columns. It does so
-     * by finding the shortest (in terms of key length) index to map to the
-     * longest list of columns(in the case of composite key idnexes). The index
-     * selection is expressed using a map where all selected indexes and the
-     * matched key positions are remembered.
-     *
-     * @param colLists two column lists: the first one contains the "point
-     * interval" columns, the secod one contains the "range interval" columns.
-     *
-     * @return a map from selected index to its associated matched key position.
-     */
-    public Map<FemLocalIndex, Integer> getIndex2PosMap(
-        List<List<CwmColumn>> colLists)
-    {
-        assert (colLists.size() == 2);
-
-        List<CwmColumn> pointColumnList = colLists.get(0);
-        List<CwmColumn> rangeColumnList = colLists.get(1);
-
-        Map<CwmColumn, FemLocalIndex> col2IndexMap =
-            new HashMap<CwmColumn, FemLocalIndex>();
-        Map<FemLocalIndex, Integer> index2PosMap =
-            new HashMap<FemLocalIndex, Integer>();
-        boolean matchedAll = false;
-
-        // Sort the index based on length(and a unique identifier to break
-        // ties), so that index with fewer key columns are searched first(and
-        // preferred).
-        TreeSet<FemLocalIndex> indexSet =
-            new TreeSet<FemLocalIndex>(new IndexLengthComparator());
-
-        indexSet.addAll(unclusteredIndexes);
-
-        // First process the columns with point predicates.
-        // Objective is to maximize the index key oclumns matched.
-        while ((pointColumnList.size() > 0) && !matchedAll) {
-            // TODO: match the shortest index with the maximum matched positions
-            int maxMatchedPos = 0;
-            FemLocalIndex maxMatchedIndex = null;
-            int matchedPos = 0;
-
-            for (FemLocalIndex index : indexSet) {
-                if (isValid(index)) {
-                    matchedPos = 0;
-
-                    CwmColumn col = getIndexColumn(index, matchedPos);
-
-                    while ((col != null) && pointColumnList.contains(col)) {
-                        matchedPos++;
-                        col = getIndexColumn(index, matchedPos);
-                    }
-
-                    // try to match one more column from the interval column
-                    // list
-                    if (rangeColumnList.contains(
-                        getIndexColumn(index, matchedPos))) {
-                        matchedPos++;
-                    }
-
-                    // Pick the index with the biggest matchedPos.
-                    if (maxMatchedPos < matchedPos) {
-                        maxMatchedPos = matchedPos;
-                        maxMatchedIndex = index;
-                    }
-                }
-            }
-
-            if (maxMatchedIndex != null) {
-                // Find a maximum matched index, from the set of indexes to use
-                // and columns to match
-                for (int i = 0; i < maxMatchedPos; i++) {
-                    // remember which index a column is mapped to.
-                    CwmColumn matchedCol = getIndexColumn(maxMatchedIndex, i);
-                    col2IndexMap.put(matchedCol, maxMatchedIndex);
-
-                    // remove matched columns from the set.
-                    if (!pointColumnList.remove(matchedCol)) {
-                        // last column might come from the interval list.
-                        boolean removed = rangeColumnList.remove(matchedCol);
-                        assert (removed);
-                    }
-                }
-
-                // remove matched index from the set.
-                indexSet.remove(maxMatchedIndex);
-
-                // remember for each matched index, how many positions are
-                // matched.
-                index2PosMap.put(
-                    maxMatchedIndex,
-                    new Integer(maxMatchedPos));
-            } else {
-                // no more match possible, get out of here
-                matchedAll = true;
-            }
-        }
-
-        Iterator<FemLocalIndex> iter = indexSet.iterator();
-
-        // Process the columns with range predicates:
-        // Simple assign the shortest index with matching first key column
-        int maxMatchedPos = 1;
-        while ((rangeColumnList.size() > 0) && iter.hasNext()) {
-            FemLocalIndex index = iter.next();
-            CwmColumn firstCol = getIndexColumn(index, maxMatchedPos - 1);
-            if ((firstCol != null) && rangeColumnList.contains(firstCol)) {
-                col2IndexMap.put(firstCol, index);
-                index2PosMap.put(
-                    index,
-                    maxMatchedPos);
-                rangeColumnList.remove(firstCol);
-                iter.remove();
-            }
-        }
-
-        return index2PosMap;
-    }
-
-    public FemAbstractColumn getIndexColumn(
+    private FemAbstractColumn getIndexColumn(
         FemLocalIndex index,
         int position)
     {
@@ -1688,28 +1541,18 @@ public class LcsIndexGuide
         return (FemAbstractColumn) indexedFeature.getFeature();
     }
 
-    public boolean testIndexColumn(
-        FemLocalIndex index,
-        int position,
-        CwmColumn column)
-    {
-        if (!column.equals(getIndexColumn(index, position))) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * Determines the best index to be used to process a semijoin
      *
      * @param semiJoinKeys keys of the semijoin that we are trying to find an
      * index for.
      * @param bestKeyList appends the list of specific keys within the input
-     * paramter that match an index if an appropriate index is available
+     * parameter that match an index if an appropriate index is available
      *
      * @return best index, if available; else null is returned
      */
-    public FemLocalIndex findSemiJoinIndex(List<Integer> semiJoinKeys,
+    public FemLocalIndex findSemiJoinIndex(
+        List<Integer> semiJoinKeys,
         List<Integer> bestKeyList)
     {
         // loop through the indexes and either find the one that has the
@@ -1718,7 +1561,7 @@ public class LcsIndexGuide
         Integer [] bestKeyOrder = {};
         FemLocalIndex bestIndex = null;
         int maxNkeys = 0;
-        for (FemLocalIndex index : getUnclusteredIndexes()) {
+        for (FemLocalIndex index : FarragoCatalogUtil.getUnclusteredIndexes(repos, table)) {
             Integer [] keyOrder = new Integer[semiJoinKeys.size()];
             int nKeys = matchIndexKeys(index, semiJoinKeys, keyOrder);
             if (nKeys > maxNkeys) {
@@ -1748,7 +1591,7 @@ public class LcsIndexGuide
      *
      * @return number of matching keys
      */
-    private int matchIndexKeys(
+    public int matchIndexKeys(
         FemLocalIndex index,
         List<Integer> keys,
         Integer [] keyOrder)
@@ -1778,140 +1621,8 @@ public class LcsIndexGuide
         return nMatches;
     }
 
-    public List<FemLocalIndex> getUnclusteredIndexes()
-    {
-        return unclusteredIndexes;
-    }
-
-    /**
-     * Selects from a list of indexes the one with the fewest number of pages.
-     * If more than one has the fewest pages, pick based on the one that sorts
-     * alphabetically earliest, based on the index names.
-     *
-     * @param indexList list of indexes to choose from
-     *
-     * @return the best index
-     */
-    public FemLocalIndex pickBestIndex(List<FemLocalIndex> indexList)
-    {
-        FemLocalIndex bestIndex = indexList.get(0);
-        Long minPageCount = bestIndex.getPageCount();
-        String bestName = bestIndex.getName();
-        for (int i = 1; i < indexList.size(); i++) {
-            FemLocalIndex index = indexList.get(i);
-            Long count = index.getPageCount();
-            String name = index.getName();
-            boolean found = false;
-            if ((minPageCount == null) && (count == null)) {
-                if (name.compareTo(bestName) < 0) {
-                    found = true;
-                }
-            } else if ((minPageCount == null) && (count != null)) {
-                found = true;
-            } else if ((minPageCount != null) && (count != null)) {
-                int countCompare = count.compareTo(minPageCount);
-                if (countCompare < 0) {
-                    found = true;
-                } else if ((countCompare == 0)
-                    && (name.compareTo(bestName) < 0)) {
-                    found = true;
-                }
-            }
-            if (found) {
-                bestIndex = index;
-                minPageCount = count;
-                bestName = name;
-            }
-        }
-        return bestIndex;
-    }
-
-    /**
-     * Search for a projection of a bitmap index that satisfies a row scan. If
-     * such a projection exists, return the projection, with bitmap columns
-     * appended.
-     *
-     * @param rowScan the row scan to be satisfied
-     * @param index the index which is to be projected
-     *
-     * @return a projection on the index that satisfies the columns of the row
-     * scan and includes bitmap data, or null if a satisfying projection could
-     * not be found
-     */
-    public Integer [] findIndexOnlyProjection(
-        LcsRowScanRel rowScan,
-        FemLocalIndex index)
-    {
-        // determine columns to be satisfied
-        Integer [] proj = rowScan.projectedColumns;
-        if (proj == null) {
-            proj =
-                FennelRelUtil.newIotaProjection(
-                    rowScan.getRowType().getFieldCount());
-        }
-
-        // find available columns
-        List<FemAbstractColumn> idxCols = new LinkedList<FemAbstractColumn>();
-        for (CwmIndexedFeature indexedFeature : index.getIndexedFeature()) {
-            idxCols.add((FemAbstractColumn) indexedFeature.getFeature());
-        }
-
-        // find projection
-        List<Integer> indexProj = new ArrayList<Integer>();
-        final List<FemAbstractColumn> columns =
-            Util.cast(table.getFeature(), FemAbstractColumn.class);
-        for (int i = 0; i < proj.length; i++) {
-            // TODO: handle lcs rid
-            if (LucidDbSpecialOperators.isLcsRidColumnId(proj[i])) {
-                return null;
-            }
-            FemAbstractColumn keyCol = columns.get(proj[i]);
-            int next = idxCols.indexOf(keyCol);
-            if (next == -1) {
-                return null;
-            }
-            indexProj.add(next);
-        }
-
-        // add bitmap columns (which follow the index key columns)
-        int nKeys = idxCols.size();
-        for (int i = nKeys; i < (nKeys + 3); i++) {
-            indexProj.add(i);
-        }
-        Integer [] projArray = new Integer[indexProj.size()];
-        return indexProj.toArray(projArray);
-    }
-
     //~ Inner Classes ----------------------------------------------------------
-
-    public static class IndexLengthComparator
-        implements Comparator<FemLocalIndex>
-    {
-        IndexLengthComparator()
-        {
-        }
-
-        public int compare(FemLocalIndex index1, FemLocalIndex index2)
-        {
-            int compRes =
-                (
-                    index1.getIndexedFeature().size()
-                    - index2.getIndexedFeature().size()
-                );
-
-            if (compRes == 0) {
-                compRes =
-                    index1.getStorageId().compareTo(index2.getStorageId());
-            }
-
-            return compRes;
-        }
-
-        public boolean equals(Object obj)
-        {
-            return (obj instanceof IndexLengthComparator);
-        }
-    }
+    
 }
 
 //End LcsIndexGuide.java

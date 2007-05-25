@@ -10,12 +10,15 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failures
 0: jdbc:luciddb:> values applib.rand (9, 2);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Min value must be less than max value (state=,code=0)
+Error: Min value must be less than max value (state=,code=0)
 0: jdbc:luciddb:> values applib.rand(1.1, 3);
 Error: From line 1, column 15 to line 1, column 26: No match found for function signature RAND(<NUMERIC>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.rand(cast(null as integer), 9);
+Error: Target "MINVAL" cannot be assigned null value (state=,code=0)
+0: jdbc:luciddb:> values applib.rand(2, cast(null as integer));
+Error: Target "MAXVAL" cannot be assigned null value (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.rand
 0: jdbc:luciddb:> create view randt as

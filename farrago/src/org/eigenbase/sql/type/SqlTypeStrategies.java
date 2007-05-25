@@ -26,6 +26,7 @@ import java.util.Arrays;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.*;
 
 
@@ -825,7 +826,7 @@ public abstract class SqlTypeStrategies
         };
 
     /**
-     * Same as {@link #rtiNullableDecimalProduct} but returns with nullablity if
+     * Same as {@link #rtiDecimalProduct} but returns with nullablity if
      * any of the operands is nullable by using {@link
      * SqlTypeTransforms#toNullable}
      */
@@ -866,7 +867,7 @@ public abstract class SqlTypeStrategies
         };
 
     /**
-     * Same as {@link #rtiNullableDecimalQuotient} but returns with nullablity
+     * Same as {@link #rtiDecimalQuotient} but returns with nullablity
      * if any of the operands is nullable by using {@link
      * SqlTypeTransforms#toNullable}
      */
@@ -885,8 +886,20 @@ public abstract class SqlTypeStrategies
         new SqlReturnTypeInferenceChain(
             new SqlReturnTypeInference[] {
                 rtiNullableDecimalQuotient,
-            rtiNullableFirstInterval,
-            rtiLeastRestrictive
+                rtiNullableFirstInterval,
+                rtiLeastRestrictive
+            });
+
+    /**
+     * Type-inference strategy whereby the result type of a call is {@link
+     * #rtiNullableFirstInterval} and {@link #rtiLeastRestrictive}. These rules
+     * are used for integer division.
+     */
+    public static final SqlReturnTypeInference rtiNullableIntegerQuotient =
+        new SqlReturnTypeInferenceChain(
+            new SqlReturnTypeInference[] {
+                rtiNullableFirstInterval,
+                rtiLeastRestrictive
             });
 
     /**

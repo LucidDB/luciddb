@@ -43,9 +43,13 @@
 <text>Invalid start date</text>
 </exception>
 
+<exception id="800001" name="TimeDimInvalidFiscalStartMonth">
+<text>Fiscal start month should be a value between 1 and 12</text>
+</exception>
+
 <exception id="800010" name="TimeDimInvalidEndDate">
 <text>Invalid end date</text>
-</exception>
+  </exception>
 
 <exception id="800020" name="TimeDimStartDayMustPrecedeEndDay">
 <text>Start day must precede end day</text>
@@ -227,6 +231,39 @@
 <text>Syntax error: parameter must be either ''RESTRICT'' or ''CASCADE''.</text>
 </exception>
 
+<exception id="900430" name="InvalidCheckColumns">
+<text>Check constraint column(s) could not be found or are not of type VARCHAR: {0}</text>
+</exception>
+
+<exception id="900431" name="RowConstraintsFatal">
+<text>Row constraint UDX failed with FATAL error code: {0}
+Message: {1}</text>
+</exception>
+
+<exception id="900432" name="MessageCatalogLoadFailed">
+<text>Failed to load message catalog jar ''{0}'', resource bundle ''{1}'' at ''{2}''
+Message: {3}</text>
+</exception>
+
+<exception id="900433" name="NoSuchMessageCatalogJar">
+<text>Message Catalog Jar ''{0}'' could not be found at ''{1}''</text>
+</exception>
+
+<exception id="900500" name="InputMustBeSingleColumn">
+<text>Input cursor must be one single column.</text>
+</exception>
+
+<exception id="900501" name="SplitColNameMustBeSingleColumn">
+<text>Can only split a single column at a time.</text>
+</exception>
+
+<exception id="900510" name="SeparatorMustBeOneCharacter">
+<text>Split separator must be a single character.</text>
+</exception>
+
+<exception id="900511" name="EscapeCharMustBeOneCharacter">
+<text>Escape symbol must be a single character.</text>
+</exception>
 
 <!-- ====================================================================== -->
  Messages

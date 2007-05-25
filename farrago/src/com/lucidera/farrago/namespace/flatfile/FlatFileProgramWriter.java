@@ -20,8 +20,6 @@
 */
 package com.lucidera.farrago.namespace.flatfile;
 
-import com.disruptivetech.farrago.calc.*;
-
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
@@ -370,18 +368,6 @@ public class FlatFileProgramWriter
                 null);
         Util.permAssert(func != null, "datetime routine not found");
         return func;
-    }
-    
-    /**
-     * Serializes a program into a format directly usable by a Fennel calc 
-     */
-    public String serializeProgram(RexProgram program, RelNode rel)
-    {
-        RexToCalcTranslator translator =
-            new RexToCalcTranslator(rexBuilder, rel);
-        return translator.generateProgram(
-            program.getInputRowType(),
-            program);
     }
 }
 

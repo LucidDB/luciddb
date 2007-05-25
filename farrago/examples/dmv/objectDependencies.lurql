@@ -1,0 +1,7 @@
+select o, d
+from class LocalSchema
+where name in ('ACCOUNTS', 'CAR_RENTALS', 'LODGING', 'BILLING') then (
+    follow composite forward destination class ColumnSet as o then (
+        follow origin end client as d
+    )
+);

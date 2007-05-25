@@ -57,6 +57,8 @@ import org.eigenbase.util.property.*;
 
 import org.netbeans.mdr.handlers.*;
 
+import javax.security.auth.login.Configuration;
+import com.sun.security.auth.login.ConfigFile;
 
 /**
  * FarragoDatabase is a top-level singleton representing an instance of a
@@ -73,12 +75,6 @@ public class FarragoDatabase
     extends FarragoDbSingleton
 {
 
-    //~ Static fields/initializers ---------------------------------------------
-
-    // TODO jvs 11-Aug-2004:  Get rid of this once corresponding TODO in
-    // FarragoDbSession.prepare is resolved.
-    public static final Integer DDL_LOCK = new Integer(1994);
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoRepos systemRepos;
@@ -90,6 +86,8 @@ public class FarragoDatabase
     private List<FarragoSessionModelExtension> modelExtensions;
     private FarragoDdlLockManager ddlLockManager;
     private FarragoSessionTxnMgr txnMgr;
+    private Configuration authenticationConfig;
+    private boolean authenticateLocalConnections = false;
 
     /**
      * Cache of all sorts of stuff; see <a
@@ -243,10 +241,17 @@ public class FarragoDatabase
                     checkpointIntervalMillis,
                     checkpointIntervalMillis);
             }
-
+            
             ddlLockManager = new FarragoDdlLockManager();
             txnMgr = sessionFactory.newTxnMgr();
             sessionFactory.specializedInitialization(this);
+            
+            File jaasConfigFile = new File(FarragoProperties.instance().homeDir.get(), "plugin/jaas.config");
+            if (jaasConfigFile.exists()) {
+                System.setProperty("java.security.auth.login.config", jaasConfigFile.getPath());
+                authenticationConfig = new ConfigFile();
+            }
+
         } catch (Throwable ex) {
             tracer.throwing("FarragoDatabase", "<init>", ex);
             close(true);
@@ -514,6 +519,26 @@ public class FarragoDatabase
     public FarragoRepos getUserRepos()
     {
         return userRepos;
+    }
+    
+    /**
+     * @return true if there is a JAAS configuration entry for application "Farrago".
+     */
+    public boolean isAuthenticationEnabled()
+    {
+        if (authenticationConfig == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    /**
+     * @return the JAAS authentication configuration.
+     */
+    public Configuration getAuthenticationConfig()
+    {
+        return authenticationConfig;
     }
 
     /**
@@ -991,6 +1016,36 @@ public class FarragoDatabase
         cmd.setAsync(async);
         fennelDbHandle.executeCmd(cmd);
     }
+    
+    public void deallocateOld()
+    {
+        if (!systemRepos.isFennelEnabled()) {
+            return;
+        }
+        FemCmdAlterSystemDeallocate cmd =
+            systemRepos.newFemCmdAlterSystemDeallocate();
+        cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
+        fennelDbHandle.executeCmd(cmd);
+    }
+    
+    public static FarragoSessionFactory newSessionFactory()
+    {
+        String libraryName =
+            FarragoProperties.instance().defaultSessionFactoryLibraryName.get();
+        try {
+            FarragoPluginClassLoader classLoader =
+                new FarragoPluginClassLoader();
+            Class c =
+                classLoader.loadClassFromLibraryManifest(
+                    libraryName,
+                    "SessionFactoryClassName");
+            return (FarragoSessionFactory) classLoader.newPluginInstance(c);
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().PluginInitFailed.ex(
+                libraryName,
+                ex);
+        }
+    }
 
     /**
      * Main entry point which creates a new Farrago database.
@@ -1001,7 +1056,7 @@ public class FarragoDatabase
     {
         FarragoDatabase database =
             new FarragoDatabase(
-                new FarragoDbSessionFactory(),
+                FarragoDatabase.newSessionFactory(),
                 true);
         database.close(false);
     }
@@ -1063,6 +1118,22 @@ public class FarragoDatabase
         {
             userRepos = systemRepos;
         }
+    }
+
+    public boolean isAuthenticateLocalConnections()
+    {
+        return authenticateLocalConnections;
+    }
+
+    /**
+     * Turns on/off authentication for in-process jdbc sessions.
+     * NOTE: If set to off, the origin of the jdbc connection is determined 
+     * by the remoteProtocol attribute of the jdbc URL.
+     * @param authenticateLocalConnections
+     */
+    public void setAuthenticateLocalConnections(boolean authenticateLocalConnections)
+    {
+        this.authenticateLocalConnections = authenticateLocalConnections;
     }
 }
 

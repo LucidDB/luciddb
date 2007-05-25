@@ -89,11 +89,6 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
     TupleDescriptor errorDesc;
     TupleData errorTuple;
 
-    /**
-     * The Calculator object which does the real work.
-     */
-    SharedCalculator pCalc;
-
     // implement ExecStream
     virtual void closeImpl();
     

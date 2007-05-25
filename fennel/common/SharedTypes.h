@@ -25,6 +25,7 @@
 #define Fennel_SharedTypes_Included
 
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -41,6 +42,7 @@ typedef boost::shared_ptr<CacheAccessor> SharedCacheAccessor;
 
 class Segment;
 typedef boost::shared_ptr<Segment> SharedSegment;
+typedef boost::weak_ptr<Segment> WeakSegment;
 
 class SegmentAccessor;
 typedef boost::shared_ptr<SegmentAccessor> SharedSegmentAccessor;

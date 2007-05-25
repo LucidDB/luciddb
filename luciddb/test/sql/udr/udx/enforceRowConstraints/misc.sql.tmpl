@@ -1,0 +1,69 @@
+create schema rcmisc;
+set schema 'rcmisc';
+alter session set "logDir" = '@LOGDIR@';
+alter session set "etlProcessId" = 'Misc';
+
+-- non varchar check column
+alter session set "etlActionId" = 'NonVarcharCheckCol1';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when LOCID = 'HQ' then true else cast(null as boolean) end as loccheck
+    from ffserver.bcp.EMP),
+  row(loccheck),
+  'TestMsgs',
+  'M1'))
+order by EMPNO;
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, EMPNO
+from logserver.bcp."Misc_NonVarcharCheckCol_M1"
+order by EMPNO;
+
+-- check expansion various datatypes
+alter session set "etlActionId" = 'ExpandDatatypes';
+alter session set "errorMax" = 3;
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when "c_boolean" = true then 'DTERR'
+      else cast(null as varchar(128)) end as bcheck
+    from ffserver.bcp."types"),
+  row(bcheck),
+  'TestMsgs',
+  'M2'))
+order by "c_char";
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, "c_char"
+from logserver.bcp."Misc_ExpandDatatypes_M2"
+order by "c_char";
+
+-- expansion column doesn't exist
+alter session set "etlActionId" = 'NoExpandCol';
+
+select * from table(rc.enforce_row_constraints(
+  cursor(select *,
+    case when "c_boolean" = true then 'DtNoColErr'
+      else cast(null as varchar(128)) end as bcheck
+    from ffserver.bcp."types"),
+  row(bcheck),
+  'TestMsgs',
+  'M3'))
+order by "c_char";
+
+select LE_LEVEL, LE_ERROR_CODE, LE_EXCEPTION, LE_TARGET_COLUMN, "c_char"
+from logserver.bcp."Misc_NoExpandCol_M3"
+order by "c_char";
+
+-- check generated tag
+alter session set "etlActionId" = 'TagGen';
+
+select * from table(applib.enforce_row_constraints(
+  cursor(select *,
+    case when "c_boolean" = true then 'DtNoColErr'
+      else cast(null as varchar(128)) end as bcheck
+    from ffserver.bcp."types"),
+  row(bcheck),
+  'TestMsgs'))
+order by "c_char";
+
+-- TODO: check that log exists

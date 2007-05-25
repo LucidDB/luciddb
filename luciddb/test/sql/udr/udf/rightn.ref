@@ -23,6 +23,20 @@
 |         |
 +---------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values applib.rightn(cast(null as varchar(20)), 4);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values applib.rightn('this is the right one!', cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.rightN
 0: jdbc:luciddb:> create view cutcust as
 . . . . . . . . > select applib.rightN(fname, 5), applib.rightN(lname, 3), applib.rightN(phone, 7)

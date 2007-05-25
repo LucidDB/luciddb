@@ -192,6 +192,11 @@ insert into lt1 select t1a, t1b, t1c, t1d from t1;
 insert into lt2 select t2a, t2b, t2c, t2d from t2;
 insert into lt3 select t3a, t3b, t3c, t3d from t3;
 
+-- fake row count so that index access is considered
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'PDF', 'LT1', 100);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'PDF', 'LT2', 100);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'PDF', 'LT3', 100);
+
 explain plan for
     select * from
         (select t1c, t1d from lt1 intersect select t2b+1, t2a+3 from lt2)

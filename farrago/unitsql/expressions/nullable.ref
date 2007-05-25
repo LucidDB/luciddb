@@ -59,4 +59,41 @@
   <result SLACKER="null" EXPR$1="true" EXPR$2="true" EXPR$3="true"/>
   <result SLACKER="false" EXPR$1="null" EXPR$2="null" EXPR$3="true"/>
 </resultset>
+> 
+> -- casts with nulls; use xmlattr to distinguish null from empty string
+> !set outputformat xmlattr
+> 
+> values cast(cast(null as tinyint) as varchar(30));
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
+> values cast(cast(null as boolean) as varchar(30));
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
+> values cast(cast(null as int) as varchar(30));
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
+> values cast(cast(null as varchar(10)) as varchar(30));
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
+> values cast(cast(null as date) as varchar(30));
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
+> values cast(cast(null as time) as varchar(30));
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
+> values cast(cast(null as timestamp) as varchar(30));
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
+> values cast(cast(null as double) as varchar(30));
+<resultset>
+  <result EXPR$0="null"/>
+</resultset>
+> 
 > !quit

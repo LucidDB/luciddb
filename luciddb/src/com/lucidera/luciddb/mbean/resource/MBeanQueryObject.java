@@ -1,8 +1,8 @@
 /*
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2007-2007 LucidEra, Inc.
+// Copyright (C) 2007-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -16,7 +16,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 */
 package com.lucidera.luciddb.mbean.resource;
 

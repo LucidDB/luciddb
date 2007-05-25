@@ -530,16 +530,10 @@ Error: From line 1, column 15 to line 1, column 39: Table 'FLATFILE_SCHEMA.examp
 > 
 > -- test files with null values
 > select * from flatfiledir_schema."withnulls" order by 3,1,2;
-+------+------------------------------------------+--------------+
-|  ID  |                   NAME                   | EXTRA_FIELD  |
-+------+------------------------------------------+--------------+
-|      |                                          |              |
-|      | Susan, Peter and Dave                    |              |
-| 123  |                                          |              |
-| 123  | "S,"                                     | F            |
-|      |                                          | G            |
-| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
-+------+------------------------------------------+--------------+
+Error: could not calculate results for the following row:
+[ '', '', '' ]
+Messages:
+[0]:PC=0 Code=22018 (state=,code=0)
 > drop table flatfiledir_schema."withnulls";
 > 
 > -- test badly qualified import foreign schema
@@ -747,10 +741,15 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 > options (filename 'buggy');
 > 
 > -- errors are usually returned immediately
+> !set shownestederrs true
 > select * from buggy order by 1;
+Error: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,code=0)
 Error: Could not calculate result column 3 for the following row:
 [Caroll & Graf, The Diary of a Country Priest, -]
 Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+> !set shownestederrs false
 > 
 > -- but we can allow errors by setting this parameter
 > alter session set "errorMax" = 100;
@@ -797,12 +796,16 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 Warning: Statement execution encountered recoverable exceptions; errors: 2; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > 
 > -- we can limit the number of errors
+> !set shownestederrs true
 > alter session set "errorMax" = 1;
 > select * from buggy order by 1;
 Error: Exceeded limit of 1 errors. Last error was:
 Could not calculate result column 2 for the following row:
 [Gary Larsen, null, 5.00]
-Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
+Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value
+Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
+Error: error while fetching from cursor (state=,code=0)
+> !set shownestederrs false
 > 
 > -- another case of bad options
 > create server mapped_server
@@ -855,6 +858,33 @@ Error: Mapping source columns in data files to target columns specified by contr
 > -- this should fail
 > select * from flatfile_server.""."example";
 Error: From line 1, column 15 to line 1, column 42: Table 'FLATFILE_SERVER..example' not found (state=,code=0)
+> 
+> -- mapped option
+> create or replace server mapped_server
+> foreign data wrapper sys_file_wrapper
+> options (
+>     directory 'unitsql/med/flatfiles/',
+>     file_extension 'csv',
+>     with_header 'yes',
+>     mapped 'yes');
+> 
+> select * from mapped_server.bcp."mapped_extra_cols";
++--------+--------+--------+
+|  COL1  |  COL2  |  COL3  |
++--------+--------+--------+
+| 3      | 5      | 6      |
+| 8      | 10     | 11     |
+| 13     | 15     | 16     |
+| 18     | 20     | 21     |
++--------+--------+--------+
+> select * from mapped_server.bcp."mapped_fewer_cols";
++--------+-------+--------+
+|  COL1  | COL2  |  COL3  |
++--------+-------+--------+
+| 2      |       | 1      |
+| 4      |       | 3      |
+| 6      |       | 5      |
++--------+-------+--------+
 > 
 > drop schema test_schema cascade;
 > 

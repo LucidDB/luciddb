@@ -1,0 +1,170 @@
+0: jdbc:luciddb:> -- test SplitStringUdx
+0: jdbc:luciddb:> create schema SPLITTEST;
+0: jdbc:luciddb:> set schema 'SPLITTEST';
+0: jdbc:luciddb:> create table "T1" (COL1 integer, COL2 varchar(255), COL3 varchar(255));
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (10, 'AA~BB~ ', 'b!ah');
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (20, '~', 'bl~~h');
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (30, '\~', 'bl~~h');
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (40, 'CC~\~\~~\~DD', '~meh');
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (50, 'EE ~ F\~F\F', '~heh');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- don't strip whitespace
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE)
+. . . . . . . . > );
++---------+
+|  COL2   |
++---------+
+| AA      |
+| BB      |
+|         |
+| ~       |
+| CC      |
+| ~~      |
+| ~DD     |
+| EE      |
+|  F~F\F  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- strip whitespace
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE)
+. . . . . . . . > );
++--------+
+|  COL2  |
++--------+
+| AA     |
+| BB     |
+| ~      |
+| CC     |
+| ~~     |
+| ~DD    |
+| EE     |
+| F~F\F  |
++--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace view V1 as (select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select * from T1),
+. . . . . . . . >     row(COL2),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE)
+. . . . . . . . > ));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should have two rows with trailing space
+0: jdbc:luciddb:> select * from V1 where COL2 like '% ';
++-------+-------+-------+
+| COL1  | COL2  | COL3  |
++-------+-------+-------+
+| 10    |       | b!ah  |
+| 50    | EE    | ~heh  |
++-------+-------+-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should have two rows with leading space
+0: jdbc:luciddb:> select * from V1 where COL2 like ' %';
++-------+---------+-------+
+| COL1  |  COL2   | COL3  |
++-------+---------+-------+
+| 10    |         | b!ah  |
+| 50    |  F~F\F  | ~heh  |
++-------+---------+-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- following three should give the same output
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     'AA~BB~CC',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE)
+. . . . . . . . > );
++--------------+
+| OUT_STRINGS  |
++--------------+
+| AA           |
+| BB           |
+| CC           |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     'AA~BB~CC~ ~~ ',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE)
+. . . . . . . . > );
++--------------+
+| OUT_STRINGS  |
++--------------+
+| AA           |
+| BB           |
+| CC           |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '~~  ~ AA~BB~CC',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE)
+. . . . . . . . > );
++--------------+
+| OUT_STRINGS  |
++--------------+
+| AA           |
+| BB           |
+| CC           |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception when more than one escape char
+0: jdbc:luciddb:> -- enable when LER-4686 is fixed
+0: jdbc:luciddb:> --select * from table(
+0: jdbc:luciddb:> --  applib.split_string_to_rows(
+0: jdbc:luciddb:> --    '~~  ~ AA~BB~CC',
+0: jdbc:luciddb:> --    '~',
+0: jdbc:luciddb:> --    '\a',
+0: jdbc:luciddb:> --    TRUE)
+0: jdbc:luciddb:> --);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception when more than one separator char
+0: jdbc:luciddb:> -- enable when LER-4686 is fixed
+0: jdbc:luciddb:> --select * from table(
+0: jdbc:luciddb:> --  applib.split_string_to_rows(
+0: jdbc:luciddb:> --    '~~  ~ AA~BB~CC',
+0: jdbc:luciddb:> --    '~a',
+0: jdbc:luciddb:> --    '\',
+0: jdbc:luciddb:> --    TRUE)
+0: jdbc:luciddb:> --);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception when more than one col to split in multicol mode
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select * from T1),
+. . . . . . . . >     row(COL2,COL3),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE)
+. . . . . . . . > );
+Error: Can only split a single column at a time. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception when more than one col as input in singlecol mode
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select * from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE)
+. . . . . . . . > );
+Error: Input cursor must be one single column. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema SPLITTEST cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

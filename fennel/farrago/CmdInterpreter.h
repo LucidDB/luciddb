@@ -76,6 +76,7 @@ public:
         SharedFtrsTableWriterFactory pFtrsTableWriterFactory;
         bool readOnly;
         SharedExecStreamGovernor pResourceGovernor;
+        SharedSegment pSnapshotSegment;
 
         explicit TxnHandle()
             : readOnly(false)
@@ -92,6 +93,8 @@ public:
         SharedExecStreamGraph pExecStreamGraph;
         SharedExecStreamScheduler pScheduler;
         TxnHandle *pTxnHandle;
+        // Segment associated with the stream graph
+        SharedSegment pSegment;
         // a global ref to the FarragoRuntimeContext
         jobject javaRuntimeContext;
 
@@ -153,6 +156,8 @@ protected:
     virtual void visit(ProxyCmdSavepoint &);
     virtual void visit(ProxyCmdCommit &);
     virtual void visit(ProxyCmdRollback &);
+    virtual void visit(ProxyCmdAlterSystemDeallocate &);
+    virtual void visit(ProxyCmdVersionIndexRoot &);
 
 public:
     /**

@@ -645,7 +645,7 @@ public abstract class SqlOperatorTests
     {
         // Test cast for date/time/timestamp
         getTester().setFor(SqlStdOperatorTable.castFunc);
-        
+
         getTester().checkScalar(
             "cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIMESTAMP)",
             "1945-02-24 12:42:25.0",
@@ -656,11 +656,11 @@ public abstract class SqlOperatorTests
             "12:42:25",
             "TIME(0) NOT NULL");
 
-        // test rounding
-        getTester().checkScalar(
-            "cast(TIME '12:42:25.9' as TIME)",
-            "12:42:26",
-            "TIME(0) NOT NULL");
+            // test rounding
+            getTester().checkScalar(
+                "cast(TIME '12:42:25.9' as TIME)",
+                "12:42:26",
+                "TIME(0) NOT NULL");
 
         if (SupportDatetimeWithPrecision) {
             // test precision
@@ -720,10 +720,10 @@ public abstract class SqlOperatorTests
             "DATE NOT NULL");
 
         // Note: casting to Date discards Time fields
-        getTester().checkScalar(
-            "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as DATE) as TIMESTAMP)",
+            getTester().checkScalar(
+                "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as DATE) as TIMESTAMP)",
             "1945-02-24 00:00:00.0",
-            "TIMESTAMP(0) NOT NULL");
+                "TIMESTAMP(0) NOT NULL");
 
         // TODO: precision should not be included
         getTester().checkScalar(
@@ -1683,7 +1683,7 @@ public abstract class SqlOperatorTests
     public void testMinusIntervalOperator()
     {
         getTester().setFor(SqlStdOperatorTable.minusOperator);
-        
+
         // Intervals
         getTester().checkScalar(
             "interval '2' day - interval '1' day",
@@ -2115,10 +2115,12 @@ public abstract class SqlOperatorTests
             "++interval '-6:2:8' hour to second",
             "-6:02:08",
             "INTERVAL HOUR TO SECOND NOT NULL");
-        getTester().checkScalar(
-            "+interval '6:2:8.234' hour to second",
-            "+6:02:08.234",
-            "INTERVAL HOUR TO SECOND NOT NULL");
+        if (Bug.Frg254Fixed) {
+            getTester().checkScalar(
+                "+interval '6:2:8.234' hour to second",
+                "+06:02:08.234",
+                "INTERVAL HOUR TO SECOND NOT NULL");
+        }
         getTester().checkScalar(
             "+interval '5' month",
             "+5",

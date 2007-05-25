@@ -18,31 +18,27 @@
 . . . . . . . . > ('01185223456789');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values applib.clean_phone_international('23890123809214382109432809', true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Incorrect North American phone number (state=,code=0)
+Error: Incorrect North American phone number (state=,code=0)
 0: jdbc:luciddb:> values applib.clean_phone_international('fdjk3242478932hfdskf832498', true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Incorrect North American phone number (state=,code=0)
+Error: Incorrect North American phone number (state=,code=0)
 0: jdbc:luciddb:> values applib.clean_phone_international('23', true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-Incorrect North American phone number (state=,code=0)
+Error: Incorrect North American phone number (state=,code=0)
 0: jdbc:luciddb:> values applib.clean_phone_international('sdf', true);
-Error: Could not calculate result column 1 for the following row:
-[0]
-Messages: Invocation of user-defined external Java method execute failed
-This is not a phone number (state=,code=0)
+Error: This is not a phone number (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values applib.clean_phone_international('dsf', false);
 +---------+
 | EXPR$0  |
 +---------+
 | dsf     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null parameters
+0: jdbc:luciddb:> values applib.clean_phone_international(cast(null as varchar(20)), true);
++---------+
+| EXPR$0  |
++---------+
+|         |
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.clean_phone_international

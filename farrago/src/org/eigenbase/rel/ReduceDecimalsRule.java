@@ -748,7 +748,7 @@ public class ReduceDecimalsRule
             RexNode b)
         {
             return builder.makeCall(
-                SqlStdOperatorTable.divideOperator,
+                SqlStdOperatorTable.divideIntegerOperator,
                 a,
                 b);
         }
@@ -915,8 +915,6 @@ public class ReduceDecimalsRule
             RelDataType typeB = operands[1].getType();
             assert (SqlTypeUtil.isNumeric(typeA)
                     && SqlTypeUtil.isNumeric(typeB));
-            assert (SqlTypeUtil.isDecimal(typeA)
-                    || SqlTypeUtil.isDecimal(typeB));
 
             if (SqlTypeUtil.isApproximateNumeric(typeA)
                 || SqlTypeUtil.isApproximateNumeric(typeB)) {
@@ -958,7 +956,6 @@ public class ReduceDecimalsRule
          * <ul>
          * <li>there are exactly two operands
          * <li>both are exact numeric types
-         * <li>at least the operands is a decimal
          * </ul>
          */
         private void analyzeOperands(RexNode [] operands)
@@ -968,8 +965,6 @@ public class ReduceDecimalsRule
             typeB = operands[1].getType();
             assert (SqlTypeUtil.isExactNumeric(typeA)
                     && SqlTypeUtil.isExactNumeric(typeB));
-            assert (SqlTypeUtil.isDecimal(typeA)
-                    || SqlTypeUtil.isDecimal(typeB));
 
             scaleA = typeA.getScale();
             scaleB = typeB.getScale();

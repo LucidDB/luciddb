@@ -1,0 +1,66 @@
+@nolockstep
+
+@setup
+-- Test attempts to run various queries against a table being rebuilt
+
+  set schema 's';
+  select count(*) from bench1m;
+@end
+
+-----------------------------------------------------------
+
+-- Row count should be the same because all DML should have failed
+@thread cleanup
+  @sync
+  @sync
+  set schema 's';
+  select count(*) from bench1m;
+@end
+
+-----------------------------------------------------------
+
+@thread alter
+  set schema 's';
+
+  @sync
+  alter table bench1m rebuild;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread insert
+  set schema 's';
+
+  @sync
+  @sleep 1000
+  @err insert into bench1m("kseq") values(-1);
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread delete
+  set schema 's';
+
+  @sync
+  @sleep 1000
+  @err delete from bench1m where "kseq" = -1;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+-- This select should succeed
+@thread select
+  set schema 's';
+
+  @sync
+  @sleep 1000
+  select count(*) from bench1m;
+  @sync
+
+@end

@@ -123,39 +123,42 @@ public class LcsIndexOnlyAccessRule
         // TODO: we might be able to expand a single keyset search if we
         // allow input key projections with them and remember to update null
         // input key projections
-        LcsIndexGuide indexGuide = rowScan.lcsTable.getIndexGuide();
         FemLocalIndex origIndex = origIndexSearch.index;
-        List<FemLocalIndex> candidates;
+        List<FemLocalIndex> candidateIndexes;
         if (origIndexSearch.isInputSingleKeyset()) {
-            candidates = Collections.singletonList(origIndex);
+            candidateIndexes = Collections.singletonList(origIndex);
         } else {
             assert (origIndexSearch.inputKeyProj != null);
-            candidates = indexGuide.getUnclusteredIndexes();
+            candidateIndexes = LcsIndexOptimizer.getUnclusteredIndexes(rowScan);
         }
         int nInputKeys = origIndexSearch.getInputKeyCount();
         assert (nInputKeys > 0);
 
+        // first sort the indexes in key length
+        TreeSet<FemLocalIndex> indexSet =
+            new TreeSet<FemLocalIndex>(
+                new LcsIndexOptimizer.IndexLengthComparator());
+
+        indexSet.addAll(candidateIndexes);
+        
         FemLocalIndex bestIndex = null;
         Integer [] bestProj = null;
-        for (FemLocalIndex index : candidates) {
-            // only look for thinner indexes
-            if ((bestIndex != null)
-                && (
-                    bestIndex.getIndexedFeature().size()
-                    <= index.getIndexedFeature().size()
-                   )) {
-                continue;
-            }
-            if (!samePrefix(origIndex, index, nInputKeys)) {
-                continue;
-            }
-            Integer [] proj =
-                indexGuide.findIndexOnlyProjection(rowScan, index);
-            if (proj != null) {
-                bestIndex = index;
-                bestProj = proj;
+        
+        for (FemLocalIndex index : indexSet) {
+            // Starting from the "thinnest" indexes
+            if (samePrefix(origIndex, index, nInputKeys)) {
+                
+                Integer[] proj =
+                    LcsIndexOptimizer.findIndexOnlyProjection(rowScan, index);
+                
+                if (proj != null) {
+                    bestIndex = index;
+                    bestProj = proj;
+                    break;
+                }
             }
         }
+        
         if (bestIndex == null) {
             return;
         }

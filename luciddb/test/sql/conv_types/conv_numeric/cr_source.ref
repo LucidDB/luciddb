@@ -55,16 +55,12 @@
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('smallint','target',-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[smallint, target, -32768, -32768, -32768, -32768, -32768, -32768, -32768, -32768, -32768]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('smallint','target',32767,32767,32767,32767,32767,32767,32767,32767,32767)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[smallint, target, 32767, 32767, 32767, 32767, 32767, 32767, 32767, 32767, 32767]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('smallint','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
@@ -87,16 +83,12 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('integer','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[integer, target, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -4294967296, -4294967296, -4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('integer','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[integer, target, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 4294967296, 4294967296, 4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('integer','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
@@ -119,16 +111,12 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('bigint','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[bigint, target, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -4294967296, -4294967296, -4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('bigint','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[bigint, target, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 4294967296, 4294967296, 4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('bigint','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
@@ -151,16 +139,12 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('decimal','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[decimal, target, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -4294967296, -4294967296, -4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('decimal','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[decimal, target, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 4294967296, 4294967296, 4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('decimal','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
@@ -183,16 +167,12 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('numeric','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[numeric, target, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -4294967296, -4294967296, -4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('numeric','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[numeric, target, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 4294967296, 4294967296, 4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('numeric','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
@@ -215,16 +195,12 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('double','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[double, target, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -4294967296, -4294967296, -4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('double','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[double, target, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 4294967296, 4294967296, 4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('double','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
@@ -247,16 +223,12 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('float','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[float, target, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -4294967296, -4294967296, -4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('float','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[float, target, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 4294967296, 4294967296, 4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('float','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
@@ -279,16 +251,12 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('real','target',-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[real, target, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -2147483647, -4294967296, -4294967296, -4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('real','target',2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,4294967296,4294967296,4294967296)
 . . . . . . . . > ;
-Error: Could not calculate result column COLTINY for the following row:
-[real, target, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 4294967296, 4294967296, 4294967296]
-Messages: Overflow during calculation or cast. (state=,code=0)
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into datatype_source
 . . . . . . . . > values('real','source',0,-32768,-2147483647,-2147483647,-2147483647,-2147483647,-4294967296,-4294967296,-4294967296)

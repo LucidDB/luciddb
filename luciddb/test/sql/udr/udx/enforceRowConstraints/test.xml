@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2007-2007 LucidEra, Inc.
+// Copyright (C) 2007-2007 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//  
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<project name="bh" default="rowconstraints">
+  <target name="rowconstraints">
+    <test-suite name="rowconstraints">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="rowconstraints"/>
+          </test-suite-call>
+        </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/udr/udx/enforceRowConstraints"
+          target="installTestMsgCatalogs"/>
+        <ant dir="${open.dir}/luciddb/test/sql/udr/udx/enforceRowConstraints"
+          target="copy-csv"/>
+      </init-hook>
+
+      <test name="init">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/enforceRowConstraints/gen/init.sql"/>
+      </test>
+
+      <test name="basic" requiresSuccess="init">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/enforceRowConstraints/gen/basic.sql"/>
+      </test>
+
+      <test name="msgCatalogs" requiresSuccess="init">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/enforceRowConstraints/gen/msgCatalogs.sql"/>
+      </test>
+
+      <test name="misc" requiresSuccess="init">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/enforceRowConstraints/gen/misc.sql"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="rowconstraints"/>
+          </test-suite-call>
+        </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/udr/udx/enforceRowConstraints"
+          target="cleanTestMsgCatalogs"/>
+      </cleanup-hook>
+    </test-suite>
+  </target>
+</project>

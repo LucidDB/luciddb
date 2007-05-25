@@ -474,7 +474,9 @@ server ff_lenient
 options (filename 'buggy');
 
 -- errors are usually returned immediately
+!set shownestederrs true
 select * from buggy order by 1;
+!set shownestederrs false
 
 -- but we can allow errors by setting this parameter
 alter session set "errorMax" = 100;
@@ -506,8 +508,10 @@ create table surrey(
 insert into surrey select * from buggy;
 
 -- we can limit the number of errors
+!set shownestederrs true
 alter session set "errorMax" = 1;
 select * from buggy order by 1;
+!set shownestederrs false
 
 -- another case of bad options
 create server mapped_server
@@ -531,5 +535,17 @@ select count(*) from test_schema."example";
 
 -- this should fail
 select * from flatfile_server.""."example";
+
+-- mapped option
+create or replace server mapped_server
+foreign data wrapper sys_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles/',
+    file_extension 'csv',
+    with_header 'yes',
+    mapped 'yes');
+
+select * from mapped_server.bcp."mapped_extra_cols";
+select * from mapped_server.bcp."mapped_fewer_cols";
 
 drop schema test_schema cascade;

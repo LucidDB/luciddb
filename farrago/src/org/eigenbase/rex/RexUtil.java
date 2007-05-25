@@ -433,6 +433,12 @@ public class RexUtil
         }
 
         if (localCheck) {
+            if (SqlTypeUtil.isDecimal(call.getType())) {
+                // NOTE jvs 27-Mar-2007: Depending on the type factory, the
+                // result of a division may be decimal, even though both inputs
+                // are integer.
+                return true;
+            }
             for (int i = 0; i < call.operands.length; i++) {
                 if (SqlTypeUtil.isDecimal(call.operands[i].getType())) {
                     return true;

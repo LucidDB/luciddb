@@ -34,6 +34,7 @@
 -Dnet.sf.farrago.home=${farrago.dir}
 -Dnet.sf.farrago.catalog=${project.catalog.dir}
 -Djava.util.logging.config.file=${FarragoTrace.properties}
+-Djava.security.auth.login.config=jaas.config
 ${farrago.test.jvmargs}
 ">
 
@@ -51,7 +52,7 @@ ${farrago.test.jvmargs}
   <property file="initBuild.properties"/>
 
   <!-- import local property overrides; these take precedence over
-       later definitions in this file -->
+  later definitions in this file -->
   <property file="customBuild.properties"/>
 
   <!-- Definitions for Farrago build properties and macros -->
@@ -83,7 +84,7 @@ ${farrago.test.jvmargs}
     location="${farrago.src.dir}/com/lucidera/lurql/parser"/>
 
   <!-- The version of ANT we require. -->
-  <property name="required.ant.version" value="1.6.5"/>
+  <property name="required.ant.version" value="1.7.0"/>
 
   <condition property="is.correct.ant.version">
     <contains string="${ant.version}" substring="${required.ant.version}"/>
@@ -132,6 +133,7 @@ require version '${required.ant.version}'."/>
   <!-- a fileset of all SQL unit tests -->
   <fileset dir="${unitsql.dir}" id="fileset.unitsql">
     <include name="**/*.sql"/>
+    <exclude name="runner/**/*.sql"/>
   </fileset>
   <pathconvert property="fileset.unitsql" refid="fileset.unitsql"
     pathsep="${line.separator}" dirsep="${file.separator}" />
@@ -172,13 +174,7 @@ require version '${required.ant.version}'."/>
     <pathelement path="${farrago.3p.classpath}"/>
     <pathelement location="${sqlline.lib.dir}/sqlline.jar"/>
     <pathelement location="${sqlline.lib.dir}/jline.jar"/>
-    <fileset dir="${jgrapht.dir}">
-      <include name="jgrapht-jdk1.4.jar" if="farrago.javasrc.14"/>
-      <include name="jgrapht-jdk1.5.jar" unless="farrago.javasrc.14"/>
-    </fileset>
-    <fileset dir="${jgrapht7.dir}">
-      <include name="jgrapht7-jdk1.5.jar" />
-    </fileset>
+    <pathelement location="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
   </path>
   <property name="farrago.build.3p.classpath" 
     refid="farrago.build.3p.classpath"/>
@@ -409,6 +405,12 @@ require version '${required.ant.version}'."/>
       <fileset dir="${unitsql.dir}/syslib/depts_files">
         <include name="*"/>
       </fileset>
+      <fileset dir="${unitsql.dir}/syslib/dates_files">
+        <include name="*"/>
+      </fileset>
+      <fileset dir="${unitsql.dir}/syslib/sales_files">
+        <include name="*"/>
+      </fileset>
       <fileset dir="${unitlurql.dir}" includes="**/*.log"/>
       <fileset dir="${regressionsql.dir}" includes="**/*.log"/>
       <fileset dir="${unitsql.dir}/med/flatfiles">
@@ -446,6 +448,7 @@ require version '${required.ant.version}'."/>
     <!-- NOTE:  redundant backup is an intentional checkpoint; in case
     populateTestData fails, it can be debugged from restored empty catalog -->
     <antcall target="backupCatalog"/>
+    <antcall target="createJaasConfig"/>
   </target>
 
   <target name="createCatalogIfNotUptodate" depends="checkCatalogUptodate"
@@ -482,6 +485,16 @@ require version '${required.ant.version}'."/>
 
   <target name="compileCatalog"
     depends="cleanCatalog,generateSqlTestWrapper,createRepository"/>
+
+  <!-- creates the plugin/jaas.config file from template -->
+  <target name="createJaasConfig">
+    <copy file="${farrago.plugin.dir}/templates/jaas.config.tmpl"
+      tofile="${farrago.plugin.dir}/jaas.config">
+      <filterset>
+        <filter token="FARRAGO_LOGIN_MODULE" value="net.sf.farrago.test.FarragoMockLoginModule"/>
+      </filterset>
+    </copy>
+  </target>
 
   <!-- initialize catalog repository -->
   <target name="createRepository" 
@@ -912,6 +925,7 @@ require version '${required.ant.version}'."/>
   <target name="test-only">
     <antcall target="testRngPlugin"/>
     <antcall target="exportCatalog"/>
+    <antcall target="testDmv"/>
     <antcall target="junit"/>
     <antcall target="regressionWithoutBuild"/>
     <antcall target="testCleanup"/>
@@ -1002,6 +1016,12 @@ please disable it and try again.
       file="${farrago.dir}/examples/rng/unitsql/verifyReplaceCatalog.sql"/>
   </target>
 
+  <!-- TODO:  verify actual .dot output -->
+  <target name="testDmv">
+    <farrago.runSqlTest
+      file="${farrago.dir}/examples/dmv/test.sql"/>
+  </target>
+
   <target name="testCleanup">
     <farrago.runSqlTest
       file="${farrago.dir}/initsql/testCleanup.sql"/>
@@ -1064,6 +1084,8 @@ please disable it and try again.
 
   <!-- Generate FarragoMetadataFactory -->
   <target name="generateMetadataFactory">
+    <antcall target="extractFemTimestamp"/>
+    <property file="${farrago.xmi.dir}/femTimestamp.txt"/>
     <!-- FactoryGen.class needed for code generation -->
     <farrago.javaCompile
       srcdir="${farrago.src.dir}"
@@ -1083,9 +1105,14 @@ please disable it and try again.
       <arg value="FarragoMetadataFactoryImpl"/>
       <arg value="net.sf.farrago.FarragoPackage"/>
       <arg value="FarragoCatalog"/>
+      <arg value="${fem.timestamp}"/>
     </farrago.javaExec>
   </target>
 
+  <target name="extractFemTimestamp">
+    <farrago.extractModelTimestamp umlFile="${FarragoExtMetamodel.uml}"
+      outFile="${farrago.xmi.dir}/femTimestamp.txt"/>
+  </target>
 
   <!-- Debugging target for listing repository extents -->
   <target name="printRepositoryExtents" depends="farrago.mdr_taskdef">

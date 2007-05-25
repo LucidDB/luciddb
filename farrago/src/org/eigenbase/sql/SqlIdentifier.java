@@ -180,6 +180,17 @@ public class SqlIdentifier
     }
 
     /**
+     * Copies names and components from another identifier.  Does
+     * not modify the cross-component parser position.
+     *
+     * @param other identifer from which to copy
+     */
+    public void assignNamesFrom(SqlIdentifier other)
+    {
+        setNames(other.names, other.componentPositions);
+    }
+
+    /**
      * Creates an identifier which contains only the <code>ordinal</code>th
      * component of this compound identifier. It will have the correct {@link
      * SqlParserPos}, provided that detailed position information is available.

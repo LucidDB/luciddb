@@ -24,6 +24,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
+#include "fennel/db/DataFormatExcn.h"
 #include "fennel/common/ConfigMap.h"
 #include "fennel/common/FileSystem.h"
 #include "fennel/device/RandomAccessFileDevice.h"
@@ -32,6 +33,7 @@
 #include "fennel/segment/LinearDeviceSegment.h"
 #include "fennel/segment/Segment.h"
 #include "fennel/segment/VersionedSegment.h"
+#include "fennel/segment/VersionedRandomAllocationSegment.h"
 #include "fennel/common/CompoundId.h"
 #include "fennel/txn/LogicalTxnLog.h"
 #include "fennel/txn/LogicalRecoveryLog.h"
@@ -51,6 +53,7 @@ using namespace boost::filesystem;
 ParamName Database::paramDatabaseDir = "databaseDir";
 ParamName Database::paramResourceDir = "resourceDir";
 ParamName Database::paramForceTxns = "forceTxns";
+ParamName Database::paramDisableSnapshots = "disableSnapshots";
 ParamName Database::paramDatabasePrefix = "database";
 ParamName Database::paramTempPrefix = "temp";
 ParamName Database::paramShadowLogPrefix = "databaseShadowLog";
@@ -77,11 +80,14 @@ SharedDatabase Database::newDatabase(
     if (!pUuidGenerator) {
         pUuidGenerator.reset(new PseudoUuidGenerator());
     }
-    return SharedDatabase(
-        new Database(
-            pCacheInit, configMapInit, openModeInit, pTraceTarget,
-            pUuidGenerator),
-        ClosableObjectDestructor());
+    SharedDatabase pDb =
+        SharedDatabase(
+            new Database(
+                pCacheInit, configMapInit, openModeInit, pTraceTarget,
+                pUuidGenerator),
+            ClosableObjectDestructor());
+    pDb->init();
+    return pDb;
 }
 
 Database::Database(
@@ -96,8 +102,12 @@ Database::Database(
       pUuidGenerator(pUuidGeneratorInit)
 {
     openMode = openModeInit;
+}
 
+void Database::init()
+{
     forceTxns = configMap.getBoolParam(paramForceTxns);
+    disableSnapshots = configMap.getBoolParam(paramDisableSnapshots);
 
     // NOTE:  do this early in case other initialization throws exceptions
     // (and to prevent thread-safety issues later on)
@@ -142,7 +152,7 @@ Database::Database(
     nCheckpoints = nCheckpointsStat = 0;
 
     pSegmentFactory = SegmentFactory::newSegmentFactory(
-        configMap,pTraceTarget);
+        configMap,getSharedTraceTarget());
 
     if (FileSystem::doesFileExist(tempDeviceName.c_str())) {
         FileSystem::remove(tempDeviceName.c_str());
@@ -265,19 +275,32 @@ void Database::closeDevices()
     // REVIEW: have to explicitly close in case someone (like a recovery
     // factory) else still has a segment reference; should probably find a
     // better way to deal with this
-    pDataSegment->close();
-    pDataSegment.reset();
-    pHeaderSegment.reset();
-    pTempSegment->close();
-    pTempSegment.reset();
-
-    // for incomplete recovery, this device may not have been opened yet
-    if (pCache->getDevice(txnLogDeviceId)) {
-        pCache->unregisterDevice(txnLogDeviceId);
+    if (pDataSegment) {
+        pDataSegment->close();
+        pDataSegment.reset();
     }
-    pCache->unregisterDevice(shadowDeviceId);
-    pCache->unregisterDevice(dataDeviceId);
-    pCache->unregisterDevice(tempDeviceId);
+    pHeaderSegment.reset();
+    if (pTempSegment) {
+        pTempSegment->close();
+        pTempSegment.reset();
+    }
+
+    // for incomplete recovery or startup, these devices may not have been
+    // opened yet
+    if (pCache) {
+        if (pCache->getDevice(txnLogDeviceId)) {
+            pCache->unregisterDevice(txnLogDeviceId);
+        }
+        if (pCache->getDevice(shadowDeviceId)) {
+            pCache->unregisterDevice(shadowDeviceId);
+        }
+        if (pCache->getDevice(dataDeviceId)) {
+            pCache->unregisterDevice(dataDeviceId);
+        }
+        if (pCache->getDevice(tempDeviceId)) {
+            pCache->unregisterDevice(tempDeviceId);
+        }
+    }
 }
 
 void Database::deleteLogs()
@@ -433,10 +456,18 @@ void Database::createDataSegment(
     pVersionedSegment = SegmentFactory::dynamicCast<VersionedSegment *>(
         pVersionedDataSegment);
 
-    pDataSegment =
-        pSegmentFactory->newRandomAllocationSegment(
-            pVersionedDataSegment,
-            openMode.create);
+    if (areSnapshotsEnabled()) {
+        pDataSegment =
+            pSegmentFactory->newVersionedRandomAllocationSegment(
+                pVersionedDataSegment,
+                pTempSegment,
+                openMode.create);
+    } else {
+        pDataSegment =
+            pSegmentFactory->newRandomAllocationSegment(
+                pVersionedDataSegment,
+                openMode.create);
+    }
 }
 
 void Database::createTempSegment()
@@ -498,13 +529,19 @@ SharedCheckpointThread Database::getCheckpointThread() const
     return pCheckpointThread;
 }
 
-SharedSegment Database::getSegmentById(SegmentId segmentId)
+SharedSegment Database::getSegmentById(
+    SegmentId segmentId,
+    SharedSegment pDataSegment)
 {
     if (segmentId == TEMP_SEGMENT_ID) {
         return getTempSegment();
     } else {
         assert(segmentId == DEFAULT_DATA_SEGMENT_ID);
-        return getDataSegment();
+        if (pDataSegment) {
+            return pDataSegment;
+        } else {
+            return getDataSegment();
+        }
     }
 }
 
@@ -532,6 +569,7 @@ void Database::allocateHeader()
     DatabaseHeaderPageLock headerPageLock(segmentAccessor);
         
     PageId pageId;
+    pTxnLog->setNextTxnId(FIRST_TXN_ID);
     pageId = headerPageLock.allocatePage();
     assert(pageId == headerPageId1);
     headerPageLock.getNodeForWrite() = header;
@@ -557,9 +595,15 @@ void Database::loadHeader(bool recovery)
     SegmentAccessor segmentAccessor(pHeaderSegment,pCache);
     DatabaseHeaderPageLock headerPageLock1(segmentAccessor);
     headerPageLock1.lockShared(headerPageId1);
+    if (!headerPageLock1.checkMagicNumber()) {
+        throw DataFormatExcn();
+    }
 
     DatabaseHeaderPageLock headerPageLock2(segmentAccessor);
     headerPageLock2.lockShared(headerPageId2);
+    if (!headerPageLock2.checkMagicNumber()) {
+        throw DataFormatExcn();
+    }
 
     DatabaseHeader const &header1 = headerPageLock1.getNodeForRead();
     DatabaseHeader const &header2 = headerPageLock2.getNodeForRead();
@@ -574,6 +618,9 @@ void Database::loadHeader(bool recovery)
         assert(header1.versionNumber == header2.versionNumber);
         // REVIEW:  should assert other fields equal as well?
         header = header1;
+    }
+    if (pTxnLog) {
+        pTxnLog->setNextTxnId(header.txnLogCheckpointMemento.nextTxnId);
     }
 }
 
@@ -743,8 +790,10 @@ void Database::recoverPhysical(CheckpointType checkpointType)
 
     if (header.shadowRecoveryPageId != NULL_PAGE_ID) {
         pVersionedSegment->recover(
-            header.shadowRecoveryPageId, header.versionNumber);
-        pVersionedSegment->checkpoint(checkpointType);
+            pDataSegment,
+            header.shadowRecoveryPageId,
+            header.versionNumber);
+        pDataSegment->checkpoint(checkpointType);
         header.versionNumber = pVersionedSegment->getVersionNumber();
         header.shadowRecoveryPageId = NULL_PAGE_ID;
         writeHeader();
@@ -801,6 +850,57 @@ void Database::writeStats(StatsTarget &target)
 bool Database::shouldForceTxns() const
 {
     return forceTxns;
+}
+
+bool Database::areSnapshotsEnabled() const
+{
+    return (forceTxns && !disableSnapshots);
+}
+
+void Database::deallocateOldPages()
+{
+    uint iSegAlloc = 0;
+    ExtentNum extentNum = 0;
+    // REVIEW zfong 3/12/07 - Determine a good value for numPages.  This
+    // corresponds to the number of pages we will deallocate during a single
+    // iteration.  We will be holding the checkpoint mutex for the duration
+    // of an iteration so we don't want to make the value too big.  But at
+    // the same time, we don't want to make it too small either, because it
+    // would then require a large number of iterations to clean out all old
+    // pages.
+    uint numPages = 100;
+
+    // Determine the oldest active txnId.
+    TxnId oldestActiveTxnId = pTxnLog->getOldestActiveTxnId();
+
+    // Gather a batch of old pageIds and then deallocate them.  After each 
+    // deallocation, issue a checkpoint to flush the modified allocation
+    // node pages.  Continue this in a loop until we've read through all
+    // allocation node pages.
+
+    PageSet oldPageSet;
+    VersionedRandomAllocationSegment *pVersionedRandomSegment =
+        SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
+            pDataSegment);
+    bool morePages = true;
+    do {
+        morePages =
+            pVersionedRandomSegment->getOldPageIds(
+                iSegAlloc,
+                extentNum,
+                oldestActiveTxnId,
+                numPages,
+                oldPageSet);
+        // Hold the checkpoint mutex while deallocating old pages
+        pCheckpointThread->getActionMutex().waitFor(LOCKMODE_S);
+        pVersionedRandomSegment->deallocateOldPages(
+            oldPageSet,
+            oldestActiveTxnId);
+
+        pCheckpointThread->getActionMutex().release(LOCKMODE_S);
+        requestCheckpoint(CHECKPOINT_FLUSH_ALL, false);
+        oldPageSet.clear();
+    } while (morePages);
 }
 
 FENNEL_END_CPPFILE("$Id$");

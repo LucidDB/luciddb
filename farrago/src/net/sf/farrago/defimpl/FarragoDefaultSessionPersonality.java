@@ -39,8 +39,10 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.ddl.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
-import net.sf.farrago.fem.sql2003.FemAbstractColumnSet;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
@@ -75,6 +77,11 @@ public class FarragoDefaultSessionPersonality
 
     //~ Static fields ----------------------------------------------------------
 
+    // REVIEW jvs 8-May-2007:  These are referenced from various
+    // places where it seems like macker should prevent the dependency.
+    // Not sure why that is, but figure out a better place for them
+    // (probably FarragoSessionVariables), leaving these here as aliases.
+    
     /**
      * Numeric data from external data sources may have a greater precision
      * than Farrago. Whether data of greater precision should be replaced
@@ -87,6 +94,21 @@ public class FarragoDefaultSessionPersonality
      */
     public static final String CACHE_STATEMENTS = "cacheStatements";
     public static final String CACHE_STATEMENTS_DEFAULT = "true";
+    /**
+     * Whether DDL validation should be done at prepare time
+     */
+    public static final String VALIDATE_DDL_ON_PREPARE = "validateDdlOnPrepare";
+    public static final String VALIDATE_DDL_ON_PREPARE_DEFAULT = "true";
+    /**
+     * Whether the GENERATED ALWAYS option for identity columns should
+     * be enforced.  TODO jvs 8-May-2007:  This is only intended
+     * for use by the system during ALTER TABLE REBUILD; need to
+     * hide it from the user level.
+     */
+    public static final String ENFORCE_IDENTITY_GENERATED_ALWAYS =
+        "enforceIdentityGeneratedAlways";
+    public static final String ENFORCE_IDENTITY_GENERATED_ALWAYS_DEFAULT =
+        "true";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -104,6 +126,10 @@ public class FarragoDefaultSessionPersonality
             SQUEEZE_JDBC_NUMERIC, false);
         paramValidator.registerBoolParam(
             CACHE_STATEMENTS, false);
+        paramValidator.registerBoolParam(
+            VALIDATE_DDL_ON_PREPARE, false);
+        paramValidator.registerBoolParam(
+            ENFORCE_IDENTITY_GENERATED_ALWAYS, false);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -372,6 +398,12 @@ public class FarragoDefaultSessionPersonality
         variables.setDefault(
             CACHE_STATEMENTS,
             CACHE_STATEMENTS_DEFAULT);
+        variables.setDefault(
+            VALIDATE_DDL_ON_PREPARE,
+            VALIDATE_DDL_ON_PREPARE_DEFAULT);
+        variables.setDefault(
+            ENFORCE_IDENTITY_GENERATED_ALWAYS,
+            ENFORCE_IDENTITY_GENERATED_ALWAYS_DEFAULT);
     }
 
     // implement FarragoSessionPersonality
@@ -380,7 +412,7 @@ public class FarragoDefaultSessionPersonality
     {
         return variables.cloneVariables();
     }
-
+ 
     // implement FarragoSessionPersonality
     public void validateSessionVariable(
         FarragoSessionDdlValidator ddlValidator,
@@ -388,7 +420,7 @@ public class FarragoDefaultSessionPersonality
         String name,
         String value)
     {
-        String validatedValue =
+        String validatedValue = 
             paramValidator.validate(ddlValidator, name, value);
         variables.set(name, validatedValue);
     }
@@ -450,7 +482,7 @@ public class FarragoDefaultSessionPersonality
         if (feature == maasFeature) {
             return false;
         }
-
+        
         // Farrago doesn't support MERGE
         if (feature == EigenbaseResource.instance().SQLFeature_F312) {
             return false;
@@ -515,6 +547,18 @@ public class FarragoDefaultSessionPersonality
     public void resetRowCounts(FemAbstractColumnSet table)
     {
     }
+    
+    // implement FarragoSessionPersonality
+    public void updateIndexRoot(
+        FemLocalIndex index,
+        FarragoDataWrapperCache wrapperCache,
+        FarragoSessionIndexMap baseIndexMap,
+        Long newRoot)
+    {
+        // Drop old roots and update references to point to new roots
+        baseIndexMap.dropIndexStorage(wrapperCache, index, false);
+        baseIndexMap.setIndexRoot(index, newRoot);
+    }
 
     /**
      * ParamDesc represents a session parameter descriptor
@@ -524,7 +568,7 @@ public class FarragoDefaultSessionPersonality
         int type;
         boolean nullability;
         Long rangeStart, rangeEnd;
-
+        
         public ParamDesc(int type, boolean nullability) {
             this.type = type;
             this.nullability = nullability;
@@ -537,18 +581,18 @@ public class FarragoDefaultSessionPersonality
             rangeEnd = end;
         }
     }
-
+    
     /**
      * ParamValidator is a basic session parameter validator
      */
-    public class ParamValidator
+    public class ParamValidator 
     {
         private final int BOOLEAN_TYPE = 1;
         private final int INT_TYPE = 2;
         private final int STRING_TYPE = 3;
         private final int DIRECTORY_TYPE = 4;
         private final int LONG_TYPE = 5;
-
+        
         private Map<String, ParamDesc> params;
 
         public ParamValidator()
@@ -572,7 +616,7 @@ public class FarragoDefaultSessionPersonality
             assert (start <= end);
             params.put(name, new ParamDesc(INT_TYPE, nullability, start, end));
         }
-
+        
         public void registerLongParam(
             String name, boolean nullability, long start, long end)
         {
@@ -592,7 +636,7 @@ public class FarragoDefaultSessionPersonality
 
         public String validate(
             FarragoSessionDdlValidator ddlValidator,
-            String name,
+            String name, 
             String value)
         {
             if (! params.containsKey(name)) {

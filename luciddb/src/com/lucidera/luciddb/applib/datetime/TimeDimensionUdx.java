@@ -287,10 +287,11 @@ public abstract class TimeDimensionUdx
             //~---------- fiscal columns ----------
           
             // FISCAL_WEEK_START_DATE
-            resultInserter.setDate(++column, tdi.getFirstDayOfWeekDate());
+            resultInserter.setDate(++column, 
+                tdi.getFirstDayOfFiscalWeekDate());
 
             // FISCAL_WEEK_END_DATE
-            resultInserter.setDate(++column, tdi.getLastDayOfWeekDate());
+            resultInserter.setDate(++column, tdi.getLastDayOfFiscalWeekDate());
 
             // FISCAL_WEEK_NUMBER_IN_MONTH
             resultInserter.setInt(++column, tdi.getWeekOfFiscalMonth());

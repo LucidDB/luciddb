@@ -32,7 +32,9 @@ values (current_user);
 values (user);
 
 -- test SYSTEM_USER (but don't actually execute since it's context-dependent)
-explain plan for values (system_user);
+-- (zfong 5/9/07) - Commented out test since we now convert system_user and
+-- other context dependent functions to constants during optimization
+-- explain plan for values (system_user);
 
 -- Janino had problems with this one (fixed in their 2.0.5 release)
 values true and true;
@@ -59,6 +61,9 @@ values current_path;
 -- test LucidDB's standard-bending for 
 -- SQL:2003 Part 2 Section 9.3 Syntax Rule 3.a.iii.3
 -- (see http://sf.net/mailarchive/message.php?msg_id=13337379)
+-- and some numeric type derivation
+
+values (1/3);
 
 !set outputformat csv
 
@@ -66,4 +71,6 @@ values ('no'), ('yes'), ('maybe');
 
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
-values ('no'), ('si'), ('es possible');
+values (1/7);
+
+values ('no'), ('si'), ('es posible');

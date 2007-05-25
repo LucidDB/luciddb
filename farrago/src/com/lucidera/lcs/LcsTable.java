@@ -75,6 +75,8 @@ public class LcsTable
             FarragoCatalogUtil.getClusteredIndexes(
                 getPreparingStmt().getRepos(),
                 getCwmColumnSet());
+        double inputSelectivity = 1.0;
+        
         return
             new LcsRowScanRel(
                 cluster,
@@ -85,7 +87,8 @@ public class LcsTable
                 null,
                 true,
                 false,
-                new Integer[0]);
+                new Integer[0],
+                inputSelectivity);
     }
 
     public LcsIndexGuide getIndexGuide()

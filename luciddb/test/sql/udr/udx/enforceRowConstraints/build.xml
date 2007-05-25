@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2007-2007 LucidEra, Inc.
+// Copyright (C) 2007-2007 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<project name="rowconstraints" basedir="." default="test">
+  <dirname property="rowconstraints.dir" file="${ant.file.rowconstraints}" />
+
+  <property name="open.dir" 
+    location="${rowconstraints.dir}/../../../../../.."/>
+  <fail unless="open.dir" />
+
+  <property environment="env" />
+  <property file="run.properties"/>
+
+  <!-- override Farrago -->
+  <property name="project.catalog.dir"
+    location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" 
+    location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <property name="project.testlog.dir"
+    location="${open.dir}/luciddb/testlog" />
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+  <import file="${open.dir}/luciddb/buildMacros.xml" />
+
+  <!-- directory where sql is generated -->
+  <property name="gensql.dir" value="${rowconstraints.dir}/gen" />
+  <!-- directory where blackhawk output should go -->
+  <property name="bh.log.basedir" value="${rowconstraints.dir}/testlog" />
+
+  <!-- directory for test message catalog jars -->
+  <property name="testmsgs.dir" value="${rowconstraints.dir}/msgs" />
+  <!-- directory of csv files -->
+  <property name="csv.copy.dir" value="${rowconstraints.dir}/csv-copy" />
+  <property name="data.dir" value="${open.dir}/luciddb/test/data" />
+  <!-- directory for log files -->
+  <property name="log.dir" value="${rowconstraints.dir}/logs" />
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${open.dir}/luciddb/classes"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+    <pathelement path="${test.emma.classpath}" />
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
+  <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+
+    <!-- generate sql -->
+    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
+    <if>
+      <isset property="sql.generated"/>
+      <then/>
+      <else>
+        <copy todir="${gensql.dir}" overwrite="true">
+          <fileset dir="${rowconstraints.dir}" includes="*.tmpl"/>
+          <filterset id="dir.filter">
+            <filter token="DIR" value="${csv.copy.dir}"/>
+            <filter token="LOGDIR" value="${log.dir}"/>
+            <filter token="PLUGINDIR" value="${luciddb.plugin.dir}"/>
+          </filterset>
+          <globmapper from="*.tmpl" to="*"/>
+        </copy>
+
+        <copy todir="${gensql.dir}" overwrite="true">
+          <fileset dir="${rowconstraints.dir}">
+            <include name="*.sql"/>
+            <include name="*.ref"/>
+          </fileset>
+        </copy>
+      </else>
+    </if>
+    
+    <!-- create log directory -->
+    <mkdir dir="${log.dir}"/>
+  </target>
+
+  <target name="test" depends="gen-all-sql">
+    <blackhawk.fork
+      basedir="${rowconstraints.dir}"
+      testscript="${testfile}"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="clean">
+    <delete dir="${bh.log.basedir}"/>
+    <delete file="run.properties"/>
+    <delete dir="${gensql.dir}"/>
+    <delete dir="${log.dir}"/>
+    <delete dir="${csv.copy.dir}"/>
+  </target>
+
+  <!-- targets to be called for tests -->
+  <target name="installTestMsgCatalogs">
+    <copy todir="${luciddb.plugin.dir}">
+      <fileset dir="${testmsgs.dir}">
+        <include name="TestMsgs.jar"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="cleanTestMsgCatalogs">
+    <delete>
+      <fileset dir="${luciddb.plugin.dir}">
+        <include name="TestMsgs.jar"/>
+      </fileset>
+    </delete>
+  </target>
+  
+  <target name="copy-csv">
+    <sync todir="${csv.copy.dir}" overwrite="true" verbose="true"
+      failonerror="true">
+      <fileset dir="${data.dir}">
+        <include name="EMP.*"/>
+        <include name="types.*"/>
+      </fileset>
+    </sync>
+  </target>
+
+  <!-- misc targets for building msg catalog jars -->
+  <target name="buildTestMsgCatalogs">
+    <delete>
+      <fileset dir="${testmsgs.dir}">
+        <include name="TestMsgs.jar"/>
+      </fileset>
+    </delete>
+    <jar jarfile="${testmsgs.dir}/TestMsgs.jar">
+      <fileset dir="${testmsgs.dir}">
+        <include name="TestMsgs.properties" />
+      </fileset>
+      <manifest>
+        <attribute name="ResourceBundleBaseName" value="TestMsgs"/>
+      </manifest>
+    </jar>
+  </target>
+
+</project>

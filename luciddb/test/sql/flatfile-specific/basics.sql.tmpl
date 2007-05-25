@@ -1,0 +1,197 @@
+--------------------------------------------------
+-- test basic lenient reading from flatfiles
+-- without mapping
+--------------------------------------------------
+
+----------------------------------------
+-- setup
+----------------------------------------
+
+create schema flatfile_schema;
+set schema 'flatfile_schema';
+
+create server lenientnomap_server
+foreign data wrapper sys_file_wrapper
+options (
+        directory '@DIRECTORY@',
+        file_extension '@FILE_EXTENSION@');
+
+import foreign schema bcp
+from server lenientnomap_server
+into flatfile_schema;
+
+
+----------------------------------------
+-- csv file has fewer columns 
+----------------------------------------
+
+-- case 1: csv doesn't have last column
+
+-- select directly from flatfile server
+select * from lenientnomap_server.bcp."example1" order by id;
+
+-- select from foreign table
+create foreign table hasfewercol1(
+        id              int not null,
+        name            varchar(50) not null,
+        extra_col1      char(1) not null,
+        extra_col2      char(1))
+server lenientnomap_server
+options (filename 'example1');
+select * from hasfewercol1 order by id;
+
+create foreign table hasfewercol11
+server lenientnomap_server
+options (filename 'example1');
+select * from hasfewercol11 order by id;
+
+-- select from imported schema
+select * from "example1" order by id;
+
+-- case 2 - bcp has 4, csv has 1 column
+
+-- select directly from flatfile server
+select * from lenientnomap_server.bcp."onecol" order by id;
+
+-- select from foreign table
+create foreign table hasfewercol2(
+        id      int not null,
+        name    varchar(5))
+server lenientnomap_server
+options (filename 'onecol');
+select * from hasfewercol2 order by id;
+
+create foreign table hasfewercol21
+server lenientnomap_server
+options (filename 'onecol');
+select * from hasfewercol21 order by id;
+
+-- select from imported schema
+select * from "onecol" order by id;
+
+----------------------------------------
+-- csv file has more columns
+----------------------------------------
+
+-- case 1: bcp has 2, csv has 3 columns
+
+-- select directly from flatfile server
+select * from lenientnomap_server.bcp."example2" order by id;
+
+-- select from foreign table
+create foreign table hasmorecol1(
+        id       int not null,
+        name     varchar(50) not null)
+server lenientnomap_server
+options (filename 'example2');
+select * from hasmorecol1 order by id;
+
+create foreign table hasmorecol11
+server lenientnomap_server
+options (filename 'example2');
+select * from hasmorecol11 order by id;
+
+-- select from imported schema
+select * from "example2" order by id;
+
+----------------------------------------
+-- csv has various number of columns
+----------------------------------------
+
+-- case 1
+
+-- select directly from flatfile server
+select * from lenientnomap_server.bcp."mixednumcols1" order by id;
+
+-- select from foreign table
+create foreign table mixednumcols1(
+        id              int not null,
+        name            varchar(50) not null,
+        extra_col      char(1))
+server lenientnomap_server
+options (filename 'mixednumcols1');
+select * from mixednumcols1 order by id;
+
+create foreign table mixednumcols11
+server lenientnomap_server
+options (filename 'mixednumcols1');
+select * from mixednumcols11 order by id;
+
+-- select from imported schema
+select * from "mixednumcols1" order by id;
+
+-- case 2
+
+-- select directly from flatfile server
+select * from lenientnomap_server.bcp."mixednumcols2" order by id;
+
+-- select from foreign table
+create foreign table mixednumcols21(
+        id              int not null,
+        name            varchar(50),
+        extra_col      char(1))
+server lenientnomap_server
+options (filename 'mixednumcols2');
+select * from mixednumcols21 order by id;
+
+create foreign table mixednumcols22
+server lenientnomap_server
+options (filename 'mixednumcols2');
+select * from mixednumcols22 order by id;
+
+-- select from imported schema
+select * from "mixednumcols2" order by id;
+
+----------------------------------------
+-- csv has blank lines (lines with only line delims)
+----------------------------------------
+
+-- case 1
+
+-- select directly from flatfile server
+select * from lenientnomap_server.bcp."blanklines1" order by id;
+
+-- select from foreign table
+create foreign table blanklines11(
+        id              int not null,
+        name            varchar(50) not null,
+        extra_col      char(1))
+server lenientnomap_server
+options (filename 'blanklines1');
+select * from blanklines11 order by id;
+
+create foreign table blanklines12
+server lenientnomap_server
+options (filename 'blanklines1');
+select * from blanklines12 order by id;
+
+-- select from imported schema
+select * from "blanklines1" order by id;
+
+-- case 2
+
+-- select directly from flatfile server
+select * from lenientnomap_server.bcp."blanklines2" order by id;
+
+-- select from foreign table
+create foreign table blanklines21(
+        id              int not null,
+        name            varchar(50) not null,
+        extra_col      char(1))
+server lenientnomap_server
+options (filename 'blanklines2');
+select * from blanklines21 order by id;
+
+create foreign table blanklines22
+server lenientnomap_server
+options (filename 'blanklines2');
+select * from blanklines22 order by id;
+
+-- select from imported schema
+select * from "blanklines2" order by id;
+
+----------------------------------------
+-- cleanup
+----------------------------------------
+drop schema flatfile_schema cascade;
+drop server lenientnomap_server cascade;

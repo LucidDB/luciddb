@@ -194,6 +194,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
     PageBucketT &bucket = getHashBucket(blockId);
     PageT *page = lookupPage(bucket,blockId);
     if (page) {
+        assert(page->pMappedPageListener == pMappedPageListener); 
         // note that lookupPage incremented page's reference count for us, so
         // it's safe from victimization from here on
         incrementStatsCounter(nCacheHits);
@@ -494,6 +495,19 @@ uint CacheImpl<PageT,VictimPolicyT>
             } else if (flushPhase == phaseWait) {
                 while (page.dataStatus == CachePage::DATA_WRITE) {
                     page.waitForPendingIO(pageGuard);
+                }
+
+                // Reset the listener if called for by the original listener.
+                // Note that by doing so, if we're later going to be unmapping
+                // cache entries, we will not unmap this page because its
+                // listener has changed.
+                if (page.pMappedPageListener) {
+                    MappedPageListener *newListener =
+                    page.pMappedPageListener->notifyAfterPageCheckpointFlush(
+                        page);
+                    if (newListener != NULL) {
+                        page.pMappedPageListener = newListener;
+                    }
                 }
             } else {
                 if (checkpointType <= CHECKPOINT_FLUSH_AND_UNMAP) {
@@ -1036,7 +1050,8 @@ template <class PageT,class VictimPolicyT>
 inline FileSize CacheImpl<PageT,VictimPolicyT>
 ::getPageOffset(BlockId const &blockId)
 {
-    return CompoundId::getBlockNum(blockId)*cbPage;
+    return ((FileSize) CompoundId::getBlockNum(blockId))
+        * (FileSize) cbPage;
 }
 
 template <class PageT,class VictimPolicyT>

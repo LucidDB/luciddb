@@ -206,13 +206,6 @@ public interface FarragoSessionDdlValidator
     public void executeStorage();
 
     /**
-     * Schedules truncation of an existing object.
-     *
-     * @param modelElement to be truncated
-     */
-    public void scheduleTruncation(CwmModelElement modelElement);
-
-    /**
      * Validates all scheduled operations. Validation may cause other objects to
      * be changed, so the process continues until a fixpoint is reached.
      *

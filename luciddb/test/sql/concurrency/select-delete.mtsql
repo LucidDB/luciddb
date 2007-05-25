@@ -62,7 +62,7 @@
 
   @sync
   @sleep 1000
-  @err delete from t1 where c=1;
+  delete from t1 where c=1;
   @sync
 
 @end

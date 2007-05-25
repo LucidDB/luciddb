@@ -40,7 +40,23 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct DatabaseHeader : public StoredNode
 {
-    static const MagicNumber MAGIC_NUMBER = 0xb1b7b315d821d90aLL;
+    // NOTE jvs 27-Apr-2007:  We use distinct magic numbers for incompatible
+    // hardware/OS/compiler architectures.  This prevents accidents when
+    // attempting to transport physical backup images across machines.
+    // Currently, for 32-bit x86, Windows and Linux gcc are incompatible
+    // (it may be possible to fix this via pragma/switches, but no
+    // one has investigated it so far).
+    
+    // Magic number history:
+    // Original value:  0xb1b7b315d821d90aLL;
+    // Modified by zfong on 3/1/07 (for addition of nextTxnId to checkpoint
+    // memento) to latest value:
+#ifndef __MINGW32__
+    static const MagicNumber MAGIC_NUMBER = 0xb0941b203b81f718LL;
+#else
+    // Added by jvs for Windows-specific on 27-Apr-2007
+    static const MagicNumber MAGIC_NUMBER = 0x8afe0241a2f7063eLL;
+#endif
 
     /**
      * Data segment version number at last checkpoint.

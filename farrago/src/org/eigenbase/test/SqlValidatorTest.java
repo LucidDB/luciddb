@@ -5602,6 +5602,52 @@ public class SqlValidatorTest
             + "FROM `SALES`.`DEPT` AS `DEPT`");
     }
 
+    public void testRewriteWithColumnReferenceExpansion()
+    {
+        // NOTE jvs 9-Apr-2007:  This tests illustrates that
+        // ORDER BY is still a special case.  Update expected
+        // output if that gets fixed in the future.
+        
+        SqlValidator validator = tester.getValidator();
+        validator.setIdentifierExpansion(true);
+        validator.setColumnReferenceExpansion(true);
+        tester.checkRewrite(
+            validator,
+            "select name from dept where name = 'Moonracer' group by name"
+            + " having sum(deptno) > 3 order by name",
+            TestUtil.fold(
+                "SELECT `DEPT`.`NAME`\n"
+                + "FROM `SALES`.`DEPT` AS `DEPT`\n"
+                + "WHERE `DEPT`.`NAME` = 'Moonracer'\n"
+                + "GROUP BY `DEPT`.`NAME`\n"
+                + "HAVING SUM(`DEPT`.`DEPTNO`) > 3\n"
+                + "ORDER BY `NAME`"));
+    }
+
+    public void testRewriteWithColumnReferenceExpansionAndFromAlias()
+    {
+        // NOTE jvs 9-Apr-2007:  This tests illustrates that
+        // ORDER BY is still a special case.  Update expected
+        // output if that gets fixed in the future.
+        
+        SqlValidator validator = tester.getValidator();
+        validator.setIdentifierExpansion(true);
+        validator.setColumnReferenceExpansion(true);
+        tester.checkRewrite(
+            validator,
+            "select name from (select * from dept)"
+            + " where name = 'Moonracer' group by name"
+            + " having sum(deptno) > 3 order by name",
+            TestUtil.fold(
+                "SELECT `EXPR$0`.`NAME`\n"
+                + "FROM (SELECT `DEPT`.`DEPTNO`, `DEPT`.`NAME`\n"
+                + "FROM `SALES`.`DEPT` AS `DEPT`) AS `EXPR$0`\n"
+                + "WHERE `EXPR$0`.`NAME` = 'Moonracer'\n"
+                + "GROUP BY `EXPR$0`.`NAME`\n"
+                + "HAVING SUM(`EXPR$0`.`DEPTNO`) > 3\n"
+                + "ORDER BY `NAME`"));
+    }
+
     public void testCoalesceWithoutRewrite()
     {
         SqlValidator validator = tester.getValidator();

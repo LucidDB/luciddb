@@ -40,9 +40,14 @@ public:
      *
      * @param segmentId the SegmentId to find
      *
+     * @param pDataSegment the specific segment associated with a statement,
+     * if a specific segment must be used
+     *
      * @return loaded segment, or a singular SharedSegment if not found
      */
-    virtual SharedSegment getSegmentById(SegmentId segmentId) = 0;
+    virtual SharedSegment getSegmentById(
+        SegmentId segmentId,
+        SharedSegment pDataSegment) = 0;
 };
 
 FENNEL_END_NAMESPACE

@@ -1,0 +1,302 @@
+0: jdbc:luciddb:> -- constraints for different datatypes and data w/ nulls
+0: jdbc:luciddb:> create schema uc;
+0: jdbc:luciddb:> set schema 'uc';
+0: jdbc:luciddb:> alter session set "etlProcessId"='null_uc';
+0: jdbc:luciddb:> alter session set "logDir"='@ERRLOGDIR@';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table null_src(
+. . . . . . . . >   pkey int,
+. . . . . . . . >   colbigint bigint,
+. . . . . . . . >   colvar varchar(20),
+. . . . . . . . >   colchar char(20),
+. . . . . . . . >   colint int
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into null_src values
+. . . . . . . . > (null, null, null, null, null),
+. . . . . . . . > (1, 10000, 'one', 'ten-thousand', 10000),
+. . . . . . . . > (2, 30, 'two', 'thirty', 60),
+. . . . . . . . > (3, null, 'three', null, null),
+. . . . . . . . > (3, null, 'three2', 'three2', 32),
+. . . . . . . . > (2, 40, 'two', 'forty', 80),
+. . . . . . . . > (null, 10, null, 'ten', null),
+. . . . . . . . > (4, 40, 'four', 'forty', 160);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- duplicate data with null keys for primary key insert
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_pk_null';
+0: jdbc:luciddb:> alter session set "errorMax"=5;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table null_uc_pk(
+. . . . . . . . >   pkey int primary key,
+. . . . . . . . >   colbigint bigint,
+. . . . . . . . >   colvar varchar(20),
+. . . . . . . . >   colchar char(20),
+. . . . . . . . >   colint int
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into null_uc_pk select * from null_src;
+0: jdbc:luciddb:> select * from null_uc_pk order by 1,2,3,4,5;
++-------+------------+---------+-----------------------+---------+
+| PKEY  | COLBIGINT  | COLVAR  |        COLCHAR        | COLINT  |
++-------+------------+---------+-----------------------+---------+
+| 1     | 10000      | one     | ten-thousand          | 10000   |
+| 2     | 30         | two     | thirty                | 60      |
+| 3     |            | three   |                       |         |
+| 4     | 40         | four    | forty                 | 160     |
++-------+------------+---------+-----------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- duplicate data with null keys for single unique constraint insert
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_sk_null';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table null_uc_sk(
+. . . . . . . . >   pkey int,
+. . . . . . . . >   colbigint bigint,
+. . . . . . . . >   colvar varchar(20),
+. . . . . . . . >   colchar char(20),
+. . . . . . . . >   colint int,
+. . . . . . . . >   constraint n_pkey_unique UNIQUE(pkey)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into null_uc_sk select * from null_src;
+0: jdbc:luciddb:> select * from null_uc_sk order by 1,2,3,4,5;
++-------+------------+---------+-----------------------+---------+
+| PKEY  | COLBIGINT  | COLVAR  |        COLCHAR        | COLINT  |
++-------+------------+---------+-----------------------+---------+
+|       |            |         |                       |         |
+|       | 10         |         | ten                   |         |
+| 1     | 10000      | one     | ten-thousand          | 10000   |
+| 2     | 30         | two     | thirty                | 60      |
+| 3     |            | three   |                       |         |
+| 4     | 40         | four    | forty                 | 160     |
++-------+------------+---------+-----------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- duplicate data with null keys for primary key merge
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_pk_null';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from null_src where pkey=2 and colbigint=30;
+0: jdbc:luciddb:> insert into null_src values
+. . . . . . . . > (1, 10, 'one', 'ten', 100),
+. . . . . . . . > (5, 50, 'five', 'fifty', 250),
+. . . . . . . . > (null, 50, null, 'fifty', null);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into null_uc_pk tgt using null_src src
+. . . . . . . . >   on src.pkey = tgt.pkey
+. . . . . . . . >   when matched then
+. . . . . . . . >     update set colbigint=src.colbigint, colvar=src.colvar, colchar=src.colchar,
+. . . . . . . . >       colint=src.colint 
+. . . . . . . . >   when not matched then
+. . . . . . . . >     insert values (src.pkey, src.colbigint, src.colvar, src.colchar,
+. . . . . . . . >       src.colint);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from null_uc_pk order by 1,2,3,4,5;
++-------+------------+---------+-----------------------+---------+
+| PKEY  | COLBIGINT  | COLVAR  |        COLCHAR        | COLINT  |
++-------+------------+---------+-----------------------+---------+
+| 1     | 10         | one     | ten                   | 100     |
+| 2     | 40         | two     | forty                 | 80      |
+| 3     |            | three2  | three2                | 32      |
+| 4     | 40         | four    | forty                 | 160     |
+| 5     | 50         | five    | fifty                 | 250     |
++-------+------------+---------+-----------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- duplicate data with null keys for single key constraint merge
+0: jdbc:luciddb:> alter session set "etlActionId"='merge_sk_null';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into null_uc_sk tgt using null_src src
+. . . . . . . . >   on src.pkey = tgt.pkey
+. . . . . . . . >   when matched then
+. . . . . . . . >     update set colbigint=src.colbigint, colvar=src.colvar, colchar=src.colchar,
+. . . . . . . . >       colint=src.colint 
+. . . . . . . . >   when not matched then
+. . . . . . . . >     insert values (src.pkey, src.colbigint, src.colvar, src.colchar,
+. . . . . . . . >       src.colint);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from null_uc_sk order by 1,2,3,4,5;
++-------+------------+---------+-----------------------+---------+
+| PKEY  | COLBIGINT  | COLVAR  |        COLCHAR        | COLINT  |
++-------+------------+---------+-----------------------+---------+
+|       |            |         |                       |         |
+|       |            |         |                       |         |
+|       | 10         |         | ten                   |         |
+|       | 10         |         | ten                   |         |
+|       | 50         |         | fifty                 |         |
+| 1     | 10         | one     | ten                   | 100     |
+| 2     | 40         | two     | forty                 | 80      |
+| 3     |            | three2  | three2                | 32      |
+| 4     | 40         | four    | forty                 | 160     |
+| 5     | 50         | five    | fifty                 | 250     |
++-------+------------+---------+-----------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- duplicate data with multiple key constraint
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_multikey_null';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table null_uc_mk(
+. . . . . . . . >   pkey int,
+. . . . . . . . >   colbigint bigint,
+. . . . . . . . >   colvar varchar(20),
+. . . . . . . . >   colchar char(20),
+. . . . . . . . >   colint int,
+. . . . . . . . >   constraint n_pkey_bi_unique UNIQUE(pkey,colbigint)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into null_uc_mk select * from null_src;
+0: jdbc:luciddb:> select * from null_uc_mk order by 1,2,3,4,5;
++-------+------------+---------+-----------------------+---------+
+| PKEY  | COLBIGINT  | COLVAR  |        COLCHAR        | COLINT  |
++-------+------------+---------+-----------------------+---------+
+|       |            |         |                       |         |
+|       | 10         |         | ten                   |         |
+|       | 50         |         | fifty                 |         |
+| 1     | 10         | one     | ten                   | 100     |
+| 1     | 10000      | one     | ten-thousand          | 10000   |
+| 2     | 40         | two     | forty                 | 80      |
+| 3     |            | three   |                       |         |
+| 3     |            | three2  | three2                | 32      |
+| 4     | 40         | four    | forty                 | 160     |
+| 5     | 50         | five    | fifty                 | 250     |
++-------+------------+---------+-----------------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check logs
+0: jdbc:luciddb:> select process_id, action_id, error_count, warning_count, "SQL"
+. . . . . . . . >   from errlogs.bcp."Summary"
+. . . . . . . . >   where process_id='nulls_uc';
++-------------+------------+--------------+----------------+------+
+| PROCESS_ID  | ACTION_ID  | ERROR_COUNT  | WARNING_COUNT  | SQL  |
++-------------+------------+--------------+----------------+------+
++-------------+------------+--------------+----------------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- tests for different datatype keys
+0: jdbc:luciddb:> alter session set "etlProcessId"='datatypes_uc';
+0: jdbc:luciddb:> alter session set "errorMax"=10;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- boolean key
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_boolkey';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table boolkey_uc(
+. . . . . . . . >   pkey boolean,
+. . . . . . . . >   var varchar(20),
+. . . . . . . . >   constraint b_pkey_unique UNIQUE(pkey)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into boolkey_uc values
+. . . . . . . . > (true, 'true'),
+. . . . . . . . > (false, 'false'),
+. . . . . . . . > (true, 'false'),
+. . . . . . . . > (false, 'true');
+0: jdbc:luciddb:> select * from boolkey_uc order by 1,2;
++--------+--------+
+|  PKEY  |  VAR   |
++--------+--------+
+| false  | false  |
+| true   | true   |
++--------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- varchar with trailing spaces
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_varcharkey';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table varchar_uc(
+. . . . . . . . >   pkey varchar(20),
+. . . . . . . . >   var varchar(20),
+. . . . . . . . >   constraint v_pkey_unique UNIQUE(pkey)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into varchar_uc values
+. . . . . . . . > ('Abc', 'Abc-trimmed'),
+. . . . . . . . > ('  Abc', 'Abc-spaces before'),
+. . . . . . . . > ('Abc  ', 'Abc-trailing spaces'),
+. . . . . . . . > (cast('Abc   ' as varchar(100)), 'trailing-100'),
+. . . . . . . . > (trim(' Abc '), 'trimmed');
+0: jdbc:luciddb:> select * from varchar_uc order by 1,2;
++--------+--------------------+
+|  PKEY  |        VAR         |
++--------+--------------------+
+|   Abc  | Abc-spaces before  |
+| Abc    | Abc-trimmed        |
++--------+--------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- char with trailing spaces
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_charkey';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table char_uc(
+. . . . . . . . >   pkey char(20),
+. . . . . . . . >   var varchar(20),
+. . . . . . . . >   constraint c_pkey_unique UNIQUE(pkey)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into char_uc values
+. . . . . . . . > ('Abc', 'Abc-trimmed'),
+. . . . . . . . > ('  Abc', 'Abc-spaces before'),
+. . . . . . . . > ('Abc  ', 'Abc-trailing spaces'),
+. . . . . . . . > (cast('Abc   ' as varchar(100)), 'trailing-100'),
+. . . . . . . . > (trim(' Abc '), 'trimmed');
+0: jdbc:luciddb:> select * from char_uc order by 1,2;
++-----------------------+--------------------+
+|         PKEY          |        VAR         |
++-----------------------+--------------------+
+|   Abc                 | Abc-spaces before  |
+| Abc                   | Abc-trimmed        |
++-----------------------+--------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- different kind of integer types
+0: jdbc:luciddb:> alter session set "etlActionId"='insert_intkey';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table bii_uc(
+. . . . . . . . >   ikey int,
+. . . . . . . . >   bikey bigint,
+. . . . . . . . >   var varchar(20),
+. . . . . . . . >   constraint i_unique UNIQUE(ikey),
+. . . . . . . . >   constraint bi_unique  UNIQUE(bikey)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into bii_uc values
+. . . . . . . . > (1, 1, '1'),
+. . . . . . . . > (cast(1 as bigint), cast(1 as bigint), '2'),
+. . . . . . . . > (cast(1 as tinyint), cast(1 as tinyint), '3'),
+. . . . . . . . > (cast(1 as smallint), cast(1 as smallint), '4');
+0: jdbc:luciddb:> select * from bii_uc order by 1,2,3;
++-------+--------+------+
+| IKEY  | BIKEY  | VAR  |
++-------+--------+------+
+| 1     | 1      | 1    |
++-------+--------+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check logs
+0: jdbc:luciddb:> select process_id, action_id, error_count, warning_count, "SQL"
+. . . . . . . . >   from errlogs.bcp."Summary"
+. . . . . . . . >   where process_id='datatypes_uc';
++---------------+--------------------+--------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|  PROCESS_ID   |     ACTION_ID      | ERROR_COUNT  | WARNING_COUNT  |                                                                                                  SQL                                                                                                  |
++---------------+--------------------+--------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| datatypes_uc  | insert_boolkey     | 2            | 0              | insert into boolkey_uc values
+(true, 'true'),
+(false, 'false'),
+(true, 'false'),
+(false, 'true')                                                                                                      |
+| datatypes_uc  | insert_varcharkey  | 3            | 0              | insert into varchar_uc values
+('Abc', 'Abc-trimmed'),
+('  Abc', 'Abc-spaces before'),
+('Abc  ', 'Abc-trailing spaces'),
+(cast('Abc   ' as varchar(100)), 'trailing-100'),
+(trim(' Abc '), 'trimmed')  |
+| datatypes_uc  | insert_charkey     | 3            | 0              | insert into char_uc values
+('Abc', 'Abc-trimmed'),
+('  Abc', 'Abc-spaces before'),
+('Abc  ', 'Abc-trailing spaces'),
+(cast('Abc   ' as varchar(100)), 'trailing-100'),
+(trim(' Abc '), 'trimmed')     |
+| datatypes_uc  | insert_intkey      | 3            | 0              | insert into bii_uc values
+(1, 1, '1'),
+(cast(1 as bigint), cast(1 as bigint), '2'),
+(cast(1 as tinyint), cast(1 as tinyint), '3'),
+(cast(1 as smallint), cast(1 as smallint), '4')                    |
+| datatypes_uc  | insert_intkey      | 3            | 0              | insert into bii_uc values
+(1, 1, '1'),
+(cast(1 as bigint), cast(1 as bigint), '2'),
+(cast(1 as tinyint), cast(1 as tinyint), '3'),
+(cast(1 as smallint), cast(1 as smallint), '4')                    |
++---------------+--------------------+--------------+----------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop schema uc cascade;
+0: jdbc:luciddb:> !quit
