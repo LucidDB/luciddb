@@ -625,9 +625,27 @@ public class JmiChangeSet
             JmiValidationAction.DELETION);
     }
 
+    /**
+     * Decides whether an object requires validation processing on creation or
+     * modification.  (Deletion validation processing is carried out
+     * regardless of this decision.)
+     *
+     * @param obj object being touched
+     *
+     * @return true to carry out validation processing; false to
+     * suppress
+     */
+    protected boolean shouldValidateModification(RefObject obj)
+    {
+        return true;
+    }
+
     private void scheduleModification(RefObject obj)
     {
         if (obj == null) {
+            return;
+        }
+        if (!shouldValidateModification(obj)) {
             return;
         }
         if (validatedMap.containsKey(obj)) {
