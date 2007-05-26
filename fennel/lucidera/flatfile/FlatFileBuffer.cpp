@@ -89,8 +89,10 @@ uint FlatFileBuffer::read()
 
     uint free = bufferSize - residual;
     char *target = pBuffer + residual;
-    uint targetSize =
-        std::min( free * sizeof(char), (uint) (fileEnd - filePosition) );
+    uint targetSize = (uint)
+        std::min( 
+            FileSize(free * sizeof(char)), 
+            fileEnd - filePosition );
     
     RandomAccessRequest readRequest;
     readRequest.pDevice = pRandomAccessDevice.get();

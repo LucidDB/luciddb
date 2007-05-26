@@ -1,0 +1,29 @@
+-- use default ORACLE wrapper
+create server ORCL_SERVER_SCHEMA_MAPPING
+foreign data wrapper ORACLE
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    schema_mapping 'SCHOI:X;SCOTT:X'
+);
+
+select * from orcl_server_schema_mapping.schoi.@DATATYPE_TABLE@ order by 1,2,3,4,5,6;
+select * from orcl_server_schema_mapping.scott.ADDR order by 1,2,3;
+
+-- query directly using mapped schema name
+select numericcolzerop from orcl_server_schema_mapping.x.@DATATYPE_TABLE@ order by 1;
+select street from orcl_server_schema_mapping.x.ADDR order by 1;
+
+create schema apps;
+set schema 'apps';
+
+-- import tables from different schemas to one local schema
+import foreign schema X LIMIT TO (@DATATYPE_TABLE@, ADDR) from server ORCL_SERVER_SCHEMA_MAPPING into apps;
+
+select * from apps.ADDR order by 1,2,3;
+select * from apps.@DATATYPE_TABLE@ order by 1,2,3,4,5,6;
+
+drop schema apps cascade;
+drop server ORCL_SERVER_SCHEMA_MAPPING cascade;

@@ -81,6 +81,7 @@ public class MedJdbcDataServer
     public static final String PROP_LENIENT = "LENIENT";
     public static final String PROP_DISABLED_PUSHDOWN_REL_PATTERN =
         "DISABLED_PUSHDOWN_REL_PATTERN";
+    public static final String PROP_SCHEMA_MAPPING = "SCHEMA_MAPPING";
 
     // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
@@ -116,6 +117,7 @@ public class MedJdbcDataServer
     protected Pattern disabledPushdownPattern;
     private int fetchSize;
     private boolean autocommit;
+    protected HashMap schemaMaps;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -141,6 +143,7 @@ public class MedJdbcDataServer
         catalogName = props.getProperty(PROP_CATALOG_NAME);
         loginTimeout = props.getProperty(PROP_LOGIN_TIMEOUT);
         validationQuery = props.getProperty(PROP_VALIDATION_QUERY);
+        schemaMaps = new HashMap<String, HashMap>();
 
         if (getBooleanProperty(props, PROP_EXT_OPTIONS, false)) {
             connectProps = (Properties) props.clone();
@@ -185,6 +188,12 @@ public class MedJdbcDataServer
             getBooleanProperty(props, PROP_AUTOCOMMIT, DEFAULT_AUTOCOMMIT);
 
         createConnection();
+
+        // schema mapping
+        String schemaMapping = props.getProperty(PROP_SCHEMA_MAPPING);
+        if (schemaMapping != null) {
+            createSchemaMaps(schemaMapping);
+        }
     }
 
     protected void createConnection()
@@ -280,6 +289,7 @@ public class MedJdbcDataServer
         props.remove(PROP_DISABLED_PUSHDOWN_REL_PATTERN);
         props.remove(PROP_FETCH_SIZE);
         props.remove(PROP_AUTOCOMMIT);
+        props.remove(PROP_SCHEMA_MAPPING);
     }
 
     // implement FarragoMedDataServer
@@ -486,6 +496,52 @@ public class MedJdbcDataServer
     public void releaseResources()
     {
         validateConnection = true;
+    }
+
+    private void createSchemaMaps(String mapping)
+        throws SQLException
+    {
+        String[] allMapping = mapping.split(";");
+
+        for (String s : allMapping) {
+            String[] map = s.split(":");
+            // not a valid mapping
+            if (map.length != 2) {
+                continue;
+            }
+            String key = map[0].trim();
+            String value = map[1].trim();
+
+            if (!key.equals("") && !value.equals("")) {
+                HashMap h = new HashMap();
+                if (schemaMaps.get(value) != null) {
+                    h = (HashMap)schemaMaps.get(value);
+                }
+                ResultSet resultSet = null;
+                try {
+                    resultSet =
+                        databaseMetaData.getTables(
+                            catalogName,
+                            key,
+                            null,
+                            tableTypes);
+                    if (resultSet == null) {
+                        continue;
+                    }
+                    while (resultSet.next()) {
+                        h.put(resultSet.getString(3), key);
+                    }
+                    schemaMaps.put(value, h);
+                } catch (Throwable ex) {
+                    // assume unsupported
+                    continue;
+                } finally {
+                    if (resultSet != null) {
+                        resultSet.close();
+                    }
+                }
+            }
+        }
     }
 }
 

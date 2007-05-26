@@ -83,6 +83,14 @@ public class DdlValidator
 
     private static final Logger tracer = FarragoTrace.getDdlValidatorTracer();
 
+    private static enum ValidatedOp 
+    {
+        CREATION,
+        MODIFICATION,
+        DELETION,
+        TRUNCATION
+    }
+
     /**
      * Symbolic constant used to mark an element being created
      */
@@ -136,23 +144,21 @@ public class DdlValidator
 
     /**
      * Map containing scheduled validation actions. The key is the MofId of the
-     * object scheduled for validation; the value is the action type (one of the
-     * symbols {@link #VALIDATE_CREATION}, {@link #VALIDATE_DELETION}, {@link
-     * #VALIDATE_MODIFICATION}, {@link #VALIDATE_TRUNCATION}).
+     * object scheduled for validation; the value is a ValidatedOp.
      */
-    private Map<String, Integer> schedulingMap;
+    private Map<String, ValidatedOp> schedulingMap;
 
     /**
      * Map of objects in transition between schedulingMap and validatedMap.
      * Content format is same as for schedulingMap.
      */
-    private Map<String, Integer> transitMap;
+    private Map<String, ValidatedOp> transitMap;
 
     /**
      * Map of object validations which have already taken place. The key is the
      * RefObject itself; the value is the action type.
      */
-    private Map<RefObject, Object> validatedMap;
+    private Map<RefObject, ValidatedOp> validatedMap;
 
     /**
      * Set of objects which a DROP CASCADE has encountered but not yet
@@ -203,8 +209,8 @@ public class DdlValidator
 
         // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX, since order
         // matters for these.
-        schedulingMap = new LinkedHashMap<String, Integer>();
-        validatedMap = new LinkedHashMap<RefObject, Object>();
+        schedulingMap = new LinkedHashMap<String, ValidatedOp>();
+        validatedMap = new LinkedHashMap<RefObject, ValidatedOp>();
         deleteQueue = new LinkedHashSet<RefObject>();
 
         parserContextMap = new HashMap<Object, SqlParserPos>();
@@ -301,18 +307,18 @@ public class DdlValidator
     // implement FarragoSessionDdlValidator
     public boolean isDeletedObject(RefObject refObject)
     {
-        return testObjectStatus(refObject, VALIDATE_DELETION);
+        return testObjectStatus(refObject, ValidatedOp.DELETION);
     }
 
     // implement FarragoSessionDdlValidator
     public boolean isCreatedObject(RefObject refObject)
     {
-        return testObjectStatus(refObject, VALIDATE_CREATION);
+        return testObjectStatus(refObject, ValidatedOp.CREATION);
     }
 
     private boolean testObjectStatus(
         RefObject refObject,
-        Integer status)
+        ValidatedOp status)
     {
         return
             (schedulingMap.get(refObject.refMofId()) == status)
@@ -582,11 +588,11 @@ public class DdlValidator
         stopListening();
 
         List<RefObject> deletionList = new ArrayList<RefObject>();
-        for (Object entry : validatedMap.entrySet()) {
-            Map.Entry<RefObject, Object> mapEntry =
-                (Map.Entry<RefObject, Object>) entry;
+        for (Map.Entry<RefObject, ValidatedOp> mapEntry
+                 : validatedMap.entrySet())
+        {
             RefObject obj = mapEntry.getKey();
-            Object action = mapEntry.getValue();
+            ValidatedOp action = mapEntry.getValue();
 
             if (obj instanceof CwmStructuralFeature) {
                 // Set some mandatory but irrelevant attributes.
@@ -595,12 +601,12 @@ public class DdlValidator
                 feature.setChangeability(ChangeableKindEnum.CK_CHANGEABLE);
             }
 
-            if (action == VALIDATE_DELETION) {
+            if (action == ValidatedOp.DELETION) {
                 clearDependencySuppliers(obj);
                 RefFeatured container = obj.refImmediateComposite();
                 if (container != null) {
-                    Object containerAction = validatedMap.get(container);
-                    if (containerAction == VALIDATE_DELETION) {
+                    ValidatedOp containerAction = validatedMap.get(container);
+                    if (containerAction == ValidatedOp.DELETION) {
                         // container is also being deleted; don't try
                         // deleting this contained object--depending on order,
                         // the attempt could cause an excn
@@ -617,13 +623,13 @@ public class DdlValidator
                 continue;
             }
             CwmModelElement element = (CwmModelElement) obj;
-            if (action == VALIDATE_CREATION) {
+            if (action == ValidatedOp.CREATION) {
                 invokeHandler(element, "executeCreation");
-            } else if (action == VALIDATE_DELETION) {
+            } else if (action == ValidatedOp.DELETION) {
                 invokeHandler(element, "executeDrop");
-            } else if (action == VALIDATE_TRUNCATION) {
+            } else if (action == ValidatedOp.TRUNCATION) {
                 invokeHandler(element, "executeTruncation");
-            } else if (action == VALIDATE_MODIFICATION) {
+            } else if (action == ValidatedOp.MODIFICATION) {
                 invokeHandler(element, "executeModification");
             } else {
                 assert (false);
@@ -633,18 +639,18 @@ public class DdlValidator
         // Now mark objects as visible and update their timestamps; we defer
         // this until here so that storage handlers above can use object
         // visibility attribute to distinguish new objects.
-        for (Object entry : validatedMap.entrySet()) {
-            Map.Entry<RefObject, Object> mapEntry =
-                (Map.Entry<RefObject, Object>) entry;
+        for (Map.Entry<RefObject, ValidatedOp> mapEntry
+                 : validatedMap.entrySet())
+        {
             RefObject obj = mapEntry.getKey();
-            Object action = mapEntry.getValue();
+            ValidatedOp action = mapEntry.getValue();
 
             if (!(obj instanceof CwmModelElement)) {
                 continue;
             }
             CwmModelElement element = (CwmModelElement) obj;
 
-            if (action != VALIDATE_DELETION) {
+            if (action != ValidatedOp.DELETION) {
                 updateObjectTimestamp(element);
             }
         }
@@ -660,12 +666,12 @@ public class DdlValidator
         }
 
         // verify repository integrity post-delete
-        for (Object entry : validatedMap.entrySet()) {
-            Map.Entry<RefObject, Object> mapEntry =
-                (Map.Entry<RefObject, Object>) entry;
+        for (Map.Entry<RefObject, ValidatedOp> mapEntry
+                 : validatedMap.entrySet())
+        {
             RefObject obj = mapEntry.getKey();
-            Object action = mapEntry.getValue();
-            if (action != VALIDATE_DELETION) {
+            ValidatedOp action = mapEntry.getValue();
+            if (action != ValidatedOp.DELETION) {
                 checkJmiConstraints(obj);
             }
         }
@@ -839,17 +845,19 @@ public class DdlValidator
             // Swap in a new map so new scheduling calls aren't handled until
             // the next round.
             transitMap = schedulingMap;
-            schedulingMap = new LinkedHashMap<String, Integer>();
+            schedulingMap = new LinkedHashMap<String, ValidatedOp>();
 
             boolean progress = false;
-            for (Map.Entry<String, Integer> mapEntry : transitMap.entrySet()) {
+            for (Map.Entry<String, ValidatedOp> mapEntry
+                     : transitMap.entrySet())
+            {
                 RefObject obj =
                     (RefObject) getRepos().getMdrRepos().getByMofId(
                         mapEntry.getKey());
                 if (obj == null) {
                     continue;
                 }
-                Integer action = mapEntry.getValue();
+                ValidatedOp action = mapEntry.getValue();
 
                 // mark this object as already validated so it doesn't slip
                 // back in by updating itself
@@ -1210,7 +1218,7 @@ public class DdlValidator
         // delete overrides anything else
         schedulingMap.put(
             obj.refMofId(),
-            VALIDATE_DELETION);
+            ValidatedOp.DELETION);
         mapParserPosition(obj);
     }
 
@@ -1230,18 +1238,18 @@ public class DdlValidator
             // integrity verification on it during executeStorage()
             schedulingMap.put(
                 obj.refMofId(),
-                VALIDATE_MODIFICATION);
+                ValidatedOp.MODIFICATION);
             return;
         }
         CwmModelElement element = (CwmModelElement) obj;
         if (isNewObject(element)) {
             schedulingMap.put(
                 obj.refMofId(),
-                VALIDATE_CREATION);
+                ValidatedOp.CREATION);
         } else {
             schedulingMap.put(
                 obj.refMofId(),
-                VALIDATE_MODIFICATION);
+                ValidatedOp.MODIFICATION);
         }
         mapParserPosition(obj);
     }
@@ -1270,16 +1278,16 @@ public class DdlValidator
 
     private boolean validateAction(
         CwmModelElement modelElement,
-        Integer action)
+        ValidatedOp action)
     {
         stmtValidator.setParserPosition(null);
-        if (action == VALIDATE_CREATION) {
+        if (action == ValidatedOp.CREATION) {
             return invokeHandler(modelElement, "validateDefinition");
-        } else if (action == VALIDATE_MODIFICATION) {
+        } else if (action == ValidatedOp.MODIFICATION) {
             return invokeHandler(modelElement, "validateModification");
-        } else if (action == VALIDATE_DELETION) {
+        } else if (action == ValidatedOp.DELETION) {
             return invokeHandler(modelElement, "validateDrop");
-        } else if (action == VALIDATE_TRUNCATION) {
+        } else if (action == ValidatedOp.TRUNCATION) {
             return invokeHandler(modelElement, "validateTruncation");
         } else {
             throw new AssertionError();
@@ -1371,7 +1379,7 @@ public class DdlValidator
 
                 // REVIEW jvs 3-Nov-2006:  Probably we should
                 // discriminate revalidation from both
-                // VALIDATE_CREATION and VALIDATE_MODIFICATION.
+                // ValidatedOp.CREATION and ValidatedOp.MODIFICATION.
 
                 //REVIEW: unless we regenerate this dependency's SQL
                 //and reparse, how would we get the SqlParserPos.
@@ -1381,7 +1389,7 @@ public class DdlValidator
                     new SqlParserPos(1, 0));
                 schedulingMap.put(
                     e.refMofId(),
-                    VALIDATE_CREATION);
+                    ValidatedOp.CREATION);
             }
         }
     }

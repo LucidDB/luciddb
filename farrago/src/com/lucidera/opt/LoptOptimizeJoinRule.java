@@ -286,7 +286,7 @@ public class LoptOptimizeJoinRule
             // locate the join factor in the new join ordering
             int fieldStart = 0;
             for (int pos = 0; pos < nJoinFactors; pos++) {
-                if (newJoinOrder.get(pos) == currFactor) {
+                if (newJoinOrder.get(pos).intValue() == currFactor) {
                     break;
                 }
                 fieldStart +=
@@ -912,10 +912,11 @@ public class LoptOptimizeJoinRule
             int nFieldsOld = 0;
 
             // no need to make any adjustments on the newly added factor
-            if (newJoinOrder.get(newPos) != factorAdded) {
+            if (newJoinOrder.get(newPos).intValue() != factorAdded) {
                 for (int oldPos = 0; oldPos < origJoinOrder.size(); oldPos++) {
-                    if (newJoinOrder.get(newPos)
-                        == origJoinOrder.get(oldPos)) {
+                    if (newJoinOrder.get(newPos).intValue()
+                        == origJoinOrder.get(oldPos).intValue())
+                    {
                         break;
                     }
                     nFieldsOld +=
