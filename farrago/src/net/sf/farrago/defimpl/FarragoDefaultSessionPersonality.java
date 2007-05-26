@@ -547,7 +547,7 @@ public class FarragoDefaultSessionPersonality
     public void resetRowCounts(FemAbstractColumnSet table)
     {
     }
-    
+ 
     // implement FarragoSessionPersonality
     public void updateIndexRoot(
         FemLocalIndex index,

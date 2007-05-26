@@ -788,6 +788,7 @@ Error: error while fetching from cursor (state=,code=0)
 +-------------+--------------+--------------+---------------------------------+
 > 
 > -- make sure we receive a warning for DML
+> !set showwarnings true
 > create table surrey(
 >     author varchar(30),
 >     title varchar(45) not null,

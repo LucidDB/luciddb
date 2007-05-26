@@ -26,6 +26,7 @@ import junit.framework.*;
 
 import org.eigenbase.util.property.*;
 
+import java.lang.ref.SoftReference;
 
 /**
  * Unit test for properties system ({@link TriggerableProperties}, {@link
@@ -38,6 +39,7 @@ import org.eigenbase.util.property.*;
 public class PropertyTest
     extends TestCase
 {
+    private static final boolean[] FalseTrue = new boolean[] {false, true};
 
     //~ Methods ----------------------------------------------------------------
 
@@ -894,10 +896,28 @@ public class PropertyTest
             (state.secondaryOne < state.tertiaryOne));
     }
 
+    public void testVetoChangeValue()
+        throws Exception
+    {
+        checkVetoChangeValue(false, true);
+    }
+
+    public void testVetoChangeValuePersistent()
+        throws Exception
+    {
+        checkVetoChangeValue(true, true);
+    }
+
     /**
      * Checks that one can veto a property change.
+     * @param persistent Whether to make strong references to triggers, to
+     *   prevent them from being garbage collected
+     * @param save Whether to keep a pointer to each trigger on the stack, to
+     *   prevent them from being garbage collected
      */
-    public void testVetoChangeValue()
+    private void checkVetoChangeValue(
+        final boolean persistent,
+        boolean save)
         throws Exception
     {
         final MyProperties props = new MyProperties();
@@ -929,7 +949,7 @@ public class PropertyTest
             new Trigger() {
                 public boolean isPersistent()
                 {
-                    return false;
+                    return persistent;
                 }
 
                 public int phase()
@@ -944,12 +964,13 @@ public class PropertyTest
                 }
             };
         intProp.addTrigger(trigger1);
+        SoftReference<Trigger> ref1 = new SoftReference<Trigger>(trigger1);
 
         final Trigger trigger2 =
             new Trigger() {
                 public boolean isPersistent()
                 {
-                    return false;
+                    return persistent;
                 }
 
                 public int phase()
@@ -972,6 +993,16 @@ public class PropertyTest
                 }
             };
         intProp.addTrigger(trigger2);
+        SoftReference<Trigger> ref2 = new SoftReference<Trigger>(trigger2);
+
+        // Holder object prevents triggers from being garbage-collected even
+        // if persistent=false.
+        Object saver;
+        if (save) {
+            saver = new Trigger[] {trigger1, trigger2};
+        } else {
+            saver = "dummy";
+        }
 
         for (int i = 0; i < 10; i++) {
             // reset values
@@ -984,7 +1015,35 @@ public class PropertyTest
                 props.setProperty(
                     path,
                     Integer.toString(i));
+
+                // If triggers have been gc'ed - only possible if persistent =
+                // save = false - then we can't guarantee that state has been
+                // changed.
+                if (!persistent
+                    && !save
+                    && (ref1.get() == null || ref2.get() == null))
+                {
+                    continue;
+                }
+
+                // should only be here if odd
+                if (isEven) {
+                    fail("Did not pass odd number: " + i);
+                }
+                int val = Integer.decode(state.triggerValue).intValue();
+
+                assertTrue("Odd counter not value", (i == val));
             } catch (Trigger.VetoRT ex) {
+                // If triggers have been gc'ed - only possible if persistent =
+                // save = false - then we can't guarantee that state has been
+                // changed.
+                if (!persistent
+                    && !save
+                    && (ref1.get() == null || ref2.get() == null))
+                {
+                    continue;
+                }
+
                 // Trigger rejects even numbers so if even its ok
                 if (!isEven) {
                     fail("Did not reject even number: " + i);
@@ -993,18 +1052,15 @@ public class PropertyTest
 
                 // the property value was reset to the previous value of "i"
                 // so we add "1" to it to get the current value.
-                assertTrue("Even counter not value plus one", (i == (val + 1)));
-                continue;
+                if (i != val + 1) {
+                    fail("Even counter not value plus one: " + i + ", " + val);
+                }
             }
-
-            // should only be here if odd
-            if (isEven) {
-                fail("Did not pass odd number: " + i);
-            }
-            int val = Integer.decode(state.triggerValue).intValue();
-
-            assertTrue("Odd counter not value", (i == val));
         }
+
+        // Refer to the saver object at the end of the routine so that it
+        // cannot be garbage-collected. (Some VMs try to be smart.)
+        assertTrue(saver != null);
     }
 
     /**
@@ -1013,12 +1069,13 @@ public class PropertyTest
     public void testVetoChangeValueManyTimes()
         throws Exception
     {
-        if (System.getProperty("java.vm.name").startsWith("BEA JRockit(R)")) {
-            System.out.println("Not running for JRockit (FRG-100)");
-            return;
-        }
-        for (int i = 0; i < 1000; ++i) {
-            testVetoChangeValue();
+        final int count = 10000;
+        for (boolean persistent : FalseTrue) {
+            for (boolean save : FalseTrue) {
+                for (int i = 0; i < count; ++i) {
+                    checkVetoChangeValue(persistent, save);
+                }
+            }
         }
     }
 

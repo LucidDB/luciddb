@@ -30,6 +30,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.jdbc.FarragoAbstractJdbcDriver;
 import net.sf.farrago.test.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -233,7 +234,7 @@ public class FarragoEngineDriverTest
     }
 
     /**
-     * tests that session parameter values make it to sessions_view.
+     * Tests that session parameter values make it to sessions_view.
      */
     public void testSessionParams()
         throws Exception
@@ -281,6 +282,47 @@ public class FarragoEngineDriverTest
     }
 
     /**
+     * Tests special connection initialization based on connection properties.
+     * @see FarragoJdbcEngineConnection#initConnection(Properties)
+     * @throws Exception
+     */
+    public void testConnectionInit() throws Exception
+    {
+        final String driverURI = "jdbc:farrago:";
+        final String initialSchema = "sales";
+        final String query = "SELECT * FROM emps";
+        FarragoAbstractJdbcDriver driver =
+            FarragoTestCase.newJdbcEngineDriver();
+
+        Properties props = newProperties();
+        Connection conn = driver.connect(driverURI, props);
+
+        // test query that assumes a schema
+        Statement stmt = conn.createStatement();
+        try {
+            stmt.executeQuery(query);
+            fail("query should have required a default schema");
+        } catch (SQLException e) {
+            assertExceptionMatches(e, "No default schema specified.*");
+        }
+        stmt.close();
+        conn.close();
+
+        // test initial schema; could also be param on URI string
+        props.setProperty("schema", initialSchema);
+        conn = driver.connect(driverURI, props);
+        stmt = conn.createStatement();
+        try {
+            ResultSet rset = stmt.executeQuery(query);
+            assertTrue("expected at last one row", rset.next());
+        } catch (SQLException e) {
+            assertExceptionMatches(e, "No default schema specified.*");
+        }
+        stmt.close();
+        conn.close();
+    }
+
+    /**
      * creates test connection properties.
      */
     private static Properties newProperties()
@@ -311,6 +353,16 @@ public class FarragoEngineDriverTest
         }
         buf.append("}");
         return buf.toString();
+    }
+
+    /** asserts that exception message matches the specified pattern. */
+    private static void assertExceptionMatches(Throwable e, String match)
+        throws Exception
+    {
+        String msg = e.getMessage();
+        assertTrue(
+            "Got exception \"" +msg + "\" but expected \"" + match + "\"",
+            msg.matches(match));
     }
 }
 

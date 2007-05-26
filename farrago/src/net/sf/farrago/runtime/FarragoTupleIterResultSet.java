@@ -75,7 +75,7 @@ public class FarragoTupleIterResultSet
             runtimeContext,
             new SyntheticColumnGetter(clazz));
     }
-    
+
     /**
      * Creates a new FarragoTupleIterResultSet object.
      *
@@ -159,12 +159,18 @@ public class FarragoTupleIterResultSet
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine(toString());
         }
-        if (runtimeContext != null) {
+        FarragoSessionRuntimeContext allocationToClose = runtimeContext;
+        if (allocationToClose != null) {
             // NOTE:  this may be called reentrantly for daemon stmts,
             // so need special handling
-            FarragoAllocation allocationToClose = runtimeContext;
             runtimeContext = null;
-            allocationToClose.closeAllocation();
+            // Lock session before sessionCtxt, to be consistent with global
+            // locking strategy. In particular, FarragoDbStmtContext.close()
+            // locks the session before it calls
+            // FarragoSessionRuntimeContext.closeAllocation().
+            synchronized (allocationToClose.getSession()) {
+                allocationToClose.closeAllocation();
+            }
         }
         super.close();
     }

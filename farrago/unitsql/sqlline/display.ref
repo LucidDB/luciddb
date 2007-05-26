@@ -15,6 +15,7 @@ Error: Parser Error: No default schema specified; execute SET SCHEMA or use full
 Error: org.eigenbase.sql.parser.SqlParseException: No default schema specified; execute SET SCHEMA or use fully qualified names (state=,code=0)
 > 
 > --  default:  show warnings
+> !set showwarnings true
 > !closeall
 sqlline> !connect jdbc:farrago:;clientProcessId=bogus sa tiger
 Warning: clientProcessId 'bogus' could not be parsed as an integer (state=,code=0)
