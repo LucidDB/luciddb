@@ -770,6 +770,10 @@ public:
 string CalcAssemblerTestCase::toLiteralString(TupleDatum &datum, 
                                               uint typeOrdinal)
 {
+
+    // NOTE jvs 25-May-2007:  casts to int64_t below are required
+    // for a 64-bit build to pass
+    
     ostringstream ostr("");
     if (datum.pData != NULL)
     {
@@ -780,22 +784,22 @@ string CalcAssemblerTestCase::toLiteralString(TupleDatum &datum,
             else ostr << "0";
             break;
         case STANDARD_TYPE_INT_8:
-            ostr << (int) (*reinterpret_cast<const int8_t*>(datum.pData));
+            ostr << (int64_t) (*reinterpret_cast<const int8_t*>(datum.pData));
             break;
         case STANDARD_TYPE_UINT_8:
-            ostr << (int) (*reinterpret_cast<const uint8_t*>(datum.pData));
+            ostr << (int64_t) (*reinterpret_cast<const uint8_t*>(datum.pData));
             break;
         case STANDARD_TYPE_INT_16:
-            ostr << (*reinterpret_cast<const int16_t*>(datum.pData));
+            ostr << (int64_t) (*reinterpret_cast<const int16_t*>(datum.pData));
             break;
         case STANDARD_TYPE_UINT_16:
-            ostr << (*reinterpret_cast<const uint16_t*>(datum.pData));
+            ostr << (int64_t) (*reinterpret_cast<const uint16_t*>(datum.pData));
         break;
         case STANDARD_TYPE_INT_32:
-            ostr << (*reinterpret_cast<const int32_t*>(datum.pData));
+            ostr << (int64_t) (*reinterpret_cast<const int32_t*>(datum.pData));
             break;
         case STANDARD_TYPE_UINT_32:
-            ostr << (*reinterpret_cast<const uint32_t*>(datum.pData));
+            ostr << (int64_t) (*reinterpret_cast<const uint32_t*>(datum.pData));
         break;
         case STANDARD_TYPE_INT_64:
             ostr << (*reinterpret_cast<const int64_t*>(datum.pData));

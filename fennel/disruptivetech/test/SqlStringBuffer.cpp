@@ -272,9 +272,9 @@ SqlStringBufferUCS2::dump()
     string ret;
     char buf[100];
 
-    sprintf(buf, "DUMP: Storage=%d LeftBump=%d Size=%d RightBump=%d LP=%x Str=%x\n",
+    sprintf(buf, "DUMP: Storage=%d LeftBump=%d Size=%d RightBump=%d LP=%p Str=%p\n",
             mStorage, mLeftBump, mSize, mRightBump,
-            (uint)mLeftP, (uint)mStr);
+            mLeftP, mStr);
     ret += buf;
 
     i = 0;
