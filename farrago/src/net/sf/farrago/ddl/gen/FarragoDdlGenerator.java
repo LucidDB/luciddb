@@ -443,16 +443,19 @@ public class FarragoDdlGenerator
 
                 sb.append(" ").append(type.getName());
 
-                //there must be an easier way
-                Integer len = col.getLength();
-                Integer scale = col.getScale();
-
-                if ((len != null) && stn.allowsPrec()) {
-                    sb.append("(").append(len);
-                    if ((scale != null) && stn.allowsScale()) {
-                        sb.append(",").append(scale);
-                    }
-                    sb.append(")");
+                Integer precision = col.getPrecision();
+                if (precision != null && stn.allowsPrec()) {
+                  sb.append("(").append(precision);
+                  Integer scale = col.getScale();
+                  if (scale != null && stn.allowsScale()) {
+                    sb.append(",").append(scale);
+                  }
+                  sb.append(")");
+                } else {
+                  Integer length = col.getLength();
+                  if (length != null) {
+                    sb.append("(").append(length).append(")");
+                  }
                 }
 
                 if (!skipDefaults) {
