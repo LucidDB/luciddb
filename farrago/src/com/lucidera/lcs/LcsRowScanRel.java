@@ -71,8 +71,6 @@ public class LcsRowScanRel
      */
     final Integer [] projectedColumns;
 
-    FarragoRepos repos;
-
     /**
      * Types of scans to perform.
      */
@@ -130,7 +128,6 @@ public class LcsRowScanRel
         assert (lcsTable.getPreparingStmt()
                 == FennelRelUtil.getPreparingStmt(this));
 
-        repos = FennelRelUtil.getRepos(this);
         this.inputSelectivity = inputSelectivity;
     }
 

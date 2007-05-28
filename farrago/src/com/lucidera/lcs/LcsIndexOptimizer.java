@@ -81,7 +81,6 @@ public class LcsIndexOptimizer
     private Double estimatedBitmapRowCount;
     
     // Temporary data structures used during costing
-    private Set<FemAbstractColumn> tmpMappedPointColumns;
     private Set<SargColumnFilter> tmpResidualFilterSet;
     private Map<FemLocalIndex, SargColumnFilter> tmpIndex2LastFilterMap;
     
@@ -115,7 +114,6 @@ public class LcsIndexOptimizer
             getCurrentConfig().getFennelConfig().getCachePageSize();
         tableColumnCount =
             rowScanRel.lcsTable.getCwmColumnSet().getFeature().size();
-        tmpMappedPointColumns = new HashSet<FemAbstractColumn> ();
         tmpResidualFilterSet = new HashSet<SargColumnFilter> ();
         tmpIndex2LastFilterMap = 
             new HashMap<FemLocalIndex, SargColumnFilter> ();
@@ -710,17 +708,9 @@ public class LcsIndexOptimizer
         TreeSet<IndexFilterTuple> indexFilterSet,
         Set<SargColumnFilter> mappedFilters)
     {
-        TreeSet<IndexFilterTuple> newIndexFilterSet = 
-            new TreeSet<IndexFilterTuple>(
-                new MappedFilterSelectivityComparator());
-
-        Iterator iter = indexFilterSet.iterator();
-        while (iter.hasNext()) {
-            IndexFilterTuple tup = (IndexFilterTuple) iter.next();
-            tup.reCalculateEffectiveSelectivity(mappedFilters);
-            newIndexFilterSet.add(tup);
+        for (IndexFilterTuple indexFilter : indexFilterSet) {
+            indexFilter.reCalculateEffectiveSelectivity(mappedFilters);
         }
-        indexFilterSet = newIndexFilterSet;
     }
     
     /**
@@ -1953,13 +1943,16 @@ public class LcsIndexOptimizer
             // deterministic
             Double colSel1 = filter1.getSelectivity(tabStats);
             Double colSel2 = filter2.getSelectivity(tabStats);
+            int compRes = 0;
             if (colSel1 != null && colSel2 != null) {
-                return
-                (colSel1 < colSel2) ? -1 :
-                    ((colSel1 == colSel2) ? 0 : 1); 
-            } else {
-                return (filter1.columnPos - filter2.columnPos);                  
+                compRes = colSel1.compareTo(colSel2);
             }
+
+            if (compRes == 0) {
+                compRes = filter1.columnPos - filter2.columnPos;
+            }
+
+            return compRes;
         }
         
     }
@@ -2266,11 +2259,7 @@ public class LcsIndexOptimizer
             int compRes = 0;
             
             if ((sel1 != null) && (sel2 != null)) {
-                if (sel1 > sel2) {
-                    compRes = 1;
-                } else if (sel1 < sel2) {
-                    compRes = -1;
-                }
+                compRes = sel1.compareTo(sel2);
             }
             
             if (compRes == 0) {
