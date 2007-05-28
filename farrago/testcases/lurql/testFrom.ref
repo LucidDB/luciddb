@@ -62,6 +62,22 @@ Reference: exposedEnd
 
 ****
 
+# Test MATCHES filter with NOT
+PARSE RESULT:
+select *
+from
+class "ModelElement"
+where
+    not "name" matches '.*[a-j].*';
+
+EXPLANATION:
+anon_1 { ModelElement } where not "name" matches '.*[a-j].*'
+
+EXECUTION RESULT:
+Class: Import
+
+****
+
 # Test IN filter with SQL query.
 PARSE RESULT:
 select *

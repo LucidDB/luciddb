@@ -74,9 +74,17 @@ public class LurqlPlan
      */
     private Set<String> projectSet;
 
+    /**
+     * For select *, all vertices which are defined inside
+     * of exists (meaning they should not contribute to the final result).
+     */
+    private Set<LurqlPlanVertex> existsSet;
+
     private int idGen;
 
     private Map<String,Class> paramMap;
+
+    private int existsDepth;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -93,6 +101,7 @@ public class LurqlPlan
             LurqlPlanEdge.class);
         idGen = 0;
         paramMap = new LinkedHashMap<String, Class>();
+        existsSet = new HashSet<LurqlPlanVertex>();
 
         prepareQuery();
     }
@@ -109,9 +118,13 @@ public class LurqlPlan
         return projectSet == null;
     }
 
-    public boolean isSelected(String varName)
+    public boolean isSelected(LurqlPlanVertex vertex)
     {
-        return isSelectAll() || projectSet.contains(varName);
+        if (isSelectAll()) {
+            return !existsSet.contains(vertex);
+        } else {
+            return projectSet.contains(vertex.getAlias());
+        }
     }
 
     public void explain(PrintWriter pw)
@@ -153,8 +166,6 @@ public class LurqlPlan
                     "unknown alias reference in select:  " + list);
             }
         }
-
-        // TODO:  pruneQuery()?
     }
 
     private boolean isStar(List<String> selectList)
@@ -211,6 +222,9 @@ public class LurqlPlan
             aliasToBranchMap.put(
                 branch.getAliasName(),
                 branch);
+        }
+        if (existsDepth > 0) {
+            existsSet.add(planVertex);
         }
         graph.addVertex(planVertex);
         return planVertex;
@@ -627,7 +641,9 @@ public class LurqlPlan
             LurqlFilter filter = iter.next();
             LurqlExists exists = filter.getExists();
             if (exists != null) {
-                prepareExists(planVertex, exists);
+                ++existsDepth;
+                prepareExists(planVertex, exists, filter.isNegated());
+                --existsDepth;
 
                 // don't need exists filter at runtime; edge added
                 // by prepareExists will represent it instead
@@ -655,9 +671,25 @@ public class LurqlPlan
 
     private void prepareExists(
         LurqlPlanVertex planVertex,
-        LurqlExists exists)
+        LurqlExists exists,
+        boolean isNegated)
         throws JmiQueryException
     {
+        Set<String> existsProjectSet = null;
+
+        // Verify that exists does not reference variables defined
+        // outside of it.
+        if (!isStar(exists.getSelectList())) {
+            existsProjectSet =
+                new LinkedHashSet<String>(exists.getSelectList());
+            List<String> list = new ArrayList<String>(exists.getSelectList());
+            list.retainAll(aliasToBranchMap.keySet());
+            if (!list.isEmpty()) {
+                throw newException(
+                    "exists list aliases defined outside of exists:  " + list);
+            }
+        }
+        
         // Create a new "root" only reachable explicitly from filtering
         // on planVertex.  We'll give it an empty set of object ID's
         // now, and bind to each real object ID at execution time.
@@ -685,13 +717,9 @@ public class LurqlPlan
             exists.getPathSpec(),
             new ArrayList<LurqlPlanVertex>());
 
-        Set<String> projectSet = null;
-
         // Validate that all variables referenced by exists select list
-        // were defined.  TODO jvs 6-July-2006:  Should also validate
-        // that they were not defined outside of exists.
+        // were defined.
         if (!isStar(exists.getSelectList())) {
-            projectSet = new LinkedHashSet<String>(exists.getSelectList());
             List<String> list = new ArrayList<String>(exists.getSelectList());
             list.removeAll(aliasToBranchMap.keySet());
             if (!list.isEmpty()) {
@@ -710,7 +738,8 @@ public class LurqlPlan
                 planVertex,
                 existsRoot,
                 subgraph,
-                projectSet);
+                existsProjectSet,
+                isNegated);
         graph.addEdge(planVertex, existsRoot, edge);
     }
 

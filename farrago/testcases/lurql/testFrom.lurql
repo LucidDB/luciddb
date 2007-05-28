@@ -15,6 +15,11 @@ EXPLAIN AND EXECUTE
 select *
 from class ModelElement where name matches '.*x.*';
 
+# Test MATCHES filter with NOT
+EXPLAIN AND EXECUTE
+select *
+from class ModelElement where not name matches '.*[a-j].*';
+
 # Test IN filter with SQL query.
 EXPLAIN AND EXECUTE
 select *

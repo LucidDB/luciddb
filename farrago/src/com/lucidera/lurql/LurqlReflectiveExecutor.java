@@ -145,7 +145,7 @@ public class LurqlReflectiveExecutor
             } else {
                 executeOutgoingEdges(graph, planVertex, result, true);
             }
-            if (plan.isSelected(planVertex.getAlias())) {
+            if (plan.isSelected(planVertex)) {
                 finalResult.addAll(result);
             }
         }
@@ -377,22 +377,25 @@ outer:
                     }
                 }
                 Set filterValues = getFilterValues(filters[i]);
+                boolean negated = filters[i].isNegated();
                 if (filters[i].isPattern()) {
                     assert(filterValues.size() == 1);
                     boolean match = filters[i].patternMatch(
                         (String) filterValues.iterator().next(),
                         (String) value);
-                    if (!match) {
+                    if (match == negated) {
                         continue outer;
                     }
                 } else {
-                    if (!filterValues.contains(value)) {
+                    if (filterValues.contains(value) == negated) {
                         continue outer;
                     }
                 }
             }
             for (int i = 0; i < existsEdges.length; ++i) {
-                if (!testExists(refObj, existsEdges[i])) {
+                LurqlPlanExistsEdge existsEdge = existsEdges[i];
+                boolean negated = existsEdge.isNegated();
+                if (testExists(refObj, existsEdge) == negated) {
                     continue outer;
                 }
             }

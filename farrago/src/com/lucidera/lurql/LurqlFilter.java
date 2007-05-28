@@ -42,6 +42,8 @@ import org.eigenbase.util.*;
  * <li><code>EXISTS (path-spec)</code>
  * </ul>
  *
+ * or negations, e.g. NOT ATTRIBUTE = 'VALUE'
+ *
  * TODO jvs 6-July-2006: refactor into LurqlExistsFilter, LurqlComparisonFilter
  *
  * @author John V. Sichi
@@ -75,6 +77,8 @@ public class LurqlFilter
     private final boolean isPattern;
 
     private boolean hasDynamicParams;
+
+    private boolean isNegated;
 
     private Matcher matcher;
 
@@ -184,14 +188,28 @@ public class LurqlFilter
         return hasDynamicParams;
     }
 
+    public boolean isNegated()
+    {
+        return isNegated;
+    }
+
     public LurqlDynamicParam getSetParam()
     {
         return setParam;
     }
 
+    public void setNegated()
+    {
+        isNegated = true;
+    }
+
     // implement LurqlQueryNode
     public void unparse(PrintWriter pw)
     {
+        if (isNegated) {
+            pw.print("not ");
+        }
+        
         if (exists != null) {
             exists.unparse(pw);
             return;

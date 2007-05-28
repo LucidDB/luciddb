@@ -39,7 +39,7 @@ from
     where
         "beebee" = 'c' and
         "yo" matches '.*UNIV.*' and
-        "mama" matches ?"wears" and
+        not "mama" matches ?"wears" and
         exists * in (
             follow as "p"
         ) and
@@ -49,7 +49,7 @@ from
         exists * in (
             follow as "ff"
         ) and
-        exists "brat", "wurst" in (
+        not exists "brat", "wurst" in (
             follow as "ff"
         )
     then (
