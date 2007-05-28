@@ -336,7 +336,14 @@ public class FennelTupleTest
         //        System.out.println(            "def=" +defsize +" by4="
         // +by4size +" by8=" +by8size);
 
+        // NOTE jvs 26-May-2007:  I'm disabling this because now
+        // default alignment is based on JVM data model; but see
+        // TODO on FennelTupleAccessor.TUPLE_ALIGN_JVM; resolution
+        // there may imply more testing here.
+        /*
         assertEquals("4-byte alignment is default,", by4size, defsize);
+        */
+        
         assertTrue("4-byte alignment, size=" + by4size, (by4size % 4) == 0);
         assertTrue("8-byte alignment, size=" + by8size, (by8size % 8) == 0);
     }

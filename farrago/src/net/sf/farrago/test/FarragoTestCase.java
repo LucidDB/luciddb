@@ -580,6 +580,16 @@ public abstract class FarragoTestCase
         return true;
     }
 
+    // override DiffTestCase
+    protected void setRefFileDiffMasks()
+    {
+        super.setRefFileDiffMasks();
+
+        // physical quantities such as row size may vary according to
+        // architecture
+        addDiffMask(".*Row size.*exceeds maximum.*");
+    }
+    
     //~ Inner Classes ----------------------------------------------------------
 
     private static class ShutdownThread

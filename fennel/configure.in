@@ -171,8 +171,11 @@ boost_jam_platform=linuxx86
 lib_path_var=LD_LIBRARY_PATH
 jdk_platform=linux
 
-dnl TODO:  figure out how to reliably determine the correct boost_jam_platform
-dnl On SuSE amd64, it came out just linux without the x86.
+dnl amd64 tweaks
+if test "$target_cpu" = "x86_64"
+then
+    boost_jam_platform=linux
+fi
 
 dnl Cygwin tweaks.
 if test "$target_os" = "cygwin" 
