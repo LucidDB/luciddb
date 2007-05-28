@@ -271,55 +271,9 @@ public class VolcanoPlanner
 
         mapRuleDescription(rule);
 
-        // REVIEW jvs 3-Apr-2006:  This initialization is now in RelOptRule's
-        // constructor, so it can be deleted from here.  But solve-order
-        // remains Volcano-specific for now.
-
         // Each of this rule's operands is an 'entry point' for a rule call.
-        Walker<RelOptRuleOperand> operandWalker =
-            new Walker<RelOptRuleOperand>(rule.getOperand());
-        int ordinalInRule = 0;
-        List<RelOptRuleOperand> operandsOfRule =
-            new ArrayList<RelOptRuleOperand>();
-        while (operandWalker.hasNext()) {
-            RelOptRuleOperand operand = operandWalker.next();
-            operand.setRule(rule);
-            operand.setParent(operandWalker.getParent());
-            operand.ordinalInParent = operandWalker.getOrdinal();
-            operand.ordinalInRule = ordinalInRule++;
-            operandsOfRule.add(operand);
+        for (RelOptRuleOperand operand : rule.operands) {
             allOperands.add(operand);
-        }
-
-        // Convert this rule's operands from a list to an array.
-        rule.operands =
-            (RelOptRuleOperand []) operandsOfRule.toArray(
-                RelOptRuleOperand.noOperands);
-
-        // Build each operand's solve-order.  Start with itself, then its
-        // parent, up to the root, then the remaining operands in prefix
-        // order.
-        for (int j = 0; j < rule.operands.length; j++) {
-            RelOptRuleOperand operand = rule.operands[j];
-            operand.solveOrder = new int[rule.operands.length];
-            int m = 0;
-            for (RelOptRuleOperand o = operand; o != null; o = o.getParent()) {
-                operand.solveOrder[m++] = o.ordinalInRule;
-            }
-            for (int k = 0; k < rule.operands.length; k++) {
-                boolean exists = false;
-                for (int n = 0; n < m; n++) {
-                    if (operand.solveOrder[n] == k) {
-                        exists = true;
-                    }
-                }
-                if (!exists) {
-                    operand.solveOrder[m++] = k;
-                }
-            }
-
-            // Assert: operand appears once in the sort-order.
-            assert (m == rule.operands.length);
         }
 
         // If this is a converter rule, check if the registered RelTraitDefs

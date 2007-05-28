@@ -68,7 +68,7 @@ public class HepPlanner
     private int nTransformationsLastGC;
 
     private boolean noDAG;
-    
+
     /**
      * Query graph, with edges directed from parent to child. This is a
      * single-rooted DAG, possibly with additional roots corresponding to
@@ -83,7 +83,7 @@ public class HepPlanner
      *
      * @param program program controlling rule application
      */
-    public HepPlanner(HepProgram program) 
+    public HepPlanner(HepProgram program)
     {
     	this(program, false);
     }
@@ -97,17 +97,17 @@ public class HepPlanner
     public HepPlanner(HepProgram program, boolean noDAG)
     {
     	this.mainProgram = program;
-    	
+
     	mapDigestToVertex = new HashMap<String, HepRelVertex>();
     	graph = new DefaultDirectedGraph<HepRelVertex, DefaultEdge>(
             DefaultEdge.class);
-    	
+
     	// NOTE jvs 24-Apr-2006:  We use LinkedHashSet here and below
     	// in order to provide deterministic behavior.
     	allRules = new LinkedHashSet<RelOptRule>();
     	this.noDAG = noDAG;
     }
-    
+
     //~ Methods ----------------------------------------------------------------
 
     // implement RelOptPlanner
@@ -383,13 +383,13 @@ public class HepPlanner
         // Make sure there's no garbage, because topological sort
         // doesn't start from a specific root, and rules can't
         // deal with firing on garbage.
-        
+
         // FIXME jvs 25-Sept-2006:  I had to move this earlier because
         // of FRG-215, which is still under investigation.  Once we
         // figure that one out, move down to location below for
         // better optimizer performance.
         collectGarbage();
-        
+
         if (currentProgram.matchOrder == HepMatchOrder.ARBITRARY) {
             return
                 new DepthFirstIterator<HepRelVertex, DefaultEdge>(
@@ -504,7 +504,7 @@ public class HepPlanner
             return false;
         }
         bindings.add(rel);
-        Object [] childOperands = operand.getChildren();
+        RelOptRuleOperand [] childOperands = operand.getChildOperands();
         if (childOperands == null) {
             return true;
         }
@@ -516,7 +516,7 @@ public class HepPlanner
         for (int i = 0; i < n; ++i) {
             boolean match =
                 matchOperands(
-                    (RelOptRuleOperand) childOperands[i],
+                    childOperands[i],
                     ((HepRelVertex) childRels[i]).getCurrentRel(),
                     bindings);
             if (!match) {
@@ -671,7 +671,7 @@ public class HepPlanner
                 return equivVertex;
             }
         }
-        
+
         // No equivalence:  create a new vertex to represent this rel.
         HepRelVertex newVertex = new HepRelVertex(rel);
         graph.addVertex(newVertex);

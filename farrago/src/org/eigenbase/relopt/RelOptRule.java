@@ -74,30 +74,107 @@ public abstract class RelOptRule
         Util.pre(operand != null, "operand != null");
         this.operand = operand;
         this.description = guessDescription(getClass().getName());
-
-        Walker<RelOptRuleOperand> operandWalker =
-            new Walker<RelOptRuleOperand>(getOperand());
-        List<RelOptRuleOperand> operandsOfRule =
-            new ArrayList<RelOptRuleOperand>();
-        while (operandWalker.hasNext()) {
-            RelOptRuleOperand flattenedOperand = operandWalker.next();
-            flattenedOperand.setRule(this);
-            flattenedOperand.setParent(operandWalker.getParent());
-            operandsOfRule.add(flattenedOperand);
-        }
-        operands = operandsOfRule.toArray(RelOptRuleOperand.noOperands);
+        this.operands = flattenOperands(operand);
+        assignSolveOrder();
     }
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Creates a flattened list of this operand and its descendants in prefix
+     * order.
+     *
+     * @param rootOperand Root operand
+     * @return Flattened list of operands
+     */
+    private RelOptRuleOperand[] flattenOperands(
+        RelOptRuleOperand rootOperand)
+    {
+        List<RelOptRuleOperand> operandList =
+            new ArrayList<RelOptRuleOperand>();
+
+        // Flatten the operands into a list.
+        rootOperand.setRule(this);
+        rootOperand.setParent(null);
+        rootOperand.ordinalInParent = 0;
+        rootOperand.ordinalInRule = operandList.size();
+        operandList.add(rootOperand);
+        flattenRecurse(operandList, rootOperand);
+        return operandList.toArray(new RelOptRuleOperand[operandList.size()]);
+    }
+
+    /**
+     * Adds the operand and its descendants to the list in prefix order.
+     *
+     * @param operandList Flattened list of operands
+     * @param parentOperand Parent of this operand
+     */
+    private void flattenRecurse(
+        List<RelOptRuleOperand> operandList,
+        RelOptRuleOperand parentOperand)
+    {
+        if (parentOperand.getChildOperands() == null) {
+            return;
+        }
+        int k = 0;
+        for (RelOptRuleOperand operand : parentOperand.getChildOperands()) {
+            operand.setRule(this);
+            operand.setParent(parentOperand);
+            operand.ordinalInParent = k++;
+            operand.ordinalInRule = operandList.size();
+            operandList.add(operand);
+            flattenRecurse(operandList, operand);
+        }
+    }
+
+    /**
+     * Builds each operand's solve-order.  Start with itself, then its
+     * parent, up to the root, then the remaining operands in prefix
+     * order.
+     */
+    private void assignSolveOrder()
+    {
+        for (RelOptRuleOperand operand : operands) {
+            operand.solveOrder = new int[operands.length];
+            int m = 0;
+            for (RelOptRuleOperand o = operand; o != null; o = o.getParent()) {
+                operand.solveOrder[m++] = o.ordinalInRule;
+            }
+            for (int k = 0; k < operands.length; k++) {
+                boolean exists = false;
+                for (int n = 0; n < m; n++) {
+                    if (operand.solveOrder[n] == k) {
+                        exists = true;
+                    }
+                }
+                if (!exists) {
+                    operand.solveOrder[m++] = k;
+                }
+            }
+
+            // Assert: operand appears once in the sort-order.
+            assert m == operands.length;
+        }
+    }
+
+    /**
+     * Returns the root operand of this rule
+     *
+     * @return the root operand of this rule
+     */
     public RelOptRuleOperand getOperand()
     {
         return operand;
     }
 
-    public RelOptRuleOperand [] getOperands()
+    /**
+     * Returns a flattened list of operands of this rule.
+     *
+     * @return flattened list of operands
+     */
+    public List<RelOptRuleOperand> getOperands()
     {
-        return operands;
+        return Collections.unmodifiableList(Arrays.asList(operands));
     }
 
     public int hashCode()
@@ -111,10 +188,8 @@ public abstract class RelOptRule
 
     public boolean equals(Object obj)
     {
-        if (!(obj instanceof RelOptRule)) {
-            return false;
-        }
-        return equals((RelOptRule) obj);
+        return obj instanceof RelOptRule
+            && equals((RelOptRule) obj);
     }
 
     /**
@@ -285,7 +360,7 @@ public abstract class RelOptRule
                 className.lastIndexOf('.'),
                 className.lastIndexOf('$'));
         if (punc >= 0) {
-            // Examples:  * "com.foo.Bar" yields "Bar"  * "com.foo.Bar$Baz"
+            // Examples:  * "com.foo.Bar" yields "Bar"  * "com.flatten.Bar$Baz"
             // yields "Baz";  * "com.foo.Bar$1" yields "1" (which as an integer
             // is an invalid     name, and writer of the rule is encouraged to
             // give it an     explicit name)

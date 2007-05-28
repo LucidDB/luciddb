@@ -47,22 +47,22 @@ public class TraitMatchingRule
     /**
      * Creates a new TraitMatchingRule.
      *
-     * @param rule rule to be restricted; rule must take a single operand
-     * expecting a single input
+     * @param converterRule rule to be restricted; rule must take a single
+     * operand expecting a single input
      */
-    public TraitMatchingRule(ConverterRule converter)
+    public TraitMatchingRule(ConverterRule converterRule)
     {
         super(
             new RelOptRuleOperand(
-                converter.getOperand().getMatchedClass(),
+                converterRule.getOperand().getMatchedClass(),
                 new RelOptRuleOperand[] {
                     new RelOptRuleOperand(
                         RelNode.class,
                         null)
                 }));
-        assert (converter.getOperand().getChildren() == null);
-        description = "TraitMatchingRule: " + converter;
-        this.converter = converter;
+        assert (converterRule.getOperand().getChildOperands() == null);
+        description = "TraitMatchingRule: " + converterRule;
+        this.converter = converterRule;
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -134,7 +134,7 @@ public class MockRelOptPlanner
             return false;
         }
         bindings.add(rel);
-        Object [] childOperands = operand.getChildren();
+        RelOptRuleOperand [] childOperands = operand.getChildOperands();
         if (childOperands == null) {
             return true;
         }
@@ -144,7 +144,7 @@ public class MockRelOptPlanner
             return false;
         }
         for (int i = 0; i < n; ++i) {
-            if (!match((RelOptRuleOperand) childOperands[i],
+            if (!match(childOperands[i],
                     childRels[i],
                     bindings)) {
                 return false;
