@@ -1857,7 +1857,7 @@
                   isAbstract = 'false' isActive = 'false'>
                   <UML:ModelElement.taggedValue>
                     <UML:TaggedValue xmi.id = 'Ilsmmsmm110b640m100aa8b9ab3mm7fcd' isSpecification = 'false'>
-                      <UML:TaggedValue.dataValue>&lt;p&gt;Execution object which calculates expressions over a set of windows. An output record is made up expressions drawn from the input record and the current bucket of each window.&lt;/p&gt; &lt;p&gt;Note that this a window stream has a superset of the functionality of the {@link CalcTupleStreamDef} execution object.&lt;/p&gt;</UML:TaggedValue.dataValue>
+                      <UML:TaggedValue.dataValue>&lt;p&gt;Execution object which calculates expressions over a set of windows. An output record is made up expressions drawn from the input record and the current bucket of each window.&lt;/p&gt; &lt;p&gt;Note that this a window stream has a superset of the functionality of the {@link FemCalcTupleStreamDef} execution object.&lt;/p&gt;</UML:TaggedValue.dataValue>
                       <UML:TaggedValue.type>
                         <UML:TagDefinition xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7df8'/>
                       </UML:TaggedValue.type>
@@ -1924,7 +1924,7 @@
                   isAbstract = 'false' isActive = 'false'>
                   <UML:ModelElement.taggedValue>
                     <UML:TaggedValue xmi.id = 'Ilsmmsmm110b640m100aa8b9ab3mm7e08' isSpecification = 'false'>
-                      <UML:TaggedValue.dataValue>&lt;p&gt;The definition of a window inside a {@link WindowStreamDef}.&lt;/p&gt; &lt;p&gt;A window has either a logical or physical range, and contains a number of partitions:&lt;/p&gt; &lt;ul type=&quot;disc&quot;&gt; &lt;li&gt;A logical window is defined by a range of values, and may have several partitions.&lt;/li&gt; &lt;li&gt;A physical window is defined by a range of rows, and may have several partitions. &lt;/li&gt; &lt;/ul&gt;</UML:TaggedValue.dataValue>
+                      <UML:TaggedValue.dataValue>&lt;p&gt;The definition of a window inside a {@link FemWindowStreamDef}.&lt;/p&gt; &lt;p&gt;A window has either a logical or physical range, and contains a number of partitions:&lt;/p&gt; &lt;ul type=&quot;disc&quot;&gt; &lt;li&gt;A logical window is defined by a range of values, and may have several partitions.&lt;/li&gt; &lt;li&gt;A physical window is defined by a range of rows, and may have several partitions. &lt;/li&gt; &lt;/ul&gt;</UML:TaggedValue.dataValue>
                       <UML:TaggedValue.type>
                         <UML:TagDefinition xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7df8'/>
                       </UML:TaggedValue.type>
@@ -1935,7 +1935,7 @@
                       visibility = 'private' isSpecification = 'false' ownerScope = 'instance'>
                       <UML:ModelElement.taggedValue>
                         <UML:TaggedValue xmi.id = 'Ilsmmsmm110b640m100aa8b9ab3mm7f66' isSpecification = 'false'>
-                          <UML:TaggedValue.dataValue>&lt;p&gt;List of columns to sort the window on. For example, in &lt;span style=&quot;font-family:Courier&quot;&gt;WINDOW w AS (ORDER BY hiredate PARTITION BY gender ROWS 5 PRECEDING)&lt;/span&gt;, the order list is &amp;quot;hiredate&amp;quot;.&lt;/p&gt; &lt;p&gt;Often the optimizer will have ensured that the input stream is already sorted on the sort key, or at least a subset of it; for infinite relations, this is required in order to perform aggregation. See {@link WindowStreamDef#getInputOrderKeyList}.&lt;/p&gt;</UML:TaggedValue.dataValue>
+                          <UML:TaggedValue.dataValue>&lt;p&gt;List of columns to sort the window on. For example, in &lt;span style=&quot;font-family:Courier&quot;&gt;WINDOW w AS (ORDER BY hiredate PARTITION BY gender ROWS 5 PRECEDING)&lt;/span&gt;, the order list is &amp;quot;hiredate&amp;quot;.&lt;/p&gt; &lt;p&gt;Often the optimizer will have ensured that the input stream is already sorted on the sort key, or at least a subset of it; for infinite relations, this is required in order to perform aggregation. See {@link FemWindowStreamDef#getInputOrderKeyList}.&lt;/p&gt;</UML:TaggedValue.dataValue>
                           <UML:TaggedValue.type>
                             <UML:TagDefinition xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7df8'/>
                           </UML:TaggedValue.type>
