@@ -54,35 +54,35 @@ public class JavaToSqlTypeConversionRules
 
     private JavaToSqlTypeConversionRules()
     {
-        rules.put(Integer.class, SqlTypeName.Integer);
-        rules.put(int.class, SqlTypeName.Integer);
-        rules.put(Long.class, SqlTypeName.Bigint);
-        rules.put(long.class, SqlTypeName.Bigint);
-        rules.put(Short.class, SqlTypeName.Smallint);
-        rules.put(short.class, SqlTypeName.Smallint);
-        rules.put(byte.class, SqlTypeName.Tinyint);
-        rules.put(Byte.class, SqlTypeName.Tinyint);
+        rules.put(Integer.class, SqlTypeName.INTEGER);
+        rules.put(int.class, SqlTypeName.INTEGER);
+        rules.put(Long.class, SqlTypeName.BIGINT);
+        rules.put(long.class, SqlTypeName.BIGINT);
+        rules.put(Short.class, SqlTypeName.SMALLINT);
+        rules.put(short.class, SqlTypeName.SMALLINT);
+        rules.put(byte.class, SqlTypeName.TINYINT);
+        rules.put(Byte.class, SqlTypeName.TINYINT);
 
-        rules.put(Float.class, SqlTypeName.Real);
-        rules.put(float.class, SqlTypeName.Real);
-        rules.put(Double.class, SqlTypeName.Double);
-        rules.put(double.class, SqlTypeName.Double);
+        rules.put(Float.class, SqlTypeName.REAL);
+        rules.put(float.class, SqlTypeName.REAL);
+        rules.put(Double.class, SqlTypeName.DOUBLE);
+        rules.put(double.class, SqlTypeName.DOUBLE);
 
-        rules.put(boolean.class, SqlTypeName.Boolean);
-        rules.put(Boolean.class, SqlTypeName.Boolean);
-        rules.put(byte [].class, SqlTypeName.Varbinary);
-        rules.put(String.class, SqlTypeName.Varchar);
-        rules.put(char [].class, SqlTypeName.Varchar);
-        rules.put(Character.class, SqlTypeName.Char);
-        rules.put(char.class, SqlTypeName.Char);
+        rules.put(boolean.class, SqlTypeName.BOOLEAN);
+        rules.put(Boolean.class, SqlTypeName.BOOLEAN);
+        rules.put(byte [].class, SqlTypeName.VARBINARY);
+        rules.put(String.class, SqlTypeName.VARCHAR);
+        rules.put(char [].class, SqlTypeName.VARCHAR);
+        rules.put(Character.class, SqlTypeName.CHAR);
+        rules.put(char.class, SqlTypeName.CHAR);
 
-        rules.put(Date.class, SqlTypeName.Date);
-        rules.put(Timestamp.class, SqlTypeName.Timestamp);
-        rules.put(Time.class, SqlTypeName.Time);
-        rules.put(BigDecimal.class, SqlTypeName.Decimal);
+        rules.put(Date.class, SqlTypeName.DATE);
+        rules.put(Timestamp.class, SqlTypeName.TIMESTAMP);
+        rules.put(Time.class, SqlTypeName.TIME);
+        rules.put(BigDecimal.class, SqlTypeName.DECIMAL);
 
-        rules.put(ResultSet.class, SqlTypeName.Cursor);
-        rules.put(List.class, SqlTypeName.ColumnList);
+        rules.put(ResultSet.class, SqlTypeName.CURSOR);
+        rules.put(List.class, SqlTypeName.COLUMN_LIST);
     }
 
     //~ Methods ----------------------------------------------------------------

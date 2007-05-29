@@ -27,7 +27,7 @@ package org.eigenbase.oj.rel;
  * flow-control statements. This interface corresponds to the {@link
  * org.eigenbase.relopt.CallingConvention#JAVA Java calling-convention}.
  *
- * <p>For example, {@link JavaFilterRel} implements filtering logic by
+ * <p>For example, <code>JavaFilterRe</code> implements filtering logic by
  * generating an <code>if (...) { ... }</code> construct.
  *
  * @author jhyde

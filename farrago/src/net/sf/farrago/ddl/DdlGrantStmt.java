@@ -52,7 +52,7 @@ public abstract class DdlGrantStmt
     protected boolean grantOption;
     protected boolean currentRoleOption;
     protected boolean currentUserOption;
-    protected List granteeList;
+    protected List<SqlIdentifier> granteeList;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -72,7 +72,7 @@ public abstract class DdlGrantStmt
         visitor.visit(this);
     }
 
-    public void setGranteeList(List granteeList)
+    public void setGranteeList(List<SqlIdentifier> granteeList)
     {
         this.granteeList = granteeList;
     }

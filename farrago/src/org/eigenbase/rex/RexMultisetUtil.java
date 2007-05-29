@@ -141,7 +141,7 @@ public class RexMultisetUtil
         if (!call.getOperator().equals(SqlStdOperatorTable.castFunc)) {
             return false;
         }
-        return call.getType().getSqlTypeName() == SqlTypeName.Multiset;
+        return call.getType().getSqlTypeName() == SqlTypeName.MULTISET;
     }
 
     /**

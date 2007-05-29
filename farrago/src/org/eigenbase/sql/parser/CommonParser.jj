@@ -75,7 +75,7 @@ JAVACODE List startList(Object o)
  * usage of hints could easily mask unintended ambiguities resulting from
  * future changes to the grammar, making it very brittle.
  */
- 
+
 JAVACODE SqlParserPos getPos()
 {
     return new SqlParserPos(
@@ -220,7 +220,7 @@ JAVACODE SqlParseException convertException(Throwable ex)
             pos = new SqlParserPos(line, column, line, column);
         }
     }
-    
+
     SqlParseException spex = new SqlParseException(
         ex.getMessage(), pos, expectedTokenSequences, tokenImage, ex);
     return spex;
@@ -239,8 +239,8 @@ JAVACODE ParseException cleanupParseException(ParseException ex)
         return ex;
     }
     int iIdentifier = java.util.Arrays.asList(ex.tokenImage).indexOf("<IDENTIFIER>");
-    
-    // Find all sequences in the error which contain identifier. For 
+
+    // Find all sequences in the error which contain identifier. For
     // example,
     //       {<IDENTIFIER>}
     //       {A}
@@ -264,20 +264,20 @@ JAVACODE ParseException cleanupParseException(ParseException ex)
             prefixList.add(prefix);
         }
     }
-    
+
     if (prefixList.isEmpty()) {
         return ex;
     }
 
-    int[][] prefixes = (int[][]) 
+    int[][] prefixes = (int[][])
         prefixList.toArray(new int[prefixList.size()][]);
-    
+
     // Since <IDENTIFIER> was one of the possible productions,
     // we know that the parser will also have included all
     // of the non-reserved keywords (which are treated as
     // identifiers in non-keyword contexts).  So, now we need
     // to clean those out, since they're totally irrelevant.
-    
+
     List list = new ArrayList();
     Metadata metadata = getMetadata();
     for (int i = 0; i < ex.expectedTokenSequences.length; ++i) {
@@ -293,8 +293,8 @@ JAVACODE ParseException cleanupParseException(ParseException ex)
             list.add(seq);
         }
     }
-    
-    ex.expectedTokenSequences = 
+
+    ex.expectedTokenSequences =
         (int [][]) list.toArray(new int [list.size()][]);
     return ex;
 }
@@ -585,11 +585,11 @@ SqlSelect SqlSelect() :
     (
         <DISTINCT> {
             keywords.add(
-                SqlLiteral.createSymbol(SqlSelectKeyword.Distinct, getPos())); 
+                SqlLiteral.createSymbol(SqlSelectKeyword.Distinct, getPos()));
         }
         |   <ALL> {
             keywords.add(
-                SqlLiteral.createSymbol(SqlSelectKeyword.All, getPos())); 
+                SqlLiteral.createSymbol(SqlSelectKeyword.All, getPos()));
         }
         |   E()
     )
@@ -605,9 +605,9 @@ SqlSelect SqlSelect() :
     windowDecls = WindowOpt()
     {
 	selectItem = (SqlNode)selectList.get(0);
-        selectListPos = selectItem.getParserPosition();	
+        selectListPos = selectItem.getParserPosition();
         return SqlStdOperatorTable.selectOperator.createCall(
-            new SqlNodeList(keywords, pos), 
+            new SqlNodeList(keywords, pos),
             new SqlNodeList(selectList,selectListPos.plusAll(selectList)),
             fromClause, where, groupBy, having, windowDecls, null, pos);
     }
@@ -642,7 +642,7 @@ SqlNode SqlExplain() :
         {
             asXml = false;
         }
-    ) 
+    )
     <FOR> (
         stmt = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
         | stmt = SqlInsert()
@@ -655,8 +655,8 @@ SqlNode SqlExplain() :
         return new SqlExplain(
             SqlStdOperatorTable.explainOperator,
             stmt,
-            SqlLiteral.createEnum(detailLevel, SqlParserPos.ZERO),
-            SqlLiteral.createEnum(depth, SqlParserPos.ZERO),
+            SqlLiteral.createSymbol(detailLevel, SqlParserPos.ZERO),
+            SqlLiteral.createSymbol(depth, SqlParserPos.ZERO),
             SqlLiteral.createBoolean(asXml, SqlParserPos.ZERO),
             pos);
     }
@@ -690,7 +690,7 @@ SqlExplain.Depth ExplainDepth() :
         {
             return SqlExplain.Depth.Physical;
         }
-        
+
     )
 }
 
@@ -780,7 +780,7 @@ SqlNode SqlInsert() :
     SqlParserPos columnListPos = null;
 }
 {
-    <INSERT> 
+    <INSERT>
     SqlInsertKeywords(keywords)
     <INTO> table = CompoundIdentifier()
     {
@@ -1005,9 +1005,9 @@ SqlNode WhenNotMatchedClause(SqlIdentifier table) :
         insertPos = getPos();
     }
     SqlInsertKeywords(keywords)
-    [ 
+    [
         LOOKAHEAD(2)
-        <LPAREN> 
+        <LPAREN>
         insertColumnList = SimpleIdentifierCommaList()
         {
             columnListPos = getPos();
@@ -1176,7 +1176,7 @@ SqlNode FromClause() :
                     e2,
                     SqlLiteral.createSymbol(
                         SqlJoinOperator.ConditionType.On, onPos),
-                    condition, 
+                    condition,
                     joinTypePos);
             }
             |
@@ -1338,7 +1338,7 @@ SqlNode TableFunctionCall() :
     {
         return SqlStdOperatorTable.collectionTableOperator.createCall(
             pos, call);
-        
+
         return call;
     }
 }
@@ -1883,7 +1883,7 @@ List Expression2(ExprContext exprContext) :
                     checkNonQueryExpression(exprContext);
                 }
                 (
-                    <NOT> <IN> 
+                    <NOT> <IN>
                     {
                         op = SqlStdOperatorTable.notInOperator;
                         pos = getPos();
@@ -2529,7 +2529,7 @@ SqlIntervalQualifier IntervalQualifier() :
     int secondFracPrec = SqlIntervalQualifier.getDefaultPrecisionId();
 }
 {
-    ( 
+    (
         <YEAR> [ <LPAREN> startPrec = UnsignedIntLiteral() <RPAREN> ]
         [
             LOOKAHEAD(2) <TO> <MONTH>
@@ -2762,7 +2762,7 @@ int IntLiteral() :
     Token t;
 }
 {
-    ( t = <UNSIGNED_INTEGER_LITERAL> | <PLUS> t = <UNSIGNED_INTEGER_LITERAL> ) 
+    ( t = <UNSIGNED_INTEGER_LITERAL> | <PLUS> t = <UNSIGNED_INTEGER_LITERAL> )
     {
         try {
             return Integer.parseInt(t.image);
@@ -2771,7 +2771,7 @@ int IntLiteral() :
         }
     }
     |
-    <MINUS> t = <UNSIGNED_INTEGER_LITERAL> 
+    <MINUS> t = <UNSIGNED_INTEGER_LITERAL>
     {
         try {
             return -Integer.parseInt(t.image);
@@ -2847,104 +2847,104 @@ SqlIdentifier TypeName() :
             <CHARACTER> | <CHAR>
             {
                 typeName = new SqlIdentifier(
-                    SqlTypeName.Char.getName(), pos);
+                    SqlTypeName.CHAR.name(), pos);
             }
         )
         [
             <VARYING>
             {
                 typeName = new SqlIdentifier(
-                    SqlTypeName.Varchar.getName(), pos);
+                    SqlTypeName.VARCHAR.name(), pos);
             }
         ]
         | <VARCHAR>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Varchar.getName(), pos);
+                SqlTypeName.VARCHAR.name(), pos);
         }
         | <DATE>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Date.getName(),pos);
+                SqlTypeName.DATE.name(),pos);
         }
         | <TIME>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Time.getName(),pos);
+                SqlTypeName.TIME.name(),pos);
         }
         | <TIMESTAMP>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Timestamp.getName(),pos);
+                SqlTypeName.TIMESTAMP.name(),pos);
         }
         | (<DECIMAL> | <DEC> | <NUMERIC>)
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Decimal.getName(),pos);
+                SqlTypeName.DECIMAL.name(),pos);
         }
         | <BOOLEAN>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Boolean.getName(),pos);
+                SqlTypeName.BOOLEAN.name(),pos);
         }
         | <INTEGER>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Integer.getName(),pos);
+                SqlTypeName.INTEGER.name(),pos);
         }
         | <INT>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Integer.getName(),pos);
+                SqlTypeName.INTEGER.name(),pos);
         }
         | (
             <BINARY>
             {
                 typeName = new SqlIdentifier(
-                    SqlTypeName.Binary.getName(),pos);
+                    SqlTypeName.BINARY.name(),pos);
             }
         )
         [
             <VARYING>
             {
                 typeName = new SqlIdentifier(
-                    SqlTypeName.Varbinary.getName(), pos);
+                    SqlTypeName.VARBINARY.name(), pos);
             }
         ]
         | <VARBINARY>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Varbinary.getName(),pos);
+                SqlTypeName.VARBINARY.name(),pos);
         }
         | <TINYINT>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Tinyint.getName(),pos);
+                SqlTypeName.TINYINT.name(),pos);
         }
         | <SMALLINT>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Smallint.getName(),pos);
+                SqlTypeName.SMALLINT.name(),pos);
         }
         | <BIGINT>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Bigint.getName(),pos);
+                SqlTypeName.BIGINT.name(),pos);
         }
         | <REAL>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Real.getName(),pos);
+                SqlTypeName.REAL.name(),pos);
         }
         | <DOUBLE> [ <PRECISION> ]
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Double.getName(),pos);
+                SqlTypeName.DOUBLE.name(),pos);
         }
         | <FLOAT>
         {
             typeName = new SqlIdentifier(
-                SqlTypeName.Float.getName(),pos);
+                SqlTypeName.FLOAT.name(),pos);
         }
         |   typeName = CollectionsTypeName()
         |   typeName = CompoundIdentifier()
@@ -2963,7 +2963,7 @@ SqlIdentifier CollectionsTypeName() :
     <MULTISET>
     {
         typeName = new SqlIdentifier(
-            SqlTypeName.Multiset.getName(),pos);
+            SqlTypeName.MULTISET.name(),pos);
         return typeName;
     }
 }
@@ -3089,7 +3089,7 @@ SqlNode BuiltinFunctionCall() :
         {
             pos = getPos();
         }
-        <LPAREN> 
+        <LPAREN>
         e = Expression(EXPR_ACCEPT_SUBQUERY)
         {
             args = startList(e);
@@ -3157,7 +3157,7 @@ SqlNode BuiltinFunctionCall() :
         {
             pos = getPos();
         }
-        <LPAREN> 
+        <LPAREN>
         e = Expression(EXPR_ACCEPT_SUBQUERY)
         { args = startList(e); }
         ( <FROM> | <COMMA>)
@@ -3190,21 +3190,21 @@ SqlNode BuiltinFunctionCall() :
                 {
                     pos = getPos();
                     flag = SqlLiteral.createSymbol(
-                        SqlTrimFunction.Flag.Both, pos);
+                        SqlTrimFunction.Flag.BOTH, pos);
                 }
                 |
                 <TRAILING>
                 {
                     pos = getPos();
                     flag = SqlLiteral.createSymbol(
-                        SqlTrimFunction.Flag.Trailing, pos);
+                        SqlTrimFunction.Flag.TRAILING, pos);
                 }
                 |
                 <LEADING>
                 {
                     pos = getPos();
                     flag = SqlLiteral.createSymbol(
-                        SqlTrimFunction.Flag.Leading, pos);
+                        SqlTrimFunction.Flag.LEADING, pos);
                 }
             ]
             [ trimChars = Expression(EXPR_ACCEPT_SUBQUERY) ]
@@ -3345,7 +3345,7 @@ SqlNode NamedFunctionCall() :
         }
     )
 }
-  
+
 
 /*
 * Parse Floor/Ceil function parameters
@@ -3361,7 +3361,7 @@ SqlNode StandardFloorCeilOptions(SqlParserPos pos, boolean floorFlag) :
     boolean over = false;
 }
 {
-    args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY) 
+    args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
     [
         <OVER>
         {

@@ -27,7 +27,6 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -51,11 +50,11 @@ public abstract class TableModificationRelBase
     /**
      * The table definition.
      */
-    protected RelOptTable table;
-    private Operation operation;
-    private List<String> updateColumnList;
+    protected final RelOptTable table;
+    private final Operation operation;
+    private final List<String> updateColumnList;
     private RelDataType inputRowType;
-    private boolean flattened;
+    private final boolean flattened;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -109,22 +108,22 @@ public abstract class TableModificationRelBase
 
     public boolean isInsert()
     {
-        return operation.equals(Operation.INSERT);
+        return operation == Operation.INSERT;
     }
 
     public boolean isUpdate()
     {
-        return operation.equals(Operation.UPDATE);
+        return operation == Operation.UPDATE;
     }
 
     public boolean isDelete()
     {
-        return operation.equals(Operation.DELETE);
+        return operation == Operation.DELETE;
     }
 
     public boolean isMerge()
     {
-        return operation.equals(Operation.MERGE);
+        return operation == Operation.MERGE;
     }
 
     // implement RelNode
@@ -187,13 +186,13 @@ public abstract class TableModificationRelBase
             this,
             new String[] {
                 "child", "table", "operation", "updateColumnList",
-            "flattened"
+                "flattened"
             },
             new Object[] {
                 Arrays.asList(table.getQualifiedName()), getOperation(),
-            (updateColumnList == null) ? Collections.EMPTY_LIST
-                : updateColumnList,
-            Boolean.valueOf(flattened)
+                (updateColumnList == null) ? Collections.EMPTY_LIST
+                    : updateColumnList,
+                flattened
             });
     }
 
@@ -210,51 +209,9 @@ public abstract class TableModificationRelBase
     /**
      * Enumeration of supported modification operations.
      */
-    public static class Operation
-        extends EnumeratedValues.BasicValue
+    public enum Operation
     {
-        public static final int INSERT_ORDINAL = 1;
-        public static final Operation INSERT =
-            new Operation("INSERT", INSERT_ORDINAL);
-        public static final int UPDATE_ORDINAL = 2;
-        public static final Operation UPDATE =
-            new Operation("UPDATE", UPDATE_ORDINAL);
-        public static final int DELETE_ORDINAL = 3;
-        public static final Operation DELETE =
-            new Operation("DELETE", DELETE_ORDINAL);
-        public static final int MERGE_ORDINAL = 4;
-        public static final Operation MERGE =
-            new Operation("MERGE", MERGE_ORDINAL);
-
-        /**
-         * List of all allowable {@link TableModificationRel.Operation} values.
-         */
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(
-                new Operation[] { INSERT, UPDATE, DELETE, MERGE });
-
-        private Operation(
-            String name,
-            int ordinal)
-        {
-            super(name, ordinal, null);
-        }
-
-        /**
-         * Looks up a operation from its ordinal.
-         */
-        public static Operation get(int ordinal)
-        {
-            return (Operation) enumeration.getValue(ordinal);
-        }
-
-        /**
-         * Looks up an operation from its name.
-         */
-        public static Operation get(String name)
-        {
-            return (Operation) enumeration.getValue(name);
-        }
+        INSERT, UPDATE, DELETE, MERGE;
     }
 }
 

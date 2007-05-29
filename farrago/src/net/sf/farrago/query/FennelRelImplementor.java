@@ -90,7 +90,7 @@ public interface FennelRelImplementor
      *
      * @param producer the upstream node of the dataflow
      * @param consumer the downstream node of the dataflow
-     * @param boolean implicit false if this is an explicit dataflow
+     * @param implicit false if this is an explicit dataflow
      * edge between two ExecStreams; true if it represents implicit
      * dataflow via a UDX reading from a cursor
      */
@@ -127,8 +127,7 @@ public interface FennelRelImplementor
 
     /**
      * Sets the format of error records for an execution stream.
-     * 
-     * @param implementor an implementor for Fennel relations
+     *
      * @param rel relation to which the execution stream belongs
      * @param streamDef stream definition of stream that may produce errors
      * @param errorType row type of error records produced by the stream

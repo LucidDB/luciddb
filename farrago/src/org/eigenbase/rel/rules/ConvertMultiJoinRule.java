@@ -35,11 +35,11 @@ import java.util.*;
  * input is a null generating input in an outer join, i.e., either input in
  * a full outer join, the right hand side of a left outer join, or the left
  * hand side of a right outer join.
- * 
+ *
  * <p>Join conditions are also pulled up from the inputs into the topmost
  * {@link MultiJoinRel}, unless the input corresponds to a null generating
  * input in an outer join,
- * 
+ *
  * <p>Outer join information is also stored in the {@link MultiJoinRel}.  A
  * boolean flag indicates if the join is a full outer join, and in the case of
  * left and right outer joins, the join type and outer join conditions are
@@ -47,10 +47,10 @@ import java.util.*;
  * is associated with the null generating input in the outer join.  So, in the
  * case of a a left outer join between A and B, the information is associated
  * with B, not A.
- * 
+ *
  * <p>Here are examples of the {@link MultiJoinRel}s constructed after this
  * rule has been applied on following join trees.
- * 
+ *
  * <pre>
  * A JOIN B -> MJ(A, B)
  * A JOIN B JOIN C -> MJ(A, B, C)
@@ -125,14 +125,14 @@ public class ConvertMultiJoinRule
             right,
             newOuterJoinConds,
             joinTypes);
-        
+
         // pull up the join filters from the children MultiJoinRels and
         // combine them with the join filter associated with this JoinRel to
         // form the join filter for the new MultiJoinRel
         RexNode newJoinFilter = combineJoinFilters(origJoinRel, left, right);
-        
+
         // add on the join field reference counts for the join condition
-        // associated with this JoinRel     
+        // associated with this JoinRel
         Map<Integer, int []> newJoinFieldRefCountsMap =
             new HashMap<Integer, int []>();
         addOnJoinFieldRefCounts(
@@ -152,7 +152,7 @@ public class ConvertMultiJoinRule
                 newOuterJoinConds,
                 joinTypes,
                 projFieldsList.toArray(new BitSet[projFieldsList.size()]),
-                newJoinFieldRefCountsMap);            
+                newJoinFieldRefCountsMap);
 
         call.transformTo(multiJoin);
     }
@@ -171,7 +171,7 @@ public class ConvertMultiJoinRule
      * @return combined left and right inputs in an array
      */
     private RelNode [] combineInputs(
-        JoinRel joinRel,
+        JoinRel join,
         RelNode left,
         RelNode right,
         List<BitSet> projFieldsList,
@@ -182,7 +182,7 @@ public class ConvertMultiJoinRule
         int nInputs;
         int nInputsOnLeft;
         MultiJoinRel leftMultiJoin = null;
-        JoinRelType joinType = joinRel.getJoinType();
+        JoinRelType joinType = join.getJoinType();
         boolean combineLeft = canCombine(left, joinType.generatesNullsOnLeft());
         if (combineLeft) {
             leftMultiJoin = (MultiJoinRel) left;
@@ -201,7 +201,7 @@ public class ConvertMultiJoinRule
         } else {
             nInputs += 1;
         }
-        
+
         RelNode [] newInputs = new RelNode[nInputs];
         int i = 0;
         if (combineLeft) {
@@ -282,7 +282,7 @@ public class ConvertMultiJoinRule
             }
             combinedConds[nCombinedInputs - 1] = joinRel.getCondition();
             joinTypes[nCombinedInputs - 1] = joinType;
-            
+
         } else if (joinType == JoinRelType.RIGHT) {
             if (rightCombined) {
                 copyOuterJoinInfo(
@@ -298,7 +298,7 @@ public class ConvertMultiJoinRule
             }
             combinedConds[0] = joinRel.getCondition();
             joinTypes[0] = joinType;
-            
+
         } else {
             int nInputsLeft;
             if (leftCombined) {
@@ -323,20 +323,20 @@ public class ConvertMultiJoinRule
                     nInputsLeft,
                     left.getRowType().getFieldCount(),
                     right.getRowType().getFields(),
-                    joinRel.getRowType().getFields());                  
+                    joinRel.getRowType().getFields());
             } else {
                 joinTypes[nInputsLeft] = JoinRelType.INNER;
             }
         }
-        
+
         return combinedConds;
     }
-        
+
     /**
      * Copies outer join data from a source MultiJoinRel to a new set of arrays.
      * Also adjusts the conditions to reflect the new position of an input
      * if that input ends up being shifted to the right.
-     * 
+     *
      * @param multiJoinRel the source MultiJoinRel
      * @param destConds the array where the join conditions will be copied
      * @param destJoinTypes the array where the join types will be copied
@@ -358,12 +358,12 @@ public class ConvertMultiJoinRule
         RelDataTypeField [] destFields)
     {
         RexNode [] srcConds = multiJoinRel.getOuterJoinConditions();
-        JoinRelType [] srcJoinTypes = multiJoinRel.getJoinTypes(); 
+        JoinRelType [] srcJoinTypes = multiJoinRel.getJoinTypes();
         RexBuilder rexBuilder = multiJoinRel.getCluster().getRexBuilder();
-        
+
         int len = srcConds.length;
         System.arraycopy(srcJoinTypes, 0, destJoinTypes, destPos, len);
-        
+
         if (adjustmentAmount == 0) {
             System.arraycopy(srcConds, 0, destConds, 0, len);
         } else {
@@ -383,7 +383,7 @@ public class ConvertMultiJoinRule
                                 adjustments));
                 }
             }
-        }      
+        }
     }
 
     /**
@@ -452,11 +452,11 @@ public class ConvertMultiJoinRule
 
         return newFilter;
     }
-    
+
     /**
      * @param input input into a join
      * @param nullGenerating true if the input is null generating
-     * 
+     *
      * @return true if the input can be combined into a parent MultiJoinRel
      */
     private boolean canCombine(RelNode input, boolean nullGenerating)
@@ -466,11 +466,11 @@ public class ConvertMultiJoinRule
             !((MultiJoinRel) input).isFullOuterJoin() &&
             !nullGenerating);
     }
-    
+
     /**
      * Adds on to the existing join condition reference counts the references
      * from the new join condition.
-     * 
+     *
      * @param multiJoinInputs inputs into the new MultiJoinRel
      * @param nTotalFields total number of fields in the MultiJoinRel
      * @param joinCondition the new join condition
@@ -488,7 +488,7 @@ public class ConvertMultiJoinRule
         // count the input references in the join condition
         int [] joinCondRefCounts = new int[nTotalFields];
         joinCondition.accept(new InputReferenceCounter(joinCondRefCounts));
-        
+
         // first, make a copy of the ref counters
         int nInputs = multiJoinInputs.length;
         int currInput = 0;
@@ -499,7 +499,7 @@ public class ConvertMultiJoinRule
             currInput++;
         }
 
-        // add on to the counts for each input into the MultiJoinRel the  
+        // add on to the counts for each input into the MultiJoinRel the
         // reference counts computed for the current join condition
         currInput = -1;
         int startField = 0;
@@ -519,7 +519,7 @@ public class ConvertMultiJoinRule
             refCounts[i - startField] += joinCondRefCounts[i];
         }
     }
-    
+
     /**
      * Visitor that keeps a reference count of the inputs used by an expression.
      */

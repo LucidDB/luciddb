@@ -34,7 +34,6 @@ import net.sf.farrago.plugin.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.cwm.core.CwmFeature;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
@@ -329,7 +328,7 @@ public class FarragoDataWrapperCache
     public void closeAllocation()
     {
         super.closeAllocation();
-        Map mapMofIdToPlugin = getMapMofIdToPlugin();
+        Map<String, Object> mapMofIdToPlugin = getMapMofIdToPlugin();
         for (Object plugin : mapMofIdToPlugin.values()) {
             if (plugin instanceof FarragoMedDataServer) {
                 ((FarragoMedDataServer)plugin).releaseResources();

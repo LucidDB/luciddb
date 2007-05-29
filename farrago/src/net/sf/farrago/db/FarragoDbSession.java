@@ -146,7 +146,7 @@ public class FarragoDbSession
      * List of savepoints established within current transaction which have not
      * been released or rolled back; order is from earliest to latest.
      */
-    private List savepointList;
+    private List<FarragoDbSavepoint> savepointList;
 
     /**
      * Generator for savepoint Id's.
@@ -166,7 +166,7 @@ public class FarragoDbSession
     /**
      * Private cache of executable code pinned by the current txn.
      */
-    private Map txnCodeCache;
+    private Map<String, FarragoObjectCache.Entry> txnCodeCache;
     private DatabaseMetaData dbMetaData;
     protected FarragoSessionFactory sessionFactory;
 
@@ -262,7 +262,7 @@ public class FarragoDbSession
                 throw FarragoResource.instance().SessionLoginFailed.ex(
                     repos.getLocalizedObjectName(sessionUser));
             }  else if (database.isAuthenticationEnabled()
-                && (database.isAuthenticateLocalConnections() 
+                && (database.isAuthenticateLocalConnections()
                     || !remoteProtocol.equals("none"))) {
                 // authenticate; use same SessionLoginFailed if fails
                 LoginContext lc;
@@ -279,14 +279,14 @@ public class FarragoDbSession
                     throw FarragoResource.instance().SessionLoginFailed.ex(
                         repos.getLocalizedObjectName(sessionUser));
                 }
-                
+
                 try {
                     lc.logout();
                 } catch (LoginException ex) {
                     throw FarragoResource.instance().SessionLogoutFailed.ex(
                         repos.getLocalizedObjectName(sessionUser));
                 }
-            } 
+            }
         }
 
         fennelTxnContext =
@@ -308,11 +308,11 @@ public class FarragoDbSession
                 defaultNamespace.getNamespace().getName();
         }
 
-        txnCodeCache = new HashMap();
+        txnCodeCache = new HashMap<String, FarragoObjectCache.Entry>();
 
         isAutoCommit = true;
 
-        savepointList = new ArrayList();
+        savepointList = new ArrayList<FarragoDbSavepoint>();
 
         sessionIndexMap = new FarragoDbSessionIndexMap(this, this, repos);
 
@@ -388,7 +388,7 @@ public class FarragoDbSession
     {
         return warningQueue;
     }
-    
+
     // implement FarragoSession
     public synchronized FarragoSessionStmtContext newStmtContext(
         FarragoSessionStmtParamDefFactory paramDefFactory)
@@ -430,10 +430,7 @@ public class FarragoDbSession
             FarragoDbSessionPrivilegeMap newPrivilegeMap =
                 new FarragoDbSessionPrivilegeMap(repos.getModelView());
             getPersonality().definePrivileges(newPrivilegeMap);
-            Iterator iter = getModelExtensions().iterator();
-            while (iter.hasNext()) {
-                FarragoSessionModelExtension ext =
-                    (FarragoSessionModelExtension) iter.next();
+            for (FarragoSessionModelExtension ext : getModelExtensions()) {
                 ext.definePrivileges(newPrivilegeMap);
             }
             newPrivilegeMap.makeImmutable();
@@ -452,8 +449,8 @@ public class FarragoDbSession
         try {
             FarragoDbSession clone = (FarragoDbSession) super.clone();
             clone.isClone = true;
-            clone.allocations = new LinkedList();
-            clone.savepointList = new ArrayList();
+            clone.allocations = new LinkedList<ClosableAllocation>();
+            clone.savepointList = new ArrayList<FarragoDbSavepoint>();
             clone.warningQueue = new FarragoWarningQueue();
             if (isTxnInProgress()) {
                 // Calling statement has already started a transaction:
@@ -567,7 +564,7 @@ public class FarragoDbSession
     // NOTE jvs 16-Jan-2007:  Don't make this synchronized, since that
     // would reverse the synchronization order inside of closeAllocation,
     // leading to deadlock
-    
+
     // implement FarragoSession
     public void kill()
     {
@@ -584,7 +581,7 @@ public class FarragoDbSession
             info.getStmtContext().cancel();
         }
     }
-    
+
     // implement FarragoAllocation
     public void closeAllocation()
     {
@@ -714,7 +711,7 @@ public class FarragoDbSession
         this.sessionIndexMap = sessionIndexMap;
     }
 
-    Map getTxnCodeCache()
+    Map<String, FarragoObjectCache.Entry> getTxnCodeCache()
     {
         return txnCodeCache;
     }
@@ -751,13 +748,11 @@ public class FarragoDbSession
             txnIdRef.txnId = null;
         }
         savepointList.clear();
-        Iterator iter = txnCodeCache.values().iterator();
-        while (iter.hasNext()) {
+        for (FarragoObjectCache.Entry o : txnCodeCache.values()) {
             // REVIEW jvs 26-Nov-2006:  for pinned ExecStreamGraphs
             // (and maybe other statement-related resources) can
             // we verify that they are no longer in use?
-            FarragoAllocation alloc = (FarragoAllocation) iter.next();
-            alloc.closeAllocation();
+            o.closeAllocation();
         }
         txnCodeCache.clear();
     }
@@ -856,7 +851,7 @@ public class FarragoDbSession
             throw FarragoResource.instance().SessionWrongSavepoint.ex(
                 savepoint.getName());
         }
-        int iSavepoint = findSavepoint(savepoint);
+        int iSavepoint = findSavepoint(dbSavepoint);
         if (iSavepoint == -1) {
             if (savepoint.getName() == null) {
                 throw FarragoResource.instance().SessionInvalidSavepointId.ex(
@@ -874,8 +869,7 @@ public class FarragoDbSession
         boolean throwIfNotFound)
     {
         for (int i = 0; i < savepointList.size(); ++i) {
-            FarragoDbSavepoint savepoint =
-                (FarragoDbSavepoint) savepointList.get(i);
+            FarragoDbSavepoint savepoint = savepointList.get(i);
             if (name.equals(savepoint.getName())) {
                 return i;
             }
@@ -887,7 +881,7 @@ public class FarragoDbSession
         return -1;
     }
 
-    private int findSavepoint(FarragoSessionSavepoint savepoint)
+    private int findSavepoint(FarragoDbSavepoint savepoint)
     {
         return savepointList.indexOf(savepoint);
     }
@@ -903,8 +897,7 @@ public class FarragoDbSession
         if (isAutoCommit) {
             throw FarragoResource.instance().SessionNoRollbackInAutocommit.ex();
         }
-        FarragoDbSavepoint savepoint =
-            (FarragoDbSavepoint) savepointList.get(iSavepoint);
+        FarragoDbSavepoint savepoint = savepointList.get(iSavepoint);
         if (repos.isFennelEnabled()) {
             fennelTxnContext.rollbackToSavepoint(
                 savepoint.getFennelSvptHandle());
@@ -929,23 +922,22 @@ public class FarragoDbSession
             new EigenbaseTimingTracer(
                 sqlTimingTracer,
                 "begin prepare");
-        
+
         FarragoReposTxnContext reposTxnContext =
             new FarragoReposTxnContext(repos);
 
-        boolean [] pRollback = new boolean[1];
-        pRollback[0] = true;
+        boolean [] pRollback = {true};
         FarragoSessionStmtValidator stmtValidator = newStmtValidator();
         if (stmtContext != null) {
             stmtValidator.setWarningQueue(stmtContext.getWarningQueue());
         }
         stmtValidator.setTimingTracer(timingTracer);
-            
+
         // Pass the repos txn context to the statement validator so
         // the parser can access it and start the appropriate type of
         // repository transaction (for DDL vs not DDL)
         stmtValidator.setReposTxnContext(reposTxnContext);
-            
+
         FarragoSessionExecutableStmt stmt = null;
         try {
             stmt =
@@ -971,7 +963,7 @@ public class FarragoDbSession
             if (stmtValidator != null) {
                 stmtValidator.closeAllocation();
             }
-                
+
             // MDR doesn't allow rollback on read-only txns
             if (pRollback[0] && !reposTxnContext.isReadTxnInProgress()) {
                 tracer.fine("rolling back DDL");
@@ -980,7 +972,7 @@ public class FarragoDbSession
                 reposTxnContext.commit();
             }
             reposTxnContext.unlockAfterTxn();
-        }            
+        }
         timingTracer.traceTime("end prepare");
         return stmt;
     }
@@ -1037,7 +1029,7 @@ public class FarragoDbSession
         }
 
         FarragoSessionDdlStmt ddlStmt = (FarragoSessionDdlStmt) parsedObj;
-    
+
         // If !isExecDirect and we don't need to validate on prepare, then
         // we only need to parse the statement
         if (!isExecDirect &&
@@ -1049,15 +1041,15 @@ public class FarragoDbSession
             }
             return null;
         }
-        
+
         if (ddlStmt.runsAsDml()) {
             markTableInUse(stmtContext, reposTxnContext, ddlStmt);
-        }   
+        }
 
         validateDdl(ddlValidator, stmtContext, reposTxnContext, ddlStmt);
 
         stmtValidator.getTimingTracer().traceTime("end DDL validation");
-        
+
         // Now that we've validated, we shouldn't continue with execution
         // when !isExecDirect
         if (!isExecDirect) {
@@ -1066,7 +1058,7 @@ public class FarragoDbSession
             }
             return null;
         }
-        
+
         executeDdl(ddlValidator, reposTxnContext, ddlStmt);
 
         stmtValidator.getTimingTracer().traceTime("end DDL execution");
@@ -1094,7 +1086,7 @@ public class FarragoDbSession
             fennelTxnContext.initiateTxn();
         }
         boolean rollbackFennel = true;
-        try {           
+        try {
             ddlValidator.validate(ddlStmt);
             rollbackFennel = false;
         } finally {
@@ -1109,7 +1101,7 @@ public class FarragoDbSession
      * the MDR repository lock acquired at the start of query preparation.
      * Since we no longer have the repository locked, marking the table as
      * in-use prevents it from being dropped.
-     * 
+     *
      * @param stmtContext context of the DDL statement
      * @param reposTxnContext current repository txn context
      * @param ddlStmt the DDL statement
@@ -1121,15 +1113,15 @@ public class FarragoDbSession
     {
         // Mark the table as in use, then unlock the repository
         CwmModelElement table = ddlStmt.getModelElement();
-        stmtContext.lockObjectInUse(table.refMofId());      
+        stmtContext.lockObjectInUse(table.refMofId());
         reposTxnContext.commit();
         reposTxnContext.unlockAfterTxn();
     }
-    
+
     /**
      * Accesses the target table of a DDL statement for write to prevent
      * concurrent DML on the same table.
-     * 
+     *
      * @param stmtContext context of the DDL statement
      * @param ddlStmt the DDL statement
      */
@@ -1162,14 +1154,14 @@ public class FarragoDbSession
             }
         }
     }
-    
+
     private void executeDdl(
         FarragoSessionDdlValidator ddlValidator,
         FarragoReposTxnContext reposTxnContext,
         FarragoSessionDdlStmt ddlStmt)
     {
         tracer.fine("updating storage");
-        
+
         boolean rollbackFennel = true;
         try {
             ddlValidator.executeStorage();
@@ -1319,7 +1311,7 @@ public class FarragoDbSession
         }
     }
 
-    private static class TxnIdRef 
+    private static class TxnIdRef
     {
         FarragoSessionTxnId txnId;
     }

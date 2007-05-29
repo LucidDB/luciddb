@@ -58,12 +58,12 @@ public interface FarragoSessionIndexMap
     public long getIndexRoot(FemLocalIndex index);
 
     /**
-     * Gets the root PageId of an index to be used for reading or 
+     * Gets the root PageId of an index to be used for reading or
      * for writing.
      *
      * @param index the index of interest
-     * @param write whether to access a root for reading or writing. A root 
-     *   for reading reflects the index before modifications. A root for 
+     * @param write whether to access a root for reading or writing. A root
+     *   for reading reflects the index before modifications. A root for
      *   writing may be the same root, or may reflect an updated index,
      *   depending on the implementation of the session index map.
      *
@@ -73,7 +73,7 @@ public interface FarragoSessionIndexMap
 
     /**
      * Sets the root PageId of an index.
-     * 
+     *
      * @param index the index to be updated
      * @param pageId the root PageId
      */
@@ -106,7 +106,7 @@ public interface FarragoSessionIndexMap
      * @param wrapperCache cache for looking up data wrappers
      * @param index the index to create
      * @param updateMap whether to record the new root in the map
-     * 
+     *
      * @return the root of the newly created index storage
      */
     public long createIndexStorage(
@@ -128,11 +128,11 @@ public interface FarragoSessionIndexMap
         boolean truncate);
 
     /**
-     * Verifies an index and records returns page count for the index
+     * Verifies an index and records returns page count for the index.
      *
      * @param wrapperCache cache for looking up data wrappers
      * @param index the index to verify
-     * 
+     *
      * @return page count for the index
      */
     public long computeIndexStats(
@@ -141,15 +141,16 @@ public interface FarragoSessionIndexMap
         boolean estimate);
 
     /**
-     * Commit hook
+     * Commit hook.
      */
     public void onCommit();
-    
+
     /**
-     * Versions an index root page
-     * 
-     * @param oldIndexRoots list of current index root ids
-     * @param newIndexRoots list of new index root ids
+     * Versions an index root page.
+     *
+     * @param wrapperCache Wrapper cache
+     * @param index Index definition
+     * @param newRoot new index root ids
      */
     public void versionIndexRoot(
         FarragoDataWrapperCache wrapperCache,

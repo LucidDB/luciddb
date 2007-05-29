@@ -23,16 +23,12 @@
 package org.eigenbase.oj.rex;
 
 import java.math.*;
-
 import java.nio.*;
-
 import java.util.*;
 
 import openjava.mop.*;
-
 import openjava.ptree.*;
 
-import org.eigenbase.oj.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
@@ -40,6 +36,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.util.*;
 
 
@@ -254,31 +251,33 @@ public class RexToOJTranslator
         final Object value = literal.getValue();
         Calendar calendar;
         long timeInMillis;
-        switch (literal.getTypeName().getOrdinal()) {
-        case SqlTypeName.Null_ordinal:
+        switch (literal.getTypeName()) {
+        case NULL:
             setTranslation(Literal.constantNull());
             break;
-        case SqlTypeName.Char_ordinal:
+        case CHAR:
             setTranslation(
                 Literal.makeLiteral(((NlsString) value).getValue()));
             break;
-        case SqlTypeName.Boolean_ordinal:
+        case BOOLEAN:
             setTranslation(Literal.makeLiteral((Boolean) value));
             break;
-        case SqlTypeName.Decimal_ordinal:
+        case DECIMAL:
             BigDecimal bd = (BigDecimal) value;
             if (bd.scale() == 0) {
-                // Honor the requested type (if long) to prevent 
+                // Honor the requested type (if long) to prevent
                 // unexpected overflow during arithmetic.
                 SqlTypeName type = literal.getType().getSqlTypeName();
                 long longValue = bd.longValue();
-                if (type == SqlTypeName.Tinyint
-                    || type == SqlTypeName.Smallint
-                    || type == SqlTypeName.Integer)
-                {
+                switch (type) {
+                case TINYINT:
+                case SMALLINT:
+                case INTEGER:
                     setTranslation(Literal.makeLiteral((int) longValue));
-                } else {
+                    break;
+                default:
                     setTranslation(Literal.makeLiteral(longValue));
+                    break;
                 }
                 break;
             }
@@ -287,8 +286,8 @@ public class RexToOJTranslator
             long unscaled = bd.unscaledValue().longValue();
             setTranslation(Literal.makeLiteral(unscaled));
             break;
-        case SqlTypeName.Double_ordinal:
-            if (literal.getType().getSqlTypeName() == SqlTypeName.Real) {
+        case DOUBLE:
+            if (literal.getType().getSqlTypeName() == SqlTypeName.REAL) {
                 setTranslation(
                     Literal.makeLiteral(((BigDecimal) value).floatValue()));
             } else {
@@ -296,26 +295,25 @@ public class RexToOJTranslator
                     Literal.makeLiteral(((BigDecimal) value).doubleValue()));
             }
             break;
-        case SqlTypeName.Binary_ordinal:
+        case BINARY:
             setTranslation(
                 convertByteArrayLiteral(((ByteBuffer) value).array()));
             break;
-        case SqlTypeName.Date_ordinal:
-        case SqlTypeName.Time_ordinal:
-        case SqlTypeName.Timestamp_ordinal:
+        case DATE:
+        case TIME:
+        case TIMESTAMP:
             calendar = (Calendar) value;
             timeInMillis = calendar.getTimeInMillis();
             setTranslation(Literal.makeLiteral(timeInMillis));
             break;
-        case SqlTypeName.IntervalDayTime_ordinal:
-        case SqlTypeName.IntervalYearMonth_ordinal:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             BigDecimal interval = (BigDecimal) value;
             setTranslation(Literal.makeLiteral(interval.longValue()));
             break;
-        case SqlTypeName.Symbol_ordinal:
-            EnumeratedValues.BasicValue ord =
-                (EnumeratedValues.BasicValue) value;
-            setTranslation(Literal.makeLiteral(ord.getOrdinal()));
+        case SYMBOL:
+            SqlLiteral.SqlSymbol ord = (SqlLiteral.SqlSymbol) value;
+            setTranslation(Literal.makeLiteral(ord.ordinal()));
             break;
         default:
             throw Util.newInternal(
@@ -332,7 +330,6 @@ public class RexToOJTranslator
         RexNode [] operands = call.getOperands();
         Expression [] exprs = new Expression[operands.length];
         StatementList [] savedStmtLists = stmtLists;
-        StatementList outStmtList = null;
         // TODO jvs 16-Oct-2006:  make this properly extensible
         boolean needSub =
             (call.getOperator() instanceof SqlCaseOperator)

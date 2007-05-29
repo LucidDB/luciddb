@@ -62,7 +62,7 @@ public class SargInterval
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @see SargFactory.newInterval
+     * Creates a SargInterval.
      */
     SargInterval(
         SargFactory factory,

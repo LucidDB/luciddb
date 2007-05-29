@@ -30,10 +30,10 @@ import java.sql.*;
 import java.text.*;
 
 /**
- * Moved over from luciddb applib datetime package for general use. 
+ * Moved over from luciddb applib datetime package for general use.
  * Date conversion, based on standard Java libraries
  *
- * @author 
+ * @author Elizabeth Lin
  * @version $Id$
  */
 public abstract class FarragoConvertDatetimeUDR
@@ -41,10 +41,10 @@ public abstract class FarragoConvertDatetimeUDR
 
     //~ Static fields/initializers -----------------------------------------
 
-    protected static final int UDR = 0;
-    protected static final int DIRECT_DATE = 1;
-    protected static final int DIRECT_TIME = 2;
-    protected static final int DIRECT_TIMESTAMP = 3;
+    protected enum Type
+    {
+        UDR, DIRECT_DATE, DIRECT_TIME, DIRECT_TIMESTAMP;
+    }
 
     //~ Methods -----------------------------------------------------------
 
@@ -73,7 +73,7 @@ public abstract class FarragoConvertDatetimeUDR
         return new Timestamp(charToDateHelper(format, timestampString));
     }
 
-    public static String date_to_char(String format, Date d) 
+    public static String date_to_char(String format, Date d)
     {
         return date_to_char(format, d, false);
     }
@@ -83,7 +83,7 @@ public abstract class FarragoConvertDatetimeUDR
         return time_to_char(format, t, false);
     }
 
-    public static String timestamp_to_char(String format, Timestamp ts) 
+    public static String timestamp_to_char(String format, Timestamp ts)
     {
         return timestamp_to_char(format, ts, false);
     }
@@ -97,9 +97,9 @@ public abstract class FarragoConvertDatetimeUDR
             return null;
         }
         if (directCall) {
-            df = getDateFormat(format, DIRECT_DATE);
+            df = getDateFormat(format, Type.DIRECT_DATE);
         } else {
-            df = getDateFormat(format, UDR);
+            df = getDateFormat(format, Type.UDR);
         }
         return df.format(d);
     }
@@ -113,9 +113,9 @@ public abstract class FarragoConvertDatetimeUDR
             return null;
         }
         if (directCall) {
-            df = getDateFormat(format, DIRECT_TIME);
+            df = getDateFormat(format, Type.DIRECT_TIME);
         } else {
-            df = getDateFormat(format, UDR);
+            df = getDateFormat(format, Type.UDR);
         }
         return df.format(t);
     }
@@ -129,9 +129,9 @@ public abstract class FarragoConvertDatetimeUDR
             return null;
         }
         if (directCall) {
-            df = getDateFormat(format, DIRECT_TIMESTAMP);
+            df = getDateFormat(format, Type.DIRECT_TIMESTAMP);
         } else {
-            df = getDateFormat(format, UDR);
+            df = getDateFormat(format, Type.UDR);
         }
         return df.format(ts);
     }
@@ -141,7 +141,7 @@ public abstract class FarragoConvertDatetimeUDR
      */
     private static long charToDateHelper(String format, String s)
     {
-        DateFormat df = getDateFormat(format, UDR);
+        DateFormat df = getDateFormat(format, Type.UDR);
         long ret;
         try {
             ret = df.parse(s).getTime();
@@ -155,10 +155,10 @@ public abstract class FarragoConvertDatetimeUDR
     /**
      * Gets a date formatter, caching it in the Farrago runtime context
      */
-    private static DateFormat getDateFormat(String format, int caller)
+    private static DateFormat getDateFormat(String format, Type caller)
     {
-        if (caller != UDR) {
-            DatetimeFormatHelper dfh = 
+        if (caller != Type.UDR) {
+            DatetimeFormatHelper dfh =
                 (DatetimeFormatHelper) FarragoUdrRuntime.getContext();
             if (dfh == null) {
                 dfh = new DatetimeFormatHelper();
@@ -191,54 +191,52 @@ public abstract class FarragoConvertDatetimeUDR
         {
             datefmt = timefmt = timestampfmt = null;
         }
-    
-        protected void setFormat(int type, String format) {
+
+        protected void setFormat(Type type, String format) {
             switch (type) {
-            case FarragoConvertDatetimeUDR.DIRECT_DATE:
+            case DIRECT_DATE:
                 datefmt = DateTimeUtil.newDateFormat(format);
                 break;
-            case FarragoConvertDatetimeUDR.DIRECT_TIME:
+            case DIRECT_TIME:
                 timefmt = DateTimeUtil.newDateFormat(format);
                 break;
-            case FarragoConvertDatetimeUDR.DIRECT_TIMESTAMP:
+            case DIRECT_TIMESTAMP:
                 timestampfmt = DateTimeUtil.newDateFormat(format);
                 break;
             default:
-                throw FarragoResource.instance(
-                    ).InvalidConvertDatetimeCaller.ex(String.valueOf(type));
+                throw FarragoResource.instance()
+                    .InvalidConvertDatetimeCaller.ex(type.name());
             }
         }
-    
-        protected SimpleDateFormat getFormat(int type) {
+
+        protected SimpleDateFormat getFormat(Type type) {
             switch (type) {
-            case FarragoConvertDatetimeUDR.DIRECT_DATE:
+            case DIRECT_DATE:
                 return datefmt;
-            case FarragoConvertDatetimeUDR.DIRECT_TIME:
+            case DIRECT_TIME:
                 return timefmt;
-            case FarragoConvertDatetimeUDR.DIRECT_TIMESTAMP:
+            case DIRECT_TIMESTAMP:
                 return timestampfmt;
             default:
-                throw FarragoResource.instance(
-                    ).InvalidConvertDatetimeCaller.ex(String.valueOf(type));
+                throw FarragoResource.instance()
+                    .InvalidConvertDatetimeCaller.ex(type.name());
             }
         }
-    
-        protected boolean isSet(int type) {
+
+        protected boolean isSet(Type type) {
             switch (type) {
-            case FarragoConvertDatetimeUDR.DIRECT_DATE:
+            case DIRECT_DATE:
                 return (datefmt != null);
-            case FarragoConvertDatetimeUDR.DIRECT_TIME:
+            case DIRECT_TIME:
                 return (timefmt != null);
-            case FarragoConvertDatetimeUDR.DIRECT_TIMESTAMP:
+            case DIRECT_TIMESTAMP:
                 return (timestampfmt != null);
             default:
-                throw FarragoResource.instance(
-                    ).InvalidConvertDatetimeCaller.ex(String.valueOf(type));
+                throw FarragoResource.instance()
+                    .InvalidConvertDatetimeCaller.ex(type.name());
             }
         }
-        
     }
-
 }
 
 // End FarragoConvertDatetimeUDR.java

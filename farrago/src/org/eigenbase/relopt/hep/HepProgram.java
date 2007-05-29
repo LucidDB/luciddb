@@ -23,9 +23,6 @@ package org.eigenbase.relopt.hep;
 
 import java.util.*;
 
-import org.eigenbase.relopt.*;
-
-
 /**
  * HepProgram specifies the order in which rules should be attempted by {@link
  * HepPlanner}. Use {@link HepProgramBuilder} to create a new instance of
@@ -62,8 +59,8 @@ public class HepProgram
 
     /**
      * Creates a new empty HepProgram. The program has an initial match order of
-     * {@link HepMatchOrder#ARBIRARY}, and an initial match limit of {@link
-     * #MATCH_UNTIL_FIXPOINT}.
+     * {@link org.eigenbase.relopt.hep.HepMatchOrder#ARBITRARY}, and an initial
+     * match limit of {@link #MATCH_UNTIL_FIXPOINT}.
      */
     HepProgram(List<HepInstruction> instructions)
     {

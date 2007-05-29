@@ -62,13 +62,13 @@ public abstract class RelTraitDef
 
     //~ Instance fields --------------------------------------------------------
 
-    private final WeakHashMap canonicalMap;
+    private final WeakHashMap<RelTrait, WeakReference<RelTrait>> canonicalMap;
 
     //~ Constructors -----------------------------------------------------------
 
     public RelTraitDef()
     {
-        this.canonicalMap = new WeakHashMap();
+        this.canonicalMap = new WeakHashMap<RelTrait, WeakReference<RelTrait>>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -104,12 +104,12 @@ public abstract class RelTraitDef
             + trait.getClass().getName();
 
         if (canonicalMap.containsKey(trait)) {
-            WeakReference canonicalTraitRef =
-                (WeakReference) canonicalMap.get(trait);
+            WeakReference<RelTrait> canonicalTraitRef =
+                canonicalMap.get(trait);
             if (canonicalTraitRef != null) {
                 // Make sure the canonical trait didn't disappear between
                 // containsKey and get.
-                RelTrait canonicalTrait = (RelTrait) canonicalTraitRef.get();
+                RelTrait canonicalTrait = canonicalTraitRef.get();
                 if (canonicalTrait != null) {
                     // Make sure the canonical trait didn't disappear between
                     // WeakHashMap.get() and WeakReference.get()
@@ -124,7 +124,7 @@ public abstract class RelTraitDef
         // canonical.
         canonicalMap.put(
             trait,
-            new WeakReference(trait));
+            new WeakReference<RelTrait>(trait));
 
         return trait;
     }

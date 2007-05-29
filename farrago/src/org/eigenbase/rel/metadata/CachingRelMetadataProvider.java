@@ -71,9 +71,9 @@ public class CachingRelMetadataProvider
         // query results can stay fresh until the next Ice Age.
 
         // Compute hash key.
-        List hashKey;
+        List<Object> hashKey;
         if (args != null) {
-            hashKey = new ArrayList(args.length + 2);
+            hashKey = new ArrayList<Object>(args.length + 2);
             hashKey.add(rel);
             hashKey.add(metadataQueryName);
             hashKey.addAll(Arrays.asList(args));

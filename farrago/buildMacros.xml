@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2005 The Eigenbase Project
@@ -16,7 +16,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
@@ -137,7 +137,7 @@ ${farrago.test.jvmargs}
   <property name="project.testlog.dir" location="${farrago.dir}/testlog"/>
 
   <!-- directory in which catalog sources are generated -->
-  <property name="farrago.catalog.src.dir" 
+  <property name="farrago.catalog.src.dir"
     location="${farrago.catalog.dir}/java"/>
 
   <!-- directory in which SQL parser source code is stored -->
@@ -165,11 +165,11 @@ ${farrago.test.jvmargs}
     location="${farrago.classes.dir}/net/sf/farrago/resource"/>
 
   <!-- directory in which catalog data is backed up -->
-  <property name="farrago.catalog.backup.dir" 
+  <property name="farrago.catalog.backup.dir"
     location="${farrago.catalog.dir}/backup"/>
 
   <!-- directory in which unconfigured catalog data is backed up -->
-  <property name="farrago.catalog.unconfigured.dir" 
+  <property name="farrago.catalog.unconfigured.dir"
     location="${farrago.catalog.dir}/unconfigured"/>
 
   <!-- directory in which catalog-related XMI files are stored -->
@@ -184,7 +184,7 @@ ${farrago.test.jvmargs}
   <!-- We direct SqlLine to squelch its history file by setting the system
        property sqlline.historyFile. This keeps the normal history
        file (~/.sqlline/history under Unix) free from the clutter
-       of Farrago sqlline test commands, and also speeds up 
+       of Farrago sqlline test commands, and also speeds up
        SQL-based tests by avoiding reloading history on startup. -->
   <condition property="sqlline.hist.file" value="nul">
     <os family="windows"/>
@@ -193,7 +193,7 @@ ${farrago.test.jvmargs}
   <!-- Files -->
 
   <!-- file controlling repository storage -->
-  <property name="farrago.ReposStorage.propfile" 
+  <property name="farrago.ReposStorage.propfile"
     location="${farrago.catalog.dir}/ReposStorage.properties"/>
 
   <!-- NOTE:  it would be nice if we could combine parser filesets below, -->
@@ -209,7 +209,7 @@ ${farrago.test.jvmargs}
     includes="DdlParser.jj"/>
 
   <!-- a fileset of the Farrago common DDL parser -->
-  <fileset id="farrago.parser.common.ddl" dir="${farrago.parser.ddl.dir}" 
+  <fileset id="farrago.parser.common.ddl" dir="${farrago.parser.ddl.dir}"
     includes="CommonDdlParser.jj"/>
 
   <!-- XMI file containing CWM defintion  -->
@@ -246,7 +246,7 @@ ${farrago.test.jvmargs}
 
   <!-- overridable alias for FarragoTrace.properties (must come after the
        property it uses) -->
-  <property name="project.trace.propfile" 
+  <property name="project.trace.propfile"
     location="${FarragoTrace.properties}"/>
 
   <!-- File for Farrago trace log -->
@@ -307,7 +307,7 @@ ${farrago.test.jvmargs}
     <pathelement location="${vjdbc.dir}/lib/commons-logging-1.1.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-pool-1.3.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-dbcp-1.2.1.jar"/>
-    <pathelement location="${vjdbc.dir}/lib/commons-digester-1.7.jar"/>    
+    <pathelement location="${vjdbc.dir}/lib/commons-digester-1.7.jar"/>
     <pathelement path="${farrago.custom.classpath}"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
@@ -321,6 +321,15 @@ ${farrago.test.jvmargs}
     <pathelement path="${test.emma.classpath}" />
   </path>
   <property name="farrago.run.classpath" refid="farrago.run.classpath"/>
+
+  <!-- classpath for running javadoc -->
+  <path id="farrago.javadoc.classpath">
+    <pathelement path="${farrago.3p.classpath}"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement location="${jgraphaddons.dir}/lib/jgraphaddons.jar"/>
+    <pathelement location="${jgrapht.dir}/lib/jgraph.jar"/>
+  </path>
+  <property name="farrago.javadoc.classpath" refid="farrago.javadoc.classpath"/>
 
   <!-- classpath for reentrantly invoking ant -->
   <path id="ant.classpath">
@@ -364,17 +373,17 @@ ${farrago.test.jvmargs}
   <path id="blackhawk.run.classpath">
     <pathelement path="${ant.classpath}"/>
     <pathelement location="${bh.home}/bhx.jar"/>
-    <pathelement 
+    <pathelement
       location="${thirdparty.dir}/jakarta-regexp-1.4.jar"/>
-    <pathelement 
+    <pathelement
       location="${thirdparty.dir}/xmlbeans/lib/xbean.jar"/>
-    <pathelement 
+    <pathelement
       location="${thirdparty.dir}/xmlbeans/lib/jsr173_1.0_api.jar"/>
     <pathelement location="${bh.home}/schema.jar"/>
   </path>
-  <property name="blackhawk.run.classpath" refid="blackhawk.run.classpath"/>    
-  
-  <taskdef name="blackhawk" 
+  <property name="blackhawk.run.classpath" refid="blackhawk.run.classpath"/>
+
+  <taskdef name="blackhawk"
     classname="org.eigenbase.blackhawk.BhVMTask"
     classpathref="blackhawk.run.classpath"
     onerror="ignore"/>
@@ -392,8 +401,8 @@ ${farrago.test.jvmargs}
     <attribute name="gtlf.dtd.local" default="${thirdparty.dir}/blackhawk/gtlf-config-2-1.dtd"/>
     <attribute name="luciddb.listener.port" default=""/>
     <sequential>
-      <taskdef 
-        name="bh" 
+      <taskdef
+        name="bh"
         classname="org.eigenbase.blackhawk.BhVMTask"
         classpathref="blackhawk.run.classpath"
         onerror="fail"/>
@@ -411,7 +420,7 @@ ${farrago.test.jvmargs}
         <jvmarg line="${assertions.jvmarg}"/>
         <sysproperty key="gtlf.dtd.use.remote" value="@{gtlf.dtd.use.remote}"/>
         <sysproperty key="gtlf.dtd.local" value="@{gtlf.dtd.local}"/>
-        <sysproperty key="luciddb.listener.port" 
+        <sysproperty key="luciddb.listener.port"
           value="@{luciddb.listener.port}"/>
       </bh>
     </sequential>
@@ -445,7 +454,7 @@ ${farrago.test.jvmargs}
   <macrodef name="farrago.mdrFork">
     <attribute name="target" default="unspecifiedTarget"/>
     <sequential>
-      <loadproperties 
+      <loadproperties
         srcFile="${project.catalog.dir}/ReposStorage.properties"/>
       <farrago.antFork target="@{target}" jvm="java">
         <jvmargs>
@@ -508,7 +517,7 @@ ${farrago.test.jvmargs}
       </java>
     </sequential>
   </macrodef>
- 
+
   <!-- Macro for converting metamodel from UML to MOF -->
   <macrodef name="farrago.uml2mof">
     <attribute name="umlmodelname" default="unspecified" />
@@ -519,7 +528,7 @@ ${farrago.test.jvmargs}
         in="@{umlmodelname}"
         out="@{umlsansdiagrams}">
       </xslt>
-      <java classname="org.netbeans.lib.jmi.uml2mof.Main" 
+      <java classname="org.netbeans.lib.jmi.uml2mof.Main"
         fork="true" failonerror="true">
         <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
         <classpath>
@@ -621,7 +630,7 @@ ${farrago.test.jvmargs}
         <components/>
       </concat>
       <chmod file="@{combined}" perm="a-w"/>
-      <javacc 
+      <javacc
         target="@{combined}" javacchome="${javacc.dir}"/>
     </sequential>
   </macrodef>
@@ -696,7 +705,7 @@ ${farrago.test.jvmargs}
           file="@{file}"/>
         <formatter type="plain"/>
         <formatter type="xml"/> <!-- for integration builds -->
-        <test todir="${testlog.dir}" 
+        <test todir="${testlog.dir}"
           name="net.sf.farrago.test.FarragoSqlTest" />
       </junit>
     </sequential>
@@ -796,8 +805,8 @@ ${farrago.test.jvmargs}
       <fail message="catalog differs from clean state">
         <condition>
           <not>
-            <filesmatch 
-              file1="@{log.dir}/before.masked.xmi" 
+            <filesmatch
+              file1="@{log.dir}/before.masked.xmi"
               file2="@{log.dir}/after.masked.xmi" />
           </not>
         </condition>
@@ -885,15 +894,15 @@ ${farrago.test.jvmargs}
         <and>
           <isset property="jdbc.url.port.default"/>
           <not>
-            <equals 
+            <equals
                 arg1="${RELEASE_PROPS.jdbc.url.port.default}"
                 arg2="${jdbc.url.port.default}"/>
           </not>
         </and>
         <then>
           <propertyfile file="@{file}">
-            <entry 
-                key="jdbc.url.port.default" 
+            <entry
+                key="jdbc.url.port.default"
                 default="${jdbc.url.port.default}"/>
           </propertyfile>
         </then>

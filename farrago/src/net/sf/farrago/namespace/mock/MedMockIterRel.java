@@ -36,7 +36,7 @@ import org.eigenbase.sql2rel.*;
 
 /**
  * MedMockIterRel provides a mock implementation for {@link TableAccessRel} with
- * {@link CallingConvention.ITERATOR}.
+ * {@link org.eigenbase.relopt.CallingConvention#ITERATOR}.
  *
  * @author John V. Sichi
  * @version $Id$

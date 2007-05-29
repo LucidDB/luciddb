@@ -35,8 +35,10 @@ import org.eigenbase.rex.*;
 
 
 /**
- * FennelValuesRel is Fennel implementation of {@link ValuesRel}. It corresponds
- * to fennel::ValuesExecStream via {@link ValuesStreamDef}, and guarantees the
+ * FennelValuesRel is Fennel implementation of {@link ValuesRel}.
+ *
+ * It corresponds to <code>fennel::ValuesExecStream</code> via
+ * {@link FemValuesStreamDef}, and guarantees the
  * order of the tuples it produces, making it usable for such purposes as the
  * search input to an index scan, where order may matter for both performance
  * and correctness.

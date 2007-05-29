@@ -304,8 +304,8 @@ public abstract class DdlHandler
         if (typeName != null) {
             typeFamily = SqlTypeFamily.getFamilyForSqlType(typeName);
         }
-        if ((typeFamily == SqlTypeFamily.Character)
-            || (typeFamily == SqlTypeFamily.Binary)) {
+        if ((typeFamily == SqlTypeFamily.CHARACTER)
+            || (typeFamily == SqlTypeFamily.BINARY)) {
             // convert precision to length
             if (element.getPrecision() != null) {
                 // Minimum column length for char and binary is 1
@@ -318,7 +318,7 @@ public abstract class DdlHandler
             }
         }
 
-        if (typeFamily == SqlTypeFamily.Character) {
+        if (typeFamily == SqlTypeFamily.CHARACTER) {
             // TODO jvs 18-April-2004:  Should be inheriting these defaults
             // from schema/catalog.
             if (JmiUtil.isBlank(element.getCharacterSetName())) {
@@ -448,7 +448,7 @@ public abstract class DdlHandler
     {
         CwmSqldataType cwmType;
         final SqlTypeName typeName = type.getSqlTypeName();
-        if (typeName == SqlTypeName.Row) {
+        if (typeName == SqlTypeName.ROW) {
             Util.permAssert(
                 type.isStruct(),
                 "type.isStruct()");

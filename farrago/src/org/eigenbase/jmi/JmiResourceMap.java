@@ -67,7 +67,7 @@ public class JmiResourceMap
     {
         this.modelView = modelView;
         map = new HashMap<JmiClassVertex, String>();
-        Enumeration keyEnum = bundle.getKeys();
+        Enumeration<String> keyEnum = bundle.getKeys();
         int prefixLength = 0;
         int suffixLength = 0;
         if (prefix != null) {
@@ -77,7 +77,7 @@ public class JmiResourceMap
             suffixLength = suffix.length();
         }
         while (keyEnum.hasMoreElements()) {
-            String key = (String) keyEnum.nextElement();
+            String key = keyEnum.nextElement();
             if (prefix != null) {
                 if (!key.startsWith(prefix)) {
                     continue;
@@ -104,26 +104,22 @@ public class JmiResourceMap
         // subclasses to superclasses; for each class, fill in all of its
         // subclass mappings except for the ones that are set already.  There
         // are more efficient means, but...
-        List topoList = new ArrayList();
-        Iterator topoIter =
-            new TopologicalOrderIterator(
+        List<JmiClassVertex> topoList = new ArrayList<JmiClassVertex>();
+        Iterator<JmiClassVertex> topoIter =
+            new TopologicalOrderIterator<JmiClassVertex, JmiInheritanceEdge>(
                 modelView.getModelGraph().getInheritanceGraph());
         while (topoIter.hasNext()) {
             topoList.add(topoIter.next());
         }
         Collections.reverse(topoList);
-        topoIter = topoList.iterator();
-        while (topoIter.hasNext()) {
-            JmiClassVertex classVertex = (JmiClassVertex) topoIter.next();
+        for (JmiClassVertex classVertex : topoList) {
             String value = map.get(classVertex);
             if (value == null) {
                 continue;
             }
-            Iterator subclassIter =
-                modelView.getAllSubclassVertices(classVertex).iterator();
-            while (subclassIter.hasNext()) {
-                JmiClassVertex subclassVertex =
-                    (JmiClassVertex) subclassIter.next();
+            final Set<JmiClassVertex> subclassVertices =
+                modelView.getAllSubclassVertices(classVertex);
+            for (JmiClassVertex subclassVertex : subclassVertices) {
                 if (!map.containsKey(subclassVertex)) {
                     map.put(subclassVertex, value);
                 }

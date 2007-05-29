@@ -22,20 +22,19 @@
 */
 package org.eigenbase.rel;
 
-import java.util.*;
-
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 
 
 /**
  * A <code>TableAccessRel</code> reads all the rows from a {@link RelOptTable}.
  *
- * <p>If the table is a {@link net.sf.saffron.ext.JdbcTable}, then this is
+ * <p>If the table is a <code>net.sf.saffron.ext.JdbcTable</code>, then this is
  * literally possible. But for other kinds of tables, there may be many ways to
  * read the data from the table. For some kinds of table, it may not even be
  * possible to read all of the rows unless some narrowing constraint is applied.
- * In the example of the {@link net.sf.saffron.ext.ReflectSchema} schema,
+ *
+ * <p>In the example of the <code>net.sf.saffron.ext.ReflectSchema</code>
+ * schema,
  *
  * <blockquote>
  * <pre>select from fields</pre>
@@ -61,6 +60,13 @@ public final class TableAccessRel
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a TableAccessRel.
+     *
+     * @param cluster Cluster
+     * @param table Table
+     * @param connection Connection
+     */
     public TableAccessRel(
         RelOptCluster cluster,
         RelOptTable table,

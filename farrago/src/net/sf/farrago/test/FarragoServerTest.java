@@ -140,8 +140,9 @@ public class FarragoServerTest
 
     /**
      * Tests client driver connection URI parameters. The underlying
-     * connect-string processing is tested by {@link
-     * FarragoEngineDriverTest#testConnectStrings} using the engine driver. This
+     * connect-string processing is tested by
+     * {@link net.sf.farrago.test.jdbc.FarragoEngineDriverTest#testConnectStrings}
+     * using the engine driver. This
      * method adds tests of client connections and parameter precedence with the
      * client driver.
      */

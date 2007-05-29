@@ -245,7 +245,7 @@ class MedMockDataServer
 
     RelDataType createMockColumnType(FarragoTypeFactory typeFactory)
     {
-        return typeFactory.createSqlType(SqlTypeName.Integer);
+        return typeFactory.createSqlType(SqlTypeName.INTEGER);
     }
 }
 

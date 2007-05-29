@@ -81,7 +81,7 @@ public class FarragoDefaultSessionPersonality
     // places where it seems like macker should prevent the dependency.
     // Not sure why that is, but figure out a better place for them
     // (probably FarragoSessionVariables), leaving these here as aliases.
-    
+
     /**
      * Numeric data from external data sources may have a greater precision
      * than Farrago. Whether data of greater precision should be replaced
@@ -239,7 +239,7 @@ public class FarragoDefaultSessionPersonality
     // implement FarragoSessionPersonality
     public void defineDdlHandlers(
         FarragoSessionDdlValidator ddlValidator,
-        List handlerList)
+        List<DdlHandler> handlerList)
     {
         // NOTE jvs 21-Jan-2005:  handlerList order matters here.
         // DdlRelationalHandler includes some catch-all methods for
@@ -441,27 +441,27 @@ public class FarragoDefaultSessionPersonality
             // Not a SQL type -- may be a structured type, such as MULTISET.
             return true;
         }
-        switch (type.getOrdinal()) {
-        case SqlTypeName.Boolean_ordinal:
-        case SqlTypeName.Tinyint_ordinal:
-        case SqlTypeName.Smallint_ordinal:
-        case SqlTypeName.Integer_ordinal:
-        case SqlTypeName.Date_ordinal:
-        case SqlTypeName.Time_ordinal:
-        case SqlTypeName.Timestamp_ordinal:
-        case SqlTypeName.Bigint_ordinal:
-        case SqlTypeName.Varchar_ordinal:
-        case SqlTypeName.Varbinary_ordinal:
-        case SqlTypeName.Multiset_ordinal:
-        case SqlTypeName.Char_ordinal:
-        case SqlTypeName.Binary_ordinal:
-        case SqlTypeName.Real_ordinal:
-        case SqlTypeName.Float_ordinal:
-        case SqlTypeName.Double_ordinal:
-        case SqlTypeName.Row_ordinal:
-        case SqlTypeName.Decimal_ordinal:
+        switch (type) {
+        case BOOLEAN:
+        case TINYINT:
+        case SMALLINT:
+        case INTEGER:
+        case DATE:
+        case TIME:
+        case TIMESTAMP:
+        case BIGINT:
+        case VARCHAR:
+        case VARBINARY:
+        case MULTISET:
+        case CHAR:
+        case BINARY:
+        case REAL:
+        case FLOAT:
+        case DOUBLE:
+        case ROW:
+        case DECIMAL:
             return true;
-        case SqlTypeName.Distinct_ordinal:
+        case DISTINCT:
         default:
             return false;
         }

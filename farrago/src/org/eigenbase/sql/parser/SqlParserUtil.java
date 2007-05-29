@@ -30,11 +30,9 @@ import java.text.*;
 
 import java.util.*;
 import java.util.logging.*;
-import java.util.regex.*;
 
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.SqlIntervalQualifier.TimeUnit;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
@@ -109,7 +107,7 @@ public final class SqlParserUtil
     {
         return new BigDecimal(s);
     }
-    
+
    /**
      * @deprecated this method is not localized for Farrago standards
      */
@@ -144,11 +142,11 @@ public final class SqlParserUtil
         SimpleDateFormat df = new SimpleDateFormat(pattern);
         Util.discard(df);
     }
-    
+
     /**
      * Converts the interval value into a millisecond representation.
      *
-     * @param interval
+     * @param interval Interval
      *
      * @return a long value that represents millisecond equivalent of the
      * interval value.
@@ -162,10 +160,11 @@ public final class SqlParserUtil
     }
 
     public static long intervalToMillis(
-        String literal, SqlIntervalQualifier intervalQualifier)
+        String literal,
+        SqlIntervalQualifier intervalQualifier)
     {
         Util.permAssert(!intervalQualifier.isYearMonth(), "interval must be day time");
-        int [] ret = intervalQualifier.evaluateIntervalLiteral(literal); 
+        int [] ret = intervalQualifier.evaluateIntervalLiteral(literal);
         Util.permAssert(ret != null, "error parsing day month interval " + literal);
 
         long l = 0;
@@ -184,7 +183,7 @@ public final class SqlParserUtil
     /**
      * Converts the interval value into a months representation.
      *
-     * @param interval
+     * @param interval Interval
      *
      * @return a long value that represents months equivalent of the
      * interval value.
@@ -198,7 +197,8 @@ public final class SqlParserUtil
     }
 
     public static long intervalToMonths(
-        String literal, SqlIntervalQualifier intervalQualifier)
+        String literal,
+        SqlIntervalQualifier intervalQualifier)
     {
         Util.permAssert(intervalQualifier.isYearMonth(), "interval must be year month");
         int [] ret = intervalQualifier.evaluateIntervalLiteral(literal);
@@ -217,7 +217,7 @@ public final class SqlParserUtil
     /**
      * Parses a positive int. All characters have to be digits.
      *
-     * @see {@link java.lang.Integer#parseInt(String)}
+     * @see Integer#parseInt(String)
      */
     public static int parsePositiveInt(String value)
         throws NumberFormatException
@@ -349,8 +349,7 @@ public final class SqlParserUtil
             int [] end = indexToLineCol(sql, secondCaret);
             SqlParserPos pos =
                 new SqlParserPos(start[0], start[1], end[0], end[1]);
-            StringAndPos sap = new StringAndPos(sqlSansCaret, firstCaret, pos);
-            return sap;
+            return new StringAndPos(sqlSansCaret, firstCaret, pos);
         }
     }
 
@@ -530,11 +529,11 @@ public final class SqlParserUtil
      * example, if list contains <code>{A, B, C, D, E}</code> then <code>
      * replaceSublist(list, X, 1, 4)</code> returns <code>{A, X, E}</code>.
      */
-    public static void replaceSublist(
-        List list,
+    public static <T> void replaceSublist(
+        List<T> list,
         int start,
         int end,
-        Object o)
+        T o)
     {
         Util.pre(list != null, "list != null");
         Util.pre(start < end, "start < end");
@@ -576,10 +575,10 @@ public final class SqlParserUtil
      * @param stopperKind If not {@link SqlKind#Other}, stop reading the list if
      * we encounter a token of this kind.
      *
-     * @return
+     * @return the root node of the tree which the list condenses into
      */
     public static SqlNode toTreeEx(
-        List list,
+        List<Object> list,
         int start,
         int minPrec,
         SqlKind stopperKind)
@@ -800,7 +799,7 @@ outer:
 
     /**
      * Class that holds a {@link SqlOperator} and a {@link SqlParserPos}. Used
-     * by {@link SqlSpecialOperator#reduceExpr(int, List)} and the parser to
+     * by {@link SqlSpecialOperator#reduceExpr} and the parser to
      * associate a parsed operator with a parser position.
      */
     public static class ToTreeListItem

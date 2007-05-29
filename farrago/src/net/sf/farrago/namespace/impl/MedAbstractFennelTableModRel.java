@@ -113,10 +113,9 @@ public abstract class MedAbstractFennelTableModRel
     {
         boolean needBuffer = false;
 
-        //
-        //Except for Delete, if the target table is also the source, buffering
-        //is required.
-        if (!getOperation().equals(TableModificationRel.Operation.DELETE)) {
+        // Except for Delete, if the target table is also the source, buffering
+        // is required.
+        if (getOperation() != TableModificationRel.Operation.DELETE) {
             if (isTableAccessedForRead()) {
                 if (table instanceof MedAbstractColumnSet) {
                     CwmNamedColumnSet cwmColumnSet =

@@ -27,7 +27,7 @@ package org.eigenbase.sql;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum SqlExplainLevel {
+public enum SqlExplainLevel implements SqlLiteral.SqlSymbol {
     /**
      * Suppress all attributes.
      */
@@ -37,12 +37,12 @@ public enum SqlExplainLevel {
      * Display only attributes which contribute to the plan output.
      */
     EXPPLAN_ATTRIBUTES,
-    
+
     /**
      * Display only attributes which contribute to an expression's digest.
      */
     DIGEST_ATTRIBUTES,
-    
+
     /**
      * Display all attributes, including cost.
      */

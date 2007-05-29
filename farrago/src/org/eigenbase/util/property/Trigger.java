@@ -82,14 +82,14 @@ public interface Trigger
      * that the Trigger will be wrapped in a WeakReference and thus can itself
      * be garbage collected.
      *
-     * @return
+     * @return whether trigger is persistent
      */
     boolean isPersistent();
 
     /**
      * Which phase does this Trigger belong to.
      *
-     * @return
+     * @return phase trigger belongs to
      */
     int phase();
 
@@ -97,7 +97,8 @@ public interface Trigger
      * Executes the trigger, passing in the key of the property whose change
      * triggered the execution.
      *
-     * @param property
+     * @param property Property being changed
+     * @param value New value of property
      */
     void execute(Property property, String value)
         throws VetoRT;

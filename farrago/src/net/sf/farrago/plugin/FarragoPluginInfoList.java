@@ -40,7 +40,7 @@ public class FarragoPluginInfoList
     //~ Instance fields --------------------------------------------------------
 
     private Properties defaultProps;
-    private List propertyInfoList;
+    private List<DriverPropertyInfo> propertyInfoList;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -52,7 +52,7 @@ public class FarragoPluginInfoList
     public FarragoPluginInfoList(Properties defaultProps)
     {
         this.defaultProps = defaultProps;
-        propertyInfoList = new ArrayList();
+        propertyInfoList = new ArrayList<DriverPropertyInfo>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -112,7 +112,7 @@ public class FarragoPluginInfoList
     public DriverPropertyInfo [] toArray()
     {
         return
-            (DriverPropertyInfo []) propertyInfoList.toArray(
+            propertyInfoList.toArray(
                 FarragoAbstractPluginBase.EMPTY_DRIVER_PROPERTIES);
     }
 }

@@ -90,7 +90,7 @@ public class SqlBetweenOperator
             3,
             RelDataTypeComparability.All);
     private static final SqlWriter.FrameType BetweenFrameType =
-        SqlWriter.FrameType.create("BETWEEN");
+        SqlWriter.FrameTypeEnum.create("BETWEEN");
 
     //~ Instance fields --------------------------------------------------------
 
@@ -217,7 +217,7 @@ public class SqlBetweenOperator
 
     public int reduceExpr(
         int opOrdinal,
-        List list)
+        List<Object> list)
     {
         final SqlParserUtil.ToTreeListItem betweenNode =
             (SqlParserUtil.ToTreeListItem) list.get(opOrdinal);
@@ -288,7 +288,8 @@ public class SqlBetweenOperator
                 SqlLiteral.createSymbol(flag, SqlParserPos.ZERO));
 
         // Replace all of the matched nodes with the single reduced node.
-        SqlParserUtil.replaceSublist(list,
+        SqlParserUtil.replaceSublist(
+            list,
             opOrdinal - 1,
             opOrdinal + 4,
             newExp);
@@ -302,22 +303,10 @@ public class SqlBetweenOperator
     /**
      * Defines the "SYMMETRIC" and "ASYMMETRIC" keywords.
      */
-    public static class Flag
-        extends EnumeratedValues.BasicValue
+    public enum Flag implements SqlLiteral.SqlSymbol
     {
-        public static final int Asymmetric_ordinal = 0;
-        public static final Flag Asymmetric =
-            new Flag("Asymmetric", Asymmetric_ordinal);
-        public static final int Symmetric_ordinal = 1;
-        public static final Flag Symmetric =
-            new Flag("Symmetric", Symmetric_ordinal);
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(new Flag[] { Asymmetric, Symmetric });
-
-        private Flag(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
+        ASYMMETRIC,
+        SYMMETRIC;
     }
 
     /**

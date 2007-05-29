@@ -22,9 +22,9 @@
 package org.eigenbase.util14;
 
 /**
- * This is a tagging interface to allow {@link
- * or.eigenbase.sql.parser.SqlParseException} to be identified without adding a
- * dependency on it from client-side code.
+ * This is a tagging interface to allow a
+ * {@link org.eigenbase.sql.parser.SqlParseException} to be identified without
+ * adding a dependency on it from client-side code.
  *
  * @author John V. Sichi
  * @version $Id$

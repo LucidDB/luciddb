@@ -98,7 +98,7 @@ public class LurqlQueryProcessor
         }
 
         // implement JmiPreparedQuery
-        public Map describeParameters()
+        public Map<String, ?> describeParameters()
         {
             return plan.getParamMap();
         }

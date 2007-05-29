@@ -120,9 +120,7 @@ public class SqlValidatorTestCase
             return null;
         } else {
             String compatibleName = name.substring(0, colon);
-            return
-                (SqlValidator.Compatible) SqlValidator.Compatible.enumeration
-                .getValue(compatibleName);
+            return SqlValidator.Compatible.valueOf(compatibleName);
         }
     }
 
@@ -754,11 +752,8 @@ public class SqlValidatorTestCase
             RelDataType actualType = getColumnType(buildQuery(sql));
             SqlCollation collation = actualType.getCollation();
 
-            String actualName = collation.getCollationName();
-            int actualCoercibility = collation.getCoercibility().getOrdinal();
-            int expectedCoercibilityOrd = expectedCoercibility.getOrdinal();
-            assertEquals(expectedCollationName, actualName);
-            assertEquals(expectedCoercibilityOrd, actualCoercibility);
+            assertEquals(expectedCollationName, collation.getCollationName());
+            assertEquals(expectedCoercibility, collation.getCoercibility());
         }
 
         public void checkCharset(

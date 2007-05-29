@@ -25,7 +25,7 @@ Implements Farrago query processing.
 
 <hr>
 
-<h2>Farrago Query Processing</h2> 
+<h2>Farrago Query Processing</h2>
 
 This document provides an overview of how Farrago produces a JDBC
 ResultSet corresponding to the text of a SELECT statement.  This
@@ -39,7 +39,7 @@ We'll use a simple, innocent-looking statement as an example:
 
 <pre>
 <code>
-select *,42 as the_answer 
+select *,42 as the_answer
 from sales.depts as d
 where deptno = 10
 </code>
@@ -76,11 +76,11 @@ TODO:  details on caching
 
 <h3>Validation</h3>
 
-After parsing, the parse tree must be validated.  prepareSql in {@link
-org.eigenbase.oj.stmt.OJPreparingStmt} is called, this time taking the
-root SqlNode and an instance of {@link
-org.eigenbase.sql.SqlValidator} (we supply a {@link
-net.sf.farrago.query.FarragoSqlValidator}).  SqlValidator walks the parse
+After parsing, the parse tree must be validated.  prepareSql in
+{@link org.eigenbase.oj.stmt.OJPreparingStmt} is called, this time taking the
+root SqlNode and an instance of {@link org.eigenbase.sql.validate.SqlValidator}
+(we supply a {@link net.sf.farrago.query.FarragoSqlValidator}).
+SqlValidator walks the parse
 tree performing validation tasks such as type inference, resolving
 identifiers, and expanding '*' in select lists; this results in a
 transformation of the parse tree (or a thrown exception if validation
@@ -95,7 +95,7 @@ with a scope tree (in this case a simple two-level linear tree since
 there are no joins).  The top-level scope represents the columns
 produced by the SELECT list; the bottom scope represents the columns
 to be read from table SALES.DEPT.  Note that each SqlIdentifier node in the
-validated tree is either 
+validated tree is either
 
 <ul>
 
@@ -145,7 +145,7 @@ translated tree for our example:
 <pre>
 <code>
 explain plan without implementation for
-select *,42 as the_answer 
+select *,42 as the_answer
 from sales.depts as d
 where deptno = 10
 </code>
@@ -215,7 +215,7 @@ PLAN</code> again:
 <pre>
 <code>
 explain plan for
-select *,42 as the_answer 
+select *,42 as the_answer
 from sales.depts as d
 where deptno = 10
 </code>
@@ -243,9 +243,9 @@ which corresponds to the following relational expression tree:
 
 Wow, what happened?  The optimizer found that the table's clustered
 index could satisfy the WHERE clause, and accordingly transformed the
-query using a {@link net.sf.farrago.query.FtrsIndexSearchRel} for
+query using a {@link net.sf.farrago.namespace.ftrs.FtrsIndexSearchRel} for
 the table access.  (It knew how to do this because FarragoDefaultPlanner told
-it about {@link net.sf.farrago.query.FtrsScanToSearchRule}.)  What's
+it about {@link net.sf.farrago.namespace.ftrs.FtrsScanToSearchRule}.)  What's
 interesting is that this search is sandwiched between Java iterators.
 The lowest level ({@link org.eigenbase.oj.rel.IterOneRowRel})
 produces a single row with no columns; the next level up ({@link
@@ -315,7 +315,7 @@ public class ExecutableStmt
     public static class Ojp_2 extends net.sf.farrago.type.runtime.FarragoSyntheticObject
     {
         public int DEPTNO;
-        
+
         public net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Oj_VARCHAR_128_ISO_8859_1 NAME;
 
         public Ojp_2()
@@ -355,10 +355,10 @@ public class ExecutableStmt
     {
         final net.sf.farrago.runtime.FarragoRuntimeContext connection = connection_p;
         return new org.eigenbase.runtime.CalcIterator( connection.newFennelIterator( new net.sf.farrago.runtime.FennelTupleReader(){
-            
+
             private net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_2 oj_var3 = new net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_2();
 
-            
+
             public java.lang.Object unmarshalTuple( java.nio.ByteBuffer byteBuffer, byte[] byteArray, java.nio.ByteBuffer sliceBuffer )
             {
                 int oj_var4 = byteBuffer.position();
@@ -369,7 +369,7 @@ public class ExecutableStmt
                 return oj_var3;
             }
         }, "FtrsIndexSearchRel#74:315", connection.newJavaTupleStream( 96, new net.sf.farrago.runtime.FennelTupleWriter(){
-            
+
             protected void marshalTupleOrThrow( java.nio.ByteBuffer sliceBuffer, java.lang.Object object )
             {
                 net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_1 oj_var2 = (net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_1) object;
@@ -377,10 +377,10 @@ public class ExecutableStmt
                 sliceBuffer.position( 4 );
             }
         }, new org.eigenbase.runtime.CalcIterator( java.util.Collections.singletonList( new net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_0() ).iterator() ){
-            
+
             private net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_1 oj_var1 = new net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_1();
 
-            
+
             protected java.lang.Object calcNext()
             {
                 while (inputIterator.hasNext()) {
@@ -391,10 +391,10 @@ public class ExecutableStmt
                 return null;
             }
         } ) ) ){
-            
+
             private net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_3 oj_var7 = new net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_3();
 
-            
+
             protected java.lang.Object calcNext()
             {
                 while (inputIterator.hasNext()) {
@@ -581,9 +581,9 @@ May 11, 2004 11:08:27 AM net.sf.farrago.db.FarragoDbSession prepare
 INFO: select *,42 as the_answer from sales.depts d where deptno=10
 May 11, 2004 11:08:32 AM net.sf.farrago.db.FarragoDbStmtContext traceExecute
 FINE: select *,42 as the_answer from sales.depts d where deptno=10
-May 11, 2004 11:08:33 AM net.sf.fennel.xo.IteratorToFennelConverter#96:324 <native>
+May 11, 2004 11:08:33 AM net.sf.fennel.xo.IteratorToFennelConverter#96:324 &lt;native&gt;
 FINE: [ 10 ]
-May 11, 2004 11:08:33 AM net.sf.fennel.xo.FtrsIndexSearchRel#74:315 <native>
+May 11, 2004 11:08:33 AM net.sf.fennel.xo.FtrsIndexSearchRel#74:315 &lt;native&gt;
 FINE: [ 10, 'Sales' ]
 </code>
 </pre>

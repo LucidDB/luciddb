@@ -51,9 +51,8 @@ import org.eigenbase.util.*;
  *
  * <p>When each command is created, it is associated with a thread and given an
  * execution order. Execution order values are positive integers, must be unique
- * within a thread, and may be a sparse set See {@link
- * FarragoTestConcurrentTestCase#executeTest(FarragoTestConcurrentCommandGenerator,
- * boolean)} for other considerations.
+ * within a thread, and may be a sparse set. See
+ * {@link FarragoTestConcurrentTestCase#executeTest} for other considerations.
  *
  * @author Stephan Zuercher
  * @version $Id$
@@ -92,55 +91,75 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     private static final String SQL = "";
     private static final String EOF = null;
 
-    private static final Object [][] STATE_TABLE =
+    private static class StateAction {
+        final String state;
+        final StateDatum[] stateData;
+
+        StateAction(String state, StateDatum[] stateData) {
+            this.state = state;
+            this.stateData = stateData;
+        }
+    }
+
+    private static class StateDatum {
+        final String x;
+        final String y;
+
+        StateDatum(String x, String y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+    private static final StateAction [] STATE_TABLE =
         {
-            { PRE_SETUP_STATE, new Object[][] {
-                    { LOCKSTEP, PRE_SETUP_STATE },
-                    { NOLOCKSTEP, PRE_SETUP_STATE },
-                    { ENABLED, PRE_SETUP_STATE },
-                    { DISABLED, PRE_SETUP_STATE },
-                    { SETUP, SETUP_STATE },
-                    { THREAD, THREAD_STATE }
-                } },
+            new StateAction(PRE_SETUP_STATE, new StateDatum[] {
+                new StateDatum(LOCKSTEP, PRE_SETUP_STATE),
+                new StateDatum(NOLOCKSTEP, PRE_SETUP_STATE),
+                new StateDatum(ENABLED, PRE_SETUP_STATE),
+                new StateDatum(DISABLED, PRE_SETUP_STATE),
+                new StateDatum(SETUP, SETUP_STATE),
+                new StateDatum(THREAD, THREAD_STATE)
+            }),
 
-            { SETUP_STATE, new Object[][] {
-                    { END, POST_SETUP_STATE },
-                    { SQL, SETUP_STATE }
-                } },
+            new StateAction(SETUP_STATE, new StateDatum[] {
+                new StateDatum(END, POST_SETUP_STATE),
+                new StateDatum(SQL, SETUP_STATE)
+            }),
 
-            { POST_SETUP_STATE, new Object[][] {
-                    { THREAD, THREAD_STATE }
-                } },
+            new StateAction( POST_SETUP_STATE, new StateDatum[] {
+                new StateDatum( THREAD, THREAD_STATE)
+            }),
 
-            { THREAD_STATE, new Object[][] {
-                    { REPEAT, REPEAT_STATE },
-                    { SYNC, THREAD_STATE },
-                    { TIMEOUT, THREAD_STATE },
-                    { PREPARE, THREAD_STATE },
-                    { FETCH, THREAD_STATE },
-                    { CLOSE, THREAD_STATE },
-                    { SLEEP, THREAD_STATE },
-                    { SQL, THREAD_STATE },
-                    { ERR, THREAD_STATE },
-                    { END, POST_THREAD_STATE }
-                } },
+            new StateAction( THREAD_STATE, new StateDatum[] {
+                new StateDatum(REPEAT, REPEAT_STATE),
+                new StateDatum(SYNC, THREAD_STATE),
+                new StateDatum(TIMEOUT, THREAD_STATE),
+                new StateDatum(PREPARE, THREAD_STATE),
+                new StateDatum(FETCH, THREAD_STATE),
+                new StateDatum(CLOSE, THREAD_STATE),
+                new StateDatum(SLEEP, THREAD_STATE),
+                new StateDatum(SQL, THREAD_STATE),
+                new StateDatum(ERR, THREAD_STATE),
+                new StateDatum(END, POST_THREAD_STATE)
+            }),
 
-            { REPEAT_STATE, new Object[][] {
-                    { SYNC, REPEAT_STATE },
-                    { TIMEOUT, REPEAT_STATE },
-                    { PREPARE, REPEAT_STATE },
-                    { FETCH, REPEAT_STATE },
-                    { CLOSE, REPEAT_STATE },
-                    { SLEEP, REPEAT_STATE },
-                    { SQL, REPEAT_STATE },
-                    { ERR, THREAD_STATE },
-                    { END, THREAD_STATE }
-                } },
+            new StateAction(REPEAT_STATE, new StateDatum[] {
+                new StateDatum(SYNC, REPEAT_STATE),
+                new StateDatum(TIMEOUT, REPEAT_STATE),
+                new StateDatum(PREPARE, REPEAT_STATE),
+                new StateDatum(FETCH, REPEAT_STATE),
+                new StateDatum(CLOSE, REPEAT_STATE),
+                new StateDatum(SLEEP, REPEAT_STATE),
+                new StateDatum(SQL, REPEAT_STATE),
+                new StateDatum(ERR, THREAD_STATE),
+                new StateDatum(END, THREAD_STATE)
+            }),
 
-            { POST_THREAD_STATE, new Object[][] {
-                    { THREAD, THREAD_STATE },
-                    { EOF, EOF_STATE }
-                } }
+            new StateAction(POST_THREAD_STATE, new StateDatum[] {
+                new StateDatum(THREAD, THREAD_STATE),
+                new StateDatum(EOF, EOF_STATE)
+            })
         };
 
     private static final int FETCH_LEN = FETCH.length();
@@ -317,7 +336,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                     trimmedLine = line.trim();
                 }
 
-                Map commandStateMap = lookupState(state);
+                Map<String, String> commandStateMap = lookupState(state);
 
                 String command = null;
                 boolean isSql = false;
@@ -558,25 +577,23 @@ public class FarragoTestConcurrentScriptedCommandGenerator
      * commands (e.g. @sync), and map values are the state to switch to open
      * seeing the command.
      */
-    private Map lookupState(String state)
+    private Map<String, String> lookupState(String state)
     {
         assert (state != null);
 
         for (int i = 0, n = STATE_TABLE.length; i < n; i++) {
-            if (state.equals(STATE_TABLE[i][0])) {
-                Object [][] stateData = (Object [][]) STATE_TABLE[i][1];
+            if (state.equals(STATE_TABLE[i].state)) {
+                StateDatum[] stateData = STATE_TABLE[i].stateData;
 
-                Map<Object,Object> result = new HashMap<Object, Object>();
+                Map<String,String> result = new HashMap<String, String>();
                 for (int j = 0, m = stateData.length; j < m; j++) {
-                    result.put(stateData[j][0], stateData[j][1]);
+                    result.put(stateData[j].x, stateData[j].y);
                 }
                 return result;
             }
         }
 
-        assert (false);
-
-        return null;
+        throw new IllegalArgumentException();
     }
 
     /**

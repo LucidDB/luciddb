@@ -23,8 +23,6 @@ package org.eigenbase.sarg;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
-
 
 /**
  * SargIntervalBase is a common base for {@link SargInterval} and {@link
@@ -47,7 +45,7 @@ public abstract class SargIntervalBase
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @see SargFactory.newIntervalExpr
+     * @see SargFactory#newIntervalExpr
      */
     SargIntervalBase(
         SargFactory factory,
@@ -137,8 +135,6 @@ public abstract class SargIntervalBase
 
     /**
      * Sets this interval to represent a single point matching the null value.
-     *
-     * @param coordinate coordinate of point to set, or null for the null value
      */
     void setNull()
     {
@@ -148,8 +144,8 @@ public abstract class SargIntervalBase
     /**
      * Sets the lower bound for this interval.
      *
-     * @param coordinate coordinate of point to set
-     * @param boundary strictness
+     * @param coordinate coordinate of point to set, must not be null
+     * @param strictness strictness
      */
     void setLower(RexNode coordinate, SargStrictness strictness)
     {
@@ -212,7 +208,6 @@ public abstract class SargIntervalBase
             SargStrictness.OPEN);
     }
 
-    // implement SargExpr
     public RelDataType getDataType()
     {
         return lowerBound.getDataType();

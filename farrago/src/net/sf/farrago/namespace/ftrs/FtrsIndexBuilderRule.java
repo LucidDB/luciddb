@@ -25,12 +25,12 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
 
 /**
- * FtrsTableModificationRule is a rule for converting an abstract {@link
- * FarragoIndexBuilderRule} into a corresponding {@link FtrsIndexBuilderRel}.
+ * FtrsTableModificationRule is a rule for converting an abstract
+ * {@link net.sf.farrago.query.FarragoIndexBuilderRel}
+ * into a corresponding {@link FtrsIndexBuilderRel}.
  *
  * @author John V. Sichi
  * @version $Id$

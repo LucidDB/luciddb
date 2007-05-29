@@ -86,7 +86,7 @@ public class LcsTableDeleteRule
         RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();
         RexNode ridExpr =
             rexBuilder.makeCast(
-                rexBuilder.getTypeFactory().createSqlType(SqlTypeName.Bigint),
+                rexBuilder.getTypeFactory().createSqlType(SqlTypeName.BIGINT),
                 LucidDbSpecialOperators.makeRidExpr(rexBuilder, origProj));
         RexNode [] singletonRidExpr = { ridExpr };
         String [] fieldNames = { "rid" };

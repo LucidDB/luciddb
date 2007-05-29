@@ -424,7 +424,7 @@ public class RexProgram
     /**
      * Returns whether this program contains windowed aggregate functions
      *
-     * @return
+     * @return whether this program contains windowed aggregate functions
      */
     public boolean containsAggs()
     {

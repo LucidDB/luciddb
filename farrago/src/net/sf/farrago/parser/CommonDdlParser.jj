@@ -123,14 +123,14 @@ Object FarragoSqlStmtEof() :
         obj = DdlStmtEof()
         |
         (
-            /* 
+            /*
              * Insure that a read-only repository transaction is started.
              * Note that view expansion can cause a second call into the
              * parser, which requires us to avoid attempting to start
              * the read txn twice.
              */
             {
-                FarragoReposTxnContext reposTxnContext = 
+                FarragoReposTxnContext reposTxnContext =
                     farragoParser.getStmtValidator().getReposTxnContext();
 
                 if (!reposTxnContext.isReadTxnInProgress()) {
@@ -155,7 +155,7 @@ DdlStmt DdlStmtEof() :
     SqlNode expr;
     DdlReplaceOptions replaceOptions = new DdlReplaceOptions();
     SqlIdentifier newName;
-    FarragoReposTxnContext reposTxnContext = 
+    FarragoReposTxnContext reposTxnContext =
         farragoParser.getStmtValidator().getReposTxnContext();
 }
 {
@@ -338,31 +338,31 @@ DdlStmt DdlStmtEof() :
             ddlStmt = new DdlCommitStmt();
         }
         |
-        <ROLLBACK> 
+        <ROLLBACK>
         {
             reposTxnContext.beginLockedTxn(false);
         }
         ddlStmt = Rollback()
         |
-        <SAVEPOINT> 
+        <SAVEPOINT>
         {
             reposTxnContext.beginLockedTxn(false);
         }
         ddlStmt = Savepoint()
         |
-        <RELEASE> <SAVEPOINT> 
+        <RELEASE> <SAVEPOINT>
         {
             reposTxnContext.beginLockedTxn(false);
         }
         ddlStmt = ReleaseSavepoint()
         |
-        <IMPORT> 
+        <IMPORT>
         {
             reposTxnContext.beginLockedTxn(false);
         }
         ddlStmt = ImportForeignSchemaStmt()
         |
-        <ANALYZE> 
+        <ANALYZE>
         {
             // During the initial prepare of an analyze statement, we only
             // need to acquire shared locks since we're only reading from the
@@ -1512,7 +1512,7 @@ DdlStmt AlterTableStmt() :
 {
     DdlStmt ddlStmt;
     CwmTable table;
-    FarragoReposTxnContext reposTxnContext = 
+    FarragoReposTxnContext reposTxnContext =
         farragoParser.getStmtValidator().getReposTxnContext();
 }
 {
@@ -1877,7 +1877,7 @@ void ReturnsClause(FemRoutine function) :
             returnParam.setType(
                 farragoParser.getStmtValidator().findSqldataType(
                     new SqlIdentifier(
-                        SqlTypeName.Integer.getName(),
+                        SqlTypeName.INTEGER.name(),
                         SqlParserPos.ZERO)));
         }
         |
@@ -2105,7 +2105,7 @@ void RoutineCharacteristics(FemRoutine routine) :
         | <DYNAMIC_FUNCTION>
         {
             routine.setDynamicFunction(true);
-        }        
+        }
         | <NOT>
         (
             <DETERMINISTIC>
@@ -2763,7 +2763,7 @@ SqlIdentifier PrivilegedAction() :
 {
 }
 {
-    (<INSERT> | <UPDATE> | <SELECT> | <DELETE> | <EXECUTE> | <USAGE>) 
+    (<INSERT> | <UPDATE> | <SELECT> | <DELETE> | <EXECUTE> | <USAGE>)
     {
         SqlIdentifier privId = new SqlIdentifier(
             token.image.toUpperCase(),  getPos());
@@ -2796,7 +2796,7 @@ List PrivilegedActionList() :
 //
 // This method is common between the two grant statements
 // (i.e. GRANT privilege and GRANT ROLE).
-// 
+//
 void GrantOptions(DdlGrantStmt stmt) :
 {
     SqlIdentifier grantor;
@@ -2865,13 +2865,13 @@ DdlStmt GrantPrivStmt() :
         return stmt;
     }
 }
-    
+
 
 DdlStmt GrantRoleStmt() :
 {
-    DdlGrantRoleStmt stmt = new DdlGrantRoleStmt();    
+    DdlGrantRoleStmt stmt = new DdlGrantRoleStmt();
     List roleList;
-    List granteeList;    
+    List granteeList;
 }
 {
     <ROLE> roleList = SimpleIdentifierCommaList()
@@ -2884,7 +2884,7 @@ DdlStmt GrantRoleStmt() :
     }
     GrantOptions(stmt)
     {
-        return stmt;            
+        return stmt;
     }
 }
 
@@ -2916,7 +2916,7 @@ DdlStmt AnalyzeStmt() :
     (
         ( <ALL> <COLUMNS> )
         {
-            stmt.setColumns(table.getFeature());
+            stmt.setColumns((List) table.getFeature());
         }
         |
         ( <COLUMNS>
@@ -2940,7 +2940,7 @@ DdlStmt AnalyzeStmt() :
         }
     ]
     {
-        return stmt;            
+        return stmt;
     }
 }
 

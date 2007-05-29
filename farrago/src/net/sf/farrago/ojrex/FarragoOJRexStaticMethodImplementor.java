@@ -36,7 +36,8 @@ import org.eigenbase.rex.*;
 
 
 /**
- * FarragoOJRexStaticMethodImplementor implements {@link OJRexImplementor} by
+ * FarragoOJRexStaticMethodImplementor implements
+ * {@link org.eigenbase.oj.rex.OJRexImplementor} by
  * generating a call to a static Java method.
  *
  * @author John V. Sichi
@@ -116,7 +117,7 @@ public class FarragoOJRexStaticMethodImplementor
             // system-defined
             return implementSystemCall(translator, call, operands);
         }
-        
+
         ExpressionList exprList = new ExpressionList();
         Class [] javaParams = method.getParameterTypes();
         for (int i = 0; i < operands.length; ++i) {

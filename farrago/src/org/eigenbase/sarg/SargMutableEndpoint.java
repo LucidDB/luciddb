@@ -21,12 +21,8 @@
 */
 package org.eigenbase.sarg;
 
-import java.util.*;
-
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -42,7 +38,7 @@ public class SargMutableEndpoint
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @see SargFactory.newEndpoint
+     * @see SargFactory#newEndpoint
      */
     SargMutableEndpoint(SargFactory factory, RelDataType dataType)
     {

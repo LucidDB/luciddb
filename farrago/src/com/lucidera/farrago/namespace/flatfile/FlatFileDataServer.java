@@ -250,7 +250,7 @@ class FlatFileDataServer
         case DESCRIBE:
             fieldTypes.add(
                 typeFactory.createSqlType(
-                    SqlTypeName.Varchar,
+                    SqlTypeName.VARCHAR,
                     DESCRIBE_COLUMN_LENGTH));
             fieldNames.add(DESCRIBE_COLUMN_NAME);
             break;
@@ -260,7 +260,7 @@ class FlatFileDataServer
             for (Integer size : fieldSizes) {
                 RelDataType type =
                     typeFactory.createSqlType(
-                        SqlTypeName.Varchar,
+                        SqlTypeName.VARCHAR,
                         size.intValue());
                 RelDataType nullableType =
                     typeFactory.createTypeWithNullability(type, true);

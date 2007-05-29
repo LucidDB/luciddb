@@ -28,7 +28,7 @@ import org.eigenbase.util.*;
 /**
  * Adapter which allows you to iterate over an {@link TupleIter} with a timeout.
  *
- * <p>The interface is similar to an {@link TupleIter}: the {@link #fetchNext()}
+ * <p>The interface is similar to an {@link TupleIter}: the {@link #fetchNext}
  * method retrieves rows and indicates when there are no more rows. It has a
  * timeout parameter, and throws a {@link QueueIterator.TimeoutException} if the
  * timeout is exceeded. There is also a {@link #closeAllocation} method, which
@@ -47,7 +47,7 @@ import org.eigenbase.util.*;
  * thread (e.g., the driver) is finished with the row. This is because the same
  * row object may be re-used for subsequent rows. To achieve this, this class's
  * thread always inserts {@link #FENCEPOST} after every row object and the
- * {@link #fetchNext()} method detects and discards the fencepost. The nature of
+ * {@link #fetchNext} method detects and discards the fencepost. The nature of
  * the underlying {@link QueueIterator}'s SynchronousQueue prevents the writing
  * thread from completing the put operation of the fencepost until the reading
  * thread is prepared to read the value. In this way we guarantee that the row

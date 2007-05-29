@@ -76,7 +76,7 @@ public class CalcRexImplementorTableImpl
     /**
      * Creates an empty table which delegates to another table.
      *
-     * @see {@link #std}
+     * @see #std
      */
     public CalcRexImplementorTableImpl(CalcRexImplementorTable parent)
     {
@@ -319,7 +319,7 @@ public class CalcRexImplementorTableImpl
             RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
 
             //todo do a reverse lookup on OpType.Int8 instead
-            RelDataType int8 = fac.createSqlType(SqlTypeName.Bigint);
+            RelDataType int8 = fac.createSqlType(SqlTypeName.BIGINT);
             RexNode castCall1 =
                 translator.rexBuilder.makeCast(int8, call.operands[i]);
 
@@ -373,7 +373,7 @@ public class CalcRexImplementorTableImpl
             RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
 
             //todo do a reverse lookup on OpType.Double instead
-            RelDataType db = fac.createSqlType(SqlTypeName.Double);
+            RelDataType db = fac.createSqlType(SqlTypeName.DOUBLE);
             RexNode castCall1 =
                 translator.rexBuilder.makeCast(db, call.operands[i]);
 
@@ -947,8 +947,8 @@ public class CalcRexImplementorTableImpl
                 // leave that for the Java calc.
                 RelDataType resultType = call.getType();
                 RelDataType inputType = call.getOperands()[0].getType();
-                if ((resultType.getFamily() == SqlTypeFamily.Binary)
-                    && (inputType.getFamily() == SqlTypeFamily.Binary))
+                if ((resultType.getFamily() == SqlTypeFamily.BINARY)
+                    && (inputType.getFamily() == SqlTypeFamily.BINARY))
                 {
                     if (resultType.getSqlTypeName()
                         != inputType.getSqlTypeName())
@@ -1185,14 +1185,14 @@ public class CalcRexImplementorTableImpl
             for (int i = 0; i < call.operands.length; i++) {
                 RexNode operand = call.operands[i];
                 if (!operand.getType().getSqlTypeName().equals(
-                        SqlTypeName.Double)) {
+                        SqlTypeName.DOUBLE)) {
                     RelDataType oldType = operand.getType();
                     RelDataTypeFactory fac =
                         translator.rexBuilder.getTypeFactory();
 
                     //todo do a reverse lookup on OpType.Double instead
                     RelDataType doubleType =
-                        fac.createSqlType(SqlTypeName.Double);
+                        fac.createSqlType(SqlTypeName.DOUBLE);
                     doubleType =
                         fac.createTypeWithNullability(
                             doubleType,
@@ -1231,7 +1231,7 @@ public class CalcRexImplementorTableImpl
                 new UsingInstrImplementor(CalcProgramBuilder.cast));
             putMS(
                 SqlTypeName.datetimeTypes,
-                SqlTypeName.Bigint,
+                SqlTypeName.BIGINT,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));
             // REVIEW angel 2006-08-31 - allow cast from intervals to bigint?
@@ -1240,11 +1240,11 @@ public class CalcRexImplementorTableImpl
             //   stuffs one int64 value into another)
             putMS(
                 SqlTypeName.timeIntervalTypes,
-                SqlTypeName.Bigint,
+                SqlTypeName.BIGINT,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));
             putSM(
-                SqlTypeName.Bigint,
+                SqlTypeName.BIGINT,
                 SqlTypeName.timeIntervalTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));
@@ -1314,54 +1314,54 @@ public class CalcRexImplementorTableImpl
 
             putMS(
                 SqlTypeName.charTypes,
-                SqlTypeName.Date,
+                SqlTypeName.DATE,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castStrAToDate));
             putSM(
-                SqlTypeName.Date,
+                SqlTypeName.DATE,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToStr));
 
             putMS(
                 SqlTypeName.charTypes,
-                SqlTypeName.Time,
+                SqlTypeName.TIME,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castStrAToTime));
             putSM(
-                SqlTypeName.Time,
+                SqlTypeName.TIME,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castTimeToStr));
 
             putMS(
                 SqlTypeName.charTypes,
-                SqlTypeName.Timestamp,
+                SqlTypeName.TIMESTAMP,
                 new DatetimeRoundingImplementor(
                     new UsingInstrImplementor(
                         ExtInstructionDefTable.castStrAToTimestamp)));
             putSM(
-                SqlTypeName.Timestamp,
+                SqlTypeName.TIMESTAMP,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castTimestampToStr));
 
             // TIMESTAMP to and from DATE and TIME.
             put(
-                SqlTypeName.Timestamp,
-                SqlTypeName.Date,
+                SqlTypeName.TIMESTAMP,
+                SqlTypeName.DATE,
                 new CastTimestampToDateImplementor());
             put(
-                SqlTypeName.Timestamp,
-                SqlTypeName.Time,
+                SqlTypeName.TIMESTAMP,
+                SqlTypeName.TIME,
                 new CastTimestampToTimeImplementor());
             put(
-                SqlTypeName.Date,
-                SqlTypeName.Timestamp,
+                SqlTypeName.DATE,
+                SqlTypeName.TIMESTAMP,
                 new UsingInstrImplementor(CalcProgramBuilder.cast));
             put(
-                SqlTypeName.Time,
-                SqlTypeName.Timestamp,
+                SqlTypeName.TIME,
+                SqlTypeName.TIMESTAMP,
                 new DatetimeRoundingImplementor(
                     new CastTimeToTimestampImplementor()));
 
@@ -1423,13 +1423,13 @@ public class CalcRexImplementorTableImpl
                 new UsingInstrImplementor(ExtInstructionDefTable.castA));
 
             putSM(
-                SqlTypeName.Decimal,
+                SqlTypeName.DECIMAL,
                 SqlTypeName.charTypes,
                 new CastDecimalImplementor(
                     ExtInstructionDefTable.castADecimal));
             putMS(
                 SqlTypeName.charTypes,
-                SqlTypeName.Decimal,
+                SqlTypeName.DECIMAL,
                 new CastDecimalImplementor(
                     ExtInstructionDefTable.castADecimal));
         }
@@ -1612,9 +1612,9 @@ public class CalcRexImplementorTableImpl
         {
             RelDataType fromType = call.getOperands()[0].getType();
             SqlTypeName fromTypeName = fromType.getSqlTypeName();
-            assert fromTypeName == SqlTypeName.Timestamp;
+            assert fromTypeName == SqlTypeName.TIMESTAMP;
             SqlTypeName toTypeName = call.getType().getSqlTypeName();
-            assert toTypeName == SqlTypeName.Date;
+            assert toTypeName == SqlTypeName.DATE;
 
             // Remove milliseconds part of the date:
             //   millisInDay := 86400000
@@ -1677,10 +1677,10 @@ public class CalcRexImplementorTableImpl
         {
             RelDataType fromType = call.getOperands()[0].getType();
             SqlTypeName fromTypeName = fromType.getSqlTypeName();
-            assert fromTypeName == SqlTypeName.Timestamp;
+            assert fromTypeName == SqlTypeName.TIMESTAMP;
             RelDataType toType = call.getType();
             SqlTypeName toTypeName = toType.getSqlTypeName();
-            assert toTypeName == SqlTypeName.Time;
+            assert toTypeName == SqlTypeName.TIME;
 
             // Mask all but the milliseconds part of the date, then round to
             // the required precision (TIME(0) = 1000ms, TIME(1) = 100ms, etc.)
@@ -1741,10 +1741,10 @@ public class CalcRexImplementorTableImpl
         {
             RelDataType fromType = call.getOperands()[0].getType();
             SqlTypeName fromTypeName = fromType.getSqlTypeName();
-            assert fromTypeName == SqlTypeName.Time;
+            assert fromTypeName == SqlTypeName.TIME;
             RelDataType toType = call.getType();
             SqlTypeName toTypeName = toType.getSqlTypeName();
-            assert toTypeName == SqlTypeName.Timestamp;
+            assert toTypeName == SqlTypeName.TIMESTAMP;
 
             // Mask all but the milliseconds part of the date, then round to
             // the required precision (TIME(0) = 1000ms, TIME(1) = 100ms, etc.)
@@ -1767,7 +1767,7 @@ public class CalcRexImplementorTableImpl
             final CalcReg currentDateReg =
                 implementRounding(
                     DateTimeUtil.MILLIS_PER_DAY,
-                    RoundingMode.FLOOR, 
+                    RoundingMode.FLOOR,
                     currentTimestampReg,
                     toType,
                     translator);
@@ -1928,31 +1928,31 @@ public class CalcRexImplementorTableImpl
         private int getRestrictiveness(
             CalcProgramBuilder.RegisterDescriptor rd)
         {
-            switch (rd.getType().getOrdinal()) {
-            case CalcProgramBuilder.OpType.Bool_ordinal:
+            switch (rd.getType()) {
+            case Bool:
                 return 5;
-            case CalcProgramBuilder.OpType.Uint1_ordinal:
+            case Uint1:
                 return 10;
-            case CalcProgramBuilder.OpType.Int1_ordinal:
+            case Int1:
                 return 20;
-            case CalcProgramBuilder.OpType.Uint2_ordinal:
+            case Uint2:
                 return 30;
-            case CalcProgramBuilder.OpType.Int2_ordinal:
+            case Int2:
                 return 40;
-            case CalcProgramBuilder.OpType.Uint4_ordinal:
+            case Uint4:
                 return 50;
-            case CalcProgramBuilder.OpType.Int4_ordinal:
+            case Int4:
                 return 60;
-            case CalcProgramBuilder.OpType.Uint8_ordinal:
+            case Uint8:
                 return 70;
-            case CalcProgramBuilder.OpType.Int8_ordinal:
+            case Int8:
                 return 80;
-            case CalcProgramBuilder.OpType.Real_ordinal:
+            case Real:
                 return 1000;
-            case CalcProgramBuilder.OpType.Double_ordinal:
+            case Double:
                 return 1010;
             default:
-                throw rd.getType().unexpected();
+                throw Util.unexpected(rd.getType());
             }
         }
 
@@ -1988,7 +1988,7 @@ public class CalcRexImplementorTableImpl
                 // intervals to be treated as bigint operations
                 if (SqlTypeUtil.isInterval(castToType)) {
                     RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
-                    RelDataType int8 = fac.createSqlType(SqlTypeName.Bigint);
+                    RelDataType int8 = fac.createSqlType(SqlTypeName.BIGINT);
                     castToType = int8;
                 }
                 RexNode castCall =
@@ -2049,14 +2049,16 @@ public class CalcRexImplementorTableImpl
     private static class BinaryStringMakeSametypeImplementor
         extends InstrDefImplementor
     {
-        private int iFirst;
-        private int iSecond;
+        private final int iFirst;
+        private final int iSecond;
 
         /**
-         * @param iFirst Indicates which two operands in the call list that
-         * should be made the same type.
-         * @param iSecond Indicates which two operands in the call list that
-         * should be made the same type.
+         * Creates an implementor which makes a given pair of arguments the same
+         * type.
+         *
+         * @param instr Instruction to implement
+         * @param iFirst Ordinal of first operand in pair to make the same type
+         * @param iSecond Ordinal of second operand in pair to make the same type
          */
         public BinaryStringMakeSametypeImplementor(
             CalcProgramBuilder.InstructionDef instr,
@@ -2070,9 +2072,10 @@ public class CalcRexImplementorTableImpl
         }
 
         /**
-         * Convenience constructor that calls {@link
-         * #BinaryStringMakeSametypeImplementor(com.disruptivetech.farrago.calc.CalcProgramBuilder.InstructionDef,
-         * int, int)} with the iFirst=0 and iSecond=1
+         * Creates an implementor which makes the first and second arguments
+         * the same type.
+         *
+         * @param instr Instruction to implement
          */
         public BinaryStringMakeSametypeImplementor(
             CalcProgramBuilder.InstructionDef instr)
@@ -2404,8 +2407,8 @@ public class CalcRexImplementorTableImpl
                             -1);
                     translator.setNullRegisterOrdinal(
                         translator.builder.registerSets.getSet(
-                            CalcProgramBuilder.RegisterSetType.LocalORDINAL)
-                        .size() - 1);
+                            CalcProgramBuilder.RegisterSetType.Local).size()
+                            - 1);
                 } else {
                     isNullReg =
                         translator.builder.getRegister(ordinal,
@@ -2476,8 +2479,8 @@ public class CalcRexImplementorTableImpl
                             -1);
                     translator.setNullRegisterOrdinal(
                         translator.builder.registerSets.getSet(
-                            CalcProgramBuilder.RegisterSetType.LocalORDINAL)
-                        .size() - 1);
+                            CalcProgramBuilder.RegisterSetType.Local).size()
+                            - 1);
                 } else {
                     isNullReg =
                         translator.builder.getRegister(ordinal,
@@ -2594,8 +2597,8 @@ public class CalcRexImplementorTableImpl
                             -1);
                     translator.setNullRegisterOrdinal(
                         translator.builder.registerSets.getSet(
-                            CalcProgramBuilder.RegisterSetType.LocalORDINAL)
-                        .size() - 1);
+                            CalcProgramBuilder.RegisterSetType.Local).size()
+                            - 1);
                 } else {
                     isNullReg =
                         translator.builder.getRegister(ordinal,
@@ -2659,8 +2662,8 @@ public class CalcRexImplementorTableImpl
                             -1);
                     translator.setNullRegisterOrdinal(
                         translator.builder.registerSets.getSet(
-                            CalcProgramBuilder.RegisterSetType.LocalORDINAL)
-                        .size() - 1);
+                            CalcProgramBuilder.RegisterSetType.Local).size()
+                            - 1);
                 } else {
                     isNullReg =
                         translator.builder.getRegister(ordinal,
@@ -2691,7 +2694,7 @@ public class CalcRexImplementorTableImpl
 
     /**
      * Implementation of the <code>$HISTOGRAM</code> aggregate function
-     * ({@link SqlStdOperatorTable#histogramAggFunction), which
+     * ({@link SqlStdOperatorTable#histogramAggFunction}, which
      * helps implement MIN, MAX, FIRST_VALUE, LAST_VALUE in a windowed
      * aggregation scenario.
      *

@@ -113,7 +113,7 @@ public class SqlInsert
         int leftPrec,
         int rightPrec)
     {
-        writer.startList(SqlWriter.FrameType.Select);
+        writer.startList(SqlWriter.FrameTypeEnum.Select);
         writer.sep("INSERT INTO");
         getTargetTable().unparse(
             writer,

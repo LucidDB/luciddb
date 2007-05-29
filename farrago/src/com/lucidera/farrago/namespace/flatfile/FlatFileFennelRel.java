@@ -30,12 +30,8 @@ import openjava.ptree.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
-
-import java.io.*;
-import java.util.*;
 
 
 /**
@@ -170,11 +166,12 @@ public class FlatFileFennelRel
 
         // set the error record type to be a single text column
         FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
-        RelDataTypeFactory typeFactory = 
+        RelDataTypeFactory typeFactory =
             stmt.getRelOptCluster().getTypeFactory();
-        RelDataType errorText = 
+        RelDataType errorText =
             typeFactory.createSqlType(
-                SqlTypeName.Varchar, MAX_ROW_ERROR_TEXT_WIDTH);
+                SqlTypeName.VARCHAR,
+                MAX_ROW_ERROR_TEXT_WIDTH);
         errorText = typeFactory.createTypeWithNullability(errorText, true);
         RelDataType errorType = typeFactory.createStructType(
             new RelDataType[] { errorText },

@@ -137,7 +137,7 @@ public class HepProgramBuilder
      * the actual instances. If the planner does not have a rule matching the
      * description, this instruction is a nop.
      *
-     * @param rule rule to fire
+     * @param ruleDescription description of rule to fire
      */
     public void addRuleByDescription(String ruleDescription)
     {

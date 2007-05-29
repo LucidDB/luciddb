@@ -136,7 +136,7 @@ extends SqlOperator
         int rightPrec)
     {
         final SqlWriter.Frame selectFrame =
-            writer.startList(SqlWriter.FrameType.Select);
+            writer.startList(SqlWriter.FrameTypeEnum.Select);
         writer.sep("SELECT");
         final SqlNodeList keywords =
             (SqlNodeList) operands[SqlSelect.KEYWORDS_OPERAND];
@@ -152,7 +152,7 @@ extends SqlOperator
                     selectClause.getParserPosition());
         }
         final SqlWriter.Frame selectListFrame =
-            writer.startList(SqlWriter.FrameType.SelectList);
+            writer.startList(SqlWriter.FrameTypeEnum.SelectList);
         unparseListClause(writer, selectClause);
         writer.endList(selectListFrame);
 
@@ -163,7 +163,7 @@ extends SqlOperator
         // sure that an unjoined nested select will be properly
         // parenthesized
         final SqlWriter.Frame fromFrame =
-            writer.startList(SqlWriter.FrameType.FromList);
+            writer.startList(SqlWriter.FrameTypeEnum.FromList);
         fromClause.unparse(writer,
             SqlStdOperatorTable.joinOperator.getLeftPrec() - 1,
             SqlStdOperatorTable.joinOperator.getRightPrec() - 1);
@@ -184,20 +184,20 @@ extends SqlOperator
                     whereSepKind = SqlKind.Or;
 
                 // unroll whereClause
-                ArrayList list = new ArrayList<SqlNode>(0);
+                ArrayList<SqlNode> list = new ArrayList<SqlNode>(0);
                 while (node instanceof SqlCall && (
                     ((SqlCall)node).getKind().isA(whereSepKind))) {
-                    list.add(0, ((SqlCall)node).getOperands()[1]);
+                    list.add(0, ((SqlCall) node).getOperands()[1]);
                     node = ((SqlCall)node).getOperands()[0];
                 }
                 list.add(0, node);
 
                 // unparse in a WhereList frame
-                final SqlWriter.Frame whereFrame = 
-                    writer.startList(SqlWriter.FrameType.WhereList);
-                unparseListClause(writer, 
+                final SqlWriter.Frame whereFrame =
+                    writer.startList(SqlWriter.FrameTypeEnum.WhereList);
+                unparseListClause(writer,
                     new SqlNodeList(
-                        list, 
+                        list,
                         whereClause.getParserPosition()),
                         whereSepKind);
                 writer.endList(whereFrame);
@@ -210,10 +210,10 @@ extends SqlOperator
         if (groupClause != null) {
             writer.sep("GROUP BY");
             final SqlWriter.Frame groupFrame =
-                writer.startList(SqlWriter.FrameType.GroupByList);
+                writer.startList(SqlWriter.FrameTypeEnum.GroupByList);
             if (groupClause.getList().isEmpty()) {
                 final SqlWriter.Frame frame =
-                    writer.startList(SqlWriter.FrameType.Simple, "(", ")");
+                    writer.startList(SqlWriter.FrameTypeEnum.Simple, "(", ")");
                 writer.endList(frame);
             } else {
                 unparseListClause(writer, groupClause);
@@ -230,7 +230,7 @@ extends SqlOperator
         if (windowDecls.size() > 0) {
             writer.sep("WINDOW");
             final SqlWriter.Frame windowFrame =
-                writer.startList(SqlWriter.FrameType.WindowDeclList);
+                writer.startList(SqlWriter.FrameTypeEnum.WindowDeclList);
             for (int i = 0; i < windowDecls.size(); i++) {
                 SqlNode windowDecl = windowDecls.get(i);
                 writer.sep(",");
@@ -242,7 +242,7 @@ extends SqlOperator
         if (orderClause != null) {
             writer.sep("ORDER BY");
             final SqlWriter.Frame orderFrame =
-                writer.startList(SqlWriter.FrameType.OrderByList);
+                writer.startList(SqlWriter.FrameTypeEnum.OrderByList);
             unparseListClause(writer, orderClause);
             writer.endList(orderFrame);
         }

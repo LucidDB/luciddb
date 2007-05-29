@@ -23,6 +23,7 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -90,9 +91,9 @@ public abstract class SqlTypeTransforms
                 SqlOperatorBinding opBinding,
                 RelDataType typeToTransform)
             {
-                switch (typeToTransform.getSqlTypeName().getOrdinal()) {
-                case SqlTypeName.Varchar_ordinal:
-                case SqlTypeName.Varbinary_ordinal:
+                switch (typeToTransform.getSqlTypeName()) {
+                case VARCHAR:
+                case VARBINARY:
                     return typeToTransform;
                 }
 
@@ -119,13 +120,13 @@ public abstract class SqlTypeTransforms
             private SqlTypeName toVar(RelDataType type)
             {
                 final SqlTypeName sqlTypeName = type.getSqlTypeName();
-                switch (sqlTypeName.getOrdinal()) {
-                case SqlTypeName.Char_ordinal:
-                    return SqlTypeName.Varchar;
-                case SqlTypeName.Binary_ordinal:
-                    return SqlTypeName.Varbinary;
+                switch (sqlTypeName) {
+                case CHAR:
+                    return SqlTypeName.VARCHAR;
+                case BINARY:
+                    return SqlTypeName.VARBINARY;
                 default:
-                    throw sqlTypeName.unexpected();
+                    throw Util.unexpected(sqlTypeName);
                 }
             }
         };
@@ -134,7 +135,7 @@ public abstract class SqlTypeTransforms
      * Parameter type-inference transform strategy where a derived type must be
      * a multiset type and the returned type is the multiset's element type.
      *
-     * @see {@link MultisetSqlType#getComponentType}
+     * @see MultisetSqlType#getComponentType
      */
     public static final SqlTypeTransform toMultisetElementType =
         new SqlTypeTransform() {

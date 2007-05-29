@@ -65,21 +65,21 @@ public class RexToSqlNodeConverterImpl
     public SqlNode convertLiteral(RexLiteral literal)
     {
         // Numeric
-        if (SqlTypeFamily.ExactNumeric.getTypeNames().contains(
+        if (SqlTypeFamily.EXACT_NUMERIC.getTypeNames().contains(
                 literal.getTypeName())) {
             return SqlLiteral.createExactNumeric(
                 literal.getValue().toString(),
                 SqlParserPos.ZERO);
         }
 
-        if (SqlTypeFamily.ApproximateNumeric.getTypeNames().contains(
+        if (SqlTypeFamily.APPROXIMATE_NUMERIC.getTypeNames().contains(
                 literal.getTypeName())) {
             return SqlLiteral.createApproxNumeric(
                 literal.getValue().toString(),
                 SqlParserPos.ZERO);
         }
         // Timestamp
-        if (SqlTypeFamily.Timestamp.getTypeNames().contains(
+        if (SqlTypeFamily.TIMESTAMP.getTypeNames().contains(
                 literal.getTypeName())) {
             return SqlLiteral.createTimestamp(
                 (Calendar)literal.getValue(),
@@ -87,20 +87,20 @@ public class RexToSqlNodeConverterImpl
                 SqlParserPos.ZERO);
         }
         // Date
-        if (SqlTypeFamily.Date.getTypeNames().contains(
+        if (SqlTypeFamily.DATE.getTypeNames().contains(
                 literal.getTypeName())) {
             return SqlLiteral.createDate(
                 (Calendar)literal.getValue(),
                 SqlParserPos.ZERO);
         }
         // String
-        if (SqlTypeFamily.Character.getTypeNames().contains(
+        if (SqlTypeFamily.CHARACTER.getTypeNames().contains(
                 literal.getTypeName())) {
             return SqlLiteral.createCharString(
                 ((NlsString)(literal.getValue())).getValue(),
                 SqlParserPos.ZERO);
         }
-        throw literal.getTypeName().unexpected();
+        throw Util.unexpected(literal.getTypeName());
     }
 
     public SqlNode convertInputRef(RexInputRef ref)

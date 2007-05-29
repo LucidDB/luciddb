@@ -45,7 +45,7 @@ public class SqlOverlapsOperator
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlWriter.FrameType OverlapsFrameType =
-        SqlWriter.FrameType.create("OVERLAPS");
+        SqlWriter.FrameTypeEnum.create("OVERLAPS");
 
     //~ Constructors -----------------------------------------------------------
 

@@ -23,7 +23,8 @@
 package org.eigenbase.oj.rex;
 
 /**
- * Converts aggregate expressions in logical format ({@link AggregateRel.Call})
+ * Converts aggregate expressions in logical format
+ * ({@link org.eigenbase.rel.AggregateRelBase.Call})
  * into OpenJava code.
  *
  * @author jhyde

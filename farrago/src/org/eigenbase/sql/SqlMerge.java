@@ -146,7 +146,7 @@ public class SqlMerge
         int rightPrec)
     {
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.Select, "MERGE INTO", "");
+            writer.startList(SqlWriter.FrameTypeEnum.Select, "MERGE INTO", "");
         getTargetTable().unparse(
             writer,
             getOperator().getLeftPrec(),
@@ -178,7 +178,7 @@ public class SqlMerge
             writer.newlineAndIndent();
             writer.keyword("WHEN MATCHED THEN UPDATE");
             final SqlWriter.Frame setFrame =
-                writer.startList(SqlWriter.FrameType.UpdateSetList, "SET", "");
+                writer.startList(SqlWriter.FrameTypeEnum.UpdateSetList, "SET", "");
 
             Iterator targetColumnIter =
                 updateCall.getTargetColumnList().getList().iterator();

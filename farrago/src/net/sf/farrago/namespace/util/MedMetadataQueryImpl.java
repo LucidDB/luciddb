@@ -39,16 +39,16 @@ public class MedMetadataQueryImpl
 
     //~ Instance fields --------------------------------------------------------
 
-    private final Map filterMap;
+    private final Map<String, FarragoMedMetadataFilter> filterMap;
 
-    private final Set resultObjectTypes;
+    private final Set<String> resultObjectTypes;
 
     //~ Constructors -----------------------------------------------------------
 
     public MedMetadataQueryImpl()
     {
-        filterMap = new HashMap();
-        resultObjectTypes = new HashSet();
+        filterMap = new HashMap<String, FarragoMedMetadataFilter>();
+        resultObjectTypes = new HashSet<String>();
     }
 
     //~ Methods ----------------------------------------------------------------

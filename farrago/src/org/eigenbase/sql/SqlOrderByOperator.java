@@ -64,14 +64,14 @@ public class SqlOrderByOperator
     {
         assert (operands.length == 2);
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.OrderBy);
+            writer.startList(SqlWriter.FrameTypeEnum.OrderBy);
         operands[QUERY_OPERAND].unparse(
             writer,
             getLeftPrec(),
             getRightPrec());
         writer.sep(getName());
         final SqlWriter.Frame listFrame =
-            writer.startList(SqlWriter.FrameType.OrderByList);
+            writer.startList(SqlWriter.FrameTypeEnum.OrderByList);
         unparseListClause(writer, operands[ORDER_OPERAND]);
         writer.endList(listFrame);
         writer.endList(frame);

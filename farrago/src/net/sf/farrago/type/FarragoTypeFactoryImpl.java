@@ -76,7 +76,7 @@ public class FarragoTypeFactoryImpl
 
     private int nextGeneratedClassId;
 
-    private Map mapTypeToOJClass;
+    private final Map<RelDataType, OJClass> mapTypeToOJClass;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -86,7 +86,7 @@ public class FarragoTypeFactoryImpl
 
         this.repos = repos;
 
-        mapTypeToOJClass = new HashMap();
+        mapTypeToOJClass = new HashMap<RelDataType, OJClass>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -224,7 +224,7 @@ public class FarragoTypeFactoryImpl
             return
                 canonize(
                     new ObjectSqlType(
-                        SqlTypeName.Distinct,
+                        SqlTypeName.DISTINCT,
                         id,
                         false,
                         new RelDataTypeField[] { field },
@@ -241,7 +241,7 @@ public class FarragoTypeFactoryImpl
             return
                 canonize(
                     new ObjectSqlType(
-                        SqlTypeName.Structured,
+                        SqlTypeName.STRUCTURED,
                         id,
                         false,
                         structType.getFields(),
@@ -465,7 +465,7 @@ public class FarragoTypeFactoryImpl
                 if (!substitute) {
                     throw new UnsupportedOperationException();
                 }
-                typeName = SqlTypeName.Varchar;
+                typeName = SqlTypeName.VARCHAR;
                 precision = unknownCharPrecision;
             }
 
@@ -484,16 +484,16 @@ public class FarragoTypeFactoryImpl
             // support anything greater than 0 for datetime precision; for now
             // we just toss datetime precision.
             boolean isDatetime =
-                SqlTypeFamily.Datetime.getTypeNames().contains(typeName);
+                SqlTypeFamily.DATETIME.getTypeNames().contains(typeName);
 
-            if (typeName == SqlTypeName.Decimal) {
+            if (typeName == SqlTypeName.DECIMAL) {
                 // Limit DECIMAL precision and scale.
-                int maxPrecision = SqlTypeName.Decimal.MAX_NUMERIC_PRECISION;
+                int maxPrecision = SqlTypeName.MAX_NUMERIC_PRECISION;
                 if (precision == 0) {
                     // Deal with bogus precision 0, e.g. from Oracle
                     // Change such a Decmial type to Double
-                    type = createSqlType(SqlTypeName.Double);
-                    typeName = SqlTypeName.Double;
+                    type = createSqlType(SqlTypeName.DOUBLE);
+                    typeName = SqlTypeName.DOUBLE;
                 } else {
                     if ((precision > maxPrecision) || (scale > precision)) {
                         if (!substitute) {
@@ -552,7 +552,7 @@ public class FarragoTypeFactoryImpl
             if (substitute) {
                 // last resort
                 type = createSqlType(
-                        SqlTypeName.Varchar,
+                        SqlTypeName.VARCHAR,
                         unknownCharPrecision);
             } else {
                 // Rethrow
@@ -609,19 +609,19 @@ public class FarragoTypeFactoryImpl
             Classifier classifier = feature.getType();
             String mofTypeName = classifier.getName();
             if (mofTypeName.equals("Boolean")) {
-                typeName = SqlTypeName.Boolean;
+                typeName = SqlTypeName.BOOLEAN;
             } else if (mofTypeName.equals("Byte")) {
-                typeName = SqlTypeName.Tinyint;
+                typeName = SqlTypeName.TINYINT;
             } else if (mofTypeName.equals("Double")) {
-                typeName = SqlTypeName.Double;
+                typeName = SqlTypeName.DOUBLE;
             } else if (mofTypeName.equals("Float")) {
-                typeName = SqlTypeName.Real;
+                typeName = SqlTypeName.REAL;
             } else if (mofTypeName.equals("Integer")) {
-                typeName = SqlTypeName.Integer;
+                typeName = SqlTypeName.INTEGER;
             } else if (mofTypeName.equals("Long")) {
-                typeName = SqlTypeName.Bigint;
+                typeName = SqlTypeName.BIGINT;
             } else if (mofTypeName.equals("Short")) {
-                typeName = SqlTypeName.Smallint;
+                typeName = SqlTypeName.SMALLINT;
             }
             isNullable = (feature.getMultiplicity().getLower() == 0);
         }
@@ -629,7 +629,7 @@ public class FarragoTypeFactoryImpl
         RelDataType type;
         if (typeName == null) {
             // TODO:  cleanup
-            type = createSqlType(SqlTypeName.Varchar, unknownCharPrecision);
+            type = createSqlType(SqlTypeName.VARCHAR, unknownCharPrecision);
         } else {
             type = createSqlType(typeName);
         }
@@ -644,7 +644,7 @@ public class FarragoTypeFactoryImpl
         OJClass declarer,
         RelDataType type)
     {
-        if (type.getSqlTypeName() == SqlTypeName.Null) {
+        if (type.getSqlTypeName() == SqlTypeName.NULL) {
             return OJSystem.OBJECT;
         } else if (type instanceof AbstractSqlType) {
             OJClass ojClass = (OJClass) mapTypeToOJClass.get(type);
@@ -664,8 +664,8 @@ public class FarragoTypeFactoryImpl
         OJClass declarer,
         RelDataType type)
     {
-        switch (type.getSqlTypeName().getOrdinal()) {
-        case SqlTypeName.Boolean_ordinal:
+        switch (type.getSqlTypeName()) {
+        case BOOLEAN:
             if (type.isNullable()) {
                 return
                     OJClass.forClass(
@@ -673,22 +673,22 @@ public class FarragoTypeFactoryImpl
             } else {
                 return OJSystem.BOOLEAN;
             }
-        case SqlTypeName.Tinyint_ordinal:
+        case TINYINT:
             if (type.isNullable()) {
                 return OJClass.forClass(
                         NullablePrimitive.NullableByte.class);
             } else {
                 return OJSystem.BYTE;
             }
-        case SqlTypeName.Smallint_ordinal:
+        case SMALLINT:
             if (type.isNullable()) {
                 return OJClass.forClass(
                         NullablePrimitive.NullableShort.class);
             } else {
                 return OJSystem.SHORT;
             }
-        case SqlTypeName.Symbol_ordinal:
-        case SqlTypeName.Integer_ordinal:
+        case SYMBOL:
+        case INTEGER:
             if (type.isNullable()) {
                 return
                     OJClass.forClass(
@@ -696,71 +696,71 @@ public class FarragoTypeFactoryImpl
             } else {
                 return OJSystem.INT;
             }
-        case SqlTypeName.Bigint_ordinal:
+        case BIGINT:
             if (type.isNullable()) {
                 return OJClass.forClass(
                         NullablePrimitive.NullableLong.class);
             } else {
                 return OJSystem.LONG;
             }
-        case SqlTypeName.Decimal_ordinal:
+        case DECIMAL:
             return newDecimalOJClass(
                     declarer,
                     type);
-        case SqlTypeName.Real_ordinal:
+        case REAL:
             if (type.isNullable()) {
                 return OJClass.forClass(
                         NullablePrimitive.NullableFloat.class);
             } else {
                 return OJSystem.FLOAT;
             }
-        case SqlTypeName.Float_ordinal:
-        case SqlTypeName.Double_ordinal:
+        case FLOAT:
+        case DOUBLE:
             if (type.isNullable()) {
                 return OJClass.forClass(
                         NullablePrimitive.NullableDouble.class);
             } else {
                 return OJSystem.DOUBLE;
             }
-        case SqlTypeName.Date_ordinal:
+        case DATE:
             return
                 newDatetimeOJClass(
                     SqlDateTimeWithoutTZ.SqlDate.class,
                     declarer,
                     type);
-        case SqlTypeName.Time_ordinal:
+        case TIME:
             return
                 newDatetimeOJClass(
                     SqlDateTimeWithoutTZ.SqlTime.class,
                     declarer,
                     type);
-        case SqlTypeName.Timestamp_ordinal:
+        case TIMESTAMP:
             return
                 newDatetimeOJClass(
                     SqlDateTimeWithoutTZ.SqlTimestamp.class,
                     declarer,
                     type);
-        case SqlTypeName.IntervalDayTime_ordinal:
+        case INTERVAL_DAY_TIME:
             return
                 newIntervalOJClass(
                     EncodedSqlInterval.EncodedSqlIntervalDT.class,
                     declarer,
                     type);
-        case SqlTypeName.IntervalYearMonth_ordinal:
+        case INTERVAL_YEAR_MONTH:
             return
                 newIntervalOJClass(
                     EncodedSqlInterval.EncodedSqlIntervalYM.class,
                     declarer,
                     type);
-        case SqlTypeName.Char_ordinal:
-        case SqlTypeName.Varchar_ordinal:
-        case SqlTypeName.Binary_ordinal:
-        case SqlTypeName.Varbinary_ordinal:
-        case SqlTypeName.Multiset_ordinal:
+        case CHAR:
+        case VARCHAR:
+        case BINARY:
+        case VARBINARY:
+        case MULTISET:
             return newStringOJClass(
                     declarer,
                     type);
-        case SqlTypeName.Structured_ordinal:
+        case STRUCTURED:
             return createOJClassForRecordType(declarer, type);
         default:
             throw new AssertionError();
@@ -853,10 +853,8 @@ public class FarragoTypeFactoryImpl
     }
 
     /**
-     * Generate an expression to return 
-     */
-    /**
-     * Generates an expression for a TimeUnit
+     * Generates an expression for a
+     * {@link org.eigenbase.sql.SqlIntervalQualifier.TimeUnit}.
      */
     private Expression lookupTimeUnit(SqlIntervalQualifier.TimeUnit timeUnit)
     {
@@ -868,7 +866,7 @@ public class FarragoTypeFactoryImpl
             SqlIntervalQualifier.TimeUnit.GET_VALUE_METHOD_NAME,
             new ExpressionList(
                 Literal.makeLiteral(
-                    timeUnit.getOrdinal())));
+                    timeUnit.ordinal())));
     }
 
     private OJClass newStringOJClass(
@@ -997,29 +995,29 @@ public class FarragoTypeFactoryImpl
         if (typeName == null) {
             return null;
         }
-        switch (typeName.getOrdinal()) {
-        case SqlTypeName.Boolean_ordinal:
+        switch (typeName) {
+        case BOOLEAN:
             return boolean.class;
-        case SqlTypeName.Tinyint_ordinal:
+        case TINYINT:
             return byte.class;
-        case SqlTypeName.Smallint_ordinal:
+        case SMALLINT:
             return short.class;
-        case SqlTypeName.Integer_ordinal:
+        case INTEGER:
             return int.class;
-        case SqlTypeName.Bigint_ordinal:
-        case SqlTypeName.Decimal_ordinal:
+        case BIGINT:
+        case DECIMAL:
             return long.class;
-        case SqlTypeName.Real_ordinal:
+        case REAL:
             return float.class;
-        case SqlTypeName.Float_ordinal:
-        case SqlTypeName.Double_ordinal:
+        case FLOAT:
+        case DOUBLE:
             return double.class;
-        case SqlTypeName.Date_ordinal:
-        case SqlTypeName.Time_ordinal:
-        case SqlTypeName.Timestamp_ordinal:
+        case DATE:
+        case TIME:
+        case TIMESTAMP:
             return SqlDateTimeWithoutTZ.getPrimitiveClass();
-        case SqlTypeName.IntervalDayTime_ordinal:
-        case SqlTypeName.IntervalYearMonth_ordinal:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             return EncodedSqlInterval.getPrimitiveClass();
         default:
             return null;
@@ -1039,24 +1037,24 @@ public class FarragoTypeFactoryImpl
         // SQL:2003 Part 13 Section 4.5,
         // these mappings are based on Appendix B of the JDBC 3.0
         // spec
-        switch (typeName.getOrdinal()) {
-        case SqlTypeName.Decimal_ordinal:
+        switch (typeName) {
+        case DECIMAL:
             return java.math.BigDecimal.class;
-        case SqlTypeName.Char_ordinal:
-        case SqlTypeName.Varchar_ordinal:
+        case CHAR:
+        case VARCHAR:
             return String.class;
-        case SqlTypeName.Binary_ordinal:
-        case SqlTypeName.Varbinary_ordinal:
+        case BINARY:
+        case VARBINARY:
             return byte [].class;
-        case SqlTypeName.Date_ordinal:
+        case DATE:
             return java.sql.Date.class;
-        case SqlTypeName.Time_ordinal:
+        case TIME:
             return java.sql.Time.class;
-        case SqlTypeName.Timestamp_ordinal:
+        case TIMESTAMP:
             return java.sql.Timestamp.class;
-        case SqlTypeName.Cursor_ordinal:
+        case CURSOR:
             return java.sql.ResultSet.class;
-        case SqlTypeName.ColumnList_ordinal:
+        case COLUMN_LIST:
             return List.class;
         default:
             return getClassForPrimitive(type);
@@ -1174,10 +1172,9 @@ public class FarragoTypeFactoryImpl
             mapping = mapping.substring(0, mapping.indexOf(leftParen));
         }
 
-        SqlTypeName[] allSqlTypeNames = SqlTypeName.allTypes;
-        for (int i = 0; i < allSqlTypeNames.length; i++) {
-            if (allSqlTypeNames[i].getName().equalsIgnoreCase(mapping)) {
-                return allSqlTypeNames[i].getName();
+        for (SqlTypeName typeName : SqlTypeName.values()) {
+            if (typeName.name().equalsIgnoreCase(mapping)) {
+                return typeName.name();
             }
         }
         return mapping;
@@ -1230,15 +1227,16 @@ public class FarragoTypeFactoryImpl
         if (type == null) {
             return false;
         }
-        if (type.equals(SqlTypeName.Distinct) ||
-            type.equals(SqlTypeName.Structured) ||
-            type.equals(SqlTypeName.Row) ||
-            type.equals(SqlTypeName.Cursor)) {
+        switch (type) {
+        case DISTINCT:
+        case STRUCTURED:
+        case ROW:
+        case CURSOR:
             return true;
+        default:
+            return false;
         }
-        return false;
     }
-
 }
 
 // End FarragoTypeFactoryImpl.java

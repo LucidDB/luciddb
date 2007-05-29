@@ -162,7 +162,7 @@ public class SqlWindowOperator
         int rightPrec)
     {
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.Window, "(", ")");
+            writer.startList(SqlWriter.FrameTypeEnum.Window, "(", ")");
         SqlIdentifier refName =
             (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];
         if (refName != null) {
@@ -406,20 +406,20 @@ public class SqlWindowOperator
                 SqlTypeFamily bndTypeFam =
                     SqlTypeFamily.getFamilyForSqlType(
                         bndType.getSqlTypeName());
-                switch (orderTypeFam.getOrdinal()) {
-                case SqlTypeFamily.Numeric_ordinal:
-                    if (SqlTypeFamily.Numeric != bndTypeFam) {
+                switch (orderTypeFam) {
+                case NUMERIC:
+                    if (SqlTypeFamily.NUMERIC != bndTypeFam) {
                         throw validator.newValidationError(
                             boundVal,
                             EigenbaseResource.instance().OrderByRangeMismatch
                             .ex());
                     }
                     break;
-                case SqlTypeFamily.Date_ordinal:
-                case SqlTypeFamily.Time_ordinal:
-                case SqlTypeFamily.Timestamp_ordinal:
-                    if ((SqlTypeFamily.IntervalDayTime != bndTypeFam)
-                        && (SqlTypeFamily.IntervalYearMonth != bndTypeFam)) {
+                case DATE:
+                case TIME:
+                case TIMESTAMP:
+                    if ((SqlTypeFamily.INTERVAL_DAY_TIME != bndTypeFam)
+                        && (SqlTypeFamily.INTERVAL_YEAR_MONTH != bndTypeFam)) {
                         throw validator.newValidationError(
                             boundVal,
                             EigenbaseResource.instance().OrderByRangeMismatch
@@ -452,7 +452,7 @@ public class SqlWindowOperator
         if (null != lowerBound) {
             if (lowerBound.getKind().getOrdinal() == SqlKind.LiteralORDINAL) {
                 lowerLitType = ((SqlLiteral) lowerBound).getValue();
-                if (Bound.UnboundedFollowing == lowerLitType) {
+                if (Bound.UNBOUNDED_FOLLOWING == lowerLitType) {
                     throw validator.newValidationError(
                         lowerBound,
                         EigenbaseResource.instance().BadLowerBoundary.ex());
@@ -464,7 +464,7 @@ public class SqlWindowOperator
         if (null != upperBound) {
             if (upperBound.getKind().getOrdinal() == SqlKind.LiteralORDINAL) {
                 upperLitType = ((SqlLiteral) upperBound).getValue();
-                if (Bound.UnboundedPreceding == upperLitType) {
+                if (Bound.UNBOUNDED_PRECEDING == upperLitType) {
                     throw validator.newValidationError(
                         upperBound,
                         EigenbaseResource.instance().BadUpperBoundary.ex());
@@ -474,7 +474,7 @@ public class SqlWindowOperator
             }
         }
 
-        if (Bound.CurrentRow == lowerLitType) {
+        if (Bound.CURRENT_ROW == lowerLitType) {
             if (null != upperOp) {
                 if (upperOp == precedingOperator) {
                     throw validator.newValidationError(
@@ -493,7 +493,7 @@ public class SqlWindowOperator
                             .FollowingBeforePrecedingError.ex());
                     }
                 } else if (null != upperLitType) {
-                    if (Bound.CurrentRow == upperLitType) {
+                    if (Bound.CURRENT_ROW == upperLitType) {
                         throw validator.newValidationError(
                             upperBound,
                             EigenbaseResource.instance()
@@ -585,17 +585,17 @@ public class SqlWindowOperator
 
     public static SqlNode createCurrentRow(SqlParserPos pos)
     {
-        return SqlLiteral.createSymbol(Bound.CurrentRow, pos);
+        return SqlLiteral.createSymbol(Bound.CURRENT_ROW, pos);
     }
 
     public static SqlNode createUnboundedFollowing(SqlParserPos pos)
     {
-        return SqlLiteral.createSymbol(Bound.UnboundedFollowing, pos);
+        return SqlLiteral.createSymbol(Bound.UNBOUNDED_FOLLOWING, pos);
     }
 
     public static SqlNode createUnboundedPreceding(SqlParserPos pos)
     {
-        return SqlLiteral.createSymbol(Bound.UnboundedPreceding, pos);
+        return SqlLiteral.createSymbol(Bound.UNBOUNDED_PRECEDING, pos);
     }
 
     public static SqlNode createFollowing(SqlLiteral literal, SqlParserPos pos)
@@ -619,7 +619,7 @@ public class SqlWindowOperator
     public static boolean isCurrentRow(SqlNode node)
     {
         return node instanceof SqlLiteral &&
-            SqlLiteral.symbolValue(node) == Bound.CurrentRow;
+            SqlLiteral.symbolValue(node) == Bound.CURRENT_ROW;
     }
 
     /**
@@ -629,7 +629,7 @@ public class SqlWindowOperator
     public static boolean isUnboundedPreceding(SqlNode node)
     {
         return node instanceof SqlLiteral &&
-            SqlLiteral.symbolValue(node) == Bound.UnboundedPreceding;
+            SqlLiteral.symbolValue(node) == Bound.UNBOUNDED_PRECEDING;
     }
 
     /**
@@ -639,7 +639,7 @@ public class SqlWindowOperator
     public static boolean isUnboundedFollowing(SqlNode node)
     {
         return node instanceof SqlLiteral &&
-            SqlLiteral.symbolValue(node) == Bound.UnboundedFollowing;
+            SqlLiteral.symbolValue(node) == Bound.UNBOUNDED_FOLLOWING;
     }
 
     public static OffsetRange getOffsetAndRange(
@@ -691,18 +691,21 @@ public class SqlWindowOperator
      * An enumeration of types of bounds in a window: <code>CURRENT ROW</code>,
      * <code>UNBOUNDED PRECEDING</code>, and <code>UNBOUNDED FOLLOWING</code>.
      */
-    static class Bound
-        extends EnumeratedValues.BasicValue
+    enum Bound implements SqlLiteral.SqlSymbol
     {
-        public static final Bound CurrentRow = new Bound("CURRENT ROW", 0);
-        public static final Bound UnboundedPreceding =
-            new Bound("UNBOUNDED PRECEDING", 1);
-        public static final Bound UnboundedFollowing =
-            new Bound("UNBOUNDED FOLLOWING", 2);
+        CURRENT_ROW("CURRENT ROW"),
+        UNBOUNDED_PRECEDING("UNBOUNDED PRECEDING"),
+        UNBOUNDED_FOLLOWING("UNBOUNDED FOLLOWING");
+        private final String sql;
 
-        private Bound(String name, int ordinal)
+        Bound(String sql)
         {
-            super(name, ordinal, null);
+            this.sql = sql;
+        }
+
+        public String toString()
+        {
+            return sql;
         }
     }
 

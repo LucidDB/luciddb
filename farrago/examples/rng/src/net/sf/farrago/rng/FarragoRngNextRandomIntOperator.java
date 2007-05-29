@@ -28,7 +28,6 @@ import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
 import net.sf.farrago.query.*;
-import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.rngmodel.rngschema.RngRandomNumberGenerator;
 
@@ -49,11 +48,9 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
             SqlTypeStrategies.rtiInteger,
             null,
             new FamilyOperandTypeChecker(
-                new SqlTypeFamily [] {
-                    SqlTypeFamily.Integer,
-                    SqlTypeFamily.Character,
-                    SqlTypeFamily.Character
-                }),
+                SqlTypeFamily.INTEGER,
+                SqlTypeFamily.CHARACTER,
+                SqlTypeFamily.CHARACTER),
             SqlFunctionCategory.System);
     }
 

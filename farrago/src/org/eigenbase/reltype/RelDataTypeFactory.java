@@ -201,7 +201,7 @@ public interface RelDataTypeFactory
      * Creates a SQL type with no precision or scale.
      *
      * @param typeName Name of the type, for example {@link
-     * SqlTypeName#Boolean}.
+     * SqlTypeName#BOOLEAN}.
      *
      * @return canonical type descriptor
      *
@@ -214,7 +214,7 @@ public interface RelDataTypeFactory
      * Creates a SQL type with length (precision) but no scale.
      *
      * @param typeName Name of the type, for example {@link
-     * org.eigenbase.sql.type.SqlTypeName#Varchar}.
+     * org.eigenbase.sql.type.SqlTypeName#VARCHAR}.
      * @param precision maximum length of the value (non-numeric types) or the
      * precision of the value (numeric/datetime types)
      *requires 
@@ -233,7 +233,7 @@ public interface RelDataTypeFactory
      * Creates a SQL type with precision and scale.
      *
      * @param typeName Name of the type, for example {@link
-     * org.eigenbase.sql.type.SqlTypeName#Decimal}.
+     * org.eigenbase.sql.type.SqlTypeName#DECIMAL}.
      * @param precision precision of the value
      * @param scale scale of the values, i.e. the number of decimal places to
      * shift the value. For example, a NUMBER(10,3) value of "123.45" is

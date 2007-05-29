@@ -108,9 +108,9 @@ public abstract class DdlSetContextStmt
         FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
         stmtContext.prepare(sql, true);
         RelDataType rowType = stmtContext.getPreparedRowType();
-        List fieldList = rowType.getFieldList();
+        List<RelDataTypeField> fieldList = rowType.getFieldList();
         if (fieldList.size() == 1) {
-            RelDataType type = ((RelDataTypeField) fieldList.get(0)).getType();
+            RelDataType type = fieldList.get(0).getType();
             if (!SqlTypeUtil.inCharFamily(type)) {
                 fieldList = null;
             }

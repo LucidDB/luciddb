@@ -315,7 +315,7 @@ public class VolcanoPlannerTest
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysLeafRel);
 
-        List eventList = listener.getEventList();
+        List<RelOptListener.RelEvent> eventList = listener.getEventList();
 
         // add node
         checkEvent(
@@ -391,15 +391,14 @@ public class VolcanoPlannerTest
     }
 
     private void checkEvent(
-        List eventList,
+        List<RelOptListener.RelEvent> eventList,
         int iEvent,
         Class expectedEventClass,
         RelNode expectedRel,
-        Class expectedRuleClass)
+        Class<? extends RelOptRule> expectedRuleClass)
     {
         assertTrue(iEvent < eventList.size());
-        RelOptListener.RelEvent event =
-            (RelOptListener.RelEvent) eventList.get(iEvent);
+        RelOptListener.RelEvent event = eventList.get(iEvent);
         assertSame(
             expectedEventClass,
             event.getClass());
@@ -813,14 +812,14 @@ public class VolcanoPlannerTest
     private static class TestListener
         implements RelOptListener
     {
-        private List eventList;
+        private List<RelEvent> eventList;
 
         TestListener()
         {
-            eventList = new ArrayList();
+            eventList = new ArrayList<RelEvent>();
         }
 
-        List getEventList()
+        List<RelEvent> getEventList()
         {
             return eventList;
         }

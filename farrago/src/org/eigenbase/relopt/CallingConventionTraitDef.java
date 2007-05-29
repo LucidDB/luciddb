@@ -58,7 +58,8 @@ public class CallingConventionTraitDef
      * Weak-key map of RelOptPlanner to ConversionData. The idea is that when
      * the planner goes away, so does the map entry.
      */
-    private final WeakHashMap<RelOptPlanner, ConversionData> plannerConversionMap =
+    private final WeakHashMap<RelOptPlanner, ConversionData>
+        plannerConversionMap =
         new WeakHashMap<RelOptPlanner, ConversionData>();
 
     //~ Constructors -----------------------------------------------------------
@@ -90,7 +91,7 @@ public class CallingConventionTraitDef
         if (converterRule.isGuaranteed()) {
             ConversionData conversionData = getConversionData(planner);
 
-            final Graph conversionGraph = conversionData.conversionGraph;
+            final Graph<CallingConvention> conversionGraph = conversionData.conversionGraph;
             final MultiMap<Graph.Arc, ConverterRule> mapArcToConverterRule =
                 conversionData.mapArcToConverterRule;
 
@@ -112,7 +113,8 @@ public class CallingConventionTraitDef
         if (converterRule.isGuaranteed()) {
             ConversionData conversionData = getConversionData(planner);
 
-            final Graph conversionGraph = conversionData.conversionGraph;
+            final Graph<CallingConvention> conversionGraph =
+                conversionData.conversionGraph;
             final MultiMap<Graph.Arc, ConverterRule> mapArcToConverterRule =
                 conversionData.mapArcToConverterRule;
 
@@ -136,19 +138,20 @@ public class CallingConventionTraitDef
         boolean allowInfiniteCostConverters)
     {
         final ConversionData conversionData = getConversionData(planner);
-        final Graph conversionGraph = conversionData.conversionGraph;
+        final Graph<CallingConvention> conversionGraph =
+            conversionData.conversionGraph;
         final MultiMap<Graph.Arc, ConverterRule> mapArcToConverterRule =
             conversionData.mapArcToConverterRule;
 
         final CallingConvention fromConvention = rel.getConvention();
         final CallingConvention toConvention = (CallingConvention) toTrait;
 
-        Iterator conversionPaths =
+        Iterator<Graph.Arc<CallingConvention>[]> conversionPaths =
             conversionGraph.getPaths(fromConvention, toConvention);
 
 loop:
         while (conversionPaths.hasNext()) {
-            Graph.Arc [] arcs = (Graph.Arc []) conversionPaths.next();
+            Graph.Arc [] arcs = conversionPaths.next();
             assert (arcs[0].from == fromConvention);
             assert (arcs[arcs.length - 1].to == toConvention);
             RelNode converted = rel;
@@ -235,12 +238,13 @@ loop:
 
     private static final class ConversionData
     {
-        final Graph conversionGraph = new Graph();
+        final Graph<CallingConvention> conversionGraph =
+            new Graph<CallingConvention>();
 
         /**
          * For a given source/target convention, there may be several possible
-         * conversion rules. Maps {@link Graph.Arc} to a collection of {@link
-         * ConverterRule} objects.
+         * conversion rules. Maps {@link org.eigenbase.util.Graph.Arc} to a
+         * collection of {@link ConverterRule} objects.
          */
         final MultiMap<Graph.Arc, ConverterRule> mapArcToConverterRule =
             new MultiMap<Graph.Arc, ConverterRule>();

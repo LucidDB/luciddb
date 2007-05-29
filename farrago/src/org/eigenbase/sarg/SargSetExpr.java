@@ -29,7 +29,8 @@ import org.eigenbase.util.*;
 
 
 /**
- * SargSetExpr represents the application of a {@link SargSetOp set operator} to
+ * SargSetExpr represents the application of a
+ * {@link SargSetOperator set operator} to
  * zero or more child {@link SargExpr sarg expressions}.
  *
  * @author John V. Sichi
@@ -52,7 +53,7 @@ public class SargSetExpr
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @see SargFactory.newSetExpr
+     * @see SargFactory#newSetExpr
      */
     SargSetExpr(
         SargFactory factory,
@@ -124,7 +125,7 @@ public class SargSetExpr
             SargExpr child = children.get(0);
             return child.evaluateComplemented();
         }
-        
+
         List<SargIntervalSequence> list = evaluateChildren(this);
 
         switch (setOp) {
@@ -140,7 +141,7 @@ public class SargSetExpr
     private List<SargIntervalSequence> evaluateChildren(SargSetExpr setExpr)
     {
         List<SargIntervalSequence> list = new ArrayList<SargIntervalSequence>();
-        
+
         for (SargExpr child : setExpr.children) {
             SargIntervalSequence newSeq = child.evaluate();
             list.add(newSeq);
@@ -182,7 +183,7 @@ public class SargSetExpr
 	// 2 [4, 6]          [-----]
 	// 3 [5, 7)             [-----)
 	// 4 (7, 8]                   (--]
-	// 
+	//
 	// Output:
 	// 1 [1, 3] [-----]
 	// 2 [4, 7)          [--------)
@@ -346,7 +347,7 @@ public class SargSetExpr
                         target.getUpperBound().getCoordinate(),
                         target.getUpperBound().getStrictness());
                 }
-                
+
                 // Trim current target to exclude the part of the range
                 // which will move to newTarget.
                 target.setUpper(
@@ -360,9 +361,9 @@ public class SargSetExpr
                 // Next time through, work on newTarget.
                 // targetIter.previous() is pointing at the newTarget.
                 target = targetIter.previous();
-                
+
                 // Now targetIter.next() is also pointing at the newTarget;
-                // need to do this redundant step to get targetIter in sync 
+                // need to do this redundant step to get targetIter in sync
                 // with target.
                 target = targetIter.next();
 
@@ -410,7 +411,7 @@ public class SargSetExpr
             // Double negation is a nop
             return children.get(0).evaluate();
         }
-        
+
         // Use DeMorgan's Law:  complement of union is intersection of
         // complements, and vice versa
         List<SargIntervalSequence> list = new ArrayList<SargIntervalSequence>();
@@ -427,7 +428,7 @@ public class SargSetExpr
             throw Util.newInternal(setOp.toString());
         }
     }
-    
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**

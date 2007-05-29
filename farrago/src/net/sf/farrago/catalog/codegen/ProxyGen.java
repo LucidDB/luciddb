@@ -56,14 +56,14 @@ public class ProxyGen
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Comparator classNameComparator =
-        new Comparator() {
+    private static final Comparator<Class> classNameComparator =
+        new Comparator<Class>() {
             public int compare(
-                Object o1,
-                Object o2)
+                Class o1,
+                Class o2)
             {
-                final String name1 = ((Class) o1).getName();
-                final String name2 = ((Class) o2).getName();
+                final String name1 = o1.getName();
+                final String name2 = o2.getName();
                 return name1.compareTo(name2);
             }
         };
@@ -74,18 +74,18 @@ public class ProxyGen
     /**
      * Map from Class to corresponding C++ type name as String.
      */
-    private Map cppTypeMap = new HashMap();
+    private Map<Class, String> cppTypeMap = new HashMap<Class, String>();
 
     /**
      * Map from Class to RefClass for everything in genInterfaces.
      */
-    private Map javaToJmiMap = new HashMap();
+    private Map<Class, RefClass> javaToJmiMap = new HashMap<Class, RefClass>();
 
     /**
      * Map from Class to corresponding Java type String to use in method
      * signatures.
      */
-    private Map javaTypeMap = new HashMap();
+    private Map<Class, String> javaTypeMap = new HashMap<Class, String>();
 
     /**
      * PrintWriter used to generate output.
@@ -96,26 +96,26 @@ public class ProxyGen
      * Set containing all interfaces (represented as Class objects) for which
      * C++ proxies are to be generated.
      */
-    private Set genInterfaces = new HashSet();
+    private Set<Class> genInterfaces = new HashSet<Class>();
 
     /**
      * Set containing all base interfaces (represented as Class objects) from
      * which C++ proxies are to inherit.
      */
-    private Set baseInterfaces = new HashSet();
+    private Set<Class> baseInterfaces = new HashSet<Class>();
 
     /**
      * Set containing interfaces (represented as Class objects) whose proxy
      * definition has not yet been generated. This is used to induce topological
      * order for the inheritance graph.
      */
-    private Set undefinedInterfaces = new HashSet();
+    private Set<Class> undefinedInterfaces = new HashSet<Class>();
 
     /**
      * Set containing all interfaces (represented as Class objects) for which
      * C++ enums are to be generated.
      */
-    private Set genEnums = new HashSet();
+    private Set<Class> genEnums = new HashSet<Class>();
     private String genPrefix;
     private String basePrefix;
     private String visitorClassName;
@@ -173,9 +173,8 @@ public class ProxyGen
     public void addGenClasses(RefPackage refPackage)
         throws ClassNotFoundException
     {
-        Iterator iter = refPackage.refAllClasses().iterator();
-        while (iter.hasNext()) {
-            RefClass refClass = (RefClass) iter.next();
+        Collection<RefClass> allRefClasses = refPackage.refAllClasses();
+        for (RefClass refClass : allRefClasses) {
             Class clazz = JmiUtil.getJavaInterfaceForRefObject(refClass);
             genInterfaces.add(clazz);
             javaToJmiMap.put(clazz, refClass);
@@ -191,9 +190,8 @@ public class ProxyGen
     public void addBaseClasses(RefPackage refPackage)
         throws ClassNotFoundException
     {
-        Iterator iter = refPackage.refAllClasses().iterator();
-        while (iter.hasNext()) {
-            RefClass refClass = (RefClass) iter.next();
+        Collection<RefClass> allRefClasses = refPackage.refAllClasses();
+        for (RefClass refClass : allRefClasses) {
             Class clazz = JmiUtil.getJavaInterfaceForRefObject(refClass);
             baseInterfaces.add(clazz);
             javaToJmiMap.put(clazz, refClass);
@@ -374,10 +372,9 @@ public class ProxyGen
      * Converts collection into an array of classes sorted by name. This is
      * necessary in order to make the output deterministic.
      */
-    private static Class [] toSortedArray(Collection collection)
+    private static Class [] toSortedArray(Collection<Class> collection)
     {
-        Class [] classes =
-            (Class []) collection.toArray(new Class[collection.size()]);
+        Class [] classes = collection.toArray(new Class[collection.size()]);
         Arrays.sort(classes, classNameComparator);
         return classes;
     }
@@ -585,7 +582,7 @@ public class ProxyGen
 
     private String getCppReturnTypeName(Method method)
     {
-        Class returnType = method.getReturnType();
+        Class<?> returnType = method.getReturnType();
         if (Collection.class.isAssignableFrom(returnType)) {
             // strip off "get"
             String attrName = method.getName().substring(3);
@@ -594,16 +591,15 @@ public class ProxyGen
             // association
             RefClass refClass = toJmiClass(method.getDeclaringClass());
             MofClass mofClass = (MofClass) refClass.refMetaObject();
-            Iterator iter = mofClass.getContents().iterator();
-            while (iter.hasNext()) {
-                Object obj = iter.next();
+            for (Object obj : mofClass.getContents()) {
                 if (obj instanceof Reference) {
                     Reference reference = (Reference) obj;
                     String endName = reference.getReferencedEnd().getName();
                     if (endName.equalsIgnoreCase(attrName)) {
                         return
                             "SharedProxy"
-                            + reference.getReferencedEnd().getType().getName();
+                                + reference.getReferencedEnd().getType()
+                                .getName();
                     }
                 }
                 if (obj instanceof Attribute) {
@@ -616,7 +612,7 @@ public class ProxyGen
         } else if (RefEnum.class.isAssignableFrom(returnType)) {
             return ReflectUtil.getUnqualifiedClassName(returnType);
         }
-        String cppTypeName = (String) cppTypeMap.get(returnType);
+        String cppTypeName = cppTypeMap.get(returnType);
         if (cppTypeName != null) {
             return cppTypeName;
         }
@@ -641,7 +637,7 @@ public class ProxyGen
 
     private String getJavaTypeSignature(Class clazz)
     {
-        String s = (String) javaTypeMap.get(clazz);
+        String s = javaTypeMap.get(clazz);
         if (s != null) {
             return s;
         }
@@ -729,7 +725,7 @@ public class ProxyGen
      */
     private RefClass toJmiClass(Class clazz)
     {
-        return (RefClass) javaToJmiMap.get(clazz);
+        return javaToJmiMap.get(clazz);
     }
 }
 

@@ -190,7 +190,7 @@ public class FarragoUserDefinedRoutineLookup
             // return type to allow invocations to be rewritten as functions.
             // Use a DML-compatible return type so that invocation can look
             // like DML.
-            returnType = typeFactory.createSqlType(SqlTypeName.Bigint);
+            returnType = typeFactory.createSqlType(SqlTypeName.BIGINT);
         }
 
         if (FarragoCatalogUtil.isRoutineConstructor(femRoutine)) {

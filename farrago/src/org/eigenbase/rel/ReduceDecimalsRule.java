@@ -321,8 +321,8 @@ public class ReduceDecimalsRule
         public RexExpander(RexBuilder builder)
         {
             this.builder = builder;
-            int8 = builder.getTypeFactory().createSqlType(SqlTypeName.Bigint);
-            real8 = builder.getTypeFactory().createSqlType(SqlTypeName.Double);
+            int8 = builder.getTypeFactory().createSqlType(SqlTypeName.BIGINT);
+            real8 = builder.getTypeFactory().createSqlType(SqlTypeName.DOUBLE);
         }
 
         /**

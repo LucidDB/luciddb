@@ -24,7 +24,6 @@ package org.eigenbase.jmi;
 import java.util.*;
 
 import org.jgrapht.*;
-import org.jgrapht.graph.*;
 import org.jgrapht.traverse.*;
 
 
@@ -50,7 +49,7 @@ public class JmiModelView
     /**
      * Map from JmiClassVertex to ClassAttributes.
      */
-    private Map classVertexAttributes;
+    private Map<JmiClassVertex, ClassAttributes> classVertexAttributes;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -62,7 +61,7 @@ public class JmiModelView
     public JmiModelView(JmiModelGraph modelGraph)
     {
         this.modelGraph = modelGraph;
-        classVertexAttributes = new HashMap();
+        classVertexAttributes = new HashMap<JmiClassVertex, ClassAttributes>();
         deriveAttributes();
     }
 
@@ -84,7 +83,7 @@ public class JmiModelView
      *
      * @return Set of JmiClassVertex
      */
-    public Set getAllSuperclassVertices(JmiClassVertex vertex)
+    public Set<JmiClassVertex> getAllSuperclassVertices(JmiClassVertex vertex)
     {
         return getClassAttributes(vertex).allSuperclassVertices;
     }
@@ -110,7 +109,7 @@ public class JmiModelView
      *
      * @return Set of JmiAssocEdge
      */
-    public Set getInheritedOutgoingAssocEdges(JmiClassVertex vertex)
+    public Set<JmiAssocEdge> getInheritedOutgoingAssocEdges(JmiClassVertex vertex)
     {
         return getClassAttributes(vertex).inheritedOutgoingAssocEdges;
     }
@@ -123,7 +122,7 @@ public class JmiModelView
      *
      * @return Set of JmiAssocEdge
      */
-    public Set getInheritedIncomingAssocEdges(JmiClassVertex vertex)
+    public Set<JmiAssocEdge> getInheritedIncomingAssocEdges(JmiClassVertex vertex)
     {
         return getClassAttributes(vertex).inheritedIncomingAssocEdges;
     }
@@ -156,20 +155,20 @@ public class JmiModelView
 
     private ClassAttributes getClassAttributes(JmiClassVertex classVertex)
     {
-        return (ClassAttributes) classVertexAttributes.get(classVertex);
+        return classVertexAttributes.get(classVertex);
     }
 
     private void deriveAttributes()
     {
-        Iterator topoIter =
+        Iterator<JmiClassVertex> topoIter =
             new TopologicalOrderIterator(
                 modelGraph.getInheritanceGraph());
 
         // First pass: iterate in topological order from superclasses to
         // subclasses
-        List topoList = new ArrayList();
+        List<JmiClassVertex> topoList = new ArrayList<JmiClassVertex>();
         while (topoIter.hasNext()) {
-            JmiClassVertex vertex = (JmiClassVertex) topoIter.next();
+            JmiClassVertex vertex = topoIter.next();
             topoList.add(vertex);
 
             // Include this class in its own superclass set
@@ -179,17 +178,18 @@ public class JmiModelView
 
             // Collect association edges at this level
             attrs.inheritedOutgoingAssocEdges.addAll(
+                (Set)
                 modelGraph.getAssocGraph().outgoingEdgesOf(vertex));
             attrs.inheritedIncomingAssocEdges.addAll(
+                (Set)
                 modelGraph.getAssocGraph().incomingEdgesOf(vertex));
 
             // Agglomerate superclasses and their edges
-            Iterator superIter =
+            final List<JmiClassVertex> superVertices =
                 Graphs.predecessorListOf(
                     modelGraph.getInheritanceGraph(),
-                    vertex).iterator();
-            while (superIter.hasNext()) {
-                JmiClassVertex superVertex = (JmiClassVertex) superIter.next();
+                    vertex);
+            for (JmiClassVertex superVertex : superVertices) {
                 ClassAttributes superAttrs = getClassAttributes(superVertex);
                 attrs.allSuperclassVertices.addAll(
                     superAttrs.allSuperclassVertices);
@@ -216,12 +216,11 @@ public class JmiModelView
                 attrs.inheritedIncomingAssocEdges);
 
             // Agglomerate subclasses
-            Iterator subIter =
+            final List<JmiClassVertex> subVertexes =
                 Graphs.successorListOf(
                     modelGraph.getInheritanceGraph(),
-                    vertex).iterator();
-            while (subIter.hasNext()) {
-                JmiClassVertex subVertex = (JmiClassVertex) subIter.next();
+                    vertex);
+            for (JmiClassVertex subVertex : subVertexes) {
                 ClassAttributes subAttrs = getClassAttributes(subVertex);
                 attrs.allSubclassVertices.addAll(
                     subAttrs.allSubclassVertices);
@@ -237,7 +236,7 @@ public class JmiModelView
 
     private static class ClassAttributes
     {
-        final Set allSuperclassVertices;
+        final Set<JmiClassVertex> allSuperclassVertices;
 
         final Set<JmiClassVertex> allSubclassVertices;
 
@@ -245,18 +244,18 @@ public class JmiModelView
 
         final Set<JmiAssocEdge> allIncomingAssocEdges;
 
-        final Set inheritedOutgoingAssocEdges;
+        final Set<JmiAssocEdge> inheritedOutgoingAssocEdges;
 
-        final Set inheritedIncomingAssocEdges;
+        final Set<JmiAssocEdge> inheritedIncomingAssocEdges;
 
         ClassAttributes()
         {
-            allSuperclassVertices = new HashSet();
+            allSuperclassVertices = new HashSet<JmiClassVertex>();
             allSubclassVertices = new HashSet<JmiClassVertex>();
             allOutgoingAssocEdges = new HashSet<JmiAssocEdge>();
             allIncomingAssocEdges = new HashSet<JmiAssocEdge>();
-            inheritedOutgoingAssocEdges = new HashSet();
-            inheritedIncomingAssocEdges = new HashSet();
+            inheritedOutgoingAssocEdges = new HashSet<JmiAssocEdge>();
+            inheritedIncomingAssocEdges = new HashSet<JmiAssocEdge>();
         }
     }
 }

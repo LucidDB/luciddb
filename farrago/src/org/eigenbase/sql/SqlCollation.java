@@ -173,75 +173,72 @@ public class SqlCollation
     {
         assert (null != col1);
         assert (null != col2);
-        if (col1.getCoercibility().equals(Coercibility.Coercible)) {
-            switch (col2.getCoercibility().getOrdinal()) {
-            case Coercibility.Coercible_ordinal:
+        final Coercibility coercibility1 = col1.getCoercibility();
+        final Coercibility coercibility2 = col2.getCoercibility();
+        switch (coercibility1) {
+        case Coercible:
+            switch (coercibility2) {
+            case Coercible:
                 return
                     new SqlCollation(col2.collationName,
                         Coercibility.Coercible);
-            case Coercibility.Implicit_ordinal:
+            case Implicit:
                 return
                     new SqlCollation(col2.collationName,
                         Coercibility.Implicit);
-            case Coercibility.None_ordinal:
+            case None:
                 return null;
-            case Coercibility.Explicit_ordinal:
+            case Explicit:
                 return
                     new SqlCollation(col2.collationName,
                         Coercibility.Explicit);
             default:
-                throw new AssertionError("Should never come here");
+                throw Util.unexpected(coercibility2);
             }
-        }
-
-        if (col1.getCoercibility().equals(Coercibility.Implicit)) {
-            switch (col2.getCoercibility().getOrdinal()) {
-            case Coercibility.Coercible_ordinal:
+        case Implicit:
+            switch (coercibility2) {
+            case Coercible:
                 return
                     new SqlCollation(col1.collationName,
                         Coercibility.Implicit);
-            case Coercibility.Implicit_ordinal:
+            case Implicit:
                 if (col1.collationName.equals(col2.collationName)) {
                     return
                         new SqlCollation(col2.collationName,
                             Coercibility.Implicit);
                 }
                 return null;
-            case Coercibility.None_ordinal:
+            case None:
                 return null;
-            case Coercibility.Explicit_ordinal:
+            case Explicit:
                 return
                     new SqlCollation(col2.collationName,
                         Coercibility.Explicit);
             default:
-                throw new AssertionError("Should never come here");
+                throw Util.unexpected(coercibility2);
             }
-        }
-
-        if (col1.getCoercibility().equals(Coercibility.None)) {
-            switch (col2.getCoercibility().getOrdinal()) {
-            case Coercibility.Coercible_ordinal:
-            case Coercibility.Implicit_ordinal:
-            case Coercibility.None_ordinal:
+        case None:
+            switch (coercibility2) {
+            case Coercible:
+            case Implicit:
+            case None:
                 return null;
-            case Coercibility.Explicit_ordinal:
+            case Explicit:
                 return
                     new SqlCollation(col2.collationName,
                         Coercibility.Explicit);
             default:
-                throw new AssertionError("Should never come here");
+                throw Util.unexpected(coercibility2);
             }
-        }
-
-        if (col1.getCoercibility().equals(Coercibility.Explicit)) {
-            switch (col2.getCoercibility().getOrdinal()) {
-            case Coercibility.Coercible_ordinal:
-            case Coercibility.Implicit_ordinal:
-            case Coercibility.None_ordinal:
+        case Explicit:
+            switch (coercibility2) {
+            case Coercible:
+            case Implicit:
+            case None:
                 return
                     new SqlCollation(col1.collationName,
                         Coercibility.Explicit);
-            case Coercibility.Explicit_ordinal:
+            case Explicit:
                 if (col1.collationName.equals(col2.collationName)) {
                     return
                         new SqlCollation(col2.collationName,
@@ -250,10 +247,12 @@ public class SqlCollation
                 throw EigenbaseResource.instance().DifferentCollations.ex(
                     col1.collationName,
                     col2.collationName);
+            default:
+                throw Util.unexpected(coercibility2);
             }
+        default:
+            throw Util.unexpected(coercibility1);
         }
-
-        throw Util.newInternal("Should never come here");
     }
 
     public String toString()
@@ -300,28 +299,12 @@ public class SqlCollation
      *
      * @sql.99 Part 2 Section 4.2.3
      */
-    public static class Coercibility
-        extends EnumeratedValues.BasicValue
+    public enum Coercibility
     {
-        public static final int Explicit_ordinal = 0; /* strongest */
-        public static final Coercibility Explicit =
-            new Coercibility(Explicit_ordinal);
-        public static final int Implicit_ordinal = 1;
-        public static final Coercibility Implicit =
-            new Coercibility(Implicit_ordinal);
-        public static final int Coercible_ordinal = 2;
-        public static final Coercibility Coercible =
-            new Coercibility(Coercible_ordinal);
-        public static final int None_ordinal = 3; /* weakest */
-        public static final Coercibility None = new Coercibility(None_ordinal);
-
-        private Coercibility(int ordinal)
-        {
-            super(
-                "n/a".intern(),
-                ordinal,
-                null);
-        }
+        Explicit, /* strongest */
+        Implicit,
+        Coercible,
+        None; /* weakest */
     }
 }
 

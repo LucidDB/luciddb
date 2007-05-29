@@ -36,7 +36,7 @@ import org.eigenbase.sql.*;
  * @version $Id$
  * @see SqlBasicVisitor
  * @see SqlNode#accept(SqlVisitor)
- * @see SqlOperator#acceptCall(SqlVisitor
+ * @see SqlOperator#acceptCall
  */
 public interface SqlVisitor<R>
 {
@@ -55,7 +55,7 @@ public interface SqlVisitor<R>
     /**
      * Visits a call to a {@link SqlOperator}.
      *
-     * @param call
+     * @param call Call
      *
      * @see SqlCall#accept(SqlVisitor)
      */
@@ -100,7 +100,7 @@ public interface SqlVisitor<R>
     /**
      * Visits an interval qualifier
      *
-     * @param intervalQualifier
+     * @param intervalQualifier Interval qualifier
      *
      * @see SqlIntervalQualifier#accept(SqlVisitor)
      */

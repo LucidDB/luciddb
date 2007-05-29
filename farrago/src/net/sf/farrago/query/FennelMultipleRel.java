@@ -23,6 +23,7 @@
 package net.sf.farrago.query;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import net.sf.farrago.type.*;
 
@@ -124,14 +125,13 @@ public abstract class FennelMultipleRel
     // implement RelNode
     protected RelDataType deriveRowType()
     {
-        ArrayList typeList = new ArrayList();
-        for (int i = 0; i < inputs.length; i++) {
-            RelNode input = inputs[i];
+        List<RelDataType> typeList = new ArrayList<RelDataType>();
+        for (RelNode input : inputs) {
             RelDataType inputType = input.getRowType();
             typeList.add(inputType);
         }
         final RelDataType [] types =
-            (RelDataType []) typeList.toArray(new RelDataType[typeList.size()]);
+            typeList.toArray(new RelDataType[typeList.size()]);
         return getCluster().getTypeFactory().createJoinType(types);
     }
 

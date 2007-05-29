@@ -228,26 +228,26 @@ public class SqlFunction
     {
         return deriveType(validator, scope, call, true);
     }
-    
+
     private RelDataType deriveType(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlCall call,
         boolean convertRowArgToColumnList)
-    {    
+    {
         final SqlNode [] operands = call.operands;
         RelDataType [] argTypes = new RelDataType[operands.length];
 
         // Scope for operands. Usually the same as 'scope'.
         final SqlValidatorScope operandScope = scope.getOperandScope(call);
-        
+
         // Indicate to the validator that we're validating a new function call
         validator.pushCursorMap();
 
         boolean containsRowArg = false;
         for (int i = 0; i < operands.length; ++i) {
             RelDataType nodeType;
-            
+
             // for row arguments that should be converted to ColumnList types,
             // set the nodeType to a ColumnList type but defer validating the
             // arguments of the row constructor until we know for sure that the
@@ -257,7 +257,7 @@ public class SqlFunction
             {
                 containsRowArg = true;
                 RelDataTypeFactory typeFactory = validator.getTypeFactory();
-                nodeType = typeFactory.createSqlType(SqlTypeName.ColumnList);
+                nodeType = typeFactory.createSqlType(SqlTypeName.COLUMN_LIST);
             } else {
                 nodeType = validator.deriveType(operandScope, operands[i]);
             }
@@ -271,7 +271,7 @@ public class SqlFunction
                 getNameAsId(),
                 argTypes,
                 getFunctionType());
-        
+
         // if we have a match on function name and parameter count, but couldn't
         // find a function with  a COLUMN_LIST type, retry, but this time, don't
         // convert the row argument to a COLUMN_LIST type; if we did find a
@@ -302,11 +302,11 @@ public class SqlFunction
                     operands);
             }
         }
-        
+
         // we've finished validating cursor parameters, so we can pop the
         // cursor map corresponding to the current call off the cursor map stack
         validator.popCursorMap();
-        
+
         if (getFunctionType() == SqlFunctionCategory.UserDefinedConstructor) {
             return
                 validator.deriveConstructorType(

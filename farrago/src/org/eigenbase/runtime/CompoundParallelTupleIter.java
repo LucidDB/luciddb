@@ -43,9 +43,12 @@ import org.eigenbase.test.*;
  *
  * <ul>
  * <li>items Are now synthetic {@link Object}s.</li>
+ *
  * <li>Items would have to become things that expose a {@link Comparable} <i>
  * key</i> value.</li>
- * <li>Even if one input lags behind the other provding a {@link #next()} value,
+ *
+ * <li>Even if one input lags behind the other provding a
+ * {@link Iterator#next()} value,
  * that missing value might sort before its available counterparts from the
  * other inputs. There is no basis to decide to wait for it or not.</li>
  * </ul>

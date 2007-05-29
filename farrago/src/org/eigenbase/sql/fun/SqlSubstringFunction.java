@@ -76,10 +76,10 @@ public class SqlSubstringFunction
             }
             ArrayList<SqlTypeName> list = new ArrayList<SqlTypeName>();
             list.add(SqlTypeName.stringTypes[i]);
-            list.add(SqlTypeName.Integer);
+            list.add(SqlTypeName.INTEGER);
             ret.append(SqlUtil.getAliasedSignature(this, opName, list));
             ret.append(NL);
-            list.add(SqlTypeName.Integer);
+            list.add(SqlTypeName.INTEGER);
             ret.append(SqlUtil.getAliasedSignature(this, opName, list));
         }
         return ret.toString();

@@ -24,11 +24,8 @@ package net.sf.farrago.session;
 
 import java.util.*;
 
-import javax.jmi.reflect.*;
-
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
@@ -43,8 +40,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.trace.*;
-import org.eigenbase.util.*;
-
 
 /**
  * FarragoSessionStmtValidator defines a generic interface for statement
@@ -142,8 +137,8 @@ public interface FarragoSessionStmtValidator
      * the request may be deferred.
      *
      * @param obj object to be accessed
-     * @param action the action to be performed on obj (see {@link
-     * PrivilegedActionEnum} for base set)
+     * @param action the action to be performed on obj (see
+     *  {@link net.sf.farrago.fem.security.PrivilegedActionEnum} for base set)
      */
     public void requestPrivilege(
         CwmModelElement obj,
@@ -316,7 +311,7 @@ public interface FarragoSessionStmtValidator
      * Validates that a particular feature is enabled.
      *
      * @param feature feature being used, represented as a resource definition
-     * from {@link EigenbaseResource}
+     * from {@link org.eigenbase.resource.EigenbaseResource}
      * @param context parser position context for error reporting, or null if
      * none available
      */
@@ -355,16 +350,16 @@ public interface FarragoSessionStmtValidator
      */
     public void validateDataType(SqlDataTypeSpec dataType)
         throws SqlValidatorException;
-    
+
     /**
      * Sets the repository transaction context associated with this statement.
-     * 
+     *
      * @param reposTxnContext repos txn context to use
      */
     public void setReposTxnContext(FarragoReposTxnContext reposTxnContext);
-    
+
     /**
-     * @return the repository transaction context associated with this 
+     * @return the repository transaction context associated with this
      *         statement.
      */
     public FarragoReposTxnContext getReposTxnContext();

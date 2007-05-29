@@ -30,6 +30,7 @@
 #include "fennel/cache/CacheImpl.h"
 #include "fennel/cache/RandomVictimPolicy.h"
 #include <boost/test/test_tools.hpp>
+#include <strstream>
 
 using namespace fennel;
 
@@ -75,13 +76,17 @@ SharedRandomAccessDevice CacheTestBase::openDevice(
     
 void CacheTestBase::openStorage(DeviceMode openMode)
 {
+    // make a test.dat filename unique to each process
+    std::ostrstream testDataFile;
+    testDataFile << "test-" << getpid() << ".dat" << ends;
+
     pCache = newCache();
 
     statsTimer.addSource(pCache);
     statsTimer.start();
     
     pRandomAccessDevice = openDevice(
-        "test.dat",openMode,nDiskPages,dataDeviceId);
+        testDataFile.str(),openMode,nDiskPages,dataDeviceId);
 }
 
 void CacheTestBase::closeStorage()

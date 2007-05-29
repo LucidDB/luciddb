@@ -74,7 +74,7 @@ public abstract class OneRowRelBase
             typeFactory.createStructType(
                 new RelDataType[] {
                     typeFactory.createSqlType(
-                        SqlTypeName.Integer)
+                        SqlTypeName.INTEGER)
                 },
                 new String[] { "ZERO" });
     }

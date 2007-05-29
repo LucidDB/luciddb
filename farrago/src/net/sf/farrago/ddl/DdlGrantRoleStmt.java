@@ -24,17 +24,10 @@ package net.sf.farrago.ddl;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -49,7 +42,7 @@ public class DdlGrantRoleStmt
 
     //~ Instance fields --------------------------------------------------------
 
-    protected List roleList;
+    protected List<SqlIdentifier> roleList;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -80,11 +73,7 @@ public class DdlGrantRoleStmt
         // the owner. Or (b) the owner has been granted with Admin Option. Need
         // model change!
 
-        Iterator iter = granteeList.iterator();
-        while (iter.hasNext()) {
-            // process the next grantee
-            SqlIdentifier granteeId = (SqlIdentifier) iter.next();
-
+        for (SqlIdentifier granteeId : granteeList) {
             // Find the repository element id for the grantee,  create one if
             // it does not exist
             FemAuthId granteeAuthId =
@@ -95,10 +84,7 @@ public class DdlGrantRoleStmt
             // for each role in the list, we instantiate a repository
             // element. Note that this makes it easier to revoke the privs on
             // the individual basis.
-            Iterator iterRole = roleList.iterator();
-            while (iterRole.hasNext()) {
-                SqlIdentifier roleId = (SqlIdentifier) iterRole.next();
-
+            for (SqlIdentifier roleId : roleList) {
                 // create a privilege object and set its properties
                 FemGrant grant =
                     FarragoCatalogUtil.newRoleGrant(
@@ -113,7 +99,7 @@ public class DdlGrantRoleStmt
         }
     }
 
-    public void setRoleList(List roleList)
+    public void setRoleList(List<SqlIdentifier> roleList)
     {
         this.roleList = roleList;
     }

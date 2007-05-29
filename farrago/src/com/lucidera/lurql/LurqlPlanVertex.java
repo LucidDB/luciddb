@@ -78,7 +78,7 @@ public class LurqlPlanVertex
     /**
      * Unmodifiable counterpart to filters (for public consumption).
      */
-    private final List unmodifiableFilters;
+    private final List<LurqlFilter> unmodifiableFilters;
 
     /**
      * Set of object MofIds to use as roots.
@@ -216,14 +216,14 @@ public class LurqlPlanVertex
 
     private String computeStringRep()
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(name);
         sb.append(" { ");
         List<Object> list = new ArrayList<Object>(classVertexSet);
         list.addAll(rootObjectIds);
         Collections.sort(
             list,
-            new StringRepresentationComparator());
+            new StringRepresentationComparator<Object>());
         Iterator iter = list.iterator();
         while (iter.hasNext()) {
             JmiClassVertex classVertex = (JmiClassVertex) iter.next();
@@ -251,7 +251,7 @@ public class LurqlPlanVertex
         return sb.toString();
     }
 
-    public List getFilters()
+    public List<LurqlFilter> getFilters()
     {
         return unmodifiableFilters;
     }

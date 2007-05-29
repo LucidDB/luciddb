@@ -71,7 +71,7 @@ public class SqlCountAggFunction
 
     public RelDataType getReturnType(RelDataTypeFactory typeFactory)
     {
-        return typeFactory.createSqlType(SqlTypeName.Bigint);
+        return typeFactory.createSqlType(SqlTypeName.BIGINT);
     }
 
     public OJClass [] getStartParameterTypes()
@@ -88,7 +88,7 @@ public class SqlCountAggFunction
         // want to try and derive the "*"
         if (call.isCountStar()) {
             return validator.getTypeFactory().createSqlType(
-                    SqlTypeName.Bigint);
+                    SqlTypeName.BIGINT);
         }
         return super.deriveType(validator, scope, call);
     }

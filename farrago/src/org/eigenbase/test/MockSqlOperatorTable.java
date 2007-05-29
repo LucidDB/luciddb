@@ -77,7 +77,7 @@ public class MockSqlOperatorTable
                     final RelDataTypeFactory typeFactory =
                         opBinding.getTypeFactory();
                     final RelDataType [] types =
-                        { typeFactory.createSqlType(SqlTypeName.Integer) };
+                        { typeFactory.createSqlType(SqlTypeName.INTEGER) };
                     final String [] fieldNames = new String[] { "I" };
                     return typeFactory.createStructType(types, fieldNames);
                 }
@@ -97,7 +97,7 @@ public class MockSqlOperatorTable
                     final RelDataTypeFactory typeFactory =
                         opBinding.getTypeFactory();
                     final RelDataType [] types =
-                        { typeFactory.createSqlType(SqlTypeName.Varchar, 1024) };
+                        { typeFactory.createSqlType(SqlTypeName.VARCHAR, 1024) };
                     final String [] fieldNames = new String[] { "NAME" };
                     return typeFactory.createStructType(types, fieldNames);
                 }

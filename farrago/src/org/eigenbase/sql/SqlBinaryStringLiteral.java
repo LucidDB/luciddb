@@ -30,7 +30,7 @@ import org.eigenbase.util.*;
  * A binary (or hexadecimal) string literal.
  *
  * <p>The {@link #value} field is a {@link BitString} and {@link #typeName} is
- * {@link SqlTypeName#Binary}.
+ * {@link SqlTypeName#BINARY}.
  *
  * @author wael
  * @version $Id$
@@ -45,7 +45,7 @@ public class SqlBinaryStringLiteral
         BitString val,
         SqlParserPos pos)
     {
-        super(val, SqlTypeName.Binary, pos);
+        super(val, SqlTypeName.BINARY, pos);
     }
 
     //~ Methods ----------------------------------------------------------------

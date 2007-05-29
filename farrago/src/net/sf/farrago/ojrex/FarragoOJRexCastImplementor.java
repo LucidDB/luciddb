@@ -99,8 +99,8 @@ public class FarragoOJRexCastImplementor
         Expression rhsExp = operands[0];
 
         SqlTypeName lhsTypeName = lhsType.getSqlTypeName();
-        if (lhsTypeName == SqlTypeName.Cursor ||
-            lhsTypeName == SqlTypeName.ColumnList)
+        if (lhsTypeName == SqlTypeName.CURSOR ||
+            lhsTypeName == SqlTypeName.COLUMN_LIST)
         {
             // Conversion should already have been taken care of outside.
             return rhsExp;
@@ -259,7 +259,7 @@ public class FarragoOJRexCastImplementor
 
             // Check for an explicit rhs null value. Code generated
             // afterwards need never check for an explicit null.
-            if (rhsType.getSqlTypeName() == SqlTypeName.Null) {
+            if (rhsType.getSqlTypeName() == SqlTypeName.NULL) {
                 if (lhsType.isNullable()) {
                     return castFromNull();
                 } else {
@@ -349,9 +349,9 @@ public class FarragoOJRexCastImplementor
         private Expression rhsAsValue()
         {
             if (SqlTypeUtil.isJavaPrimitive(lhsType)
-                && rhsType.getSqlTypeName() == SqlTypeName.Null)
+                && rhsType.getSqlTypeName() == SqlTypeName.NULL)
             {
-                if (lhsType.getSqlTypeName() == SqlTypeName.Boolean) {
+                if (lhsType.getSqlTypeName() == SqlTypeName.BOOLEAN) {
                     return Literal.constantFalse();
                 } else {
                     return Literal.constantZero();
@@ -488,7 +488,7 @@ public class FarragoOJRexCastImplementor
             if ((rhsType != null)
                 && (
                     SqlTypeUtil.isNumeric(rhsType)
-                    || (rhsType.getSqlTypeName() == SqlTypeName.Boolean)
+                    || (rhsType.getSqlTypeName() == SqlTypeName.BOOLEAN)
                    )
                 && SqlTypeUtil.inCharOrBinaryFamilies(lhsType)
                 && !SqlTypeUtil.isLob(lhsType))
@@ -500,7 +500,7 @@ public class FarragoOJRexCastImplementor
                 return false;
             }
         }
-        
+
         private Expression castToAssignableValueImpl()
         {
             if (requiresSpecializedCast()) {
@@ -522,9 +522,9 @@ public class FarragoOJRexCastImplementor
                 // rhsType is null then we may have to be ready for anything.
                 // But it will be null even for current_timestamp, so the
                 // condition below seems a bit excessive.
-                if (lhsType.getSqlTypeName() == SqlTypeName.Timestamp
+                if (lhsType.getSqlTypeName() == SqlTypeName.TIMESTAMP
                     && (rhsType == null
-                        || rhsType.getSqlTypeName() == SqlTypeName.Time))
+                        || rhsType.getSqlTypeName() == SqlTypeName.TIME))
                 {
                     addStatement(
                         new ExpressionStatement(
@@ -543,8 +543,8 @@ public class FarragoOJRexCastImplementor
 
             // Trim precision of datetime values.
             //
-            if ((lhsType.getSqlTypeName() == SqlTypeName.Timestamp
-                || lhsType.getSqlTypeName() == SqlTypeName.Time)) {
+            if ((lhsType.getSqlTypeName() == SqlTypeName.TIMESTAMP
+                || lhsType.getSqlTypeName() == SqlTypeName.TIME)) {
                 if (rhsType != null &&
                     // FIXME: JavaType(java.sql.Time) and
                     // JavaType(java.sql.Timestamp) say they support precision
@@ -580,13 +580,16 @@ public class FarragoOJRexCastImplementor
                 if ((rhsType != null) && (rhsType.getSqlTypeName() != null)) {
                     SqlTypeName typeName = rhsType.getSqlTypeName();
                     int precision = 0;
-                    int ord = typeName.getOrdinal();
-                    if (ord == SqlTypeName.Date_ordinal) {
+                    switch (typeName) {
+                    case DATE:
                         precision = 10;
-                    } else if (ord == SqlTypeName.Time_ordinal) {
+                        break;
+                    case TIME:
                         precision = 8;
-                    } else if (ord == SqlTypeName.Timestamp_ordinal) {
+                        break;
+                    case TIMESTAMP:
                         precision = 19;
+                        break;
                     }
                     if ((precision != 0) && (precision > lhsType.getPrecision())) {
                         addStatement(
@@ -655,7 +658,7 @@ public class FarragoOJRexCastImplementor
                                 padByteExp))));
             }
 
-            
+
             return lhsExp;
         }
 
@@ -702,8 +705,7 @@ public class FarragoOJRexCastImplementor
                         "trim",
                         new ExpressionList());
                 String methodName = "parse" + numClassName;
-                if (lhsType.getSqlTypeName().getOrdinal()
-                    == SqlTypeName.Integer_ordinal) {
+                if (lhsType.getSqlTypeName() == SqlTypeName.INTEGER) {
                     methodName = "parseInt";
                 }
                 rhsExp =
@@ -730,7 +732,7 @@ public class FarragoOJRexCastImplementor
 
             // Casting from string to boolean relies on the runtime type.
             // Note: string is trimmed by conversion method.
-            else if ((lhsType.getSqlTypeName() == SqlTypeName.Boolean)
+            else if ((lhsType.getSqlTypeName() == SqlTypeName.BOOLEAN)
                 && SqlTypeUtil.inCharOrBinaryFamilies(rhsType)
                 && !SqlTypeUtil.isLob(rhsType)) {
                 //TODO: toString will cause too much garbage collection.
@@ -918,7 +920,7 @@ public class FarragoOJRexCastImplementor
          * @param newList the new statement list
          * @return the old statement list
          *
-         * @see {@link #returnStmtList(StatementList)}
+         * @see #returnStmtList(StatementList)
          */
         private StatementList borrowStmtList(StatementList newList)
         {
@@ -933,7 +935,7 @@ public class FarragoOJRexCastImplementor
          *
          * @param oldList the previously active statement list.
          *
-         * @see {@link #borrowStmtList(StatementList)}
+         * @see #borrowStmtList(StatementList)
          */
         private void returnStmtList(StatementList oldList)
         {
@@ -1129,7 +1131,7 @@ public class FarragoOJRexCastImplementor
         {
             // unfortunately, we hard code the method name here
             return translator.convertVariable(
-                translator.getTypeFactory().createSqlType(SqlTypeName.Date),
+                translator.getTypeFactory().createSqlType(SqlTypeName.DATE),
                 "getContextVariable_CURRENT_DATE",
                 new ExpressionList());
         }

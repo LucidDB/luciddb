@@ -93,8 +93,7 @@ public class LcsTableMergeRel
             updateColumnList,
             true);
 
-        assert (getOperation().getOrdinal()
-                == TableModificationRel.Operation.MERGE_ORDINAL);
+        assert (getOperation() == TableModificationRel.Operation.MERGE);
 
         this.lcsTable = lcsTable;
         assert lcsTable.getPreparingStmt()
@@ -477,7 +476,7 @@ public class LcsTableMergeRel
             compareTuple.add(tuple);
             RelDataType ridType =
                 typeFactory.createTypeWithNullability(
-                    typeFactory.createSqlType(SqlTypeName.Bigint),
+                    typeFactory.createSqlType(SqlTypeName.BIGINT),
                     true);
             RelDataType ridRowType =
                 typeFactory.createStructType(
@@ -549,10 +548,10 @@ public class LcsTableMergeRel
         if (nullableRid) {
             ridType =
                 typeFactory.createTypeWithNullability(
-                    typeFactory.createSqlType(SqlTypeName.Bigint),
+                    typeFactory.createSqlType(SqlTypeName.BIGINT),
                     true);
         } else {
-            ridType = typeFactory.createSqlType(SqlTypeName.Bigint);
+            ridType = typeFactory.createSqlType(SqlTypeName.BIGINT);
         }
         RelDataType rowType =
             typeFactory.createStructType(

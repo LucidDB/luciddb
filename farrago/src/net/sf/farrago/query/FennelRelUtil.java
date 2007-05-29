@@ -108,7 +108,8 @@ public abstract class FennelRelUtil
         FemTupleAccessor tupleAccessor = repos.newFemTupleAccessor();
         tupleAccessor.setMinByteLength(-1);
         tupleAccessor.setBitFieldOffset(-1);
-        java.util.List attrDescriptors = tupleDesc.getAttrDescriptor();
+        List<FemTupleAttrDescriptor> attrDescriptors =
+            tupleDesc.getAttrDescriptor();
         for (int i = 0; i < attrDescriptors.size(); i++) {
             FemTupleAttrAccessor attrAccessor = repos.newFemTupleAttrAccessor();
             attrAccessor.setNullBitIndex(-1);
@@ -275,9 +276,9 @@ public abstract class FennelRelUtil
 
     /**
      * Converts a SQL type to a Fennel type.
-     * 
-     * @see FennelUtil#convertSqlTypeNameToFennelType(SqlTypeName)
-     *   for a detailed conversion table
+     *
+     * <p>See {@link FennelUtil#convertSqlTypeNameToFennelType(SqlTypeName)}
+     * for a detailed conversion table.
      */
     public static FennelStandardTypeDescriptor convertSqlTypeNameToFennelType(
         SqlTypeName sqlType)
@@ -777,12 +778,12 @@ public abstract class FennelRelUtil
                 Comparable value = literal.getValue();
                 if (value instanceof BigDecimal) {
                     BigDecimal bigDecimal = (BigDecimal) value;
-                    switch (fieldType.getSqlTypeName().getOrdinal()) {
-                    case SqlTypeName.Real_ordinal:
+                    switch (fieldType.getSqlTypeName()) {
+                    case REAL:
                         datum.setFloat(bigDecimal.floatValue());
                         break;
-                    case SqlTypeName.Float_ordinal:
-                    case SqlTypeName.Double_ordinal:
+                    case FLOAT:
+                    case DOUBLE:
                         datum.setDouble(bigDecimal.doubleValue());
                         break;
                     default:
@@ -797,7 +798,7 @@ public abstract class FennelRelUtil
                 } else if (value instanceof NlsString) {
                     NlsString nlsString = (NlsString) value;
                     try {
-                        datum.setString(nlsString.getValue(), 
+                        datum.setString(nlsString.getValue(),
                             nlsString.getCharsetName());
                     } catch (UnsupportedEncodingException ex) {
                         throw Util.newInternal(ex);

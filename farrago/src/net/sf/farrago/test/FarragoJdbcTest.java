@@ -1044,9 +1044,10 @@ public class FarragoJdbcTest
 
         Statement statement = connection.createStatement();
 
-        List numCharTypes = Arrays.asList(TestSqlType.typesNumericAndChars);
-        List binTypes = Arrays.asList(TestSqlType.typesBinary);
-        List approxCharTypes = new ArrayList();
+        List<TestSqlType> numCharTypes =
+            Arrays.asList(TestSqlType.typesNumericAndChars);
+        List<TestSqlType> binTypes = Arrays.asList(TestSqlType.typesBinary);
+        List<TestSqlType> approxCharTypes = new ArrayList<TestSqlType>();
         approxCharTypes.add(TestSqlType.Real);
         approxCharTypes.add(TestSqlType.Float);
         approxCharTypes.add(TestSqlType.Double);
@@ -2642,7 +2643,7 @@ public class FarragoJdbcTest
         boolean age2 = true;
 
         String empno3 = "777";
-        Object deptno3 = new Integer(10);
+        Integer deptno3 = new Integer(10);
 
         String name = "JDBC Test Int";
         String name2 = "JDBC Test Int2";
@@ -3172,13 +3173,13 @@ public class FarragoJdbcTest
         assertEquals(1, stmt.getMaxRows());
         String sql = "select name from sales.depts order by 1";
         resultSet = stmt.executeQuery(sql);
-        Set refSet = new HashSet();
+        Set<String> refSet = new HashSet<String>();
         refSet.add("Accounts");
         compareResultSet(refSet);
         stmt.setMaxRows(0);
         assertEquals(0, stmt.getMaxRows());
         resultSet = stmt.executeQuery(sql);
-        refSet = new HashSet();
+        refSet = new HashSet<String>();
         refSet.add("Accounts");
         refSet.add("Marketing");
         refSet.add("Sales");

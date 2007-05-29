@@ -129,7 +129,7 @@ public class SqlCaseOperator
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlWriter.FrameType CaseFrameType =
-        SqlWriter.FrameType.create("CASE");
+        SqlWriter.FrameTypeEnum.create("CASE");
 
     //~ Constructors -----------------------------------------------------------
 

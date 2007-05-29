@@ -47,7 +47,7 @@ public class SqlExplain
     /**
      * The level of abstraction with which to display the plan.
      */
-    public static enum Depth {
+    public static enum Depth implements SqlLiteral.SqlSymbol {
         Type, Logical, Physical,
     }
 
@@ -87,7 +87,7 @@ public class SqlExplain
     public SqlExplainLevel getDetailLevel()
     {
         return
-            (SqlExplainLevel) SqlLiteral.enumValue(
+            (SqlExplainLevel) SqlLiteral.symbolValue(
                 operands[DETAIL_LEVEL_OPERAND]);
     }
 
@@ -96,7 +96,7 @@ public class SqlExplain
      */
     public Depth getDepth()
     {
-        return (Depth) SqlLiteral.enumValue(operands[DEPTH_OPERAND]);
+        return (Depth) SqlLiteral.symbolValue(operands[DEPTH_OPERAND]);
     }
 
     /**
@@ -133,7 +133,7 @@ public class SqlExplain
         switch (getDetailLevel()) {
         case NO_ATTRIBUTES:
             writer.keyword("EXCLUDING ATTRIBUTES");
-            break;  
+            break;
         case EXPPLAN_ATTRIBUTES:
             writer.keyword("INCLUDING ATTRIBUTES");
             break;

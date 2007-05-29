@@ -43,7 +43,7 @@ public class SqlJoinOperator
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlWriter.FrameType UsingFrameType =
-        SqlWriter.FrameType.create("USING");
+        SqlWriter.FrameTypeEnum.create("USING");
 
     //~ Constructors -----------------------------------------------------------
 
@@ -66,20 +66,15 @@ public class SqlJoinOperator
         assert (operands[SqlJoin.IS_NATURAL_OPERAND] instanceof SqlLiteral);
         final SqlLiteral isNatural =
             (SqlLiteral) operands[SqlJoin.IS_NATURAL_OPERAND];
-        assert (isNatural.getTypeName() == SqlTypeName.Boolean);
+        assert (isNatural.getTypeName() == SqlTypeName.BOOLEAN);
         assert operands[SqlJoin.CONDITION_TYPE_OPERAND] != null : "precondition: operands[CONDITION_TYPE_OPERAND] != null";
-        assert (operands[SqlJoin.CONDITION_TYPE_OPERAND] instanceof SqlLiteral)
-            && (
-                SqlLiteral.symbolValue(
-                    operands[SqlJoin.CONDITION_TYPE_OPERAND])
-                instanceof ConditionType
-               );
+        assert operands[SqlJoin.CONDITION_TYPE_OPERAND] instanceof SqlLiteral
+            && SqlLiteral.symbolValue(operands[SqlJoin.CONDITION_TYPE_OPERAND])
+            instanceof ConditionType;
         assert operands[SqlJoin.TYPE_OPERAND] != null : "precondition: operands[TYPE_OPERAND] != null";
-        assert (operands[SqlJoin.TYPE_OPERAND] instanceof SqlLiteral)
-            && (
-                SqlLiteral.symbolValue(operands[SqlJoin.TYPE_OPERAND])
-                instanceof JoinType
-               );
+        assert operands[SqlJoin.TYPE_OPERAND] instanceof SqlLiteral
+            && SqlLiteral.symbolValue(operands[SqlJoin.TYPE_OPERAND])
+            instanceof JoinType;
         return new SqlJoin(this, operands, pos);
     }
 
@@ -109,7 +104,7 @@ public class SqlJoinOperator
         // with enclosing FROM frame pushed by SqlSelectOperator.
         /*
         final SqlWriter.Frame frame0 =
-         writer.startList(SqlWriter.FrameType.FromList, "", "");
+         writer.startList(SqlWriter.FrameTypeEnum.FromList, "", "");
          */
         left.unparse(
             writer,
@@ -121,27 +116,27 @@ public class SqlJoinOperator
         }
         final SqlJoinOperator.JoinType joinType =
             (JoinType) SqlLiteral.symbolValue(operands[SqlJoin.TYPE_OPERAND]);
-        switch (joinType.getOrdinal()) {
-        case JoinType.Comma_ORDINAL:
+        switch (joinType) {
+        case Comma:
             writer.sep(",", true);
             break;
-        case JoinType.Cross_ORDINAL:
+        case Cross:
             writer.sep(natural + "CROSS JOIN");
             break;
-        case JoinType.Full_ORDINAL:
+        case Full:
             writer.sep(natural + "FULL JOIN");
             break;
-        case JoinType.Inner_ORDINAL:
+        case Inner:
             writer.sep(natural + "INNER JOIN");
             break;
-        case JoinType.Left_ORDINAL:
+        case Left:
             writer.sep(natural + "LEFT JOIN");
             break;
-        case JoinType.Right_ORDINAL:
+        case Right:
             writer.sep(natural + "RIGHT JOIN");
             break;
         default:
-            throw joinType.unexpected();
+            throw Util.unexpected(joinType);
         }
         final SqlNode right = operands[SqlJoin.RIGHT_OPERAND];
         right.unparse(
@@ -151,11 +146,9 @@ public class SqlJoinOperator
         final SqlNode condition = operands[SqlJoin.CONDITION_OPERAND];
         if (condition != null) {
             final SqlJoinOperator.ConditionType conditionType =
-                (ConditionType) SqlLiteral.symbolValue(
-                    operands[SqlJoin.CONDITION_TYPE_OPERAND]);
-            switch (conditionType.getOrdinal()) {
-            case ConditionType.Using_ORDINAL:
-
+                (ConditionType) SqlLiteral.symbolValue(operands[SqlJoin.CONDITION_TYPE_OPERAND]);
+            switch (conditionType) {
+            case Using:
                 // No need for an extra pair of parens -- the condition is a
                 // list. The result is something like "USING (deptno, gender)".
                 writer.keyword("USING");
@@ -165,12 +158,12 @@ public class SqlJoinOperator
                 condition.unparse(writer, 0, 0);
                 writer.endList(frame);
                 break;
-            case ConditionType.On_ORDINAL:
+            case On:
                 writer.keyword("ON");
                 condition.unparse(writer, leftPrec, rightPrec);
                 break;
             default:
-                throw conditionType.unexpected();
+                throw Util.unexpected(conditionType);
             }
         }
         /*
@@ -183,143 +176,62 @@ public class SqlJoinOperator
     /**
      * Enumerates the types of condition in a join expression.
      */
-    public static class ConditionType
-        extends EnumeratedValues.BasicValue
+    public enum ConditionType implements SqlLiteral.SqlSymbol
     {
-        public static final int None_ORDINAL = 0;
-
         /**
          * Join clause has no condition, for example "FROM EMP, DEPT"
          */
-        public static final ConditionType None =
-            new ConditionType("None", None_ORDINAL);
-        public static final int On_ORDINAL = 1;
+        None,
 
         /**
          * Join clause has an ON condition, for example "FROM EMP JOIN DEPT ON
          * EMP.DEPTNO = DEPT.DEPTNO"
          */
-        public static final ConditionType On =
-            new ConditionType("On", On_ORDINAL);
-        public static final int Using_ORDINAL = 2;
+        On,
 
         /**
          * Join clause has a USING condition, for example "FROM EMP JOIN DEPT
          * USING (DEPTNO)"
          */
-        public static final ConditionType Using =
-            new ConditionType("Using", Using_ORDINAL);
-
-        /**
-         * List of all allowable {@link SqlJoinOperator.ConditionType} values.
-         */
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(new ConditionType[] { None, On, Using });
-
-        private ConditionType(
-            String name,
-            int ordinal)
-        {
-            super(name, ordinal, null);
-        }
-
-        /**
-         * Looks up a condition type from its ordinal.
-         */
-        public static ConditionType get(int ordinal)
-        {
-            return (ConditionType) enumeration.getValue(ordinal);
-        }
-
-        /**
-         * Looks up a condition type from its name.
-         */
-        public static ConditionType get(String name)
-        {
-            return (ConditionType) enumeration.getValue(name);
-        }
+        Using;
     }
 
     /**
      * Enumerates the types of join.
      */
-    public static class JoinType
-        extends EnumeratedValues.BasicValue
+    public enum JoinType implements SqlLiteral.SqlSymbol
     {
-        public static final int Inner_ORDINAL = 0;
-
         /**
          * Inner join.
          */
-        public static final JoinType Inner =
-            new JoinType("Inner", Inner_ORDINAL);
-        public static final int Full_ORDINAL = 1;
+        Inner,
 
         /**
          * Full outer join.
          */
-        public static final JoinType Full = new JoinType("Full", Full_ORDINAL);
-        public static final int Cross_ORDINAL = 2;
+        Full,
 
         /**
          * Cross join (also known as Cartesian product).
          */
-        public static final JoinType Cross =
-            new JoinType("Cross", Cross_ORDINAL);
-        public static final int Left_ORDINAL = 3;
+        Cross,
 
         /**
          * Left outer join.
          */
-        public static final JoinType Left = new JoinType("Left", Left_ORDINAL);
-        public static final int Right_ORDINAL = 4;
+        Left,
 
         /**
          * Right outer join.
          */
-        public static final JoinType Right =
-            new JoinType("Right", Right_ORDINAL);
-        public static final int Comma_ORDINAL = 5;
+        Right,
 
         /**
          * Comma join: the good old-fashioned SQL <code>FROM</code> clause,
          * where table expressions are specified with commas between them, and
          * join conditions are specified in the <code>WHERE</code> clause.
          */
-        public static final JoinType Comma =
-            new JoinType("Comma", Comma_ORDINAL);
-
-        /**
-         * List of all allowable {@link SqlJoinOperator.JoinType} values.
-         */
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(
-                new JoinType[] {
-                    Inner, Full, Cross, Left, Right, Comma
-                });
-
-        private JoinType(
-            String name,
-            int ordinal)
-        {
-            super(name, ordinal, null);
-        }
-
-        /**
-         * Looks up a join type from its ordinal.
-         */
-        public static JoinType get(int ordinal)
-        {
-            return (JoinType) enumeration.getValue(ordinal);
-        }
-
-        /**
-         * Looks up a join type from its name.
-         */
-        public static JoinType get(String name)
-        {
-            return (JoinType) enumeration.getValue(name);
-        }
+        Comma;
     }
 }
 

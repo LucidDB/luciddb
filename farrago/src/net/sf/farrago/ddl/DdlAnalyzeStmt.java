@@ -69,7 +69,7 @@ public class DdlAnalyzeStmt
     private SqlPrettyWriter writer;
     private SqlIdentifier tableName;
     private FarragoRepos repos;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     public DdlAnalyzeStmt(CwmTable table)
@@ -83,9 +83,9 @@ public class DdlAnalyzeStmt
     /**
      * Sets the list of columns to be analyzed
      *
-     * @param columnList list of CwmColumn repository objects
+     * @param columnList list of {@link CwmColumn} repository objects
      */
-    public void setColumns(List columnList)
+    public void setColumns(List<CwmColumn> columnList)
     {
         this.columnList = columnList;
     }
@@ -183,7 +183,7 @@ public class DdlAnalyzeStmt
                 estimate);
             indexPageCounts.put(index, pageCount);
         }
-        
+
         // Update stats computed above
         updateStats(repos, rowCount, histograms, indexPageCounts);
     }
@@ -201,8 +201,8 @@ public class DdlAnalyzeStmt
         assert (gotRow);
         long rowCount = resultSet.getLong(1);
         resultSet.close();
-        
-        return rowCount;   
+
+        return rowCount;
     }
 
     private String getRowCountQuery()
@@ -216,14 +216,14 @@ public class DdlAnalyzeStmt
     private void checkRowCountQuery()
     {
         RelDataType rowType = stmtContext.getPreparedRowType();
-        List fieldList = rowType.getFieldList();
+        List<RelDataTypeField> fieldList = rowType.getFieldList();
         assert (fieldList.size() == 1) : "row count wrong number of columns";
-        RelDataType type = ((RelDataTypeField) fieldList.get(0)).getType();
+        RelDataType type = fieldList.get(0).getType();
         assert (SqlTypeUtil.isExactNumeric(type)) : "row count invalid type";
     }
 
     private void computeColumnStats(
-        List<Histogram> histograms,       
+        List<Histogram> histograms,
         FemAbstractColumn column,
         long tableRowCount)
         throws SQLException
@@ -261,9 +261,9 @@ public class DdlAnalyzeStmt
         FarragoSessionStmtContext stmtContext)
     {
         RelDataType rowType = stmtContext.getPreparedRowType();
-        List fieldList = rowType.getFieldList();
+        List<RelDataTypeField> fieldList = rowType.getFieldList();
         assert (fieldList.size() == 2) : "column query wrong number of columns";
-        RelDataType type = ((RelDataTypeField) fieldList.get(1)).getType();
+        RelDataType type = fieldList.get(1).getType();
         assert (SqlTypeUtil.isExactNumeric(type)) : "column query invalid type";
     }
 
@@ -367,7 +367,7 @@ public class DdlAnalyzeStmt
         }
         return bars;
     }
-    
+
     private void buildFemBars(
         Histogram histogram,
         List<FemColumnHistogramBar> femBars)
@@ -380,7 +380,7 @@ public class DdlAnalyzeStmt
             origBarCount = origHistogram.getBarCount();
             origBars = origHistogram.getBar();
         }
-        
+
         int count = 0;
         for (ColumnHistogramBar bar : histogram.bars) {
             FemColumnHistogramBar femBar;
@@ -388,18 +388,18 @@ public class DdlAnalyzeStmt
                 femBar = origBars.get(count);
             } else {
                 femBar = repos.newFemColumnHistogramBar();
-            }   
+            }
             femBar.setStartingValue(bar.startValue);
             femBar.setValueCount(bar.valueCount);
             femBars.add(femBar);
             count++;
         }
     }
-    
+
     /**
      * Updates catalog records with new statistical data, all within a single
      * MDR write txn
-     * 
+     *
      * @param repos repository
      * @param rowCount table rowcount
      * @param histograms column histogram
@@ -416,8 +416,8 @@ public class DdlAnalyzeStmt
         try {
             txn.beginWriteTxn();
             FarragoCatalogUtil.updateRowCount(femTable, rowCount);
-        
-            for (Histogram histogram : histograms) {               
+
+            for (Histogram histogram : histograms) {
                 List<FemColumnHistogramBar> femBars =
                     new LinkedList<FemColumnHistogramBar>();
                 buildFemBars(histogram, femBars);
@@ -431,19 +431,19 @@ public class DdlAnalyzeStmt
                     histogram.rowsLastBar,
                     femBars);
             }
-            
+
             Set<FemLocalIndex> indexes = indexPageCounts.keySet();
             for (FemLocalIndex index : indexes) {
                 FarragoCatalogUtil.updatePageCount(
                     index, indexPageCounts.get(index));
             }
-            
+
             txn.commit();
         } finally {
             txn.rollback();
-        }    
+        }
     }
-    
+
     /**
      * Class used to store column histogram information
      */
@@ -455,7 +455,7 @@ public class DdlAnalyzeStmt
         long rowsPerBar;
         long rowsLastBar;
         List<ColumnHistogramBar> bars;
-        
+
         Histogram(
             FemAbstractColumn column,
             Long distinctValues,
@@ -472,7 +472,7 @@ public class DdlAnalyzeStmt
             this.bars = bars;
         }
     }
-    
+
     /**
      * Class used to store column histogram bar information
      */
@@ -480,13 +480,13 @@ public class DdlAnalyzeStmt
     {
         String startValue;
         long valueCount;
-        
+
         ColumnHistogramBar(String startValue, long valueCount)
         {
             this.startValue = startValue;
             this.valueCount = valueCount;
         }
-        
+
     }
 }
 

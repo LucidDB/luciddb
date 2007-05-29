@@ -28,9 +28,6 @@ import java.lang.reflect.*;
 
 import java.util.*;
 
-import net.sf.farrago.util.*;
-
-
 // TODO jvs 28-April-2004: move this to a repos-independent codegen utility
 // package and add a main method so it can be used from ant; this is just a
 // temporary parking space
@@ -83,7 +80,7 @@ public class CppEnumGen
         Class enumSymbolType)
         throws Exception
     {
-        List symbols = new ArrayList();
+        List<String> symbols = new ArrayList<String>();
 
         Field [] fields = enumClass.getDeclaredFields();
         for (int i = 0; i < fields.length; ++i) {
@@ -99,9 +96,9 @@ public class CppEnumGen
         pw.print(enumName);
         pw.println(" {");
 
-        Iterator iter = symbols.iterator();
+        Iterator<String> iter = symbols.iterator();
         while (iter.hasNext()) {
-            String symbol = (String) iter.next();
+            String symbol = iter.next();
             pw.print("    ");
             pw.print(symbol);
             if (iter.hasNext()) {
@@ -120,7 +117,7 @@ public class CppEnumGen
 
         iter = symbols.iterator();
         while (iter.hasNext()) {
-            String symbol = (String) iter.next();
+            String symbol = iter.next();
             pw.print('"');
             pw.print(symbol);
             pw.print('"');

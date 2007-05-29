@@ -81,11 +81,12 @@ public class JdbcQuery
      * @param sql SQL parse tree, may be null, otherwise must be a SELECT
      * statement
      * @param dataSource Provides a JDBC connection to run this query against.
-     * If the query is implementing a JDBC table, then the connection's schema
-     * will implement {@link net.sf.saffron.ext.JdbcSchema}, and data source
-     * will typically be the same as calling {@link
-     * net.sf.saffron.ext.JdbcSchema#getDataSource}. But non-JDBC schemas are
-     * also acceptable.
+     *
+     * <p>In saffron, if the query is implementing a JDBC table, then the
+     * connection's schema will implement
+     * <code>net.sf.saffron.ext.JdbcSchema</code>, and data source
+     * will typically be the same as calling the <code>getDataSource()</code>
+     * method on that schema. But non-JDBC schemas are also acceptable.
      *
      * @pre connection != null
      * @pre sql == null || sql.isA(SqlNode.Kind.Select)
@@ -129,11 +130,21 @@ public class JdbcQuery
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns the connection
+     *
+     * @return connection
+     */
     public RelOptConnection getConnection()
     {
         return connection;
     }
 
+    /**
+     * Returns the JDBC data source
+     *
+     * @return data source
+     */
     public DataSource getDataSource()
     {
         return dataSource;
@@ -148,6 +159,14 @@ public class JdbcQuery
             new Object[] { getForeignSql() });
     }
 
+    /**
+     * Returns the SQL that this query will execute against the foreign
+     * database, in the SQL dialect of that database.
+     *
+     * @see #getSql()
+     *
+     * @return foreign SQL
+     */
     public String getForeignSql()
     {
         if (queryString == null) {
@@ -201,6 +220,12 @@ public class JdbcQuery
         Util.discard(getForeignSql()); // compute query string now
     }
 
+    /**
+     * Registers any planner rules needed to implement queries using
+     * JdbcQuery objects.
+     *
+     * @param planner Planner
+     */
     public static void register(RelOptPlanner planner)
     {
         // FIXME jvs 29-Aug-2004
@@ -262,6 +287,12 @@ public class JdbcQuery
                 new ExpressionList(Literal.makeLiteral(queryString)));
     }
 
+    /**
+     * Returns the parse tree of the SQL statement which populates this
+     * query.
+     *
+     * @return SQL query
+     */
     public SqlSelect getSql()
     {
         return this.sql;

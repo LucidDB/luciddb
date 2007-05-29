@@ -158,7 +158,7 @@ public abstract class ResultSetTestCase
      *
      * @throws Exception .
      */
-    protected void compareResultList(List refList)
+    protected void compareResultList(List<String> refList)
         throws Exception
     {
         List<String> actualSet = new ArrayList<String>();

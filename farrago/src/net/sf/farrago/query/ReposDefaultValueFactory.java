@@ -54,7 +54,9 @@ public class ReposDefaultValueFactory
 
     //~ Instance fields --------------------------------------------------------
 
-    private Map constructorToSqlMap = new HashMap();
+    private Map<FemRoutine, SqlNodeList> constructorToSqlMap =
+        new HashMap<FemRoutine, SqlNodeList>();
+
     protected FarragoPreparingStmt farragoPreparingStmt;
 
     //~ Constructors -----------------------------------------------------------
@@ -79,7 +81,7 @@ public class ReposDefaultValueFactory
         if (!enforceGeneratedAlways) {
             return false;
         }
-                
+
         if (table instanceof FarragoQueryColumnSet) {
             FarragoQueryColumnSet queryColumnSet =
                 (FarragoQueryColumnSet) table;
@@ -149,7 +151,7 @@ public class ReposDefaultValueFactory
         RexNode [] constructorArgs)
     {
         SqlNodeList nodeList =
-            (SqlNodeList) constructorToSqlMap.get(constructor.getFemRoutine());
+            constructorToSqlMap.get(constructor.getFemRoutine());
         if (nodeList == null) {
             assert (constructor.hasDefinition());
             FarragoSessionParser parser =

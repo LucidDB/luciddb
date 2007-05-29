@@ -460,8 +460,8 @@ class FlatFileBCPFile
                                     typeScale),
                                 true);
                     } else {
-                        if ((typeName.equals(SqlTypeName.Timestamp))
-                            || (typeName.equals(SqlTypeName.Time))) {
+                        if ((typeName.equals(SqlTypeName.TIMESTAMP))
+                            || (typeName.equals(SqlTypeName.TIME))) {
                             typeLen = typeName.getDefaultPrecision();
                         }
                         types[index] =
@@ -525,49 +525,49 @@ class FlatFileBCPFile
         switch (bcpType) {
         case SQLCHAR:
         case SQLNCHAR:
-            return SqlTypeName.Char;
+            return SqlTypeName.CHAR;
         case SQLVARCHAR:
         case SQLNVARCHAR:
-            return SqlTypeName.Varchar;
+            return SqlTypeName.VARCHAR;
         case SQLBINARY:
-            return SqlTypeName.Binary;
+            return SqlTypeName.BINARY;
         case SQLVARBINARY:
-            return SqlTypeName.Varbinary;
+            return SqlTypeName.VARBINARY;
         case SQLDATE:
-            return SqlTypeName.Date;
+            return SqlTypeName.DATE;
         case SQLTIME:
-            return SqlTypeName.Time;
+            return SqlTypeName.TIME;
         case SQLDATETIME:
         case SQLDATETIM4:
         case SQLTIMESTAMP:
-            return SqlTypeName.Timestamp;
+            return SqlTypeName.TIMESTAMP;
         case SQLDECIMAL:
         case SQLNUMERIC:
         case SQLMONEY:
         case SQLMONEY4:
-            return SqlTypeName.Decimal;
+            return SqlTypeName.DECIMAL;
         case SQLINT:
-            return SqlTypeName.Integer;
+            return SqlTypeName.INTEGER;
         case SQLBIGINT:
-            return SqlTypeName.Bigint;
+            return SqlTypeName.BIGINT;
         case SQLSMALLINT:
-            return SqlTypeName.Smallint;
+            return SqlTypeName.SMALLINT;
         case SQLTINYINT:
-            return SqlTypeName.Tinyint;
+            return SqlTypeName.TINYINT;
         case SQLREAL:
-            return SqlTypeName.Real;
+            return SqlTypeName.REAL;
         case SQLFLT4:
-            return SqlTypeName.Float;
+            return SqlTypeName.FLOAT;
         case SQLFLT8:
-            return SqlTypeName.Double;
+            return SqlTypeName.DOUBLE;
         case SQLBIT:
-            return SqlTypeName.Boolean;
+            return SqlTypeName.BOOLEAN;
         case SQLVARIANT:
-            return SqlTypeName.Binary;
+            return SqlTypeName.BINARY;
         case SQLUNIQUEID:
         case SQLUDT:
         default:
-            return SqlTypeName.Varchar;
+            return SqlTypeName.VARCHAR;
         }
     }
 }

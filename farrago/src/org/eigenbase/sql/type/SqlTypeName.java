@@ -22,8 +22,6 @@
 */
 package org.eigenbase.sql.type;
 
-import java.io.*;
-
 import java.sql.*;
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -51,21 +49,41 @@ import org.eigenbase.sql.parser.SqlParserPos;
  * @version $Id$
  * @since Nov 24, 2003
  */
-public class SqlTypeName
-    extends EnumeratedValues.SerializableValue
+public enum SqlTypeName
 {
+    //~ Enumeration values -----------------------------------------------------
+
+    BOOLEAN(PrecScale.NoNo, false, Types.BOOLEAN),
+    TINYINT(PrecScale.NoNo, false, Types.TINYINT),
+    SMALLINT(PrecScale.NoNo, false, Types.SMALLINT),
+    INTEGER(PrecScale.NoNo, false, Types.INTEGER),
+    BIGINT(PrecScale.NoNo, false, Types.BIGINT),
+    DECIMAL(PrecScale.NoNo | PrecScale.YesNo | PrecScale.YesYes, false, Types.DECIMAL),
+    FLOAT(PrecScale.NoNo, false, Types.FLOAT),
+    REAL(PrecScale.NoNo, false, Types.REAL),
+    DOUBLE(PrecScale.NoNo, false, Types.DOUBLE),
+    DATE(PrecScale.NoNo, false, Types.DATE),
+    TIME(PrecScale.NoNo | PrecScale.YesNo, false, Types.TIME),
+    TIMESTAMP(PrecScale.NoNo | PrecScale.YesNo, false, Types.TIMESTAMP),
+    INTERVAL_YEAR_MONTH(PrecScale.NoNo, false, Types.OTHER),
+    INTERVAL_DAY_TIME(PrecScale.NoNo, false, Types.OTHER),
+    CHAR(PrecScale.NoNo | PrecScale.YesNo, false, Types.CHAR),
+    VARCHAR(PrecScale.NoNo | PrecScale.YesNo, false, Types.VARCHAR),
+    BINARY(PrecScale.NoNo | PrecScale.YesNo, false, Types.BINARY),
+    VARBINARY(PrecScale.NoNo | PrecScale.YesNo, false, Types.VARBINARY),
+    NULL(PrecScale.NoNo, true, Types.NULL),
+    ANY(PrecScale.NoNo, true, Types.OTHER),
+    SYMBOL(PrecScale.NoNo, true, Types.OTHER),
+    MULTISET(PrecScale.NoNo, false, Types.ARRAY),
+    DISTINCT(PrecScale.NoNo, false, Types.DISTINCT),
+    STRUCTURED(PrecScale.NoNo, false, Types.STRUCT),
+    ROW(PrecScale.NoNo, false, Types.STRUCT),
+    CURSOR(PrecScale.NoNo, false, Types.OTHER + 1),
+    COLUMN_LIST(PrecScale.NoNo, false, Types.OTHER + 2);
 
     //~ Static fields/initializers ---------------------------------------------
 
     public static final SqlTypeName [] EMPTY_ARRAY = new SqlTypeName[0];
-
-    // Flags indicating precision/scale combinations
-    // Note: for intervals:
-    //  precision = start (leading field) precision
-    //  scale = fractional second precision
-    private static final int PrecNoScaleNo = 1;
-    private static final int PrecYesScaleNo = 2;
-    private static final int PrecYesScaleYes = 4;
 
     private static SqlTypeName [] jdbcTypeToName;
     public static final int MIN_JDBC_TYPE = Types.BIT;
@@ -87,137 +105,29 @@ public class SqlTypeName
     public static final int MAX_INTERVAL_START_PRECISION = 10;
     public static final int MAX_INTERVAL_FRACTIONAL_SECOND_PRECISION = 9;
 
-    // SQL Type Definitions ------------------
-    public static final int Boolean_ordinal = 0;
-    public static final SqlTypeName Boolean =
-        new SqlTypeName("BOOLEAN", Boolean_ordinal, PrecNoScaleNo);
-    public static final int Tinyint_ordinal = 1;
-    public static final SqlTypeName Tinyint =
-        new SqlTypeName("TINYINT", Tinyint_ordinal, PrecNoScaleNo);
-    public static final int Smallint_ordinal = 2;
-    public static final SqlTypeName Smallint =
-        new SqlTypeName("SMALLINT", Smallint_ordinal, PrecNoScaleNo);
-    public static final int Integer_ordinal = 3;
-    public static final SqlTypeName Integer =
-        new SqlTypeName("INTEGER", Integer_ordinal, PrecNoScaleNo);
-    public static final int Bigint_ordinal = 4;
-    public static final SqlTypeName Bigint =
-        new SqlTypeName("BIGINT", Bigint_ordinal, PrecNoScaleNo);
-    public static final int Decimal_ordinal = 5;
-    public static final SqlTypeName Decimal =
-        new SqlTypeName("DECIMAL",
-            Decimal_ordinal,
-            PrecNoScaleNo | PrecYesScaleNo | PrecYesScaleYes);
-    public static final int Float_ordinal = 6;
-    public static final SqlTypeName Float =
-        new SqlTypeName("FLOAT", Float_ordinal, PrecNoScaleNo);
-    public static final int Real_ordinal = 7;
-    public static final SqlTypeName Real =
-        new SqlTypeName("REAL", Real_ordinal, PrecNoScaleNo);
-    public static final int Double_ordinal = 8;
-    public static final SqlTypeName Double =
-        new SqlTypeName("DOUBLE", Double_ordinal, PrecNoScaleNo);
-    public static final int Date_ordinal = 9;
-    public static final SqlTypeName Date =
-        new SqlTypeName("DATE", Date_ordinal, PrecNoScaleNo);
-    public static final int Time_ordinal = 10;
-    public static final SqlTypeName Time =
-        new SqlTypeName("TIME", Time_ordinal, PrecNoScaleNo | PrecYesScaleNo);
-    public static final int Timestamp_ordinal = 11;
-    public static final SqlTypeName Timestamp =
-        new SqlTypeName("TIMESTAMP",
-            Timestamp_ordinal,
-            PrecNoScaleNo | PrecYesScaleNo);
-    public static final int IntervalYearMonth_ordinal = 12;
-    public static final SqlTypeName IntervalYearMonth =
-        new SqlTypeName("IntervalYearMonth",
-            IntervalYearMonth_ordinal,
-            PrecYesScaleYes);
-    public static final int IntervalDayTime_ordinal = 13;
-    public static final SqlTypeName IntervalDayTime =
-        new SqlTypeName("IntervalDayTime",
-            IntervalDayTime_ordinal,
-            PrecYesScaleYes);
-    public static final int Char_ordinal = 14;
-    public static final SqlTypeName Char =
-        new SqlTypeName("CHAR", Char_ordinal, PrecNoScaleNo | PrecYesScaleNo);
-    public static final int Varchar_ordinal = 15;
-    public static final SqlTypeName Varchar =
-        new SqlTypeName("VARCHAR",
-            Varchar_ordinal,
-            PrecNoScaleNo | PrecYesScaleNo);
-    public static final int Binary_ordinal = 16;
-    public static final SqlTypeName Binary =
-        new SqlTypeName("BINARY",
-            Binary_ordinal,
-            PrecNoScaleNo | PrecYesScaleNo);
-    public static final int Varbinary_ordinal = 17;
-    public static final SqlTypeName Varbinary =
-        new SqlTypeName("VARBINARY",
-            Varbinary_ordinal,
-            PrecNoScaleNo | PrecYesScaleNo);
-    public static final int Null_ordinal = 18;
-    public static final SqlTypeName Null =
-        new SqlTypeName("NULL", Null_ordinal, PrecNoScaleNo);
-    public static final int Any_ordinal = 19;
-    public static final SqlTypeName Any =
-        new SqlTypeName("ANY", Any_ordinal, PrecNoScaleNo);
-    public static final int Symbol_ordinal = 20;
-    public static final SqlTypeName Symbol =
-        new SqlTypeName("SYMBOL", Symbol_ordinal, PrecNoScaleNo);
-    public static final int Multiset_ordinal = 21;
-    public static final SqlTypeName Multiset =
-        new SqlTypeName("MULTISET", Multiset_ordinal, PrecNoScaleNo);
-    public static final int Distinct_ordinal = 22;
-    public static final SqlTypeName Distinct =
-        new SqlTypeName("DISTINCT", Distinct_ordinal, PrecNoScaleNo);
-    public static final int Structured_ordinal = 23;
-    public static final SqlTypeName Structured =
-        new SqlTypeName("STRUCTURED", Structured_ordinal, PrecNoScaleNo);
-    public static final int Row_ordinal = 24;
-    public static final SqlTypeName Row =
-        new SqlTypeName("ROW", Row_ordinal, PrecNoScaleNo);
-    public static final int Cursor_ordinal = 25;
-    public static final SqlTypeName Cursor =
-        new SqlTypeName("CURSOR", Cursor_ordinal, PrecNoScaleNo);
-    public static final int ColumnList_ordinal = 26;
-    public static final SqlTypeName ColumnList =
-        new SqlTypeName("COLUMN_LIST", ColumnList_ordinal, PrecNoScaleNo);
-    
-    /**
-     * Array of all allowable {@link SqlTypeName} values.
-     */
-    public static final SqlTypeName [] allTypes =
-        new SqlTypeName[] {
-            Boolean, Integer, Varchar, Date, Time, Timestamp, Null, Decimal,
-            Any, Char, Binary, Varbinary, Tinyint, Smallint, Bigint, Real,
-            Double, Symbol, IntervalYearMonth, IntervalDayTime,
-            Float, Multiset, Distinct, Structured, Row, Cursor, ColumnList
-        };
-
     // categorizations used by SqlTypeFamily definitions
 
     public static final SqlTypeName [] booleanTypes = {
-            Boolean
-        };
+        BOOLEAN
+    };
 
     public static final SqlTypeName [] binaryTypes = {
-            Binary, Varbinary
-        };
+        BINARY, VARBINARY
+    };
 
     public static final SqlTypeName [] intTypes =
         {
-            Tinyint, Smallint, Integer, Bigint
+            TINYINT, SMALLINT, INTEGER, BIGINT
         };
 
     public static final SqlTypeName [] exactTypes =
         combine(
             intTypes,
-            new SqlTypeName[] { Decimal });
+            new SqlTypeName[] {DECIMAL});
 
     public static final SqlTypeName [] approxTypes = {
-            Float, Real, Double
-        };
+        FLOAT, REAL, DOUBLE
+    };
 
     public static final SqlTypeName [] numericTypes =
         combine(exactTypes, approxTypes);
@@ -225,60 +135,54 @@ public class SqlTypeName
     public static final SqlTypeName [] fractionalTypes =
         combine(
             approxTypes,
-            new SqlTypeName[] { Decimal });
+            new SqlTypeName[] {DECIMAL});
 
     public static final SqlTypeName [] charTypes = {
-            Char, Varchar
-        };
+        CHAR, VARCHAR
+    };
 
     public static final SqlTypeName [] stringTypes =
         combine(charTypes, binaryTypes);
 
     public static final SqlTypeName [] datetimeTypes =
         {
-            Date, Time, Timestamp
+            DATE, TIME, TIMESTAMP
         };
 
     public static final SqlTypeName [] timeIntervalTypes =
         {
-            IntervalDayTime, IntervalYearMonth
+            INTERVAL_DAY_TIME, INTERVAL_YEAR_MONTH
         };
 
     public static final SqlTypeName [] multisetTypes = {
-            Multiset
-        };
+        MULTISET
+    };
 
     public static final SqlTypeName [] cursorTypes = {
-            Cursor
-        };
+        CURSOR
+    };
 
     public static final SqlTypeName [] columnListTypes = {
-            ColumnList
-        };
-    
-    /**
-     * Enumeration of all allowable {@link SqlTypeName} values.
-     */
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(allTypes);
+        COLUMN_LIST
+    };
 
     static {
         // This squanders some memory since MAX_JDBC_TYPE == 2006!
         jdbcTypeToName = new SqlTypeName[(1 + MAX_JDBC_TYPE) - MIN_JDBC_TYPE];
 
-        setNameForJdbcType(Types.TINYINT, Tinyint);
-        setNameForJdbcType(Types.SMALLINT, Smallint);
-        setNameForJdbcType(Types.BIGINT, Bigint);
-        setNameForJdbcType(Types.INTEGER, Integer);
-        setNameForJdbcType(Types.NUMERIC, Decimal); // REVIEW
-        setNameForJdbcType(Types.DECIMAL, Decimal);
+        setNameForJdbcType(Types.TINYINT, TINYINT);
+        setNameForJdbcType(Types.SMALLINT, SMALLINT);
+        setNameForJdbcType(Types.BIGINT, BIGINT);
+        setNameForJdbcType(Types.INTEGER, INTEGER);
+        setNameForJdbcType(Types.NUMERIC, DECIMAL); // REVIEW
+        setNameForJdbcType(Types.DECIMAL, DECIMAL);
 
-        setNameForJdbcType(Types.FLOAT, Float);
-        setNameForJdbcType(Types.REAL, Real);
-        setNameForJdbcType(Types.DOUBLE, Double);
+        setNameForJdbcType(Types.FLOAT, FLOAT);
+        setNameForJdbcType(Types.REAL, REAL);
+        setNameForJdbcType(Types.DOUBLE, DOUBLE);
 
-        setNameForJdbcType(Types.CHAR, Char);
-        setNameForJdbcType(Types.VARCHAR, Varchar);
+        setNameForJdbcType(Types.CHAR, CHAR);
+        setNameForJdbcType(Types.VARCHAR, VARCHAR);
 
         // TODO
         // setNameForJdbcType(Types.LONGVARCHAR, Longvarchar);
@@ -286,16 +190,16 @@ public class SqlTypeName
         // setNameForJdbcType(Types.LONGVARBINARY, Longvarbinary);
         // setNameForJdbcType(Types.BLOB, Blob);
 
-        setNameForJdbcType(Types.BINARY, Binary);
-        setNameForJdbcType(Types.VARBINARY, Varbinary);
+        setNameForJdbcType(Types.BINARY, BINARY);
+        setNameForJdbcType(Types.VARBINARY, VARBINARY);
 
-        setNameForJdbcType(Types.DATE, Date);
-        setNameForJdbcType(Types.TIME, Time);
-        setNameForJdbcType(Types.TIMESTAMP, Timestamp);
-        setNameForJdbcType(Types.BIT, Boolean);
-        setNameForJdbcType(Types.BOOLEAN, Boolean);
-        setNameForJdbcType(Types.DISTINCT, Distinct);
-        setNameForJdbcType(Types.STRUCT, Structured);
+        setNameForJdbcType(Types.DATE, DATE);
+        setNameForJdbcType(Types.TIME, TIME);
+        setNameForJdbcType(Types.TIMESTAMP, TIMESTAMP);
+        setNameForJdbcType(Types.BIT, BOOLEAN);
+        setNameForJdbcType(Types.BOOLEAN, BOOLEAN);
+        setNameForJdbcType(Types.DISTINCT, DISTINCT);
+        setNameForJdbcType(Types.STRUCT, STRUCTURED);
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -304,60 +208,47 @@ public class SqlTypeName
      * Bitwise-or of flags indicating allowable precision/scale combinations.
      */
     private final int signatures;
-    private static final BigDecimal TWO = new BigDecimal(2);
+
+    /**
+     * Returns true if not of a "pure" standard sql type. "Inpure" types are
+     * {@link #ANY}, {@link #NULL} and {@link #SYMBOL}
+     */
+    private final boolean special;
+    private final int jdbcOrdinal;
 
     //~ Constructors -----------------------------------------------------------
 
-    private SqlTypeName(
-        String name,
-        int ordinal,
-        int signatures)
+    private SqlTypeName(int signatures, boolean special, int jdbcType)
     {
-        super(name, ordinal, null);
         this.signatures = signatures;
+        this.special = special;
+        this.jdbcOrdinal = jdbcType;
     }
 
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Looks up a type name from its ordinal.
-     */
-    public static SqlTypeName get(int ordinal)
-    {
-        return (SqlTypeName) enumeration.getValue(ordinal);
-    }
-
-    /**
      * Looks up a type name from its name.
+     *
+     * @return Type name, or null if not found
      */
     public static SqlTypeName get(String name)
     {
-        if (enumeration.containsName(name)) {
-            return (SqlTypeName) enumeration.getValue(name);
-        } else {
+        try {
+            return SqlTypeName.valueOf(name);
+        } catch (IllegalArgumentException e) {
             return null;
         }
     }
 
-    /**
-     * Returns true if <code>name</code> is defined in {@link
-     * SqlTypeName#enumeration}; otherwise, it returns false.
-     *
-     * @param name
-     */
-    public static boolean containsName(String name)
-    {
-        return enumeration.containsName(name);
-    }
-
     public boolean allowsNoPrecNoScale()
     {
-        return (signatures & PrecNoScaleNo) != 0;
+        return (signatures & PrecScale.NoNo) != 0;
     }
 
     public boolean allowsPrecNoScale()
     {
-        return (signatures & PrecYesScaleNo) != 0;
+        return (signatures & PrecScale.YesNo) != 0;
     }
 
     public boolean allowsPrec()
@@ -397,25 +288,14 @@ public class SqlTypeName
         boolean scale)
     {
         int mask =
-            precision ? (scale ? PrecYesScaleYes : PrecYesScaleNo)
-            : (scale ? 0 : PrecNoScaleNo);
+            precision ? (scale ? PrecScale.YesYes : PrecScale.YesNo)
+            : (scale ? 0 : PrecScale.NoNo);
         return (signatures & mask) != 0;
     }
 
-    /**
-     * Returns true if not of a "pure" standard sql type. "Inpure" types are
-     * {@link #Any}, {@link #Null} and {@link #Symbol}
-     */
     public boolean isSpecial()
     {
-        switch (getOrdinal()) {
-        case Any_ordinal:
-        case Null_ordinal:
-        case Symbol_ordinal:
-            return true;
-        }
-
-        return false;
+        return special;
     }
 
     /**
@@ -424,58 +304,11 @@ public class SqlTypeName
      */
     public int getJdbcOrdinal()
     {
-        switch (getOrdinal()) {
-        case Boolean_ordinal:
-            return Types.BOOLEAN;
-        case Tinyint_ordinal:
-            return Types.TINYINT;
-        case Smallint_ordinal:
-            return Types.SMALLINT;
-        case Integer_ordinal:
-            return Types.INTEGER;
-        case Bigint_ordinal:
-            return Types.BIGINT;
-        case Decimal_ordinal:
-            return Types.DECIMAL;
-        case Float_ordinal:
-            return Types.FLOAT;
-        case Real_ordinal:
-            return Types.REAL;
-        case Double_ordinal:
-            return Types.DOUBLE;
-        case Date_ordinal:
-            return Types.DATE;
-        case Time_ordinal:
-            return Types.TIME;
-        case Timestamp_ordinal:
-            return Types.TIMESTAMP;
-        case Char_ordinal:
-            return Types.CHAR;
-        case Varchar_ordinal:
-            return Types.VARCHAR;
-        case Binary_ordinal:
-            return Types.BINARY;
-        case Varbinary_ordinal:
-            return Types.VARBINARY;
-        case Null_ordinal:
-            return Types.NULL;
-        case Multiset_ordinal:
-            return Types.ARRAY;
-        case Distinct_ordinal:
-            return Types.DISTINCT;
-        case Row_ordinal:
-        case Structured_ordinal:
-            return Types.STRUCT;
-        case Cursor_ordinal:
-            return Types.OTHER + 1;
-        case ColumnList_ordinal:
-            return Types.OTHER + 2;
-        default:
-            return Types.OTHER;
-        }
+        return jdbcOrdinal;
     }
 
-    private static SqlTypeName [] combine(SqlTypeName [] array0,
+    private static SqlTypeName [] combine(
+        SqlTypeName [] array0,
         SqlTypeName [] array1)
     {
         SqlTypeName [] ret = new SqlTypeName[array0.length + array1.length];
@@ -490,23 +323,23 @@ public class SqlTypeName
      */
     public int getDefaultPrecision()
     {
-        switch (getOrdinal()) {
-        case Char_ordinal:
-        case Binary_ordinal:
-        case Varchar_ordinal:
-        case Varbinary_ordinal:
+        switch (this) {
+        case CHAR:
+        case BINARY:
+        case VARCHAR:
+        case VARBINARY:
             return 1;
-        case Time_ordinal:
+        case TIME:
             return 0;
-        case Timestamp_ordinal:
+        case TIMESTAMP:
 
             // TODO jvs 26-July-2004:  should be 6 for microseconds,
             // but we can't support that yet
             return 0;
-        case Decimal_ordinal:
+        case DECIMAL:
             return MAX_NUMERIC_PRECISION;
-        case IntervalYearMonth_ordinal:
-        case IntervalDayTime_ordinal:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             return DEFAULT_INTERVAL_START_PRECISION;
         default:
             return -1;
@@ -519,11 +352,11 @@ public class SqlTypeName
      */
     public int getDefaultScale()
     {
-        switch (getOrdinal()) {
-        case Decimal_ordinal:
+        switch (this) {
+        case DECIMAL:
             return 0;
-        case IntervalYearMonth_ordinal:
-        case IntervalDayTime_ordinal:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             return DEFAULT_INTERVAL_FRACTIONAL_SECOND_PRECISION;
         default:
             return -1;
@@ -557,24 +390,6 @@ public class SqlTypeName
         SqlTypeName name)
     {
         jdbcTypeToName[jdbcType - MIN_JDBC_TYPE] = name;
-    }
-
-    /**
-     * Retrieves a matching SqlTypeName instance based on the <code>
-     * _ordinal</code> deserialized by {@link
-     * EnumeratedValues.SerializableValue#readObject}. Current instance is the
-     * candidate object deserialized from the ObjectInputStream. It is
-     * incomplete, cannot be used as-is, and this method must return a valid
-     * replacement.
-     *
-     * @return replacement instance that matches <code>_ordinal</code>
-     *
-     * @throws java.io.ObjectStreamException
-     */
-    protected Object readResolve()
-        throws ObjectStreamException
-    {
-        return SqlTypeName.get(_ordinal);
     }
 
     /**
@@ -635,8 +450,8 @@ public class SqlTypeName
         }
         Calendar calendar;
 
-        switch (this.getOrdinal()) {
-        case Boolean_ordinal:
+        switch (this) {
+        case BOOLEAN:
             switch (limit) {
             case ZERO:
                 return false;
@@ -652,19 +467,19 @@ public class SqlTypeName
                 throw Util.unexpected(limit);
             }
 
-        case Tinyint_ordinal:
+        case TINYINT:
             return getNumericLimit(2, 8, sign, limit, beyond);
 
-        case Smallint_ordinal:
+        case SMALLINT:
             return getNumericLimit(2, 16, sign, limit, beyond);
 
-        case Integer_ordinal:
+        case INTEGER:
             return getNumericLimit(2, 32, sign, limit, beyond);
 
-        case Bigint_ordinal:
+        case BIGINT:
             return getNumericLimit(2, 64, sign, limit, beyond);
 
-        case Decimal_ordinal:
+        case DECIMAL:
             BigDecimal decimal =
                 getNumericLimit(10, precision, sign, limit, beyond);
             if (decimal == null) {
@@ -676,7 +491,7 @@ public class SqlTypeName
             switch (limit) {
             case OVERFLOW:
                 final BigDecimal other =
-                    (BigDecimal) Bigint.getLimit(sign, limit, beyond, -1, -1);
+                    (BigDecimal) BIGINT.getLimit(sign, limit, beyond, -1, -1);
                 if (decimal.compareTo(other) == (sign ? 1 : -1)) {
                     decimal = other;
                 }
@@ -692,8 +507,8 @@ public class SqlTypeName
             }
             return decimal;
 
-        case Char_ordinal:
-        case Varchar_ordinal:
+        case CHAR:
+        case VARCHAR:
             if (!sign) {
                 return null; // this type does not have negative values
             }
@@ -720,8 +535,8 @@ public class SqlTypeName
             }
             return buf.toString();
 
-        case Binary_ordinal:
-        case Varbinary_ordinal:
+        case BINARY:
+        case VARBINARY:
             if (!sign) {
                 return null; // this type does not have negative values
             }
@@ -747,7 +562,7 @@ public class SqlTypeName
             }
             return bytes;
 
-        case Date_ordinal:
+        case DATE:
             calendar = Calendar.getInstance();
             switch (limit) {
             case ZERO:
@@ -787,7 +602,7 @@ public class SqlTypeName
             calendar.set(Calendar.SECOND, 0);
             return calendar;
 
-        case Time_ordinal:
+        case TIME:
             if (!sign) {
                 return null; // this type does not have negative values
             }
@@ -819,7 +634,7 @@ public class SqlTypeName
             }
             return calendar;
 
-        case Timestamp_ordinal:
+        case TIMESTAMP:
             calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
             switch (limit) {
             case ZERO:
@@ -874,7 +689,7 @@ public class SqlTypeName
             return calendar;
 
         default:
-            throw unexpected();
+            throw Util.unexpected(this);
         }
     }
 
@@ -886,20 +701,20 @@ public class SqlTypeName
      */
     public int getMaxPrecision()
     {
-        switch (getOrdinal()) {
-        case Decimal_ordinal:
+        switch (this) {
+        case DECIMAL:
             return MAX_NUMERIC_PRECISION;
-        case Varchar_ordinal:
-        case Char_ordinal:
+        case VARCHAR:
+        case CHAR:
             return MAX_CHAR_LENGTH;
-        case Varbinary_ordinal:
-        case Binary_ordinal:
+        case VARBINARY:
+        case BINARY:
             return MAX_BINARY_LENGTH;
-        case Time_ordinal:
-        case Timestamp_ordinal:
+        case TIME:
+        case TIMESTAMP:
             return MAX_DATETIME_PRECISION;
-        case IntervalYearMonth_ordinal:
-        case IntervalDayTime_ordinal:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             return MAX_INTERVAL_START_PRECISION;
         default:
             return -1;
@@ -915,11 +730,11 @@ public class SqlTypeName
      */
     public int getMaxScale()
     {
-        switch (getOrdinal()) {
-        case Decimal_ordinal:
+        switch (this) {
+        case DECIMAL:
             return MAX_NUMERIC_SCALE;
-        case IntervalYearMonth_ordinal:
-        case IntervalDayTime_ordinal:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             return MAX_INTERVAL_FRACTIONAL_SECOND_PRECISION;
         default:
             return -1;
@@ -934,23 +749,23 @@ public class SqlTypeName
      */
     public int getMinPrecision()
     {
-        switch (getOrdinal()) {
-        case Decimal_ordinal:
-        case Varchar_ordinal:
-        case Char_ordinal:
-        case Varbinary_ordinal:
-        case Binary_ordinal:
-        case Time_ordinal:
-        case Timestamp_ordinal:
+        switch (this) {
+        case DECIMAL:
+        case VARCHAR:
+        case CHAR:
+        case VARBINARY:
+        case BINARY:
+        case TIME:
+        case TIMESTAMP:
             return 1;
-        case IntervalYearMonth_ordinal:
-        case IntervalDayTime_ordinal:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             return MIN_INTERVAL_START_PRECISION;
         default:
             return -1;
         }
     }
-    
+
     /**
      * Returns the minimum scale (or fractional second precision
      * in the case of intervals) allowed for this type,
@@ -960,10 +775,10 @@ public class SqlTypeName
      */
     public int getMinScale()
     {
-        switch (getOrdinal()) {
+        switch (this) {
         //TODO: Minimum numeric scale for decimal
-        case IntervalYearMonth_ordinal:
-        case IntervalDayTime_ordinal:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             return MIN_INTERVAL_FRACTIONAL_SECOND_PRECISION;
         default:
             return -1;
@@ -1015,30 +830,45 @@ public class SqlTypeName
 
     public SqlLiteral createLiteral(Object o, SqlParserPos pos)
     {
-        switch (getOrdinal()) {
-        case Boolean_ordinal:
+        switch (this) {
+        case BOOLEAN:
             return SqlLiteral.createBoolean((Boolean) o, pos);
-        case Tinyint_ordinal:
-        case Smallint_ordinal:
-        case Integer_ordinal:
-        case Bigint_ordinal:
-        case Decimal_ordinal:
+        case TINYINT:
+        case SMALLINT:
+        case INTEGER:
+        case BIGINT:
+        case DECIMAL:
             return SqlLiteral.createExactNumeric(o.toString(), pos);
-        case Varchar_ordinal:
-        case Char_ordinal:
+        case VARCHAR:
+        case CHAR:
             return SqlLiteral.createCharString((String) o, pos);
-        case Varbinary_ordinal:
-        case Binary_ordinal:
+        case VARBINARY:
+        case BINARY:
             return SqlLiteral.createBinaryString((byte[]) o, pos);
-        case Date_ordinal:
+        case DATE:
             return SqlLiteral.createDate((Calendar) o, pos);
-        case Time_ordinal:
+        case TIME:
             return SqlLiteral.createTime((Calendar) o, 0 /* todo */, pos);
-        case Timestamp_ordinal:
+        case TIMESTAMP:
             return SqlLiteral.createTimestamp((Calendar) o, 0 /* todo */, pos);
         default:
-            throw unexpected();
+            throw Util.unexpected(this);
         }
+    }
+
+    /**
+      * Flags indicating precision/scale combinations.
+      *
+      * <p>Note: for intervals:<ul>
+      * <li>precision = start (leading field) precision</li>
+      * <li>scale = fractional second precision</li>
+      * </ul>
+      */
+    private interface PrecScale
+    {
+        int NoNo = 1;
+        int YesNo = 2;
+        int YesYes = 4;
     }
 }
 

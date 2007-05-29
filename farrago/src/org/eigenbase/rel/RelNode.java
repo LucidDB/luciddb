@@ -90,6 +90,11 @@ public interface RelNode extends Cloneable
      */
     public RexNode [] getChildExps();
 
+    /**
+     * Returns the cluster this relational expression belongs to.
+     *
+     * @return cluster
+     */
     public RelOptCluster getCluster();
 
     /**
@@ -112,8 +117,21 @@ public interface RelNode extends Cloneable
      */
     public RelTraitSet getTraits();
 
+    /**
+     * Sets the name of the variable which is to be implicitly set at runtime
+     * each time a row is returned from this relational expression
+     *
+     * @param correlVariable Name of correlating variable
+     */
     public void setCorrelVariable(String correlVariable);
 
+    /**
+     * Returns the name of the variable which is to be implicitly set at runtime
+     * each time a row is returned from this relational expression; or null
+     * if there is no variable.
+     *
+     * @return Name of correlating variable, or null
+     */
     public String getCorrelVariable();
 
     /**
@@ -122,10 +140,19 @@ public interface RelNode extends Cloneable
      */
     public boolean isDistinct();
 
+    /**
+     * Returns the ID of this relational expression, unique among all relational
+     * expressions created since the server was started.
+     *
+     * @return Unique ID
+     */
     public int getId();
 
     /**
-     * Gets the <code>i</code><sup>th</sup> input.
+     * Returns the <code>i</code><sup>th</sup> input relational expression.
+     *
+     * @param i Ordinal of input
+     * @return <code>i</code><sup>th</sup> input
      */
     public RelNode getInput(int i);
 
@@ -136,6 +163,13 @@ public interface RelNode extends Cloneable
      */
     public String getOrCreateCorrelVariable();
 
+    /**
+     * Returns the sub-query this relational expression belongs to. A sub-query
+     * determines the scope for correlating variables (see
+     * {@link #setCorrelVariable(String)}).
+     *
+     * @return Sub-query
+     */
     public RelOptQuery getQuery();
 
     /**
@@ -298,7 +332,7 @@ public interface RelNode extends Cloneable
      * that children have already been normalized).
      *
      * <p>If you want a descriptive string which contains the identity, call
-     * {@link #toString()}, which always returns "rel#{id}:{digest}".
+     * {@link Object#toString()}, which always returns "rel#{id}:{digest}".
      */
     String getDigest();
 

@@ -28,8 +28,6 @@ import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.util.*;
 
-import java.awt.*;
-
 /**
  * FennelStorage is the JNI interface for calling Fennel from Farrago. Most
  * methods have package access only; other classes in this package expose public
@@ -113,7 +111,7 @@ public class FennelStorage
     /**
      * Opens a stream graph.
      *
-     * @param hStream handle to stream
+     * @param hStreamGraph handle to stream graph
      * @param hTxn handle to txn in which stream is being opened
      * @param javaStreamMap optional FennelJavaStreamMap
      * @param javaErrorTarget error target handles row errors
@@ -154,7 +152,7 @@ public class FennelStorage
      */
     static native int tupleStreamTransformFetch(
         long hStream,
-        int execSTreamInputOrdinal,
+        int execStreamInputOrdinal,
         byte [] byteArray)
         throws SQLException;
 
@@ -170,7 +168,7 @@ public class FennelStorage
     /**
      * Closes a stream graph.
      *
-     * @param hStream handle to stream graph
+     * @param hStreamGraph handle to stream graph
      * @param action CLOSE_XXX
      */
     static native void tupleStreamGraphClose(
