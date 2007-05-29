@@ -29,8 +29,6 @@ import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
-import org.eigenbase.sql.SqlWriter;
-import org.eigenbase.sql.pretty.SqlPrettyWriter;
 
 import java.util.*;
 
@@ -662,8 +660,9 @@ public abstract class SqlOperator
     }
 
     /**
-     * Accepts a {@link SqlVisitor}, directing an {@link
-     * SqlBasicVisitor.ArgHandler} to visit operand of a call. The argument
+     * Accepts a {@link SqlVisitor}, directing an
+     * {@link org.eigenbase.sql.util.SqlBasicVisitor.ArgHandler} 
+     * to visit operand of a call. The argument
      * handler allows fine control about how the operands are visited, and how
      * the results are combined.
      *
@@ -710,7 +709,7 @@ public abstract class SqlOperator
     {
         return true;
     }
-    
+
     /**
      * @return true iff it is unsafe to cache query plans referencing this
      * operator; false is assumed by default

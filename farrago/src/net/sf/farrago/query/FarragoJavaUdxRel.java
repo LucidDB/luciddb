@@ -29,7 +29,6 @@ import openjava.mop.*;
 
 import openjava.ptree.*;
 
-import java.util.*;
 import java.util.List;
 
 import org.eigenbase.oj.rel.*;
@@ -71,7 +70,7 @@ public class FarragoJavaUdxRel
      * identifiers, e.g. x.y.z or x."y".z
      * @param serverMofId if not null, the invoked UDX can access a
      * SQL/MED data server with the given MOFID at runtime via {@link
-     * FarragoUdrRuntime.getDataServerRuntimeSupport}
+     * FarragoUdrRuntime#getDataServerRuntimeSupport}
      * @param args arguments to UDX invocation
      * @param relInputs relational inputs
      */

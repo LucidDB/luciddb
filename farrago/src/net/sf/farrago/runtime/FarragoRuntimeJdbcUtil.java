@@ -46,7 +46,7 @@ public abstract class FarragoRuntimeJdbcUtil
             type.isNullable() ? ParameterMetaData.parameterNullable
             : ParameterMetaData.parameterNoNulls;
         fieldMeta.type = type.getSqlTypeName().getJdbcOrdinal();
-        fieldMeta.typeName = type.getSqlTypeName().getName();
+        fieldMeta.typeName = type.getSqlTypeName().name();
 
         // TODO: Get class name;
         fieldMeta.className = "";

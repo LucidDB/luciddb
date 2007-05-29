@@ -233,8 +233,8 @@ public class FarragoCalcSystemTest
             for (int i = 0; i < n; i++) {
                 SqlTypeName typeName =
                     (SqlTypeName) families[i].getTypeNames().iterator().next();
-                if (typeName.equals(SqlTypeName.Any)) {
-                    typeName = SqlTypeName.Boolean;
+                if (typeName.equals(SqlTypeName.ANY)) {
+                    typeName = SqlTypeName.BOOLEAN;
                 }
 
                 int precision = 0;
@@ -244,7 +244,7 @@ public class FarragoCalcSystemTest
                 SqlDataTypeSpec dt =
                     new SqlDataTypeSpec(
                         new SqlIdentifier(
-                            typeName.getName(),
+                            typeName.name(),
                             SqlParserPos.ZERO),
                         precision,
                         0,
@@ -288,7 +288,7 @@ public class FarragoCalcSystemTest
             Integer nOperands =
                 (Integer) otc.getOperandCountRange().getAllowedList().get(0);
             SqlTypeFamily [] families = new SqlTypeFamily[nOperands.intValue()];
-            Arrays.fill(families, SqlTypeFamily.Boolean);
+            Arrays.fill(families, SqlTypeFamily.BOOLEAN);
             return families;
         }
     }

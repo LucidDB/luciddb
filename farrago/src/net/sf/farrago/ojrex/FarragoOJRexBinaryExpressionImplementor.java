@@ -241,7 +241,7 @@ public class FarragoOJRexBinaryExpressionImplementor
         case BinaryExpression.LESSEQUAL:
             for (int i = 0; i < 2; i++) {
                 if (call.operands[i].getType().getSqlTypeName()
-                    == SqlTypeName.Boolean) {
+                    == SqlTypeName.BOOLEAN) {
                     valueOperands[i] =
                         new ConditionalExpression(
                             operands[i],
@@ -258,7 +258,7 @@ public class FarragoOJRexBinaryExpressionImplementor
                     ojBinaryExpressionOrdinal,
                     valueOperands[1]);
 
-            if ((returnType.getSqlTypeName() != SqlTypeName.Boolean)
+            if ((returnType.getSqlTypeName() != SqlTypeName.BOOLEAN)
                 && (factory.getClassForPrimitive(returnType) != null)) {
                 // Cast to correct primitive return type so compiler is happy
                 return

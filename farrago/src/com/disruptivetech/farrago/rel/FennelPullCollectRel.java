@@ -101,7 +101,7 @@ public class FennelPullCollectRel
         FemTupleDescriptor outTupleDesc = repos.newFemTupleDescriptor();
         RelDataType type =
             getCluster().getTypeFactory().createSqlType(
-                SqlTypeName.Varbinary,
+                SqlTypeName.VARBINARY,
                 4096);
         FennelRelUtil.addTupleAttrDescriptor(repos, outTupleDesc, type);
         collectStreamDef.setOutputDesc(outTupleDesc);

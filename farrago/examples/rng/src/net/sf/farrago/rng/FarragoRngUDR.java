@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -62,13 +62,11 @@ public abstract class FarragoRngUDR
      *
      * @param rngName name of the RNG (possibly qualified)
      *
-     * @param n upper limit on generated integer
-     *
      * @param n upper limit on generated nonnegative integer, or -1 for
      * unlimited (including negative)
      */
     public static int rng_next_int(
-        String rngName, 
+        String rngName,
         int n)
         throws SQLException
     {
@@ -78,13 +76,13 @@ public abstract class FarragoRngUDR
         FarragoSession session =
             FarragoJdbcRoutineDriver.getSessionForConnection(conn);
 
-        FarragoSessionStmtValidator stmtValidator = 
+        FarragoSessionStmtValidator stmtValidator =
             session.newStmtValidator();
 
         try {
             SqlParser sqlParser = new SqlParser(rngName);
             SqlIdentifier rngId = (SqlIdentifier) sqlParser.parseExpression();
-            
+
             RngRandomNumberGenerator rng =
                 stmtValidator.findSchemaObject(
                     rngId,
@@ -131,7 +129,7 @@ public abstract class FarragoRngUDR
             throw FarragoJdbcUtil.newSqlException(ex, tracer);
         }
     }
-    
+
     public static RngmodelPackage getRngModelPackage(FarragoRepos repos)
     {
         return (RngmodelPackage)
@@ -139,9 +137,9 @@ public abstract class FarragoRngUDR
     }
 
     // TODO:  file lock
-    
+
     public static void writeSerialized(
-        File file, 
+        File file,
         Random random)
         throws IOException
     {

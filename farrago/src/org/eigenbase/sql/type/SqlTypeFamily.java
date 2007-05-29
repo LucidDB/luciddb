@@ -23,12 +23,9 @@
 package org.eigenbase.sql.type;
 
 import java.sql.*;
-
 import java.util.*;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
-
 
 /**
  * SqlTypeFamily provides SQL type categorization.
@@ -47,164 +44,70 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlTypeFamily
-    extends EnumeratedValues.BasicValue
+public enum SqlTypeFamily
     implements RelDataTypeFamily
 {
 
-    //~ Static fields/initializers ---------------------------------------------
-
-    // Enumeration ordinals
-    public static final int Character_ordinal = 0;
-    public static final int Binary_ordinal = 1;
-    public static final int Numeric_ordinal = 2;
-    public static final int Date_ordinal = 3;
-    public static final int Time_ordinal = 4;
-    public static final int Timestamp_ordinal = 5;
-    public static final int Boolean_ordinal = 6;
-    public static final int IntervalYearMonth_ordinal = 7;
-    public static final int IntervalDayTime_ordinal = 8;
-    public static final int String_ordinal = 9;
-    public static final int ApproximateNumeric_ordinal = 10;
-    public static final int ExactNumeric_ordinal = 11;
-    public static final int Integer_ordinal = 12;
-    public static final int Datetime_ordinal = 13;
-    public static final int DatetimeInterval_ordinal = 14;
-    public static final int Multiset_ordinal = 15;
-    public static final int Any_ordinal = 16;
-    public static final int Cursor_ordinal = 17;
-    public static final int ColumnList_ordinal = 18;
-
     // Primary families.
 
-    public static final SqlTypeFamily Character =
-        new SqlTypeFamily(
-            "CHARACTER",
-            Character_ordinal,
-            SqlTypeName.charTypes);
+    CHARACTER(
+        SqlTypeName.charTypes),
 
-    public static final SqlTypeFamily Binary =
-        new SqlTypeFamily(
-            "BINARY",
-            Binary_ordinal,
-            SqlTypeName.binaryTypes);
+    BINARY(
+        SqlTypeName.binaryTypes),
 
-    public static final SqlTypeFamily Numeric =
-        new SqlTypeFamily(
-            "NUMERIC",
-            Numeric_ordinal,
-            SqlTypeName.numericTypes);
+    NUMERIC(
+        SqlTypeName.numericTypes),
 
-    public static final SqlTypeFamily Date =
-        new SqlTypeFamily(
-            "DATE",
-            Date_ordinal,
-            new SqlTypeName[] { SqlTypeName.Date });
+    DATE(
+        new SqlTypeName[] { SqlTypeName.DATE}),
 
-    public static final SqlTypeFamily Time =
-        new SqlTypeFamily(
-            "TIME",
-            Time_ordinal,
-            new SqlTypeName[] { SqlTypeName.Time });
+    TIME(
+        new SqlTypeName[] { SqlTypeName.TIME}),
 
-    public static final SqlTypeFamily Timestamp =
-        new SqlTypeFamily(
-            "TIMESTAMP",
-            Timestamp_ordinal,
-            new SqlTypeName[] { SqlTypeName.Timestamp });
+    TIMESTAMP(
+        new SqlTypeName[] { SqlTypeName.TIMESTAMP}),
 
-    public static final SqlTypeFamily Boolean =
-        new SqlTypeFamily(
-            "BOOLEAN",
-            Boolean_ordinal,
-            SqlTypeName.booleanTypes);
+    BOOLEAN(
+        SqlTypeName.booleanTypes),
 
-    public static final SqlTypeFamily IntervalYearMonth =
-        new SqlTypeFamily(
-            "INTERVAL_YEAR_MONTH",
-            IntervalYearMonth_ordinal,
-            new SqlTypeName[] { SqlTypeName.IntervalYearMonth });
+    INTERVAL_YEAR_MONTH(
+        new SqlTypeName[] { SqlTypeName.INTERVAL_YEAR_MONTH}),
 
-    public static final SqlTypeFamily IntervalDayTime =
-        new SqlTypeFamily(
-            "INTERVAL_DAY_TIME",
-            IntervalDayTime_ordinal,
-            new SqlTypeName[] { SqlTypeName.IntervalDayTime });
+    INTERVAL_DAY_TIME(
+        new SqlTypeName[] { SqlTypeName.INTERVAL_DAY_TIME}),
 
     // Secondary families.
 
-    public static final SqlTypeFamily String =
-        new SqlTypeFamily(
-            "STRING",
-            String_ordinal,
-            SqlTypeName.stringTypes);
+    STRING(
+        SqlTypeName.stringTypes),
 
-    public static final SqlTypeFamily ApproximateNumeric =
-        new SqlTypeFamily(
-            "APPROXIMATE_NUMERIC",
-            ApproximateNumeric_ordinal,
-            SqlTypeName.approxTypes);
+    APPROXIMATE_NUMERIC(
+        SqlTypeName.approxTypes),
 
-    public static final SqlTypeFamily ExactNumeric =
-        new SqlTypeFamily(
-            "EXACT_NUMERIC",
-            ExactNumeric_ordinal,
-            SqlTypeName.exactTypes);
+    EXACT_NUMERIC(
+        SqlTypeName.exactTypes),
 
-    public static final SqlTypeFamily Integer =
-        new SqlTypeFamily(
-            "INTEGER",
-            Integer_ordinal,
-            SqlTypeName.intTypes);
+    INTEGER(
+        SqlTypeName.intTypes),
 
-    public static final SqlTypeFamily Datetime =
-        new SqlTypeFamily(
-            "DATETIME",
-            Datetime_ordinal,
-            SqlTypeName.datetimeTypes);
+    DATETIME(
+        SqlTypeName.datetimeTypes),
 
-    public static final SqlTypeFamily DatetimeInterval =
-        new SqlTypeFamily(
-            "DATETIME_INTERVAL",
-            DatetimeInterval_ordinal,
-            SqlTypeName.timeIntervalTypes);
+    DATETIME_INTERVAL(
+        SqlTypeName.timeIntervalTypes),
 
-    public static final SqlTypeFamily Multiset =
-        new SqlTypeFamily(
-            "MULTISET",
-            Multiset_ordinal,
-            SqlTypeName.multisetTypes);
+    MULTISET(
+        SqlTypeName.multisetTypes),
 
-    public static final SqlTypeFamily Any =
-        new SqlTypeFamily(
-            "ANY",
-            Any_ordinal,
-            SqlTypeName.allTypes);
+    ANY(
+        SqlTypeName.values()),
 
-    public static final SqlTypeFamily Cursor =
-        new SqlTypeFamily(
-            "CURSOR",
-            Cursor_ordinal,
-            SqlTypeName.cursorTypes);
-    
-    public static final SqlTypeFamily ColumnList =
-        new SqlTypeFamily(
-            "COLUMN_LIST",
-            ColumnList_ordinal,
-            SqlTypeName.columnListTypes);
+    CURSOR(
+        SqlTypeName.cursorTypes),
 
-    // array of all families
-    private static final SqlTypeFamily [] values =
-        new SqlTypeFamily[] {
-            Character, Binary, Numeric, Date, Time, Timestamp, Boolean,
-            IntervalYearMonth, IntervalDayTime,
-            String, ApproximateNumeric, ExactNumeric,
-            Integer, Datetime, DatetimeInterval,
-            Multiset,
-            Any,
-            Cursor,
-            ColumnList
-        };
+    COLUMN_LIST(
+        SqlTypeName.columnListTypes);
 
     private static SqlTypeFamily [] jdbcTypeToFamily;
 
@@ -216,89 +119,79 @@ public class SqlTypeFamily
             new SqlTypeFamily[(1 + SqlTypeName.MAX_JDBC_TYPE)
             - SqlTypeName.MIN_JDBC_TYPE];
 
-        setFamilyForJdbcType(Types.BIT, Numeric);
-        setFamilyForJdbcType(Types.TINYINT, Numeric);
-        setFamilyForJdbcType(Types.SMALLINT, Numeric);
-        setFamilyForJdbcType(Types.BIGINT, Numeric);
-        setFamilyForJdbcType(Types.INTEGER, Numeric);
-        setFamilyForJdbcType(Types.NUMERIC, Numeric);
-        setFamilyForJdbcType(Types.DECIMAL, Numeric);
+        setFamilyForJdbcType(Types.BIT, NUMERIC);
+        setFamilyForJdbcType(Types.TINYINT, NUMERIC);
+        setFamilyForJdbcType(Types.SMALLINT, NUMERIC);
+        setFamilyForJdbcType(Types.BIGINT, NUMERIC);
+        setFamilyForJdbcType(Types.INTEGER, NUMERIC);
+        setFamilyForJdbcType(Types.NUMERIC, NUMERIC);
+        setFamilyForJdbcType(Types.DECIMAL, NUMERIC);
 
-        setFamilyForJdbcType(Types.FLOAT, Numeric);
-        setFamilyForJdbcType(Types.REAL, Numeric);
-        setFamilyForJdbcType(Types.DOUBLE, Numeric);
+        setFamilyForJdbcType(Types.FLOAT, NUMERIC);
+        setFamilyForJdbcType(Types.REAL, NUMERIC);
+        setFamilyForJdbcType(Types.DOUBLE, NUMERIC);
 
-        setFamilyForJdbcType(Types.CHAR, Character);
-        setFamilyForJdbcType(Types.VARCHAR, Character);
-        setFamilyForJdbcType(Types.LONGVARCHAR, Character);
-        setFamilyForJdbcType(Types.CLOB, Character);
+        setFamilyForJdbcType(Types.CHAR, CHARACTER);
+        setFamilyForJdbcType(Types.VARCHAR, CHARACTER);
+        setFamilyForJdbcType(Types.LONGVARCHAR, CHARACTER);
+        setFamilyForJdbcType(Types.CLOB, CHARACTER);
 
-        setFamilyForJdbcType(Types.BINARY, Binary);
-        setFamilyForJdbcType(Types.VARBINARY, Binary);
-        setFamilyForJdbcType(Types.LONGVARBINARY, Binary);
-        setFamilyForJdbcType(Types.BLOB, Binary);
+        setFamilyForJdbcType(Types.BINARY, BINARY);
+        setFamilyForJdbcType(Types.VARBINARY, BINARY);
+        setFamilyForJdbcType(Types.LONGVARBINARY, BINARY);
+        setFamilyForJdbcType(Types.BLOB, BINARY);
 
-        setFamilyForJdbcType(Types.DATE, Date);
-        setFamilyForJdbcType(Types.TIME, Time);
-        setFamilyForJdbcType(Types.TIMESTAMP, Timestamp);
-        setFamilyForJdbcType(Types.BOOLEAN, Boolean);
+        setFamilyForJdbcType(Types.DATE, DATE);
+        setFamilyForJdbcType(Types.TIME, TIME);
+        setFamilyForJdbcType(Types.TIMESTAMP, TIMESTAMP);
+        setFamilyForJdbcType(Types.BOOLEAN, BOOLEAN);
 
         setFamilyForJdbcType(
-            SqlTypeName.Cursor.getJdbcOrdinal(),
-            Cursor);
-        
+            SqlTypeName.CURSOR.getJdbcOrdinal(),
+            CURSOR);
+
         setFamilyForJdbcType(
-            SqlTypeName.ColumnList.getJdbcOrdinal(),
-            ColumnList);
+            SqlTypeName.COLUMN_LIST.getJdbcOrdinal(),
+            COLUMN_LIST);
 
         sqlTypeToFamily =
-            new SqlTypeFamily[SqlTypeName.enumeration.getMax() + 1];
-        sqlTypeToFamily[SqlTypeName.Boolean_ordinal] = Boolean;
-        sqlTypeToFamily[SqlTypeName.Char_ordinal] = Character;
-        sqlTypeToFamily[SqlTypeName.Varchar_ordinal] = Character;
-        sqlTypeToFamily[SqlTypeName.Binary_ordinal] = Binary;
-        sqlTypeToFamily[SqlTypeName.Varbinary_ordinal] = Binary;
-        sqlTypeToFamily[SqlTypeName.Decimal_ordinal] = Numeric;
-        sqlTypeToFamily[SqlTypeName.Tinyint_ordinal] = Numeric;
-        sqlTypeToFamily[SqlTypeName.Smallint_ordinal] = Numeric;
-        sqlTypeToFamily[SqlTypeName.Integer_ordinal] = Numeric;
-        sqlTypeToFamily[SqlTypeName.Bigint_ordinal] = Numeric;
-        sqlTypeToFamily[SqlTypeName.Real_ordinal] = Numeric;
-        sqlTypeToFamily[SqlTypeName.Double_ordinal] = Numeric;
-        sqlTypeToFamily[SqlTypeName.Float_ordinal] = Numeric;
-        sqlTypeToFamily[SqlTypeName.Date_ordinal] = Date;
-        sqlTypeToFamily[SqlTypeName.Time_ordinal] = Time;
-        sqlTypeToFamily[SqlTypeName.Timestamp_ordinal] = Timestamp;
-        sqlTypeToFamily[SqlTypeName.IntervalYearMonth_ordinal] =
-            IntervalYearMonth;
-        sqlTypeToFamily[SqlTypeName.Null_ordinal] = Any;
-        sqlTypeToFamily[SqlTypeName.Any_ordinal] = Any;
-        sqlTypeToFamily[SqlTypeName.IntervalDayTime_ordinal] = IntervalDayTime;
-        sqlTypeToFamily[SqlTypeName.Cursor_ordinal] = Cursor;
-        sqlTypeToFamily[SqlTypeName.ColumnList_ordinal] = ColumnList;
+            new SqlTypeFamily[SqlTypeName.values().length];
+        sqlTypeToFamily[SqlTypeName.BOOLEAN.ordinal()] = BOOLEAN;
+        sqlTypeToFamily[SqlTypeName.CHAR.ordinal()] = CHARACTER;
+        sqlTypeToFamily[SqlTypeName.VARCHAR.ordinal()] = CHARACTER;
+        sqlTypeToFamily[SqlTypeName.BINARY.ordinal()] = BINARY;
+        sqlTypeToFamily[SqlTypeName.VARBINARY.ordinal()] = BINARY;
+        sqlTypeToFamily[SqlTypeName.DECIMAL.ordinal()] = NUMERIC;
+        sqlTypeToFamily[SqlTypeName.TINYINT.ordinal()] = NUMERIC;
+        sqlTypeToFamily[SqlTypeName.SMALLINT.ordinal()] = NUMERIC;
+        sqlTypeToFamily[SqlTypeName.INTEGER.ordinal()] = NUMERIC;
+        sqlTypeToFamily[SqlTypeName.BIGINT.ordinal()] = NUMERIC;
+        sqlTypeToFamily[SqlTypeName.REAL.ordinal()] = NUMERIC;
+        sqlTypeToFamily[SqlTypeName.DOUBLE.ordinal()] = NUMERIC;
+        sqlTypeToFamily[SqlTypeName.FLOAT.ordinal()] = NUMERIC;
+        sqlTypeToFamily[SqlTypeName.DATE.ordinal()] = DATE;
+        sqlTypeToFamily[SqlTypeName.TIME.ordinal()] = TIME;
+        sqlTypeToFamily[SqlTypeName.TIMESTAMP.ordinal()] = TIMESTAMP;
+        sqlTypeToFamily[SqlTypeName.INTERVAL_YEAR_MONTH.ordinal()] =
+            INTERVAL_YEAR_MONTH;
+        sqlTypeToFamily[SqlTypeName.NULL.ordinal()] = ANY;
+        sqlTypeToFamily[SqlTypeName.ANY.ordinal()] = ANY;
+        sqlTypeToFamily[SqlTypeName.INTERVAL_DAY_TIME.ordinal()] = INTERVAL_DAY_TIME;
+        sqlTypeToFamily[SqlTypeName.CURSOR.ordinal()] = CURSOR;
+        sqlTypeToFamily[SqlTypeName.COLUMN_LIST.ordinal()] = COLUMN_LIST;
     }
-
-    /**
-     * Enumeration of all families.
-     */
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(values);
 
     //~ Instance fields --------------------------------------------------------
 
     /**
      * List of {@link SqlTypeName}s included in this family.
      */
-    private List typeNames;
+    private List<SqlTypeName> typeNames;
 
     //~ Constructors -----------------------------------------------------------
 
-    private SqlTypeFamily(
-        String name,
-        int ordinal,
-        SqlTypeName [] typeNames)
+    private SqlTypeFamily(SqlTypeName[] typeNames)
     {
-        super(name, ordinal, null);
         this.typeNames = Collections.unmodifiableList(
                 Arrays.asList(typeNames));
     }
@@ -321,7 +214,7 @@ public class SqlTypeFamily
      */
     public static SqlTypeFamily getFamilyForSqlType(SqlTypeName sqlTypeName)
     {
-        return sqlTypeToFamily[sqlTypeName.getOrdinal()];
+        return sqlTypeToFamily[sqlTypeName.ordinal()];
     }
 
     /**
@@ -339,7 +232,7 @@ public class SqlTypeFamily
     /**
      * @return collection of {@link SqlTypeName}s included in this family
      */
-    public Collection getTypeNames()
+    public Collection<SqlTypeName> getTypeNames()
     {
         return typeNames;
     }

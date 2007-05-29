@@ -123,12 +123,12 @@ public abstract class DdlGenerator
     {
         //REVIEW: make this work for UDTs
         if (classifier == null) {
-            return SqlTypeName.Any;
+            return SqlTypeName.ANY;
         } else {
             String typeName = classifier.getName();
             SqlTypeName stn = SqlTypeName.get(typeName);
             if (stn == null) {
-                return SqlTypeName.Any;
+                return SqlTypeName.ANY;
             }
             return stn;
         }

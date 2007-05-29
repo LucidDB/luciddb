@@ -30,6 +30,8 @@ import org.eigenbase.rel.*;
  * relational expressions} into a plan. Calling conventions typically have their
  * own protocol for walking over a tree, and correspondingly have their own
  * implementors, which are subclasses of <code>RelImplementor</code>.
+ *
+ * @version $Id$
  */
 public interface RelImplementor
 {
@@ -38,6 +40,12 @@ public interface RelImplementor
 
     /**
      * Implements a relational expression according to a calling convention.
+     *
+     * @param parent Parent relational expression
+     * @param ordinal Ordinal of child within its parent
+     * @param child Child relational expression
+     *
+     * @return Interpretation of the return value is left to the implementor
      */
     Object visitChild(
         RelNode parent,
@@ -50,7 +58,7 @@ public interface RelImplementor
      *
      * @param child Child relational expression
      *
-     * @return
+     * @return Interpretation of the return value is left to the implementor
      */
     Object visitChildInternal(RelNode child);
 }

@@ -22,8 +22,6 @@
 */
 package net.sf.farrago.plugin;
 
-import java.net.*;
-
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -49,7 +47,7 @@ public abstract class FarragoPluginCache
 
     //~ Instance fields --------------------------------------------------------
 
-    private final Map mapMofIdToPlugin;
+    private final Map<String, Object> mapMofIdToPlugin;
     private final FarragoObjectCache sharedCache;
     private final FarragoRepos repos;
     private final FarragoPluginClassLoader classLoader;
@@ -74,7 +72,7 @@ public abstract class FarragoPluginCache
         this.sharedCache = sharedCache;
         this.repos = repos;
         this.classLoader = classLoader;
-        mapMofIdToPlugin = new HashMap();
+        this.mapMofIdToPlugin = new HashMap<String, Object>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -98,7 +96,7 @@ public abstract class FarragoPluginCache
     /**
      * @return mapMofIdToPlugin
      */
-    public Map getMapMofIdToPlugin()
+    public Map<String, Object> getMapMofIdToPlugin()
     {
         return mapMofIdToPlugin;
     }
@@ -130,7 +128,7 @@ public abstract class FarragoPluginCache
 
         Object obj = entry.getValue();
         mapMofIdToPlugin.put(
-            entry.getKey(),
+            (String) entry.getKey(),
             obj);
         return obj;
     }

@@ -332,7 +332,8 @@ public class LcsIndexGuide
     public FemTupleDescriptor getClusterTupleDesc(FemLocalIndex index)
     {
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
-        List flattenedColList = flattenedRowType.getFieldList();
+        List<RelDataTypeField> flattenedColList =
+            flattenedRowType.getFieldList();
 
         for (CwmIndexedFeature indexedFeature : index.getIndexedFeature()) {
             FemAbstractColumn column =
@@ -342,8 +343,7 @@ public class LcsIndexGuide
 
             // add an entry for each subcolumn within a complex type
             for (int i = colOrd; i < (colOrd + numSubCols); i++) {
-                RelDataTypeField field =
-                    (RelDataTypeField) flattenedColList.get(i);
+                RelDataTypeField field = flattenedColList.get(i);
                 FennelRelUtil.addTupleAttrDescriptor(
                     repos,
                     tupleDesc,
@@ -445,13 +445,13 @@ public class LcsIndexGuide
         assert (i != -1);
         return i;
     }
-    
+
     /**
      * Returns the unflattened column ordinal corresponding to a flattened
      * field ordinal
-     * 
+     *
      * @param fieldOrdinal flattened ordinal
-     * 
+     *
      * @return unflattened ordinal
      */
     public int unFlattenOrdinal(int fieldOrdinal)
@@ -679,12 +679,12 @@ public class LcsIndexGuide
     }
 
     /**
-     * Creates the row data type of error records produced by a splicer 
-     * when there unique constraint violations. The row type generated 
+     * Creates the row data type of error records produced by a splicer
+     * when there unique constraint violations. The row type generated
      * contains the same column types as the btree key [K1, K2, ..., RID]
-     * 
+     *
      * @param uniqueIndex the unique index updated by the splicer
-     * 
+     *
      * @return row data type for splicer error records
      */
     public RelDataType createSplicerErrorType(FemLocalIndex uniqueIndex) {
@@ -716,7 +716,7 @@ public class LcsIndexGuide
         // returnMode indicates which input stream or streams contain the
         // data that the barrier should produce
         barrier.setReturnMode(returnMode);
-        
+
         // if this is the final barrier in a MERGE statement, setup the
         // barrier to receive the upstream deletion rowcount
         if (deleteRowCountParamId > 0) {
@@ -793,10 +793,10 @@ public class LcsIndexGuide
         scanStream.setOutputProj(
             FennelRelUtil.createTupleProjection(repos, clusterProjection));
         scanStream.setFullScan(rel.isFullScan);
-        scanStream.setHasExtraFilter(rel.hasResidualFilter);       
+        scanStream.setHasExtraFilter(rel.hasResidualFilter);
         Integer [] clusterResidualColumns =
             computeProjectedColumns(residualColumns);
-        
+
         scanStream.setResidualFilterColumns(
             FennelRelUtil.createTupleProjection(repos, clusterResidualColumns));
         return scanStream;
@@ -848,7 +848,7 @@ public class LcsIndexGuide
             repos.newFemLbmGeneratorStreamDef();
 
         //
-        // Setup cluster scans. The generator scans are based on the new 
+        // Setup cluster scans. The generator scans are based on the new
         // clusters being written.
         //
         defineScanStream(generator, rel, true);
@@ -902,7 +902,7 @@ public class LcsIndexGuide
 
     /**
      * Creates a sort streamDef for sorting bitmap entries.
-     * 
+     *
      * @param index index corresponding to the bitmap entries that will be
      * sorted
      * @param estimatedNumRows estimated number of input rows into the sort
@@ -913,7 +913,7 @@ public class LcsIndexGuide
      * once it has read all its input; this is needed in the case where the
      * producers of the sort reference a table that's modified by the consumers
      * of the sort
-     * 
+     *
      * @return the created sort streamDef
      */
     protected FemSortingStreamDef newSorter(
@@ -938,9 +938,9 @@ public class LcsIndexGuide
             sortingStream.setEstimatedNumRows(-1);
         } else {
             sortingStream.setEstimatedNumRows(estimatedNumRows.longValue());
-        }       
+        }
         sortingStream.setEarlyClose(earlyClose);
-        
+
         return sortingStream;
     }
 
@@ -963,7 +963,7 @@ public class LcsIndexGuide
             false,
             true);
         splicer.getIndexAccessor().add(indexAccessor);
-        
+
         // Setup the deletion index if the splicer will be reading from it
         if (deletionIndex != null) {
             indexAccessor = repos.newFemSplicerIndexAccessorDef();
@@ -975,7 +975,7 @@ public class LcsIndexGuide
                 false);
             splicer.getIndexAccessor().add(indexAccessor);
         }
-        
+
         //
         // The splicer is the terminal stream of a bitmap stream set.
         // It's output type is the same as the rel's: the standard
@@ -986,9 +986,9 @@ public class LcsIndexGuide
 
         // NOTE zfong 11/30/06 - Splicer may also write out rid values.
         // As it turns out, the type of a rid is currently the same as a
-        // rowcount. 
+        // rowcount.
         RelDataType rowType = typeFactory.createStructType(
-            new RelDataType[] { typeFactory.createSqlType(SqlTypeName.Bigint) },
+            new RelDataType[] { typeFactory.createSqlType(SqlTypeName.BIGINT) },
             new String[] { "ROWCOUNT" });
         splicer.setOutputDesc(
             FennelRelUtil.createTupleDescriptorFromRowType(
@@ -1165,7 +1165,7 @@ public class LcsIndexGuide
     private void defineClusterScan(
         FemLocalIndex index,
         FennelRel rel,
-        FemLcsClusterScanDef clusterScan, 
+        FemLcsClusterScanDef clusterScan,
         boolean write)
     {
         final FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(rel);
@@ -1212,7 +1212,7 @@ public class LcsIndexGuide
         // TODO: These types must match the fennel types for
         // RecordNum and LcsRowId
         RelDataType rowCountType =
-            typeFactory.createSqlType(SqlTypeName.Bigint);
+            typeFactory.createSqlType(SqlTypeName.BIGINT);
         RelDataType ridType = rowCountType;
 
         return new RexNode[] {
@@ -1226,7 +1226,7 @@ public class LcsIndexGuide
         // TODO: These types must match the fennel types for
         // RecordNum and LcsRowId
         RelDataType rowCountType =
-            typeFactory.createSqlType(SqlTypeName.Bigint);
+            typeFactory.createSqlType(SqlTypeName.BIGINT);
         RelDataType ridType = rowCountType;
 
         return
@@ -1251,9 +1251,9 @@ public class LcsIndexGuide
      */
     public RelDataType createUnclusteredBitmapRowType()
     {
-        RelDataType ridType = typeFactory.createSqlType(SqlTypeName.Bigint);
+        RelDataType ridType = typeFactory.createSqlType(SqlTypeName.BIGINT);
         RelDataType bitmapType =
-            typeFactory.createSqlType(SqlTypeName.Varbinary,
+            typeFactory.createSqlType(SqlTypeName.VARBINARY,
                 LbmBitmapSegMaxSize);
 
         RelDataType segDescType =
@@ -1452,11 +1452,11 @@ public class LcsIndexGuide
         FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
         RelDataType directiveType =
             typeFactory.createSqlType(
-                SqlTypeName.Char,
+                SqlTypeName.CHAR,
                 1);
         RelDataType keyType =
             typeFactory.createTypeWithNullability(
-                typeFactory.createSqlType(SqlTypeName.Bigint),
+                typeFactory.createSqlType(SqlTypeName.BIGINT),
                 true);
 
         // Setup the directives.  In the case of a full scan, setup an
@@ -1622,7 +1622,7 @@ public class LcsIndexGuide
     }
 
     //~ Inner Classes ----------------------------------------------------------
-    
+
 }
 
 //End LcsIndexGuide.java

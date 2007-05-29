@@ -100,7 +100,6 @@ public class FarragoStmtValidator
      * @param ddlLockManager FarragoDdlLockManager to use for protecting catalog
      * objects in use from modification
      * @param indexMap FarragoSessionIndexMap to use for index access
-     * @param warningQueue warning queue to use during statement validation
      */
     public FarragoStmtValidator(
         FarragoRepos repos,
@@ -128,7 +127,7 @@ public class FarragoStmtValidator
         // clone session variables so that any context changes we make during
         // validation are transient
         sessionVariables = session.getSessionVariables().cloneVariables();
-        typeFactory = (FarragoTypeFactory) 
+        typeFactory = (FarragoTypeFactory)
             session.getPersonality().newTypeFactory(repos);
         dataWrapperCache =
             new FarragoDataWrapperCache(
@@ -802,13 +801,13 @@ public class FarragoStmtValidator
     {
         return timingTracer;
     }
-    
+
     // implement FarragoSessionStmtValidator
     public void setReposTxnContext(FarragoReposTxnContext reposTxnContext)
     {
         this.reposTxnContext = reposTxnContext;
     }
-    
+
     public FarragoReposTxnContext getReposTxnContext()
     {
         return reposTxnContext;
@@ -876,7 +875,7 @@ public class FarragoStmtValidator
         if (typeName != null) {
             typeFamily = SqlTypeFamily.getFamilyForSqlType(typeName);
         }
-        if (typeFamily == SqlTypeFamily.Character) {
+        if (typeFamily == SqlTypeFamily.CHARACTER) {
             String charsetName = dataType.getCharSetName();
             if (JmiUtil.isBlank(charsetName)) {
                 charsetName = repos.getDefaultCharsetName();
@@ -903,8 +902,8 @@ public class FarragoStmtValidator
             CwmSqlsimpleType simpleType = (CwmSqlsimpleType) type;
 
             if (precision != null) {
-                if ((typeFamily == SqlTypeFamily.Binary)
-                    || (typeFamily == SqlTypeFamily.Character)) {
+                if ((typeFamily == SqlTypeFamily.BINARY)
+                    || (typeFamily == SqlTypeFamily.CHARACTER)) {
                     Integer maximum = simpleType.getCharacterMaximumLength();
                     assert (maximum != null);
                     if (precision.intValue() > maximum.intValue()) {
@@ -923,7 +922,7 @@ public class FarragoStmtValidator
                             precision,
                             maximum);
                     }
-                    if (typeFamily == SqlTypeFamily.Numeric) {
+                    if (typeFamily == SqlTypeFamily.NUMERIC) {
                         if (precision.intValue() <= 0) {
                             throw res.ValidatorPrecisionMustBePositive.ex();
                         }

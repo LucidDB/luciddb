@@ -312,7 +312,7 @@ public class FarragoRexToOJTranslator
         if (SqlTypeUtil.isJavaPrimitive(type)) {
             return null;
         }
-        if (type.getSqlTypeName() == SqlTypeName.Null) {
+        if (type.getSqlTypeName() == SqlTypeName.NULL) {
             return null;
         }
 
@@ -419,9 +419,9 @@ public class FarragoRexToOJTranslator
     /**
      * Creates a primitive scratch variable without initialization.
      *
-     * @param ojClass
+     * @param ojClass Variable's type
      *
-     * @return
+     * @return scratch variable
      */
     public Variable createPrimitiveScratchVariable(
         OJClass ojClass)

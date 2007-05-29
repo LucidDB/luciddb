@@ -37,8 +37,8 @@ public interface RelStatColumnStatistics
 
     /**
      * Estimates the percentage of a relational expression's rows which satisfy
-     * a given condition. This corresponds to the metadata query {@link
-     * RelMetadataQuery#getSelectivity}
+     * a given condition. This corresponds to the metadata query
+     * {@link org.eigenbase.rel.metadata.RelMetadataQuery#getSelectivity}.
      *
      * @return an estimated percentage from 0.0 to 1.0 or null if no reliable
      * estimate can be determined

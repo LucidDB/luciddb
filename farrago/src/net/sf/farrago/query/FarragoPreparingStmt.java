@@ -101,7 +101,7 @@ public class FarragoPreparingStmt
     private final FarragoSessionStmtValidator stmtValidator;
     private boolean needRestore;
     protected SqlToRelConverter sqlToRelConverter;
-    private Object savedDeclarer;
+    private OJClass savedDeclarer;
     private FarragoAllocation javaCodeDir;
     protected SqlValidatorImpl sqlValidator;
     private final Set<CwmModelElement> directDependencies;
@@ -414,10 +414,7 @@ public class FarragoPreparingStmt
         // reflection, which would be bad for UDF performance.  What to do?
         // Also, need to implement jar paths.
 
-        // REVIEW jhyde, 2006/6/3: Mystical two-stage copy designed to preserve
-        // order of set?
-        List<URL> jarUrlList = new ArrayList<URL>(jarUrlSet);
-        URL [] urls = jarUrlList.toArray(new URL[jarUrlList.size()]);
+        URL [] urls = jarUrlSet.toArray(new URL[jarUrlSet.size()]);
         URLClassLoader urlClassLoader =
             URLClassLoader.newInstance(
                 urls,

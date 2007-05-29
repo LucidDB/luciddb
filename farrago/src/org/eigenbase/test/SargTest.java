@@ -92,9 +92,9 @@ public class SargTest
         // create some reusable fixtures
 
         RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-        intType = typeFactory.createSqlType(SqlTypeName.Integer);
+        intType = typeFactory.createSqlType(SqlTypeName.INTEGER);
         intType = typeFactory.createTypeWithNullability(intType, true);
-        stringType = typeFactory.createSqlType(SqlTypeName.Varchar, 20);
+        stringType = typeFactory.createSqlType(SqlTypeName.VARCHAR, 20);
         stringType = typeFactory.createTypeWithNullability(stringType, true);
 
         rexBuilder = new RexBuilder(typeFactory);

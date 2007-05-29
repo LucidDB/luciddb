@@ -32,8 +32,6 @@ import java.util.*;
 
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
-import org.eigenbase.sql.fun.*;
-
 
 /**
  * FarragoSyntheticObject refines SyntheticObject with Farrago-specific runtime
@@ -147,7 +145,7 @@ public abstract class FarragoSyntheticObject
     {
         try {
             Field [] fields = getFields();
-            List bitReferenceList = new ArrayList();
+            List<BitReference> bitReferenceList = new ArrayList<BitReference>();
             for (int i = 0; i < fields.length; ++i) {
                 Field field = fields[i];
                 Object obj = field.get(this);
@@ -155,7 +153,7 @@ public abstract class FarragoSyntheticObject
                 // NOTE:  order has to match Fennel's TupleAccessor.cpp
                 if (obj instanceof NullablePrimitive.NullableBoolean) {
                     // add this field's holder object as a bit value
-                    bitReferenceList.add(obj);
+                    bitReferenceList.add((NullablePrimitive.NullableBoolean) obj);
                 } else if (obj instanceof Boolean) {
                     // make up a reflective reference to this field
                     // as a bit value
@@ -171,8 +169,9 @@ public abstract class FarragoSyntheticObject
                     bitReferenceList.add(bitRef);
                 }
             }
-            bitReferences = new BitReference[bitReferenceList.size()];
-            bitReferenceList.toArray(bitReferences);
+            bitReferences =
+                bitReferenceList.toArray(
+                    new BitReference[bitReferenceList.size()]);
         } catch (Exception ex) {
             throw Util.newInternal(ex);
         }
@@ -187,7 +186,7 @@ public abstract class FarragoSyntheticObject
             Field [] fields = getFields();
             for (int i = 0; i < fields.length; ++i) {
                 Field field = fields[i];
-                Class clazz = field.getType();
+                Class<?> clazz = field.getType();
                 if (!clazz.isPrimitive()) {
                     Object obj = clazz.newInstance();
                     field.set(this, obj);
@@ -214,7 +213,7 @@ public abstract class FarragoSyntheticObject
     }
 
     // implement Struct
-    public Object [] getAttributes(Map map)
+    public Object [] getAttributes(Map<String,Class<?>> map)
     {
         throw new UnsupportedOperationException();
     }
@@ -238,8 +237,9 @@ public abstract class FarragoSyntheticObject
     }
 
     /**
-     * Called at runtime to implement row-wise
-     * {@link SqlStdOperatorTable#isDifferentFrom}.
+     * Called at runtime to implement the
+     * {@link org.eigenbase.sql.fun.SqlStdOperatorTable#isDifferentFromOperator}
+     * operator in a row-size fashion.
      *
      * @param row1 first row to compare
      *

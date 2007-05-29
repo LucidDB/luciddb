@@ -29,7 +29,8 @@ import net.sf.farrago.session.*;
 
 /**
  * FarragoJdbcServerDriver defines the interface which must be implemented by
- * JDBC drivers which can be used to implement {@link FarragoServer}.
+ * JDBC drivers which can be used to implement
+ * {@link net.sf.farrago.server.FarragoRmiJdbcServer}.
  *
  * @author John V. Sichi
  * @version $Id$

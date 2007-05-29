@@ -186,8 +186,8 @@ public class CalcProgramBuilder
                 builder.compilationAssert(
                     regs[0].getOpType() == regs[1].getOpType(),
                     "Type Mismatch. Tried to MOVE "
-                    + regs[1].getOpType().getName() + " into a "
-                    + regs[0].getOpType().getName());
+                    + regs[1].getOpType() + " into a "
+                    + regs[0].getOpType());
                 super.add(builder, regs);
             }
         };
@@ -423,7 +423,7 @@ public class CalcProgramBuilder
         int ordinal,
         CalcProgramBuilder.RegisterSetType registerType)
     {
-        List<CalcReg> registerSet = registerSets.getSet(registerType.getOrdinal());
+        List<CalcReg> registerSet = registerSets.getSet(registerType);
         return registerSet.get(ordinal);
     }
 
@@ -498,7 +498,7 @@ public class CalcProgramBuilder
         PrintWriter writer,
         RegisterSetType registerSetType)
     {
-        List<CalcReg> list = registerSets.getSet(registerSetType.getOrdinal());
+        List<CalcReg> list = registerSets.getSet(registerSetType);
         if (null == list) {
             return;
         }
@@ -512,17 +512,17 @@ public class CalcProgramBuilder
             }
             CalcReg reg = list.get(j);
             assert reg.getRegisterType() == registerSetType;
-            writer.print(reg.getOpType().getName());
-            switch (reg.getOpType().getOrdinal()) {
-            case OpType.Binary_ordinal:
-            case OpType.Char_ordinal:
-            case OpType.Varbinary_ordinal:
-            case OpType.Varchar_ordinal:
+            writer.print(reg.getOpType());
+            switch (reg.getOpType()) {
+            case Binary:
+            case Char:
+            case Varbinary:
+            case Varchar:
                 assert reg.storageBytes >= 0;
                 writer.print("," + reg.storageBytes);
                 break;
             default:
-                assert reg.storageBytes == -1 : reg.getOpType().getName();
+                assert reg.storageBytes == -1 : reg.getOpType();
             }
             if (false) {
                 // Assembler doesn't support this.
@@ -541,7 +541,7 @@ public class CalcProgramBuilder
 
     private void generateRegValues(PrintWriter writer)
     {
-        List<CalcReg> list = registerSets.getSet(RegisterSetType.LiteralORDINAL);
+        List<CalcReg> list = registerSets.getSet(RegisterSetType.Literal);
         if (null == list) {
             return;
         }
@@ -610,7 +610,7 @@ public class CalcProgramBuilder
                     }
                 }
 
-                //-----------Check if any jump instructions jumps to itself
+                // Check if any jump instruction jumps to itself
                 if (inst.def instanceof JumpInstructionDef) {
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue() == i) {
@@ -620,8 +620,8 @@ public class CalcProgramBuilder
                     }
                 }
 
-                //-----------Forbidding loops. Check if any jump instructions
-                //jumps to a previous line.
+                // Forbidding loops. Check if any jump instruction jumps to a
+                // previous line.
                 if (inst.def instanceof JumpInstructionDef) {
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue() < i) {
@@ -631,11 +631,15 @@ public class CalcProgramBuilder
                     }
                 }
 
-                //TODO add to see that all declared registers are beeing
-                //referenced TODO add to see if output registers where declared
-                //(?) TODO add to see if all output registers where written to
-                //TODO add to see if a non constant register is used before
-                //assigned to ----------- Other post validation goes here ...
+                // TODO add to see that all declared registers are beeing
+                // referenced
+                //
+                // TODO add to see if output registers where declared
+
+                // (?) TODO add to see if all output registers where written to
+
+                // TODO add to see if a non constant register is used before
+                // assigned to
             } catch (Throwable e) {
                 StringWriter log = new StringWriter();
                 inst.print(new PrintWriter(log));
@@ -961,64 +965,55 @@ public class CalcProgramBuilder
             + " */";
     }
 
-    // assert helper functions---
-
     /**
-     * Asserts that the register is not declared as {@link
-     * RegisterSetType#Literal} or {@link RegisterSetType#Input}
+     * Asserts that the register is not declared as
+     * {@link RegisterSetType#Literal} or {@link RegisterSetType#Input}.
      *
-     * @param result
+     * @param reg Register
      */
-    protected void assertRegisterNotConstant(CalcReg result)
+    protected void assertRegisterNotConstant(CalcReg reg)
     {
         compilationAssert(
-            (
-                result.getRegisterType().getOrdinal()
-                != RegisterSetType.LiteralORDINAL
-            )
-            && (
-                ((CalcReg) result).getRegisterType().getOrdinal()
-                != RegisterSetType.InputORDINAL
-               ),
+            reg.getRegisterType() != RegisterSetType.Literal
+                && ((CalcReg) reg).getRegisterType() != RegisterSetType.Input,
             "Expected a non constant register. Constant registers are Literals and Inputs");
     }
 
     /**
      * Asserts that the register is declared as {@link RegisterSetType#Literal}
      *
-     * @param result
+     * @param reg Register
      */
-    protected void assertRegisterLiteral(CalcReg result)
+    protected void assertRegisterLiteral(CalcReg reg)
     {
         compilationAssert(
-            result.getRegisterType().getOrdinal()
-            == RegisterSetType.LiteralORDINAL,
+            reg.getRegisterType() == RegisterSetType.Literal,
             "Expected a Literal register.");
     }
 
     /**
      * Asserts that the register is declared as {@link OpType#Bool}
      *
-     * @param reg
+     * @param reg Register
      */
     protected void assertRegisterBool(CalcReg reg)
     {
-        compilationAssert(reg.getOpType().getOrdinal() == OpType.Bool_ordinal,
+        compilationAssert(reg.getOpType() == OpType.Bool,
             "Expected a register of Boolean type. " + "Found "
-            + reg.getOpType().getName());
+            + reg.getOpType());
     }
 
     /**
      * Asserts that the register is declared as a pointer. Pointers are {@link
      * OpType#Varchar},{@link OpType#Varbinary}
      *
-     * @param reg
+     * @param reg Register
      */
     protected void assertRegisterIsPointer(CalcReg reg)
     {
         compilationAssert(
-            (reg.getOpType().getOrdinal() == OpType.Varbinary_ordinal)
-            || (reg.getOpType().getOrdinal() == OpType.Varchar_ordinal),
+            (reg.getOpType() == OpType.Varbinary)
+            || (reg.getOpType() == OpType.Varchar),
             "Expected a register of Pointer type");
     }
 
@@ -1027,15 +1022,15 @@ public class CalcProgramBuilder
      * OpType#Int4}, {@link OpType#Int8}, {@link OpType#Uint4},{@link
      * OpType#Uint8}
      *
-     * @param reg
+     * @param reg Register
      */
     protected void assertRegisterInteger(CalcReg reg)
     {
         compilationAssert(
-            (reg.getOpType().getOrdinal() == OpType.Int4_ordinal)
-            || (reg.getOpType().getOrdinal() == OpType.Int8_ordinal)
-            || (reg.getOpType().getOrdinal() == OpType.Uint4_ordinal)
-            || (reg.getOpType().getOrdinal() == OpType.Uint8_ordinal),
+            (reg.getOpType() == OpType.Int4)
+            || (reg.getOpType() == OpType.Int8)
+            || (reg.getOpType() == OpType.Uint4)
+            || (reg.getOpType() == OpType.Uint8),
             "Expected a register of Integer type");
     }
 
@@ -1048,14 +1043,11 @@ public class CalcProgramBuilder
      * <li>its value is zero</li>
      * </ul>
      *
-     * @param reg
+     * @param reg Register
      */
     protected void assertNotDivideByZero(CalcReg reg)
     {
-        if ((
-                reg.getRegisterType().getOrdinal()
-                == RegisterSetType.LiteralORDINAL
-            )
+        if (reg.getRegisterType() == RegisterSetType.Literal
             && (reg.getValue() != null)
             && (reg.getValue() instanceof java.lang.Integer)) {
             compilationAssert(!reg.getValue().equals(0),
@@ -1066,40 +1058,40 @@ public class CalcProgramBuilder
     /**
      * Asserts input is of native type except booleans
      *
-     * @param register
+     * @param reg Register
      */
-    protected void assertIsNativeType(CalcReg register)
+    protected void assertIsNativeType(CalcReg reg)
     {
         compilationAssert(
-            (register.getOpType().getOrdinal() == OpType.Int1_ordinal)
-            || (register.getOpType().getOrdinal() == OpType.Uint1_ordinal)
-            || (register.getOpType().getOrdinal() == OpType.Int2_ordinal)
-            || (register.getOpType().getOrdinal() == OpType.Uint2_ordinal)
-            || (register.getOpType().getOrdinal() == OpType.Int4_ordinal)
-            || (register.getOpType().getOrdinal() == OpType.Int8_ordinal)
-            || (register.getOpType().getOrdinal() == OpType.Uint4_ordinal)
-            || (register.getOpType().getOrdinal() == OpType.Uint8_ordinal)
-            || (register.getOpType().getOrdinal() == OpType.Real_ordinal)
-            || (register.getOpType().getOrdinal() == OpType.Double_ordinal),
+            (reg.getOpType() == OpType.Int1)
+            || (reg.getOpType() == OpType.Uint1)
+            || (reg.getOpType() == OpType.Int2)
+            || (reg.getOpType() == OpType.Uint2)
+            || (reg.getOpType() == OpType.Int4)
+            || (reg.getOpType() == OpType.Int8)
+            || (reg.getOpType() == OpType.Uint4)
+            || (reg.getOpType() == OpType.Uint8)
+            || (reg.getOpType() == OpType.Real)
+            || (reg.getOpType() == OpType.Double),
             "Register is not of native OpType");
     }
 
     /**
      * Asserts input is of type {@link OpType#Varchar}
      *
-     * @param register
+     * @param reg Register
      */
-    protected void assertIsVarchar(CalcReg register)
+    protected void assertIsVarchar(CalcReg reg)
     {
         compilationAssert(
-            register.getOpType().getOrdinal() == OpType.Varchar_ordinal,
+            reg.getOpType() == OpType.Varchar,
             "Register is not of type Varchar");
     }
 
     /**
-     * Asserts that all operands are not null
+     * Asserts that all operands are not null.
      *
-     * @param operands
+     * @param operands Operands
      */
     protected void assertOperandsNotNull(Operand [] operands)
     {
@@ -1112,20 +1104,6 @@ public class CalcProgramBuilder
     }
 
     /**
-     * Adds a move instruction.
-     *
-     * @deprecated
-     */
-    public void addMove(
-        CalcReg target,
-        CalcReg src)
-    {
-        move.add(
-            this,
-            new CalcReg[] { target, src });
-    }
-
-    /**
      * Adds a REF instruction.
      */
     public void addRef(
@@ -1133,8 +1111,8 @@ public class CalcProgramBuilder
         CalcReg src)
     {
         compilationAssert(outputRegister.getOpType() == src.getOpType(),
-            "Type Mismatch. Tried to MOVE " + src.getOpType().getName()
-            + " into a " + outputRegister.getOpType().getName());
+            "Type Mismatch. Tried to MOVE " + src.getOpType()
+            + " into a " + outputRegister.getOpType());
         compilationAssert(
             RegisterSetType.Output == outputRegister.getRegisterType(),
             "Only output register allowed to reference other registers");
@@ -1142,7 +1120,7 @@ public class CalcProgramBuilder
         refInstruction.add(this, outputRegister, src);
     }
 
-    // Jump related instructions----------------------
+    // Jump-related instructions----------------------
 
     protected void addJumpBooleanWithCondition(
         JumpInstructionDef op,
@@ -1372,133 +1350,64 @@ public class CalcProgramBuilder
      * @see CalcProgramBuilder#Uint4_MAX
      * @see CalcProgramBuilder#Uint8_MAX
      */
-    public static class OpType
-        implements EnumeratedValues.Value
+    public enum OpType
     {
-        public static final int Bool_ordinal =
-            FennelStandardTypeDescriptor.BOOL_ORDINAL;
-        public static final OpType Bool =
-            new OpType(FennelStandardTypeDescriptor.BOOL);
-        public static final int Int1_ordinal =
-            FennelStandardTypeDescriptor.INT_8_ORDINAL;
-        public static final OpType Int1 =
-            new OpType(FennelStandardTypeDescriptor.INT_8);
-        public static final int Uint1_ordinal =
-            FennelStandardTypeDescriptor.UINT_8_ORDINAL;
-        public static final OpType Uint1 =
-            new OpType(FennelStandardTypeDescriptor.UINT_8);
-        public static final int Int2_ordinal =
-            FennelStandardTypeDescriptor.INT_16_ORDINAL;
-        public static final OpType Int2 =
-            new OpType(FennelStandardTypeDescriptor.INT_16);
-        public static final int Uint2_ordinal =
-            FennelStandardTypeDescriptor.UINT_16_ORDINAL;
-        public static final OpType Uint2 =
-            new OpType(FennelStandardTypeDescriptor.UINT_16);
-        public static final int Int4_ordinal =
-            FennelStandardTypeDescriptor.INT_32_ORDINAL;
-        public static final OpType Int4 =
-            new OpType(FennelStandardTypeDescriptor.INT_32);
-        public static final int Uint4_ordinal =
-            FennelStandardTypeDescriptor.UINT_32_ORDINAL;
-        public static final OpType Uint4 =
-            new OpType(FennelStandardTypeDescriptor.UINT_32);
-        public static final int Real_ordinal =
-            FennelStandardTypeDescriptor.REAL_ORDINAL;
-        public static final OpType Real =
-            new OpType(FennelStandardTypeDescriptor.REAL);
-        public static final int Int8_ordinal =
-            FennelStandardTypeDescriptor.INT_64_ORDINAL;
-        public static final OpType Int8 =
-            new OpType(FennelStandardTypeDescriptor.INT_64);
-        public static final int Uint8_ordinal =
-            FennelStandardTypeDescriptor.UINT_64_ORDINAL;
-        public static final OpType Uint8 =
-            new OpType(FennelStandardTypeDescriptor.UINT_64);
-        public static final int Double_ordinal =
-            FennelStandardTypeDescriptor.DOUBLE_ORDINAL;
-        public static final OpType Double =
-            new OpType(FennelStandardTypeDescriptor.DOUBLE);
-        public static final int Varbinary_ordinal =
-            FennelStandardTypeDescriptor.VARBINARY_ORDINAL;
-        public static final OpType Varbinary =
-            new OpType(FennelStandardTypeDescriptor.VARBINARY);
-        public static final int Varchar_ordinal =
-            FennelStandardTypeDescriptor.VARCHAR_ORDINAL;
-        public static final OpType Varchar =
-            new OpType(FennelStandardTypeDescriptor.VARCHAR);
-        public static final int Binary_ordinal =
-            FennelStandardTypeDescriptor.BINARY_ORDINAL;
-        public static final OpType Binary =
-            new OpType(FennelStandardTypeDescriptor.BINARY);
-        public static final int Char_ordinal =
-            FennelStandardTypeDescriptor.CHAR_ORDINAL;
-        public static final OpType Char =
-            new OpType(FennelStandardTypeDescriptor.CHAR);
+        Int1(FennelStandardTypeDescriptor.INT_8, "s1"),
+        Uint1(FennelStandardTypeDescriptor.UINT_8, "u1"),
+        Int2(FennelStandardTypeDescriptor.INT_16, "s2"),
+        Uint2(FennelStandardTypeDescriptor.UINT_16, "u2"),
+        Int4(FennelStandardTypeDescriptor.INT_32, "s4"),
+        Uint4(FennelStandardTypeDescriptor.UINT_32, "u4"),
+        Int8(FennelStandardTypeDescriptor.INT_64, "s8"),
+        Uint8(FennelStandardTypeDescriptor.UINT_64, "u8"),
+        Bool(FennelStandardTypeDescriptor.BOOL, "bo"),
+        Real(FennelStandardTypeDescriptor.REAL, "r"),
+        Double(FennelStandardTypeDescriptor.DOUBLE, "d"),
+        Char(FennelStandardTypeDescriptor.CHAR, "c"),
+        Varchar(FennelStandardTypeDescriptor.VARCHAR, "vc"),
+        Binary(FennelStandardTypeDescriptor.BINARY, "b"),
+        Varbinary(FennelStandardTypeDescriptor.VARBINARY, "vb");
 
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(
-                new OpType[] {
-                    Int1, Uint1, Int2, Uint2, Bool, Int4, Uint4, Real, Int8,
-                Uint8, Double, Varbinary, Varchar, Binary, Char,
-                });
-        private final FennelStandardTypeDescriptor type;
+        private FennelStandardTypeDescriptor type;
+        private static final int ValueCount = values().length;
+        private final String shortName;
 
-        private OpType(FennelStandardTypeDescriptor type)
+        private OpType(FennelStandardTypeDescriptor type, String shortName)
         {
-            this.type = type;
-        }
-
-        public String getDescription()
-        {
-            return null;
-        }
-
-        public String getName()
-        {
-            return type.getName();
-        }
-
-        public int getOrdinal()
-        {
-            return type.getOrdinal();
+            this.shortName = shortName;
+            // Discard the type. It is there for doc reasons, but because of
+            // the class-loading process it may be null.
+            Util.discard(type);
         }
 
         public String toString()
         {
-            return getName();
+            return shortName;
         }
 
-        /**
-         * Returns an exception indicating that we didn't expect to find this
-         * value here.
-         */
-        public Error unexpected()
-        {
-            return enumeration.unexpected(this);
+        private FennelStandardTypeDescriptor getType() {
+            if (type == null) {
+                type = (FennelStandardTypeDescriptor)
+                    FennelStandardTypeDescriptor.enumeration.getValue(
+                        ordinal() + 1);
+                assert type.getName().equals(shortName);
+            }
+            return type;
         }
 
         public boolean isExact()
         {
-            return type.isExact();
+            return getType().isExact();
         }
 
         public boolean isApprox()
         {
-            return type.isNumeric() && !type.isExact();
+            return getType().isNumeric() && !getType().isExact();
         }
 
         public boolean isNumeric()
         {
-            return type.isNumeric();
-        }
-
-        // implement Comparable
-        public int compareTo(Object other)
-        {
-            assert (other instanceof OpType);
-            OpType otherValue = (OpType) other;
-            return getOrdinal() - otherValue.getOrdinal();
+            return getType().isNumeric();
         }
     }
 
@@ -1591,43 +1500,20 @@ public class CalcProgramBuilder
     /**
      * Enumeration of register types
      */
-    public static class RegisterSetType
-        extends EnumeratedValues.BasicValue
+    public enum RegisterSetType
     {
-        public static final int OutputORDINAL = 0;
-        public static final RegisterSetType Output =
-            new RegisterSetType("output", OutputORDINAL, 'O');
-        public static final int InputORDINAL = 1;
-        public static final RegisterSetType Input =
-            new RegisterSetType("input", InputORDINAL, 'I');
-        public static final int LiteralORDINAL = 2;
-        public static final RegisterSetType Literal =
-            new RegisterSetType("literal", LiteralORDINAL, 'C');
-        public static final int LocalORDINAL = 3;
-        public static final RegisterSetType Local =
-            new RegisterSetType("local", LocalORDINAL, 'L');
-        public static final int StatusORDINAL = 4;
-        public static final RegisterSetType Status =
-            new RegisterSetType("status", StatusORDINAL, 'S');
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(
-                new RegisterSetType[] {
-                    Output, Input, Literal, Local, Status
-                });
+        Output('O'),
+        Input('I'),
+        Literal('C'),
+        Local('L'),
+        Status('S');
+
         final char prefix;
+        static final int ValueCount = RegisterSetType.values().length;
 
-        private RegisterSetType(
-            String name,
-            int ordinal,
-            char prefix)
+        RegisterSetType(char prefix)
         {
-            super(name, ordinal, null);
             this.prefix = prefix;
-        }
-
-        public static RegisterSetType get(int ordinal)
-        {
-            return (RegisterSetType) enumeration.getValue(ordinal);
         }
     }
 
@@ -1637,7 +1523,7 @@ public class CalcProgramBuilder
     protected class RegisterSets
     {
         private final List<CalcReg> [] sets =
-            new ArrayList[RegisterSetType.enumeration.getSize()];
+            new ArrayList[RegisterSetType.ValueCount];
 
         public void clear()
         {
@@ -1648,9 +1534,9 @@ public class CalcProgramBuilder
             }
         }
 
-        public final List<CalcReg> getSet(int set)
+        public final List<CalcReg> getSet(RegisterSetType registerSetType)
         {
-            return sets[set];
+            return sets[registerSetType.ordinal()];
         }
 
         /**
@@ -1673,7 +1559,7 @@ public class CalcProgramBuilder
             compilationAssert(registerType != null,
                 "null is an invalid RegisterSetType");
 
-            int set = registerType.getOrdinal();
+            int set = registerType.ordinal();
             if (null == sets[set]) {
                 sets[set] = new ArrayList<CalcReg>();
             }
@@ -2025,18 +1911,18 @@ public class CalcProgramBuilder
             builder.assertRegisterNotConstant((CalcReg) regs[0]);
             CalcReg op2 = (CalcReg) regs[2];
 
-            //second operand can only be either long or ulong
+            // second operand can only be either long or ulong
             builder.assertRegisterInteger(op2);
 
-            //smart check, if a constant value that could be negative IS
-            //negative, complain
+            // smart check: if a constant value that could be negative IS
+            // negative, complain
             if ((
-                    op2.getRegisterType().getOrdinal()
-                    == RegisterSetType.LiteralORDINAL
+                    op2.getRegisterType()
+                    == RegisterSetType.Literal
                 )
                 && (
-                    (op2.getOpType().getOrdinal() == OpType.Int4_ordinal)
-                    || (op2.getOpType().getOrdinal() == OpType.Int8_ordinal)
+                    (op2.getOpType() == OpType.Int4)
+                    || (op2.getOpType() == OpType.Int8)
                    )
                 && (op2.getValue() != null)
                 && (op2.getValue() instanceof java.lang.Integer)) {
@@ -2127,8 +2013,8 @@ public class CalcProgramBuilder
                 valueHash = value.hashCode();
             }
             return
-                (valueHash * (OpType.enumeration.getMax() + 2))
-                + type.getOrdinal();
+                (valueHash * (OpType.ValueCount + 2))
+                + type.ordinal();
         }
 
         public boolean equals(Object o)
@@ -2137,16 +2023,13 @@ public class CalcProgramBuilder
                 LiteralPair that = (LiteralPair) o;
 
                 if ((null == this.value) && (null == that.value)) {
-                    return this.type.getOrdinal() == that.type.getOrdinal();
+                    return this.type == that.type;
                 }
 
                 if (null != this.value) {
                     return
                         this.value.equals(that.value)
-                        && (
-                            this.type.getOrdinal()
-                            == that.type.getOrdinal()
-                           );
+                            && this.type == that.type;
                 }
             }
             return false;

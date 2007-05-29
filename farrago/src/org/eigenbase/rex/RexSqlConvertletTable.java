@@ -24,7 +24,7 @@ package org.eigenbase.rex;
 /**
  * Collection of {@link RexSqlConvertlet}s.
  *
- * @author
+ * @author Sunny Choi
  * @version $Id$
  */
 public interface RexSqlConvertletTable

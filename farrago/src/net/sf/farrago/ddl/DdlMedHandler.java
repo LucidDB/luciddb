@@ -89,7 +89,7 @@ public class DdlMedHandler
 
         FarragoMedColumnSet medColumnSet = validateMedColumnSet(columnSet);
 
-        List columnList = columnSet.getFeature();
+        List<CwmFeature> columnList = columnSet.getFeature();
         if (columnList.isEmpty()) {
             // derive column information
             RelDataType rowType = medColumnSet.getRowType();
@@ -101,7 +101,7 @@ public class DdlMedHandler
                 validateAttribute(column);
             }
         }
-        
+
         SqlAccessType allowedAccess = medColumnSet.getAllowedAccess();
         if (columnSet.getAllowedAccess() == null) {
             columnSet.setAllowedAccess(allowedAccess.toString());

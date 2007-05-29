@@ -62,15 +62,15 @@ public abstract class LoptMetadataQuery
                 "getCostWithFilters",
                 new Object[] { filters });
     }
-    
+
     /**
      * Like {@link RelMetadataQuery#getColumnOrigins}, for a given output
      * column of an expression, determines all columns of underlying tables
      * which contribute to result values.  The difference is if the column
-     * is derived from a complex RelNode, then null is returned instead.
-     * 
-     * <p>Complex RelNodes are RelNodes that we do not push {@link SemiJoinRel}s
-     * past.
+     * is derived from a complex {@link RelNode}, then null is returned instead.
+     *
+     * <p>A 'complex RelNode' is a RelNode that we do not push
+     * {@link org.eigenbase.rel.rules.SemiJoinRel}s past.
      *
      * @param rel the relational expression
      * @param iOutputColumn 0-based ordinal for output column of interest
@@ -83,12 +83,12 @@ public abstract class LoptMetadataQuery
         RelNode rel,
         int iOutputColumn)
     {
-        return
-        (Set<RelColumnOrigin>) rel.getCluster().getMetadataProvider()
-        .getRelMetadata(
-            rel,
-            "getSimpleColumnOrigins",
-            new Object[] { iOutputColumn });
+        final Object o =
+            rel.getCluster().getMetadataProvider().getRelMetadata(
+                rel,
+                "getSimpleColumnOrigins",
+                new Object[]{iOutputColumn});
+        return (Set<RelColumnOrigin>) o;
     }
 }
 

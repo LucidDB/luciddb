@@ -22,9 +22,6 @@
 */
 package net.sf.farrago.ojrex;
 
-import java.util.regex.*;
-
-import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
 import openjava.mop.*;
@@ -34,14 +31,14 @@ import openjava.ptree.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
 /**
- * FarragoOJRexSimilarLikeImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for builtin functions SIMILAR and LIKE.
+ * FarragoOJRexSimilarLikeImplementor implements Farrago specifics of
+ * {@link org.eigenbase.oj.rex.OJRexImplementor} for builtin functions
+ * <code>SIMILAR</code> and <code>LIKE</code>.
  *
  * @author Xiaoyang Luo
  * @version $Id$

@@ -78,7 +78,7 @@ public class LcsRowScanRel
      */
     boolean isFullScan;
     boolean hasResidualFilter;
-    
+
     /**
      * Array of 0-based flattened filter column ordinals.
      */
@@ -89,7 +89,7 @@ public class LcsRowScanRel
      * Possible inputs are index searches and residual filter values.
      */
     double inputSelectivity;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -103,7 +103,7 @@ public class LcsRowScanRel
      * @param projectedColumns array of 0-based table-relative column ordinals,
      * or null to project all columns
      * @param isFullScan true if doing a full scan of the table
-     * @param hasExtraFilter true if the scan has residual filters
+     * @param hasResidualFilter true if the scan has residual filters
      * @param resCols residual filter columns
      */
     public LcsRowScanRel(
@@ -240,7 +240,7 @@ public class LcsRowScanRel
 
             // replace the numbers for the special columns so they're more
             // readable
-            List projList = (List) projection;
+            List<Object> projList = (List) projection;
             for (int i = 0; i < projList.size(); i++) {
                 Integer colId = (Integer) projList.get(i);
                 if (LucidDbOperatorTable.ldbInstance().isSpecialColumnId(
@@ -252,7 +252,7 @@ public class LcsRowScanRel
                 }
             }
         }
-        
+
 
         // REVIEW jvs 27-Dec-2005:  Since LcsRowScanRel is given
         // a list (implying ordering) as input, it seems to me that
@@ -271,10 +271,10 @@ public class LcsRowScanRel
         // by the column projection since we don't allow clusters to overlap),
         // but is useful in verbose mode. Can't resolve this comment until FRG-8
         // is completed.
-        
+
         int nExtraTerms = (residualColumns.length > 0) ? 1 : 0;
         Object [] objects = new Object[3 + nExtraTerms];
-        String [] nameList = new String[inputs.length + 3 + nExtraTerms]; 
+        String [] nameList = new String[inputs.length + 3 + nExtraTerms];
         for (int i = 0; i < inputs.length; i++) {
             nameList[i] = "child";
         }

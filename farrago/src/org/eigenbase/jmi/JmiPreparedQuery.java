@@ -47,7 +47,7 @@ public interface JmiPreparedQuery
      * @return map from parameter name (String) to expected type (type
      * representation is implementation-dependent)
      */
-    public Map describeParameters();
+    public Map<String, ?> describeParameters();
 
     /**
      * Gets an explanation of the plan to be used to execute this query.

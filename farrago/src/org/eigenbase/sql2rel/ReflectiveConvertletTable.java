@@ -162,7 +162,7 @@ public class ReflectiveConvertletTable
                             (RexNode) method.invoke(
                                 ReflectiveConvertletTable.this,
                                 cx,
-                                call.getOperator(), 
+                                call.getOperator(),
                                 call);
                     } catch (IllegalAccessException e) {
                         throw Util.newInternal(
@@ -216,8 +216,8 @@ public class ReflectiveConvertletTable
     /**
      * Registers a convertlet for a given operator instance
      *
-     * @param op Operator instance, say {@link
-     * SqlStdOperatorTable#minusOperator}
+     * @param op Operator instance, say
+     * {@link org.eigenbase.sql.fun.SqlStdOperatorTable#minusOperator}
      * @param convertlet Convertlet
      */
     protected void registerOp(SqlOperator op, SqlRexConvertlet convertlet)

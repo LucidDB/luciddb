@@ -130,7 +130,7 @@ public final class FennelTupleAccessor
      * tuple byte alignment.
      */
     private int tupleAlignment;
-    
+
     /**
      * if true, set the ByteBuffer to native order after slicing, when doing
      * unmarshals
@@ -156,13 +156,12 @@ public final class FennelTupleAccessor
     {
         this(alignment, false);
     }
-    
+
     /**
      * Creates tuple accessor with the default byte alignmnent and a flag
      * indicating whether byte ordering should be set to native order after
      * slicing.
      *
-     * @param alignment must be multiple of 4
      * @param setNativeOrder if true, set byte ordering to native order after
      * slicing
      */
@@ -170,7 +169,7 @@ public final class FennelTupleAccessor
     {
         this(TUPLE_ALIGN4, setNativeOrder);
     }
-    
+
     /**
      * Creates tuple accessor with specified byte alignmnent and a flag
      * indicating whether byte ordering should be set to native order after

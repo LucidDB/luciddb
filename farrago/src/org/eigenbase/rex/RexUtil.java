@@ -179,7 +179,7 @@ public class RexUtil
     {
         if (node instanceof RexLiteral) {
             RexLiteral literal = (RexLiteral) node;
-            if (literal.getTypeName() == SqlTypeName.Null) {
+            if (literal.getTypeName() == SqlTypeName.NULL) {
                 assert (null == literal.getValue());
                 return true;
             } else {
@@ -227,7 +227,7 @@ public class RexUtil
         RexNode node)
     {
         try {
-            RexVisitor visitor =
+            RexVisitor<Void> visitor =
                 new RexVisitorImpl<Void>(true) {
                     public Void visitCall(RexCall call)
                     {
@@ -246,16 +246,15 @@ public class RexUtil
     }
 
     /**
-     * Returns whether a given node contains a RexCall with a specified RexNode type
+     * Returns whether a given tree contains any {link RexInputRef} nodes.
      *
-     * @param operator to look for
      * @param node a RexNode tree
      */
     public static boolean containsInputRef(
         RexNode node)
     {
         try {
-            RexVisitor visitor =
+            RexVisitor<Void> visitor =
                 new RexVisitorImpl<Void>(true) {
                 public Void visitInputRef(RexInputRef inputRef)
                 {
@@ -269,24 +268,25 @@ public class RexUtil
             return true;
         }
     }
-    
+
     /**
-     * Returns whether a given node contains a RexCall with a specified RexNode type
+     * Returns whether a given tree contains any
+     * {@link org.eigenbase.rex.RexFieldAccess} nodes.
      *
-     * @param operator to look for
      * @param node a RexNode tree
      */
     public static boolean containsFieldAccess(
         RexNode node)
     {
         try {
-            RexVisitor visitor =
-                new RexVisitorImpl<Void>(true) {
-                public Void visitFieldRef(RexFieldAccess fieldAccess)
+            RexVisitor<Void> visitor =
+                new RexVisitorImpl<Void>(true)
                 {
-                    throw new Util.FoundOne(fieldAccess);
-                }
-            };
+                    public Void visitFieldAccess(RexFieldAccess fieldAccess)
+                    {
+                        throw new Util.FoundOne(fieldAccess);
+                    }
+                };
             node.accept(visitor);
             return false;
         } catch (Util.FoundOne e) {
@@ -409,15 +409,15 @@ public class RexUtil
         RexCall call = (RexCall) expr;
 
         boolean localCheck = true;
-        switch (call.getKind().getOrdinal()) {
-        case RexKind.ReinterpretOrdinal:
-        case RexKind.IsNullORDINAL:
+        switch (call.getKind()) {
+        case Reinterpret:
+        case IsNull:
             localCheck = false;
             break;
-        case RexKind.CastOrdinal:
+        case Cast:
             RelDataType lhsType = call.getType();
             RelDataType rhsType = call.operands[0].getType();
-            if (rhsType.getSqlTypeName() == SqlTypeName.Null) {
+            if (rhsType.getSqlTypeName() == SqlTypeName.NULL) {
                 return false;
             }
             if (SqlTypeUtil.inCharFamily(lhsType)
@@ -821,7 +821,7 @@ public class RexUtil
         }
         return andExpr;
     }
-    
+
     /**
      * Creates an OR expression from a list of RexNodes
      *
@@ -856,7 +856,8 @@ public class RexUtil
     private static class ExpressionNormalizer
         extends RexVisitorImpl<RexNode>
     {
-        final Map mapDigestToExpr = new HashMap();
+        final Map<String, RexNode> mapDigestToExpr =
+            new HashMap<String, RexNode>();
         final boolean allowDups;
 
         protected ExpressionNormalizer(boolean allowDups)
@@ -868,7 +869,7 @@ public class RexUtil
         protected RexNode register(RexNode expr)
         {
             final String key = expr.toString();
-            final Object previous = mapDigestToExpr.put(key, expr);
+            final RexNode previous = mapDigestToExpr.put(key, expr);
             if (!allowDups && (previous != null)) {
                 throw new SubExprExistsException(expr);
             }
@@ -877,7 +878,7 @@ public class RexUtil
 
         protected RexNode lookup(RexNode expr)
         {
-            return (RexNode) mapDigestToExpr.get(expr.toString());
+            return mapDigestToExpr.get(expr.toString());
         }
 
         public RexNode visitInputRef(RexInputRef inputRef)
@@ -1000,7 +1001,7 @@ public class RexUtil
         {
         }
     }
-    
+
     /**
      * Visitor which builds a bitmap of the inputs used by an expression.
      */
@@ -1008,19 +1009,19 @@ public class RexUtil
         extends RexVisitorImpl<Void>
     {
         private final List<RexFieldAccess> fieldAccessList;
-        
+
         public FieldAccessFinder()
         {
             super(true);
             fieldAccessList = new ArrayList<RexFieldAccess> ();
         }
-        
+
         public Void visitFieldAccess(RexFieldAccess fieldAccess)
         {
             fieldAccessList.add(fieldAccess);
             return null;
         }
-        
+
         public Void visitCall(RexCall call)
         {
             final RexNode [] operands = call.getOperands();
@@ -1030,7 +1031,7 @@ public class RexUtil
             }
             return null;
         }
-        
+
         /**
          * Applies this visitor to an array of expressions and an optional
          * single expression.
@@ -1041,7 +1042,7 @@ public class RexUtil
             exprsList.toArray(exprs);
             RexProgram.apply(this, exprs, expr);
         }
-        
+
         public List<RexFieldAccess> getFieldAccessList()
         {
             return fieldAccessList;

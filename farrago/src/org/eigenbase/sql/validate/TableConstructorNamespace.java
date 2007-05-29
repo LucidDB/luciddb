@@ -38,14 +38,14 @@ public class TableConstructorNamespace
 
     //~ Instance fields --------------------------------------------------------
 
-    private final SqlNode values;
+    private final SqlCall values;
     private final SqlValidatorScope scope;
 
     //~ Constructors -----------------------------------------------------------
 
     TableConstructorNamespace(
         SqlValidatorImpl validator,
-        SqlNode values,
+        SqlCall values,
         SqlValidatorScope scope)
     {
         super(validator);
@@ -57,7 +57,7 @@ public class TableConstructorNamespace
 
     protected RelDataType validateImpl()
     {
-        return validator.getTableConstructorRowType((SqlCall) values, scope);
+        return validator.getTableConstructorRowType(values, scope);
     }
 
     public SqlNode getNode()

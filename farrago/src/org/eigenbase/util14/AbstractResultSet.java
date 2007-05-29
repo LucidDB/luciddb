@@ -1605,7 +1605,7 @@ abstract public class AbstractResultSet
     }
 
     /**
-     * @see {@link Statement#setMaxRows}
+     * @see Statement#setMaxRows
      */
     public void setMaxRows(int maxRows)
     {

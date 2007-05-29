@@ -34,7 +34,7 @@ package org.eigenbase.runtime;
  * </ul>
  *
  * <p>{@link ExclusivePipe} is a simple extension to this class containing a
- * {@link ByteBuffer} as the shared resource.
+ * {@link java.nio.ByteBuffer} as the shared resource.
  *
  * @author jhyde
  * @version $Id$

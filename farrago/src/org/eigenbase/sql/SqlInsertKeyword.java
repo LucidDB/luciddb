@@ -31,6 +31,7 @@ import org.eigenbase.util.*;
  */
 public class SqlInsertKeyword
     extends EnumeratedValues.BasicValue
+    implements SqlLiteral.SqlSymbol
 {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -43,6 +44,17 @@ public class SqlInsertKeyword
     protected SqlInsertKeyword(String name, int ordinal)
     {
         super(name, ordinal, null);
+    }
+
+
+    public String name()
+    {
+        return getName();
+    }
+
+    public int ordinal()
+    {
+        return getOrdinal();
     }
 }
 

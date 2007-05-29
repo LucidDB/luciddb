@@ -53,11 +53,11 @@ public final class MultiJoinRel
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Constructs a MultiJoinRel object
-     * 
+     * Constructs a MultiJoinRel.
+     *
      * @param cluster cluster that join belongs to
      * @param inputs inputs into this multirel join
-     * @param joinFilters join filters applicable to this join node
+     * @param joinFilter join filter applicable to this join node
      * @param rowType row type of the join result of this node
      * @param isFullOuterJoin true if the join is a full outer join
      * @param outerJoinConditions outer join condition associated with each
@@ -114,7 +114,10 @@ public final class MultiJoinRel
         clone.inheritTraitsFrom(this);
         return clone;
     }
-    
+
+    /**
+     * Returns a deep copy of {@link #joinFieldRefCountsMap}.
+     */
     private Map<Integer, int []> cloneJoinFieldRefCountsMap()
     {
         Map<Integer, int []> clonedMap = new HashMap<Integer, int []>();
@@ -140,7 +143,7 @@ public final class MultiJoinRel
         List<String> outerJoinConds = new ArrayList<String>();
         List<String> projFieldObjects = new ArrayList<String>();
         for (int i = 0; i < nInputs; i++) {
-            joinTypeNames.add(joinTypes[i].name());         
+            joinTypeNames.add(joinTypes[i].name());
             if (outerJoinConditions[i] == null) {
                 outerJoinConds.add("NULL");
             } else {
@@ -195,7 +198,7 @@ public final class MultiJoinRel
     {
         return joinFilter;
     }
-    
+
     /**
      * @return true if the MultiJoinRel corresponds to a full outer join.
      */
@@ -203,7 +206,7 @@ public final class MultiJoinRel
     {
         return isFullOuterJoin;
     }
-    
+
     /**
      * @return outer join conditions for null-generating inputs
      */
@@ -211,7 +214,7 @@ public final class MultiJoinRel
     {
         return outerJoinConditions;
     }
-    
+
     /**
      * @return join types of each input
      */
@@ -219,7 +222,7 @@ public final class MultiJoinRel
     {
         return joinTypes;
     }
-    
+
     /**
      * @return bitmaps representing the fields projected from each input; if an
      * entry is null, all fields are projected
@@ -228,7 +231,7 @@ public final class MultiJoinRel
     {
         return projFields;
     }
-    
+
     /**
      * @return the map of reference counts for each input, representing the
      * fields accessed in join conditions
@@ -237,7 +240,7 @@ public final class MultiJoinRel
     {
         return joinFieldRefCountsMap;
     }
-    
+
     /**
      * @return a copy of the map of reference counts for each input,
      * representing the fields accessed in join conditions

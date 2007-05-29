@@ -29,7 +29,7 @@ import org.eigenbase.runtime.*;
 
 /**
  * FennelPipeIterator implements the {@link RestartableIterator} interface,
- * receiving data from a producer as {@link ByteBuffer} objects, and
+ * receiving data from a producer as {@link java.nio.ByteBuffer} objects, and
  * unmarshalling them to a consumer. It does this by extending {@link
  * FennelPipeTupleIter} and adapting TupleIter semantics to Iterator semantics.
  *

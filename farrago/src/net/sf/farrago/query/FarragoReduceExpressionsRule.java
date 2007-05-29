@@ -193,16 +193,16 @@ public class FarragoReduceExpressionsRule
     // TODO jvs 26-May-2006:  Get rid of this.
     private static SqlTypeName broadenType(SqlTypeName typeName)
     {
-        if (SqlTypeFamily.ApproximateNumeric.getTypeNames().contains(
+        if (SqlTypeFamily.APPROXIMATE_NUMERIC.getTypeNames().contains(
                 typeName)) {
-            return SqlTypeName.Double;
-        } else if (SqlTypeFamily.ExactNumeric.getTypeNames().contains(
+            return SqlTypeName.DOUBLE;
+        } else if (SqlTypeFamily.EXACT_NUMERIC.getTypeNames().contains(
                 typeName)) {
-            return SqlTypeName.Decimal;
-        } else if (SqlTypeFamily.Character.getTypeNames().contains(typeName)) {
-            return SqlTypeName.Char;
-        } else if (SqlTypeFamily.Binary.getTypeNames().contains(typeName)) {
-            return SqlTypeName.Binary;
+            return SqlTypeName.DECIMAL;
+        } else if (SqlTypeFamily.CHARACTER.getTypeNames().contains(typeName)) {
+            return SqlTypeName.CHAR;
+        } else if (SqlTypeFamily.BINARY.getTypeNames().contains(typeName)) {
+            return SqlTypeName.BINARY;
         } else {
             return typeName;
         }
@@ -323,7 +323,7 @@ public class FarragoReduceExpressionsRule
             for (int i = 0; i < exprs.size(); ++i) {
                 RexNode expr = exprs.get(i);
                 SqlTypeName typeName = expr.getType().getSqlTypeName();
-                SqlTypeFamily approxFamily = SqlTypeFamily.ApproximateNumeric;
+                SqlTypeFamily approxFamily = SqlTypeFamily.APPROXIMATE_NUMERIC;
                 double doubleValue = 0.0;
                 String stringValue = null;
                 if (approxFamily.getTypeNames().contains(typeName)) {
@@ -391,7 +391,7 @@ public class FarragoReduceExpressionsRule
         }
 
         private final FarragoSessionPreparingStmt preparingStmt;
-        
+
         private final RelDataTypeFactory typeFactory;
 
         private final List<Constancy> stack;
@@ -493,7 +493,7 @@ public class FarragoReduceExpressionsRule
                     callConstancy = Constancy.NON_CONSTANT;
                 }
             }
-            
+
             // Even if all operands are constant, the call itself may
             // be non-deterministic.
             if (!call.getOperator().isDeterministic()) {

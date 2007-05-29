@@ -173,7 +173,7 @@ public class DdlValidator
     /**
      * List of handlers to be invoked.
      */
-    protected List actionHandlers;
+    protected List<DdlHandler> actionHandlers;
 
     /**
      * Object to be replaced if CREATE OR REPLACE
@@ -218,7 +218,7 @@ public class DdlValidator
             new MultiMap<Class<? extends Object>, FarragoSessionDdlDropRule>();
 
         // Build up list of action handlers.
-        actionHandlers = new ArrayList();
+        actionHandlers = new ArrayList<DdlHandler>();
 
         // First, install action handlers for all installed model
         // extensions.
@@ -228,7 +228,8 @@ public class DdlValidator
         }
 
         // Then, install action handlers specific to this personality.
-        stmtValidator.getSession().getPersonality().defineDdlHandlers(this,
+        stmtValidator.getSession().getPersonality().defineDdlHandlers(
+            this,
             actionHandlers);
 
         startListening();
@@ -568,7 +569,8 @@ public class DdlValidator
 
             // restore owned elements
             if (ownedElements != null) {
-                Collection c = ((CwmNamespace) newElement).getOwnedElement();
+                Collection<CwmModelElement> c =
+                    ((CwmNamespace) newElement).getOwnedElement();
                 c.addAll(ownedElements);
             }
         }
@@ -582,11 +584,9 @@ public class DdlValidator
         stopListening();
 
         List<RefObject> deletionList = new ArrayList<RefObject>();
-        for (Object entry : validatedMap.entrySet()) {
-            Map.Entry<RefObject, Object> mapEntry =
-                (Map.Entry<RefObject, Object>) entry;
-            RefObject obj = mapEntry.getKey();
-            Object action = mapEntry.getValue();
+        for (Map.Entry<RefObject,Object> entry : validatedMap.entrySet()) {
+            RefObject obj = entry.getKey();
+            Object action = entry.getValue();
 
             if (obj instanceof CwmStructuralFeature) {
                 // Set some mandatory but irrelevant attributes.
@@ -599,7 +599,8 @@ public class DdlValidator
                 clearDependencySuppliers(obj);
                 RefFeatured container = obj.refImmediateComposite();
                 if (container != null) {
-                    Object containerAction = validatedMap.get(container);
+                    Object containerAction =
+                        validatedMap.get((RefObject) container);
                     if (containerAction == VALIDATE_DELETION) {
                         // container is also being deleted; don't try
                         // deleting this contained object--depending on order,
@@ -633,11 +634,9 @@ public class DdlValidator
         // Now mark objects as visible and update their timestamps; we defer
         // this until here so that storage handlers above can use object
         // visibility attribute to distinguish new objects.
-        for (Object entry : validatedMap.entrySet()) {
-            Map.Entry<RefObject, Object> mapEntry =
-                (Map.Entry<RefObject, Object>) entry;
-            RefObject obj = mapEntry.getKey();
-            Object action = mapEntry.getValue();
+        for (Map.Entry<RefObject,Object> entry : validatedMap.entrySet()) {
+            RefObject obj = entry.getKey();
+            Object action = entry.getValue();
 
             if (!(obj instanceof CwmModelElement)) {
                 continue;
@@ -660,11 +659,9 @@ public class DdlValidator
         }
 
         // verify repository integrity post-delete
-        for (Object entry : validatedMap.entrySet()) {
-            Map.Entry<RefObject, Object> mapEntry =
-                (Map.Entry<RefObject, Object>) entry;
-            RefObject obj = mapEntry.getKey();
-            Object action = mapEntry.getValue();
+        for (Map.Entry<RefObject,Object> entry : validatedMap.entrySet()) {
+            RefObject obj = entry.getKey();
+            Object action = entry.getValue();
             if (action != VALIDATE_DELETION) {
                 checkJmiConstraints(obj);
             }
@@ -859,7 +856,7 @@ public class DdlValidator
                     progress = true;
                     continue;
                 }
-                CwmModelElement element = (CwmModelElement) obj;
+                final CwmModelElement element = (CwmModelElement) obj;
                 try {
                     validateAction(element, action);
                     if (element.getVisibility() == null) {
@@ -867,7 +864,7 @@ public class DdlValidator
                         element.setVisibility(VisibilityKindEnum.VK_PRIVATE);
                     }
                     if ((revalidateQueue != null)
-                        && revalidateQueue.contains(obj)) {
+                        && revalidateQueue.contains(element)) {
                         setRevalidationResult(element, null);
                     }
                     progress = true;
@@ -884,7 +881,7 @@ public class DdlValidator
                         + ((CwmModelElement) obj).getName() + ": "
                         + FarragoUtil.exceptionToString(ex));
                     if ((revalidateQueue != null)
-                        && revalidateQueue.contains(obj)) {
+                        && revalidateQueue.contains(element)) {
                         setRevalidationResult(element, ex);
                     } else {
                         throw ex;
@@ -1296,10 +1293,10 @@ public class DdlValidator
         CwmModelElement modelElement,
         String action)
     {
-        for (int i = 0; i < actionHandlers.size(); ++i) {
-            Object handler = actionHandlers.get(i);
+        for (Object handler : actionHandlers) {
             boolean handled =
-                ReflectUtil.invokeVisitor(handler,
+                ReflectUtil.invokeVisitor(
+                    handler,
                     modelElement,
                     CwmModelElement.class,
                     action);
@@ -1421,12 +1418,12 @@ public class DdlValidator
                     SqlTypeName sqlType = field.getType().getSqlTypeName();
                     SqlTypeFamily typeFamily =
                         SqlTypeFamily.getFamilyForSqlType(sqlType);
-                    if ((typeFamily == SqlTypeFamily.Character)
-                        || (typeFamily == SqlTypeFamily.Binary)) {
+                    if ((typeFamily == SqlTypeFamily.CHARACTER)
+                        || (typeFamily == SqlTypeFamily.BINARY)) {
                         if (field.getType().getPrecision() == 0) {
                             // Can't have precision of 0
                             // Add cast so there is precision of 1
-                            targetType = sqlType.getName() + "(1)";
+                            targetType = sqlType.name() + "(1)";
                             updateSql = true;
                         }
                     }

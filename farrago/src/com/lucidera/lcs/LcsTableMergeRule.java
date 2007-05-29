@@ -154,12 +154,12 @@ public class LcsTableMergeRule
      * Creates a RelNode that serves as the source for an insert-only MERGE.
      * A FilterRel is inserted underneath the current ProjectRel.
      * The filter removes rids that are non-null.
-     * 
+     *
      * @param origProj original projection
      * @param targetFields fields from the target table
      * @param ridExpr expression representing the target rid column
      * @param rexBuilder rex builder
-     * 
+     *
      * @return RelNode corresponding to the source for the insert-only MERGE
      */
     private RelNode createInsertSource(
@@ -199,14 +199,14 @@ public class LcsTableMergeRule
      * a new ProjectRel.  The filter removes rows where the columns are not
      * actually updated.  The new projection projects the target rid (and 2
      * nulls) followed by a set of expressions representing new insert rows.
-     * 
+     *
      * @param origProj the original projection being replaced
      * @param targetFields fields from the target table
      * @param updateList list of names corresponding to the update columns
      * @param updateOnly if true, MERGE statement contains no INSERT
      * @param ridExpr expression representing the target rid column
      * @param rexBuilder rex builder
-     * 
+     *
      * @return source RelNode for a MERGE that contains an UPDATE
      */
     private RelNode createUpdateSource(
@@ -227,7 +227,7 @@ public class LcsTableMergeRule
         // rows where the target rid is null; note also that since the
         // expression comparing the original and new values doesn't handle
         // nulls, we need to also explicitly add checks for nulls
-        RelNode child = 
+        RelNode child =
             createChangeFilterRel(
                 origProj,
                 targetFields,
@@ -237,7 +237,7 @@ public class LcsTableMergeRule
                 rexBuilder,
                 nInsertFields);
 
-        // Project out the rid column as well as the expressions that make up 
+        // Project out the rid column as well as the expressions that make up
         // a new insert target row.  The content of insert target row depends
         // on whether the rid is null or non-null.  In the case of the former,
         // it corresponds to the target of the INSERT substatement while in
@@ -296,7 +296,7 @@ public class LcsTableMergeRule
      * are the new values.  We rely on a custom implementation of the row-wise
      * IS DISTINCT FROM operator in the Java calc to evaluate this efficiently
      * and without exceeding the Java calc limit on method bytecode size.  (As
-     * opposed to {@link RelOptUtil.isDistinctFrom}, which generates a deeply
+     * opposed to {@link RelOptUtil#isDistinctFrom}, which generates a deeply
      * nested tree.)
      *
      * @param origProj the original projection being replaced
@@ -329,12 +329,12 @@ public class LcsTableMergeRule
         if (!updateOnly) {
             createNullFilter(rexBuilder, ridExpr, filterList);
         }
-        
+
         int nTargetFields = targetFields.length;
 
         List<RexNode> oldVals = new ArrayList<RexNode>();
         List<RexNode> newVals = new ArrayList<RexNode>();
-        
+
         Map<String, Integer> targetColnoMap = new HashMap<String, Integer>();
         for (int i = 0; i < nTargetFields; i++) {
             targetColnoMap.put(targetFields[i].getName(), i);
@@ -358,7 +358,7 @@ public class LcsTableMergeRule
                     origValue.getType(),
                     newValue);
             }
-            
+
             oldVals.add(origValue);
             newVals.add(newValue);
         }
@@ -376,16 +376,16 @@ public class LcsTableMergeRule
         filterList.add(distinctTest);
         RexNode nonUpdateFilter =
             RexUtil.orRexNodeList(rexBuilder, filterList);
-        
+
         RelNode filterRel =
             CalcRel.createFilter(origProj.getChild(), nonUpdateFilter);
         return filterRel;
     }
-    
+
     /**
      * Creates an is null expression on an expression and adds it to a list
      * of filters
-     * 
+     *
      * @param rexBuilder rex builder
      * @param expr expression to create the is null expression on
      * @param filterList list of filters

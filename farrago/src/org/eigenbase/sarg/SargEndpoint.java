@@ -25,13 +25,10 @@ import java.math.*;
 
 import java.nio.*;
 
-import java.util.*;
-
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
-import org.eigenbase.util14.*;
 
 
 /**
@@ -69,19 +66,19 @@ public class SargEndpoint
     protected RexNode coordinate;
 
     /**
-     * @see getBoundType
+     * @see #getBoundType
      */
     protected SargBoundType boundType;
 
     /**
-     * @see getStrictness
+     * @see #getStrictness
      */
     protected SargStrictness strictness;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @see SargFactory.newEndpoint
+     * @see SargFactory#newEndpoint
      */
     SargEndpoint(SargFactory factory, RelDataType dataType)
     {
@@ -218,9 +215,9 @@ public class SargEndpoint
     {
         // For character strings, have to deal with truncation (complicated by
         // padding rules).
-        
-        boolean fixed = dataType.getSqlTypeName() == SqlTypeName.Char;
-        
+
+        boolean fixed = dataType.getSqlTypeName() == SqlTypeName.CHAR;
+
         String s = value.getValue();
         String trimmed = Util.rtrim(s);
 
@@ -271,7 +268,7 @@ public class SargEndpoint
     private int convertBytes(ByteBuffer value)
     {
         // REVIEW jvs 11-Sept-2006:  What about 0-padding for BINARY?
-        
+
         // For binary strings, have to deal with truncation.
 
         byte [] a = value.array();

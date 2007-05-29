@@ -66,15 +66,15 @@ public class Util
 
     /**
      * Name of the system property that controls whether the AWT work-around
-     * is enabled.  This workaround allows Farrago to load its native 
+     * is enabled.  This workaround allows Farrago to load its native
      * libraries despite a conflict with AWT and allows applications that
      * use AWT to function normally.
-     * 
+     *
      * @see #loadLibrary(String)
      */
-    public static final String awtWorkaroundProperty = 
+    public static final String awtWorkaroundProperty =
         "org.eigenbase.util.AWT_WORKAROUND";
-    
+
     /**
      * System-dependent newline character.
      */
@@ -88,7 +88,7 @@ public class Util
         System.getProperty("file.separator");
 
     /**
-     * Datetime format string for generating a timestamp string to be used 
+     * Datetime format string for generating a timestamp string to be used
      * as part of a filename. Conforms to SimpleDateFormat conventions.
      */
     public static final String fileTimestampFormat = "yyyy-MM-dd_HH_mm_ss";
@@ -602,7 +602,7 @@ public class Util
     }
 
     /**
-     * Gets a timestamp string for use in file names. The generated 
+     * Gets a timestamp string for use in file names. The generated
      * timestamp string reflects the current time.
      */
     public static String getFileTimestamp()
@@ -705,19 +705,6 @@ public class Util
             }
         }
         return buf.toString();
-    }
-
-    /**
-     * @deprecated Use {@link java.util.Arrays#asList} instead Converts the
-     * elements of an array into a {@link java.util.List}
-     */
-    public static List toList(final Object [] array)
-    {
-        List ret = new ArrayList(array.length);
-        for (int i = 0; i < array.length; i++) {
-            ret.add(array[i]);
-        }
-        return ret;
     }
 
     /**
@@ -859,7 +846,7 @@ public class Util
     }
 
     /**
-     * Retrieves messages in a exception and writes them to a string. In the 
+     * Retrieves messages in a exception and writes them to a string. In the
      * string returned, each message will appear on a different line.
      * @return a non-null string containing all messages of the exception
      */
@@ -867,8 +854,8 @@ public class Util
     {
         StringBuilder sb = new StringBuilder();
         for (Throwable curr = ex; curr != null; curr = curr.getCause()) {
-            String msg = 
-                ((curr instanceof EigenbaseException) 
+            String msg =
+                ((curr instanceof EigenbaseException)
                     || (curr instanceof SQLException))
                 ? curr.getMessage() : curr.toString();
             if (sb.length() > 0) {
@@ -1040,17 +1027,17 @@ public class Util
     }
 
     /**
-     * Uses {@link System#loadLibrary(String)} to load a native library 
+     * Uses {@link System#loadLibrary(String)} to load a native library
      * correctly under mingw (Windows/Cygwin) and Linux environments.
-     *  
-     * <p>This method also implements a work-around for applications that 
-     * wish to load AWT.  AWT conflicts with some native libraries in a 
+     *
+     * <p>This method also implements a work-around for applications that
+     * wish to load AWT.  AWT conflicts with some native libraries in a
      * way that requires AWT to be loaded first.  This method checks the
      * system property named {@link #awtWorkaroundProperty} and if it is
      * set to "on" (default; case-insensitive) it pre-loads AWT to avoid
      * the conflict.
-     *  
-     * @param libName the name of the library to load, as in 
+     *
+     * @param libName the name of the library to load, as in
      *                {@link System#loadLibrary(String)}.
      */
     public static void loadLibrary(String libName)
@@ -1060,8 +1047,8 @@ public class Util
             // REVIEW jvs 8-Sept-2006:  workaround upon workaround.  This
             // is required because in native code, we sometimes (see Farrago)
             // have to use dlopen("libfoo.so", RTLD_GLOBAL) in order for native
-            // plugins to load correctly.  But the RTLD_GLOBAL causes trouble 
-            // later if someone tries to use AWT from within the same JVM. 
+            // plugins to load correctly.  But the RTLD_GLOBAL causes trouble
+            // later if someone tries to use AWT from within the same JVM.
             // So... preload AWT here unless someone configured explicitly
             // not to do so.
             try {
@@ -1070,14 +1057,14 @@ public class Util
                 // Suppress problems so that a headless server doesn't fail on
                 // startup.  If AWT is actually needed, the same exception will
                 // show up later, which is fine.
-                
+
                 // NOTE jvs 27-Mar-2007: If this exception occurs, we'll
                 // retry the AWT load on each loadLibrary call.  That's okay,
                 // since there are only a few libraries and they're loaded
                 // via static initializers.
             }
         }
-        
+
         if (!System.mapLibraryName(libName).startsWith("lib")) {
             // assume mingw
             System.loadLibrary("cyg" + libName);
@@ -1342,7 +1329,7 @@ public class Util
         }
         return sb.toString();
     }
-    
+
     /**
      * Runs an external application.
      *
@@ -1573,11 +1560,12 @@ public class Util
     }
 
     /**
-     * Converts a {@link Properties} object to a {@link Map<String, String>}.
+     * Converts a {@link Properties} object to a
+     * <code>{@link Map}&lt;String, String&gt;</code>.
      *
      * <p>This is necessary because {@link Properties} is a dinosaur class.
      * It ought to extend <code>Map&lt;String,String&gt;</code>, but instead
-     * extends <code>Hashtable&lt;Object,Object&gt;</code>.
+     * extends <code>{@link Hashtable}&lt;Object,Object&gt;</code>.
      *
      * <p>Typical usage, to iterate over a {@link Properties}:
      *
@@ -1593,8 +1581,6 @@ public class Util
     {
         return (Map) properties;
     }
-
-
 
     /**
      * Returns an exception indicating that we didn't expect to find this

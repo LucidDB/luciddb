@@ -42,11 +42,9 @@ public class SqlAbstractTimeFunction
 
     private static final SqlOperandTypeChecker otcCustom =
         new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.OR,
-            new SqlOperandTypeChecker[] {
-                SqlTypeStrategies.otcPositiveIntLit,
-            SqlTypeStrategies.otcNiladic
-            });
+            CompositeOperandTypeChecker.Composition.OR,
+            SqlTypeStrategies.otcPositiveIntLit,
+            SqlTypeStrategies.otcNiladic);
 
     //~ Instance fields --------------------------------------------------------
 

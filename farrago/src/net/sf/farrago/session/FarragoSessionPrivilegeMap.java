@@ -66,9 +66,9 @@ public interface FarragoSessionPrivilegeMap
      *
      * @param refClass a JMI class representing the object type
      *
-     * @return Set<String> where each String is a privilege name
+     * @return Set of privilege names
      */
-    public Set getLegalPrivilegesForType(RefClass refClass);
+    public Set<String> getLegalPrivilegesForType(RefClass refClass);
 }
 
 // End FarragoSessionPrivilegeMap.java

@@ -70,7 +70,7 @@ public interface DefaultValueFactory
      *
      * @param type the structured type
      * @param constructor the constructor invoked to initialize the type
-     * @param the 0-based offset of the attribute in the type
+     * @param iAttribute the 0-based offset of the attribute in the type
      * @param constructorArgs arguments passed to the constructor invocation
      *
      * @return default value expression

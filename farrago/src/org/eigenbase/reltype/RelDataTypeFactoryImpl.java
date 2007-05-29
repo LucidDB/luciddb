@@ -382,7 +382,7 @@ public abstract class RelDataTypeFactoryImpl
 
     /**
      * implement RelDataTypeFactory with SQL 2003 compliant behavior.
-     * 
+     *
      * Let p1, s1 be the precision and scale of the first operand
      * Let p2, s2 be the precision and scale of the second operand Let p, s be
      * the precision and scale of the result, Then the result type is a decimal
@@ -419,7 +419,7 @@ public abstract class RelDataTypeFactoryImpl
                 RelDataType ret;
                 ret =
                     createSqlType(
-                        SqlTypeName.Decimal,
+                        SqlTypeName.DECIMAL,
                         precision,
                         scale);
 
@@ -440,7 +440,7 @@ public abstract class RelDataTypeFactoryImpl
 
     /**
      * implement RelDataTypeFactory
-     * 
+     *
      * Let p1, s1 be the precision and scale of the first operand
      * Let p2, s2 be the precision and scale of the second operand Let p, s be
      * the precision and scale of the result, Let d be the number of whole
@@ -485,7 +485,7 @@ public abstract class RelDataTypeFactoryImpl
                 RelDataType ret;
                 ret =
                     createSqlType(
-                        SqlTypeName.Decimal,
+                        SqlTypeName.DECIMAL,
                         precision,
                         scale);
 

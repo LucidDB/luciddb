@@ -43,7 +43,7 @@ public class SargRexAnalyzer
     //~ Instance fields --------------------------------------------------------
 
     private final SargFactory factory;
-    
+
     private final boolean simpleMode;
 
     private final Map<SqlOperator, CallConvertlet> convertletMap;
@@ -84,30 +84,30 @@ public class SargRexAnalyzer
             new ComparisonConvertlet(
                 null,
                 SargStrictness.CLOSED));
-        
+
         registerConvertlet(
             SqlStdOperatorTable.isNullOperator,
             new ComparisonConvertlet(
                 null,
                 SargStrictness.CLOSED));
-        
+
         registerConvertlet(
             SqlStdOperatorTable.isTrueOperator,
             new ComparisonConvertlet(
                 null,
                 SargStrictness.CLOSED));
-        
+
         registerConvertlet(
             SqlStdOperatorTable.isFalseOperator,
             new ComparisonConvertlet(
                 null,
                 SargStrictness.CLOSED));
-        
+
         registerConvertlet(
             SqlStdOperatorTable.isUnknownOperator,
             new ComparisonConvertlet(
                 null,
-                SargStrictness.CLOSED));       
+                SargStrictness.CLOSED));
 
         registerConvertlet(
             SqlStdOperatorTable.lessThanOperator,
@@ -276,7 +276,7 @@ public class SargRexAnalyzer
         // keep a list of them.  We also only allow one non-point expression.
         List<RexInputRef> boundRefList = new ArrayList<RexInputRef>();
         boolean rangeFound = false;
-        
+
         for (RexNode rexPred : rexCFList) {
             sargBinding = analyze(rexPred);
             if (sargBinding != null) {
@@ -374,10 +374,9 @@ public class SargRexAnalyzer
 
         return newAndNode;
     }
-    
+
     /**
-     * @deprecated
-     * @see {@link #getNonSargFilterRexNode()}
+     * @deprecated use {@link #getNonSargFilterRexNode()}
      */
     public RexNode getPostFilterRexNode()
     {
@@ -411,10 +410,9 @@ public class SargRexAnalyzer
         }
         return newAndNode;
     }
-    
+
     /**
-     * @deprecated
-     * @see {@link #getSargBindingListToRexNode(List)}
+     * @deprecated use {@link #getSargBindingListToRexNode(List)}
      */
     public RexNode getResidualSargRexNode(List<SargBinding> residualSargList)
     {
@@ -498,11 +496,11 @@ public class SargRexAnalyzer
 
         // implement CallConvertlet
         public void convert(RexCall call)
-        {          
+        {
             if (!variableSeen) {
                 failed = true;
             }
-            
+
             SqlOperator op = call.getOperator();
             if (op == SqlStdOperatorTable.isNullOperator ||
                 op == SqlStdOperatorTable.isUnknownOperator)
@@ -658,7 +656,7 @@ public class SargRexAnalyzer
                 failed = true;
             } else {
                 visitCoordinate(dynamicParam);
-            }              
+            }
             return null;
         }
 

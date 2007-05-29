@@ -32,6 +32,7 @@ import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -315,9 +316,8 @@ public class FarragoOJRexBuiltinImplementor
     }
 
     /**
-     * @2003.sql Part 2 Section 6.27 General Rule 12
+     * @sql.2003 Part 2 Section 6.27 General Rule 12
      */
-
     private void implementPow(
         FarragoRexToOJTranslator translator,
         RexCall call,
@@ -414,9 +414,8 @@ public class FarragoOJRexBuiltinImplementor
     }
 
     /**
-     * @2003.sql Part 2 Section 6.27 General Rule 9
+     * @sql.2003 Part 2 Section 6.27 General Rule 9
      */
-
     private void implementMod(
         FarragoRexToOJTranslator translator,
         RexCall call,
@@ -589,6 +588,7 @@ public class FarragoOJRexBuiltinImplementor
     private StatementList getThrowStatementList(String funcName)
     {
         // String quotedName = "\"" + funcName + "\"";
+        Util.discard(net.sf.farrago.resource.FarragoResource.instance().InvalidFunctionArgument);
         return
             new StatementList(
                 new ThrowStatement(

@@ -55,7 +55,7 @@ public class SqlNumericLiteral
         boolean isExact,
         SqlParserPos pos)
     {
-        super(value, isExact ? SqlTypeName.Decimal : SqlTypeName.Double,
+        super(value, isExact ? SqlTypeName.DECIMAL : SqlTypeName.DOUBLE,
             pos);
         this.prec = prec;
         this.scale = scale;
@@ -116,9 +116,9 @@ public class SqlNumericLiteral
                 SqlTypeName result;
                 long l = bd.longValue();
                 if ((l >= Integer.MIN_VALUE) && (l <= Integer.MAX_VALUE)) {
-                    result = SqlTypeName.Integer;
+                    result = SqlTypeName.INTEGER;
                 } else {
-                    result = SqlTypeName.Bigint;
+                    result = SqlTypeName.BIGINT;
                 }
                 return typeFactory.createSqlType(result);
             }
@@ -126,14 +126,14 @@ public class SqlNumericLiteral
             //else we have a decimal
             return
                 typeFactory.createSqlType(
-                    SqlTypeName.Decimal,
+                    SqlTypeName.DECIMAL,
                     prec.intValue(),
                     scaleValue);
         }
 
         // else we have a a float, real or double.  make them all double for
         // now.
-        return typeFactory.createSqlType(SqlTypeName.Double);
+        return typeFactory.createSqlType(SqlTypeName.DOUBLE);
     }
 
     public boolean isInteger()

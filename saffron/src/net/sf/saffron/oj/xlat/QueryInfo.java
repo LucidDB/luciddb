@@ -21,7 +21,7 @@ package net.sf.saffron.oj.xlat;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,10 +32,10 @@ import net.sf.saffron.trace.SaffronTrace;
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.mop.QueryEnvironment;
+import openjava.mop.Toolbox;
 import openjava.ptree.*;
 import openjava.tools.parser.ParserConstants;
 
-import org.eigenbase.oj.*;
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.*;
@@ -62,7 +62,7 @@ import org.eigenbase.util.Util;
  */
 class QueryInfo
 {
-    ArrayList leaves = new ArrayList();
+    ArrayList<RelNode> leaves = new ArrayList<RelNode>();
     Environment env;
     OJQueryExpander expander;
     QueryInfo parent;
@@ -136,8 +136,8 @@ class QueryInfo
     public RexNode convertGroupExpToInternal(
         Expression exp,
         Expression [] groups,
-        ArrayList aggInputList,
-        ArrayList aggCallVector)
+        List<Expression> aggInputList,
+        List<AggregateRel.Call> aggCallVector)
     {
         AggInternalTranslator translator =
             new AggInternalTranslator(this, new RelNode [] { getRoot() },
@@ -208,17 +208,19 @@ class QueryInfo
 
             // Deal with any forward-references.
             if (!cluster.getQuery().getMapDeferredToCorrel().isEmpty()) {
-                Iterator lookups =
-                    cluster.getQuery().getMapDeferredToCorrel().keySet().iterator();
-                while (lookups.hasNext()) {
-                    DeferredLookupImpl lookup = (DeferredLookupImpl) lookups.next();
+                for (RelOptQuery.DeferredLookup deferredLookup :
+                    cluster.getQuery().getMapDeferredToCorrel().keySet())
+                {
+                    DeferredLookupImpl lookup =
+                        (DeferredLookupImpl) deferredLookup;
                     String correlName =
-                        (String) cluster.getQuery().getMapDeferredToCorrel().get(lookup);
+                        (String) cluster.getQuery().getMapDeferredToCorrel()
+                            .get(lookup);
 
                     // as a side-effect, this associates correlName with rel
                     LookupResult lookupResult =
                         lookup.lookup(
-                            new RelNode [] { left, right },
+                            new RelNode[]{left, right},
                             correlName);
                     assert (lookupResult != null);
                 }
@@ -237,7 +239,7 @@ class QueryInfo
                     "joined expressions must not be mutually dependent: "
                     + exp);
             }
-            HashSet variablesStopped = new HashSet();
+            HashSet<String> variablesStopped = new HashSet<String>();
             for (int i = 0; i < variablesL2R.length; i++) {
                 variablesStopped.add(variablesL2R[i]);
             }
@@ -313,8 +315,8 @@ class QueryInfo
             // functions, for example {y, x + 2, z}.  "preGroups" and
             // "postGroups" are the group expressions before and after
             // translation.
-            ArrayList aggInputList = new ArrayList();
-            Expression [] preGroups = Util.toArray(groupList);
+            List aggInputList = new ArrayList();
+            Expression [] preGroups = Toolbox.toArray(groupList);
             RexNode [] postGroups = new RexNode[preGroups.length];
             for (int i = 0; i < preGroups.length; i++) {
                 Expression preGroup = preGroups[i];
@@ -326,28 +328,32 @@ class QueryInfo
 
             // "aggCallVector" is the aggregate expressions, for example
             // {sum(#1), min(#2)}.
-            ArrayList aggCallVector = new ArrayList();
+            ArrayList<AggregateRelBase.Call> aggCallVector =
+                new ArrayList<AggregateRelBase.Call>();
             RexNode rexWhereClause = null;
             if (whereClause != null) {
                 rexWhereClause =
-                    convertGroupExpToInternal(whereClause, preGroups,
+                    convertGroupExpToInternal(
+                        whereClause, preGroups,
                         aggInputList, aggCallVector);
                 whereClause = removeSubqueries(whereClause);
             }
-            Expression [] selects = Util.toArray(queryExp.getSelectList());
+            Expression [] selects = Toolbox.toArray(queryExp.getSelectList());
             String [] aliases = new String[selects.length];
             RexNode [] rexSelects = new RexNode[selects.length];
             for (int i = 0; i < selects.length; i++) {
-                aliases[i] = Util.getAlias(selects[i]);
+                aliases[i] = Toolbox.getAlias(selects[i]);
                 rexSelects[i] =
-                    convertGroupExpToInternal(selects[i], preGroups,
+                    convertGroupExpToInternal(
+                        selects[i], preGroups,
                         aggInputList, aggCallVector);
             }
             AggregateRel.Call [] aggCalls =
-                (AggregateRel.Call []) aggCallVector.toArray(
+                aggCallVector.toArray(
                     new AggregateRel.Call[aggCallVector.size()]);
             RexNode [] aggInputs =
-                (RexNode []) aggInputList.toArray(
+                (RexNode[])
+                aggInputList.toArray(
                     new RexNode[aggInputList.size()]);
             setRoot(
                 CalcRel.createProject(
@@ -379,7 +385,7 @@ class QueryInfo
                     0));
 
             ExpressionList sortList = queryExp.getSort();
-            Expression [] sorts = Util.toArray(sortList);
+            Expression [] sorts = Toolbox.toArray(sortList);
             if ((sorts != null) && (sorts.length > 0)) {
                 throw Util.newInternal("sort not implemented");
             }
@@ -404,11 +410,11 @@ class QueryInfo
                     rexWhereClause));
         }
 
-        Expression [] selects = Util.toArray(queryExp.getSelectList());
+        Expression [] selects = Toolbox.toArray(queryExp.getSelectList());
         String [] aliases = new String[selects.length];
         RexNode [] rexSelects = new RexNode[selects.length];
         for (int i = 0; i < selects.length; i++) {
-            aliases[i] = Util.getAlias(selects[i]);
+            aliases[i] = Toolbox.getAlias(selects[i]);
             rexSelects[i] = convertExpToInternal(selects[i]);
         }
         setRoot(
@@ -418,7 +424,7 @@ class QueryInfo
                 aliases));
 
         ExpressionList sortList = queryExp.getSort();
-        Expression [] sorts = Util.toArray(sortList);
+        Expression [] sorts = Toolbox.toArray(sortList);
         if ((sorts != null) && (sorts.length > 0)) {
             throw Util.newInternal("sort not implemented");
 
@@ -479,16 +485,16 @@ class QueryInfo
         boolean isParent,
         String varName)
     {
-        final ArrayList relList = flatten(inputs);
+        final ArrayList<RelNode> relList = flatten(inputs);
         if ((offset < 0) || (offset >= relList.size())) {
             throw Util.newInternal("could not find input");
         }
         int fieldOffset = 0;
         for (int i = 0; i < offset; i++) {
-            final RelNode rel = (RelNode) relList.get(i);
+            final RelNode rel = relList.get(i);
             fieldOffset += rel.getRowType().getFieldCount();
         }
-        RelNode rel = (RelNode) relList.get(offset);
+        RelNode rel = relList.get(offset);
         if (isParent) {
             if (varName == null) {
                 varName = rel.getOrCreateCorrelVariable();
@@ -577,16 +583,16 @@ class QueryInfo
         }
     }
 
-    private ArrayList flatten(RelNode [] rels)
+    private ArrayList<RelNode> flatten(RelNode [] rels)
     {
-        ArrayList list = new ArrayList();
+        ArrayList<RelNode> list = new ArrayList<RelNode>();
         flatten(rels, list);
         return list;
     }
 
     private void flatten(
         RelNode [] rels,
-        ArrayList list)
+        ArrayList<RelNode> list)
     {
         for (int i = 0; i < rels.length; i++) {
             RelNode rel = rels[i];

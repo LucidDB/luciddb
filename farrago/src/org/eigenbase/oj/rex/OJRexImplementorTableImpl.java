@@ -54,8 +54,11 @@ public class OJRexImplementorTableImpl
 
     //~ Instance fields --------------------------------------------------------
 
-    private final Map implementorMap = new HashMap();
-    private final Map aggImplementorMap = new HashMap();
+    private final Map<SqlOperator, OJRexImplementor> implementorMap =
+        new HashMap<SqlOperator, OJRexImplementor>();
+
+    private final Map<SqlAggFunction, OJSumAggImplementor> aggImplementorMap =
+        new HashMap<SqlAggFunction, OJSumAggImplementor>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -86,13 +89,13 @@ public class OJRexImplementorTableImpl
     // implement OJRexImplementorTable
     public OJRexImplementor get(SqlOperator op)
     {
-        return (OJRexImplementor) implementorMap.get(op);
+        return implementorMap.get(op);
     }
 
     // implement OJRexImplementorTable
     public OJAggImplementor get(Aggregation agg)
     {
-        return (OJAggImplementor) aggImplementorMap.get(agg);
+        return aggImplementorMap.get(agg);
     }
 
     /**
@@ -234,9 +237,9 @@ public class OJRexImplementorTableImpl
         }
 
         /**
-         * This is a default implementation of {@link
-         * Aggregation#implementStartAndNext}; particular derived classes may do
-         * better.
+         * This is a default implementation of
+         * {@link org.eigenbase.oj.rex.OJAggImplementor#implementStartAndNext};
+         * particular derived classes may do better.
          */
         public Expression implementStartAndNext(
             JavaRelImplementor implementor,
@@ -368,7 +371,8 @@ public class OJRexImplementorTableImpl
                         new FieldAccess(
                             new CastExpression(
                                 new TypeName(
-                                    holderClassName + "." + agg.type
+                                    holderClassName + "."
+                                    + SqlCountAggFunction.type
                                     + "_Holder"),
                                 accumulator),
                             "value")));
@@ -416,7 +420,7 @@ public class OJRexImplementorTableImpl
                     new CastExpression(
                         new TypeName(
                             holderClassName
-                            + "." + agg.type + "_Holder"),
+                            + "." + SqlCountAggFunction.type + "_Holder"),
                         accumulator),
                     "value");
         }
@@ -432,7 +436,7 @@ public class OJRexImplementorTableImpl
             return
                 new AllocationExpression(
                     new TypeName(holderClassName
-                        + "." + agg.type + "_Holder"),
+                        + "." + SqlCountAggFunction.type + "_Holder"),
                     new ExpressionList(Literal.constantZero()));
         }
     }

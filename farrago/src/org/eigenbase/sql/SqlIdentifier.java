@@ -209,7 +209,7 @@ public class SqlIdentifier
         int rightPrec)
     {
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.Identifier);
+            writer.startList(SqlWriter.FrameTypeEnum.Identifier);
         for (int i = 0; i < names.length; i++) {
             String name = names[i];
             writer.sep(".");

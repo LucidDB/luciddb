@@ -73,7 +73,7 @@ public class IterCalcRel
     private final RexProgram program;
 
     /**
-     * Values defined in {@link ProjectRelBase.Flags}.
+     * Values defined in {@link org.eigenbase.rel.ProjectRelBase.Flags}.
      */
     protected int flags;
 
@@ -314,7 +314,7 @@ public class IterCalcRel
                 TypeName.forOJClass(inputRowClass),
                 varInputRow.toString(),
                 null);
-        
+
         FieldDeclaration outputRowVarDecl =
             new FieldDeclaration(
                 new ModifierList(ModifierList.PRIVATE),
@@ -527,7 +527,7 @@ public class IterCalcRel
                                 UnaryExpression.POST_INCREMENT)));
                 }
                 ++i;
-                
+
                 RexToOJTranslator projTranslator =
                     translator.push(projMethodBody);
                 String javaFieldName = Util.toJavaId(
@@ -544,7 +544,7 @@ public class IterCalcRel
                 }
 
                 // Need a separate method.
-                
+
                 String projMethodName =
                     "calc_" + varOutputRow.toString() + "_f_" + i;
                 MemberDeclaration projMethodDecl =

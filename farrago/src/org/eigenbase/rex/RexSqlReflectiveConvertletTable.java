@@ -26,9 +26,9 @@ import org.eigenbase.sql.*;
 
 
 /**
- * Implementation of {@link RexSqlConvertletTable}
+ * Implementation of {@link RexSqlConvertletTable}.
  *
- * @author
+ * @author Sunny Choi
  * @version $Id$
  */
 public class RexSqlReflectiveConvertletTable
@@ -87,7 +87,7 @@ public class RexSqlReflectiveConvertletTable
      * Registers a convertlet for a given operator instance
      *
      * @param op Operator instance, say {@link
-     * SqlStdOperatorTable#minusOperator}
+     * org.eigenbase.sql.fun.SqlStdOperatorTable#minusOperator}
      * @param convertlet Convertlet
      */
     protected void registerOp(SqlOperator op, RexSqlConvertlet convertlet)

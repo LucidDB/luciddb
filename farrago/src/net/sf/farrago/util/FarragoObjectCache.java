@@ -256,9 +256,9 @@ public class FarragoObjectCache
 
             // get an ordered list of potential cache victims and search
             // for unused entries
-            Iterator lruList = victimPolicy.getVictimIterator();
+            Iterator<FarragoCacheEntry> lruList = victimPolicy.getVictimIterator();
             while ((overdraft > 0) && lruList.hasNext()) {
-                FarragoCacheEntry entry = (FarragoCacheEntry) lruList.next();
+                FarragoCacheEntry entry = lruList.next();
                 if (entry.pinCount > 0) {
                     continue;
                 }

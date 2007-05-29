@@ -72,12 +72,14 @@ public abstract class SqlDateTimeWithoutTZ
     public static final String ADJUST_PRECISION_METHOD_NAME = "adjustPrecision";
 
     /**
-     * Name of {@link #floor(int)} method.
+     * Name of {@link #floor(org.eigenbase.sql.SqlIntervalQualifier.TimeUnit)}
+     * method.
      */
     public static final String FLOOR_METHOD_NAME = "floor";
 
     /**
-     * Name of {@link #ceil(int)} method.
+     * Name of {@link #ceil(org.eigenbase.sql.SqlIntervalQualifier.TimeUnit)}
+     * method.
      */
     public static final String CEIL_METHOD_NAME = "ceil";
 
@@ -187,7 +189,7 @@ public abstract class SqlDateTimeWithoutTZ
      * constant, or being translated from a Fennel value. If so, then the
      * Fennel type must match the Farrago type. It is legal to assign a
      * {@link ZonelessDate} to a {@link ZonelessDate} and a
-     * {@link ZonelessTime} to a {@link ZonelessTime], but it is not valid
+     * {@link ZonelessTime} to a {@link ZonelessTime}, but it is not valid
      * to assign a Timestamp to either, or vice versa.
      *
      * @param date value to assign, or null to set null
@@ -407,31 +409,42 @@ public abstract class SqlDateTimeWithoutTZ
      * <code>TIMESTAMP '2006-07-03 12:34:56.7'</code> returns
      * <code>TIMESTAMP '2006-07-03 12:00:00.0'</code>.
      *
-     * @param timeUnitOrdinal Ordinal of time unit, as per
-     * {@link SqlIntervalQualifier.TimeUnit}.
+     * @param timeUnit Time unit
      */
-    public void floor(int timeUnitOrdinal)
+    public void floor(SqlIntervalQualifier.TimeUnit timeUnit)
     {
         Calendar cal = getTempCal();
-        switch (timeUnitOrdinal) {
+        switch (timeUnit) {
         // Fall through
-        case SqlIntervalQualifier.TimeUnit.Year_ordinal:
+        case Year:
             cal.set(Calendar.MONTH, 0);
-        case SqlIntervalQualifier.TimeUnit.Month_ordinal:
+        case Month:
             cal.set(Calendar.DAY_OF_MONTH, 1);
-        case SqlIntervalQualifier.TimeUnit.Day_ordinal:
+        case Day:
             cal.set(Calendar.HOUR_OF_DAY, 0);
-        case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
+        case Hour:
             cal.set(Calendar.MINUTE, 0);
-        case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
+        case Minute:
             cal.set(Calendar.SECOND, 0);
-        case SqlIntervalQualifier.TimeUnit.Second_ordinal:
+        case Second:
             cal.set(Calendar.MILLISECOND, 0);
             break;
         default:
-            throw Util.newInternal("Invalid timeunit " + timeUnitOrdinal);
+            throw Util.unexpected(timeUnit);
         }
         value.setZonelessTime(cal.getTimeInMillis());
+    }
+
+    /**
+     * Rounds this datetime value down to a unit of time expressed using its
+     * ordinal. Called by generated code.
+     *
+     * @param timeUnitOrdinal Ordinal of
+     * {@link org.eigenbase.sql.SqlIntervalQualifier.TimeUnit} value
+     */
+    public void floor(int timeUnitOrdinal)
+    {
+        floor(SqlIntervalQualifier.TimeUnit.getValue(timeUnitOrdinal));
     }
 
     /**
@@ -442,75 +455,86 @@ public abstract class SqlDateTimeWithoutTZ
      * <code>TIMESTAMP '2006-07-03 12:34:56.7'</code> returns
      * <code>TIMESTAMP '2006-07-03 13:00:00.0'</code>.
      *
-     * @param timeUnitOrdinal Ordinal of time unit, as per
-     * {@link SqlIntervalQualifier.TimeUnit}.
+     * @param timeUnit Time unit
      */
-    public void ceil(int timeUnitOrdinal)
+    public void ceil(SqlIntervalQualifier.TimeUnit timeUnit)
     {
         Calendar cal = getTempCal();
         boolean incNeeded = false;
-        switch (timeUnitOrdinal) {
+        switch (timeUnit) {
         // Fall through
-        case SqlIntervalQualifier.TimeUnit.Year_ordinal:
+        case Year:
             if (cal.get(Calendar.MONTH) >= 0) {
                 cal.set(Calendar.MONTH, 0);
                 incNeeded = true;
             }
-        case SqlIntervalQualifier.TimeUnit.Month_ordinal:
+        case Month:
             if (cal.get(Calendar.DAY_OF_MONTH) > 0) {
                 cal.set(Calendar.DAY_OF_MONTH, 1);
                 incNeeded = true;
             }
-        case SqlIntervalQualifier.TimeUnit.Day_ordinal:
+        case Day:
             if (cal.get(Calendar.HOUR_OF_DAY) > 0) {
                 cal.set(Calendar.HOUR_OF_DAY, 0);
                 incNeeded = true;
             }
-        case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
+        case Hour:
             if (cal.get(Calendar.MINUTE) > 0) {
                 cal.set(Calendar.MINUTE, 0);
                 incNeeded = true;
             }
-        case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
+        case Minute:
             if (cal.get(Calendar.SECOND) > 0) {
                 cal.set(Calendar.SECOND, 0);
                 incNeeded = true;
             }
-        case SqlIntervalQualifier.TimeUnit.Second_ordinal:
+        case Second:
             if (cal.get(Calendar.MILLISECOND) > 0) {
                 cal.set(Calendar.MILLISECOND, 0);
                 incNeeded = true;
             }
             break;
         default:
-            throw Util.newInternal("Invalid timeunit " + timeUnitOrdinal);
+            throw Util.unexpected(timeUnit);
         }
 
         if (incNeeded) {
-            switch (timeUnitOrdinal) {
-            case SqlIntervalQualifier.TimeUnit.Year_ordinal:
+            switch (timeUnit) {
+            case Year:
                 cal.add(Calendar.YEAR, 1);
                 break;
-            case SqlIntervalQualifier.TimeUnit.Month_ordinal:
+            case Month:
                 cal.add(Calendar.MONTH, 1);
                 break;
-            case SqlIntervalQualifier.TimeUnit.Day_ordinal:
+            case Day:
                 cal.add(Calendar.DAY_OF_MONTH, 1);
                 break;
-            case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
+            case Hour:
                 cal.add(Calendar.HOUR_OF_DAY, 1);
                 break;
-            case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
+            case Minute:
                 cal.add(Calendar.MINUTE, 1);
                 break;
-            case SqlIntervalQualifier.TimeUnit.Second_ordinal:
+            case Second:
                 cal.add(Calendar.SECOND, 1);
                 break;
             default:
-                throw Util.newInternal("Invalid timeunit " + timeUnitOrdinal);
+                throw Util.unexpected(timeUnit);
             }
             value.setZonelessTime(cal.getTimeInMillis());
         }
+    }
+
+    /**
+     * Rounds this datetime value up to a unit of time expressed using its
+     * ordinal. Called by generated code.
+     *
+     * @param timeUnitOrdinal Ordinal of
+     * {@link org.eigenbase.sql.SqlIntervalQualifier.TimeUnit} value
+     */
+    public void ceil(int timeUnitOrdinal)
+    {
+        ceil(SqlIntervalQualifier.TimeUnit.getValue(timeUnitOrdinal));
     }
 
     /**

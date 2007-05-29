@@ -85,7 +85,7 @@ public class FarragoRmiJdbcServer
     protected int startNetwork(FarragoJdbcServerDriver jdbcDriver)
         throws Exception
     {
-        List argList = new ArrayList();
+        List<String> argList = new ArrayList<String>();
 
         if (rmiRegistry != null) {
             // A server instance was previously in existence, so don't
@@ -101,7 +101,7 @@ public class FarragoRmiJdbcServer
             argList.add(Integer.toString(singleListenerPort));
         }
 
-        FarragoRJJdbcServer.main((String []) argList.toArray(new String[0]));
+        FarragoRJJdbcServer.main(argList.toArray(new String[argList.size()]));
         locateRmiRegistry();
 
         return rmiRegistryPort;

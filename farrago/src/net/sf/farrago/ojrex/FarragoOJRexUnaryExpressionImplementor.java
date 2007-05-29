@@ -127,7 +127,7 @@ public class FarragoOJRexUnaryExpressionImplementor
         Expression expr =
             new UnaryExpression(operands[0],
                 ojUnaryExpressionOrdinal);
-        if ((returnType.getSqlTypeName() != SqlTypeName.Boolean)
+        if ((returnType.getSqlTypeName() != SqlTypeName.BOOLEAN)
             && (factory.getClassForPrimitive(returnType) != null)) {
             // Cast to correct primitive return type so compiler is happy
             return

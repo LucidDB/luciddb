@@ -457,7 +457,7 @@ public class FennelToIteratorConverter
 
         if (!useTransformer) {
             registerChildWithAncestor(implementor, rootStream, true);
-            
+
             // Pass tuple reader to FarragoRuntimeContext.newFennelTupleIter to
             // produce a FennelTupleIter, which will invoke our generated
             // FennelTupleReader to unmarshal
@@ -549,10 +549,8 @@ public class FennelToIteratorConverter
      */
     protected boolean isTransformerInput(JavaRelImplementor implementor)
     {
-        List ancestors = implementor.getAncestorRels(this);
-        for (Object o : ancestors) {
-            RelNode ancestor = (RelNode) o;
-
+        List<RelNode> ancestors = implementor.getAncestorRels(this);
+        for (RelNode ancestor : ancestors) {
             if (ancestor instanceof FarragoJavaUdxRel) {
                 // NOTE jvs 13-May-2006:  A UDX invocation pulls from
                 // a different thread; it does not participate
@@ -575,10 +573,8 @@ public class FennelToIteratorConverter
         FemExecutionStreamDef streamDef,
         boolean implicit)
     {
-        List ancestors = implementor.getAncestorRels(this);
-        for (Object temp : ancestors) {
-            RelNode ancestor = (RelNode) temp;
-
+        List<RelNode> ancestors = implementor.getAncestorRels(this);
+        for (RelNode ancestor : ancestors) {
             if (ancestor instanceof IteratorToFennelConverter) {
                 ((IteratorToFennelConverter) ancestor).registerChildStreamDef(
                     streamDef, implicit);

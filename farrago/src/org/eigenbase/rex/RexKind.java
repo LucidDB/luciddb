@@ -24,9 +24,6 @@ package org.eigenbase.rex;
 
 import java.util.*;
 
-import org.eigenbase.util.*;
-
-
 /**
  * Enumeration of some important types of row-expression.
  *
@@ -47,17 +44,16 @@ import org.eigenbase.util.*;
  * <pre>exp.{@link RexNode#isA isA}({@link RexKind#Comparison RexKind.Comparison})</pre>
  * </blockquote>
  *
- * To quickly choose between a number of options, use the {@link #getOrdinal()
- * ordinal} property:
+ * To quickly choose between a number of options, use a switch statement:
  *
  * <blockquote>
- * <pre>switch (exp.getKind().getOrdinal()) {
- * case {@link RexKind#EqualsORDINAL RexKind.Equals_ORDINAL}:
+ * <pre>switch (exp.getKind()) {
+ * case {@link #Equals}:
  *     ...;
- * case {@link RexKind#NotEqualsORDINAL RexKind.NotEquals_ORDINAL}:
+ * case {@link #NotEquals}:
  *     ...;
  * default:
- *     throw exp.getKind().{@link #unexpected unexpected}();
+ *     throw {@link org.eigenbase.util.Util#unexpected Util.unexpected}(exp.getKind());
  * }</pre>
  * </blockquote>
  * </p>
@@ -66,161 +62,119 @@ import org.eigenbase.util.*;
  * @version $Id$
  * @since Nov 24, 2003
  */
-public class RexKind
-    extends EnumeratedValues.BasicValue
+public enum RexKind
 {
-
-    //~ Static fields/initializers ---------------------------------------------
-
-    public static final int OtherORDINAL = 0;
-
     /**
      * No operator in particular. This is the default kind.
      */
-    public static final RexKind Other = new RexKind("Other", OtherORDINAL);
-    public static final int EqualsORDINAL = 1;
+    Other,
 
     /**
      * The equals operator, "=".
      */
-    public static final RexKind Equals = new RexKind("Equals", EqualsORDINAL);
-    public static final int NotEqualsORDINAL = 2;
+    Equals,
 
     /**
      * The not-equals operator, "&#33;=" or "&lt;&gt;".
      */
-    public static final RexKind NotEquals =
-        new RexKind("NotEquals", NotEqualsORDINAL);
-    public static final int GreaterThanORDINAL = 3;
+    NotEquals,
 
     /**
      * The greater-than operator, "&gt;".
      */
-    public static final RexKind GreaterThan =
-        new RexKind("GreaterThan", GreaterThanORDINAL);
-    public static final int GreaterEqualORDINAL = 4;
+    GreaterThan,
 
     /**
      * The greater-than-or-equal operator, "&gt;=".
      */
-    public static final RexKind GreaterThanOrEqual =
-        new RexKind("GreaterThanOrEqual", GreaterEqualORDINAL);
-    public static final int LessThanORDINAL = 5;
+    GreaterThanOrEqual,
 
     /**
      * The less-than operator, "&lt;".
      */
-    public static final RexKind LessThan =
-        new RexKind("LessThan", LessThanORDINAL);
-    public static final int LessThanOrEqualORDINAL = 6;
+    LessThan,
 
     /**
      * The less-than-or-equal operator, "&lt;=".
      */
-    public static final RexKind LessThanOrEqual =
-        new RexKind("LessThanOrEqual", LessThanOrEqualORDINAL);
-    public static final int ComparisonORDINAL = 7;
+    LessThanOrEqual,
 
     /**
      * A comparison operator ({@link #Equals}, {@link #GreaterThan}, etc.).
      * Comparisons are always a {@link RexCall} with 2 arguments.
      */
-    public static final RexKind Comparison =
-        new RexKind(
-            "Comparison",
-            ComparisonORDINAL,
-            new RexKind[] {
-                Equals, NotEquals, GreaterThan, GreaterThanOrEqual, LessThan,
+    Comparison(
+        new RexKind[] {
+            Equals, NotEquals, GreaterThan, GreaterThanOrEqual, LessThan,
             LessThanOrEqual
-            });
-    public static final int AndORDINAL = 10;
+        }),
 
     /**
      * The logical "AND" operator.
      */
-    public static final RexKind And = new RexKind("And", AndORDINAL);
-    public static final int OrORDINAL = 11;
+    And,
 
     /**
      * The logical "OR" operator.
      */
-    public static final RexKind Or = new RexKind("Or", OrORDINAL);
-    public static final int NotORDINAL = 12;
+    Or,
 
     /**
      * The logical "NOT" operator.
      */
-    public static final RexKind Not = new RexKind("Not", NotORDINAL);
-    public static final int LogicalORDINAL = 13;
+    Not,
 
     /**
      * A logical operator ({@link #And}, {@link #Or}, {@link #Not}).
      */
-    public static final RexKind Logical =
-        new RexKind(
-            "Logical",
-            LogicalORDINAL,
-            new RexKind[] { And, Or, Not });
-    public static final int DivideORDINAL = 20;
+    Logical(
+        new RexKind[] { And, Or, Not }),
 
     /**
      * The arithmetic division operator, "/".
      */
-    public static final RexKind Divide = new RexKind("Divide", DivideORDINAL);
-    public static final int MinusORDINAL = 21;
+    Divide,
 
     /**
      * The arithmetic minus operator, "-".
      *
      * @see #MinusPrefix
      */
-    public static final RexKind Minus = new RexKind("Minus", MinusORDINAL);
-    public static final int PlusORDINAL = 22;
+    Minus,
 
     /**
      * The arithmetic plus operator, "+".
      */
-    public static final RexKind Plus = new RexKind("Plus", PlusORDINAL);
-    public static final int MinusPrefixORDINAL = 23;
+    Plus,
 
     /**
      * The unary minus operator, as in "-1".
      *
      * @see #Minus
      */
-    public static final RexKind MinusPrefix =
-        new RexKind("MinusPrefix", MinusPrefixORDINAL);
-    public static final int TimesORDINAL = 24;
+    MinusPrefix,
 
     /**
      * The arithmetic multiplication operator, "*".
      */
-    public static final RexKind Times = new RexKind("Times", TimesORDINAL);
-    public static final int ArithmeticORDINAL = 25;
+    Times,
 
     /**
-     * An arithmetic operator ({@link #Divide}, {@link #Minus}, {@link
-     * #MinusPrefix}, {@link #Plus}, {@link #Times}).
+     * An arithmetic operator ({@link #Divide}, {@link #Minus},
+     * {@link #MinusPrefix}, {@link #Plus}, {@link #Times}).
      */
-    public static final RexKind Arithmetic =
-        new RexKind(
-            "Arithmetic",
-            ArithmeticORDINAL,
-            new RexKind[] { Divide, Minus, MinusPrefix, Plus, Times });
-    public static final int FieldAccessORDINAL = 30;
+    Arithmetic(
+        new RexKind[] { Divide, Minus, MinusPrefix, Plus, Times }),
 
     /**
-     * The arithmetic multiplication operator, "*".
+     * The field access operator, ".".
      */
-    public static final RexKind FieldAccess =
-        new RexKind("FieldAccess", FieldAccessORDINAL);
-    public static final int ConcatORDINAL = 31;
+    FieldAccess,
 
     /**
      * The string concatenation operator, "||".
      */
-    public static final RexKind Concat = new RexKind("Concat", ConcatORDINAL);
-    public static final int SubstrORDINAL = 32;
+    Concat,
 
     /**
      * The substring function.
@@ -231,140 +185,99 @@ public class RexKind
     // syntactic cetegories, and there's nothing particularly special about
     // Substr. For the mapping of sql->rex, and rex->calc, just use its name
     // or signature.
-    public static final RexKind Substr = new RexKind("SUBSTR", SubstrORDINAL);
-    public static final int RowORDINAL = 33;
+    Substr,
 
     /**
      * The row constructor operator.
      */
-    public static final RexKind Row = new RexKind("Row", RowORDINAL);
-    public static final int IsNullORDINAL = 34;
+    Row,
 
     /**
      * The IS NULL operator.
      */
-    public static final RexKind IsNull = new RexKind("IsNull", IsNullORDINAL);
-    public static final int IdentifierORDINAL = 35;
+    IsNull,
 
     /**
      * An identifier.
      */
-    public static final RexKind Identifier =
-        new RexKind("Identifier", IdentifierORDINAL);
-    public static final int LiteralORDINAL = 36;
+    Identifier,
 
     /**
      * A literal.
      */
-    public static final RexKind Literal =
-        new RexKind("Literal", LiteralORDINAL);
-    public static final int ValuesORDINAL = 37;
+    Literal,
 
     /**
      * The VALUES operator.
      */
-    public static final RexKind Values = new RexKind("Values", ValuesORDINAL);
-    public static final int IsTrueORDINAL = 38;
+    Values,
 
     /**
      * The IS TRUE operator.
      */
-    public static final RexKind IsTrue = new RexKind("IsTrue", IsTrueORDINAL);
-    public static final int IsFalseORDINAL = 39;
+    IsTrue,
 
     /**
      * The IS FALSE operator.
      */
-    public static final RexKind IsFalse =
-        new RexKind("IsFalse", IsFalseORDINAL);
-    public static final int DynamicParamORDINAL = 40;
+    IsFalse,
 
     /**
      * A dynamic parameter.
      */
-    public static final RexKind DynamicParam =
-        new RexKind("DynamicParam", DynamicParamORDINAL);
-    public static final int CastOrdinal = 41;
-    public static final RexKind Cast = new RexKind("Cast", CastOrdinal);
-    public static final int TrimOrdinal = 42;
-    public static final RexKind Trim = new RexKind("Trim", TrimOrdinal);
+    DynamicParam,
+    Cast,
+    Trim,
 
     /**
-     * The LIKE operator
+     * The LIKE operator.
      */
-    public static final int LikeOrdinal = 43;
-    public static final RexKind Like = new RexKind("LIKE", LikeOrdinal);
+    Like,
 
     /**
-     * The SIMILAR operator
+     * The SIMILAR operator.
      */
-    public static final int SimilarOrdinal = 44;
-    public static final RexKind Similar =
-        new RexKind("SIMILAR TO", SimilarOrdinal);
+    Similar,
 
     /**
      * The MULTISET Query Constructor
      */
-    public static final int MultisetQueryConstructorOrdinal = 45;
-    public static final RexKind MultisetQueryConstructor =
-        new RexKind("MultisetQueryConstructor",
-            MultisetQueryConstructorOrdinal);
+    MultisetQueryConstructor,
 
     /**
      * NEW invocation
      */
-    public static final int NewSpecificationOrdinal = 46;
-    public static final RexKind NewSpecification =
-        new RexKind("NewSpecification", NewSpecificationOrdinal);
+    NewSpecification,
 
     /**
      * The internal REINTERPRET operator
      */
-    public static final int ReinterpretOrdinal = 47;
-    public static final RexKind Reinterpret =
-        new RexKind("Reinterpret", ReinterpretOrdinal);
-
-    /**
-     * Set of all {@link RexKind} instances.
-     */
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(
-            new RexKind[] { Equals, NotEquals, GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Comparison, IsNull, IsTrue, IsFalse, // comparisons
-             And, Or, Not, Logical, // logical
-             Divide, Minus, Plus, MinusPrefix, Times, Arithmetic, // arithmetic
-             FieldAccess, Concat, Substr, Row, Identifier, Literal, Values, DynamicParam, Cast, Trim, MultisetQueryConstructor, NewSpecification, Reinterpret });
+    Reinterpret;
 
     //~ Instance fields --------------------------------------------------------
 
-    private Set otherKinds;
+    private final Set<RexKind> otherKinds;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a kind.
      */
-    private RexKind(
-        String name,
-        int ordinal)
+    RexKind()
     {
-        super(name, ordinal, null);
-        otherKinds = Collections.EMPTY_SET;
+        otherKinds = Collections.emptySet();
     }
 
     /**
      * Creates a kind which includes other kinds.
      */
-    private RexKind(
-        String name,
-        int ordinal,
-        RexKind [] others)
+    RexKind(RexKind [] others)
     {
-        super(name, ordinal, null);
-        otherKinds = new HashSet();
+        otherKinds = new HashSet<RexKind>();
         for (int i = 0; i < others.length; i++) {
             RexKind other = others[i];
             otherKinds.add(other);
-            otherKinds.add(other.otherKinds);
+            otherKinds.addAll(other.otherKinds);
         }
     }
 
@@ -373,22 +286,6 @@ public class RexKind
     public boolean includes(RexKind kind)
     {
         return (kind == this) || otherKinds.contains(kind);
-    }
-
-    /**
-     * Looks up a kind from its ordinal.
-     */
-    public static RexKind get(int ordinal)
-    {
-        return (RexKind) enumeration.getValue(ordinal);
-    }
-
-    /**
-     * Looks up a kind from its name.
-     */
-    public static RexKind get(String name)
-    {
-        return (RexKind) enumeration.getValue(name);
     }
 }
 

@@ -25,7 +25,6 @@ import java.math.*;
 
 import net.sf.farrago.resource.*;
 
-import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
@@ -46,7 +45,7 @@ import org.eigenbase.util14.*;
  * runtime. As usual, the method <code>getNullableData</code> returns an
  * external data type, conforming to SQL standards.
  *
- * <p>Note: the code may be inefficient, since it relies on Java libraries 
+ * <p>Note: the code may be inefficient, since it relies on Java libraries
  * for decimal support and allocates memory on a per row basis.
  *
  * @author jpham
@@ -100,13 +99,11 @@ public abstract class EncodedSqlDecimal
      */
     protected abstract int getScale();
 
-    // implement NullableValue
     public boolean isNull()
     {
         return isNull;
     }
 
-    // implement NullableValue
     public void setNull(boolean b)
     {
         isNull = b;
@@ -118,7 +115,6 @@ public abstract class EncodedSqlDecimal
         helper.assignFrom(obj);
     }
 
-    // implement AssignableValue
     public void assignFrom(long l)
     {
         // NOTE: this is used internally and for decimal literals
@@ -138,7 +134,7 @@ public abstract class EncodedSqlDecimal
     }
 
     /**
-     * Encodes a long value as an EncodedSqlDecimal, with an optional 
+     * Encodes a long value as an EncodedSqlDecimal, with an optional
      * overflow check.
      *
      * @param value value to be encoded as an EncodedSqlDecimal
@@ -148,7 +144,7 @@ public abstract class EncodedSqlDecimal
     {
         if (overflowCheck && (getPrecision() < 19)) {
             if (overflowValue == 0) {
-                overflowValue = 
+                overflowValue =
                     NumberUtil.getMaxUnscaled(getPrecision()).longValue() + 1;
             }
             if (Math.abs(value) >= overflowValue) {
@@ -160,7 +156,7 @@ public abstract class EncodedSqlDecimal
 
     /**
      * Encodes a long value as an EncodedSqlDecimal without an overflow check.
-     * 
+     *
      * @param value value to be encoded as an EncodedSqlDecimal
      */
     public void reinterpret(long value)
@@ -169,10 +165,10 @@ public abstract class EncodedSqlDecimal
     }
 
     /**
-     * Encodes a long value as an EncodedSqlDecimal, with an optional 
+     * Encodes a long value as an EncodedSqlDecimal, with an optional
      * overflow check.
      *
-     * @param value value to be encoded as an EncodedSqlDecimal
+     * @param primitive value to be encoded as an EncodedSqlDecimal
      * @param overflowCheck whether to check for overflow
      */
     public void reinterpret(
@@ -188,8 +184,8 @@ public abstract class EncodedSqlDecimal
 
     /**
      * Encodes a long value as an EncodedSqlDecimal without an overflow check.
-     * 
-     * @param value value to be encoded as an EncodedSqlDecimal
+     *
+     * @param primitive value to be encoded as an EncodedSqlDecimal
      */
     public void reinterpret(NullablePrimitive.NullableLong primitive)
     {
@@ -198,7 +194,7 @@ public abstract class EncodedSqlDecimal
 
     /**
      * Assigns the internal value of this decimal to a long variable
-     * 
+     *
      * @param target the variable to be assigned
      */
     public void assignTo(NullablePrimitive.NullableLong target)
@@ -215,10 +211,10 @@ public abstract class EncodedSqlDecimal
     }
 
     /**
-     * Narrows an external BigDecimal value (potentially larger than the 
-     * database can handle) into a native value. Unsupported values are 
+     * Narrows an external BigDecimal value (potentially larger than the
+     * database can handle) into a native value. Unsupported values are
      * replaced with null.
-     * 
+     *
      * @param o the BigDecimal value
      */
     public void narrowCast(Object o)
@@ -229,24 +225,24 @@ public abstract class EncodedSqlDecimal
             setNull(true);
             return;
         }
-        
-        // round it to the correct scale; if it's too large, then 
+
+        // round it to the correct scale; if it's too large, then
         // replace it with null
         BigDecimal rounded = NumberUtil.rescaleBigDecimal(bd, getScale());
         if (! NumberUtil.isValidDecimal(rounded)) {
             setNull(true);
             return;
         }
-        
+
         assignFrom(rounded.unscaledValue().longValue());
     }
 
     //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * Class which assigns a value to an {@link EncodedSqlDecimal}. 
-     * Note that EncodedSqlDecimal cannot inherit from NullablePrimitive 
-     * because EncodedSqlDecimal supports "NOT NULL" data and 
+     * Class which assigns a value to an {@link EncodedSqlDecimal}.
+     * Note that EncodedSqlDecimal cannot inherit from NullablePrimitive
+     * because EncodedSqlDecimal supports "NOT NULL" data and
      * NullablePrimitive tags data as nullable.
      */
     public class AssignableDecimal
@@ -255,8 +251,8 @@ public abstract class EncodedSqlDecimal
         private EncodedSqlDecimal parent;
 
         /**
-         * The maximum LONG value that can be assigned to this decimal. 
-         * No overflow check is performed when this value is set to 
+         * The maximum LONG value that can be assigned to this decimal.
+         * No overflow check is performed when this value is set to
          * Long.MAX_VALUE.
          */
         private long longOverflow;
@@ -293,8 +289,8 @@ public abstract class EncodedSqlDecimal
         // implement NullablePrimitive
         protected void setLong(long n)
         {
-            // Check for overflow if the number of whole digits is less than 
-            // 19, the maximum for a long. Also set the scaling factor used 
+            // Check for overflow if the number of whole digits is less than
+            // 19, the maximum for a long. Also set the scaling factor used
             // to convert a long into a decimal of the specified scale.
             if (longOverflow == 0) {
                 int precision = parent.getPrecision();
@@ -305,7 +301,7 @@ public abstract class EncodedSqlDecimal
                 // The scale factor is 10^scale.
                 Util.permAssert(
                     scale < 19, "decimal scale exceeded limit for setLong");
-                longScaleFactor = 
+                longScaleFactor =
                     BigInteger.TEN.pow(parent.getScale()).longValue();
 
                 if (wholeDigits >= 19) {
@@ -313,19 +309,19 @@ public abstract class EncodedSqlDecimal
                 } else if (precision == 19) {
                     longOverflow = (Long.MAX_VALUE / longScaleFactor) + 1;
                 } else {
-                    longOverflow = 
+                    longOverflow =
                         BigInteger.TEN.pow(wholeDigits).longValue();
                 }
             }
-            if (longOverflow != Long.MAX_VALUE 
-                && Math.abs(n) >= longOverflow) 
+            if (longOverflow != Long.MAX_VALUE
+                && Math.abs(n) >= longOverflow)
             {
                 throw FarragoResource.instance().Overflow.ex();
             }
 
             reinterpret(n*longScaleFactor);
         }
-        
+
         // implement AssignableValue
         public void assignFrom(Object obj)
         {

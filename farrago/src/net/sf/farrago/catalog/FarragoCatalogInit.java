@@ -21,8 +21,9 @@
 */
 package net.sf.farrago.catalog;
 
-import net.sf.farrago.fem.security.*;
-import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fem.security.FemRole;
+import net.sf.farrago.fem.security.FemUser;
+import net.sf.farrago.fem.sql2003.FemLocalCatalog;
 
 
 /**

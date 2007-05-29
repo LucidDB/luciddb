@@ -26,9 +26,6 @@ import java.io.*;
 
 import java.util.*;
 
-import net.sf.farrago.jdbc.engine.*;
-
-
 /**
  * FarragoTestConcurrentScriptedTestCase is a base class for multi-threaded,
  * scripted tests. Subclasses must implement the suite() method in order to get
@@ -78,24 +75,19 @@ public abstract class FarragoTestConcurrentScriptedTestCase
         cmdGen.executeSetup(jdbcUrl);
 
         executeTest(
-            cmdGen, 
+            cmdGen,
             cmdGen.useLockstep(),
             jdbcUrl);
 
-        Map results = cmdGen.getResults();
-
-
+        Map<Integer, String[]> results = cmdGen.getResults();
         OutputStream outStream = openTestLogOutputStream(mtsqlFileSansExt);
 
         BufferedWriter out =
             new BufferedWriter(new OutputStreamWriter(outStream));
 
- 
-        for (Iterator i = results.entrySet().iterator(); i.hasNext();) {
-            Map.Entry entry = (Map.Entry) i.next();
-
-            Integer threadId = (Integer) entry.getKey();
-            String [] threadResult = (String []) entry.getValue();
+        for (Map.Entry<Integer, String[]> entry : results.entrySet()) {
+            Integer threadId = entry.getKey();
+            String [] threadResult = entry.getValue();
 
             String threadName = "thread " + threadResult[0];
             if (FarragoTestConcurrentScriptedCommandGenerator.SETUP_THREAD_ID

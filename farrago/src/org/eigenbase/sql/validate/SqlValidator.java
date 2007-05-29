@@ -211,10 +211,10 @@ public interface SqlValidator
      * Validates a call to an operator.
      */
     void validateCall(SqlCall call, SqlValidatorScope scope);
-    
+
     /**
      * Validates a COLUMN_LIST parameter
-     * 
+     *
      * @param function function containing COLUMN_LIST parameter
      * @param argTypes function arguments
      * @param operands operands passed into the function call
@@ -248,7 +248,7 @@ public interface SqlValidator
      * @param e The validation error
      * @param node The place where the exception occurred
      *
-     * @return
+     * @return Exception containing positional information
      *
      * @pre node != null
      * @post return != null
@@ -264,7 +264,7 @@ public interface SqlValidator
      * as <code>SUM(x) OVER w</code>, don't count.)
      */
     boolean isAggregate(SqlSelect select);
-    
+
     /**
      * Returns whether a select list expression is an aggregate function.
      */
@@ -348,10 +348,10 @@ public interface SqlValidator
     void setValidatedNodeType(
         SqlNode node,
         RelDataType type);
-    
+
     /**
      * Removes a node from the set of validated nodes
-     * 
+     *
      * @param node node to be removed
      */
     void removeValidatedNodeType(SqlNode node);
@@ -443,9 +443,9 @@ public interface SqlValidator
 
     /**
      * Declares a SELECT expression as a cursor.
-     * 
+     *
      * @param select select expression associated with the cursor
-     * @param parentScope scope of the parent query associated with the cursor
+     * @param scope scope of the parent query associated with the cursor
      */
     void declareCursor(SqlSelect select, SqlValidatorScope scope);
 
@@ -454,12 +454,12 @@ public interface SqlValidator
      * Each cursor map corresponds to a specific function call.
      */
     void pushCursorMap();
-    
+
     /**
      * Removes the topmost entry from the cursor map stack.
      */
     void popCursorMap();
-    
+
     /**
      * Enables or disables expansion of identifiers other than
      * column references.
@@ -489,6 +489,16 @@ public interface SqlValidator
      */
     void setCallRewrite(boolean rewriteCalls);
 
+    /**
+     * Derives the type of a constructor.
+     *
+     * @param scope Scope
+     * @param call Call
+     * @param unresolvedConstructor TODO
+     * @param resolvedConstructor TODO
+     * @param argTypes Types of arguments
+     * @return Resolved type of constructor
+     */
     RelDataType deriveConstructorType(
         SqlValidatorScope scope,
         SqlCall call,
@@ -496,6 +506,15 @@ public interface SqlValidator
         SqlFunction resolvedConstructor,
         RelDataType [] argTypes);
 
+    /**
+     * Handles a call to a function which cannot be resolved, throwing an
+     * appropriately descriptive error.
+     *
+     * @param call Call
+     * @param unresolvedFunction Overloaded function which is the target of the
+     * call
+     * @param argTypes Types of arguments
+     */
     void handleUnresolvedFunction(
         SqlCall call,
         SqlFunction unresolvedFunction,
@@ -523,8 +542,15 @@ public interface SqlValidator
      */
     SqlNode expandOrderExpr(SqlSelect select, SqlNode orderExpr);
 
+    /**
+     * Expands an expression.
+     *
+     * @param expr Expression
+     * @param scope Scope
+     * @return Expanded expression
+     */
     SqlNode expand(SqlNode expr, SqlValidatorScope scope);
-    
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**
@@ -532,50 +558,15 @@ public interface SqlValidator
      *
      * <p>TODO jvs 16-June-2006: Move this to top-level as enum SqlConformance.
      */
-    public class Compatible
-        extends EnumeratedValues.BasicValue
+    public enum Compatible
     {
-        public static final int Default_ordinal = 0;
-        public static final int Strict92_ordinal = 1;
-        public static final int Strict99_ordinal = 2;
-        public static final int Pragmatic99_ordinal = 3;
-        public static final int Oracle10g_ordinal = 4;
-        public static final int Sql2003_ordinal = 5;
-        public static final int Pragmatic2003_ordinal = 6;
-
-        public static final Compatible Strict92 =
-            new Compatible("Strict92", Strict92_ordinal);
-        public static final Compatible Strict99 =
-            new Compatible("Strict99", Strict99_ordinal);
-        public static final Compatible Pragmatic99 =
-            new Compatible("Pragmatic99", Pragmatic99_ordinal);
-        public static final Compatible Oracle10g =
-            new Compatible("Oracle10g", Oracle10g_ordinal);
-        public static final Compatible Sql2003 =
-            new Compatible("Sql2003", Sql2003_ordinal);
-        public static final Compatible Default =
-            new Compatible("Default", Default_ordinal);
-        public static final Compatible Pragmatic2003 =
-            new Compatible("Pragmatic2003", Pragmatic2003_ordinal);
-
-        public static final Compatible [] Values =
-            {
-                Default,
-                Strict92,
-                Strict99,
-                Pragmatic99,
-                Oracle10g,
-                Sql2003,
-                Pragmatic2003,
-            };
-
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(Values);
-
-        private Compatible(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
+        Default,
+        Strict92,
+        Strict99,
+        Pragmatic99,
+        Oracle10g,
+        Sql2003,
+        Pragmatic2003;
 
         /**
          * Whether 'order by 2' is interpreted to mean 'sort by the 2nd column
@@ -583,11 +574,16 @@ public interface SqlValidator
          */
         public boolean isSortByOrdinal()
         {
-            return
-                (this == Compatible.Default) || (this == Compatible.Oracle10g)
-                || (this == Compatible.Strict92)
-                || (this == Compatible.Pragmatic99)
-                || (this == Compatible.Pragmatic2003);
+            switch (this) {
+            case Default:
+            case Oracle10g:
+            case Strict92:
+            case Pragmatic99:
+            case Pragmatic2003:
+                return true;
+            default:
+                return false;
+            }
         }
 
         /**
@@ -596,9 +592,14 @@ public interface SqlValidator
          */
         public boolean isSortByAlias()
         {
-            return
-                (this == Compatible.Default) || (this == Compatible.Oracle10g)
-                || (this == Compatible.Strict92);
+            switch (this) {
+            case Default:
+            case Oracle10g:
+            case Strict92:
+                return true;
+            default:
+                return false;
+            }
         }
 
         /**

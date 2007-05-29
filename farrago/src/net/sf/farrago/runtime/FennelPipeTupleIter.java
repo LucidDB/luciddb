@@ -31,9 +31,9 @@ import org.eigenbase.util.*;
 
 
 /**
- * FennelPipeTupleIter implements the {@link TupleIter} interface, receiving
- * data from a producer as {@link ByteBuffer} objects, and unmarshalling them to
- * a consumer.
+ * FennelPipeTupleIter implements the {@link org.eigenbase.runtime.TupleIter}
+ * interface, receiving data from a producer as {@link ByteBuffer} objects, and
+ * unmarshalling them to a consumer.
  *
  * <p>A FennelPipeTupleIter has a C++ peer, a JavaSinkExecstream. The peer sends
  * marshalled data, wrapped as a ByteBuffer. The reader has a current buffer

@@ -22,8 +22,8 @@
 package org.eigenbase.runtime;
 
 /**
- * <code>Dummy</code> is the default context for code calling {@link
- * net.sf.saffron.oj.stmt.OJStatement#execute}.
+ * <code>Dummy</code> is the default context for code calling the
+ * <code>net.sf.saffron.oj.stmt.OJStatement.execute()</code> method.
  *
  * @author jhyde
  * @version $Id$

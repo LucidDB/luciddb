@@ -121,7 +121,7 @@ public class LurqlPlan
         list.addAll(graph.edgeSet());
         Collections.sort(
             list,
-            new StringRepresentationComparator());
+            new StringRepresentationComparator<Object>());
         for (Object o : list) {
             pw.println(o);
         }

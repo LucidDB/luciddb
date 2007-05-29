@@ -167,7 +167,7 @@ public abstract class SqlUtil
     {
         if (node instanceof SqlLiteral) {
             SqlLiteral literal = (SqlLiteral) node;
-            if (literal.getTypeName() == SqlTypeName.Null) {
+            if (literal.getTypeName() == SqlTypeName.NULL) {
                 assert (null == literal.getValue());
                 return true;
             } else {
@@ -282,7 +282,7 @@ public abstract class SqlUtil
             return;
         }
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.FunCall, "(", ")");
+            writer.startList(SqlWriter.FrameTypeEnum.FunCall, "(", ")");
         if (null != quantifier) {
             quantifier.unparse(writer, 0, 0);
         }
@@ -305,8 +305,8 @@ public abstract class SqlUtil
         assert operands.length == 2;
         final SqlWriter.Frame frame =
             writer.startList(
-                (binop instanceof SqlSetOperator) ? SqlWriter.FrameType.Setop
-                : SqlWriter.FrameType.Simple);
+                (binop instanceof SqlSetOperator) ? SqlWriter.FrameTypeEnum.Setop
+                : SqlWriter.FrameTypeEnum.Simple);
         operands[0].unparse(
             writer,
             leftPrec,
@@ -448,7 +448,7 @@ public abstract class SqlUtil
 
         return routines;
     }
-    
+
     /**
      * Determine if there is a routine matching the given name and number of
      * arguments.
@@ -473,10 +473,10 @@ public abstract class SqlUtil
         // first pass:  eliminate routines which don't accept the given
         // number of arguments
         filterRoutinesByParameterCount(routines, argTypes);
-        
+
         return (routines.size() > 0);
     }
-    
+
     private static List<SqlFunction> lookupSubjectRoutinesByName(
         SqlOperatorTable opTab,
         SqlIdentifier funcName,
@@ -515,12 +515,12 @@ public abstract class SqlUtil
      * @sql.99 Part 2 Section 10.4 Syntax Rule 6.b.iii.2.B
      */
     private static void filterRoutinesByParameterType(
-        List routines,
+        List<SqlFunction> routines,
         RelDataType [] argTypes)
     {
-        Iterator iter = routines.iterator();
+        Iterator<SqlFunction> iter = routines.iterator();
         while (iter.hasNext()) {
-            SqlFunction function = (SqlFunction) iter.next();
+            SqlFunction function = iter.next();
             RelDataType [] paramTypes = function.getParamTypes();
             if (paramTypes == null) {
                 // no parameter information for builtins; keep for now
@@ -816,7 +816,7 @@ public abstract class SqlUtil
         }
         RelDataType type =
             typeFactory.createSqlType(
-                SqlTypeName.Char,
+                SqlTypeName.CHAR,
                 str.getValue().length());
         type =
             typeFactory.createTypeWithCharsetAndCollation(

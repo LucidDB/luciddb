@@ -23,6 +23,7 @@
 package net.sf.farrago.catalog;
 
 import java.util.*;
+import java.nio.charset.Charset;
 
 import javax.jmi.reflect.*;
 
@@ -34,6 +35,7 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.jmi.*;
+import org.eigenbase.sql.parser.SqlParserUtil;
 
 import org.netbeans.api.mdr.*;
 
@@ -93,8 +95,9 @@ public interface FarragoRepos
 
     /**
      * @return the name of the default collation name for this repository. The
-     * value is of the form <i>charset$locale$strength</i>, as per {@link
-     * SqlParserUtil#parseCollation(String)}. The default is "ISO-8859-1$en_US".
+     * value is of the form <i>charset$locale$strength</i>, as per
+     * {@link SqlParserUtil#parseCollation(String)}.
+     * The default is "ISO-8859-1$en_US".
      */
     public String getDefaultCollationName();
 
@@ -256,10 +259,9 @@ public interface FarragoRepos
     /**
      * Defines localization for this repository.
      *
-     * @param bundles list of {@link ResourceBundle} instances to add for
-     * localization.
+     * @param bundles list of {@link java.util.ResourceBundle} instances to add for
      */
-    public void addResourceBundles(List bundles);
+    public void addResourceBundles(List<ResourceBundle> bundles);
 
     /**
      * @return an instance of FarragoReposTxnContext for use in

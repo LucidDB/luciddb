@@ -39,15 +39,15 @@ public class FarragoMockLoginModule implements LoginModule
 {
     CallbackHandler callbackHandler;
     Subject subject;
-    Map sharedState;
-    Map options;
-    
+    Map<String, ?> sharedState;
+    Map<String, ?> options;
+
     List<FarragoMockCredential> tempCredentials;
     List<FarragoMockPrincipal> tempPrincipals;
-    
+
     // authentication status
     boolean success;
-    
+
     // config options
     boolean debug;
 
@@ -58,7 +58,7 @@ public class FarragoMockLoginModule implements LoginModule
         tempCredentials = new ArrayList<FarragoMockCredential>();
         tempPrincipals = new ArrayList<FarragoMockPrincipal>();
     }
-    
+
     /**
      * Called if LoginContext's required authentications failed.
      */
@@ -70,7 +70,7 @@ public class FarragoMockLoginModule implements LoginModule
         tempCredentials.clear();
         return true;
     }
-    
+
     /**
      * Called if the LoginContext's required authentications succeeded.
      */
@@ -81,7 +81,7 @@ public class FarragoMockLoginModule implements LoginModule
             try {
                 subject.getPrincipals().addAll(tempPrincipals);
                 subject.getPublicCredentials().addAll(tempCredentials);
-                
+
                 tempPrincipals.clear();
                 tempCredentials.clear();
             } catch (Exception ex) {
@@ -94,7 +94,7 @@ public class FarragoMockLoginModule implements LoginModule
             tempCredentials.clear();
             return false;
         }
-        
+
         return true;
     }
 
@@ -102,9 +102,9 @@ public class FarragoMockLoginModule implements LoginModule
      * Initialize this LoginModule
      */
     public void initialize(
-        Subject subject, 
-        CallbackHandler callbackHandler, 
-        Map<String, ?> sharedState, 
+        Subject subject,
+        CallbackHandler callbackHandler,
+        Map<String, ?> sharedState,
         Map<String, ?> options)
     {
         // save the initial state
@@ -112,34 +112,34 @@ public class FarragoMockLoginModule implements LoginModule
         this.subject = subject;
         this.sharedState = sharedState;
         this.options = options;
-        
+
         // initialize any configured options
         if (options.containsKey("debug")) {
             debug = "true".equalsIgnoreCase((String)options.get("debug"));
         }
     }
-    
+
     /**
      * Try to log in a user.
      */
     public boolean login()
         throws LoginException
-    { 
+    {
         if (callbackHandler == null) {
             throw new LoginException("No callback handler available");
         }
-        
+
         try {
             Callback[] callbacks = new Callback[] {
                 new NameCallback("Username: "),
                 new PasswordCallback("Password: ", false)
             };
-            
+
             callbackHandler.handle(callbacks);
             String username = ((NameCallback)callbacks[0]).getName();
             String password = new String(((PasswordCallback)callbacks[1]).getPassword());
             ((PasswordCallback)callbacks[1]).clearPassword();
-            
+
             // hardcoded accts
             if (username.equals("MockLoginModuleTestUser")) {
                 // acct testuser requires a correct password
@@ -148,7 +148,7 @@ public class FarragoMockLoginModule implements LoginModule
                 // all other usernames are just let through
                 success = true;
             }
-            
+
             if (success) {
                 // dummy credential handling that does nothing
                 FarragoMockCredential c = new FarragoMockCredential();
@@ -162,34 +162,36 @@ public class FarragoMockLoginModule implements LoginModule
             success = false;
             throw new LoginException(ex.getMessage());
         }
-        
+
         return true;
     }
-    
+
     /**
      * Log out currently logged in subject
      */
-    
+
     public boolean logout()
         throws LoginException
     {
         tempPrincipals.clear();
         tempCredentials.clear();
-        
+
         // remove principals
-        Iterator it = subject.getPrincipals(FarragoMockPrincipal.class).iterator();
-        while (it.hasNext()) {
-            FarragoMockPrincipal p = (FarragoMockPrincipal)it.next();
+        for (FarragoMockPrincipal p :
+            subject.getPrincipals(FarragoMockPrincipal.class))
+        {
             subject.getPrincipals().remove(p);
         }
-        
+
         // remove credentials
-        it = subject.getPublicCredentials(FarragoMockCredential.class).iterator();
-        while (it.hasNext()) {
-            FarragoMockCredential c = (FarragoMockCredential)it.next();
+        for (FarragoMockCredential c :
+            subject.getPublicCredentials(FarragoMockCredential.class))
+        {
             subject.getPublicCredentials().remove(c);
         }
-        
+
         return true;
     }
 }
+
+// End FarragoMockLoginModule.java

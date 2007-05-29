@@ -46,7 +46,7 @@ public class SqlInOperator
      * If true the call represents 'NOT IN'.
      */
     private final boolean isNotIn;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     SqlInOperator(boolean isNotIn)
@@ -144,7 +144,7 @@ public class SqlInOperator
 
         // Result is a boolean, nullable if there are any nullable types
         // on either side.
-        RelDataType type = typeFactory.createSqlType(SqlTypeName.Boolean);
+        RelDataType type = typeFactory.createSqlType(SqlTypeName.BOOLEAN);
         if (leftType.isNullable() || rightType.isNullable()) {
             type = typeFactory.createTypeWithNullability(type, true);
         }

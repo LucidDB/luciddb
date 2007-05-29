@@ -30,7 +30,7 @@ import org.eigenbase.util.*;
  * A character string literal.
  *
  * <p>Its {@link #value} field is an {@link NlsString} and {@link #typeName} is
- * {@link SqlTypeName#Char}.
+ * {@link SqlTypeName#CHAR}.
  *
  * @author wael
  * @version $Id$
@@ -45,7 +45,7 @@ public class SqlCharStringLiteral
         NlsString val,
         SqlParserPos pos)
     {
-        super(val, SqlTypeName.Char, pos);
+        super(val, SqlTypeName.CHAR, pos);
     }
 
     //~ Methods ----------------------------------------------------------------

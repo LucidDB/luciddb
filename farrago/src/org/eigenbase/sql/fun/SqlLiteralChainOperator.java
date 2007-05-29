@@ -183,7 +183,7 @@ public class SqlLiteralChainOperator
                 rand.unparse(writer, leftPrec, rightPrec);
             } else {
                 // print without prefix
-                if (rand.getTypeName() == SqlTypeName.Binary) {
+                if (rand.getTypeName() == SqlTypeName.BINARY) {
                     BitString bs = (BitString) rand.getValue();
                     writer.literal("'" + bs.toHexString() + "'");
                 } else {

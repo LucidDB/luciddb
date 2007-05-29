@@ -32,18 +32,18 @@ import org.eigenbase.util.*;
 
 
 /**
- * FlatFileProgramWriter builds calculator programs for converting 
+ * FlatFileProgramWriter builds calculator programs for converting
  * text from flat files into typed data. It assumes the text has already
- * been processed for quoting and escape characters. The programs mainly 
- * consist of simple casts. However, custom date formats may be specified 
- * when using LucidDb. They are implemented with calls to LucidDb user 
+ * been processed for quoting and escape characters. The programs mainly
+ * consist of simple casts. However, custom date formats may be specified
+ * when using LucidDb. They are implemented with calls to LucidDb user
  * defined routines. Only one set of formats can be active for a writer.
- * 
+ *
  * <p>
- * 
- * When using custom date conversions, the program can be split into 
- * Fennel and Java-only sections. If splitting the program, data must 
- * flow through the Fennel section first, which handles basic casts. 
+ *
+ * When using custom date conversions, the program can be split into
+ * Fennel and Java-only sections. If splitting the program, data must
+ * flow through the Fennel section first, which handles basic casts.
  * Then the Java-only section handles custom date conversions.
  *
  * @author jpham
@@ -56,15 +56,15 @@ public class FlatFileProgramWriter
 
     public static final int FLAT_FILE_MAX_NON_CHAR_VALUE_LEN = 255;
 
-    private static final SqlIdentifier toDateFuncName = 
+    private static final SqlIdentifier toDateFuncName =
         new SqlIdentifier(
             new String[] {"SYS_BOOT","MGMT","CHAR_TO_DATE"},
             new SqlParserPos(0,0));
-    private static final SqlIdentifier toTimeFuncName = 
+    private static final SqlIdentifier toTimeFuncName =
         new SqlIdentifier(
             new String[] {"SYS_BOOT","MGMT","CHAR_TO_TIME"},
             new SqlParserPos(0,0));
-    private static final SqlIdentifier toTimestampFuncName = 
+    private static final SqlIdentifier toTimestampFuncName =
         new SqlIdentifier(
             new String[] {"SYS_BOOT","MGMT","CHAR_TO_TIMESTAMP"},
             new SqlParserPos(0,0));
@@ -86,13 +86,13 @@ public class FlatFileProgramWriter
 
     /**
      * Constructs a new FlatFileProgramWriter
-     * 
+     *
      * @param rexBuilder a rex node builder
      * @param stmt the statement being prepared
-     * @param params a set of flat file server parameters. These parameters 
+     * @param params a set of flat file server parameters. These parameters
      *   may include custom date formats
-     * @param rowType the desired data type for data read from a flat file. 
-     *   The row type is also used to infer the size of text fields in the 
+     * @param rowType the desired data type for data read from a flat file.
+     *   The row type is also used to infer the size of text fields in the
      *   file.
      */
     public FlatFileProgramWriter(
@@ -142,35 +142,35 @@ public class FlatFileProgramWriter
      * Identifies a section of a flat file program
      */
     private enum Section {
-        /** 
-         * Fennel compatible program section, may include the entire program, 
+        /**
+         * Fennel compatible program section, may include the entire program,
          * but does not include custom datetime conversions.
          */
         FENNEL,
         /**
-         * Fennel incompatible program section. Includes custom datetime 
+         * Fennel incompatible program section. Includes custom datetime
          * conversions, but not ISO datetime conversions. May be empty.
          */
         JAVA_ONLY,
         /**
-         * Includes the entire program 
+         * Includes the entire program
          */
         ALL
     }
 
     /**
      * Builds a section of the data conversion program as follows.
-     * 
+     *
      * <ul>
-     *   <li>FENNEL: all inputs are text columns. Most inputs are casted to 
+     *   <li>FENNEL: all inputs are text columns. Most inputs are casted to
      *     target types, except custom date fields, which are projected
-     *   <li>JAVA_ONLY: most inputs are typed data, except custom date fields, 
-     *     which are text columns. The typed fields are projected, while the 
+     *   <li>JAVA_ONLY: most inputs are typed data, except custom date fields,
+     *     which are text columns. The typed fields are projected, while the
      *     date fields are converted with user defined routines.
-     *   <li>ALL: all inputs are text columns and all are converted to target 
+     *   <li>ALL: all inputs are text columns and all are converted to target
      *     types, either by casting or by UDRs.
      * </ul>
-     * 
+     *
      * @param section section of the program to build
      * @return the program section
      */
@@ -200,7 +200,7 @@ public class FlatFileProgramWriter
         for (int i = 0; i < targetTypes.length; i++) {
             RelDataType targetType = targetTypes[i].getType();
             if (section == Section.JAVA_ONLY
-                && (!isCustom(targetType))) 
+                && (!isCustom(targetType)))
             {
                 sourceTypes[i] = targetType;
             } else {
@@ -210,7 +210,7 @@ public class FlatFileProgramWriter
         }
         RelDataType inputRowType =
             typeFactory.createStructType(sourceTypes, sourceNames);
-        
+
         // construct rex program
         RexProgramBuilder programBuilder =
             new RexProgramBuilder(inputRowType, rexBuilder);
@@ -235,16 +235,16 @@ public class FlatFileProgramWriter
                 node = input;
             } else if (isCustom) {
                 // custom user defined routine
-                node = 
+                node =
                     rexBuilder.makeCall(
                         getUdr(targetType, sourceTypes[i]),
                         rexBuilder.makeLiteral(getFormat(targetType)),
                         input);
             } else {
                 // simple cast
-                node = 
+                node =
                     rexBuilder.makeCast(
-                        targetType, 
+                        targetType,
                         input);
             }
             programBuilder.addProject(node, sourceNames[i]);
@@ -259,43 +259,43 @@ public class FlatFileProgramWriter
     private RelDataType getTextType(RelDataType sqlType)
     {
         int length = FLAT_FILE_MAX_NON_CHAR_VALUE_LEN;
-        switch (sqlType.getSqlTypeName().getOrdinal()) {
-        case SqlTypeName.Char_ordinal:
-        case SqlTypeName.Varchar_ordinal:
+        switch (sqlType.getSqlTypeName()) {
+        case CHAR:
+        case VARCHAR:
             length = sqlType.getPrecision();
             break;
-        case SqlTypeName.Bigint_ordinal:
-        case SqlTypeName.Boolean_ordinal:
-        case SqlTypeName.Date_ordinal:
-        case SqlTypeName.Decimal_ordinal:
-        case SqlTypeName.Double_ordinal:
-        case SqlTypeName.Float_ordinal:
-        case SqlTypeName.Integer_ordinal:
-        case SqlTypeName.Real_ordinal:
-        case SqlTypeName.Smallint_ordinal:
-        case SqlTypeName.Time_ordinal:
-        case SqlTypeName.Timestamp_ordinal:
-        case SqlTypeName.Tinyint_ordinal:
+        case BIGINT:
+        case BOOLEAN:
+        case DATE:
+        case DECIMAL:
+        case DOUBLE:
+        case FLOAT:
+        case INTEGER:
+        case REAL:
+        case SMALLINT:
+        case TIME:
+        case TIMESTAMP:
+        case TINYINT:
             break;
-        case SqlTypeName.Binary_ordinal:
-        case SqlTypeName.IntervalDayTime_ordinal:
-        case SqlTypeName.IntervalYearMonth_ordinal:
-        case SqlTypeName.Multiset_ordinal:
-        case SqlTypeName.Null_ordinal:
-        case SqlTypeName.Row_ordinal:
-        case SqlTypeName.Structured_ordinal:
-        case SqlTypeName.Symbol_ordinal:
-        case SqlTypeName.Varbinary_ordinal:
+        case BINARY:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
+        case MULTISET:
+        case NULL:
+        case ROW:
+        case STRUCTURED:
+        case SYMBOL:
+        case VARBINARY:
         default:
             // unsupported for flat files
             assert (false) : "Type is unsupported for flat files: "
                 + sqlType.getSqlTypeName();
         }
         RelDataType type =
-            typeFactory.createSqlType(SqlTypeName.Varchar, length);
+            typeFactory.createSqlType(SqlTypeName.VARCHAR, length);
         return typeFactory.createTypeWithNullability(type, true);
     }
-    
+
     /**
      * Whether a data type has a custom format
      */
@@ -308,14 +308,14 @@ public class FlatFileProgramWriter
     /**
      * Returns the custom format for a data type
      */
-    private String getFormat(RelDataType type) 
+    private String getFormat(RelDataType type)
     {
-        switch (type.getSqlTypeName().getOrdinal()) {
-        case SqlTypeName.Date_ordinal:
+        switch (type.getSqlTypeName()) {
+        case DATE:
             return dateFormat;
-        case SqlTypeName.Time_ordinal:
+        case TIME:
             return timeFormat;
-        case SqlTypeName.Timestamp_ordinal:
+        case TIMESTAMP:
             return timestampFormat;
         default:
             return null;
@@ -323,10 +323,10 @@ public class FlatFileProgramWriter
     }
 
     /**
-     * Gets a function that converts a string to another type, 
-     * according to a format string. Throws an exception if the 
+     * Gets a function that converts a string to another type,
+     * according to a format string. Throws an exception if the
      * function was not found.
-     * 
+     *
      * @param type the target type
      * @param charType the type of the string
      * @return a matching conversion function
@@ -335,18 +335,18 @@ public class FlatFileProgramWriter
         RelDataType type,
         RelDataType charType)
     {
-        SqlOperatorTable opTable = 
+        SqlOperatorTable opTable =
             stmt.getSqlOperatorTable();
 
         SqlIdentifier funcName;
-        switch (type.getSqlTypeName().getOrdinal()) {
-        case SqlTypeName.Date_ordinal:
+        switch (type.getSqlTypeName()) {
+        case DATE:
             funcName = toDateFuncName;
             break;
-        case SqlTypeName.Time_ordinal:
+        case TIME:
             funcName = toTimeFuncName;
             break;
-        case SqlTypeName.Timestamp_ordinal:
+        case TIMESTAMP:
             funcName = toTimestampFuncName;
             break;
         default:
@@ -356,11 +356,11 @@ public class FlatFileProgramWriter
 
         if (datetimeArgs[0] == null) {
             datetimeArgs[0] = typeFactory.createSqlType(
-                SqlTypeName.Varchar, DATETIME_FORMAT_ARG_LENGTH);
+                SqlTypeName.VARCHAR, DATETIME_FORMAT_ARG_LENGTH);
         }
         datetimeArgs[1] = charType;
 
-        SqlFunction func = 
+        SqlFunction func =
             SqlUtil.lookupRoutine(
                 opTable,
                 funcName,

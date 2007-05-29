@@ -50,7 +50,7 @@ public class MultisetSqlType
      */
     public MultisetSqlType(RelDataType elementType, boolean isNullable)
     {
-        super(SqlTypeName.Multiset, isNullable, null);
+        super(SqlTypeName.MULTISET, isNullable, null);
         Util.pre(null != elementType, "null!=elementType");
         this.elementType = elementType;
         computeDigest();

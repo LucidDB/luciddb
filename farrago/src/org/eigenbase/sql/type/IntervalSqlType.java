@@ -52,8 +52,8 @@ public class IntervalSqlType
         boolean isNullable)
     {
         super(
-            intervalQualifier.isYearMonth() ? SqlTypeName.IntervalYearMonth
-            : SqlTypeName.IntervalDayTime,
+            intervalQualifier.isYearMonth() ? SqlTypeName.INTERVAL_YEAR_MONTH
+                : SqlTypeName.INTERVAL_DAY_TIME,
             isNullable,
             null);
         this.intervalQualifier = intervalQualifier;
@@ -105,30 +105,28 @@ public class IntervalSqlType
         int secondPrec =
             this.intervalQualifier.getStartPrecisionPreservingDefault();
         int fracPrec =
-            intervalQualifier.combineFractionalSecondPrecisionPreservingDefault(
+            SqlIntervalQualifier.combineFractionalSecondPrecisionPreservingDefault(
                 this.intervalQualifier,
-                that.intervalQualifier
-            );
+                that.intervalQualifier);
 
-        if (thisStart.getOrdinal() > thatStart.getOrdinal()) {
+        if (thisStart.ordinal() > thatStart.ordinal()) {
             thisEnd = thisStart;
             thisStart = thatStart;
             secondPrec =
                 that.intervalQualifier.getStartPrecisionPreservingDefault();
-        } else if (thisStart.getOrdinal() == thatStart.getOrdinal()) {
+        } else if (thisStart.ordinal() == thatStart.ordinal()) {
             secondPrec =
-                intervalQualifier.combineStartPrecisionPreservingDefault(
+                SqlIntervalQualifier.combineStartPrecisionPreservingDefault(
                     this.intervalQualifier,
-                    that.intervalQualifier
-                );
+                    that.intervalQualifier);
         } else if ((null == thisEnd)
-            || (thisEnd.getOrdinal() < thatStart.getOrdinal())) {
+            || (thisEnd.ordinal() < thatStart.ordinal())) {
             thisEnd = thatStart;
         }
 
         if (null != thatEnd) {
             if ((null == thisEnd)
-                || (thisEnd.getOrdinal() < thatEnd.getOrdinal())) {
+                || (thisEnd.ordinal() < thatEnd.ordinal())) {
                 thisEnd = thatEnd;
             }
         }

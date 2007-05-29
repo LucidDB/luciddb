@@ -23,13 +23,15 @@ package org.eigenbase.test;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
-import org.eigenbase.relopt.*;
 
 
 /**
- * Unit test for rules in {@link org.eigenbase.rel} and subpackages. As input,
+ * Unit test for rules in {@link org.eigenbase.rel} and subpackages.
+ *
+ * <p>As input,
  * the test supplies a SQL statement and a single rule; the SQL is translated
- * into relational algebra and then fed into a {@link HepPlanner}. The planner
+ * into relational algebra and then fed into a
+ * {@link org.eigenbase.relopt.hep.HepPlanner}. The planner
  * fires the rule on every pattern match in a depth-first left-to-right preorder
  * traversal of the tree for as long as the rule continues to succeed in
  * applying its transform. (For rules which call transformTo more than once,

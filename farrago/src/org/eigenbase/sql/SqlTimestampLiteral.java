@@ -47,7 +47,7 @@ public class SqlTimestampLiteral
     {
         super(cal,
             hasTimeZone,
-            SqlTypeName.Timestamp,
+            SqlTypeName.TIMESTAMP,
             precision,
             SqlParserUtil.TimestampFormatStr,
             pos);
@@ -60,7 +60,7 @@ public class SqlTimestampLiteral
         String format,
         SqlParserPos pos)
     {
-        super(cal, hasTimeZone, SqlTypeName.Timestamp, precision,
+        super(cal, hasTimeZone, SqlTypeName.TIMESTAMP, precision,
             format, pos);
     }
 

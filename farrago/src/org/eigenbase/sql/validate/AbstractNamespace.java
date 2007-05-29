@@ -79,8 +79,8 @@ abstract class AbstractNamespace
 
     public void validate()
     {
-        switch (status.getOrdinal()) {
-        case SqlValidatorImpl.Status.Unvalidated_ordinal:
+        switch (status) {
+        case Unvalidated:
             try {
                 status = SqlValidatorImpl.Status.InProgress;
                 Util.permAssert(rowType == null,
@@ -101,12 +101,12 @@ abstract class AbstractNamespace
                 status = SqlValidatorImpl.Status.Valid;
             }
             break;
-        case SqlValidatorImpl.Status.InProgress_ordinal:
+        case InProgress:
             throw Util.newInternal("todo: Cycle detected during type-checking");
-        case SqlValidatorImpl.Status.Valid_ordinal:
+        case Valid:
             break;
         default:
-            throw status.unexpected();
+            throw Util.unexpected(status);
         }
     }
 

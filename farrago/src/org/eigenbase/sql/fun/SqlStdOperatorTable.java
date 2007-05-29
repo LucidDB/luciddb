@@ -270,7 +270,7 @@ public class SqlStdOperatorTable
      * a list of values.
      */
     public static final SqlBinaryOperator notInOperator = new SqlInOperator(true);
-    
+
     /**
      * Logical less-than operator, '<code>&lt;</code>'.
      */
@@ -772,22 +772,22 @@ public class SqlStdOperatorTable
 
     public static final SqlBetweenOperator betweenOperator =
         new SqlBetweenOperator(
-            SqlBetweenOperator.Flag.Asymmetric,
+            SqlBetweenOperator.Flag.ASYMMETRIC,
             false);
 
     public static final SqlBetweenOperator symmetricBetweenOperator =
         new SqlBetweenOperator(
-            SqlBetweenOperator.Flag.Symmetric,
+            SqlBetweenOperator.Flag.SYMMETRIC,
             false);
 
     public static final SqlBetweenOperator notBetweenOperator =
         new SqlBetweenOperator(
-            SqlBetweenOperator.Flag.Asymmetric,
+            SqlBetweenOperator.Flag.ASYMMETRIC,
             true);
 
     public static final SqlBetweenOperator symmetricNotBetweenOperator =
         new SqlBetweenOperator(
-            SqlBetweenOperator.Flag.Symmetric,
+            SqlBetweenOperator.Flag.SYMMETRIC,
             true);
 
     public static final SqlSpecialOperator notLikeOperator =
@@ -1077,25 +1077,25 @@ public class SqlStdOperatorTable
      * The <code>LOCALTIME [(<i>precision</i>)]</code> function.
      */
     public static final SqlFunction localTimeFunc =
-        new SqlAbstractTimeFunction("LOCALTIME", SqlTypeName.Time);
+        new SqlAbstractTimeFunction("LOCALTIME", SqlTypeName.TIME);
 
     /**
      * The <code>LOCALTIMESTAMP [(<i>precision</i>)]</code> function.
      */
     public static final SqlFunction localTimestampFunc =
-        new SqlAbstractTimeFunction("LOCALTIMESTAMP", SqlTypeName.Timestamp);
+        new SqlAbstractTimeFunction("LOCALTIMESTAMP", SqlTypeName.TIMESTAMP);
 
     /**
      * The <code>CURRENT_TIME [(<i>precision</i>)]</code> function.
      */
     public static final SqlFunction currentTimeFunc =
-        new SqlAbstractTimeFunction("CURRENT_TIME", SqlTypeName.Time);
+        new SqlAbstractTimeFunction("CURRENT_TIME", SqlTypeName.TIME);
 
     /**
      * The <code>CURRENT_TIMESTAMP [(<i>precision</i>)]</code> function.
      */
     public static final SqlFunction currentTimestampFunc =
-        new SqlAbstractTimeFunction("CURRENT_TIMESTAMP", SqlTypeName.Timestamp);
+        new SqlAbstractTimeFunction("CURRENT_TIMESTAMP", SqlTypeName.TIMESTAMP);
 
     /**
      * The <code>CURRENT_DATE</code> function.
@@ -1241,7 +1241,7 @@ public class SqlStdOperatorTable
                 return false;
             }
         };
-        
+
     /**
      * The CARDINALITY operator, used to retrieve the number of elements in a
      * MULTISET

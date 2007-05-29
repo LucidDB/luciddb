@@ -775,14 +775,14 @@ public abstract class JmiMemFactory
                 return children;
             }
         }
-        
+
         protected RefPackage proxyRefImmediatePackage()
         {
             if (immediatePkg == null) {
                 // Outermost package
                 return null;
             }
-            
+
             // Have to cast RefPackageImpl to ElementImpl to get at the
             // proxy field.  (Eclipse, at least, doesn't allow this otherwise.)
             return (RefPackage)((ElementImpl)immediatePkg).proxy;
@@ -809,7 +809,7 @@ public abstract class JmiMemFactory
         {
             if (moniker instanceof String) {
                 String name = (String)moniker;
-                
+
                 return "get" + Character.toUpperCase(name.charAt(0)) +
                     name.substring(1);
             } else {
@@ -831,7 +831,7 @@ public abstract class JmiMemFactory
             Field field = enumClass.getField(JmiObjUtil.getEnumFieldName(name));
             return field.get(null);
         }
-        
+
         protected Boolean proxyRefLinkExists(
             RefObject firstEnd,
             RefObject secondEnd)
@@ -980,23 +980,23 @@ public abstract class JmiMemFactory
             RefObject refObject, boolean considerSubTypes)
         {
             RefObject thisMofClass = classMap.get(clazz).refMetaObject();
-            
+
             return isInstanceOf(thisMofClass, refObject, considerSubTypes);
         }
-        
+
         private boolean isInstanceOf(
             RefObject mofClass, RefObject refObject, boolean considerSubTypes)
         {
             if (refObject.equals(mofClass)) {
                 return true;
             }
-            
+
             if (!considerSubTypes) {
                 return false;
             }
-            
+
             JmiModelGraph modelGraph = getModelGraph();
-            
+
             // Some tests simply use JmiMemFactory directly, in which case
             // there's no model graph to be had.  However, these tests all
             // worked before this method was implemented, so they clearly
@@ -1005,27 +1005,27 @@ public abstract class JmiMemFactory
             // test case to use JmiModeledMemFactory (see JmiMemTest).
             assert(modelGraph != null);
 
-            JmiClassVertex mofClassVertex = 
+            JmiClassVertex mofClassVertex =
                 modelGraph.getVertexForMofClass((MofClass)refObject);
 
             // Traverse up refObject's inheritance chain and see if we find
             // a match.
             DirectedGraph<JmiClassVertex, JmiInheritanceEdge>
                 inheritanceGraph = modelGraph.getInheritanceGraph();
-            
-            Set<JmiInheritanceEdge> edges = 
+
+            Set<JmiInheritanceEdge> edges =
                 inheritanceGraph.outgoingEdgesOf(mofClassVertex);
             for (JmiInheritanceEdge edge : edges) {
                 mofClass = edge.getSuperClass().getMofClass();
-                
+
                 if (isInstanceOf(mofClass, refObject, true)) {
                     return true;
                 }
             }
-                
+
             return false;
         }
-        
+
         protected <T> Collection<T> filterChildren(Class<T> iface)
         {
             List<T> list = new ArrayList<T>();
@@ -1123,7 +1123,7 @@ public abstract class JmiMemFactory
         {
             this(clazz, null);
         }
-        
+
         public RefPackageImpl(
             Class<? extends RefPackage> clazz,
             RefPackageImpl immediatePkg)
@@ -1216,13 +1216,13 @@ public abstract class JmiMemFactory
             elementImpl.put(relationship.inverse.name, element.proxy);
             return super.add(o);
         }
-        
+
         public boolean addAll(Collection<? extends Object> c)
         {
             for(Object o: c) {
                 this.add(o);
             }
-            
+
             return c.size() > 0;
         }
     }
@@ -1230,10 +1230,10 @@ public abstract class JmiMemFactory
     /**
      * List which holds instances of a bi-directional relationship.
      *
-     * <p/>When an instance of the relationship is created, by calling {@link
-     * #add(Object)} to the collection at one end, this collection automatically
-     * finds the corresponding collection at the other end and calls {@link
-     * #addInternal(ElementImpl)}.
+     * <p>When an instance of the relationship is created, by calling
+     * {@link #add(Object)} to the collection at one end, this collection
+     * automatically finds the corresponding collection at the other end and
+     * calls its <code>addInternal</code> method.
      */
     private static class ManyList
         extends ArrayList<Object>
@@ -1262,13 +1262,13 @@ public abstract class JmiMemFactory
             }
             return super.add(o);
         }
-        
+
         public boolean addAll(Collection<? extends Object> c)
         {
             for(Object o: c) {
                 this.add(o);
             }
-            
+
             return c.size() > 0;
         }
 

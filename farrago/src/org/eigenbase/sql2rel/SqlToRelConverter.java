@@ -1166,7 +1166,7 @@ public class SqlToRelConverter
         }
 
         if (value instanceof NlsString &&
-            type.getSqlTypeName() == SqlTypeName.Char)
+            type.getSqlTypeName() == SqlTypeName.CHAR)
         {
             // pad fixed character type
             NlsString unpadded = (NlsString) value;
@@ -1660,11 +1660,11 @@ public class SqlToRelConverter
         if (condition == null) {
             return rexBuilder.makeLiteral(true);
         }
-        switch (conditionType.getOrdinal()) {
-        case SqlJoinOperator.ConditionType.On_ORDINAL:
+        switch (conditionType) {
+        case On:
             bb.setRoot(new RelNode[] { leftRel, rightRel });
             return bb.convertExpression(condition);
-        case SqlJoinOperator.ConditionType.Using_ORDINAL:
+        case Using:
             SqlNodeList list = (SqlNodeList) condition;
             RexNode conditionExp = null;
             for (int i = 0; i < list.size(); i++) {
@@ -1684,26 +1684,26 @@ public class SqlToRelConverter
             assert conditionExp != null;
             return conditionExp;
         default:
-            throw conditionType.unexpected();
+            throw Util.unexpected(conditionType);
         }
     }
 
     private static JoinRelType convertJoinType(
         SqlJoinOperator.JoinType joinType)
     {
-        switch (joinType.getOrdinal()) {
-        case SqlJoinOperator.JoinType.Comma_ORDINAL:
-        case SqlJoinOperator.JoinType.Inner_ORDINAL:
-        case SqlJoinOperator.JoinType.Cross_ORDINAL:
+        switch (joinType) {
+        case Comma:
+        case Inner:
+        case Cross:
             return JoinRelType.INNER;
-        case SqlJoinOperator.JoinType.Full_ORDINAL:
+        case Full:
             return JoinRelType.FULL;
-        case SqlJoinOperator.JoinType.Left_ORDINAL:
+        case Left:
             return JoinRelType.LEFT;
-        case SqlJoinOperator.JoinType.Right_ORDINAL:
+        case Right:
             return JoinRelType.RIGHT;
         default:
-            throw joinType.unexpected();
+            throw Util.unexpected(joinType);
         }
     }
 
@@ -3978,11 +3978,11 @@ public class SqlToRelConverter
         private RelDataType computeHistogramType(RelDataType type)
         {
             if (SqlTypeUtil.isExactNumeric(type)
-                && (type.getSqlTypeName() != SqlTypeName.Bigint)) {
-                return new BasicSqlType(SqlTypeName.Bigint);
+                && (type.getSqlTypeName() != SqlTypeName.BIGINT)) {
+                return new BasicSqlType(SqlTypeName.BIGINT);
             } else if (SqlTypeUtil.isApproximateNumeric(type)
-                && (type.getSqlTypeName() != SqlTypeName.Double)) {
-                return new BasicSqlType(SqlTypeName.Double);
+                && (type.getSqlTypeName() != SqlTypeName.DOUBLE)) {
+                return new BasicSqlType(SqlTypeName.DOUBLE);
             } else {
                 return type;
             }

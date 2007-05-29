@@ -168,7 +168,7 @@ public class RelStructuredTypeFlattener
         int iOutput = 0;
         for (RelDataTypeField field : structuredType.getFieldList()) {
             // TODO:  row
-            if (field.getType().getSqlTypeName() == SqlTypeName.Structured) {
+            if (field.getType().getSqlTypeName() == SqlTypeName.STRUCTURED) {
                 restructured = true;
                 structuringExps[iOutput] = restructure(field.getType());
                 ++iOutput;
@@ -765,7 +765,7 @@ public class RelStructuredTypeFlattener
 
         private RelDataType removeDistinct(RelDataType type)
         {
-            if (type.getSqlTypeName() != SqlTypeName.Distinct) {
+            if (type.getSqlTypeName() != SqlTypeName.DISTINCT) {
                 return type;
             }
             return type.getFields()[0].getType();

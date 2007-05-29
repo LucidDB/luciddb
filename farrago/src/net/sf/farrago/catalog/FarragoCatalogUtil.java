@@ -183,11 +183,11 @@ public abstract class FarragoCatalogUtil
         return index.getName().startsWith(
             "SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY");
     }
-    
+
     /**
      * Determines whether an index implements either a primary key or a
      * unique constraint
-     * 
+     *
      * @param index the index in question
      *
      * @return true if is either the primary key index or a unique constraint
@@ -248,19 +248,19 @@ public abstract class FarragoCatalogUtil
         }
         return null;
     }
-    
+
     /**
      * Returns a bitmap with bits set for any column from a table that is part
      * of either a primary key or a unique constraint
-     * 
+     *
      * @param table the table of interest
-     * 
+     *
      * @return bitmap with set bits
      */
     public static BitSet getUniqueKeyCols(CwmClassifier table)
     {
         BitSet uniqueCols = new BitSet();
-        
+
         // first retrieve the columns from the primary key
         FemPrimaryKeyConstraint primKey =
             FarragoCatalogUtil.getPrimaryKey(table);
@@ -274,10 +274,10 @@ public abstract class FarragoCatalogUtil
         for (FemUniqueKeyConstraint uniqueConstraint : uniqueConstraints) {
             addKeyCols((List) uniqueConstraint.getFeature(), uniqueCols);
         }
-        
+
         return uniqueCols;
     }
-    
+
     private static void addKeyCols(
         List<FemAbstractColumn> keyCols,
         BitSet keys)
@@ -286,12 +286,12 @@ public abstract class FarragoCatalogUtil
             keys.set(keyCol.getOrdinal());
         }
     }
-    
+
     /**
      * Determines whether a table contains a unique key
-     * 
+     *
      * @param table the table of interest
-     * 
+     *
      * @return true if the table has a unique key
      */
     public static boolean hasUniqueKey(CwmClassifier table)
@@ -1061,7 +1061,7 @@ public abstract class FarragoCatalogUtil
                 bar.refDelete();
             }
         }
-        
+
         int ordinal = 0;
         for (FemColumnHistogramBar bar : bars) {
             bar.setHistogram(histogram);
@@ -1076,7 +1076,7 @@ public abstract class FarragoCatalogUtil
      *
      * @param timestamp timestamp to use for creation/modification
      *
-     * @parem isNew true iff object is being created
+     * @param isNew whether object is being created
      */
     public static void updateAnnotatedElement(
         FemAnnotatedElement annotatedElement,
@@ -1099,10 +1099,10 @@ public abstract class FarragoCatalogUtil
     {
         return new Timestamp(System.currentTimeMillis()).toString();
     }
-    
+
     /**
      * Resets the rowcounts for a table
-     * 
+     *
      * @param table a column set table
      */
     public static void resetRowCounts(FemAbstractColumnSet table)

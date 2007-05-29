@@ -66,7 +66,7 @@ public interface FarragoSessionTxnListener
      * Notifies listener of a call to FarragoSessionTxnMgr.endTxn.
      *
      * @param txnId ID of ending transaction
-     * @param end how transaction is ending
+     * @param endType how transaction is ending
      */
     public void transactionEnded(
         FarragoSessionTxnId txnId,

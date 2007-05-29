@@ -275,7 +275,7 @@ public class FarragoSqlOperatorsSuite
             }
             farragoTest.assertNotNull(actualSqlTypeName);
             farragoTest.assertEquals(
-                actualSqlTypeName.getName(),
+                actualSqlTypeName.name(),
                 actualTypeName);
             BasicSqlType sqlType;
             final int actualNullable = md.isNullable(column);

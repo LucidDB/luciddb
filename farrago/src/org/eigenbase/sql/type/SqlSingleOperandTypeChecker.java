@@ -22,8 +22,6 @@
 package org.eigenbase.sql.type;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-
 
 /**
  * SqlSingleOperandTypeChecker is an extension of {@link SqlOperandTypeChecker}
@@ -45,14 +43,22 @@ public interface SqlSingleOperandTypeChecker
      * Checks the type of a single operand against a particular ordinal position
      * within a formal operator signature. Note that the actual ordinal position
      * of the operand being checked may be <em>different</em> from the position
-     * of the formal operand. For example, when validating the actual call C(X,
-     * Y, Z), the strategy for validating the operand Z might involve checking
-     * its type against the formal signature OP(W). In this case, iFormalOperand
+     * of the formal operand.
+     *
+     * <p>For example, when validating the actual call
+     *
+     * <blockquote>
+     * <pre>C(X, Y, Z)</pre>
+     * </blockquote>
+     *
+     * the strategy for validating the operand Z might involve checking
+     * its type against the formal signature OP(W). In this case,
+     * <code>iFormalOperand</code>
      * would be zero, even though the position of Z within call C is two.
      *
-     * @param call description of the call being checked; this is only provided
-     * for context when throwing an exception; the implementation should <em>
-     * NOT</em> examine the operands of the call as part of the check
+     * @param callBinding description of the call being checked; this is only
+     * provided for context when throwing an exception; the implementation
+     * should <em>NOT</em> examine the operands of the call as part of the check
      * @param operand the actual operand to be checked
      * @param iFormalOperand the 0-based formal operand ordinal
      * @param throwOnFailure whether to throw an exception if check fails

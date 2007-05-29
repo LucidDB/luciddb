@@ -27,12 +27,10 @@ import org.eigenbase.sql.type.BasicSqlType;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlUtil;
-import org.eigenbase.util.Util;
 
 import java.util.*;
 import java.io.StringWriter;
 import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
 import java.text.DateFormat;
 
 import junit.framework.TestCase;
@@ -49,25 +47,25 @@ public class SqlLimitsTest extends TestCase
         new ArrayList<BasicSqlType>();
 
     static {
-        typeList.add(new BasicSqlType(SqlTypeName.Boolean));
-        typeList.add(new BasicSqlType(SqlTypeName.Tinyint));
-        typeList.add(new BasicSqlType(SqlTypeName.Smallint));
-        typeList.add(new BasicSqlType(SqlTypeName.Integer));
-        typeList.add(new BasicSqlType(SqlTypeName.Bigint));
-        typeList.add(new BasicSqlType(SqlTypeName.Decimal));
-        typeList.add(new BasicSqlType(SqlTypeName.Decimal, 5));
-        typeList.add(new BasicSqlType(SqlTypeName.Decimal, 6, 2));
-        typeList.add(new BasicSqlType(SqlTypeName.Decimal, SqlTypeName.Decimal.getMaxPrecision(), 0));
-        typeList.add(new BasicSqlType(SqlTypeName.Decimal, SqlTypeName.Decimal.getMaxPrecision(), 5));
+        typeList.add(new BasicSqlType(SqlTypeName.BOOLEAN));
+        typeList.add(new BasicSqlType(SqlTypeName.TINYINT));
+        typeList.add(new BasicSqlType(SqlTypeName.SMALLINT));
+        typeList.add(new BasicSqlType(SqlTypeName.INTEGER));
+        typeList.add(new BasicSqlType(SqlTypeName.BIGINT));
+        typeList.add(new BasicSqlType(SqlTypeName.DECIMAL));
+        typeList.add(new BasicSqlType(SqlTypeName.DECIMAL, 5));
+        typeList.add(new BasicSqlType(SqlTypeName.DECIMAL, 6, 2));
+        typeList.add(new BasicSqlType(SqlTypeName.DECIMAL, SqlTypeName.DECIMAL.getMaxPrecision(), 0));
+        typeList.add(new BasicSqlType(SqlTypeName.DECIMAL, SqlTypeName.DECIMAL.getMaxPrecision(), 5));
         // todo: test Float, Real, Double
-        typeList.add(new BasicSqlType(SqlTypeName.Char, 5));
-        typeList.add(new BasicSqlType(SqlTypeName.Varchar, 1));
-        typeList.add(new BasicSqlType(SqlTypeName.Varchar, 20));
-        typeList.add(new BasicSqlType(SqlTypeName.Binary, 3));
-        typeList.add(new BasicSqlType(SqlTypeName.Varbinary, 4));
-        typeList.add(new BasicSqlType(SqlTypeName.Date));
-        typeList.add(new BasicSqlType(SqlTypeName.Time, 0));
-        typeList.add(new BasicSqlType(SqlTypeName.Timestamp, 0));
+        typeList.add(new BasicSqlType(SqlTypeName.CHAR, 5));
+        typeList.add(new BasicSqlType(SqlTypeName.VARCHAR, 1));
+        typeList.add(new BasicSqlType(SqlTypeName.VARCHAR, 20));
+        typeList.add(new BasicSqlType(SqlTypeName.BINARY, 3));
+        typeList.add(new BasicSqlType(SqlTypeName.VARBINARY, 4));
+        typeList.add(new BasicSqlType(SqlTypeName.DATE));
+        typeList.add(new BasicSqlType(SqlTypeName.TIME, 0));
+        typeList.add(new BasicSqlType(SqlTypeName.TIMESTAMP, 0));
         // todo: test IntervalDayTime and IntervalYearMonth
     }
 
@@ -84,7 +82,7 @@ public class SqlLimitsTest extends TestCase
     /**
      * Returns a list of typical types.
      */
-    public static List<BasicSqlType> getTypes() 
+    public static List<BasicSqlType> getTypes()
     {
         return typeList;
     }
@@ -137,11 +135,11 @@ public class SqlLimitsTest extends TestCase
         } else if (o instanceof Calendar) {
             Calendar calendar = (Calendar) o;
             DateFormat dateFormat;
-            switch (type.getSqlTypeName().getOrdinal()) {
-            case SqlTypeName.Date_ordinal:
+            switch (type.getSqlTypeName()) {
+            case DATE:
                 dateFormat = DateFormat.getDateInstance();
                 break;
-            case SqlTypeName.Time_ordinal:
+            case TIME:
                 dateFormat = DateFormat.getTimeInstance();
                 break;
             default:

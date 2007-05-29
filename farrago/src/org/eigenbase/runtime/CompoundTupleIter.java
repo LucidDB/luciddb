@@ -30,10 +30,14 @@ import org.eigenbase.trace.*;
 
 
 /**
- * <code>CompoundTupleIter</code> creates an iterator out of several.
- * CompoundTupleIter is serial: it yields all the elements of its first input
+ * <code>CompoundTupleIter</code> creates an iterator out of several iterators.
+ *
+ * <p>CompoundTupleIter is serial: it yields all the elements of its first input
  * Iterator, then all those of its second input, etc. When all inputs are
- * exhausted, it is done. (Cf {@link CompoundParallelIterator}.)
+ * exhausted, it is done. (Cf {@link CompoundParallelTupleIter}.)
+ *
+ * @version $Id$
+ * @author Stephan Zuercher
  */
 public class CompoundTupleIter
     implements TupleIter
@@ -340,4 +344,5 @@ public class CompoundTupleIter
         }
     }
 }
+
 // End CompoundTupleIter.java

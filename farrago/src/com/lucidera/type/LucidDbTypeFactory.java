@@ -39,7 +39,7 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
     //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Cap applied to the scale of a decimal multiplication product, if the 
+     * Cap applied to the scale of a decimal multiplication product, if the
      * product's ideal precision is too high to be supported by LucidDb.
      */
     public static final int DECIMAL_PRODUCT_SCALE_CAP = 6;
@@ -62,7 +62,7 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Similar to {@link RelDataTypeFactoryImpl#createDecimalProduct()} but 
+     * Similar to {@link RelDataTypeFactoryImpl#createDecimalProduct} but
      * caps the maximum scale at {@link #DECIMAL_PRODUCT_SCALE_CAP}.
      */
     public RelDataType createDecimalProduct(
@@ -81,8 +81,8 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
                 scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
                 int precision = p1 + p2;
 
-                // if precision is too great and we have to make a choice 
-                // between integer digits and scale, then favor integer 
+                // if precision is too great and we have to make a choice
+                // between integer digits and scale, then favor integer
                 // digits once certain scale is reached
                 if (precision > SqlTypeName.MAX_NUMERIC_PRECISION
                     && scale > DECIMAL_PRODUCT_SCALE_CAP)
@@ -96,10 +96,9 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
                     Math.min(precision,
                         SqlTypeName.MAX_NUMERIC_PRECISION);
 
-                RelDataType ret;
-                ret =
+                RelDataType ret =
                     createSqlType(
-                        SqlTypeName.Decimal,
+                        SqlTypeName.DECIMAL,
                         precision,
                         scale);
 
@@ -122,7 +121,7 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
     }
 
     /**
-     * Similar to {@link RelDataTypeFactoryImpl#createDecimalQuotient()} but 
+     * Similar to {@link RelDataTypeFactoryImpl#createDecimalQuotient} but
      * caps the maximum scale at {@link #DECIMAL_QUOTIENT_SCALE_CAP}.
      */
     public RelDataType createDecimalQuotient(
@@ -141,11 +140,11 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
 
             int scale = Math.max(6, s1 + p2 + 1);
 
-            // LucidDb preserves the scale, but caps it, in order to 
+            // LucidDb preserves the scale, but caps it, in order to
             // preserve the integral part of the result.
             scale = Math.min(scale, DECIMAL_QUOTIENT_SCALE_CAP);
-            dout = 
-                Math.min(dout, 
+            dout =
+                Math.min(dout,
                     SqlTypeName.MAX_NUMERIC_PRECISION - scale);
 
             int precision = dout + scale;
@@ -155,13 +154,13 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
             RelDataType ret;
             ret =
                 createSqlType(
-                    SqlTypeName.Decimal,
+                    SqlTypeName.DECIMAL,
                     precision,
                     scale);
 
             return ret;
         }
-        
+
         return null;
     }
 

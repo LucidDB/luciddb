@@ -79,8 +79,8 @@ public class ComparableOperandTypeChecker
         boolean throwOnFailure,
         RelDataType type)
     {
-        if (type.getComparability().getOrdinal()
-            < requiredComparability.getOrdinal()) {
+        if (type.getComparability().ordinal()
+            < requiredComparability.ordinal()) {
             if (throwOnFailure) {
                 throw callBinding.newValidationSignatureError();
             } else {
@@ -102,8 +102,8 @@ public class ComparableOperandTypeChecker
         for (int i = 0; i < nOperands; ++i) {
             RelDataType type = callBinding.getOperandType(i);
             boolean result;
-            if (type.getComparability().getOrdinal()
-                < requiredComparability.getOrdinal()) {
+            if (type.getComparability().ordinal()
+                < requiredComparability.ordinal()) {
                 result = false;
             } else {
                 result = true;

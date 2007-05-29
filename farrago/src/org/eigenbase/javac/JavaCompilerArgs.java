@@ -43,8 +43,8 @@ public class JavaCompilerArgs
 
     //~ Instance fields --------------------------------------------------------
 
-    ArrayList argsList = new ArrayList();
-    ArrayList fileNameList = new ArrayList();
+    List<String> argsList = new ArrayList<String>();
+    List<String> fileNameList = new ArrayList<String>();
 
     ClassLoader classLoader;
 
@@ -70,12 +70,12 @@ public class JavaCompilerArgs
      */
     public void setString(String args)
     {
-        ArrayList list = new ArrayList();
+        List<String> list = new ArrayList<String>();
         StringTokenizer tok = new StringTokenizer(args);
         while (tok.hasMoreTokens()) {
             list.add(tok.nextToken());
         }
-        setStringArray((String []) list.toArray(new String[list.size()]));
+        setStringArray(list.toArray(new String[list.size()]));
     }
 
     /**
@@ -105,12 +105,8 @@ public class JavaCompilerArgs
 
     public String [] getStringArray()
     {
-        for (Iterator fileNames = fileNameList.iterator();
-            fileNames.hasNext();) {
-            String fileName = (String) fileNames.next();
-            argsList.add(fileName);
-        }
-        return (String []) argsList.toArray(new String[0]);
+        argsList.addAll(fileNameList);
+        return argsList.toArray(new String[argsList.size()]);
     }
 
     public void addFile(String fileName)
@@ -120,7 +116,7 @@ public class JavaCompilerArgs
 
     public String [] getFileNames()
     {
-        return (String []) fileNameList.toArray(new String[0]);
+        return fileNameList.toArray(new String[fileNameList.size()]);
     }
 
     public void setVerbose(boolean verbose)

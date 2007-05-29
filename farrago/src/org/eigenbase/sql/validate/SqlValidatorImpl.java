@@ -107,7 +107,7 @@ public class SqlValidatorImpl
      */
     private final Map<SqlSelect, SqlValidatorScope> cursorScopes =
         new HashMap<SqlSelect, SqlValidatorScope>();
-    
+
     /**
      * Maps a {@link SqlNode node} to the {@link SqlValidatorNamespace
      * namespace} which describes what columns they contain.
@@ -131,7 +131,7 @@ public class SqlValidatorImpl
      */
     protected final Stack<Map<Integer, SqlSelect>> cursorMapStack =
         new Stack<Map<Integer, SqlSelect>>();
-    
+
     private int nextGeneratedId;
     protected final RelDataTypeFactory typeFactory;
     protected final RelDataType unknownType;
@@ -154,7 +154,7 @@ public class SqlValidatorImpl
     // method and always use this variable (or better, move preferences like
     // this to a separate "parameter" class)
     protected boolean expandIdentifiers;
-    
+
     protected boolean expandColumnReferences;
 
     private boolean rewriteCalls;
@@ -187,8 +187,8 @@ public class SqlValidatorImpl
 
         // NOTE jvs 23-Dec-2003:  This is used as the type for dynamic
         // parameters and null literals until a real type is imposed for them.
-        unknownType = typeFactory.createSqlType(SqlTypeName.Null);
-        booleanType = typeFactory.createSqlType(SqlTypeName.Boolean);
+        unknownType = typeFactory.createSqlType(SqlTypeName.NULL);
+        booleanType = typeFactory.createSqlType(SqlTypeName.BOOLEAN);
 
         rewriteCalls = true;
     }
@@ -542,8 +542,8 @@ public class SqlValidatorImpl
         SqlJoinOperator.ConditionType conditionType = join.getConditionType();
         final SqlValidatorScope joinScope =
             (SqlValidatorScope) scopes.get(join);
-        switch (conditionType.getOrdinal()) {
-        case SqlJoinOperator.ConditionType.On_ORDINAL:
+        switch (conditionType) {
+        case On:
             condition.findValidOptions(this, joinScope, pos, hintList);
             return;
         default:
@@ -1758,14 +1758,14 @@ public class SqlValidatorImpl
             break;
 
         case SqlKind.ValuesORDINAL:
+            call = (SqlCall) node;
             final TableConstructorNamespace tableConstructorNamespace =
-                new TableConstructorNamespace(this, node, parentScope);
+                new TableConstructorNamespace(this, call, parentScope);
             registerNamespace(
                 usingScope,
                 alias,
                 tableConstructorNamespace,
                 forceNullable);
-            call = (SqlCall) node;
             operands = call.getOperands();
             for (int i = 0; i < operands.length; ++i) {
                 assert (operands[i].isA(SqlKind.Row));
@@ -2034,8 +2034,8 @@ public class SqlValidatorImpl
 
     public void validateLiteral(SqlLiteral literal)
     {
-        switch (literal.getTypeName().getOrdinal()) {
-        case SqlTypeName.Decimal_ordinal:
+        switch (literal.getTypeName()) {
+        case DECIMAL:
             // Decimal and long have the same precision (as 64-bit integers),
             // so the unscaled value of a decimal must fit into a long.
 
@@ -2057,11 +2057,11 @@ public class SqlValidatorImpl
             }
             break;
 
-        case SqlTypeName.Double_ordinal:
+        case DOUBLE:
             validateLiteralAsDouble(literal);
             break;
 
-        case SqlTypeName.Binary_ordinal:
+        case BINARY:
             final BitString bitString = (BitString) literal.getValue();
             if ((bitString.getBitCount() % 8) != 0) {
                 throw newValidationError(
@@ -2070,9 +2070,9 @@ public class SqlValidatorImpl
             }
             break;
 
-        case SqlTypeName.Date_ordinal:
-        case SqlTypeName.Time_ordinal:
-        case SqlTypeName.Timestamp_ordinal:
+        case DATE:
+        case TIME:
+        case TIMESTAMP:
             Calendar calendar = (Calendar) literal.getValue();
             final int year = calendar.get(Calendar.YEAR);
             final int era = calendar.get(Calendar.ERA);
@@ -2083,9 +2083,9 @@ public class SqlValidatorImpl
                         literal.toString()));
             }
             break;
-        
-        case SqlTypeName.IntervalYearMonth_ordinal:
-        case SqlTypeName.IntervalDayTime_ordinal:
+
+        case INTERVAL_YEAR_MONTH:
+        case INTERVAL_DAY_TIME:
             if (literal instanceof SqlIntervalLiteral) {
                 SqlIntervalLiteral.IntervalValue interval =
                     (SqlIntervalLiteral.IntervalValue)
@@ -2132,34 +2132,34 @@ public class SqlValidatorImpl
         assert( qualifier != null );
         boolean startPrecisionOutOfRange = false;
         boolean fractionalSecondPrecisionOutOfRange = false;
-        
+
         if (qualifier.isYearMonth()) {
-            if ( (qualifier.getStartPrecision() < 
-                     SqlTypeName.IntervalYearMonth.getMinPrecision() ) ||
-                  (qualifier.getStartPrecision() > 
-                     SqlTypeName.IntervalYearMonth.getMaxPrecision() ) 
+            if ( (qualifier.getStartPrecision() <
+                     SqlTypeName.INTERVAL_YEAR_MONTH.getMinPrecision() ) ||
+                  (qualifier.getStartPrecision() >
+                     SqlTypeName.INTERVAL_YEAR_MONTH.getMaxPrecision() )
                  ){
                 startPrecisionOutOfRange = true;
-            } else if 
-                 ( (qualifier.getFractionalSecondPrecision() < 
-                        SqlTypeName.IntervalYearMonth.getMinScale()) ||
-                    (qualifier.getFractionalSecondPrecision() > 
-                        SqlTypeName.IntervalYearMonth.getMaxScale() ) 
+            } else if
+                 ( (qualifier.getFractionalSecondPrecision() <
+                        SqlTypeName.INTERVAL_YEAR_MONTH.getMinScale()) ||
+                    (qualifier.getFractionalSecondPrecision() >
+                        SqlTypeName.INTERVAL_YEAR_MONTH.getMaxScale() )
                   ){
                 fractionalSecondPrecisionOutOfRange = true;
             }
         } else {
-            if ( (qualifier.getStartPrecision() < 
-                    SqlTypeName.IntervalDayTime.getMinPrecision() ) ||
-                  (qualifier.getStartPrecision() > 
-                    SqlTypeName.IntervalDayTime.getMaxPrecision() ) 
+            if ( (qualifier.getStartPrecision() <
+                    SqlTypeName.INTERVAL_DAY_TIME.getMinPrecision() ) ||
+                  (qualifier.getStartPrecision() >
+                    SqlTypeName.INTERVAL_DAY_TIME.getMaxPrecision() )
                 ){
                startPrecisionOutOfRange = true;
-            } else if 
-                 ( (qualifier.getFractionalSecondPrecision() < 
-                      SqlTypeName.IntervalDayTime.getMinScale()) ||
-                   (qualifier.getFractionalSecondPrecision() > 
-                      SqlTypeName.IntervalDayTime.getMaxScale() ) 
+            } else if
+                 ( (qualifier.getFractionalSecondPrecision() <
+                      SqlTypeName.INTERVAL_DAY_TIME.getMinScale()) ||
+                   (qualifier.getFractionalSecondPrecision() >
+                      SqlTypeName.INTERVAL_DAY_TIME.getMaxScale() ) 
                  ){
                 fractionalSecondPrecisionOutOfRange = true;
             }
@@ -2236,15 +2236,15 @@ public class SqlValidatorImpl
         validateFrom(right, unknownType, joinScope);
 
         // Validate condition.
-        switch (conditionType.getOrdinal()) {
-        case SqlJoinOperator.ConditionType.None_ORDINAL:
+        switch (conditionType) {
+        case None:
             Util.permAssert(condition == null, "condition == null");
             break;
-        case SqlJoinOperator.ConditionType.On_ORDINAL:
+        case On:
             Util.permAssert(condition != null, "condition != null");
             condition.validate(this, joinScope);
             break;
-        case SqlJoinOperator.ConditionType.Using_ORDINAL:
+        case Using:
             SqlNodeList list = (SqlNodeList) condition;
 
             // Parser ensures that using clause is not empty.
@@ -2256,7 +2256,7 @@ public class SqlValidatorImpl
             }
             break;
         default:
-            throw conditionType.unexpected();
+            throw Util.unexpected(conditionType);
         }
 
         // Validate NATURAL.
@@ -2268,19 +2268,19 @@ public class SqlValidatorImpl
 
         // Which join types require/allow a ON/USING condition, or allow
         // a NATURAL keyword?
-        switch (joinType.getOrdinal()) {
-        case SqlJoinOperator.JoinType.Inner_ORDINAL:
-        case SqlJoinOperator.JoinType.Left_ORDINAL:
-        case SqlJoinOperator.JoinType.Right_ORDINAL:
-        case SqlJoinOperator.JoinType.Full_ORDINAL:
+        switch (joinType) {
+        case Inner:
+        case Left:
+        case Right:
+        case Full:
             if ((condition == null) && !natural) {
                 throw newValidationError(
                     join,
                     EigenbaseResource.instance().JoinRequiresCondition.ex());
             }
             break;
-        case SqlJoinOperator.JoinType.Comma_ORDINAL:
-        case SqlJoinOperator.JoinType.Cross_ORDINAL:
+        case Comma:
+        case Cross:
             if (condition != null) {
                 throw newValidationError(
                     join.operands[SqlJoin.CONDITION_TYPE_OPERAND],
@@ -2295,7 +2295,7 @@ public class SqlValidatorImpl
             }
             break;
         default:
-            throw joinType.unexpected();
+            throw Util.unexpected(joinType);
         }
     }
 
@@ -2937,7 +2937,7 @@ public class SqlValidatorImpl
             SqlAccessType access = table.getAllowedAccess();
             if (!access.allowsAccess(requiredAccess)) {
                 throw EigenbaseResource.instance().AccessNotAllowed.ex(
-                    requiredAccess.getName(),
+                    requiredAccess.name(),
                     Arrays.asList(table.getQualifiedName()).toString());
             }
         }
@@ -3286,34 +3286,22 @@ public class SqlValidatorImpl
     /**
      * Validation status.
      */
-    public static class Status
-        extends EnumeratedValues.BasicValue
+    public enum Status
     {
-        public static final int Unvalidated_ordinal = 0;
-        public static final int InProgress_ordinal = 1;
-        public static final int Valid_ordinal = 2;
-
         /**
          * Validation has not started for this scope.
          */
-        public static final Status Unvalidated =
-            new Status("Unvalidated", Unvalidated_ordinal);
+        Unvalidated,
 
         /**
          * Validation is in progress for this scope.
          */
-        public static final Status InProgress =
-            new Status("InProgress", InProgress_ordinal);
+        InProgress,
 
         /**
          * Validation has completed (perhaps unsuccessfully).
          */
-        public static final Status Valid = new Status("Valid", Valid_ordinal);
-
-        private Status(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
+        Valid;
     }
 
     /**
@@ -3625,8 +3613,8 @@ public class SqlValidatorImpl
             // and if the dialect permits.
             if ((literal == root)
                 && getCompatible().isSortByOrdinal()) {
-                if ((literal.getTypeName() == SqlTypeName.Decimal)
-                    || (literal.getTypeName() == SqlTypeName.Double)) {
+                if ((literal.getTypeName() == SqlTypeName.DECIMAL)
+                    || (literal.getTypeName() == SqlTypeName.DOUBLE)) {
                     final int intValue = literal.intValue(false);
                     if (intValue >= 0) {
                         if ((intValue < 1) || (intValue > aliasList.size())) {

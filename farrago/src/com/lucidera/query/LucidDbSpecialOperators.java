@@ -77,7 +77,7 @@ public class LucidDbSpecialOperators
         final SpecialOperatorInfo lcsRidFuncInfo =
             new SpecialOperatorInfo(
                 LucidDbOperatorTable.lcsRidFunc,
-                SqlTypeName.Bigint,
+                SqlTypeName.BIGINT,
                 true,
                 LcsRidColumnId);
 

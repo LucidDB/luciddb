@@ -52,7 +52,7 @@ public class RelRecordType
     // implement RelDataType
     public SqlTypeName getSqlTypeName()
     {
-        return SqlTypeName.Row;
+        return SqlTypeName.ROW;
     }
 
     // implement RelDataType

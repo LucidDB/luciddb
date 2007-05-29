@@ -139,12 +139,12 @@ public class LcsIndexAggRule
                     new LcsIndexOptimizer.IndexLengthComparator());
 
             indexSet.addAll(LcsIndexOptimizer.getUnclusteredIndexes(rowScan));
-            
+
             FemLocalIndex bestIndex = null;
             Integer [] bestProj = null;
-            
+
             for (FemLocalIndex index : indexSet) {
-                
+
                 Integer [] proj =
                     LcsIndexOptimizer.findIndexOnlyProjection(rowScan, index);
                 if (proj != null &&
@@ -154,11 +154,11 @@ public class LcsIndexAggRule
                     break;
                 }
             }
-            
+
             if (bestIndex == null) {
                 return;
             }
-            
+
             indexOnlyScan =
                 new LcsIndexOnlyScanRel(
                     rowScan,
@@ -201,7 +201,8 @@ public class LcsIndexAggRule
      * @param groupCount the number of columns to be grouped. the columns are
      * assumed to be the prefix of input to the aggregate
      *
-     * @return
+     * @return whether the projection can meet the group by requirements of an
+     * aggregate
      */
     private boolean projectionSatisfiesGroupBy(Integer [] proj,
         int groupCount)

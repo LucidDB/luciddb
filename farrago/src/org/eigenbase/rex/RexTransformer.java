@@ -35,10 +35,11 @@ import org.eigenbase.sql.SqlOperator;
  * sense equivalent tree. Nodes in tree will be modified and hence tree will not
  * remain unchanged.
  *
+ * <p>NOTE: You must validate the tree of RexNodes before using this class.
+ *
  * @author wael
  * @version $Id$
  * @since Mar 8, 2004
- * @pre The RexTree must have been validated prior to using this class
  */
 public class RexTransformer
 {

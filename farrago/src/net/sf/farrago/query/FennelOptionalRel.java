@@ -58,7 +58,6 @@ public abstract class FennelOptionalRel
      * Creates a new FennelOptionalRel object without an input rel.
      *
      * @param cluster RelOptCluster for this rel
-     * @param child input rel
      */
     protected FennelOptionalRel(
         RelOptCluster cluster)

@@ -61,52 +61,52 @@ import org.eigenbase.util.*;
  * <th>Value type</th>
  * </tr>
  * <tr>
- * <td>{@link SqlTypeName#Null}</td>
+ * <td>{@link SqlTypeName#NULL}</td>
  * <td>The null value. It has its own special type.</td>
  * <td>null</td>
  * </tr>
  * <tr>
- * <td>{@link SqlTypeName#Boolean}</td>
+ * <td>{@link SqlTypeName#BOOLEAN}</td>
  * <td>Boolean, namely <code>TRUE</code>, <code>FALSE</code> or <code>
  * UNKNOWN</code>.</td>
  * <td>{@link Boolean}, or null represents the UNKNOWN value</td>
  * </tr>
  * <tr>
- * <td>{@link SqlTypeName#Decimal}</td>
+ * <td>{@link SqlTypeName#DECIMAL}</td>
  * <td>Exact number, for example <code>0</code>, <code>-.5</code>, <code>
  * 12345</code>.</td>
  * <td>{@link BigDecimal}</td>
  * </tr>
  * <tr>
- * <td>{@link SqlTypeName#Double}</td>
+ * <td>{@link SqlTypeName#DOUBLE}</td>
  * <td>Approximate number, for example <code>6.023E-23</code>.</td>
  * <td>{@link BigDecimal}</td>
  * </tr>
  * <tr>
- * <td>{@link SqlTypeName#Date}</td>
+ * <td>{@link SqlTypeName#DATE}</td>
  * <td>Date, for example <code>DATE '1969-04'29'</code></td>
  * <td>{@link Calendar}</td>
  * </tr>
  * <tr>
- * <td>{@link SqlTypeName#Time}</td>
+ * <td>{@link SqlTypeName#TIME}</td>
  * <td>Time, for example <code>TIME '18:37:42.567'</code></td>
  * <td>{@link Calendar}</td>
  * </tr>
  * <tr>
- * <td>{@link SqlTypeName#Timestamp}</td>
+ * <td>{@link SqlTypeName#TIMESTAMP}</td>
  * <td>Timestamp, for example <code>TIMESTAMP '1969-04-29
  * 18:37:42.567'</code></td>
  * <td>{@link Calendar}</td>
  * </tr>
  * <tr>
- * <td>{@link SqlTypeName#Char}</td>
+ * <td>{@link SqlTypeName#CHAR}</td>
  * <td>Character constant, for example <code>'Hello, world!'</code>, <code>
  * ''</code>, <code>_N'Bonjour'</code>, <code>_ISO-8859-1'It''s superman!'
  * COLLATE SHIFT_JIS$ja_JP$2</code>. These are always CHAR, never VARCHAR.</td>
  * <td>{@link NlsString}</td>
  * </tr>
  * <tr>
- * <td>{@link SqlTypeName#Binary}</td>
+ * <td>{@link SqlTypeName#BINARY}</td>
  * <td>Binary constant, for example <code>X'ABC'</code>, <code>X'7F'</code>.
  * Note that strings with an odd number of hexits will later become values of
  * the BIT datatype, because they have an incomplete number of bytes. But here,
@@ -115,16 +115,15 @@ import org.eigenbase.util.*;
  * <td>{@link BitString}</td>
  * </tr>
  * <tr>
- * <td>{@link SqlTypeName#Symbol}</td>
+ * <td>{@link SqlTypeName#SYMBOL}</td>
  * <td>A symbol is a special type used to make parsing easier; it is not part of
  * the SQL standard, and is not exposed to end-users. It is used to hold a
  * symbol, such as the LEADING flag in a call to the function <code>
  * TRIM([LEADING|TRAILING|BOTH] chars FROM string)</code>.</td>
- * <td>A class which implements the {@link EnumeratedValues.Value}
- * interface</td>
+ * <td>A class which implements the {@link SqlSymbol} interface</td>
  * </tr>
  * <tr>
- * <td>{@link SqlTypeName#IntervalDayTime}</td>
+ * <td>{@link SqlTypeName#INTERVAL_DAY_TIME}</td>
  * <td>Interval, for example <code>INTERVAL '1:34' HOUR</code>.</td>
  * <td><{@link SqlIntervalLiteral.IntervalValue}.</td>
  * </tr>
@@ -143,8 +142,8 @@ public class SqlLiteral
      * The type with which this literal was declared. This type is very
      * approximate: the literal may have a different type once validated. For
      * example, all numeric literals have a type name of {@link
-     * SqlTypeName#Decimal}, but on validation may become {@link
-     * SqlTypeName#Integer}.
+     * SqlTypeName#DECIMAL}, but on validation may become {@link
+     * SqlTypeName#INTEGER}.
      */
     private final SqlTypeName typeName;
 
@@ -194,44 +193,38 @@ public class SqlLiteral
         Object value,
         SqlTypeName typeName)
     {
-        switch (typeName.getOrdinal()) {
-        case SqlTypeName.Boolean_ordinal:
+        switch (typeName) {
+        case BOOLEAN:
             return (value == null) || (value instanceof Boolean);
-        case SqlTypeName.Null_ordinal:
+        case NULL:
             return value == null;
-        case SqlTypeName.Decimal_ordinal:
-        case SqlTypeName.Double_ordinal:
+        case DECIMAL:
+        case DOUBLE:
             return value instanceof BigDecimal;
-        case SqlTypeName.Date_ordinal:
-        case SqlTypeName.Time_ordinal:
-        case SqlTypeName.Timestamp_ordinal:
+        case DATE:
+        case TIME:
+        case TIMESTAMP:
             return value instanceof Calendar;
-        case SqlTypeName.IntervalDayTime_ordinal:
-        case SqlTypeName.IntervalYearMonth_ordinal:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             return value instanceof SqlIntervalLiteral.IntervalValue;
-        case SqlTypeName.Binary_ordinal:
+        case BINARY:
             return value instanceof BitString;
-        case SqlTypeName.Char_ordinal:
+        case CHAR:
             return value instanceof NlsString;
 
-        case SqlTypeName.Symbol_ordinal:
+        case SYMBOL:
 
-            // We grudgingly allow the value to be a String, because
-            // SqlSymbol extends SqlLiteral and implements
-            // EnumeratedValues.Value, and it would be silly if it were its
-            // own value!
             return
-                (value instanceof EnumeratedValues.Value)
-                || (value instanceof String)
-                || (value instanceof Enum)
+                (value instanceof SqlSymbol)
                 || (value instanceof SqlSampleSpec);
-        case SqlTypeName.Multiset_ordinal:
+        case MULTISET:
             return true;
-        case SqlTypeName.Integer_ordinal: // not allowed -- use Decimal
-        case SqlTypeName.Varchar_ordinal: // not allowed -- use Char
-        case SqlTypeName.Varbinary_ordinal: // not allowed -- use Binary
+        case INTEGER: // not allowed -- use Decimal
+        case VARCHAR: // not allowed -- use Char
+        case VARBINARY: // not allowed -- use Binary
         default:
-            throw typeName.unexpected();
+            throw Util.unexpected(typeName);
         }
     }
 
@@ -275,23 +268,11 @@ public class SqlLiteral
      *
      * @throws ClassCastException if the value is not a symbol literal
      *
-     * @see #createSymbol(EnumeratedValues.Value, SqlParserPos)
+     * @see #createSymbol(SqlSymbol, SqlParserPos)
      */
-    public static EnumeratedValues.Value symbolValue(SqlNode node)
+    public static SqlSymbol symbolValue(SqlNode node)
     {
-        return (EnumeratedValues.Value) ((SqlLiteral) node).value;
-    }
-
-    /**
-     * Extracts the Enum from a symbol literal.
-     *
-     * @throws ClassCastException if the value is not a symbol literal
-     *
-     * @see #createEnum(Enum, SqlParserPos)
-     */
-    public static Enum enumValue(SqlNode node)
-    {
-        return (Enum) ((SqlLiteral) node).value;
+        return (SqlSymbol) ((SqlLiteral) node).value;
     }
 
     /**
@@ -299,7 +280,7 @@ public class SqlLiteral
      *
      * @throws ClassCastException if the value is not a symbol literal
      *
-     * @see #createSymbol(EnumeratedValues.Value, SqlParserPos)
+     * @see #createSymbol(SqlSymbol, SqlParserPos)
      */
     public static SqlSampleSpec sampleValue(SqlNode node)
     {
@@ -347,8 +328,8 @@ public class SqlLiteral
         if (value == null) {
             return null;
         }
-        switch (typeName.getOrdinal()) {
-        case SqlTypeName.Char_ordinal:
+        switch (typeName) {
+        case CHAR:
 
             // We want 'It''s superman!', not _ISO-8859-1'It''s superman!'
             return ((NlsString) value).getValue();
@@ -390,7 +371,7 @@ public class SqlLiteral
      */
     public static SqlLiteral createNull(SqlParserPos pos)
     {
-        return new SqlLiteral(null, SqlTypeName.Null, pos);
+        return new SqlLiteral(null, SqlTypeName.NULL, pos);
     }
 
     /**
@@ -401,13 +382,13 @@ public class SqlLiteral
         SqlParserPos pos)
     {
         return
-            b ? new SqlLiteral(Boolean.TRUE, SqlTypeName.Boolean, pos)
-            : new SqlLiteral(Boolean.FALSE, SqlTypeName.Boolean, pos);
+            b ? new SqlLiteral(Boolean.TRUE, SqlTypeName.BOOLEAN, pos)
+            : new SqlLiteral(Boolean.FALSE, SqlTypeName.BOOLEAN, pos);
     }
 
     public static SqlLiteral createUnknown(SqlParserPos pos)
     {
-        return new SqlLiteral(null, SqlTypeName.Boolean, pos);
+        return new SqlLiteral(null, SqlTypeName.BOOLEAN, pos);
     }
 
     /**
@@ -418,22 +399,10 @@ public class SqlLiteral
      * @see #symbolValue(SqlNode)
      */
     public static SqlLiteral createSymbol(
-        EnumeratedValues.Value o,
+        SqlLiteral.SqlSymbol o,
         SqlParserPos pos)
     {
-        return new SqlLiteral(o, SqlTypeName.Symbol, pos);
-    }
-
-    /**
-     * Creates a literal which represents an Enum represented as a symbol.
-     *
-     * @see #enumValue(SqlNode)
-     */
-    public static SqlLiteral createEnum(
-        Enum o,
-        SqlParserPos pos)
-    {
-        return new SqlLiteral(o, SqlTypeName.Symbol, pos);
+        return new SqlLiteral(o, SqlTypeName.SYMBOL, pos);
     }
 
     /**
@@ -443,7 +412,7 @@ public class SqlLiteral
         SqlSampleSpec sampleSpec,
         SqlParserPos pos)
     {
-        return new SqlLiteral(sampleSpec, SqlTypeName.Symbol, pos);
+        return new SqlLiteral(sampleSpec, SqlTypeName.SYMBOL, pos);
     }
 
     public boolean equals(Object obj)
@@ -471,9 +440,9 @@ public class SqlLiteral
      */
     public int intValue(boolean exact)
     {
-        switch (typeName.getOrdinal()) {
-        case SqlTypeName.Decimal_ordinal:
-        case SqlTypeName.Double_ordinal:
+        switch (typeName) {
+        case DECIMAL:
+        case DOUBLE:
             BigDecimal bd = (BigDecimal) value;
             if (exact) {
                 try {
@@ -488,7 +457,7 @@ public class SqlLiteral
                 return bd.intValue();
             }
         default:
-            throw typeName.unexpected();
+            throw Util.unexpected(typeName);
         }
     }
 
@@ -503,9 +472,9 @@ public class SqlLiteral
      */
     public long longValue(boolean exact)
     {
-        switch (typeName.getOrdinal()) {
-        case SqlTypeName.Decimal_ordinal:
-        case SqlTypeName.Double_ordinal:
+        switch (typeName) {
+        case DECIMAL:
+        case DOUBLE:
             BigDecimal bd = (BigDecimal) value;
             if (exact) {
                 try {
@@ -520,7 +489,7 @@ public class SqlLiteral
                 return bd.longValue();
             }
         default:
-            throw typeName.unexpected();
+            throw Util.unexpected(typeName);
         }
     }
 
@@ -529,12 +498,12 @@ public class SqlLiteral
      */
     public BigDecimal bigDecimalValue()
     {
-        switch (typeName.getOrdinal()) {
-        case SqlTypeName.Decimal_ordinal:
-        case SqlTypeName.Double_ordinal:
+        switch (typeName) {
+        case DECIMAL:
+        case DOUBLE:
             return (BigDecimal) value;
         default:
-            throw typeName.unexpected();
+            throw Util.unexpected(typeName);
         }
     }
 
@@ -548,30 +517,30 @@ public class SqlLiteral
         int leftPrec,
         int rightPrec)
     {
-        switch (typeName.getOrdinal()) {
-        case SqlTypeName.Boolean_ordinal:
+        switch (typeName) {
+        case BOOLEAN:
             writer.keyword(
                 (value == null) ? "UNKNOWN"
                 : (((Boolean) value).booleanValue() ? "TRUE" : "FALSE"));
             break;
-        case SqlTypeName.Null_ordinal:
+        case NULL:
             writer.keyword("NULL");
             break;
-        case SqlTypeName.Char_ordinal:
-        case SqlTypeName.Decimal_ordinal:
-        case SqlTypeName.Double_ordinal:
-        case SqlTypeName.Binary_ordinal:
+        case CHAR:
+        case DECIMAL:
+        case DOUBLE:
+        case BINARY:
 
             // should be handled in subtype
-            throw typeName.unexpected();
+            throw Util.unexpected(typeName);
 
-        case SqlTypeName.Symbol_ordinal:
+        case SYMBOL:
             if (value instanceof EnumeratedValues.Value) {
                 EnumeratedValues.Value enumVal = (EnumeratedValues.Value) value;
                 writer.keyword(enumVal.getName().toUpperCase());
             } else if (value instanceof Enum) {
                 Enum enumVal = (Enum) value;
-                writer.keyword(enumVal.name());
+                writer.keyword(enumVal.toString());
             } else {
                 writer.keyword(String.valueOf(value));
             }
@@ -584,17 +553,17 @@ public class SqlLiteral
     public RelDataType createSqlType(RelDataTypeFactory typeFactory)
     {
         BitString bitString;
-        switch (typeName.getOrdinal()) {
-        case SqlTypeName.Null_ordinal:
-        case SqlTypeName.Boolean_ordinal:
+        switch (typeName) {
+        case NULL:
+        case BOOLEAN:
             RelDataType ret = typeFactory.createSqlType(typeName);
             ret = typeFactory.createTypeWithNullability(ret, null == value);
             return ret;
-        case SqlTypeName.Binary_ordinal:
+        case BINARY:
             bitString = (BitString) value;
             int bitCount = bitString.getBitCount();
-            return typeFactory.createSqlType(SqlTypeName.Binary, bitCount / 8);
-        case SqlTypeName.Char_ordinal:
+            return typeFactory.createSqlType(SqlTypeName.BINARY, bitCount / 8);
+        case CHAR:
             NlsString string = (NlsString) value;
             Charset charset = string.getCharset();
             if (null == charset) {
@@ -607,7 +576,7 @@ public class SqlLiteral
             }
             RelDataType type =
                 typeFactory.createSqlType(
-                    SqlTypeName.Char,
+                    SqlTypeName.CHAR,
                     string.getValue().length());
             type =
                 typeFactory.createTypeWithCharsetAndCollation(
@@ -616,21 +585,21 @@ public class SqlLiteral
                     collation);
             return type;
 
-        case SqlTypeName.IntervalYearMonth_ordinal:
-        case SqlTypeName.IntervalDayTime_ordinal:
+        case INTERVAL_YEAR_MONTH:
+        case INTERVAL_DAY_TIME:
             SqlIntervalLiteral.IntervalValue intervalValue =
                 (SqlIntervalLiteral.IntervalValue) value;
             return
                 typeFactory.createSqlIntervalType(
                     intervalValue.getIntervalQualifier());
 
-        case SqlTypeName.Symbol_ordinal:
-            return typeFactory.createSqlType(SqlTypeName.Symbol);
+        case SYMBOL:
+            return typeFactory.createSqlType(SqlTypeName.SYMBOL);
 
-        case SqlTypeName.Integer_ordinal: // handled in derived class
-        case SqlTypeName.Time_ordinal: // handled in derived class
-        case SqlTypeName.Varchar_ordinal: // should never happen
-        case SqlTypeName.Varbinary_ordinal: // should never happen
+        case INTEGER: // handled in derived class
+        case TIME: // handled in derived class
+        case VARCHAR: // should never happen
+        case VARBINARY: // should never happen
 
         default:
             throw Util.needToImplement(toString() + ", operand=" + value);
@@ -674,8 +643,8 @@ public class SqlLiteral
         SqlParserPos pos)
     {
         SqlTypeName typeName =
-            intervalQualifier.isYearMonth() ? SqlTypeName.IntervalYearMonth
-            : SqlTypeName.IntervalDayTime;
+            intervalQualifier.isYearMonth() ? SqlTypeName.INTERVAL_YEAR_MONTH
+                : SqlTypeName.INTERVAL_DAY_TIME;
         return
             new SqlIntervalLiteral(sign,
                 intervalStr,
@@ -805,6 +774,21 @@ public class SqlLiteral
     {
         NlsString slit = new NlsString(s, charSet, null);
         return new SqlCharStringLiteral(slit, pos);
+    }
+
+    /**
+     * A value must implement this interface if it is to be embedded as a
+     * SqlLiteral of type SYMBOL. If the class is an {@link Enum} it trivially
+     * implements this interface.
+     *
+     * <p>The {@link #toString()} method should return how the symbol should
+     * be unparsed, which is sometimes not the same as the enumerated value's
+     * name (e.g. "UNBOUNDED PRECEDING" versus "UnboundedPreceeding").
+     */
+    public interface SqlSymbol
+    {
+        String name();
+        int ordinal();
     }
 }
 

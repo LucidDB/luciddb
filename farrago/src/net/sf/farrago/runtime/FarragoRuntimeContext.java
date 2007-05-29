@@ -71,24 +71,26 @@ public class FarragoRuntimeContext
     protected static final Logger tracer =
         FarragoTrace.getRuntimeContextTracer();
 
-    private static final ThreadLocal threadInvocationStack = new ThreadLocal();
+    private static final ThreadLocal<List<FarragoUdrInvocationFrame>>
+        threadInvocationStack =
+        new ThreadLocal<List<FarragoUdrInvocationFrame>>();
 
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoSession session;
     private final FarragoRepos repos;
     protected final FarragoObjectCache codeCache;
-    private final Map txnCodeCache;
+    private final Map<String, FarragoObjectCache.Entry> txnCodeCache;
     private final FennelTxnContext fennelTxnContext;
     private final FarragoWarningQueue warningQueue;
     private final Object cursorMonitor;
     private boolean cursorActive;
 
     /**
-     * Maps stream id ({@link Integer}) to the corresponding java object ({@link
-     * FennelJavaHandle}).
+     * Maps stream id to the corresponding java object.
      */
-    private final Map streamIdToHandleMap = new HashMap();
+    private final Map<Integer, FennelJavaHandle> streamIdToHandleMap =
+        new HashMap<Integer, FennelJavaHandle>();
     private final Object [] dynamicParamValues;
 
     protected FennelStreamGraph streamGraph;
@@ -160,7 +162,7 @@ public class FarragoRuntimeContext
     {
         return warningQueue;
     }
-    
+
     /**
      * Returns the stream graph.
      */
@@ -182,7 +184,7 @@ public class FarragoRuntimeContext
             return;
         }
         isClosed = true;
-        
+
         isCanceled = true;
 
         // make sure all streams get closed BEFORE they are deallocated
@@ -192,12 +194,12 @@ public class FarragoRuntimeContext
             session.endTransactionIfAuto(true);
         }
         statementClassLoader = null;
-        
+
         // FRG-253:  nullify this, so that once we release its pinned
         // entry from the cache, we don't try to abort it after someone
         // else starts to reuse it!
         streamGraph = null;
-        
+
         super.closeAllocation();
     }
 
@@ -477,8 +479,7 @@ public class FarragoRuntimeContext
 
         FarragoObjectCache.Entry cacheEntry = null;
         if (txnCodeCache != null) {
-            cacheEntry =
-                (FarragoObjectCache.Entry) txnCodeCache.get(xmiFennelPlan);
+            cacheEntry = txnCodeCache.get(xmiFennelPlan);
         }
         if (cacheEntry == null) {
             cacheEntry = codeCache.pin(xmiFennelPlan, streamFactory, true);
@@ -645,8 +646,7 @@ public class FarragoRuntimeContext
     // implement FennelJavaStreamMap
     public long getJavaStreamHandle(int streamId)
     {
-        FennelJavaHandle handle =
-            (FennelJavaHandle) streamIdToHandleMap.get(new Integer(streamId));
+        FennelJavaHandle handle = streamIdToHandleMap.get(streamId);
         assert handle != null : "No handle for stream #" + streamId;
         return handle.getLongHandle();
     }
@@ -715,7 +715,7 @@ public class FarragoRuntimeContext
         udrContext.setSession(session);
         frame.udrContext = udrContext;
 
-        List stack = getInvocationStack();
+        List<FarragoUdrInvocationFrame> stack = getInvocationStack();
         stack.add(frame);
     }
 
@@ -725,10 +725,10 @@ public class FarragoRuntimeContext
         // TODO jvs 19-Jan-2005:  see corresponding comment in
         // pushRoutineInvocation.
 
-        List stack = getInvocationStack();
+        List<FarragoUdrInvocationFrame> stack = getInvocationStack();
         assert (!stack.isEmpty());
         FarragoUdrInvocationFrame frame =
-            (FarragoUdrInvocationFrame) stack.remove(stack.size() - 1);
+            stack.remove(stack.size() - 1);
         assert (frame.context == this);
         if (frame.connection != null) {
             try {
@@ -785,7 +785,7 @@ public class FarragoRuntimeContext
             }
         }
     }
-    
+
     // implement FarragoSessionRuntimeContext
     public RuntimeException handleRoutineInvocationException(
         Throwable ex,
@@ -799,11 +799,11 @@ public class FarragoRuntimeContext
                 ex);
     }
 
-    private static List getInvocationStack()
+    private static List<FarragoUdrInvocationFrame> getInvocationStack()
     {
-        List stack = (List) threadInvocationStack.get();
+        List<FarragoUdrInvocationFrame> stack = threadInvocationStack.get();
         if (stack == null) {
-            stack = new ArrayList();
+            stack = new ArrayList<FarragoUdrInvocationFrame>();
             threadInvocationStack.set(stack);
         }
         return stack;
@@ -811,7 +811,7 @@ public class FarragoRuntimeContext
 
     static FarragoUdrInvocationFrame getUdrInvocationFrame()
     {
-        List stack = (List) threadInvocationStack.get();
+        List<FarragoUdrInvocationFrame> stack = threadInvocationStack.get();
         if ((stack == null) || (stack.isEmpty())) {
             throw new IllegalStateException("No UDR executing.");
         }
@@ -819,10 +819,11 @@ public class FarragoRuntimeContext
         return frame;
     }
 
-    private static FarragoUdrInvocationFrame peekStackFrame(List stack)
+    private static FarragoUdrInvocationFrame peekStackFrame(
+        List<FarragoUdrInvocationFrame> stack)
     {
         assert (!stack.isEmpty());
-        return (FarragoUdrInvocationFrame) stack.get(stack.size() - 1);
+        return stack.get(stack.size() - 1);
     }
 
     /**
@@ -831,7 +832,7 @@ public class FarragoRuntimeContext
      */
     public static Connection newConnection()
     {
-        List stack = getInvocationStack();
+        List<FarragoUdrInvocationFrame> stack = getInvocationStack();
         if (stack.isEmpty()) {
             throw FarragoResource.instance().NoDefaultConnection.ex();
         }
@@ -900,26 +901,26 @@ public class FarragoRuntimeContext
     }
 
     /**
-     * Handles an exception encountered by a stream while processing an 
-     * input row. The default implementation logs exceptions to the 
+     * Handles an exception encountered by a stream while processing an
+     * input row. The default implementation logs exceptions to the
      * server trace file.
-     * 
+     *
      * @param row the input row object
      * @param ex the exception encountered
-     * @param columnIndex index for the output column being calculated 
-     *   when an exception was encountered, or zero if the filter condition 
-     *   was being evaluated. This parameter may be -1 if not appropriate 
+     * @param columnIndex index for the output column being calculated
+     *   when an exception was encountered, or zero if the filter condition
+     *   was being evaluated. This parameter may be -1 if not appropriate
      *   for the exception
      * @param tag an error handling tag specific to the runtime context.
      *   This parameter may also be null
-     * @return the status of the error handler. While the default 
-     *   implementation returns null, Farrago extensions may return 
+     * @return the status of the error handler. While the default
+     *   implementation returns null, Farrago extensions may return
      *   more informative values, such as TupleIter.NoDataReason.
      */
     public Object handleRowError(
-        SyntheticObject row, 
-        RuntimeException ex, 
-        int columnIndex, 
+        SyntheticObject row,
+        RuntimeException ex,
+        int columnIndex,
         String tag)
     {
         return handleRowError(row, ex, columnIndex, tag, false);
@@ -927,23 +928,22 @@ public class FarragoRuntimeContext
 
     /**
      * Handles a runtime exception, but allows warnings as well.
-     * 
-     * @see {@link #handleRowError(SyntheticObject, RuntimeException, 
-     *   int, String)}
+     *
+     * @see #handleRowError(SyntheticObject, RuntimeException, int, String)
      */
     public Object handleRowError(
-        SyntheticObject row, 
-        RuntimeException ex, 
-        int columnIndex, 
+        SyntheticObject row,
+        RuntimeException ex,
+        int columnIndex,
         String tag,
-        boolean isWarning) 
+        boolean isWarning)
     {
         return handleRowErrorHelper(
             row.toString(), ex, columnIndex, tag, isWarning);
     }
 
     /**
-     * Handles a runtime exception based on an array of column values 
+     * Handles a runtime exception based on an array of column values
      * rather than on a SyntheticObject
      */
     public Object handleRowError(
@@ -955,12 +955,12 @@ public class FarragoRuntimeContext
         boolean isWarning)
     {
         return handleRowErrorHelper(
-            Util.flatArrayToString(columnValues), 
+            Util.flatArrayToString(columnValues),
             ex, columnIndex, tag, isWarning);
     }
 
     /**
-     * Handles runtime exception; if errorCode is non-null, exceptions are 
+     * Handles runtime exception; if errorCode is non-null, exceptions are
      * deferred until all errors on a row are processed;
      * not currently implemented
      */
@@ -1004,15 +1004,15 @@ public class FarragoRuntimeContext
 
     /**
      * Makes a row error based on conventions for column index
-     * 
+     *
      * @param ex the runtime exception encountered
      * @param row string representing the row on which an exception occurred
-     * @param index index of the column being processed at the time 
-     *   the exception was encountered, or 0 for an error processing a 
+     * @param index index of the column being processed at the time
+     *   the exception was encountered, or 0 for an error processing a
      *   conditional expression, or -1 for a non-specific error
-     * @param field optional column name, used in constructing the error 
+     * @param field optional column name, used in constructing the error
      *   message when columnIndex > 0
-     * 
+     *
      * @return a non-nested exception summarizing the row error
      */
     protected EigenbaseException makeRowError(
@@ -1029,7 +1029,7 @@ public class FarragoRuntimeContext
         } else if (index == 0) {
             return resource.JavaCalcConditionError.ex(row, msgs, ex);
         } else {
-            String fieldName = (field != null) 
+            String fieldName = (field != null)
                 ? field : Integer.toString(index);
             return resource.JavaCalcError.ex(
                 fieldName, row, msgs, ex);
@@ -1047,7 +1047,7 @@ public class FarragoRuntimeContext
         if (nativeContext == null) {
             nativeContext = new NativeRuntimeContext(this);
         }
-        return nativeContext.handleRowError(source, isWarning, msg, 
+        return nativeContext.handleRowError(source, isWarning, msg,
             byteBuffer, index);
     }
 

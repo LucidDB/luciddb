@@ -35,9 +35,12 @@ import net.sf.farrago.test.*;
  * <p>Obtain a {@link FarragoTestConcurrentCommandGenerator} via the method
  * {@link #newCommandGenerator()} and use it to configure one or more threads to
  * execute one or more commands. Once configured, pass the
- * FarragoTestCommandGenerator to the {@link
- * #executeTest(FarragoTestConcurrentCommandGenerator, boolean)} method to run
- * the test. <b>Note:</b> To properly configure a test based on this class, you
+ * FarragoTestCommandGenerator to the
+ * {@link #executeTest(FarragoTestConcurrentCommandGenerator, boolean, String)}
+ * method to run
+ * the test.
+ *
+ * <p><b>Note:</b> To properly configure a test based on this class, you
  * must provide a <code>suite()</code> method that wraps the tests in your class
  * with the necessary initialization from {@link FarragoTestCase}. The normal
  * implementation is:

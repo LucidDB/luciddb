@@ -29,8 +29,8 @@ import org.eigenbase.rex.*;
 
 
 /**
- * FarragoOJRexColumnListImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for a ColumnList constructor
+ * FarragoOJRexColumnListImplementor implements Farrago specifics of
+ * {@link org.eigenbase.oj.rex.OJRexImplementor} for a column-list constructor.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -46,7 +46,7 @@ public class FarragoOJRexColumnListImplementor
         FarragoRexToOJTranslator translator,
         RexCall call,
         Expression [] operands)
-    {          
+    {
         // allocate an OJClass object corresponding to a Java list and declare
         // a variable for that class
         OJClass listClass = OJClass.forClass(java.util.ArrayList.class);
@@ -57,7 +57,7 @@ public class FarragoOJRexColumnListImplementor
                     TypeName.forOJClass(listClass),
                     null,
                     null));
-        
+
         // generate calls to add the individual column names to the list
         // object
         RexNode [] columns = (RexNode []) call.getOperands();
@@ -71,7 +71,7 @@ public class FarragoOJRexColumnListImplementor
                             Literal.makeLiteral(
                                 RexLiteral.stringValue(columns[i]))))));
         }
-        
+
         return variable;
     }
 }

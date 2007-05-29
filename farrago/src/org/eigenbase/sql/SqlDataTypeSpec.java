@@ -190,7 +190,7 @@ public class SqlDataTypeSpec
         int rightPrec)
     {
         String name = typeName.getSimple();
-        if (SqlTypeName.containsName(name)) {
+        if (SqlTypeName.get(name) != null) {
             SqlTypeName sqlTypeName = SqlTypeName.get(name);
 
             // we have a built-in data type
@@ -198,7 +198,7 @@ public class SqlDataTypeSpec
 
             if (sqlTypeName.allowsPrec() && (precision >= 0)) {
                 final SqlWriter.Frame frame =
-                    writer.startList(SqlWriter.FrameType.FunCall, "(", ")");
+                    writer.startList(SqlWriter.FrameTypeEnum.FunCall, "(", ")");
                 writer.print(precision);
                 if (sqlTypeName.allowsScale() && (scale >= 0)) {
                     writer.sep(",", true);
@@ -274,7 +274,7 @@ public class SqlDataTypeSpec
         String name = typeName.getSimple();
 
         //for now we only support builtin datatypes
-        if (!SqlTypeName.containsName(name)) {
+        if (SqlTypeName.get(name) == null) {
             throw validator.newValidationError(
                 this,
                 EigenbaseResource.instance().UnknownDatatypeName.ex(name));
@@ -282,7 +282,7 @@ public class SqlDataTypeSpec
 
         if (null != collectionsTypeName) {
             final String collectionName = collectionsTypeName.getSimple();
-            if (!SqlTypeName.containsName(collectionName)) {
+            if (!(SqlTypeName.get(collectionName) != null)) {
                 throw validator.newValidationError(
                     this,
                     EigenbaseResource.instance().UnknownDatatypeName.ex(
@@ -345,13 +345,13 @@ public class SqlDataTypeSpec
             SqlTypeName collectionsSqlTypeName =
                 SqlTypeName.get(collectionName);
 
-            switch (collectionsSqlTypeName.getOrdinal()) {
-            case SqlTypeName.Multiset_ordinal:
+            switch (collectionsSqlTypeName) {
+            case MULTISET:
                 type = typeFactory.createMultisetType(type, -1);
                 break;
 
             default:
-                throw Util.newInternal("should never come here");
+                throw Util.unexpected(collectionsSqlTypeName);
             }
         }
 

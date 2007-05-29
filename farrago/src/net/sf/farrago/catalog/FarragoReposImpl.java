@@ -70,16 +70,16 @@ public abstract class FarragoReposImpl
     protected final FarragoCompoundAllocation allocations =
         new FarragoCompoundAllocation();
 
-    private final Map localizedClassNames = new HashMap();
+    private final Map<String, String> localizedClassNames = new HashMap<String, String>();
 
-    private final List resourceBundles = new ArrayList();
+    private final List<ResourceBundle> resourceBundles = new ArrayList<ResourceBundle>();
 
     private JmiModelGraph modelGraph;
 
     private JmiModelView modelView;
 
     private Map<String, FarragoSequenceAccessor> sequenceMap;
-    
+
     private final ReentrantReadWriteLock sxLock =
         new ReentrantReadWriteLock();
 
@@ -299,7 +299,7 @@ public abstract class FarragoReposImpl
     public String getLocalizedClassName(RefClass refClass)
     {
         String umlKey = getLocalizedClassKey(refClass);
-        String name = (String) localizedClassNames.get(umlKey);
+        String name = localizedClassNames.get(umlKey);
         if (name != null) {
             return name;
         } else {
@@ -492,20 +492,19 @@ public abstract class FarragoReposImpl
         }
         return errs;
     }
-    
+
     // implement FarragoRepos
-    public void addResourceBundles(List bundles)
+    public void addResourceBundles(List<ResourceBundle> bundles)
     {
         resourceBundles.addAll(bundles);
-        Iterator iter = bundles.iterator();
-        while (iter.hasNext()) {
-            ResourceBundle resourceBundle = (ResourceBundle) iter.next();
-            Enumeration e = resourceBundle.getKeys();
+        Iterator<ResourceBundle> iter = bundles.iterator();
+        for (ResourceBundle resourceBundle : bundles) {
+            Enumeration<String> e = resourceBundle.getKeys();
             while (e.hasMoreElements()) {
                 // NOTE jvs 12-Apr-2005:  This early binding won't
                 // work once we have sessions with different locales, but
                 // I'll leave that for someone wiser in the ways of i18n.
-                String key = (String) e.nextElement();
+                String key = e.nextElement();
                 if (key.startsWith("Uml")) {
                     localizedClassNames.put(
                         key,
@@ -570,7 +569,7 @@ public abstract class FarragoReposImpl
     {
         return null;
     }
-    
+
     // implement FarragoRepos
     public FarragoReposTxnContext newTxnContext()
     {
@@ -596,7 +595,7 @@ public abstract class FarragoReposImpl
      * taken even for a read-only MDR transaction).  Currently,
      * its only public exposure is via {@link FarragoReposTxnContext},
      * which matches shared with read and exclusive with write.
-     * 
+     *
      * @param lockLevel 1 for a shared lock, 2 for an exclusive lock
      */
     void lockRepos(int lockLevel)
@@ -609,11 +608,11 @@ public abstract class FarragoReposImpl
             assert(false);
         }
     }
-    
+
     /**
      * Releases either a shared or exclusive lock on the repository that
      * was previously acquired (caller must ensure consistency).
-     * 
+     *
      * @param lockLevel 1 for a shared lock, 2 for an exclusive lock
      */
     void unlockRepos(int lockLevel)
