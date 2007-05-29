@@ -299,7 +299,7 @@ void ExternalSortExecStreamImpl::mergeFirstResult()
             if (storedRuns.size() <= nMergePages) {
                 nRunsToMerge = storedRuns.size();
             } else {
-                nRunsToMerge = std::min(
+                nRunsToMerge = std::min<uint>(
                     storedRuns.size() - nMergePages + 1,
                     nMergePages);
             }

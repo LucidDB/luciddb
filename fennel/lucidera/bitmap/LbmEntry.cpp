@@ -2091,7 +2091,7 @@ int LbmEntry::segmentContainsRid(
     if (rid >= startRid && rid < startRid + (nSegBytes * LbmOneByteSize)) {
         // rid is within the current segment; check the
         // appropriate byte
-        uint byteNum = (opaqueToInt(rid - startRid) / LbmOneByteSize) + 1;
+        int byteNum = (opaqueToInt(rid - startRid) / LbmOneByteSize) + 1;
         uint8_t setRid = 1 << (opaqueToInt(rid) % LbmOneByteSize);
         if (pSeg[-byteNum] & setRid) {
             return 0;

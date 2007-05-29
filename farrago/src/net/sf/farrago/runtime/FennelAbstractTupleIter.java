@@ -26,6 +26,7 @@ import java.nio.*;
 
 import org.eigenbase.runtime.*;
 
+import net.sf.farrago.fennel.tuple.*;
 
 /**
  * FennelAbstractTupleIter implements the {@link TupleIter} interface by
@@ -48,6 +49,12 @@ public abstract class FennelAbstractTupleIter
     implements TupleIter
 {
 
+    /**
+     * Singleton helper for aligning tuple buffers correctly.
+     */
+    private static FennelTupleAccessor tupleAligner
+        = new FennelTupleAccessor();
+    
     //~ Instance fields --------------------------------------------------------
 
     protected final FennelTupleReader tupleReader;
@@ -134,9 +141,8 @@ public abstract class FennelAbstractTupleIter
         int newPosition = byteBuffer.position() + sliceBuffer.position();
 
         // eat final alignment padding
-        while ((newPosition & 3) != 0) {
-            ++newPosition;
-        }
+        newPosition = tupleAligner.alignRoundUp(newPosition);
+        
         byteBuffer.position(newPosition);
         traceNext(obj);
         if (!byteBuffer.hasRemaining()) {

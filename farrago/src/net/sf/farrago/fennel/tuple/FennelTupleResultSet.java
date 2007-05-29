@@ -70,7 +70,7 @@ abstract public class FennelTupleResultSet
     protected FennelTupleAccessor accessor = null;
     protected FennelTupleData data = null;
     protected boolean tupleComputed = false;
-    protected final int tupleAlignment = FennelTupleAccessor.TUPLE_ALIGN4;
+    protected final int tupleAlignment = FennelTupleAccessor.TUPLE_ALIGN_JVM;
     protected final int tupleAlignmentMask = tupleAlignment - 1;
 
     //~ Constructors -----------------------------------------------------------
@@ -106,6 +106,7 @@ abstract public class FennelTupleResultSet
      */
     protected void alignBufferPosition(ByteBuffer buf)
     {
+        // TODO jvs 26-May-2007:  Unify with FennelTupleAccessor.
         int pos = buf.position();
         int pad = pos & tupleAlignmentMask;
         if (pad > 0) {

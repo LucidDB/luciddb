@@ -24,6 +24,7 @@ package net.sf.farrago.runtime;
 
 import java.nio.*;
 
+import net.sf.farrago.fennel.tuple.*;
 
 /**
  * FennelTupleWriter defines an interface for marshalling tuples to be sent to
@@ -42,6 +43,12 @@ public abstract class FennelTupleWriter
      * Matches fennel/tuple/TupleAccessor.cpp.
      */
     private static long MAGIC_NUMBER = 0x9897ab509de7dcf5L;
+
+    /**
+     * Singleton helper for aligning tuple buffers correctly.
+     */
+    private static FennelTupleAccessor tupleAligner
+        = new FennelTupleAccessor();
 
     //~ Methods ----------------------------------------------------------------
 
@@ -89,9 +96,8 @@ public abstract class FennelTupleWriter
             int newPosition = byteBuffer.position() + sliceBuffer.position();
 
             // add final alignment padding
-            while ((newPosition & 3) != 0) {
-                ++newPosition;
-            }
+            newPosition = tupleAligner.alignRoundUp(newPosition);
+            
             byteBuffer.position(newPosition);
         } catch (BufferOverflowException ex) {
             return false;

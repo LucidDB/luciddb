@@ -22,6 +22,18 @@ from
     class "Exception" as "c"
 );
 
+# Should fail:  reference to alias from outside in exists.
+EXPLAIN
+select c
+from class "Class" as c
+where exists c in (
+    follow association Generalizes forward then (
+        follow composite forward
+        destination class Attribute as a
+        where name='annotation'
+    )
+);
+
 # Should fail:  bad SQL
 EXPLAIN AND EXECUTE
 select * 

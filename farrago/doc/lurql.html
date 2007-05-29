@@ -500,7 +500,9 @@ class &lt;id&gt; [ as &lt;id&gt; ]
 &lt;where-clause&gt; ::=
 where &lt;filter&gt; [ and &lt;filter&gt; ... ]
 
-&lt;filter&gt; ::=
+&lt;filter&gt; ::= [ NOT ] &lt;leaf-filter&gt;
+
+&lt;leaf-filter&gt; ::=
 &lt;id&gt; '=' &lt;value&gt;
 |
 &lt;id&gt; matches &lt;regular-expression-value&gt;

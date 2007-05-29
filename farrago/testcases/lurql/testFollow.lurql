@@ -73,11 +73,36 @@ where exists (
     where name='visibility'
 );
 
+# Same as previous one, but using NOT exists instead
+EXPLAIN AND EXECUTE
+select c
+from class "Class" as c
+where not exists (
+    follow composite forward destination class Attribute
+    where name='annotation'
+    union
+    follow composite forward destination class Attribute
+    where name='visibility'
+);
+
 # Test exists with projection:  only get classes which have descendants
 # with an attribute named 'annotation'; we're verifying
 # that the existence of the descendants themselves is ignored
 EXPLAIN AND EXECUTE
 select c
+from class "Class" as c
+where exists a in (
+    follow association Generalizes forward then (
+        follow composite forward
+        destination class Attribute as a
+        where name='annotation'
+    )
+);
+
+# Same as previous, but use select * to verify FRG-179
+# (variables inside of exists should not contribute to results)
+EXPLAIN AND EXECUTE
+select *
 from class "Class" as c
 where exists a in (
     follow association Generalizes forward then (

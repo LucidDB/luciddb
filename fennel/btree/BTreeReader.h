@@ -236,6 +236,14 @@ public:
     /**
      * Searches for a tuple in the tree based on the given key.
      *
+     *<p>
+     *
+     * NOTE jvs 27-May-2007:  This method's interface has some problems;
+     * resolving http://issues.eigenbase.org/browse/FNL-65 will
+     * involve coming up with a more rational interface.  In particular,
+     * note that the return value is unreliable in the case of
+     * DUP_SEEK_END, and should be ignored by callers.
+     *
      * @param key the key to search for
      *
      * @param dupSeek what to do if duplicates are found

@@ -34,6 +34,25 @@ PREPARATION ERROR:  duplicate definition for alias c
 
 ****
 
+# Should fail:  reference to alias from outside in exists.
+PARSE RESULT:
+select "c"
+from
+class "Class" as "c"
+where
+    exists "c" in (
+        follow association "Generalizes" forward
+        then (
+            follow composite forward destination class "Attribute" as "a"
+            where
+                "name" = 'annotation'
+        )
+    );
+
+PREPARATION ERROR:  exists list aliases defined outside of exists:  [c]
+
+****
+
 # Should fail:  bad SQL
 PARSE RESULT:
 select *

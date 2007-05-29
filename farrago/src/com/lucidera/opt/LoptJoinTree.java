@@ -156,7 +156,7 @@ public class LoptJoinTree
 
         public void getTreeOrder(List<Integer> treeOrder)
         {
-            if ((left == null) && (right == null)) {
+            if ((left == null) || (right == null)) {
                 treeOrder.add(id);
             } else {
                 left.getTreeOrder(treeOrder);

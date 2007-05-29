@@ -26,6 +26,7 @@
 
 #include "fennel/ftrs/BTreeInsertExecStream.h"
 #include "fennel/txn/LogicalTxnParticipant.h"
+#include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -88,6 +89,7 @@ class FtrsTableWriter : public LogicalTxnParticipant
     TupleProjection updateProj;
     TupleData updateTupleData;
     TupleData *pTupleData;
+    boost::scoped_array<FixedBuffer> logBuf;
 
     FtrsTableIndexWriter &createIndexWriter(
         FtrsTableIndexWriter &,

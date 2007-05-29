@@ -55,14 +55,28 @@ public final class FennelTupleAccessor
     static final int STOREDVALUEOFFSETSIZE = 2;
 
     /**
-     * specify 4-byte alignment.
+     * Specifies 4-byte alignment.
      */
     public static final int TUPLE_ALIGN4 = 4;
 
     /**
-     * specify 8-byte alignment.
+     * Specifies 8-byte alignment.
      */
     public static final int TUPLE_ALIGN8 = 8;
+
+    /**
+     * Specifies alignment matching the data model of this JVM;
+     * fallback is to assume 4-byte if relevant system property is
+     * undefined.  TODO jvs 26-May-2007: we really ought to be calling
+     * Fennel to get this instead, since e.g. on Sun CPU
+     * architectures, 64-bit alignment is required even for a 32-bit
+     * JVM.  Plus this System property is undocumented, although it's
+     * also available on JRockit.
+     */
+    public static final int TUPLE_ALIGN_JVM =
+        "64".equals(System.getProperty("sun.arch.data.model"))
+        ? TUPLE_ALIGN8
+        : TUPLE_ALIGN4;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -130,6 +144,11 @@ public final class FennelTupleAccessor
      * tuple byte alignment.
      */
     private int tupleAlignment;
+
+    /**
+     * mask derived from tupleAlignment
+     */
+    private int tupleAlignmentMask;
     
     /**
      * if true, set the ByteBuffer to native order after slicing, when doing
@@ -144,7 +163,7 @@ public final class FennelTupleAccessor
      */
     public FennelTupleAccessor()
     {
-        this(TUPLE_ALIGN4, false); // default 4-byte alignment
+        this(TUPLE_ALIGN_JVM, false);
     }
 
     /**
@@ -168,7 +187,7 @@ public final class FennelTupleAccessor
      */
     public FennelTupleAccessor(boolean setNativeOrder)
     {
-        this(TUPLE_ALIGN4, setNativeOrder);
+        this(TUPLE_ALIGN_JVM, setNativeOrder);
     }
     
     /**
@@ -186,6 +205,7 @@ public final class FennelTupleAccessor
             + ") not multiple of 4";
         this.tupleAlignment = alignment;
         this.setNativeOrder = setNativeOrder;
+        tupleAlignmentMask = tupleAlignment - 1;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -193,10 +213,9 @@ public final class FennelTupleAccessor
     /**
      * rounds up a value to the next multiple of {@link #tupleAlignment}.
      */
-    private int alignRoundUp(int val)
+    public int alignRoundUp(int val)
     {
-        int mask = tupleAlignment - 1;
-        int lobits = val & mask;
+        int lobits = val & tupleAlignmentMask;
         if (lobits != 0) {
             val += (tupleAlignment - lobits);
         }

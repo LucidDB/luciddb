@@ -266,7 +266,7 @@ bool LbmUnionExecStream::transfer()
         LbmByteSegment seg = workspace.getSegment();
         assert(seg.len < reverseAreaSize);
         PBuffer reverseStart = reverseArea + seg.len - 1;
-        for (uint i = 0; i < seg.len; i++) {
+        for (int i = 0; i < seg.len; i++) {
             reverseStart[-i] = seg.byteSeg[i];
         }
         LcsRid startRid = seg.getSrid();

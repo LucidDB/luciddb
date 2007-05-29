@@ -98,8 +98,9 @@ public class LcsIndexOnlyAccessRule
         LcsIndexSearchRel origIndexSearch = null;
         if (call.rels[1] instanceof LcsIndexSearchRel) {
             origIndexSearch = (LcsIndexSearchRel) call.rels[1];
-        } else if (call.rels[2] instanceof LcsIndexSearchRel) {
+        } else {
             assert (call.rels[1] instanceof LcsIndexMergeRel);
+            assert (call.rels[2] instanceof LcsIndexSearchRel);
             origIndexSearch = (LcsIndexSearchRel) call.rels[2];
         }
 

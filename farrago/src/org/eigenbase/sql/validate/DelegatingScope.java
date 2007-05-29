@@ -64,8 +64,8 @@ public abstract class DelegatingScope
     DelegatingScope(SqlValidatorScope parent)
     {
         super();
-        this.validator = (SqlValidatorImpl) parent.getValidator();
         Util.pre(parent != null, "parent != null");
+        this.validator = (SqlValidatorImpl) parent.getValidator();
         this.parent = parent;
     }
 

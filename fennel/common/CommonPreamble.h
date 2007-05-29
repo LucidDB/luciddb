@@ -36,13 +36,6 @@
 // definitions
 #ifndef __MINGW32__
 #define __STDC_LIMIT_MACROS
-#define FMT_INT64      "lld"
-#define FMT_UINT64     "llu"
-#else
-// Mingw uses MSVCRT.DLL for printf, which treats ll as a 32-bit integer
-// and uses the prefix I64 for 64 integers
-#define FMT_INT64      "I64d"
-#define FMT_UINT64     "I64u"
 #endif
 
 #define _XOPEN_SOURCE 500
@@ -66,6 +59,21 @@
 #include <new>
 #include <cassert>
 #include <boost/thread/tss.hpp>
+
+#ifndef __MINGW32__
+#if __WORDSIZE == 64
+#define FMT_INT64      "ld"
+#define FMT_UINT64     "lu"
+#else
+#define FMT_INT64      "lld"
+#define FMT_UINT64     "llu"
+#endif
+#else
+// Mingw uses MSVCRT.DLL for printf, which treats ll as a 32-bit integer
+// and uses the prefix I64 for 64-bit integers
+#define FMT_INT64      "I64d"
+#define FMT_UINT64     "I64u"
+#endif
 
 // FIXME:  correct port
 typedef unsigned uint;
