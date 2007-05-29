@@ -694,13 +694,11 @@ public abstract class FarragoTestCase
         public void execute()
             throws Exception
         {
-            if (connection instanceof FarragoJdbcEngineConnection) {
-                restoreCleanupParameters();
-                dropSchemas();
-                dropDataWrappers();
-                dropDataServers();
-                dropAuthIds();
-            }
+            restoreCleanupParameters();
+            dropSchemas();
+            dropDataWrappers();
+            dropDataServers();
+            dropAuthIds();
         }
 
         public void saveCleanupParameters()
