@@ -29,6 +29,9 @@ AC_PROG_MAKE_SET
 AC_PROG_LEX
 AC_PROG_YACC
 
+dnl Check for gcc version (FIXME:  get rid of this once 4.1.1 goes away)
+fennel_gcc_version=`g++ --version | head -n 1 | cut -f 3 -d ' '`
+
 if test "$LEX" != "flex"; then
    AC_MSG_ERROR([Fennel build requires flex])
 fi
@@ -260,6 +263,13 @@ AC_ARG_WITH([debug],
 if test "$with_debug" = "yes"
 then
     CXXFLAGS="$CXXFLAGS -g"
+fi
+
+dnl Compiler version-specific tweaks
+if test "$fennel_gcc_version" = "4.1.1"
+then
+    dnl gcc 4.1.1 build encounters bogus errors
+    CXXFLAGS="$CXXFLAGS -Wno-uninitialized -Wno-unused"
 fi
 
 BOOST_THREADLIB=boost_thread-$BOOST_LIB_SUFFIX
