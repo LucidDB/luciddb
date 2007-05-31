@@ -445,17 +445,17 @@ public class FarragoDdlGenerator
 
                 Integer precision = col.getPrecision();
                 if (precision != null && stn.allowsPrec()) {
-                	sb.append("(").append(precision);
-                	Integer scale = col.getScale();
-                	if (scale != null && stn.allowsScale()) {
-                		sb.append(",").append(scale);
-                	}
-                	sb.append(")");
+                    sb.append("(").append(precision);
+                    Integer scale = col.getScale();
+                    if (scale != null && stn.allowsScale()) {
+                        sb.append(",").append(scale);
+                    }
+                    sb.append(")");
                 } else {
-                	Integer length = col.getLength();
-                	if (length != null) {
-                		sb.append("(").append(length).append(")");
-	            	}
+                    Integer length = col.getLength();
+                    if (length != null) {
+                        sb.append("(").append(length).append(")");
+	            }
                 }
 
                 if (!skipDefaults) {
