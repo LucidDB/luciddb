@@ -115,15 +115,15 @@ Error: From line 2, column 9 to line 2, column 16: Cannot assign to target field
 0: jdbc:luciddb:> select * from target_timestamp
 . . . . . . . . > where cast( coltimestamp as date ) <> current_date
 . . . . . . . . > order by 1;
-+-------------------------+
-|      COLTIMESTAMP       |
-+-------------------------+
-| 1957-09-29 00:00:00.0   |
-| 1957-09-29 02:16:29.33  |
-| 1990-03-24 06:40:00.0   |
-| 2002-11-16 00:00:00.0   |
-| 2002-11-16 02:12:47.0   |
-+-------------------------+
++------------------------+
+|      COLTIMESTAMP      |
++------------------------+
+| 1957-09-29 00:00:00.0  |
+| 1957-09-29 02:16:29.0  |
+| 1990-03-24 06:40:00.0  |
+| 2002-11-16 00:00:00.0  |
+| 2002-11-16 02:12:47.0  |
++------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select cast(coltimestamp as time) from target_timestamp
 . . . . . . . . > where cast( coltimestamp as date) = current_date
