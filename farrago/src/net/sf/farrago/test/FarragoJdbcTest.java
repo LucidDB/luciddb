@@ -875,7 +875,7 @@ public class FarragoJdbcTest
         assertEquals(res, rows);
         stmt.close();
         if (!connection.getAutoCommit()) {
-        connection.rollback();
+            connection.rollback();
         }
 
         // wipe out the array for the next test
@@ -1044,9 +1044,10 @@ public class FarragoJdbcTest
 
         Statement statement = connection.createStatement();
 
-        List numCharTypes = Arrays.asList(TestSqlType.typesNumericAndChars);
-        List binTypes = Arrays.asList(TestSqlType.typesBinary);
-        List approxCharTypes = new ArrayList();
+        List<TestSqlType> numCharTypes =
+            Arrays.asList(TestSqlType.typesNumericAndChars);
+        List<TestSqlType> binTypes = Arrays.asList(TestSqlType.typesBinary);
+        List<TestSqlType> approxCharTypes = new ArrayList<TestSqlType>();
         approxCharTypes.add(TestSqlType.Real);
         approxCharTypes.add(TestSqlType.Float);
         approxCharTypes.add(TestSqlType.Double);
@@ -1484,19 +1485,19 @@ public class FarragoJdbcTest
                     stringValue,
                     resultSet.getString(BIGINT));
                 assertEquals(
-                    
+
 
                     /*stringValue,*/
                 "0.0",
                     resultSet.getString(REAL));
                 assertEquals(
-                    
+
 
                     /*stringValue,*/
                 "0.0",
                     resultSet.getString(FLOAT));
                 assertEquals(
-                    
+
 
                     /*stringValue,*/
                 "0.0",
@@ -1508,7 +1509,7 @@ public class FarragoJdbcTest
                     "0.000",
                     resultSet.getString(DECIMAL73));
                 assertEquals(
-                    
+
 
                     /*stringValue,*/
                 "false",
@@ -2175,11 +2176,6 @@ public class FarragoJdbcTest
                 assertEquals(
                     timeNoDate.getTime(),
                     resultSet.getTime(TIME).getTime());
-
-                // FIXME: FNL-54
-                // SQL Spec Part 2 Section 4.6.2 Table 3 requires 
-                // Time to Timestamp cast to set the date to current_date
-                // (currently stored in FarragoRuntimeContext)
                 assertEquals(
                     timeNoDate.getTime(),
                     resultSet.getTime(TIMESTAMP).getTime());
@@ -2287,8 +2283,8 @@ public class FarragoJdbcTest
         resultSet = null;
 
         if (!connection.getAutoCommit()) {
-        connection.rollback();
-    }
+            connection.rollback();
+        }
     }
 
     /**
@@ -2647,7 +2643,7 @@ public class FarragoJdbcTest
         boolean age2 = true;
 
         String empno3 = "777";
-        Object deptno3 = new Integer(10);
+        Integer deptno3 = new Integer(10);
 
         String name = "JDBC Test Int";
         String name2 = "JDBC Test Int2";
@@ -2861,13 +2857,17 @@ public class FarragoJdbcTest
      */
     public void testDdlValidateOnPrepare()
     {
+        // Can only run this test server-side.
+        if (!(connection instanceof FarragoJdbcEngineConnection)) {
+            return;
+        }
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         boolean origSetting =
             farragoConnection.getSession().getSessionVariables().getBoolean(
                 "validateDdlOnPrepare");
         setValidateOnPrepare(origSetting, true);
-        
+
         // test error:  exceed timestamp precision
         String ddl =
             "create table sales.bad_tbl("
@@ -2891,18 +2891,22 @@ public class FarragoJdbcTest
     }
 
     /**
-     * Verifies that DDL statements are not validated at prepare time, 
+     * Verifies that DDL statements are not validated at prepare time,
      * but at execution time
      */
     public void testDdlNoValidateOnPrepare()
     {
+        // Can only run this test server-side.
+        if (!(connection instanceof FarragoJdbcEngineConnection)) {
+            return;
+        }
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         boolean origSetting =
             farragoConnection.getSession().getSessionVariables().getBoolean(
                 "validateDdlOnPrepare");
         setValidateOnPrepare(origSetting, false);
-        
+
         // test error:  exceed timestamp precision
         String ddl =
             "create table sales.bad_tbl("
@@ -2930,7 +2934,7 @@ public class FarragoJdbcTest
             }
         }
     }
-        
+
     private void setValidateOnPrepare(boolean currSetting, boolean newSetting)
     {
         if (currSetting != newSetting) {
@@ -3169,13 +3173,13 @@ public class FarragoJdbcTest
         assertEquals(1, stmt.getMaxRows());
         String sql = "select name from sales.depts order by 1";
         resultSet = stmt.executeQuery(sql);
-        Set refSet = new HashSet();
+        Set<String> refSet = new HashSet<String>();
         refSet.add("Accounts");
         compareResultSet(refSet);
         stmt.setMaxRows(0);
         assertEquals(0, stmt.getMaxRows());
         resultSet = stmt.executeQuery(sql);
-        refSet = new HashSet();
+        refSet = new HashSet<String>();
         refSet.add("Accounts");
         refSet.add("Marketing");
         refSet.add("Sales");

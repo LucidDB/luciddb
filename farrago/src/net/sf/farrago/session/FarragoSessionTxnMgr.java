@@ -21,8 +21,6 @@
 */
 package net.sf.farrago.session;
 
-import java.util.*;
-
 import org.eigenbase.relopt.*;
 
 
@@ -85,7 +83,7 @@ public interface FarragoSessionTxnMgr
      * Notifies transaction manager that a transaction is ending.
      *
      * @param txnId ID of ending transaction
-     * @param end how transaction is ending
+     * @param endType how transaction is ending
      */
     public void endTxn(
         FarragoSessionTxnId txnId,

@@ -42,261 +42,261 @@ public class SqlTypeAssignmentRules
     //~ Static fields/initializers ---------------------------------------------
 
     private static SqlTypeAssignmentRules instance = null;
-    private static HashMap rules = null;
-    private static HashMap coerceRules = null;
+    private static Map<SqlTypeName, Set<SqlTypeName>> rules = null;
+    private static Map<SqlTypeName, Set<SqlTypeName>> coerceRules = null;
 
     //~ Constructors -----------------------------------------------------------
 
     private SqlTypeAssignmentRules()
     {
-        rules = new HashMap();
+        rules = new HashMap<SqlTypeName, Set<SqlTypeName>>();
 
-        HashSet rule;
+        HashSet<SqlTypeName> rule;
 
         //IntervalYearMonth is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.IntervalYearMonth);
-        rules.put(SqlTypeName.IntervalYearMonth, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.INTERVAL_YEAR_MONTH);
+        rules.put(SqlTypeName.INTERVAL_YEAR_MONTH, rule);
 
         //IntervalDayTime is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.IntervalDayTime);
-        rules.put(SqlTypeName.IntervalDayTime, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.INTERVAL_DAY_TIME);
+        rules.put(SqlTypeName.INTERVAL_DAY_TIME, rule);
 
         // Multiset is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Multiset);
-        rules.put(SqlTypeName.Multiset, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.MULTISET);
+        rules.put(SqlTypeName.MULTISET, rule);
 
         // Tinyint is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Tinyint);
-        rules.put(SqlTypeName.Tinyint, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TINYINT);
+        rules.put(SqlTypeName.TINYINT, rule);
 
         // Smallint is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Tinyint);
-        rule.add(SqlTypeName.Smallint);
-        rules.put(SqlTypeName.Smallint, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TINYINT);
+        rule.add(SqlTypeName.SMALLINT);
+        rules.put(SqlTypeName.SMALLINT, rule);
 
         // Int is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Tinyint);
-        rule.add(SqlTypeName.Smallint);
-        rule.add(SqlTypeName.Integer);
-        rules.put(SqlTypeName.Integer, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TINYINT);
+        rule.add(SqlTypeName.SMALLINT);
+        rule.add(SqlTypeName.INTEGER);
+        rules.put(SqlTypeName.INTEGER, rule);
 
         // BigInt is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Tinyint);
-        rule.add(SqlTypeName.Smallint);
-        rule.add(SqlTypeName.Integer);
-        rule.add(SqlTypeName.Bigint);
-        rules.put(SqlTypeName.Bigint, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TINYINT);
+        rule.add(SqlTypeName.SMALLINT);
+        rule.add(SqlTypeName.INTEGER);
+        rule.add(SqlTypeName.BIGINT);
+        rules.put(SqlTypeName.BIGINT, rule);
 
         // Float is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Tinyint);
-        rule.add(SqlTypeName.Smallint);
-        rule.add(SqlTypeName.Integer);
-        rule.add(SqlTypeName.Bigint);
-        rule.add(SqlTypeName.Decimal);
-        rule.add(SqlTypeName.Float);
-        rules.put(SqlTypeName.Float, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TINYINT);
+        rule.add(SqlTypeName.SMALLINT);
+        rule.add(SqlTypeName.INTEGER);
+        rule.add(SqlTypeName.BIGINT);
+        rule.add(SqlTypeName.DECIMAL);
+        rule.add(SqlTypeName.FLOAT);
+        rules.put(SqlTypeName.FLOAT, rule);
 
         // Real is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Tinyint);
-        rule.add(SqlTypeName.Smallint);
-        rule.add(SqlTypeName.Integer);
-        rule.add(SqlTypeName.Bigint);
-        rule.add(SqlTypeName.Decimal);
-        rule.add(SqlTypeName.Float);
-        rule.add(SqlTypeName.Real);
-        rules.put(SqlTypeName.Real, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TINYINT);
+        rule.add(SqlTypeName.SMALLINT);
+        rule.add(SqlTypeName.INTEGER);
+        rule.add(SqlTypeName.BIGINT);
+        rule.add(SqlTypeName.DECIMAL);
+        rule.add(SqlTypeName.FLOAT);
+        rule.add(SqlTypeName.REAL);
+        rules.put(SqlTypeName.REAL, rule);
 
         // Double is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Tinyint);
-        rule.add(SqlTypeName.Smallint);
-        rule.add(SqlTypeName.Integer);
-        rule.add(SqlTypeName.Bigint);
-        rule.add(SqlTypeName.Decimal);
-        rule.add(SqlTypeName.Float);
-        rule.add(SqlTypeName.Real);
-        rule.add(SqlTypeName.Double);
-        rules.put(SqlTypeName.Double, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TINYINT);
+        rule.add(SqlTypeName.SMALLINT);
+        rule.add(SqlTypeName.INTEGER);
+        rule.add(SqlTypeName.BIGINT);
+        rule.add(SqlTypeName.DECIMAL);
+        rule.add(SqlTypeName.FLOAT);
+        rule.add(SqlTypeName.REAL);
+        rule.add(SqlTypeName.DOUBLE);
+        rules.put(SqlTypeName.DOUBLE, rule);
 
         // Decimal is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Tinyint);
-        rule.add(SqlTypeName.Smallint);
-        rule.add(SqlTypeName.Integer);
-        rule.add(SqlTypeName.Bigint);
-        rule.add(SqlTypeName.Real);
-        rule.add(SqlTypeName.Double);
-        rule.add(SqlTypeName.Decimal);
-        rules.put(SqlTypeName.Decimal, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TINYINT);
+        rule.add(SqlTypeName.SMALLINT);
+        rule.add(SqlTypeName.INTEGER);
+        rule.add(SqlTypeName.BIGINT);
+        rule.add(SqlTypeName.REAL);
+        rule.add(SqlTypeName.DOUBLE);
+        rule.add(SqlTypeName.DECIMAL);
+        rules.put(SqlTypeName.DECIMAL, rule);
 
         // VarBinary is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Varbinary);
-        rule.add(SqlTypeName.Binary);
-        rules.put(SqlTypeName.Varbinary, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.VARBINARY);
+        rule.add(SqlTypeName.BINARY);
+        rules.put(SqlTypeName.VARBINARY, rule);
 
         // Char is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Char);
-        rules.put(SqlTypeName.Char, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.CHAR);
+        rules.put(SqlTypeName.CHAR, rule);
 
         // VarChar is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Char);
-        rule.add(SqlTypeName.Varchar);
-        rules.put(SqlTypeName.Varchar, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.CHAR);
+        rule.add(SqlTypeName.VARCHAR);
+        rules.put(SqlTypeName.VARCHAR, rule);
 
         // Boolean is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Boolean);
-        rules.put(SqlTypeName.Boolean, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.BOOLEAN);
+        rules.put(SqlTypeName.BOOLEAN, rule);
 
         // Binary is assignable from...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Binary);
-        rule.add(SqlTypeName.Varbinary);
-        rules.put(SqlTypeName.Binary, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.BINARY);
+        rule.add(SqlTypeName.VARBINARY);
+        rules.put(SqlTypeName.BINARY, rule);
 
         // Date is assignable from ...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Date);
-        rule.add(SqlTypeName.Timestamp);
-        rules.put(SqlTypeName.Date, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.DATE);
+        rule.add(SqlTypeName.TIMESTAMP);
+        rules.put(SqlTypeName.DATE, rule);
 
         // Time is assignable from ...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Time);
-        rule.add(SqlTypeName.Timestamp);
-        rules.put(SqlTypeName.Time, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TIME);
+        rule.add(SqlTypeName.TIMESTAMP);
+        rules.put(SqlTypeName.TIME, rule);
 
         // Timestamp is assignable from ...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Timestamp);
-        rules.put(SqlTypeName.Timestamp, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TIMESTAMP);
+        rules.put(SqlTypeName.TIMESTAMP, rule);
 
         // we use coerceRules when we're casting
-        coerceRules = (HashMap) rules.clone();
+        coerceRules = copy(rules);
 
         // Make numbers symmetrical and
         // make varchar/char castable to/from numbers
-        rule = new HashSet();
-        rule.add(SqlTypeName.Tinyint);
-        rule.add(SqlTypeName.Smallint);
-        rule.add(SqlTypeName.Integer);
-        rule.add(SqlTypeName.Bigint);
-        rule.add(SqlTypeName.Decimal);
-        rule.add(SqlTypeName.Float);
-        rule.add(SqlTypeName.Real);
-        rule.add(SqlTypeName.Double);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TINYINT);
+        rule.add(SqlTypeName.SMALLINT);
+        rule.add(SqlTypeName.INTEGER);
+        rule.add(SqlTypeName.BIGINT);
+        rule.add(SqlTypeName.DECIMAL);
+        rule.add(SqlTypeName.FLOAT);
+        rule.add(SqlTypeName.REAL);
+        rule.add(SqlTypeName.DOUBLE);
 
-        rule.add(SqlTypeName.Char);
-        rule.add(SqlTypeName.Varchar);
+        rule.add(SqlTypeName.CHAR);
+        rule.add(SqlTypeName.VARCHAR);
 
         coerceRules.put(
-            SqlTypeName.Tinyint,
-            rule.clone());
+            SqlTypeName.TINYINT,
+            copy(rule));
         coerceRules.put(
-            SqlTypeName.Smallint,
-            rule.clone());
+            SqlTypeName.SMALLINT,
+            copy(rule));
         coerceRules.put(
-            SqlTypeName.Integer,
-            rule.clone());
+            SqlTypeName.INTEGER,
+            copy(rule));
         coerceRules.put(
-            SqlTypeName.Bigint,
-            rule.clone());
+            SqlTypeName.BIGINT,
+            copy(rule));
         coerceRules.put(
-            SqlTypeName.Float,
-            rule.clone());
+            SqlTypeName.FLOAT,
+            copy(rule));
         coerceRules.put(
-            SqlTypeName.Real,
-            rule.clone());
+            SqlTypeName.REAL,
+            copy(rule));
         coerceRules.put(
-            SqlTypeName.Decimal,
-            rule.clone());
+            SqlTypeName.DECIMAL,
+            copy(rule));
         coerceRules.put(
-            SqlTypeName.Double,
-            rule.clone());
+            SqlTypeName.DOUBLE,
+            copy(rule));
         coerceRules.put(
-            SqlTypeName.Char,
-            rule.clone());
+            SqlTypeName.CHAR,
+            copy(rule));
         coerceRules.put(
-            SqlTypeName.Varchar,
-            rule.clone());
+            SqlTypeName.VARCHAR,
+            copy(rule));
 
         // Bigint is castable from intervals
-        rule = (HashSet) coerceRules.get(SqlTypeName.Bigint);
-        rule.add(SqlTypeName.IntervalDayTime);
-        rule.add(SqlTypeName.IntervalYearMonth);
+        rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.BIGINT);
+        rule.add(SqlTypeName.INTERVAL_DAY_TIME);
+        rule.add(SqlTypeName.INTERVAL_YEAR_MONTH);
 
         // intervals is castable from Bigint and Integer
-        rule = (HashSet) coerceRules.get(SqlTypeName.IntervalDayTime);
-        rule.add(SqlTypeName.Bigint);
-        rule.add(SqlTypeName.Integer);
-        rule.add(SqlTypeName.Varchar);
+        rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.INTERVAL_DAY_TIME);
+        rule.add(SqlTypeName.BIGINT);
+        rule.add(SqlTypeName.INTEGER);
+        rule.add(SqlTypeName.VARCHAR);
 
         // intervals is castable from Bigint and Integer
-        rule = (HashSet) coerceRules.get(SqlTypeName.IntervalYearMonth);
-        rule.add(SqlTypeName.Bigint);
-        rule.add(SqlTypeName.Integer);
-        rule.add(SqlTypeName.Varchar);
+        rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.INTERVAL_YEAR_MONTH);
+        rule.add(SqlTypeName.BIGINT);
+        rule.add(SqlTypeName.INTEGER);
+        rule.add(SqlTypeName.VARCHAR);
 
         // varchar is castable from Boolean, Date, time, timestamp, numbers and
         // intervals
-        rule = (HashSet) coerceRules.get(SqlTypeName.Varchar);
-        rule.add(SqlTypeName.Boolean);
-        rule.add(SqlTypeName.Date);
-        rule.add(SqlTypeName.Time);
-        rule.add(SqlTypeName.Timestamp);
-        rule.add(SqlTypeName.IntervalDayTime);
-        rule.add(SqlTypeName.IntervalYearMonth);
+        rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.VARCHAR);
+        rule.add(SqlTypeName.BOOLEAN);
+        rule.add(SqlTypeName.DATE);
+        rule.add(SqlTypeName.TIME);
+        rule.add(SqlTypeName.TIMESTAMP);
+        rule.add(SqlTypeName.INTERVAL_DAY_TIME);
+        rule.add(SqlTypeName.INTERVAL_YEAR_MONTH);
 
         // char is castable from Boolean, Date, time and timestamp and numbers
-        rule = (HashSet) coerceRules.get(SqlTypeName.Char);
-        rule.add(SqlTypeName.Boolean);
-        rule.add(SqlTypeName.Date);
-        rule.add(SqlTypeName.Time);
-        rule.add(SqlTypeName.Timestamp);
+        rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.CHAR);
+        rule.add(SqlTypeName.BOOLEAN);
+        rule.add(SqlTypeName.DATE);
+        rule.add(SqlTypeName.TIME);
+        rule.add(SqlTypeName.TIMESTAMP);
 
         // Boolean is castable from char and varchar
-        rule = (HashSet) coerceRules.get(SqlTypeName.Boolean);
-        rule.add(SqlTypeName.Char);
-        rule.add(SqlTypeName.Varchar);
+        rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.BOOLEAN);
+        rule.add(SqlTypeName.CHAR);
+        rule.add(SqlTypeName.VARCHAR);
 
         // Date, time, and timestamp are castable from
         // char and varchar
         // Date is castable from ...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Date);
-        rule.add(SqlTypeName.Timestamp);
-        rule.add(SqlTypeName.Char);
-        rule.add(SqlTypeName.Varchar);
-        coerceRules.put(SqlTypeName.Date, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.DATE);
+        rule.add(SqlTypeName.TIMESTAMP);
+        rule.add(SqlTypeName.CHAR);
+        rule.add(SqlTypeName.VARCHAR);
+        coerceRules.put(SqlTypeName.DATE, rule);
 
         // Time is castable from ...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Time);
-        rule.add(SqlTypeName.Timestamp);
-        rule.add(SqlTypeName.Char);
-        rule.add(SqlTypeName.Varchar);
-        coerceRules.put(SqlTypeName.Time, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TIME);
+        rule.add(SqlTypeName.TIMESTAMP);
+        rule.add(SqlTypeName.CHAR);
+        rule.add(SqlTypeName.VARCHAR);
+        coerceRules.put(SqlTypeName.TIME, rule);
 
         // Timestamp is castable from ...
-        rule = new HashSet();
-        rule.add(SqlTypeName.Timestamp);
-        rule.add(SqlTypeName.Date);
-        rule.add(SqlTypeName.Time);
-        rule.add(SqlTypeName.Char);
-        rule.add(SqlTypeName.Varchar);
-        coerceRules.put(SqlTypeName.Timestamp, rule);
+        rule = new HashSet<SqlTypeName>();
+        rule.add(SqlTypeName.TIMESTAMP);
+        rule.add(SqlTypeName.DATE);
+        rule.add(SqlTypeName.TIME);
+        rule.add(SqlTypeName.CHAR);
+        rule.add(SqlTypeName.VARCHAR);
+        coerceRules.put(SqlTypeName.TIMESTAMP, rule);
 
         // REVIEW jvs 13-Dec-2004:  getting the milliseconds?
         // That sounds like a physical operation, and has nothing to do
@@ -304,15 +304,15 @@ public class SqlTypeAssignmentRules
 
         // for getting the milliseconds.
         // Bigint is assignable from...
-        rule = new HashSet();
-        rule = (HashSet) coerceRules.get(SqlTypeName.Bigint);
+        rule = new HashSet<SqlTypeName>();
+        rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.BIGINT);
 
         // xluo 24-Sept-2005 datetime added, there is a specific
         // test case for that. I assume it should.
-        rule.add(SqlTypeName.Date);
-        rule.add(SqlTypeName.Time);
-        rule.add(SqlTypeName.Timestamp);
-        coerceRules.put(SqlTypeName.Bigint, rule);
+        rule.add(SqlTypeName.DATE);
+        rule.add(SqlTypeName.TIME);
+        rule.add(SqlTypeName.TIMESTAMP);
+        coerceRules.put(SqlTypeName.BIGINT, rule);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -333,11 +333,12 @@ public class SqlTypeAssignmentRules
         assert (null != to);
         assert (null != from);
 
-        HashMap ruleset = coerce ? coerceRules : rules;
+        Map<SqlTypeName, Set<SqlTypeName>> ruleset =
+            coerce ? coerceRules : rules;
 
-        if (to.equals(SqlTypeName.Null)) {
+        if (to.equals(SqlTypeName.NULL)) {
             return false;
-        } else if (from.equals(SqlTypeName.Null)) {
+        } else if (from.equals(SqlTypeName.NULL)) {
             return true;
         }
 
@@ -350,6 +351,16 @@ public class SqlTypeAssignmentRules
         }
 
         return rule.contains(from);
+    }
+
+    private static <K, V> HashMap<K, V> copy(Map<K, V> map)
+    {
+        return new HashMap<K, V>(map);
+    }
+
+    private static <T> HashSet<T> copy(Set<T> set)
+    {
+        return new HashSet<T>(set);
     }
 }
 

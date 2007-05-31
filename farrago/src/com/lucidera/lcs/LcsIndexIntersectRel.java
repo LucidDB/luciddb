@@ -43,8 +43,6 @@ class LcsIndexIntersectRel
 
     /**
      * Creates a new LcsIndexIntersectRel object.
-     *
-     * @param indexSearchRel the input to this merge
      */
     public LcsIndexIntersectRel(
         RelOptCluster cluster,

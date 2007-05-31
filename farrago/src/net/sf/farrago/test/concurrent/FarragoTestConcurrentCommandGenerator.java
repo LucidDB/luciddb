@@ -54,9 +54,9 @@ import org.eigenbase.util.*;
  *
  * <p>When each command is created, it is associated with a thread and given an
  * execution order. Execution order values are positive integers, must be unique
- * within a thread, and may be a sparse set See {@link
- * FarragoTestConcurrentTestCase#executeTest(FarragoTestConcurrentCommandGenerator,
- * boolean)} for other considerations.
+ * within a thread, and may be a sparse set. See
+ * {@link FarragoTestConcurrentTestCase#executeTest(FarragoTestConcurrentCommandGenerator, boolean, String)}
+ * for other considerations.
  *
  * <p>There are no restrictions on the order of command creation.
  *
@@ -989,13 +989,13 @@ public class FarragoTestConcurrentCommandGenerator
                     + result.size());
             }
 
-            Iterator expectedIter = expected.iterator();
-            Iterator resultIter = result.iterator();
+            Iterator<List<Object>> expectedIter = expected.iterator();
+            Iterator<List<Object>> resultIter = result.iterator();
 
             int rowNum = 1;
             while (expectedIter.hasNext() && resultIter.hasNext()) {
-                ArrayList expectedRow = (ArrayList) expectedIter.next();
-                ArrayList resultRow = (ArrayList) resultIter.next();
+                List<Object> expectedRow = expectedIter.next();
+                List<Object> resultRow = resultIter.next();
 
                 testValues(expectedRow, resultRow, rowNum++);
             }
@@ -1005,8 +1005,8 @@ public class FarragoTestConcurrentCommandGenerator
          * Validates {@link ResultSet} against expected data.
          */
         private void testValues(
-            ArrayList expectedRow,
-            ArrayList resultRow,
+            List<Object> expectedRow,
+            List<Object> resultRow,
             int rowNum)
         {
             if (expectedRow.size() != resultRow.size()) {
@@ -1176,8 +1176,8 @@ public class FarragoTestConcurrentCommandGenerator
          */
         private void dumpData(String message)
         {
-            Iterator expectedIter = expected.iterator();
-            Iterator resultIter = result.iterator();
+            Iterator<List<Object>> expectedIter = expected.iterator();
+            Iterator<List<Object>> resultIter = result.iterator();
 
             StringBuilder fullMessage = new StringBuilder(message);
 
@@ -1189,15 +1189,15 @@ public class FarragoTestConcurrentCommandGenerator
                 StringBuilder resultOut = new StringBuilder();
                 resultOut.append("Row ").append(rowNum).append(" got:");
 
-                Iterator expectedRowIter = null;
+                Iterator<Object> expectedRowIter = null;
                 if (expectedIter.hasNext()) {
-                    ArrayList expectedRow = (ArrayList) expectedIter.next();
+                    List<Object> expectedRow = expectedIter.next();
                     expectedRowIter = expectedRow.iterator();
                 }
 
-                Iterator resultRowIter = null;
+                Iterator<Object> resultRowIter = null;
                 if (resultIter.hasNext()) {
-                    ArrayList resultRow = (ArrayList) resultIter.next();
+                    List<Object> resultRow = resultIter.next();
                     resultRowIter = resultRow.iterator();
                 }
 

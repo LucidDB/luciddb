@@ -30,8 +30,9 @@ import org.eigenbase.rex.*;
 
 
 /**
- * FarragoOJRexRowImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for ROW and UDT constructors.
+ * FarragoOJRexRowImplementor implements Farrago specifics of
+ * {@link org.eigenbase.oj.rex.OJRexImplementor } for <code>ROW</code> and
+ * UDT constructors.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -52,7 +53,7 @@ public class FarragoOJRexRowImplementor
         // method for each value; this keeps us conservative about the total
         // method bytecode 32K limit.  Should probably refactor together with
         // IterCalcRel to do properly balanced decomposition.
-        
+
         RelDataType rowType = call.getType();
         Variable variable = translator.createScratchVariable(rowType);
         RelDataTypeField [] fields = rowType.getFields();

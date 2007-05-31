@@ -162,7 +162,7 @@ public class SqlSelect
             // frame. (The topmost item in the subquery might be a UNION or
             // ORDER. In this case, we don't need a wrapper frame.)
             final SqlWriter.Frame frame =
-                writer.startList(SqlWriter.FrameType.Subquery, "(", ")");
+                writer.startList(SqlWriter.FrameTypeEnum.Subquery, "(", ")");
             getOperator().unparse(writer, operands, 0, 0);
             writer.endList(frame);
         } else {

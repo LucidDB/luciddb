@@ -88,7 +88,7 @@ public class JavaRexBuilder
         Environment env,
         RexNode exp,
         String methodName,
-        List args)
+        List<RexNode> args)
     {
         ExpressionList ojArgs = translator.toJava(args);
         Expression ojExp = translator.toJava(exp);
@@ -140,7 +140,7 @@ public class JavaRexBuilder
 
     private static class OJTranslator
     {
-        public ExpressionList toJava(List args)
+        public ExpressionList toJava(List<RexNode> args)
         {
             return null;
         }

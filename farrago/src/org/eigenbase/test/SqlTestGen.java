@@ -99,12 +99,10 @@ public class SqlTestGen
     /**
      * Returns a list of all of the Junit methods in a given class.
      */
-    private static Method [] getJunitMethods(Class clazz)
+    private static Method [] getJunitMethods(Class<SqlValidatorSpooler> clazz)
     {
-        final Method [] methods = clazz.getMethods();
-        ArrayList list = new ArrayList();
-        for (int i = 0; i < methods.length; i++) {
-            Method method = methods[i];
+        List<Method> list = new ArrayList<Method>();
+        for (Method method : clazz.getMethods()) {
             if (method.getName().startsWith("test")
                 && Modifier.isPublic(method.getModifiers())
                 && !Modifier.isStatic(method.getModifiers())
@@ -113,7 +111,7 @@ public class SqlTestGen
                 list.add(method);
             }
         }
-        return (Method []) list.toArray(new Method[list.size()]);
+        return list.toArray(new Method[list.size()]);
     }
 
     //~ Inner Classes ----------------------------------------------------------

@@ -56,7 +56,7 @@ public class FarragoSqlValidator
 
     /**
      * Constructor that allows caller to specify dependant objects rather
-     * than relying on the preparingStmt to supply them.  This constructor is 
+     * than relying on the preparingStmt to supply them.  This constructor is
      * is friendlier to class extension as well as providing more control during
      * test setup.
      */
@@ -78,7 +78,7 @@ public class FarragoSqlValidator
 
     /**
      * Constructor that relies on the preparingStmt object to provide various
-     * other objects during initialization.  
+     * other objects during initialization.
      */
     public FarragoSqlValidator(
         FarragoPreparingStmt preparingStmt,
@@ -89,7 +89,7 @@ public class FarragoSqlValidator
             preparingStmt,
             preparingStmt.getFarragoTypeFactory(),
             compatible);
-        
+
         this.preparingStmt = preparingStmt;
     }
 
@@ -185,7 +185,7 @@ public class FarragoSqlValidator
             feature,
             context);
     }
-    
+
     // override SqlValidatorImpl
     public void validateColumnListParams(
         SqlFunction function,
@@ -198,12 +198,12 @@ public class FarragoSqlValidator
         FemRoutine femRoutine = routine.getFemRoutine();
         List<CwmParameter> params = femRoutine.getParameter();
         Map<Integer, SqlSelect> cursorMap = cursorMapStack.peek();
-        
+
         // locate arguments that are COLUMN_LIST types; locate the select
         // scope corresponding to the source cursor and revalidate the
         // function operand using that scope
         for (int i = 0; i < argTypes.length; i++) {
-            if (argTypes[i].getSqlTypeName() == SqlTypeName.ColumnList) {
+            if (argTypes[i].getSqlTypeName() == SqlTypeName.COLUMN_LIST) {
                 FemColumnListRoutineParameter clParam =
                     (FemColumnListRoutineParameter) params.get(i);
                 String sourceCursor = clParam.getSourceCursorName();
@@ -228,7 +228,7 @@ public class FarragoSqlValidator
                             break;
                         }
                     }
-                }               
+                }
             }
         }
     }

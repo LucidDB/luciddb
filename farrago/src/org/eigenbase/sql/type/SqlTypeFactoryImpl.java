@@ -151,7 +151,7 @@ public class SqlTypeFactoryImpl
         boolean anyNullable = resultType.isNullable();
         for (int i = 1; i < types.length; i++) {
             RelDataType type = types[i];
-            if (type.getSqlTypeName() == SqlTypeName.Null) {
+            if (type.getSqlTypeName() == SqlTypeName.NULL) {
                 anyNullable = true;
                 continue;
             }
@@ -199,9 +199,9 @@ public class SqlTypeFactoryImpl
     private void assertBasic(SqlTypeName typeName)
     {
         assert (typeName != null);
-        assert (typeName != SqlTypeName.Multiset) : "use createMultisetType() instead";
-        assert (typeName != SqlTypeName.IntervalDayTime) : "use createSqlIntervalType() instead";
-        assert (typeName != SqlTypeName.IntervalYearMonth) : "use createSqlIntervalType() instead";
+        assert (typeName != SqlTypeName.MULTISET) : "use createMultisetType() instead";
+        assert (typeName != SqlTypeName.INTERVAL_DAY_TIME) : "use createSqlIntervalType() instead";
+        assert (typeName != SqlTypeName.INTERVAL_YEAR_MONTH) : "use createSqlIntervalType() instead";
     }
 
     private RelDataType leastRestrictiveSqlType(RelDataType [] types)
@@ -222,13 +222,13 @@ public class SqlTypeFactoryImpl
                 anyNullable = true;
             }
 
-            if (typeName == SqlTypeName.Null) {
+            if (typeName == SqlTypeName.NULL) {
                 continue;
             }
 
             if (resultType == null) {
                 resultType = type;
-                if (resultType.getSqlTypeName() == SqlTypeName.Row) {
+                if (resultType.getSqlTypeName() == SqlTypeName.ROW) {
                     return leastRestrictiveStructuredType(types);
                 }
             }
@@ -265,14 +265,14 @@ public class SqlTypeFactoryImpl
 
                     if (shouldRaggedFixedLengthValueUnionBeVariable()) {
                         if (resultType.getPrecision() != type.getPrecision()) {
-                            if (newTypeName == SqlTypeName.Char) {
-                                newTypeName = SqlTypeName.Varchar;
-                            } else if (newTypeName == SqlTypeName.Binary) {
-                                newTypeName = SqlTypeName.Varbinary;
+                            if (newTypeName == SqlTypeName.CHAR) {
+                                newTypeName = SqlTypeName.VARCHAR;
+                            } else if (newTypeName == SqlTypeName.BINARY) {
+                                newTypeName = SqlTypeName.VARBINARY;
                             }
                         }
                     }
-                    
+
                     resultType =
                         createSqlType(
                             newTypeName,
@@ -325,7 +325,7 @@ public class SqlTypeFactoryImpl
                             assert (precision > 0);
 
                             resultType =
-                                createSqlType(SqlTypeName.Decimal,
+                                createSqlType(SqlTypeName.DECIMAL,
                                     precision,
                                     scale);
                         }
@@ -418,7 +418,7 @@ public class SqlTypeFactoryImpl
 
     private RelDataType createDoublePrecisionType()
     {
-        return createSqlType(SqlTypeName.Double);
+        return createSqlType(SqlTypeName.DOUBLE);
     }
 
     private RelDataType copyMultisetType(RelDataType type, boolean nullable)

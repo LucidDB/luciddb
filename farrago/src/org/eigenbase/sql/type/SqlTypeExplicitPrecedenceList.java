@@ -46,84 +46,84 @@ public class SqlTypeExplicitPrecedenceList
      *
      * @sql.2003 Part 2 Section 9.5
      */
-    private static final Map<SqlTypeName,SqlTypeExplicitPrecedenceList> typeNameToPrecedenceList;
+    private static final Map<SqlTypeName,SqlTypeExplicitPrecedenceList>
+        typeNameToPrecedenceList;
 
     static {
         // NOTE jvs 25-Jan-2005:  the null entries delimit equivalence
         // classes
         List<SqlTypeName> numericList =
             Arrays.asList(
-                new SqlTypeName[] {
-                    SqlTypeName.Tinyint,
+                SqlTypeName.TINYINT,
                 null,
-                SqlTypeName.Smallint,
+                SqlTypeName.SMALLINT,
                 null,
-                SqlTypeName.Integer,
+                SqlTypeName.INTEGER,
                 null,
-                SqlTypeName.Bigint,
+                SqlTypeName.BIGINT,
                 null,
-                SqlTypeName.Decimal,
+                SqlTypeName.DECIMAL,
                 null,
-                SqlTypeName.Real,
+                SqlTypeName.REAL,
                 null,
-                SqlTypeName.Float,
-                SqlTypeName.Double
-                });
-        typeNameToPrecedenceList = new HashMap<SqlTypeName, SqlTypeExplicitPrecedenceList>();
+                SqlTypeName.FLOAT,
+                SqlTypeName.DOUBLE);
+        typeNameToPrecedenceList =
+            new HashMap<SqlTypeName, SqlTypeExplicitPrecedenceList>();
         addList(
-            SqlTypeName.Boolean,
-            new SqlTypeName[] { SqlTypeName.Boolean });
+            SqlTypeName.BOOLEAN,
+            new SqlTypeName[] { SqlTypeName.BOOLEAN});
         addNumericList(
-            SqlTypeName.Tinyint,
+            SqlTypeName.TINYINT,
             numericList);
         addNumericList(
-            SqlTypeName.Smallint,
+            SqlTypeName.SMALLINT,
             numericList);
         addNumericList(
-            SqlTypeName.Integer,
+            SqlTypeName.INTEGER,
             numericList);
         addNumericList(
-            SqlTypeName.Bigint,
+            SqlTypeName.BIGINT,
             numericList);
         addNumericList(
-            SqlTypeName.Decimal,
+            SqlTypeName.DECIMAL,
             numericList);
         addNumericList(
-            SqlTypeName.Real,
+            SqlTypeName.REAL,
             numericList);
         addNumericList(
-            SqlTypeName.Float,
+            SqlTypeName.FLOAT,
             numericList);
         addNumericList(
-            SqlTypeName.Double,
+            SqlTypeName.DOUBLE,
             numericList);
         addList(
-            SqlTypeName.Char,
-            new SqlTypeName[] { SqlTypeName.Char, SqlTypeName.Varchar });
+            SqlTypeName.CHAR,
+            new SqlTypeName[] { SqlTypeName.CHAR, SqlTypeName.VARCHAR});
         addList(
-            SqlTypeName.Varchar,
-            new SqlTypeName[] { SqlTypeName.Varchar });
+            SqlTypeName.VARCHAR,
+            new SqlTypeName[] { SqlTypeName.VARCHAR});
         addList(
-            SqlTypeName.Binary,
-            new SqlTypeName[] { SqlTypeName.Binary, SqlTypeName.Varbinary });
+            SqlTypeName.BINARY,
+            new SqlTypeName[] { SqlTypeName.BINARY, SqlTypeName.VARBINARY});
         addList(
-            SqlTypeName.Varbinary,
-            new SqlTypeName[] { SqlTypeName.Varbinary });
+            SqlTypeName.VARBINARY,
+            new SqlTypeName[] { SqlTypeName.VARBINARY});
         addList(
-            SqlTypeName.Date,
-            new SqlTypeName[] { SqlTypeName.Date });
+            SqlTypeName.DATE,
+            new SqlTypeName[] { SqlTypeName.DATE});
         addList(
-            SqlTypeName.Time,
-            new SqlTypeName[] { SqlTypeName.Time });
+            SqlTypeName.TIME,
+            new SqlTypeName[] { SqlTypeName.TIME});
         addList(
-            SqlTypeName.Timestamp,
-            new SqlTypeName[] { SqlTypeName.Timestamp });
+            SqlTypeName.TIMESTAMP,
+            new SqlTypeName[] { SqlTypeName.TIMESTAMP});
         addList(
-            SqlTypeName.IntervalYearMonth,
-            new SqlTypeName[] { SqlTypeName.IntervalYearMonth });
+            SqlTypeName.INTERVAL_YEAR_MONTH,
+            new SqlTypeName[] { SqlTypeName.INTERVAL_YEAR_MONTH});
         addList(
-            SqlTypeName.IntervalDayTime,
-            new SqlTypeName[] { SqlTypeName.IntervalDayTime });
+            SqlTypeName.INTERVAL_DAY_TIME,
+            new SqlTypeName[] { SqlTypeName.INTERVAL_DAY_TIME});
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -204,8 +204,7 @@ public class SqlTypeExplicitPrecedenceList
         if (typeName == null) {
             return null;
         }
-        return
-            (RelDataTypePrecedenceList) typeNameToPrecedenceList.get(typeName);
+        return typeNameToPrecedenceList.get(typeName);
     }
 }
 

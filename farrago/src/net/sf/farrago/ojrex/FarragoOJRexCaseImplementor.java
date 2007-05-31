@@ -22,9 +22,6 @@
 */
 package net.sf.farrago.ojrex;
 
-import net.sf.farrago.type.*;
-import net.sf.farrago.type.runtime.*;
-
 import openjava.mop.*;
 
 import openjava.ptree.*;
@@ -32,13 +29,13 @@ import openjava.ptree.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 
 
 /**
- * FarragoOJRexCaseImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for CASE expressions.
+ * FarragoOJRexCaseImplementor implements Farrago specifics of
+ * {@link org.eigenbase.oj.rex.OJRexImplementor} for <code>CASE</code>
+ * expressions.
  *
  * @author Xiaoyang Luo
  * @version $Id$

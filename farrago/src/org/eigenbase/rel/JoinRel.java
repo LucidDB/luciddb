@@ -63,6 +63,18 @@ public final class JoinRel
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a JoinRel.
+     *
+     * @param cluster Cluster
+     * @param left Left input
+     * @param right Right input
+     * @param condition Join condition
+     * @param joinType Join type
+     * @param variablesStopped Set of names of variables which are set by the
+     * LHS and used by the RHS and are not available to nodes above this
+     * JoinRel in the tree
+     */
     public JoinRel(
         RelOptCluster cluster,
         RelNode left,
@@ -82,6 +94,25 @@ public final class JoinRel
             false);
     }
 
+    /**
+     * Creates a JoinRel, flagged with whether it has been translated to
+     * a semi-join or multi-join.
+     *
+     * @see #isSemiJoinDone()
+     * @see #isMultiJoinDone()
+     *
+     * @param cluster Cluster
+     * @param left Left input
+     * @param right Right input
+     * @param condition Join condition
+     * @param joinType Join type
+     * @param variablesStopped Set of names of variables which are set by the
+     * LHS and used by the RHS and are not available to nodes above this
+     * JoinRel in the tree
+     * @param semiJoinDone Whether this join has been translated to a semi-join
+     * @param multiJoinDone Whether this join has been translated to a
+     * multi-join
+     */
     public JoinRel(
         RelOptCluster cluster,
         RelNode left,
@@ -143,8 +174,9 @@ public final class JoinRel
     }
 
     /**
-     * @return true if this join has already spawned a {@link SemiJoinRel} via
-     * {@link AddRedundantSemiJoinRule}; false otherwise
+     * Returns whether this JoinRel has already spawned a
+     * {@link org.eigenbase.rel.rules.SemiJoinRel} via
+     * {@link org.eigenbase.rel.rules.AddRedundantSemiJoinRule}.
      */
     public boolean isSemiJoinDone()
     {
@@ -152,7 +184,8 @@ public final class JoinRel
     }
 
     /**
-     * @return true if this JoinRel has already been converted to a MultiJoinRel
+     * Returns whether this JoinRel has already been converted to a
+     * {@link org.eigenbase.rel.rules.MultiJoinRel}.
      */
     public boolean isMultiJoinDone()
     {

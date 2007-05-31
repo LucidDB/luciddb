@@ -245,7 +245,7 @@ public class FarragoDatabase
             ddlLockManager = new FarragoDdlLockManager();
             txnMgr = sessionFactory.newTxnMgr();
             sessionFactory.specializedInitialization(this);
-            
+
             File jaasConfigFile = new File(FarragoProperties.instance().homeDir.get(), "plugin/jaas.config");
             if (jaasConfigFile.exists()) {
                 System.setProperty("java.security.auth.login.config", jaasConfigFile.getPath());
@@ -532,7 +532,7 @@ public class FarragoDatabase
             return true;
         }
     }
-    
+
     /**
      * @return the JAAS authentication configuration.
      */
@@ -790,7 +790,7 @@ public class FarragoDatabase
         // EXPLAIN PLAN?
 
         // It would be silly to cache EXPLAIN PLAN results, so deal with them
-        // directly. Also check for whether statement caching is turned off 
+        // directly. Also check for whether statement caching is turned off
         // for the session before continuing.
         boolean cacheStatements =
             stmt.getSession().getSessionVariables().getBoolean(
@@ -866,8 +866,8 @@ public class FarragoDatabase
 
                     assert (key.equals(sql));
                     FarragoSessionExecutableStmt executableStmt =
-                        stmt.prepare(validatedSqlNode, sqlNode);               
-                    long memUsage = 
+                        stmt.prepare(validatedSqlNode, sqlNode);
+                    long memUsage =
                         FarragoUtil.getStringMemoryUsage(sql)
                         + executableStmt.getMemoryUsage();
                     entry.initialize(executableStmt, memUsage);
@@ -876,7 +876,9 @@ public class FarragoDatabase
 
         FarragoSessionExecutableStmt executableStmt;
         do {
-            // prepare the statement, caching the results in codeCache
+            // prepare the statement, caching the results in codeCache;
+            // note that executable statements are always sharable, so
+            // don't pin them as exclusive
             cacheEntry = codeCache.pin(sql, stmtFactory, false);
             executableStmt =
                 (FarragoSessionExecutableStmt) cacheEntry.getValue();
@@ -970,12 +972,12 @@ public class FarragoDatabase
             codeCache.setMaxBytes(
                 getCodeCacheMaxBytes(systemRepos.getCurrentConfig()));
         }
-        
+
         if (paramName.equals("cachePagesInit") ||
             paramName.equals("expectedConcurrentStatements") ||
             paramName.equals("cacheReservePercentage")) {
             executeFennelSetParam(paramName, ddlStmt.getParamValue());
-        }     
+        }
     }
 
     private long getCodeCacheMaxBytes(FemFarragoConfig config)
@@ -986,7 +988,7 @@ public class FarragoDatabase
         }
         return codeCacheMaxBytes;
     }
-    
+
     private void executeFennelSetParam(String paramName, SqlLiteral paramValue)
     {
         if (!systemRepos.isFennelEnabled()) {
@@ -1127,7 +1129,7 @@ public class FarragoDatabase
 
     /**
      * Turns on/off authentication for in-process jdbc sessions.
-     * NOTE: If set to off, the origin of the jdbc connection is determined 
+     * NOTE: If set to off, the origin of the jdbc connection is determined
      * by the remoteProtocol attribute of the jdbc URL.
      * @param authenticateLocalConnections
      */

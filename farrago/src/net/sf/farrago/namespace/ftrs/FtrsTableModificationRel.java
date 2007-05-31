@@ -145,14 +145,14 @@ class FtrsTableModificationRel
         List<FemAbstractColumn> updateCwmColumnList = null;
 
         FemTableWriterDef tableWriterDef;
-        switch (getOperation().getOrdinal()) {
-        case TableModificationRel.Operation.INSERT_ORDINAL:
+        switch (getOperation()) {
+        case INSERT:
             tableWriterDef = repos.newFemTableInserterDef();
             break;
-        case TableModificationRel.Operation.DELETE_ORDINAL:
+        case DELETE:
             tableWriterDef = repos.newFemTableDeleterDef();
             break;
-        case TableModificationRel.Operation.UPDATE_ORDINAL:
+        case UPDATE:
             FemTableUpdaterDef tableUpdaterDef = repos.newFemTableUpdaterDef();
             tableWriterDef = tableUpdaterDef;
             updateCwmColumnList = getUpdateColumnList(FemAbstractColumn.class);
@@ -161,7 +161,7 @@ class FtrsTableModificationRel
                     updateCwmColumnList));
             break;
         default:
-            throw getOperation().unexpected();
+            throw Util.unexpected(getOperation());
         }
 
         // We need to be careful about the order in which we write to indexes.

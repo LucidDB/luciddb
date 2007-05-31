@@ -34,16 +34,21 @@ import org.eigenbase.rel.*;
  *
  * <ul>
  * <li>extend {@link org.eigenbase.rel.AbstractRelNode}, and</li>
- * <li>return one of the following calling-conventions from their {@link
- * #getConvention} method: {@link CallingConvention#ARRAY ARRAY}, {@link
- * CallingConvention#ITERABLE ITERABLE}, {@link CallingConvention#ITERATOR
- * ITERATOR}, {@link CallingConvention#COLLECTION COLLECTION}, {@link
- * CallingConvention#MAP MAP}, {@link CallingConvention#VECTOR VECTOR}, {@link
- * CallingConvention#HASHTABLE HASHTABLE}, {@link CallingConvention#JAVA JAVA}
- * .</li>
+ * <li>return one of the following calling-conventions from their
+ * {@link #getConvention} method: <ul>
+ *   <li>{@link org.eigenbase.relopt.CallingConvention#ARRAY ARRAY},
+ *   <li>{@link org.eigenbase.relopt.CallingConvention#ITERABLE ITERABLE},
+ *   <li>{@link org.eigenbase.relopt.CallingConvention#ITERATOR ITERATOR},
+ *   <li>{@link org.eigenbase.relopt.CallingConvention#COLLECTION COLLECTION},
+ *   <li>{@link org.eigenbase.relopt.CallingConvention#MAP MAP},
+ *   <li>{@link org.eigenbase.relopt.CallingConvention#VECTOR VECTOR},
+ *   <li>{@link org.eigenbase.relopt.CallingConvention#HASHTABLE HASHTABLE},
+ *   <li>{@link org.eigenbase.relopt.CallingConvention#JAVA JAVA}
+ * </ul>
+ * </li>
  * </ul>
  *
- * <p>For {@link CallingConvention#JAVA JAVA calling-convention}, see the
+ * <p>For {@link org.eigenbase.relopt.CallingConvention#JAVA JAVA calling-convention}, see the
  * sub-interface {@link JavaLoopRel}, and the auxilliary interface {@link
  * JavaSelfRel}.
  *

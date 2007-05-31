@@ -62,7 +62,7 @@ public class FarragoSessionRuntimeParams
      * Txn-private cache for Fennel tuple streams, or null if streams don't need
      * to be pinned by txn.
      */
-    public Map txnCodeCache;
+    public Map<String, FarragoObjectCache.Entry> txnCodeCache;
 
     /**
      * Fennel context for transactions.
@@ -105,15 +105,15 @@ public class FarragoSessionRuntimeParams
     public Map<String, RelDataType> resultSetTypeMap;
 
     /**
-     * Map from IterCalcRel tag to row type. If a mapping is available, it 
-     * associates the tag with the type of a table being modified. It would 
-     * be possible to infer, for example, that result column 1 was being 
+     * Map from IterCalcRel tag to row type. If a mapping is available, it
+     * associates the tag with the type of a table being modified. It would
+     * be possible to infer, for example, that result column 1 was being
      * used to insert into a column called "EMPNO".
      */
     public Map<String, RelDataType> iterCalcTypeMap;
 
     /**
-     * An identifier for the executable statement id. This parameter 
+     * An identifier for the executable statement id. This parameter
      * assumes there will be a one to one mapping from statement to context.
      */
     public long stmtId;

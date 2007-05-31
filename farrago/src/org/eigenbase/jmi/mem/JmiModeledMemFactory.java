@@ -26,6 +26,7 @@ import javax.jmi.reflect.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
+import org.jgrapht.graph.DefaultEdge;
 
 
 /**
@@ -87,8 +88,7 @@ public abstract class JmiModeledMemFactory
     private void defineClasses()
         throws ClassNotFoundException
     {
-        for (Object vertexObj : modelGraph.vertexSet()) {
-            JmiClassVertex vertex = (JmiClassVertex) vertexObj;
+        for (JmiClassVertex vertex : modelGraph.vertexSet()) {
             Class ifaceClass =
                 JmiObjUtil.getJavaInterfaceForRefClass(vertex.getRefClass());
             Class ifaceObj =
@@ -161,10 +161,10 @@ public abstract class JmiModeledMemFactory
     private void defineAssociations()
         throws ClassNotFoundException
     {
-        for (Object edgeObj : modelGraph.getAssocGraph().edgeSet()) {
+        for (DefaultEdge edgeObj : modelGraph.getAssocGraph().edgeSet()) {
             JmiAssocEdge edge = (JmiAssocEdge) edgeObj;
 
-            Class ifaceAssoc =
+            Class<? extends RefBaseObject> ifaceAssoc =
                 JmiObjUtil.getJavaInterfaceForRefAssoc(
                     edge.getRefAssoc());
             defineMetaObject(
@@ -173,7 +173,7 @@ public abstract class JmiModeledMemFactory
 
             JmiClassVertex sourceClassVertex =
                 modelGraph.getAssocGraph().getEdgeSource(edge);
-            Class sourceInterface =
+            Class<? extends RefBaseObject> sourceInterface =
                 JmiObjUtil.getJavaInterfaceForRefObject(
                     sourceClassVertex.getRefClass());
             String targetAccessorName =

@@ -33,6 +33,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.Enum14;
 
 
 /**
@@ -67,23 +68,23 @@ public class RexBuilder
         this.booleanTrue =
             makeLiteral(
                 Boolean.TRUE,
-                typeFactory.createSqlType(SqlTypeName.Boolean),
-                SqlTypeName.Boolean);
+                typeFactory.createSqlType(SqlTypeName.BOOLEAN),
+                SqlTypeName.BOOLEAN);
         this.booleanFalse =
             makeLiteral(
                 Boolean.FALSE,
-                typeFactory.createSqlType(SqlTypeName.Boolean),
-                SqlTypeName.Boolean);
+                typeFactory.createSqlType(SqlTypeName.BOOLEAN),
+                SqlTypeName.BOOLEAN);
         this.charEmpty =
             makeLiteral(
                 new NlsString("", null, null),
-                typeFactory.createSqlType(SqlTypeName.Char, 0),
-                SqlTypeName.Char);
+                typeFactory.createSqlType(SqlTypeName.CHAR, 0),
+                SqlTypeName.CHAR);
         this.constantNull =
             makeLiteral(
                 null,
-                typeFactory.createSqlType(SqlTypeName.Null),
-                SqlTypeName.Null);
+                typeFactory.createSqlType(SqlTypeName.NULL),
+                SqlTypeName.NULL);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -257,7 +258,7 @@ public class RexBuilder
         if (!allowPartial) {
             Util.permAssert(physical, "DISALLOW PARTIAL over RANGE");
             final RelDataType bigintType = getTypeFactory().createSqlType(
-                SqlTypeName.Bigint);
+                SqlTypeName.BIGINT);
             result =
                 makeCall(
                     SqlStdOperatorTable.caseOperator,
@@ -271,7 +272,7 @@ public class RexBuilder
                         makeLiteral( // todo: read bound
                             new BigDecimal(2),
                             bigintType,
-                            SqlTypeName.Decimal)),
+                            SqlTypeName.DECIMAL)),
                     over,
                     constantNull);
         }
@@ -414,16 +415,23 @@ public class RexBuilder
 
     /**
      * Creates a literal representing a flag.
+     *
+     * @param flag Flag value; must be either a
+     * {@link org.eigenbase.util14.Enum14.Value} or a {@link Enum}, and hence a
+     * {@link Comparable}.
      */
     public RexLiteral makeFlag(
-        EnumeratedValues.Value flag)
+        Object flag)
     {
         assert flag != null;
+        assert flag instanceof EnumeratedValues.Value ||
+            flag instanceof Enum;
+        assert flag instanceof Comparable;
         return
             makeLiteral(
-                flag,
-                typeFactory.createSqlType(SqlTypeName.Symbol),
-                SqlTypeName.Symbol);
+                (Comparable) flag,
+                typeFactory.createSqlType(SqlTypeName.SYMBOL),
+                SqlTypeName.SYMBOL);
     }
 
     protected RexLiteral makeLiteral(
@@ -433,13 +441,13 @@ public class RexBuilder
     {
         // All literals except NULL have NOT NULL types.
         type = typeFactory.createTypeWithNullability(type, o == null);
-        if (typeName == SqlTypeName.Char) {
+        if (typeName == SqlTypeName.CHAR) {
             // Character literals must have a charset and collation. Populate
             // from the type if necessary.
             NlsString nlsString = (NlsString) o;
             if ((nlsString.getCollation() == null)
                 || (nlsString.getCharset() == null)) {
-                assert type.getSqlTypeName() == SqlTypeName.Char;
+                assert type.getSqlTypeName() == SqlTypeName.CHAR;
                 assert type.getCharset().name() != null;
                 assert type.getCollation() != null;
                 o =
@@ -472,15 +480,15 @@ public class RexBuilder
         assert (BigDecimal.valueOf(l, scale).equals(bd));
         if (scale == 0) {
             if ((l >= Integer.MIN_VALUE) && (l <= Integer.MAX_VALUE)) {
-                relType = typeFactory.createSqlType(SqlTypeName.Integer);
+                relType = typeFactory.createSqlType(SqlTypeName.INTEGER);
             } else {
-                relType = typeFactory.createSqlType(SqlTypeName.Bigint);
+                relType = typeFactory.createSqlType(SqlTypeName.BIGINT);
             }
         } else {
             int precision = bd.unscaledValue().toString().length();
             relType =
                 typeFactory.createSqlType(
-                    SqlTypeName.Decimal,
+                    SqlTypeName.DECIMAL,
                     scale,
                     precision);
         }
@@ -495,7 +503,7 @@ public class RexBuilder
         return makeLiteral(
                 bd,
                 type,
-                SqlTypeName.Decimal);
+                SqlTypeName.DECIMAL);
     }
 
     /**
@@ -506,9 +514,9 @@ public class RexBuilder
         return
             makeLiteral(
                 ByteBuffer.wrap(byteArray),
-                typeFactory.createSqlType(SqlTypeName.Binary,
+                typeFactory.createSqlType(SqlTypeName.BINARY,
                     byteArray.length),
-                SqlTypeName.Binary);
+                SqlTypeName.BINARY);
     }
 
     /**
@@ -524,7 +532,7 @@ public class RexBuilder
         return
             makeApproxLiteral(
                 bd,
-                typeFactory.createSqlType(SqlTypeName.Double));
+                typeFactory.createSqlType(SqlTypeName.DOUBLE));
     }
 
     /**
@@ -537,12 +545,12 @@ public class RexBuilder
      */
     public RexLiteral makeApproxLiteral(BigDecimal bd, RelDataType type)
     {
-        assert (SqlTypeFamily.ApproximateNumeric.getTypeNames().contains(
+        assert (SqlTypeFamily.APPROXIMATE_NUMERIC.getTypeNames().contains(
                     type.getSqlTypeName()));
         return makeLiteral(
                 bd,
                 type,
-                SqlTypeName.Double);
+                SqlTypeName.DOUBLE);
     }
 
     /**
@@ -565,9 +573,9 @@ public class RexBuilder
                 makeLiteral(
                     new NlsString(s, null, null),
                     typeFactory.createSqlType(
-                        SqlTypeName.Char,
+                        SqlTypeName.CHAR,
                         s.length()),
-                    SqlTypeName.Char);
+                    SqlTypeName.CHAR);
         }
     }
 
@@ -583,7 +591,7 @@ public class RexBuilder
     {
         Util.pre(str != null, "str != null");
         RelDataType type = SqlUtil.createNlsStringType(typeFactory, str);
-        return makeLiteral(str, type, SqlTypeName.Char);
+        return makeLiteral(str, type, SqlTypeName.CHAR);
     }
 
     /**
@@ -597,8 +605,8 @@ public class RexBuilder
         return
             makeLiteral(
                 date,
-                typeFactory.createSqlType(SqlTypeName.Date),
-                SqlTypeName.Date);
+                typeFactory.createSqlType(SqlTypeName.DATE),
+                SqlTypeName.DATE);
     }
 
     /**
@@ -614,8 +622,8 @@ public class RexBuilder
         return
             makeLiteral(
                 time,
-                typeFactory.createSqlType(SqlTypeName.Time, precision),
-                SqlTypeName.Time);
+                typeFactory.createSqlType(SqlTypeName.TIME, precision),
+                SqlTypeName.TIME);
     }
 
     /**
@@ -631,8 +639,8 @@ public class RexBuilder
         return
             makeLiteral(
                 timestamp,
-                typeFactory.createSqlType(SqlTypeName.Timestamp, precision),
-                SqlTypeName.Timestamp);
+                typeFactory.createSqlType(SqlTypeName.TIMESTAMP, precision),
+                SqlTypeName.TIMESTAMP);
     }
 
     /**
@@ -646,8 +654,8 @@ public class RexBuilder
             makeLiteral(
                 null,
                 typeFactory.createSqlIntervalType(intervalQualifier),
-                intervalQualifier.isYearMonth() ? SqlTypeName.IntervalYearMonth
-                : SqlTypeName.IntervalDayTime);
+                intervalQualifier.isYearMonth() ? SqlTypeName.INTERVAL_YEAR_MONTH
+                    : SqlTypeName.INTERVAL_DAY_TIME);
     }
 
     /**
@@ -659,8 +667,8 @@ public class RexBuilder
             makeLiteral(
                 new BigDecimal(l),
                 typeFactory.createSqlIntervalType(intervalQualifier),
-                intervalQualifier.isYearMonth() ? SqlTypeName.IntervalYearMonth
-                : SqlTypeName.IntervalDayTime);
+                intervalQualifier.isYearMonth() ? SqlTypeName.INTERVAL_YEAR_MONTH
+                    : SqlTypeName.INTERVAL_DAY_TIME);
     }
 
     public RexDynamicParam makeDynamicParam(

@@ -474,8 +474,9 @@ public abstract class Mappings
          *
          * @param sourceList List whose i'th element is the source of target #i
          * @param sourceCount Number of elements in the source domain
-         * @param mappingType Mapping type, must be {@link
-         * MappingType.PartialSurjection} or stronger.
+         * @param mappingType Mapping type, must be
+         * {@link org.eigenbase.util.mapping.MappingType#PartialSurjection} or
+         * stronger.
          */
         public PartialMapping(
             List<Integer> sourceList,

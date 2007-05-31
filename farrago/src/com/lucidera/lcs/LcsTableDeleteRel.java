@@ -68,7 +68,7 @@ public class LcsTableDeleteRel
         RelOptConnection connection,
         RelNode child,
         Operation operation,
-        List updateColumnList)
+        List<String> updateColumnList)
     {
         super(
             cluster,
@@ -80,8 +80,7 @@ public class LcsTableDeleteRel
             updateColumnList,
             true);
 
-        assert (getOperation().getOrdinal()
-                == TableModificationRel.Operation.DELETE_ORDINAL);
+        assert (getOperation() == TableModificationRel.Operation.DELETE);
 
         this.lcsTable = lcsTable;
         assert lcsTable.getPreparingStmt()
@@ -90,7 +89,7 @@ public class LcsTableDeleteRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public LcsTable getLcsTable() 
+    public LcsTable getLcsTable()
     {
         return lcsTable;
     }

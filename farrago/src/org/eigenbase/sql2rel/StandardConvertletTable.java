@@ -24,8 +24,6 @@ package org.eigenbase.sql2rel;
 
 import java.math.*;
 
-import java.util.*;
-
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -33,7 +31,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
 
@@ -404,8 +401,7 @@ public class StandardConvertletTable
             SqlIntervalLiteral.IntervalValue interval =
                 (SqlIntervalLiteral.IntervalValue)
                     ((SqlIntervalLiteral) operands[0]).getValue();
-            long val = SqlIntervalQualifier.getConversion(
-                interval.getIntervalQualifier().getStartUnit());
+            long val = interval.getIntervalQualifier().getStartUnit().multiplier;
             RexNode rexInterval = cx.convertExpression(operands[0]);
 
             RexNode res;
@@ -459,41 +455,36 @@ public class StandardConvertletTable
         final SqlNode [] operands = call.getOperands();
         final RexNode [] exprs = convertExpressionList(cx, operands);
         // TODO: Will need to use decimal type for seconds with precision
-        RelDataType resType = cx.getTypeFactory().createSqlType(SqlTypeName.Bigint);
+        RelDataType resType = cx.getTypeFactory().createSqlType(SqlTypeName.BIGINT);
         resType = cx.getTypeFactory().createTypeWithNullability(
                 resType, exprs[1].getType().isNullable());
         RexNode cast = rexBuilder.makeCast(resType, exprs[1]);
 
         SqlIntervalQualifier.TimeUnit unit =
             ((SqlIntervalQualifier) operands[0]).getStartUnit();
-        long val = SqlIntervalQualifier.getConversion(unit);
+        long val = unit.multiplier;
         RexNode factor = rexBuilder.makeExactLiteral(BigDecimal.valueOf(val));
-        switch (unit.getOrdinal()) {
-            case SqlIntervalQualifier.TimeUnit.Day_ordinal:
-                val = 0;
-                break;
-            case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
-                val = SqlIntervalQualifier.getConversion(
-                    SqlIntervalQualifier.TimeUnit.Day);
-                break;
-            case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
-                val = SqlIntervalQualifier.getConversion(
-                    SqlIntervalQualifier.TimeUnit.Hour);
-                break;
-            case SqlIntervalQualifier.TimeUnit.Second_ordinal:
-                val = SqlIntervalQualifier.getConversion(
-                    SqlIntervalQualifier.TimeUnit.Minute);
-                break;
-            case SqlIntervalQualifier.TimeUnit.Year_ordinal:
-                val = 0;
-                break;
-            case SqlIntervalQualifier.TimeUnit.Month_ordinal:
-                val = SqlIntervalQualifier.getConversion(
-                    SqlIntervalQualifier.TimeUnit.Year);
-                break;
-            default:
-                assert false : "invalid interval qualifier";
-                break;
+        switch (unit) {
+        case Day:
+            val = 0;
+            break;
+        case Hour:
+            val = SqlIntervalQualifier.TimeUnit.Day.multiplier;
+            break;
+        case Minute:
+            val = SqlIntervalQualifier.TimeUnit.Hour.multiplier;
+            break;
+        case Second:
+            val = SqlIntervalQualifier.TimeUnit.Minute.multiplier;
+            break;
+        case Year:
+            val = 0;
+            break;
+        case Month:
+            val = SqlIntervalQualifier.TimeUnit.Year.multiplier;
+            break;
+        default:
+            throw Util.unexpected(unit);
         }
 
         RexNode res = cast;
@@ -523,13 +514,13 @@ public class StandardConvertletTable
         final SqlNode [] operands = call.getOperands();
         final RexNode [] exprs = convertExpressionList(cx, operands);
         // TODO: Handle year month interval (represented in months)
-        for (int i = 0; i < exprs.length; i++) {
-            if (SqlTypeName.IntervalYearMonth.equals(
-                exprs[i].getType().getSqlTypeName())) {
+        for (RexNode expr : exprs) {
+            if (SqlTypeName.INTERVAL_YEAR_MONTH ==
+                expr.getType().getSqlTypeName()) {
                 Util.needToImplement("Datetime subtraction of year month interval");
             }
         }
-        RelDataType int8Type = cx.getTypeFactory().createSqlType(SqlTypeName.Bigint);
+        RelDataType int8Type = cx.getTypeFactory().createSqlType(SqlTypeName.BIGINT);
         final RexNode [] casts = new RexNode[2];
         casts[0] = rexBuilder.makeCast(
             cx.getTypeFactory().createTypeWithNullability(
@@ -685,7 +676,7 @@ public class StandardConvertletTable
             return cx.convertExpression(call3);
         } else if (op instanceof SqlRowOperator &&
             cx.getValidator().getValidatedNodeType(call).getSqlTypeName() ==
-                SqlTypeName.ColumnList)
+                SqlTypeName.COLUMN_LIST)
         {
             RexNode [] columns = new RexNode[operands.length];
             RexBuilder rexBuilder = cx.getRexBuilder();
@@ -699,7 +690,7 @@ public class StandardConvertletTable
                     SqlStdOperatorTable.columnListConstructor,
                     columns);
         }
-        
+
         final RexNode [] exprs = convertExpressionList(cx, operands);
         return cx.getRexBuilder().makeCall(op, exprs);
     }
@@ -769,11 +760,11 @@ public class StandardConvertletTable
                 ge1,
                 le1);
 
-        switch (symmetric.getOrdinal()) {
-        case SqlBetweenOperator.Flag.Asymmetric_ordinal:
+        switch (symmetric) {
+        case ASYMMETRIC:
             res = and1;
             break;
-        case SqlBetweenOperator.Flag.Symmetric_ordinal:
+        case SYMMETRIC:
             RexNode ge2 =
                 rexBuilder.makeCall(
                     SqlStdOperatorTable.greaterThanOrEqualOperator,
@@ -796,7 +787,7 @@ public class StandardConvertletTable
                     and2);
             break;
         default:
-            throw symmetric.unexpected();
+            throw Util.unexpected(symmetric);
         }
         final SqlBetweenOperator betweenOp =
             (SqlBetweenOperator) call.getOperator();
@@ -824,8 +815,8 @@ public class StandardConvertletTable
     }
 
     /**
-     * Casts a RexNode value to the validated type of a SqlCall. If the 
-     * value was already of the validated type, then the value is returned 
+     * Casts a RexNode value to the validated type of a SqlCall. If the
+     * value was already of the validated type, then the value is returned
      * without an additional cast.
      */
     public RexNode castToValidatedType(

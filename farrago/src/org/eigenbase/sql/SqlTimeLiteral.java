@@ -47,7 +47,7 @@ public class SqlTimeLiteral
     {
         super(t,
             hasTZ,
-            SqlTypeName.Time,
+            SqlTypeName.TIME,
             precision,
             SqlParserUtil.TimeFormatStr,
             pos);
@@ -60,7 +60,7 @@ public class SqlTimeLiteral
         String format,
         SqlParserPos pos)
     {
-        super(t, hasTZ, SqlTypeName.Time, precision, format, pos);
+        super(t, hasTZ, SqlTypeName.TIME, precision, format, pos);
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -22,8 +22,6 @@
  */
 package org.eigenbase.sql;
 
-import org.eigenbase.util.*;
-
 
 /**
  * A <code>SqlWriter</code> is the target to construct a SQL statement from a
@@ -118,7 +116,7 @@ public interface SqlWriter
      *
      * @param frameType Type of list. For example, a SELECT list will be
      */
-    Frame startList(FrameType frameType);
+    Frame startList(FrameTypeEnum frameType);
 
     /**
      * Starts a list.
@@ -211,8 +209,7 @@ public interface SqlWriter
     /**
      * Style of formatting subqueries.
      */
-    static class SubqueryStyle
-    extends EnumeratedValues.BasicValue
+    enum SubqueryStyle
     {
         /**
          * Julian's style of subquery nesting. Like this:
@@ -224,7 +221,7 @@ public interface SqlWriter
          * )
          * WHERE condition</pre>
          */
-        public static final SubqueryStyle Hyde = new SubqueryStyle("Hyde", 0);
+        Hyde,
 
         /**
          * Damian's style of subquery nesting. Like this:
@@ -236,73 +233,51 @@ public interface SqlWriter
          * )
          * WHERE condition</pre>
          */
-        public static final SubqueryStyle Black = new SubqueryStyle("Black", 1);
-
-        private SubqueryStyle(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
+        Black;
     }
+
+    interface FrameType
+    {
+        String getName();
+
+        boolean needsIndent();
+    };
 
     /**
      * Enumerates the types of frame.
      */
-    static class FrameType
-    extends EnumeratedValues.BasicValue
+    enum FrameTypeEnum implements FrameType
     {
-        public static final int Simple_ordinal = 0;
-        public static final int Select_ordinal = 1;
-        public static final int SelectList_ordinal = 2;
-        public static final int FromList_ordinal = 3;
-        public static final int OrderBy_ordinal = 4;
-        public static final int OrderByList_ordinal = 5;
-        public static final int GroupByList_ordinal = 6;
-        public static final int WindowDeclList_ordinal = 7;
-        public static final int Window_ordinal = 8;
-        public static final int UpdateSetList_ordinal = 9;
-        public static final int FunDecl_ordinal = 10;
-        public static final int FunCall_ordinal = 11;
-        public static final int Subquery_ordinal = 12;
-        public static final int Setop_ordinal = 13;
-        public static final int Identifier_ordinal = 14;
-        public static final int WhereList_ordinal = 15;
-
         /**
          * SELECT query (or UPDATE or DELETE). The items in the list are the
          * clauses: FROM, WHERE, etc.
          */
-        public static final FrameType Select =
-            new FrameType("Select", Select_ordinal);
+        Select,
 
         /**
          * Simple list.
          */
-        public static final FrameType Simple =
-            new FrameType("Simple", Simple_ordinal);
+        Simple,
 
         /**
          * The SELECT clause of a SELECT statement.
          */
-        public static final FrameType SelectList =
-            new FrameType("SelectList", SelectList_ordinal);
+        SelectList,
 
         /**
          * The WINDOW clause of a SELECT statement.
          */
-        public static final FrameType WindowDeclList =
-            new FrameType("WindowDeclList", WindowDeclList_ordinal);
+        WindowDeclList,
 
         /**
          * The SET clause of an UPDATE statement.
          */
-        public static final FrameType UpdateSetList =
-            new FrameType("UpdateSetList", UpdateSetList_ordinal);
+        UpdateSetList,
 
         /**
          * Function declaration.
          */
-        public static final FrameType FunDecl =
-            new FrameType("FunDecl", FunDecl_ordinal);
+        FunDecl,
 
         /**
          * Function call or datatype declaration.
@@ -311,8 +286,7 @@ public interface SqlWriter
          * <li>SUBSTRING('foobar' FROM 1 + 2 TO 4)</li>
          * <li>DECIMAL(10, 5)</li>
          */
-        public static final FrameType FunCall =
-            new FrameType("FunCall", FunCall_ordinal);
+        FunCall,
 
         /**
          * Window specification.
@@ -323,15 +297,13 @@ public interface SqlWriter
          * RANGE BETWEEN INTERVAL '1' YEAR PRECEDING AND '2' MONTH
          * PRECEDING)</li>
          */
-        public static final FrameType Window =
-            new FrameType("Window", Window_ordinal);
+        Window,
 
         /**
          * ORDER BY clause of a SELECT statement. The "list" has only two items:
          * the query and the order by clause, with ORDER BY as the separator.
          */
-        public static final FrameType OrderBy =
-            new FrameType("OrderBy", OrderBy_ordinal);
+        OrderBy,
 
         /**
          * ORDER BY list.
@@ -339,8 +311,7 @@ public interface SqlWriter
          * <p>Example:
          * <li>ORDER BY x, y DESC, z
          */
-        public static final FrameType OrderByList =
-            new FrameType("OrderByList", OrderByList_ordinal);
+        OrderByList,
 
         /**
          * GROUP BY list.
@@ -348,8 +319,7 @@ public interface SqlWriter
          * <p>Example:
          * <li>GROUP BY x, FLOOR(y)
          */
-        public static final FrameType GroupByList =
-            new FrameType("GroupByList", GroupByList_ordinal);
+        GroupByList,
 
         /**
          * Sub-query list. Encloses a SELECT, UNION, EXCEPT, INTERSECT query
@@ -358,8 +328,7 @@ public interface SqlWriter
          * <p>Example:
          * <li>GROUP BY x, FLOOR(y)
          */
-        public static final FrameType Subquery =
-            new FrameType("Subquery", Subquery_ordinal);
+        Subquery,
 
         /**
          * Set operation.
@@ -367,20 +336,17 @@ public interface SqlWriter
          * <p>Example:
          * <li>SELECT * FROM a UNION SELECT * FROM b
          */
-        public static final FrameType Setop =
-            new FrameType("Setop", Setop_ordinal);
+        Setop,
 
         /**
          * FROM clause (containing various kinds of JOIN).
          */
-        public static final FrameType FromList =
-            new FrameType("From", FromList_ordinal);
+        FromList,
 
         /**
          * WHERE clause.
          */
-        public static final FrameType WhereList =
-            new FrameType("Where", WhereList_ordinal);
+        WhereList,
 
         /**
          * Compound identifier.
@@ -388,47 +354,23 @@ public interface SqlWriter
          * <p>Example:
          * <li>"A"."B"."C"
          */
-        public static final FrameType Identifier =
-            new FrameType("Identifier", Identifier_ordinal, false);
-
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(
-                new EnumeratedValues.Value[] {
-                    Select,
-                    Simple,
-                    SelectList,
-                    WindowDeclList,
-                    UpdateSetList,
-                    FunDecl,
-                    FunCall,
-                    Window,
-                    OrderBy,
-                    OrderByList,
-                    GroupByList,
-                    Setop,
-                    FromList,
-                    Identifier,
-                    WhereList,
-                });
-
-        private static int nextOrdinal = enumeration.getMax() + 1;
+        Identifier(false);
 
         private final boolean needsIndent;
 
         /**
          * Creates a list type.
          */
-        private FrameType(String name, int ordinal)
+        FrameTypeEnum()
         {
-            this(name, ordinal, true);
+            this(true);
         }
 
         /**
          * Creates a list type.
          */
-        private FrameType(String name, int ordinal, boolean needsIndent)
+        FrameTypeEnum(boolean needsIndent)
         {
-            super(name, ordinal, null);
             this.needsIndent = needsIndent;
         }
 
@@ -437,9 +379,25 @@ public interface SqlWriter
             return needsIndent;
         }
 
-        public static FrameType create(String name)
+
+        public static FrameType create(final String name)
         {
-            return new FrameType(name, FrameType.nextOrdinal++);
+            return new FrameType() {
+                public String getName()
+                {
+                    return name;
+                }
+
+                public boolean needsIndent()
+                {
+                    return true;
+                }
+            };
+        }
+
+        public String getName()
+        {
+            return name();
         }
     }
 }

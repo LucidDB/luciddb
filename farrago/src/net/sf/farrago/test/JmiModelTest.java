@@ -110,16 +110,15 @@ public class JmiModelTest
         JmiModelGraph graph = getMofModelGraph();
         JmiModelView view = new JmiModelView(graph);
 
-        List list = new ArrayList(graph.vertexSet());
+        List<JmiClassVertex> list =
+            new ArrayList<JmiClassVertex>(graph.vertexSet());
         Collections.sort(
             list,
-            new StringRepresentationComparator());
+            new StringRepresentationComparator<JmiClassVertex>());
 
         Writer writer = openTestLog();
         PrintWriter pw = new PrintWriter(writer);
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            JmiClassVertex vertex = (JmiClassVertex) iter.next();
+        for (JmiClassVertex vertex : list) {
             dumpViewVertex(pw, view, vertex);
         }
         pw.close();
@@ -133,10 +132,10 @@ public class JmiModelTest
         return new JmiModelGraph(mofPackage);
     }
 
-    private void diffGraph(DirectedGraph graph)
+    private <V, E> void diffGraph(DirectedGraph<V, E> graph)
         throws Exception
     {
-        List list = new ArrayList();
+        List<Object> list = new ArrayList<Object>();
         list.addAll(graph.vertexSet());
         list.addAll(graph.edgeSet());
 
@@ -180,29 +179,28 @@ public class JmiModelTest
         pw.println();
     }
 
-    private void dumpNamedSet(
+    private <T> void dumpNamedSet(
         PrintWriter pw,
         String name,
-        Set set)
+        Set<T> set)
     {
         pw.print(name);
         pw.println(" {");
         dumpList(
             pw,
-            new ArrayList(set));
+            new ArrayList<T>(set));
         pw.println("}");
     }
 
-    private void dumpList(
+    private <T> void dumpList(
         PrintWriter pw,
-        List list)
+        List<T> list)
     {
         Collections.sort(
             list,
-            new StringRepresentationComparator());
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            pw.println(iter.next());
+            new StringRepresentationComparator<T>());
+        for (T o : list) {
+            pw.println(o);
         }
     }
 }

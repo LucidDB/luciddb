@@ -25,11 +25,6 @@ package org.eigenbase.util;
 import java.util.*;
 
 
-// REVIEW jvs 7-Jan-2003:  using inheritance from HashMap seems a little
-// dangerous since method like entrySet() won't work as expected; should
-// probably define a separate MultiMap interface and use aggregation rather
-// than inheritance in the implementation
-
 /**
  * Map which contains more than one value per key.
  *

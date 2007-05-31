@@ -26,19 +26,19 @@ import java.util.*;
 
 /**
  * StringRepresentationComparator compares two objects by comparing their
- * toString() representations.
+ * {@link Object#toString()} representations.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class StringRepresentationComparator
-    implements Comparator
+public class  StringRepresentationComparator<T>
+    implements Comparator<T>
 {
 
     //~ Methods ----------------------------------------------------------------
 
     // implement Comparator
-    public int compare(Object o1, Object o2)
+    public int compare(T o1, T o2)
     {
         return o1.toString().compareTo(o2.toString());
     }

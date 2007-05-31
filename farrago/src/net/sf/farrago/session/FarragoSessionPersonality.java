@@ -38,6 +38,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.ddl.DdlHandler;
 
 
 /**
@@ -129,7 +130,7 @@ public interface FarragoSessionPersonality
      */
     public FarragoSessionPreparingStmt newPreparingStmt(
         FarragoSessionStmtValidator stmtValidator);
-    
+
     /**
      * Creates a new validator for DDL commands.
      *
@@ -145,11 +146,10 @@ public interface FarragoSessionPersonality
      *
      * @param ddlValidator validator which will invoke handlers
      * @param handlerList receives handler objects in order in which they should
-     * be tried
      */
     public void defineDdlHandlers(
         FarragoSessionDdlValidator ddlValidator,
-        List handlerList);
+        List<DdlHandler> handlerList);
 
     /**
      * Defines privileges allowed on various object types.
@@ -202,9 +202,9 @@ public interface FarragoSessionPersonality
 
     /**
      * Creates a new type factory.
-     * 
+     *
      * @param repos a repository containing Farrago metadata
-     * 
+     *
      * @return a new type factory
      */
     public RelDataTypeFactory newTypeFactory(
@@ -216,20 +216,20 @@ public interface FarragoSessionPersonality
         SqlNode sqlNode);
 
     /**
-     * Loads variables from the session personality into a session variables 
-     * object. Each personality uses on its own variables. This method 
-     * allows the personality to declare its variables and set default 
-     * values for them. If any variables already have values, then they 
-     * will not be overwritten. 
-     * 
+     * Loads variables from the session personality into a session variables
+     * object. Each personality uses on its own variables. This method
+     * allows the personality to declare its variables and set default
+     * values for them. If any variables already have values, then they
+     * will not be overwritten.
+     *
      * <p>
-     * 
-     * This method should be called when initializing a new session or when 
-     * loading a new session personality for an existing session. This method 
-     * "leaves a mark", as it has the side effect of permanently updating the 
-     * session variables. Even if the session personality is swapped out, 
+     *
+     * This method should be called when initializing a new session or when
+     * loading a new session personality for an existing session. This method
+     * "leaves a mark", as it has the side effect of permanently updating the
+     * session variables. Even if the session personality is swapped out,
      * the changes will remain.
-     * 
+     *
      * @param variables the session variables object
      */
     public void loadDefaultSessionVariables(
@@ -249,14 +249,14 @@ public interface FarragoSessionPersonality
         FarragoSessionVariables variables);
 
     /**
-     * Checks whether a parameter value is appropriate for a session 
-     * variable and, if the value is appropriate, sets the session variable. 
-     * If an error is encountered, then the method throws an 
-     * {@link org.eigenbase.util.EigenbaseException}. Possible errors 
-     * include when no session variable has the specified name, when a 
-     * non-numeric value was specified for a numeric variable, when a 
+     * Checks whether a parameter value is appropriate for a session
+     * variable and, if the value is appropriate, sets the session variable.
+     * If an error is encountered, then the method throws an
+     * {@link org.eigenbase.util.EigenbaseException}. Possible errors
+     * include when no session variable has the specified name, when a
+     * non-numeric value was specified for a numeric variable, when a
      * directory does not exist, or other errors.
-     * 
+     *
      * @param ddlValidator a ddl statement validator
      * @param variables a session variables object
      * @param name name of the session variable to be validated
@@ -308,14 +308,14 @@ public interface FarragoSessionPersonality
      * @param chain receives personality's custom providers, if any
      */
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain);
-    
+
     /**
      * Gives this personality the opportunity to retrieve rowcount information
      * returned by a DML operation.
-     * 
+     *
      * @param resultSet result set returned by DML operation
-     * @rowCounts list of rowcounts returned by the DML operation
-     * @param table modification operation that caused the
+     * @param rowCounts list of rowcounts returned by the DML operation
+     * @param tableModOp table modification operation that caused the
      * rowcounts to be modified
      */
     public void getRowCounts(
@@ -323,19 +323,19 @@ public interface FarragoSessionPersonality
         List<Long> rowCounts,
         TableModificationRel.Operation tableModOp)
         throws SQLException;
-    
+
     /**
      * Gives this personality the opportunity to update rowcount information in
      * the catalog tables for a specified table as a result of a particular
      * DML operation.
-     * 
+     *
      * @param session session that needs to update rowcounts
      * @param tableName fully qualified table name for which rowcounts will be
      * updated
      * @param rowCounts list of row counts returned by the DML statement
      * @param tableModOp table modification operation that caused the
      * rowcounts to be modified
-     * 
+     *
      * @return number of rows affected by the DML operation
      */
     public long updateRowCounts(
@@ -343,19 +343,19 @@ public interface FarragoSessionPersonality
         List<String> tableName,
         List<Long> rowCounts,
         TableModificationRel.Operation tableModOp);
-    
+
     /**
      * Gives this personality the opportunity to reset rowcount information in
      * the catalog tables for a specified table
-     * 
+     *
      * @param table column set corresponding to table
      */
     public void resetRowCounts(FemAbstractColumnSet table);
-    
+
     /**
      * Gives the personality the opportunity to update an index root page
      * when the index is rebuilt
-     * 
+     *
      * @param index index whose root is being updated
      * @param wrapperCache cache for looking up data wrappers
      * @param baseIndexMap map for managing index storage

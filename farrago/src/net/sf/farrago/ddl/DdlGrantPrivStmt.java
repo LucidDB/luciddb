@@ -25,17 +25,11 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.util.*;
 
-import org.eigenbase.jmi.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -51,7 +45,7 @@ public class DdlGrantPrivStmt
     //~ Instance fields --------------------------------------------------------
 
     private CwmModelElement grantedObject;
-    private List privList;
+    private List<SqlIdentifier> privList;
     private boolean hierarchyOption;
     private SqlIdentifier grantor;
 
@@ -90,11 +84,7 @@ public class DdlGrantPrivStmt
         // Initialize the privilege lookup table.
         validatePrivileges(ddlValidator);
 
-        Iterator iter = granteeList.iterator();
-        while (iter.hasNext()) {
-            // process the next grantee
-            SqlIdentifier id = (SqlIdentifier) iter.next();
-
+        for (SqlIdentifier id : granteeList) {
             // Find the repository element id for the grantee
             FemAuthId granteeAuthId =
                 FarragoCatalogUtil.getAuthIdByName(
@@ -104,10 +94,7 @@ public class DdlGrantPrivStmt
             // For each privilege in the list, we instantiate a repository
             // element. Note that this makes it easier to revoke the privs on
             // an individual basis.
-            Iterator iterPriv = privList.iterator();
-            while (iterPriv.hasNext()) {
-                SqlIdentifier privId = (SqlIdentifier) iterPriv.next();
-
+            for (SqlIdentifier privId : privList) {
                 // Create a privilege object and set its properties.
                 FemGrant grant = repos.newFemGrant();
 
@@ -126,7 +113,7 @@ public class DdlGrantPrivStmt
         }
     }
 
-    public void setPrivList(List privList)
+    public void setPrivList(List<SqlIdentifier> privList)
     {
         this.privList = privList;
     }
@@ -149,12 +136,10 @@ public class DdlGrantPrivStmt
     private void validatePrivileges(FarragoSessionDdlValidator ddlValidator)
     {
         FarragoSession session = ddlValidator.getStmtValidator().getSession();
-        Set legalPrivSet =
+        Set<String> legalPrivSet =
             session.getPrivilegeMap().getLegalPrivilegesForType(
                 grantedObject.refClass());
-        Iterator iter = privList.iterator();
-        while (iter.hasNext()) {
-            SqlIdentifier privId = (SqlIdentifier) iter.next();
+        for (SqlIdentifier privId : privList) {
             if (!legalPrivSet.contains(privId.getSimple())) {
                 // throw an exception, because this is an illegal privilege
                 // REVIEW jvs 13-Aug-2005:  maybe report all illegal

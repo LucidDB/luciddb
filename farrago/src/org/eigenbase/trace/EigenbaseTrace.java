@@ -110,7 +110,7 @@ public abstract class EigenbaseTrace
      * The tracer "org.eigenbase.sql.timing" traces timing for various stages of
      * query processing.
      *
-     * @see {@link EigenbaseTimingTracer}
+     * @see EigenbaseTimingTracer
      */
     public static Logger getSqlTimingTracer()
     {

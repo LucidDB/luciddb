@@ -109,7 +109,7 @@ public class SqlDelete
         int rightPrec)
     {
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.Select, "DELETE FROM", "");
+            writer.startList(SqlWriter.FrameTypeEnum.Select, "DELETE FROM", "");
         getTargetTable().unparse(
             writer,
             getOperator().getLeftPrec(),

@@ -61,7 +61,7 @@ public class RexTransformerTest
     {
         typeFactory = new OJTypeFactoryImpl();
         rexBuilder = new JavaRexBuilder(typeFactory);
-        boolRelDataType = typeFactory.createSqlType(SqlTypeName.Boolean);
+        boolRelDataType = typeFactory.createSqlType(SqlTypeName.BOOLEAN);
 
         x =
             new RexInputRef(
@@ -116,7 +116,7 @@ public class RexTransformerTest
             new RexInputRef(
                 0,
                 typeFactory.createTypeWithNullability(
-                    typeFactory.createSqlType(SqlTypeName.Boolean),
+                    typeFactory.createSqlType(SqlTypeName.BOOLEAN),
                     true));
         assertTrue(node.getType().isNullable());
 
@@ -125,7 +125,7 @@ public class RexTransformerTest
             new RexInputRef(
                 0,
                 typeFactory.createTypeWithNullability(
-                    typeFactory.createSqlType(SqlTypeName.Boolean),
+                    typeFactory.createSqlType(SqlTypeName.BOOLEAN),
                     false));
         assertFalse(node.getType().isNullable());
     }

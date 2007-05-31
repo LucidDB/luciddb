@@ -12,6 +12,7 @@ drop table cylon;
 drop table cylon;
 
 --  default:  show warnings
+!set showwarnings true
 !closeall
 !connect jdbc:farrago:;clientProcessId=bogus sa tiger
 

@@ -759,20 +759,20 @@ public class LoptMetadataTest
         // note: this matches a value of each column
         // be careful of 0-indexed month, and timezone
         value = RexLiteral.fromJdbcString(
-            factory.createSqlType(SqlTypeName.Date),
-            SqlTypeName.Date,
+            factory.createSqlType(SqlTypeName.DATE),
+            SqlTypeName.DATE,
             "2002-01-01");
         searchColumn(5, value, 0.2, 1.0);
 
         value = RexLiteral.fromJdbcString(
-            factory.createSqlType(SqlTypeName.Time),
-            SqlTypeName.Time,
+            factory.createSqlType(SqlTypeName.TIME),
+            SqlTypeName.TIME,
             "12:01:01");
         searchColumn(6, value, 0.2, 1.0);
 
         value = RexLiteral.fromJdbcString(
-            factory.createSqlType(SqlTypeName.Timestamp),
-            SqlTypeName.Timestamp,
+            factory.createSqlType(SqlTypeName.TIMESTAMP),
+            SqlTypeName.TIMESTAMP,
             "2002-01-01 12:01:01");
         searchColumn(7, value, 0.4, 1.0);
 
@@ -862,7 +862,7 @@ public class LoptMetadataTest
             result,
             EPSILON);
     }
-    
+
     public void testRowCountLeftSemiJoin()
         throws Exception
     {
@@ -879,7 +879,7 @@ public class LoptMetadataTest
         assertTrue(result != null);
         assertEquals(COLSTORE_EMPS_ROWCOUNT, result, EPSILON);
     }
-    
+
     public void testRowCountRightAntiJoin()
         throws Exception
     {
@@ -1085,7 +1085,7 @@ public class LoptMetadataTest
             result.doubleValue(),
             EPSILON);
     }
-    
+
     public void testDistinctRowCountHashJoin()
         throws Exception
     {
@@ -1100,7 +1100,7 @@ public class LoptMetadataTest
         // get the distinct row count for emps.name
         BitSet groupKey = new BitSet();
         groupKey.set(1);
-        
+
         Double result =
             RelMetadataQuery.getDistinctRowCount(
                 rootRel,
@@ -1231,7 +1231,7 @@ public class LoptMetadataTest
             expected,
             1.0);
     }
-    
+
     public void testPopulationHashJoin()
         throws Exception
     {
@@ -1246,7 +1246,7 @@ public class LoptMetadataTest
         // get the population for emps.name
         BitSet groupKey = new BitSet();
         groupKey.set(1);
-    
+
         Double result =
             RelMetadataQuery.getPopulationSize(
                 rootRel,
@@ -1299,14 +1299,14 @@ public class LoptMetadataTest
 
         Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
         assertTrue(result.equals(expected));
-        
+
         for (BitSet key : expected) {
             Boolean boolResult =
                 RelMetadataQuery.areColumnsUnique(rootRel, key);
             assertTrue(boolResult.equals(true));
         }
     }
-    
+
     private Set<RelColumnOrigin> checkSimpleColumnOrigin(String sql)
         throws Exception
     {
@@ -1374,14 +1374,14 @@ public class LoptMetadataTest
             "DNAME",
             false);
     }
-    
+
     public void testSimpleColumnOriginsAggregate()
         throws Exception
     {
         checkNoSimpleColumnOrigin(
             "select x from (select min(deptno) as x from depts)");
     }
-    
+
     public void testSimpleColumnOriginsUnion()
         throws Exception
     {

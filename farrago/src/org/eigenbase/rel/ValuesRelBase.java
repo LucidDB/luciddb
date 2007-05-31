@@ -142,7 +142,7 @@ public abstract class ValuesRelBase
         // A little adapter just to get the tuples to come out
         // with curly brackets instead of square brackets.  Plus
         // more whitespace for readability.
-        List renderList = new ArrayList();
+        List<String> renderList = new ArrayList<String>();
         for (List<RexLiteral> tuple : tuples) {
             String s = tuple.toString();
             assert (s.startsWith("["));

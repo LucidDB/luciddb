@@ -27,12 +27,12 @@ import net.sf.farrago.type.runtime.*;
 import openjava.ptree.*;
 
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 
 
 /**
- * FarragoOJRexNullTestImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for null-test row expressions IS NULL and IS NOT NULL.
+ * FarragoOJRexNullTestImplementor implements Farrago specifics of
+ * {@link org.eigenbase.oj.rex.OJRexImplementor} for null-test row expressions
+ * <code>IS NULL</code> and <code>IS NOT NULL</code>.
  *
  * @author John V. Sichi
  * @version $Id$

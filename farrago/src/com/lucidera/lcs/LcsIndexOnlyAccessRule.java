@@ -141,17 +141,17 @@ public class LcsIndexOnlyAccessRule
                 new LcsIndexOptimizer.IndexLengthComparator());
 
         indexSet.addAll(candidateIndexes);
-        
+
         FemLocalIndex bestIndex = null;
         Integer [] bestProj = null;
-        
+
         for (FemLocalIndex index : indexSet) {
             // Starting from the "thinnest" indexes
             if (samePrefix(origIndex, index, nInputKeys)) {
-                
+
                 Integer[] proj =
                     LcsIndexOptimizer.findIndexOnlyProjection(rowScan, index);
-                
+
                 if (proj != null) {
                     bestIndex = index;
                     bestProj = proj;
@@ -159,7 +159,7 @@ public class LcsIndexOnlyAccessRule
                 }
             }
         }
-        
+
         if (bestIndex == null) {
             return;
         }
@@ -188,14 +188,13 @@ public class LcsIndexOnlyAccessRule
         if (a == b) {
             return true;
         }
-        List aCols = a.getIndexedFeature();
-        List bCols = b.getIndexedFeature();
+        List<CwmIndexedFeature> aCols = a.getIndexedFeature();
+        List<CwmIndexedFeature> bCols = b.getIndexedFeature();
         if ((aCols.size() < nKeys) || (bCols.size() < nKeys)) {
             return false;
         }
         for (int i = 0; i < nKeys; i++) {
-            if (((CwmIndexedFeature) aCols.get(i)).getFeature()
-                != ((CwmIndexedFeature) bCols.get(i)).getFeature()) {
+            if (aCols.get(i).getFeature() != bCols.get(i).getFeature()) {
                 return false;
             }
         }

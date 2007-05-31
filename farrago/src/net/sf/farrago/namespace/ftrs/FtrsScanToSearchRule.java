@@ -217,7 +217,7 @@ class FtrsScanToSearchRule
         FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
         RelDataType directiveType =
             typeFactory.createSqlType(
-                SqlTypeName.Char,
+                SqlTypeName.CHAR,
                 1);
         RelDataType keyType =
             typeFactory.createTypeWithNullability(

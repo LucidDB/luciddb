@@ -19,7 +19,7 @@
 
 package net.sf.saffron.oj.xlat;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import net.sf.saffron.core.AggregationExtender;
 import net.sf.saffron.oj.rel.BuiltinAggregation;
@@ -60,17 +60,17 @@ import org.eigenbase.util.Util;
  */
 class AggInternalTranslator extends InternalTranslator
 {
-    ArrayList aggInputList;
+    List<Expression> aggInputList;
     InternalTranslator nonAggTranslator;
-    ArrayList aggCallList;
+    List<AggregateRel.Call> aggCallList;
     Expression [] groups;
 
     AggInternalTranslator(
         QueryInfo queryInfo,
         RelNode [] inputs,
         Expression [] groups,
-        ArrayList aggInputList,
-        ArrayList aggCallList,
+        List<Expression> aggInputList,
+        List<AggregateRel.Call> aggCallList,
         JavaRexBuilder javaRexBuilder)
     {
         super(queryInfo, inputs, javaRexBuilder);
@@ -202,7 +202,7 @@ class AggInternalTranslator extends InternalTranslator
             rexArgs[i] = nonAggTranslator.go(arg);
         }
         int [] argIndexes = new int[argCount];
-outer: 
+outer:
         for (int i = 0; i < argCount; i++) {
             Expression arg = args.get(i);
             for (int j = 0, m = aggInputList.size(); j < m; j++) {

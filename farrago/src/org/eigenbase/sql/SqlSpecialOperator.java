@@ -97,10 +97,16 @@ public class SqlSpecialOperator
      *
      * @param ordinal indicating the ordinal of the current operator in the list
      * on which a possible reduction can be made
+     *
+     * @param list List of alternating
+     * {@link org.eigenbase.sql.parser.SqlParserUtil.ToTreeListItem}
+     * and {@link SqlNode}
+     *
+     * @return ordinal of the node which replaced the expression
      */
     public int reduceExpr(
         int ordinal,
-        List list)
+        List<Object> list)
     {
         throw Util.needToImplement(this);
     }

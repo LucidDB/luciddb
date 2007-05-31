@@ -28,7 +28,8 @@ import org.eigenbase.rel.*;
 
 /**
  * ChainedRelMetadataProvider implements the {@link RelMetadataProvider}
- * interface via the {@link Glossary#ChainOfResponsibilityPattern}.
+ * interface via the
+ * {@link org.eigenbase.util.Glossary#ChainOfResponsibilityPattern}.
  *
  * @author John V. Sichi
  * @version $Id$

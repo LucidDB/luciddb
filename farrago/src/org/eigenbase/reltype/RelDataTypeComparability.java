@@ -21,55 +21,28 @@
 */
 package org.eigenbase.reltype;
 
-import org.eigenbase.util.*;
-
+import org.eigenbase.util.Util;
 
 /**
  * RelDataTypeComparability is an enumeration of the categories of comparison
  * operators which types may support.
  *
- * <p>NOTE jvs 17-Mar-2005: the ordinal values of this enumeration are
+ * <p>NOTE jvs 17-Mar-2005: the order of values of this enumeration is
  * significant (from least inclusive to most inclusive) and should not be
  * changed.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class RelDataTypeComparability
-    extends EnumeratedValues.BasicValue
+public enum RelDataTypeComparability
 {
+    None("No comparisons allowed"),
+    Unordered("Only equals/not-equals allowed"),
+    All("All comparisons allowed");
 
-    //~ Static fields/initializers ---------------------------------------------
-
-    public static final int None_ordinal = 0;
-    public static final RelDataTypeComparability None =
-        new RelDataTypeComparability(
-            "NONE",
-            None_ordinal,
-            "No comparisons allowed");
-
-    public static final int Unordered_ordinal = 1;
-    public static final RelDataTypeComparability Unordered =
-        new RelDataTypeComparability(
-            "UNORDERED",
-            Unordered_ordinal,
-            "Only equals/not-equals allowed");
-
-    public static final int All_ordinal = 2;
-    public static final RelDataTypeComparability All =
-        new RelDataTypeComparability(
-            "ALL",
-            All_ordinal,
-            "All comparisons allowed");
-
-    //~ Constructors -----------------------------------------------------------
-
-    private RelDataTypeComparability(
-        String name,
-        int ordinal,
-        String description)
+    RelDataTypeComparability(String description)
     {
-        super(name, ordinal, description);
+        Util.discard(description);
     }
 }
 

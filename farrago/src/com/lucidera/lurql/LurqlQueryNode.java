@@ -58,19 +58,20 @@ public abstract class LurqlQueryNode
         return sw.toString();
     }
 
-    protected void unparseFilterList(PrintWriter pw, List filterList)
+    protected void unparseFilterList(
+        PrintWriter pw,
+        List<LurqlFilter> filterList)
     {
         if (!filterList.isEmpty()) {
             pw.println();
             pw.println("where");
             pw.write(StackWriter.INDENT);
-            Iterator iter = filterList.iterator();
-            while (iter.hasNext()) {
-                LurqlFilter filter = (LurqlFilter) iter.next();
-                filter.unparse(pw);
-                if (iter.hasNext()) {
+            int k = 0;
+            for (LurqlFilter filter : filterList) {
+                if (k++ > 0) {
                     pw.println(" and");
                 }
+                filter.unparse(pw);
             }
             pw.write(StackWriter.OUTDENT);
         }

@@ -103,8 +103,10 @@ public class FennelRemoveRedundantSortRule
             return false;
         }
 
-        List inputCollationList = Arrays.asList(inputCollationArray);
-        List outputCollationList = Arrays.asList(outputCollationArray);
+        List<RelFieldCollation> inputCollationList =
+            Arrays.asList(inputCollationArray);
+        List<RelFieldCollation> outputCollationList =
+            Arrays.asList(outputCollationArray);
         if (outputCollationArray.length < inputCollationArray.length) {
             // truncate for prefix comparison
             inputCollationList =

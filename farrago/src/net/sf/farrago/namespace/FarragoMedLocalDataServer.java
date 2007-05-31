@@ -64,7 +64,7 @@ public interface FarragoMedLocalDataServer
         FemLocalTable table,
         FemLocalIndex generatedPrimaryKeyIndex)
         throws SQLException;
-    
+
     /**
      * Validates the definition of a table being created. May have side-effects
      * such as creating additional system-maintained indexes.
@@ -86,7 +86,7 @@ public interface FarragoMedLocalDataServer
      * @param index definition of the index to create
      *
      * @param txnContext Fennel txn context
-     * 
+     *
      * @return root PageId of index
      */
     public long createIndex(FemLocalIndex index, FennelTxnContext txnContext)
@@ -96,7 +96,7 @@ public interface FarragoMedLocalDataServer
      * Drops or truncates an index.
      *
      * @param index definition of the index to drop
-     * @param rootPageid root PageId of index
+     * @param rootPageId root PageId of index
      * @param truncate if true, only truncate storage; if false, drop storage
      * entirely
      * @param txnContext Fennel txn context
@@ -112,7 +112,7 @@ public interface FarragoMedLocalDataServer
      * Verifies an index and returns its page count.
      *
      * @param index definition of the index to verify
-     * @param rootPageid root PageId of index
+     * @param rootPageId root PageId of index
      * @param estimate whether to estimate statistics for a quicker result
      * @param txnContext Fennel txn context
      *
@@ -143,10 +143,10 @@ public interface FarragoMedLocalDataServer
         RelOptTable table,
         FemLocalIndex index,
         RelOptCluster cluster);
-    
+
     /**
      * Versions the root page of an index
-     * 
+     *
      * @param oldRoot original root page
      * @param newRoot new versioned, root page
      * @param txnContext Fennel txn context

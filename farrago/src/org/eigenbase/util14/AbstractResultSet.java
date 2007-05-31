@@ -606,17 +606,12 @@ abstract public class AbstractResultSet
                 cal);
     }
 
-    /**
-     * Get the value of a column in the current row as a java.sql.Timestamp
-     * object.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     *
-     * @return the column value; if the value is SQL NULL, the result is null
-     */
     public java.sql.Timestamp getTimestamp(int columnIndex)
         throws SQLException
     {
+        // getTimestamp(x) -- i.e. without Calendar -- means don't do timezone
+        // conversion: different than getTimestamp(x, null), which means
+        // convert to the client Java VM's default timezone
         return toTimestamp(getRaw(columnIndex), null);
     }
 
@@ -1610,7 +1605,7 @@ abstract public class AbstractResultSet
     }
 
     /**
-     * @see {@link Statement#setMaxRows}
+     * @see Statement#setMaxRows
      */
     public void setMaxRows(int maxRows)
     {
@@ -1971,7 +1966,7 @@ abstract public class AbstractResultSet
     private Timestamp toTimestamp(Object o, TimeZone zone)
         throws SQLException
     {
-        // NOTE: ignore time zone since all timestamps are represented 
+        // NOTE: ignore time zone since all timestamps are represented
         // as milliseconds since the epoch
 
         if (o == null) {
@@ -1983,8 +1978,8 @@ abstract public class AbstractResultSet
         if (zone == null) {
             zone = defaultZone;
         }
-        // Note that dates returned as Jdbc objects already use the 
-        // apropriate conventions 
+        // Note that dates returned as Jdbc objects already use the
+        // apropriate conventions
         if (o instanceof ZonelessDatetime) {
             ZonelessDatetime zd = (ZonelessDatetime) o;
             return new Timestamp(zd.getJdbcTimestamp(zone));

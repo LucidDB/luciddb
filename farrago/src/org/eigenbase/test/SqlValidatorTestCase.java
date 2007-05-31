@@ -120,9 +120,7 @@ public class SqlValidatorTestCase
             return null;
         } else {
             String compatibleName = name.substring(0, colon);
-            return
-                (SqlValidator.Compatible) SqlValidator.Compatible.enumeration
-                .getValue(compatibleName);
+            return SqlValidator.Compatible.valueOf(compatibleName);
         }
     }
 
@@ -374,7 +372,7 @@ public class SqlValidatorTestCase
             if (null != actualException) {
                 actualException.printStackTrace();
                 fail(
-                    "SqlValidationTest: Validator threw unexpected exception"
+                    "Validator threw unexpected exception"
                     + "; query [" + sap.sql
                     + "]; exception [" + actualMessage
                     + "]; pos [line " + actualLine
@@ -385,7 +383,7 @@ public class SqlValidatorTestCase
         } else if (null != expectedMsgPattern) {
             if (null == actualException) {
                 fail(
-                    "SqlValidationTest: Expected validator to throw "
+                    "Expected validator to throw "
                     + "exception, but it did not; query [" + sap.sql
                     + "]; expected [" + expectedMsgPattern + "]");
             } else {
@@ -424,7 +422,7 @@ public class SqlValidatorTestCase
                         TestUtil.quoteForJava(
                             TestUtil.quotePattern(actualMessage));
                     fail(
-                        "SqlValidationTest: Validator threw different "
+                        "Validator threw different "
                         + "exception than expected; query [" + sap.sql
                         + "];" + NL
                         + " expected pattern [" + expectedMsgPattern
@@ -445,7 +443,7 @@ public class SqlValidatorTestCase
                         || (actualEndColumn != sap.pos.getEndColumnNum())
                        )) {
                     fail(
-                        "SqlValidationTest: Validator threw expected "
+                        "Validator threw expected "
                         + "exception [" + actualMessage
                         + "]; but at pos [line " + actualLine
                         + " col " + actualColumn
@@ -612,22 +610,25 @@ public class SqlValidatorTestCase
             try {
                 sqlNode = parseQuery(sap.sql);
                 validator = getValidator();
-            } catch (SqlParseException ex) {
-                String errMessage = ex.getMessage();
-                if ((null == errMessage) || (expectedMsgPattern == null)
+            } catch (SqlParseException e) {
+                String errMessage = e.getMessage();
+                if (expectedMsgPattern == null) {
+                    e.printStackTrace();
+                    throw new AssertionFailedError(
+                        "Error while parsing query [" + sap.sql + "]");
+                } else if ((null == errMessage)
                     || !errMessage.matches(expectedMsgPattern)) {
-                    ex.printStackTrace();
-                    fail(
-                        "SqlValidationTest: Parse Error while parsing query="
-                        + sap.sql + "\n" + errMessage);
+                    e.printStackTrace();
+                    throw new AssertionFailedError(
+                        "Error did not match expected ["
+                            + expectedMsgPattern + "] while parsing query ["
+                            + sap.sql + "]");
                 }
                 return;
             } catch (Throwable e) {
-                e.printStackTrace(System.err);
-                fail(
-                    "SqlValidationTest: Failed while trying to connect or "
-                    + "get statement");
-                return;
+                e.printStackTrace();
+                throw new AssertionFailedError(
+                    "Error while parsing query [" + sap.sql + "]");
             }
 
             Throwable thrown = null;
@@ -666,17 +667,14 @@ public class SqlValidatorTestCase
             SqlNode sqlNode;
             try {
                 sqlNode = parseQuery(sql);
-            } catch (SqlParseException ex) {
-                ex.printStackTrace();
+            } catch (SqlParseException e) {
+                e.printStackTrace();
                 throw new AssertionFailedError(
-                    "SqlValidationTest: "
-                    + "Parse Error while parsing query=" + sql
-                    + "\n" + ex.getMessage());
+                    "Error while parsing query [" + sql + "]");
             } catch (Throwable e) {
-                e.printStackTrace(System.err);
+                e.printStackTrace();
                 throw new AssertionFailedError(
-                    "SqlValidationTest: "
-                    + "Failed while trying to connect or get statement");
+                    "Error while parsing query [" + sql + "]");
             }
             SqlNode n = validator.validate(sqlNode);
             return n;
@@ -754,11 +752,8 @@ public class SqlValidatorTestCase
             RelDataType actualType = getColumnType(buildQuery(sql));
             SqlCollation collation = actualType.getCollation();
 
-            String actualName = collation.getCollationName();
-            int actualCoercibility = collation.getCoercibility().getOrdinal();
-            int expectedCoercibilityOrd = expectedCoercibility.getOrdinal();
-            assertEquals(expectedCollationName, actualName);
-            assertEquals(expectedCoercibilityOrd, actualCoercibility);
+            assertEquals(expectedCollationName, collation.getCollationName());
+            assertEquals(expectedCoercibility, collation.getCoercibility());
         }
 
         public void checkCharset(

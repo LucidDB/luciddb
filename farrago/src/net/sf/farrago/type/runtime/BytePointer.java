@@ -426,13 +426,13 @@ public class BytePointer
         }
         copyFrom(bp2);
         trimChar = bp1.buf[bp1.pos];
-        if (trimOrdinal == SqlTrimFunction.Flag.Both.getOrdinal()) {
+        if (trimOrdinal == SqlTrimFunction.Flag.BOTH.ordinal()) {
             leading = true;
             trailing = true;
-        } else if (trimOrdinal == SqlTrimFunction.Flag.Leading.getOrdinal()) {
+        } else if (trimOrdinal == SqlTrimFunction.Flag.LEADING.ordinal()) {
             leading = true;
         } else {
-            assert trimOrdinal == SqlTrimFunction.Flag.Trailing.getOrdinal();
+            assert trimOrdinal == SqlTrimFunction.Flag.TRAILING.ordinal();
             trailing = true;
         }
         int cnt = count;
@@ -736,7 +736,7 @@ public class BytePointer
                 break;
             }
         }
-        
+
         // read up to 19 digits, the most for a long value
         if (start >= end || end - start > 19) {
             return Long.MAX_VALUE;

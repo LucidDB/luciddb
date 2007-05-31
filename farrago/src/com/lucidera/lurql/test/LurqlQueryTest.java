@@ -57,7 +57,7 @@ public class LurqlQueryTest
 
     private JmiModelView modelView;
 
-    private Map args;
+    private Map<String, Object> args;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -66,7 +66,7 @@ public class LurqlQueryTest
     {
         super(testName);
 
-        args = new HashMap();
+        args = new HashMap<String, Object>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -183,7 +183,7 @@ public class LurqlQueryTest
             String paramName = action.substring(13);
             LineNumberReader lineReader =
                 new LineNumberReader(new StringReader(queryString));
-            Set set = new HashSet();
+            Set<String> set = new HashSet<String>();
             for (;;) {
                 String s = lineReader.readLine();
                 if (s == null) {
@@ -235,10 +235,9 @@ public class LurqlQueryTest
 
             if (explain) {
                 pw.println("EXPLANATION:");
-                Iterator iter =
-                    (new TreeMap(plan.getParamMap())).entrySet().iterator();
-                while (iter.hasNext()) {
-                    Map.Entry entry = (Map.Entry) iter.next();
+                for (Map.Entry<String,Class> entry :
+                    new TreeMap<String,Class>(plan.getParamMap()).entrySet())
+                {
                     pw.print("param ?");
                     pw.print(entry.getKey());
                     pw.print(" : ");
@@ -254,7 +253,7 @@ public class LurqlQueryTest
                         plan,
                         connection,
                         args);
-                Set set;
+                Set<RefObject> set;
                 try {
                     set = executor.execute();
                 } catch (Throwable ex) {
@@ -264,18 +263,15 @@ public class LurqlQueryTest
                     return;
                 }
                 pw.println("EXECUTION RESULT:");
-                List result = new ArrayList();
-                Iterator iter = set.iterator();
-                while (iter.hasNext()) {
-                    RefObject refObj = (RefObject) iter.next();
+                List<String> result = new ArrayList<String>();
+                for (RefObject refObj : set) {
                     String typeName =
                         ((ModelElement) refObj.refMetaObject()).getName();
                     result.add(typeName + ": " + refObj.refGetValue("name"));
                 }
                 Collections.sort(result);
-                iter = result.iterator();
-                while (iter.hasNext()) {
-                    pw.println(iter.next());
+                for (String s : result) {
+                    pw.println(s);
                 }
                 pw.println();
             }

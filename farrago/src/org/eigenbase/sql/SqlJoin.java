@@ -47,15 +47,15 @@ public class SqlJoin
     public static final int IS_NATURAL_OPERAND = 1;
 
     /**
-     * Value must be a {@link SqlLiteral}, one of the integer codes for {@link
-     * JoinType}.
+     * Value must be a {@link SqlLiteral}, one of the integer codes for
+     * {@link SqlJoinOperator.JoinType}.
      */
     public static final int TYPE_OPERAND = 2;
     public static final int RIGHT_OPERAND = 3;
 
     /**
-     * Value must be a {@link SqlLiteral}, one of the integer codes for {@link
-     * ConditionType}.
+     * Value must be a {@link SqlLiteral}, one of the integer codes for
+     * {@link SqlJoinOperator.ConditionType}.
      */
     public static final int CONDITION_TYPE_OPERAND = 4;
     public static final int CONDITION_OPERAND = 5;

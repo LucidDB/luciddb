@@ -23,7 +23,6 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
 
@@ -46,20 +45,20 @@ public class MatchReturnTypeInference
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Returns the type at element start (zero based)
+     * Returns the type at element start (zero based).
      *
-     * @see {@link TypeMatchReturnTypeInference(int, SqlTypeName[])}
+     * @see #MatchReturnTypeInference(int, SqlTypeName[])
      */
     public MatchReturnTypeInference(int start)
     {
-        this(start, SqlTypeName.Any);
+        this(start, SqlTypeName.ANY);
     }
 
     /**
      * Returns the first type of typeName at or after position start (zero
-     * based)
+     * based).
      *
-     * @see {@link TypeMatchReturnTypeInference(int, SqlTypeName[])}
+     * @see #MatchReturnTypeInference(int, SqlTypeName[])
      */
     public MatchReturnTypeInference(int start, SqlTypeName typeName)
     {

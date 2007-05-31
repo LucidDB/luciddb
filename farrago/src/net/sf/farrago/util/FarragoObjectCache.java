@@ -256,9 +256,9 @@ public class FarragoObjectCache
 
             // get an ordered list of potential cache victims and search
             // for unused entries
-            Iterator lruList = victimPolicy.getVictimIterator();
+            Iterator<FarragoCacheEntry> lruList = victimPolicy.getVictimIterator();
             while ((overdraft > 0) && lruList.hasNext()) {
-                FarragoCacheEntry entry = (FarragoCacheEntry) lruList.next();
+                FarragoCacheEntry entry = lruList.next();
                 if (entry.pinCount > 0) {
                     continue;
                 }
@@ -343,7 +343,7 @@ public class FarragoObjectCache
                         "Detaching entry " + entry.key.toString()
                         + ", size " + entry.memoryUsage);
                 }
-                assert (entry.pinCount == 1) : entry.pinCount;
+                assert (entry.pinCount == 1) : entry;
                 mapKeyToEntry.removeMulti(
                     entry.getKey(),
                     entry);
@@ -388,10 +388,11 @@ public class FarragoObjectCache
     {
         tracer.fine("discarding all entries");
         synchronized (mapKeyToEntry) {
-            Iterator iter = mapKeyToEntry.entryIterMulti();
+            Iterator<Map.Entry<Object, FarragoCacheEntry>> iter =
+                mapKeyToEntry.entryIterMulti();
             while (iter.hasNext()) {
-                Map.Entry mapEntry = (Map.Entry) iter.next();
-                FarragoCacheEntry entry = (FarragoCacheEntry) mapEntry.getValue();
+                Map.Entry<Object, FarragoCacheEntry> mapEntry = iter.next();
+                FarragoCacheEntry entry = mapEntry.getValue();
                 discardEntry(entry);
             }
             mapKeyToEntry.clear();
@@ -409,11 +410,11 @@ public class FarragoObjectCache
             }
 
             assert (entry.pinCount == 0) :
-                "cache entry " + entry + " has pin count " + entry.pinCount;
+                "expected pin-count=0 for entry " + entry;
             assert (entry.constructionThread == null) : entry;
 
             if (entry.value instanceof FarragoAllocation) {
-                ((FarragoAllocation) (entry.value)).closeAllocation();
+                ((FarragoAllocation) entry.value).closeAllocation();
             }
         }
 

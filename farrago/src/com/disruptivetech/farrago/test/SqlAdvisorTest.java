@@ -532,7 +532,7 @@ public class SqlAdvisorTest
         List<String> expectedResults)
         throws Exception
     {
-        HashMap uniqueResults = new HashMap();
+        Map<String, String> uniqueResults = new HashMap<String, String>();
         for (int i = 0; i < actualResults.length; i++) {
             uniqueResults.put(actualResults[i], actualResults[i]);
         }

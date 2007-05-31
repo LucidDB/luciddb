@@ -26,10 +26,10 @@ package net.sf.farrago.query;
 // underneath.
 
 /**
- * FennelRelParamId is an opaque type representing the reservation of a {@link
- * FennelDynamicParamId} during query planning. See <a
- * href="http://wiki.eigenbase.org/InternalDynamicParamScoping">the design
- * docs</a> for why this logical ID is needed in addition to
+ * FennelRelParamId is an opaque type representing the reservation of a
+ * {@link net.sf.farrago.fennel.FennelDynamicParamId} during query planning.
+ * See <a href="http://wiki.eigenbase.org/InternalDynamicParamScoping">the
+ * design docs</a> for why this logical ID is needed in addition to
  * FennelDynamicParamId, which is the physical ID. A 64-bit integer is used
  * since a large number of these may be generated and then discarded during
  * query planning. (I hate to think about the impliciations of a planner that

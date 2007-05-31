@@ -130,41 +130,41 @@ public class RexToCalcTranslator
             SaffronProperties.instance().generateCalcProgramComments.get());
         RelDataTypeFactory fac = this.rexBuilder.getTypeFactory();
         knownTypes = new TypePair[] { new TypePair(
-                    fac.createSqlType(SqlTypeName.Tinyint),
+                    fac.createSqlType(SqlTypeName.TINYINT),
                     CalcProgramBuilder.OpType.Int1), new TypePair(
-                    fac.createSqlType(SqlTypeName.Smallint),
+                    fac.createSqlType(SqlTypeName.SMALLINT),
                     CalcProgramBuilder.OpType.Int2), new TypePair(
-                    fac.createSqlType(SqlTypeName.Integer),
+                    fac.createSqlType(SqlTypeName.INTEGER),
                     CalcProgramBuilder.OpType.Int4), new TypePair(
-                    fac.createSqlType(SqlTypeName.Bigint),
+                    fac.createSqlType(SqlTypeName.BIGINT),
                     CalcProgramBuilder.OpType.Int8), new TypePair(
-                    fac.createSqlType(SqlTypeName.Decimal),
+                    fac.createSqlType(SqlTypeName.DECIMAL),
                     CalcProgramBuilder.OpType.Int8), new TypePair(
-                    fac.createSqlType(SqlTypeName.Float),
+                    fac.createSqlType(SqlTypeName.FLOAT),
                     CalcProgramBuilder.OpType.Double), new TypePair(
-                    fac.createSqlType(SqlTypeName.Double),
+                    fac.createSqlType(SqlTypeName.DOUBLE),
                     CalcProgramBuilder.OpType.Double), new TypePair(
-                    fac.createSqlType(SqlTypeName.Real),
+                    fac.createSqlType(SqlTypeName.REAL),
                     CalcProgramBuilder.OpType.Real), new TypePair(
-                    fac.createSqlType(SqlTypeName.Varbinary, 0),
+                    fac.createSqlType(SqlTypeName.VARBINARY, 0),
                     CalcProgramBuilder.OpType.Varbinary), new TypePair(
-                    fac.createSqlType(SqlTypeName.Varchar, 0),
+                    fac.createSqlType(SqlTypeName.VARCHAR, 0),
                     CalcProgramBuilder.OpType.Varchar), new TypePair(
-                    fac.createSqlType(SqlTypeName.Boolean),
+                    fac.createSqlType(SqlTypeName.BOOLEAN),
                     CalcProgramBuilder.OpType.Bool),
 
                 // FIXME: not right for T/w TZ.
                 new TypePair(
-                    fac.createSqlType(SqlTypeName.Date),
+                    fac.createSqlType(SqlTypeName.DATE),
                     CalcProgramBuilder.OpType.Int8), new TypePair(
-                    fac.createSqlType(SqlTypeName.Time),
+                    fac.createSqlType(SqlTypeName.TIME),
                     CalcProgramBuilder.OpType.Int8), new TypePair(
-                    fac.createSqlType(SqlTypeName.Timestamp),
+                    fac.createSqlType(SqlTypeName.TIMESTAMP),
                     CalcProgramBuilder.OpType.Int8),
 
 
                 new TypePair(
-                    fac.createSqlType(SqlTypeName.Symbol),
+                    fac.createSqlType(SqlTypeName.SYMBOL),
                     CalcProgramBuilder.OpType.Int4),
 
                 new TypePair(
@@ -312,11 +312,11 @@ public class RexToCalcTranslator
         }
 
         int bytes;
-        switch (calcType.getOrdinal()) {
-        case CalcProgramBuilder.OpType.Binary_ordinal:
-        case CalcProgramBuilder.OpType.Char_ordinal:
-        case CalcProgramBuilder.OpType.Varbinary_ordinal:
-        case CalcProgramBuilder.OpType.Varchar_ordinal:
+        switch (calcType) {
+        case Binary:
+        case Char:
+        case Varbinary:
+        case Varchar:
             bytes = SqlTypeUtil.getMaxByteSize(relDataType);
             if (bytes < 0) {
                 bytes = 0;
@@ -559,14 +559,14 @@ public class RexToCalcTranslator
 
         // Validate aggOp.
         assert aggOp != null;
-        switch (aggOp.getOrdinal()) {
-        case AggOp.None_ordinal:
-        case AggOp.Init_ordinal:
-        case AggOp.Add_ordinal:
-        case AggOp.Drop_ordinal:
+        switch (aggOp) {
+        case None:
+        case Init:
+        case Add:
+        case Drop:
             break;
         default:
-            throw aggOp.unexpected();
+            throw Util.unexpected(aggOp);
         }
 
         // Step 0. Create input fields.
@@ -580,8 +580,8 @@ public class RexToCalcTranslator
             }
 
             // Additional inputs for the aggregate functions.
-            switch (aggOp.getOrdinal()) {
-            case AggOp.None_ordinal:
+            switch (aggOp) {
+            case None:
                 List<RexNode> al = new ArrayList<RexNode>(1);
                 Map<String,RexNode> dups = new HashMap<String, RexNode>();
 
@@ -640,8 +640,8 @@ public class RexToCalcTranslator
         }
 
         // Ref instructions for output program.
-        switch (aggOp.getOrdinal()) {
-        case AggOp.None_ordinal:
+        switch (aggOp) {
+        case None:
             for (int i = 0; i < projectExprs.length; i++) {
                 RexNode node = projectExprs[i];
                 CalcProgramBuilder.RegisterDescriptor desc =
@@ -870,8 +870,8 @@ public class RexToCalcTranslator
             CalcReg reg1 = implementNode(call.operands[1]);
             CalcReg result =
                 builder.newLocal(CalcProgramBuilder.OpType.Bool, -1);
-            assert result.getOpType().getOrdinal()
-                == getCalcRegisterDescriptor(call).getType().getOrdinal();
+            assert result.getOpType()
+                == getCalcRegisterDescriptor(call).getType();
             CalcProgramBuilder.move.add(builder, result, reg1);
 
             String restOfInstructions = newLabel();
@@ -953,15 +953,11 @@ public class RexToCalcTranslator
                 // when a fennel function that can take it is born.
                 ExtInstructionDefTable.strCmpA.add(
                     builder,
-                    new CalcReg[] {
-                        strCmpResult, reg1, reg2
-                    });
+                    strCmpResult, reg1, reg2);
             } else {
                 ExtInstructionDefTable.strCmpOct.add(
                     builder,
-                    new CalcReg[] {
-                        strCmpResult, reg1, reg2
-                    });
+                    strCmpResult, reg1, reg2);
             }
 
             CalcReg zero = builder.newInt4Literal(0);
@@ -1009,22 +1005,22 @@ public class RexToCalcTranslator
                 // registers.
                 CalcReg register =
                     builder.newOutput(getCalcRegisterDescriptor(call));
-                switch (aggOp.getOrdinal()) {
-                case AggOp.None_ordinal:
+                switch (aggOp) {
+                case None:
                     throw Util.newInternal(
                         "Cannot generate calc program: Aggregate call "
                         + call + " found in non-aggregating context");
-                case AggOp.Init_ordinal:
+                case Init:
                     aggImplementor.implementInitialize(call, register, this);
                     return setResult(call, register);
-                case AggOp.Add_ordinal:
+                case Add:
                     aggImplementor.implementAdd(call, register, this);
                     return setResult(call, register);
-                case AggOp.Drop_ordinal:
+                case Drop:
                     aggImplementor.implementDrop(call, register, this);
                     return setResult(call, register);
                 default:
-                    throw aggOp.unexpected();
+                    throw Util.unexpected(aggOp);
                 }
             }
         }
@@ -1054,9 +1050,9 @@ public class RexToCalcTranslator
 
     private static boolean isOctetString(RelDataType t)
     {
-        switch (t.getSqlTypeName().getOrdinal()) {
-        case SqlTypeName.Varbinary_ordinal:
-        case SqlTypeName.Binary_ordinal:
+        switch (t.getSqlTypeName()) {
+        case VARBINARY:
+        case BINARY:
             return true;
         }
         return false;
@@ -1090,7 +1086,7 @@ public class RexToCalcTranslator
             // Need to perform a cast.
             CalcReg newReg;
             SqlTypeName replaceType =
-                (keepVartypes) ? SqlTypeName.Char : SqlTypeName.Varchar;
+                (keepVartypes) ? SqlTypeName.CHAR : SqlTypeName.VARCHAR;
             if (op1.getType().getSqlTypeName() == replaceType) {
                 // cast op1 to op2's type but use op1's precision
                 CalcProgramBuilder.RegisterDescriptor reg1Desc =
@@ -1104,7 +1100,7 @@ public class RexToCalcTranslator
 
                 ExtInstructionDefTable.castA.add(
                     builder,
-                    new CalcReg[] { newReg, regs[0] });
+                    newReg, regs[0]);
 
                 regs[0] = newReg;
             } else {
@@ -1120,7 +1116,7 @@ public class RexToCalcTranslator
 
                 ExtInstructionDefTable.castA.add(
                     builder,
-                    new CalcReg[] { newReg, regs[1] });
+                    newReg, regs[1]);
 
                 regs[1] = newReg;
             }
@@ -1141,10 +1137,14 @@ public class RexToCalcTranslator
         Object value = node.getValue2();
         CalcProgramBuilder.RegisterDescriptor desc =
             getCalcRegisterDescriptor(node);
-        if (node.getTypeName().getOrdinal() == SqlTypeName.Symbol_ordinal) {
-            EnumeratedValues.BasicValue ord =
-                (EnumeratedValues.BasicValue) value;
-            value = ord.getOrdinal();
+        if (node.getTypeName() == SqlTypeName.SYMBOL) {
+            if (value instanceof Enum) {
+                value = ((Enum) value).ordinal();
+            } else {
+                EnumeratedValues.BasicValue ord =
+                    (EnumeratedValues.BasicValue) value;
+                value = ord.getOrdinal();
+            }
         }
         final CalcReg register =
             builder.newLiteral(desc, value);
@@ -1200,7 +1200,7 @@ public class RexToCalcTranslator
             builder.newLocal(getCalcRegisterDescriptor(node));
         ExtInstructionDefTable.dynamicVariable.add(
             builder,
-            new CalcReg[] { result, idReg });
+            result, idReg);
         setResult(node, result);
         return result;
     }
@@ -1457,22 +1457,9 @@ public class RexToCalcTranslator
     /**
      * Enumeration of aggregate operations.
      */
-    public static class AggOp
-        extends EnumeratedValues.BasicValue
+    public enum AggOp
     {
-        private static final int None_ordinal = 0;
-        public static final AggOp None = new AggOp("None", None_ordinal);
-        private static final int Init_ordinal = 1;
-        public static final AggOp Init = new AggOp("Init", Init_ordinal);
-        private static final int Add_ordinal = 2;
-        public static final AggOp Add = new AggOp("Add", Add_ordinal);
-        private static final int Drop_ordinal = 3;
-        public static final AggOp Drop = new AggOp("Drop", Drop_ordinal);
-
-        private AggOp(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
+        None, Init, Add, Drop;
     }
 }
 

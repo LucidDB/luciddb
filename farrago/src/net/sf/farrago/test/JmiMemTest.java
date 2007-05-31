@@ -100,24 +100,24 @@ public class JmiMemTest
         FarragoMemRepos factory = new FarragoMemRepos(repos.getModelGraph());
 
         FemTableInserterDef inserterDef = factory.newFemTableInserterDef();
-        
+
         inserterDef.setName(TABLE_NAME);
-        
+
         FemTupleDescriptor tupleDesc = makeTupleDescriptor(factory);
         inserterDef.setOutputDesc(tupleDesc);
 
         FemIndexWriterDef indexWriterDef = factory.newFemIndexWriterDef();
         indexWriterDef.setIndexId(999L);
-        
+
         inserterDef.getIndexWriter().add(indexWriterDef);
 
-        // NOTE: SWZ: 12/1/2006: Changed to use addAll to mimic 
+        // NOTE: SWZ: 12/1/2006: Changed to use addAll to mimic
         // FarragoPreparingStmt's actual behavior.
         FemCmdPrepareExecutionStreamGraph cmd =
             factory.newFemCmdPrepareExecutionStreamGraph();
         cmd.getStreamDefs().addAll(
             Collections.singleton(inserterDef));
-        
+
         String xmi = JmiObjUtil.exportToXmiString(
                 Collections.singleton(cmd));
 
@@ -134,29 +134,29 @@ public class JmiMemTest
             1,
             cmd.getStreamDefs().size());
 
-        inserterDef = 
+        inserterDef =
             (FemTableInserterDef) cmd.getStreamDefs().iterator().next();
         assertEquals(
             1,
             inserterDef.getIndexWriter().size());
 
-        indexWriterDef = 
+        indexWriterDef =
             (FemIndexWriterDef) inserterDef.getIndexWriter().iterator().next();
         assertEquals(
             999L,
             indexWriterDef.getIndexId());
-        
+
         tupleDesc = (FemTupleDescriptor) inserterDef.getOutputDesc();
         assertNotNull(tupleDesc);
-        
+
         List<FemTupleAttrDescriptor> attrDescs = tupleDesc.getAttrDescriptor();
         assertEquals(2, attrDescs.size());
-        
+
         FemTupleAttrDescriptor col1 = attrDescs.get(0);
         assertEquals(
             FennelStandardTypeDescriptor.INT_32_ORDINAL,
             col1.getTypeOrdinal());
-        
+
         FemTupleAttrDescriptor col2 = attrDescs.get(1);
         assertEquals(
             FennelStandardTypeDescriptor.VARCHAR_ORDINAL,
@@ -169,18 +169,18 @@ public class JmiMemTest
         RelDataTypeFactory typeFactory = new FarragoTypeFactoryImpl(factory);
 
         RelDataType[] types = new RelDataType[] {
-            typeFactory.createSqlType(SqlTypeName.Integer),
-            typeFactory.createSqlType(SqlTypeName.Varchar, 128),
+            typeFactory.createSqlType(SqlTypeName.INTEGER),
+            typeFactory.createSqlType(SqlTypeName.VARCHAR, 128),
         };
-        
+
         String[] names = new String[] {
             COLUMN_NAME,
             COLUMN_NAME_2,
         };
-        
+
         RelDataType rowType = typeFactory.createStructType(types, names);
-        
-        FemTupleDescriptor tupleDesc = 
+
+        FemTupleDescriptor tupleDesc =
             FennelRelUtil.createTupleDescriptorFromRowType(
                 factory,
                 typeFactory,
@@ -306,7 +306,7 @@ public class JmiMemTest
             txn.commit();
         }
         String xmi1 = outStream.toString();
-        
+
         // Import into an in-mem repository.
         FarragoMemFactory factory =
             new FarragoMemFactory(
@@ -336,16 +336,16 @@ public class JmiMemTest
             new FarragoMemFactory(
                 repos.getModelGraph());
         FemStoredColumn col = factory.newFemStoredColumn();
-        
+
         RefPackage pkg = col.refImmediatePackage();
         RefPackage expectedPkg = factory.getMedPackage();
         assertEquals(expectedPkg, pkg);
-        
+
         // Traverse our way up to the root package
         pkg = pkg.refImmediatePackage();
         expectedPkg = factory.getFemPackage();
         assertEquals(expectedPkg, pkg);
-        
+
         pkg = pkg.refImmediatePackage();
         expectedPkg = factory.getFarragoPackage();
         assertEquals(expectedPkg, pkg);
@@ -354,7 +354,7 @@ public class JmiMemTest
         pkg = pkg.refImmediatePackage();
         assertNull(pkg);
     }
-    
+
     public void testRefIsInstanceOf()
     {
         FarragoMemFactory factory =
@@ -364,20 +364,20 @@ public class JmiMemTest
         FemLocalTable table = factory.newFemLocalTable();
         table.setName(TABLE_NAME);
 
-        RefObject cwmTableMofClass = 
+        RefObject cwmTableMofClass =
             factory.getRelationalPackage().getCwmTable().refMetaObject();
 
         RefObject femLocalTableClass =
             factory.getMedPackage().getFemLocalTable().refMetaObject();
-        
-        // table is a FemLocalTable which is a subclass of CwmTable 
+
+        // table is a FemLocalTable which is a subclass of CwmTable
         assertTrue(table.refIsInstanceOf(cwmTableMofClass, true));
-        
+
         // table is a FemLocalTale which is not exactly CwmTable
         assertTrue(!table.refIsInstanceOf(cwmTableMofClass, false));
-        
+
         assertTrue(table.refIsInstanceOf(femLocalTableClass, true));
-        assertTrue(table.refIsInstanceOf(femLocalTableClass, false));        
+        assertTrue(table.refIsInstanceOf(femLocalTableClass, false));
     }
 
     public void testClone()
@@ -385,7 +385,7 @@ public class JmiMemTest
         FarragoMemFactory factory =
             new FarragoMemFactory(
                 repos.getModelGraph());
-        
+
         FemLocalView view = factory.newFemLocalView();
         view.setName(TABLE_NAME);
         view.setQueryExpression(factory.newCwmQueryExpression());
@@ -404,7 +404,7 @@ public class JmiMemTest
 
         assertEquals(origAttrs, cloneAttrs);
     }
-    
+
     //~ Inner Classes ----------------------------------------------------------
 
     private class FarragoMemRepos
@@ -423,7 +423,7 @@ public class JmiMemTest
 
         public JmiModelGraph getModelGraph()
         {
-            return getImpl().getJmiModelGraph(); 
+            return getImpl().getJmiModelGraph();
         }
 
         public JmiModelView getModelView()
@@ -518,7 +518,7 @@ public class JmiMemTest
 
         public void setTagAnnotationValue(FemAnnotatedElement element, String tagName, String tagValue)
         {
-            throw new UnsupportedOperationException();            
+            throw new UnsupportedOperationException();
         }
 
         public String getTagAnnotationValue(FemAnnotatedElement element, String tagName)
@@ -526,7 +526,7 @@ public class JmiMemTest
             throw new UnsupportedOperationException();
         }
 
-        public void addResourceBundles(List bundles)
+        public void addResourceBundles(List<ResourceBundle> bundles)
         {
             throw new UnsupportedOperationException();
         }
@@ -579,14 +579,14 @@ public class JmiMemTest
         public void closeAllocation()
         {
         }
-    
+
         // implement FarragoRepos
         public FarragoReposTxnContext newTxnContext()
         {
             return new FarragoReposTxnContext(this);
         }
     }
-    
+
     private class FarragoMemFactory
         extends FarragoMetadataFactoryImpl
     {
@@ -616,7 +616,7 @@ public class JmiMemTest
         {
             return new RefPackageImpl(FarragoPackage.class);
         }
-        
+
         public JmiModelGraph getJmiModelGraph()
         {
             return getModelGraph();

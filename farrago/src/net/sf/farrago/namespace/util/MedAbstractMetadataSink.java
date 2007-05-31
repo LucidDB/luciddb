@@ -29,9 +29,6 @@ import java.util.regex.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.type.*;
 
-import org.eigenbase.util.*;
-import org.eigenbase.reltype.*;
-
 
 /**
  * MedAbstractMetadataSink is an abstract base class for implementations of the
@@ -48,7 +45,7 @@ public abstract class MedAbstractMetadataSink
 
     private final FarragoMedMetadataQuery query;
     private final FarragoTypeFactory typeFactory;
-    private final Map patternMap;
+    private final Map<String, Pattern> patternMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -65,7 +62,7 @@ public abstract class MedAbstractMetadataSink
     {
         this.query = query;
         this.typeFactory = typeFactory;
-        patternMap = new HashMap();
+        this.patternMap = new HashMap<String, Pattern>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -117,7 +114,7 @@ public abstract class MedAbstractMetadataSink
 
     Pattern getPattern(String likePattern)
     {
-        Pattern pattern = (Pattern) patternMap.get(likePattern);
+        Pattern pattern = patternMap.get(likePattern);
         if (pattern == null) {
             // TODO jvs 6-Aug-2005:  move this to a common location
             // where it can be used for LIKE evaluations in SQL expressions,

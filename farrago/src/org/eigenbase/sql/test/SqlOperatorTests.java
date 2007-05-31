@@ -166,7 +166,7 @@ public abstract class SqlOperatorTests
     public static final String [] minNumericStrings =
         new String[] { Long.toString(Byte.MIN_VALUE), Long.toString(
                 Short.MIN_VALUE), Long.toString(Integer.MIN_VALUE), Long
-            .toString(Long.MIN_VALUE), "-999.99", 
+            .toString(Long.MIN_VALUE), "-999.99",
             // NOTE jvs 26-Apr-2006:  Win32 takes smaller values from
             // win32_values.h
             "1E-37", /*Float.toString(Float.MIN_VALUE)*/ "2E-307", /*Double.toString(Double.MIN_VALUE)*/ "2E-307" /*Double.toString(Double.MIN_VALUE)*/, };
@@ -186,7 +186,7 @@ public abstract class SqlOperatorTests
     public static final String [] maxNumericStrings =
         new String[] { Long.toString(Byte.MAX_VALUE), Long.toString(
                 Short.MAX_VALUE), Long.toString(Integer.MAX_VALUE), Long
-            .toString(Long.MAX_VALUE), "999.99", 
+            .toString(Long.MAX_VALUE), "999.99",
             // NOTE jvs 26-Apr-2006:  use something slightly less than MAX_VALUE
             // because roundtripping string to approx to string doesn't preserve
             // MAX_VALUE on win32
@@ -3137,7 +3137,7 @@ public abstract class SqlOperatorTests
                         expr,
                         type.getFullTypeString());
 
-                    if (type.getSqlTypeName() == SqlTypeName.Binary) {
+                    if (type.getSqlTypeName() == SqlTypeName.BINARY) {
                         // Casting a string/binary values may change the value.
                         // For example, CAST(X'AB' AS BINARY(2)) yields
                         // X'AB00'.
@@ -3177,18 +3177,18 @@ public abstract class SqlOperatorTests
                     type.getSqlTypeName().createLiteral(o, SqlParserPos.ZERO);
                 String literalString = literal.toSqlString(SqlUtil.dummyDialect);
 
-                if (type.getSqlTypeName() == SqlTypeName.Bigint ||
-                    type.getSqlTypeName() == SqlTypeName.Decimal &&
+                if (type.getSqlTypeName() == SqlTypeName.BIGINT ||
+                    type.getSqlTypeName() == SqlTypeName.DECIMAL &&
                         type.getPrecision() == 19) {
                     // Values which are too large to be literals fail at
                     // validate time.
                     tester.checkFails(
                         "CAST(^" + literalString + "^ AS " + type + ")",
                         "Numeric literal '.*' out of range", false);
-                } else if (type.getSqlTypeName() == SqlTypeName.Char ||
-                    type.getSqlTypeName() == SqlTypeName.Varchar ||
-                    type.getSqlTypeName() == SqlTypeName.Binary ||
-                    type.getSqlTypeName() == SqlTypeName.Varbinary) {
+                } else if (type.getSqlTypeName() == SqlTypeName.CHAR ||
+                    type.getSqlTypeName() == SqlTypeName.VARCHAR ||
+                    type.getSqlTypeName() == SqlTypeName.BINARY ||
+                    type.getSqlTypeName() == SqlTypeName.VARBINARY) {
                     // Casting overlarge string/binary values do not fail -
                     // they are truncated. See testCastTruncates().
                 } else {

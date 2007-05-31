@@ -179,7 +179,7 @@ public class DdlValidator
     /**
      * List of handlers to be invoked.
      */
-    protected List actionHandlers;
+    protected List<DdlHandler> actionHandlers;
 
     /**
      * Object to be replaced if CREATE OR REPLACE
@@ -224,7 +224,7 @@ public class DdlValidator
             new MultiMap<Class<? extends Object>, FarragoSessionDdlDropRule>();
 
         // Build up list of action handlers.
-        actionHandlers = new ArrayList();
+        actionHandlers = new ArrayList<DdlHandler>();
 
         // First, install action handlers for all installed model
         // extensions.
@@ -234,7 +234,8 @@ public class DdlValidator
         }
 
         // Then, install action handlers specific to this personality.
-        stmtValidator.getSession().getPersonality().defineDdlHandlers(this,
+        stmtValidator.getSession().getPersonality().defineDdlHandlers(
+            this,
             actionHandlers);
 
         startListening();
@@ -574,7 +575,8 @@ public class DdlValidator
 
             // restore owned elements
             if (ownedElements != null) {
-                Collection c = ((CwmNamespace) newElement).getOwnedElement();
+                Collection<CwmModelElement> c =
+                    ((CwmNamespace) newElement).getOwnedElement();
                 c.addAll(ownedElements);
             }
         }
@@ -867,7 +869,7 @@ public class DdlValidator
                     progress = true;
                     continue;
                 }
-                CwmModelElement element = (CwmModelElement) obj;
+                final CwmModelElement element = (CwmModelElement) obj;
                 try {
                     validateAction(element, action);
                     if (element.getVisibility() == null) {
@@ -875,7 +877,7 @@ public class DdlValidator
                         element.setVisibility(VisibilityKindEnum.VK_PRIVATE);
                     }
                     if ((revalidateQueue != null)
-                        && revalidateQueue.contains(obj)) {
+                        && revalidateQueue.contains(element)) {
                         setRevalidationResult(element, null);
                     }
                     progress = true;
@@ -892,7 +894,7 @@ public class DdlValidator
                         + ((CwmModelElement) obj).getName() + ": "
                         + FarragoUtil.exceptionToString(ex));
                     if ((revalidateQueue != null)
-                        && revalidateQueue.contains(obj)) {
+                        && revalidateQueue.contains(element)) {
                         setRevalidationResult(element, ex);
                     } else {
                         throw ex;
@@ -1304,10 +1306,10 @@ public class DdlValidator
         CwmModelElement modelElement,
         String action)
     {
-        for (int i = 0; i < actionHandlers.size(); ++i) {
-            Object handler = actionHandlers.get(i);
+        for (Object handler : actionHandlers) {
             boolean handled =
-                ReflectUtil.invokeVisitor(handler,
+                ReflectUtil.invokeVisitor(
+                    handler,
                     modelElement,
                     CwmModelElement.class,
                     action);
@@ -1429,12 +1431,12 @@ public class DdlValidator
                     SqlTypeName sqlType = field.getType().getSqlTypeName();
                     SqlTypeFamily typeFamily =
                         SqlTypeFamily.getFamilyForSqlType(sqlType);
-                    if ((typeFamily == SqlTypeFamily.Character)
-                        || (typeFamily == SqlTypeFamily.Binary)) {
+                    if ((typeFamily == SqlTypeFamily.CHARACTER)
+                        || (typeFamily == SqlTypeFamily.BINARY)) {
                         if (field.getType().getPrecision() == 0) {
                             // Can't have precision of 0
                             // Add cast so there is precision of 1
-                            targetType = sqlType.getName() + "(1)";
+                            targetType = sqlType.name() + "(1)";
                             updateSql = true;
                         }
                     }

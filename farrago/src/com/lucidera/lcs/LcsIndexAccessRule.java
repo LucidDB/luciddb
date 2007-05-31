@@ -575,7 +575,7 @@ public class LcsIndexAccessRule
         FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
         RelDataType directiveType =
             typeFactory.createSqlType(
-                SqlTypeName.Char,
+                SqlTypeName.CHAR,
                 1);
 
         int searchLen = searchColumns.length;

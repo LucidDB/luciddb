@@ -157,7 +157,7 @@ public class SqlLikeOperator
 
     public int reduceExpr(
         final int opOrdinal,
-        List list)
+        List<Object> list)
     {
         // Example:
         //   a LIKE b || c ESCAPE d || e AND f

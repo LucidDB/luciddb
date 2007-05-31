@@ -27,12 +27,12 @@ import net.sf.farrago.type.runtime.*;
 import openjava.ptree.*;
 
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 
 
 /**
- * FarragoOJRexTruthTestImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for truth-test row expressions IS TRUE and IS FALSE.
+ * FarragoOJRexTruthTestImplementor implements Farrago specifics of
+ * {@link org.eigenbase.oj.rex.OJRexImplementor} for truth-test row expressions
+ * <code>IS TRUE</code> and <code>IS FALSE</code>.
  *
  * @author John V. Sichi
  * @version $Id$

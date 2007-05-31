@@ -101,7 +101,7 @@ public class FarragoPreparingStmt
     private final FarragoSessionStmtValidator stmtValidator;
     private boolean needRestore;
     protected SqlToRelConverter sqlToRelConverter;
-    private Object savedDeclarer;
+    private OJClass savedDeclarer;
     private FarragoAllocation javaCodeDir;
     protected SqlValidatorImpl sqlValidator;
     private final Set<CwmModelElement> directDependencies;

@@ -45,12 +45,12 @@ public class SqlDateLiteral
 
     SqlDateLiteral(Calendar d, SqlParserPos pos)
     {
-        super(d, false, SqlTypeName.Date, 0, SqlParserUtil.DateFormatStr, pos);
+        super(d, false, SqlTypeName.DATE, 0, SqlParserUtil.DateFormatStr, pos);
     }
 
     SqlDateLiteral(Calendar d, String format, SqlParserPos pos)
     {
-        super(d, false, SqlTypeName.Date, 0, format, pos);
+        super(d, false, SqlTypeName.DATE, 0, format, pos);
     }
 
     //~ Methods ----------------------------------------------------------------

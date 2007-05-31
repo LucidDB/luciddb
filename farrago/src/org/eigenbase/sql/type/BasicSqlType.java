@@ -67,7 +67,7 @@ public class BasicSqlType
         Util.pre(
             typeName.allowsPrecScale(false, false),
             "typeName.allowsPrecScale(false,false), typeName="
-            + typeName.getName());
+            + typeName.name());
         this.precision = PRECISION_NOT_SPECIFIED;
         this.scale = SCALE_NOT_SPECIFIED;
         computeDigest();
@@ -158,38 +158,38 @@ public class BasicSqlType
     public int getPrecision()
     {
         if (precision == PRECISION_NOT_SPECIFIED) {
-            switch (typeName.getOrdinal()) {
-            case SqlTypeName.Boolean_ordinal:
+            switch (typeName) {
+            case BOOLEAN:
                 return 1;
-            case SqlTypeName.Tinyint_ordinal:
+            case TINYINT:
                 return 3;
-            case SqlTypeName.Smallint_ordinal:
+            case SMALLINT:
                 return 5;
-            case SqlTypeName.Integer_ordinal:
+            case INTEGER:
                 return 10;
-            case SqlTypeName.Bigint_ordinal:
+            case BIGINT:
                 return 19;
-            case SqlTypeName.Decimal_ordinal:
+            case DECIMAL:
                 return SqlTypeName.MAX_NUMERIC_PRECISION;
-            case SqlTypeName.Real_ordinal:
+            case REAL:
                 return 7;
-            case SqlTypeName.Float_ordinal:
-            case SqlTypeName.Double_ordinal:
+            case FLOAT:
+            case DOUBLE:
                 return 15;
-            case SqlTypeName.Time_ordinal:
+            case TIME:
                 return 0; // SQL99 part 2 section 6.1 syntax rule 30
-            case SqlTypeName.Timestamp_ordinal:
+            case TIMESTAMP:
 
                 // farrago supports only 0 (see
                 // SqlTypeName.getDefaultPrecision), but it should be 6
                 // (microseconds) per SQL99 part 2 section 6.1 syntax rule 30.
                 return 0;
-            case SqlTypeName.Date_ordinal:
+            case DATE:
                 return 0;
-            case SqlTypeName.Char_ordinal:
-            case SqlTypeName.Varchar_ordinal:
-            case SqlTypeName.Binary_ordinal:
-            case SqlTypeName.Varbinary_ordinal:
+            case CHAR:
+            case VARCHAR:
+            case BINARY:
+            case VARBINARY:
                 return 1; // SQL2003 part 2 section 6.1 syntax rule 5
             default:
                 throw Util.newInternal(
@@ -203,12 +203,12 @@ public class BasicSqlType
     public int getScale()
     {
         if (scale == SCALE_NOT_SPECIFIED) {
-            switch (typeName.getOrdinal()) {
-            case SqlTypeName.Tinyint_ordinal:
-            case SqlTypeName.Smallint_ordinal:
-            case SqlTypeName.Integer_ordinal:
-            case SqlTypeName.Bigint_ordinal:
-            case SqlTypeName.Decimal_ordinal:
+            switch (typeName) {
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
+            case DECIMAL:
                 return 0;
             default:
                 throw Util.newInternal(
@@ -238,7 +238,7 @@ public class BasicSqlType
         // Called to make the digest, which equals() compares;
         // so equivalent data types must produce identical type strings.
 
-        sb.append(typeName.getName());
+        sb.append(typeName.name());
         boolean printPrecision = (precision != PRECISION_NOT_SPECIFIED);
         boolean printScale = (scale != SCALE_NOT_SPECIFIED);
 

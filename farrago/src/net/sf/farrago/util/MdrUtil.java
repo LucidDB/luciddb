@@ -22,8 +22,6 @@
 */
 package net.sf.farrago.util;
 
-import java.io.*;
-
 import java.util.*;
 import java.util.logging.*;
 
@@ -78,11 +76,10 @@ public abstract class MdrUtil
         String storageFactoryClassName,
         Properties storageProps)
     {
-        Iterator iter;
         String classNameProp =
             "org.netbeans.mdr.storagemodel.StorageFactoryClassName";
         Properties sysProps = System.getProperties();
-        Map savedProps = new HashMap();
+        Map<Object, Object> savedProps = new HashMap<Object, Object>();
 
         String storagePrefix = "MDRStorageProperty.";
 
@@ -105,9 +102,7 @@ public abstract class MdrUtil
         savedProps.put(
             classNameProp,
             sysProps.get(classNameProp));
-        iter = storageProps.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
+        for (Map.Entry<Object, Object> entry : storageProps.entrySet()) {
             String propName =
                 applyPrefix(
                     storagePrefix,
@@ -120,9 +115,7 @@ public abstract class MdrUtil
         try {
             // set desired properties
             sysProps.put(classNameProp, storageFactoryClassName);
-            iter = storageProps.entrySet().iterator();
-            while (iter.hasNext()) {
-                Map.Entry entry = (Map.Entry) iter.next();
+            for (Map.Entry<Object, Object> entry : storageProps.entrySet()) {
                 sysProps.put(
                     applyPrefix(
                         storagePrefix,
@@ -134,9 +127,7 @@ public abstract class MdrUtil
             return new NBMDRepositoryImpl();
         } finally {
             // restore saved system properties
-            iter = savedProps.entrySet().iterator();
-            while (iter.hasNext()) {
-                Map.Entry entry = (Map.Entry) iter.next();
+            for (Map.Entry<Object, Object> entry : savedProps.entrySet()) {
                 if (entry.getValue() == null) {
                     sysProps.remove(entry.getKey());
                 } else {

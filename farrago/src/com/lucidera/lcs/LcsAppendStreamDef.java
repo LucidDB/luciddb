@@ -76,9 +76,9 @@ public class LcsAppendStreamDef
     /**
      * Creates the top half of an insert execution stream, i.e., the part
      * that appends to the clustered indexes.
-     * 
+     *
      * @param implementor FennelRel implementor
-     * 
+     *
      * @return the barrier stream that anchors the top half of the insert
      * execution stream
      */
@@ -86,7 +86,7 @@ public class LcsAppendStreamDef
         FennelRelImplementor implementor)
     {
         CwmTable table = (CwmTable) lcsTable.getCwmColumnSet();
-        
+
         // if the table has unclustered indexes, the output from the append
         // stream contains a startRid; so make sure to reflect that in the
         // output descriptors
@@ -120,11 +120,11 @@ public class LcsAppendStreamDef
                     appendRel,
                     clusteredIndex,
                     hasIndexes));
-        } 
-        
+        }
+
         //
         // Setup the BarrierStreamDef.
-        //        
+        //
         RelDataType barrierRowType;
         if (hasIndexes) {
             barrierRowType = indexGuide.getUnclusteredInputType();
@@ -136,7 +136,7 @@ public class LcsAppendStreamDef
                 barrierRowType,
                 BarrierReturnModeEnum.BARRIER_RET_ANY_INPUT,
                 0);
-        
+
         //
         // Link the StreamDefs together.  Note that the input may be
         //    a buffering stream
@@ -147,7 +147,7 @@ public class LcsAppendStreamDef
         //
         implementor.addDataFlowFromProducerToConsumer(
             inputStream,
-            splitter);   
+            splitter);
 
         for (FemLcsClusterAppendStreamDef clusterAppend : clusterAppendDefs) {
             implementor.addDataFlowFromProducerToConsumer(
@@ -157,22 +157,21 @@ public class LcsAppendStreamDef
                 clusterAppend,
                 barrier);
         }
-        
+
         return barrier;
     }
-    
+
     /**
      * Creates the bottom half of an insert execution stream, i.e., the part
      * the inserts into the unclustered indexes.
-     * 
-     * @param rel the fennel rel creating these stream definitions
+     *
      * @param implementor FennelRel implementor
      * @param clusterAppendBarrier the barrier from the cluster appends that
      * serves as the producer for the unclustered index append streams
      * @param writeRowCountParamId parameter id the final barrier will
      * use to retrieve the upstream deletion rowcount, in the case of a
      * MERGE statement
-     * 
+     *
      * @return the final barrier that anchors the full insert stream or the
      * clusterAppendBarrier if the table does not have any unclustered indexes
      */
@@ -202,9 +201,9 @@ public class LcsAppendStreamDef
                 delIndex = null;
             }
             LcsIndexGuide ucxIndexGuide = getIndexGuide(unclusteredIndex);
-            FennelRelParamId insertDynParamId = 
+            FennelRelParamId insertDynParamId =
                 implementor.allocateRelParamId();
-            LcsCompositeStreamDef bitmapAppend = 
+            LcsCompositeStreamDef bitmapAppend =
                 ucxIndexGuide.newBitmapAppend(
                     appendRel,
                     unclusteredIndex,
@@ -217,7 +216,7 @@ public class LcsAppendStreamDef
             // splicers updating unique indexes can produce violations.
             // for these streams, register the types of their error records.
             if (delIndex != null) {
-                FemLbmSplicerStreamDef splicer = 
+                FemLbmSplicerStreamDef splicer =
                     (FemLbmSplicerStreamDef) bitmapAppend.getProducer();
                 RelDataType errorType =
                     ucxIndexGuide.createSplicerErrorType(unclusteredIndex);
@@ -241,7 +240,7 @@ public class LcsAppendStreamDef
                 appendRel.getRowType(),
                 BarrierReturnModeEnum.BARRIER_RET_ANY_INPUT,
                 dynParam);
-        
+
         // For each bitmap append stream, link
         //    splitter -> bitmap append stream -> bitmap barrier
         for (Object streamDef : bitmapAppendDefs) {
@@ -254,13 +253,13 @@ public class LcsAppendStreamDef
                 bitmapAppend.getProducer(),
                 bitmapBarrier);
         }
-        
+
         // if there are no unique indexes, no need to deal with unique
         // constraint violations
         if (numUniqueIndexes == 0) {
             return bitmapBarrier;
         }
-        
+
         // Setup the substream for inserting unique constraint violations
         // into the deletion index.  Note that this method also links
         // the bitmap append streams to the violation streams
@@ -268,8 +267,8 @@ public class LcsAppendStreamDef
             createViolationStream(
                 implementor,
                 bitmapAppendDefs,
-                numUniqueIndexes);       
-        
+                numUniqueIndexes);
+
         // Setup the final barrier
         FemBarrierStreamDef finalBarrier =
             indexGuide.newBarrier(
@@ -293,7 +292,7 @@ public class LcsAppendStreamDef
 
     /**
      * Returns an index guide specific to an unclustered index
-     * 
+     *
      * @param unclusteredIndex the unclustered index
      */
     private LcsIndexGuide getIndexGuide(FemLocalIndex unclusteredIndex)
@@ -304,23 +303,24 @@ public class LcsAppendStreamDef
                 lcsTable.getCwmColumnSet(),
                 unclusteredIndex);
     }
-    
+
     /**
      * Creates the substream that inserts unique constraint violations into
      * the table's deletion index.  Only bitmap appenders that are writing to
      * a unique index will create violations.  Those streams are then merged
      * together into a single stream of violating rids.
-     * 
+     *
      * <p>Bitmap appenders that do not write to unique indexes don't need to be
      * involved.  In fact, the violation substream can even proceed before
      * those appenders have finished because they don't access the deletion
      * index and therefore there is no conflict.
-     * 
+     *
      * @param implementor FennelRel implementor
      * @param bitmapAppendDefs bitmap append substreams that created the
      * violations
-     * @param number of unique indexes on the table; must be > 0
-     * 
+     * @param numUniqueIndexes number of unique indexes on the table; must be
+     * &gt; 0
+     *
      * @return the stream def corresponding to the splicer that inserts into
      * the deletion index
      */
@@ -330,7 +330,7 @@ public class LcsAppendStreamDef
         int numUniqueIndexes)
     {
         assert(numUniqueIndexes > 0);
-        
+
         // create a merge stream if there is more than one stream of violation
         // rids
         FemExecutionStreamDef deleteInput = null;
@@ -356,9 +356,9 @@ public class LcsAppendStreamDef
                 } else {
                     deleteInput = bitmapAppendStream.getProducer();
                 }
-            }           
+            }
         }
-        
+
         // assume that the number of violations is 1% of the number of input
         // rows
         Double numViolations = estimatedNumInputRows;
@@ -368,7 +368,7 @@ public class LcsAppendStreamDef
                 numViolations = 1.0;
             }
         }
-        
+
         // create the delete substream; no need to remove duplicates if we
         // have only one stream of violation rids
         return createDeleteRidStream(
@@ -378,12 +378,12 @@ public class LcsAppendStreamDef
             0,
             (numUniqueIndexes > 1));
     }
-    
+
     /**
      * Creates a substream that takes an input stream of rids, sorts them,
      * optionally removes duplicates, and then adds them into the deletion
      * index associated with the table we're appending to
-     * 
+     *
      * @param implementor FennelRel implementor
      * @param inputStream input stream containing rids
      * @param inputRowCount estimated number of rids to be added to the
@@ -391,7 +391,7 @@ public class LcsAppendStreamDef
      * @param writeRowCountParamId > 0 if the splicer that writes to the
      * deletion index needs to return a count of the number of rids written
      * @param removeDups if true, remove duplicate rids from the stream
-     * 
+     *
      * @return the stream def corresponding to the splicer that inserts into
      * the deletion index
      */
@@ -410,7 +410,7 @@ public class LcsAppendStreamDef
         implementor.addDataFlowFromProducerToConsumer(
             inputStream,
             sortingStream);
-        
+
         // remove duplicate rids; use a sorted agg stream since we need to
         // sort the rids anyway, and we don't expect many duplicates
         FemExecutionStreamDef deleteInput;
@@ -425,7 +425,7 @@ public class LcsAppendStreamDef
                 distinctStream);
             deleteInput = distinctStream;
         }
-      
+
         // setup the splicer that inserts the deleted rids into the deletion
         // index
         FemLbmSplicerStreamDef deleter =
@@ -438,7 +438,7 @@ public class LcsAppendStreamDef
         implementor.addDataFlowFromProducerToConsumer(
             deleteInput,
             deleter);
-        
+
         return deleter;
     }
 }

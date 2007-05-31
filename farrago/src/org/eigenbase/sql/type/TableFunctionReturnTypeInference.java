@@ -41,7 +41,7 @@ public class TableFunctionReturnTypeInference
     private final List<String> paramNames;
 
     private Set<RelColumnMapping> columnMappings;
-    
+
     public TableFunctionReturnTypeInference(
         RelDataType unexpandedOutputType,
         List<String> paramNames)
@@ -54,7 +54,7 @@ public class TableFunctionReturnTypeInference
     {
         return columnMappings;
     }
-    
+
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)
     {
@@ -65,7 +65,7 @@ public class TableFunctionReturnTypeInference
         for (RelDataTypeField field : unexpandedOutputType.getFieldList()) {
             RelDataType fieldType = field.getType();
             String fieldName = field.getName();
-            if (fieldType.getSqlTypeName() != SqlTypeName.Cursor) {
+            if (fieldType.getSqlTypeName() != SqlTypeName.CURSOR) {
                 expandedOutputTypes.add(fieldType);
                 expandedFieldNames.add(fieldName);
                 continue;
@@ -100,7 +100,7 @@ public class TableFunctionReturnTypeInference
                 // so assume the worst
                 columnMapping.isDerived = true;
                 columnMappings.add(columnMapping);
-                
+
                 RelDataType nullableType =
                     opBinding.getTypeFactory().createTypeWithNullability(
                         cursorField.getType(),

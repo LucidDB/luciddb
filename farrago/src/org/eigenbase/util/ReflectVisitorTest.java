@@ -28,7 +28,7 @@ import junit.framework.*;
 
 
 /**
- * ReflectVisitorTest tests {@link ReflectUtil.invokeVisitor} and provides a
+ * ReflectVisitorTest tests {@link ReflectUtil#invokeVisitor} and provides a
  * contrived example of how to use it.
  *
  * @author John V. Sichi

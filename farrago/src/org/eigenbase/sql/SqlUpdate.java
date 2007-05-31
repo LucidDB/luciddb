@@ -134,7 +134,7 @@ public class SqlUpdate
         int rightPrec)
     {
         final SqlWriter.Frame frame =
-            writer.startList(SqlWriter.FrameType.Select, "UPDATE", "");
+            writer.startList(SqlWriter.FrameTypeEnum.Select, "UPDATE", "");
         getTargetTable().unparse(
             writer,
             getOperator().getLeftPrec(),
@@ -153,7 +153,7 @@ public class SqlUpdate
                 getOperator().getRightPrec());
         }
         final SqlWriter.Frame setFrame =
-            writer.startList(SqlWriter.FrameType.UpdateSetList, "SET", "");
+            writer.startList(SqlWriter.FrameTypeEnum.UpdateSetList, "SET", "");
         Iterator targetColumnIter = getTargetColumnList().getList().iterator();
         Iterator sourceExpressionIter =
             getSourceExpressionList().getList().iterator();

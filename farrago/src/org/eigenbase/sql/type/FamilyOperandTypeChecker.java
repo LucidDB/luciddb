@@ -45,7 +45,7 @@ public class FamilyOperandTypeChecker
 
     //~ Constructors -----------------------------------------------------------
 
-    public FamilyOperandTypeChecker(SqlTypeFamily [] families)
+    public FamilyOperandTypeChecker(SqlTypeFamily... families)
     {
         this.families = families;
     }
@@ -60,7 +60,7 @@ public class FamilyOperandTypeChecker
         boolean throwOnFailure)
     {
         SqlTypeFamily family = families[iFormalOperand];
-        if (family == SqlTypeFamily.Any) {
+        if (family == SqlTypeFamily.ANY) {
             // no need to check
             return true;
         }

@@ -60,7 +60,7 @@ public class FarragoJdbcEngineStatement
     protected FarragoSessionStmtContext stmtContext;
 
     /**
-     * @see {@link Statement#setMaxRows}
+     * @see Statement#setMaxRows
      */
     private int maxRows;
 
@@ -452,7 +452,7 @@ public class FarragoJdbcEngineStatement
         }
         return info.getId();
     }
-    
+
     // implement Statement
     public SQLWarning getWarnings()
         throws SQLException

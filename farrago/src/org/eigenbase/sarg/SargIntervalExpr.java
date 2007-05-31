@@ -55,7 +55,7 @@ public class SargIntervalExpr
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @see SargFactory.newIntervalExpr
+     * @see SargFactory#newIntervalExpr
      */
     SargIntervalExpr(
         SargFactory factory,
@@ -215,7 +215,7 @@ public class SargIntervalExpr
             dynamicParams.add((RexDynamicParam) upperBound.getCoordinate());
         }
     }
-    
+
     // implement SargExpr
     public SargIntervalSequence evaluateComplemented()
     {

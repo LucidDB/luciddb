@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2005 The Eigenbase Project
@@ -16,7 +16,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -80,7 +80,7 @@ ${farrago.test.jvmargs}
   <property name="unitlurql.dir" location="${farrago.dir}/testcases/lurql"/>
 
   <!-- directory containing definition of LURQL parser -->
-  <property name="lurql.parser.dir" 
+  <property name="lurql.parser.dir"
     location="${farrago.src.dir}/com/lucidera/lurql/parser"/>
 
   <!-- The version of ANT we require. -->
@@ -137,7 +137,7 @@ require version '${required.ant.version}'."/>
   </fileset>
   <pathconvert property="fileset.unitsql" refid="fileset.unitsql"
     pathsep="${line.separator}" dirsep="${file.separator}" />
-  <property name="FarragoSqlTestWrapper.java" 
+  <property name="FarragoSqlTestWrapper.java"
     location=
     "${farrago.src.dir}/net/sf/farrago/test/FarragoSqlTestWrapper.java"/>
 
@@ -145,7 +145,7 @@ require version '${required.ant.version}'."/>
   <fileset dir="${regressionsql.dir}" id="fileset.regressionsql">
     <include name="**/*.sql"/>
   </fileset>
-  <pathconvert property="fileset.regressionsql" 
+  <pathconvert property="fileset.regressionsql"
     refid="fileset.regressionsql"
     pathsep="${line.separator}" dirsep="${file.separator}" />
 
@@ -176,7 +176,7 @@ require version '${required.ant.version}'."/>
     <pathelement location="${sqlline.lib.dir}/jline.jar"/>
     <pathelement location="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
   </path>
-  <property name="farrago.build.3p.classpath" 
+  <property name="farrago.build.3p.classpath"
     refid="farrago.build.3p.classpath"/>
 
   <!-- classpath for main build (after catalog codegen) -->
@@ -201,7 +201,7 @@ require version '${required.ant.version}'."/>
     <pathelement location="${junit.dir}/src.jar"/>
     <pathelement location="${rmijdbc.dir}/src"/>
     <pathelement location="${open.dir}/thirdparty/netbeans/mdr/src"/>
-    <pathelement 
+    <pathelement
       location="${open.dir}/thirdparty/netbeans/mdr/extras/jdbcstorage/src"/>
   </path>
   <property name="farrago.sourcepath" refid="farrago.sourcepath"/>
@@ -252,7 +252,7 @@ require version '${required.ant.version}'."/>
     </rmic>
   </target>
 
-  <target name="compile" 
+  <target name="compile"
     depends="generateResources,sqlParser,ddlParser,lurqlParser">
     <farrago.javaCompileClient
       srcdir="${farrago.src.dir}"
@@ -295,7 +295,7 @@ require version '${required.ant.version}'."/>
       deprecation="off"
       srcdir="${farrago.src.dir}"
       destdir="${farrago.classes.dir}"
-      classpathref="farrago.build.classpath">      
+      classpathref="farrago.build.classpath">
       <include name="org/eigenbase/**/*.java" />
       <include name="com/disruptivetech/farrago/volcano/**/*.java" />
       <exclude name="org/eigenbase/inventory/**/*.java" />
@@ -366,7 +366,7 @@ require version '${required.ant.version}'."/>
   <!-- cleans for non-catalog-generated code -->
   <target name="clean" depends="cleanTestLogs">
     <delete includeEmptyDirs="true" quiet="true">
-      <fileset dir="${farrago.classes.dir}" 
+      <fileset dir="${farrago.classes.dir}"
         includes="**/*.class,**/*.properties"/>
       <fileset dir="${plugin.classes.dir}" includes="**/*.class"/>
       <fileset dir="${farrago.plugin.dir}" includes="**/*.jar"/>
@@ -459,17 +459,17 @@ require version '${required.ant.version}'."/>
   <!-- creates ReposStorage.properties from a default template unless
        it already exists -->
   <target name="configureReposStorage" unless="ReposStorage.configured">
-    <copy file="${farrago.catalog.dir}/templates/HsqldbRepos.properties" 
+    <copy file="${farrago.catalog.dir}/templates/HsqldbRepos.properties"
       tofile="${farrago.ReposStorage.propfile}"/>
   </target>
 
   <!-- creates ReposStorage.properties from the default Postgres template -->
   <target name="switchToPsqlReposStorage">
-    <copy file="${farrago.catalog.dir}/templates/PostgresRepos.properties" 
+    <copy file="${farrago.catalog.dir}/templates/PostgresRepos.properties"
       tofile="${farrago.ReposStorage.propfile}" overwrite="true">
       <filterchain>
         <tokenfilter>
-          <replacestring 
+          <replacestring
             from="jdbc:postgresql://localhost/test"
             to="jdbc:postgresql://localhost/farrago"/>
         </tokenfilter>
@@ -479,7 +479,7 @@ require version '${required.ant.version}'."/>
 
   <!-- creates ReposStorage.properties from the default Postgres template -->
   <target name="switchToDefaultReposStorage">
-    <copy file="${farrago.catalog.dir}/templates/HsqldbRepos.properties" 
+    <copy file="${farrago.catalog.dir}/templates/HsqldbRepos.properties"
       tofile="${farrago.ReposStorage.propfile}" overwrite="true"/>
   </target>
 
@@ -497,7 +497,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <!-- initialize catalog repository -->
-  <target name="createRepository" 
+  <target name="createRepository"
     depends="configureTrace, convertExtMetamodel">
     <mkdir dir="${farrago.catalog.dir}"/>
     <mkdir dir="${farrago.catalog.src.dir}"/>
@@ -689,7 +689,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="convertExtMetamodel">
-    <farrago.extractArgoModel 
+    <farrago.extractArgoModel
       umlFile="${FarragoExtMetamodel.uml}"
       umlBasename="FarragoExtMetamodel"
       mofBasename="FarragoExtMetamodel"
@@ -702,13 +702,13 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="checkResourceUptodate">
-    <!-- 
+    <!--
          Set jdbc.url.port.default in customBuild.properties to
          override JDBC listener port.
     -->
     <farrago.configureReleaseProperties
         file="${farrago.classes.dir}/FarragoRelease.properties"/>
-      
+
     <!-- REVIEW: SWZ: 10/4/2005: We should also check the locale-specific
          properties files generated by resgen to see that they're up-to-date.
          However, there doesn't seem to be an Ant mapper that maps
@@ -739,7 +739,7 @@ require version '${required.ant.version}'."/>
     </condition>
   </target>
 
-  <target name="generateResources" 
+  <target name="generateResources"
     depends="makeClassesDir,checkResourceUptodate,copyFennelResources"
     unless="resource.uptodate">
     <!-- Exception classes need to exist for reflection -->
@@ -794,8 +794,8 @@ require version '${required.ant.version}'."/>
     </condition>
   </target>
 
-  <target 
-    name="copyFennelResources" 
+  <target
+    name="copyFennelResources"
     depends="checkFennelResourceUptodate"
     unless="resource.fennel.uptodate">
 
@@ -842,7 +842,7 @@ require version '${required.ant.version}'."/>
        JavaCharStream.java, Token.java -->
   <target name="ddlParser" depends="checkParserUptodate"
     unless="parser.uptodate">
-    <farrago.generateParser 
+    <farrago.generateParser
       combined="${farrago.parser.ddl.dir}/impl/CombinedParser.jj">
       <components>
         <fileset refid="farrago.parser.ddl"/>
@@ -854,8 +854,8 @@ require version '${required.ant.version}'."/>
 
   <target name="lurqlParser" depends="checkParserUptodate"
     unless="lurqlParser.uptodate">
-    <javacc 
-      target="${lurql.parser.dir}/LurqlParser.jj" 
+    <javacc
+      target="${lurql.parser.dir}/LurqlParser.jj"
       javacchome="${javacc.dir}"/>
   </target>
 
@@ -864,13 +864,20 @@ require version '${required.ant.version}'."/>
        JavaCharStream.java, Token.java, ASCII_UCodeESC_CharStream.java -->
   <target name="sqlParser" depends="checkParserUptodate"
     unless="sqlParser.uptodate">
-    <farrago.generateParser 
+    <farrago.generateParser
       combined="${farrago.parser.sql.dir}/impl/CombinedParser.jj">
       <components>
         <filelist dir="${farrago.parser.sql.dir}" files="Parser.jj"/>
         <fileset refid="farrago.parser.common.sql"/>
       </components>
     </farrago.generateParser>
+  </target>
+
+  <target name="jjDoc" description="Converts parser to human-readable BNF form">
+    <jjdoc
+      target="${farrago.parser.sql.dir}/impl/CombinedParser.jj"
+      outputfile="doc/combinedParserBnf.html"
+      javacchome="${javacc.dir}"/>
   </target>
 
   <!-- run all JUnit test cases (or a single test case chosen with -->
@@ -907,7 +914,7 @@ require version '${required.ant.version}'."/>
     </farrago.runTests>
   </target>
 
-  <!-- ************** test ****************** 
+  <!-- ************** test ******************
   Split 'test' to 'test-only' and 'test-only-setup' so Emma can plugin a instr.
   -->
 
@@ -940,8 +947,8 @@ require version '${required.ant.version}'."/>
       <equals arg1="${TRACE.net.sf.farrago.dynamic.level}" arg2="FINE"/>
       <then>
         <fail>
-Trace net.sf.farrago.dynamic.level=FINE 
-will cause ant test to fail or run very slowly; 
+Trace net.sf.farrago.dynamic.level=FINE
+will cause ant test to fail or run very slowly;
 please disable it and try again.
         </fail>
       </then>
@@ -956,7 +963,7 @@ please disable it and try again.
   <!-- run all regression test cases; -->
   <!-- for use only as a subtarget to avoid destroying test logs from junit -->
   <target name="regressionWithoutBuild">
-    <farrago.antFork target="forked_regressionWithoutBuild" 
+    <farrago.antFork target="forked_regressionWithoutBuild"
       classpathref="test.classpath">
       <jvmargs>
         <jvmarg line="${assertions.jvmarg}"/>
@@ -1000,7 +1007,7 @@ please disable it and try again.
       file="${farrago.dir}/examples/rng/unitsql/testPlugin.sql"/>
     <!-- restore from pre-upgrade catalog -->
     <delete quiet="true">
-      <fileset dir="${farrago.catalog.dir}" 
+      <fileset dir="${farrago.catalog.dir}"
         includes="*.dat,FarragoCatalogDump.xmi"/>
     </delete>
     <copy todir="${farrago.catalog.dir}">
@@ -1029,8 +1036,8 @@ please disable it and try again.
 
   <!-- if this task fails, it means some test has polluted the catalog -->
   <target name="compareCatalogExport">
-    <farrago.compareCatalogExport 
-      log.dir="${testlog.dir}/CatalogLeak" 
+    <farrago.compareCatalogExport
+      log.dir="${testlog.dir}/CatalogLeak"
       export.file="${farrago.xmi.dir}/FarragoCatalogExport.xmi" />
   </target>
 
@@ -1177,6 +1184,11 @@ please disable it and try again.
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${javadoc.dir}" includes="*"/>
     </delete>
+    <!-- remove stray package.html files under classes to avoid 'multiple
+         sources of package comments' errors -->
+    <delete includeEmptyDirs="false" quiet="true">
+      <fileset dir="${farrago.classes.dir}" includes="**/package.html"/>
+    </delete>
     <mkdir dir="${javadoc.dir}"/>
     <antcall target="javadoc-with-or-without-ydoc"/>
   </target>
@@ -1197,7 +1209,7 @@ please disable it and try again.
       private="true"
       destdir="${javadoc.dir}"
       source="${farrago.javasrc.version}"
-      classpathref="farrago.run.classpath">
+      classpathref="farrago.javadoc.classpath">
       <tag dir="src" includes="customJavadocTags.txt"/>
       <packageset dir="${farrago.catalog.src.dir}">
         <include name="**"/>
@@ -1243,7 +1255,7 @@ please disable it and try again.
       private="true"
       destdir="${javadoc.dir}"
       source="${farrago.javasrc.version}"
-      classpathref="farrago.run.classpath">
+      classpathref="farrago.javadoc.classpath">
       <tag dir="src" includes="customJavadocTags.txt"/>
       <packageset dir="${farrago.catalog.src.dir}">
         <include name="**"/>
@@ -1270,7 +1282,7 @@ please disable it and try again.
   </target>
 
   <!-- create the documentation tarball -->
-  <target name="buildDoc" 
+  <target name="buildDoc"
     depends="cleanExamples, createCatalog, buildExamples, javadoc">
     <delete file="${farrago.dir}/doc.tar" />
     <delete file="${farrago.dir}/doc.tar.gz" />
@@ -1343,19 +1355,19 @@ please disable it and try again.
     </farrago.jswatDebug>
   </target>
 
-  <!-- verify that ReposStorage.properties is correctly configured 
+  <!-- verify that ReposStorage.properties is correctly configured
        for storage via JDBC -->
   <target name="verifyReposSqlStorage" depends="configureReposStorage">
     <loadproperties srcFile="${farrago.ReposStorage.propfile}">
       <filterchain>
         <tokenfilter>
-          <replacestring 
+          <replacestring
             from="MDRStorageProperty.org.netbeans.mdr.persistence."
             to=""/>
         </tokenfilter>
       </filterchain>
     </loadproperties>
-    <sql 
+    <sql
       driver="${jdbcimpl.driverClassName}"
       url="${jdbcimpl.url}"
       userid="${jdbcimpl.userName}"
@@ -1369,14 +1381,14 @@ please disable it and try again.
 
   <target name="buildExamples" depends="compile">
     <ant antfile="examples/plannerviz/build.xml" inheritAll="false"/>
-    <ant antfile="examples/rng/build.xml" target="createPlugin" 
+    <ant antfile="examples/rng/build.xml" target="createPlugin"
       inheritAll="false"/>
   </target>
 
   <target name="cleanExamples">
-    <ant antfile="examples/plannerviz/build.xml" target="clean" 
+    <ant antfile="examples/plannerviz/build.xml" target="clean"
       inheritAll="false"/>
-    <ant antfile="examples/rng/build.xml" target="clean" 
+    <ant antfile="examples/rng/build.xml" target="clean"
       inheritAll="false"/>
   </target>
 
@@ -1501,8 +1513,8 @@ please disable it and try again.
     description="Generate JUnit test wrappers for all unitsql scripts">
     <farrago.generateSqlTestWrapper
       filesetref="fileset.unitsql"
-      outputfile="${FarragoSqlTestWrapper.java}" 
-      rootpath="${farrago.dir}${file.separator}" 
+      outputfile="${FarragoSqlTestWrapper.java}"
+      rootpath="${farrago.dir}${file.separator}"
       packagename="net.sf.farrago.test"
       classname="FarragoSqlTestWrapper"/>
   </target>
@@ -1526,10 +1538,10 @@ please disable it and try again.
   <target name="emmaInstr">
     <mkdir dir="${emma.farrago.classes.dir}"/>
     <emma verbosity="verbose">
-      <instr 
-        mode="copy" 
-        outdir="${emma.farrago.classes.dir}" 
-        metadatafile="${farrago.dir}/coverage.em" 
+      <instr
+        mode="copy"
+        outdir="${emma.farrago.classes.dir}"
+        metadatafile="${farrago.dir}/coverage.em"
         instrpath="${farrago.classes.dir}">
         <filter excludes="*_Stub*"/>
       </instr>
@@ -1546,7 +1558,7 @@ please disable it and try again.
     <antcall target="testRngPlugin"/>
     <antcall target="exportCatalog"/>
     <antcall target="emmaJunit"/>
-    <!-- comment out the following since I merged junit and regression in 
+    <!-- comment out the following since I merged junit and regression in
     emmaJunit-->
     <!--    <antcall target="regressionWithoutBuild"/>-->
     <antcall target="testCleanup"/>

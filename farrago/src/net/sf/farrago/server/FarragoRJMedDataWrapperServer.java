@@ -34,7 +34,8 @@ import net.sf.farrago.jdbc.rmi.*;
 
 
 /**
- * RMI server-side implementation of {@link FarragoMedDataWrapper}.
+ * RMI server-side implementation of
+ * {@link net.sf.farrago.jdbc.FarragoMedDataWrapperInfo}.
  *
  * <p>This object is constructed with a factory for creating a data wrapper.
  * Each method grabs a data wrapper from the factory, and releases it at the end
@@ -152,7 +153,8 @@ class FarragoRJMedDataWrapperServer
      * Gets wrapper information from the server.
      *
      * <p>This {@link FarragoMedDataWrapperInfo} is leak-proof -- unlike a
-     * {@link FarragoMedDataWrapper}, we don't have to worry about freeing it.
+     * {@link net.sf.farrago.namespace.FarragoMedDataWrapper}, we don't have to
+     * worry about freeing it.
      */
     private FarragoMedDataWrapperInfo getWrapper()
         throws RemoteException

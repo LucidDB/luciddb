@@ -88,10 +88,9 @@ public class LcsIndexOnlyScanRel
     }
 
     /**
-     * Constructs an index only scan from a row scan
+     * Constructs an index-only scan from a row scan.
      *
-     * @param cluster the environment for the scan
-     * @param table the table containing the index to be scanned
+     * @param rowScan row scan
      * @param index the index to be scanned
      * @param proj keys to be projected from the index
      */
@@ -123,14 +122,12 @@ public class LcsIndexOnlyScanRel
      * @param index the index to be scanned
      * @param projectedColumns for full scans, the output projection. Should be
      * null for searches
-     * @param isUniqueKey
-     * @param isOuter
+     * @param isUniqueKey   TODO
+     * @param isOuter       TODO
      * @param inputKeyProj for searches, the key columns
      * @param inputJoinProj for index joins applied to searches, the input keys
      * to be output
      * @param inputDirectiveProj for searches, the search directive columns
-     * @param outputProj for searches, the output projection. Should be null for
-     * full scans
      */
     private LcsIndexOnlyScanRel(
         RelOptCluster cluster,

@@ -88,7 +88,7 @@ public class FarragoQueryTest
             + " from sales.emps order by deptno";
         preparedStmt = connection.prepareStatement(sql);
         resultSet = preparedStmt.executeQuery();
-        List refList = new ArrayList();
+        List<String> refList = new ArrayList<String>();
         refList.add("10");
         refList.add("20");
         refList.add("20");
@@ -107,7 +107,7 @@ public class FarragoQueryTest
         final byte [] bytes = { 0x41, 0x62, 0x63 };
         preparedStmt.setBytes(1, bytes);
         resultSet = preparedStmt.executeQuery();
-        Set refSet = new HashSet();
+        Set<String> refSet = new HashSet<String>();
         refSet.add("Eric");
         compareResultSet(refSet);
     }
@@ -121,7 +121,7 @@ public class FarragoQueryTest
         String sql =
             "select name,public_key from sales.emps" + " order by public_key";
         resultSet = stmt.executeQuery(sql);
-        List refList = new ArrayList();
+        List<String> refList = new ArrayList<String>();
         refList.add("Wilma");
         refList.add("Eric");
         refList.add("Fred");
@@ -139,7 +139,7 @@ public class FarragoQueryTest
         stmt.execute(sql);
         sql = "select \"name\" from \"Relational\".\"Schema\"";
         resultSet = stmt.executeQuery(sql);
-        Set refSet = new HashSet();
+        Set<String> refSet = new HashSet<String>();
         refSet.add("INFORMATION_SCHEMA");
         refSet.add("JDBC_METADATA");
         refSet.add("MGMT");
@@ -445,7 +445,7 @@ public class FarragoQueryTest
     {
         // make sure we're starting a new txn
         connection.commit();
-        
+
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         FarragoSession session = farragoConnection.getSession();
@@ -462,11 +462,10 @@ public class FarragoQueryTest
         }
 
         List<String> expectedName =
-            Arrays.asList(new String[] {
+            Arrays.asList(
                 "LOCALDB",
                 "SALES",
-                "DEPTS"
-                });
+                "DEPTS");
 
         assertEquals(
             "begin",

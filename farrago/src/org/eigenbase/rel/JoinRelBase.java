@@ -49,13 +49,25 @@ public abstract class JoinRelBase
     protected Set<String> variablesStopped = Collections.emptySet();
 
     /**
-     * Values must be of enumeration {@link JoinRelType}, except that {@link
-     * JoinType#RIGHT} is disallowed.
+     * Values must be of enumeration {@link JoinRelType}, except that
+     * {@link JoinRelType#RIGHT} is disallowed.
      */
     protected JoinRelType joinType;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a JoinRelBase.
+     *
+     * @param cluster Cluster
+     * @param left Left input
+     * @param right Right input
+     * @param condition Join condition
+     * @param joinType Join type
+     * @param variablesStopped Set of names of variables which are set by the
+     * LHS and used by the RHS and are not available to nodes above this
+     * JoinRel in the tree
+     */
     protected JoinRelBase(
         RelOptCluster cluster,
         RelTraitSet traits,
@@ -217,7 +229,9 @@ public abstract class JoinRelBase
     }
 
     /**
-     * Returns the type of joining two relations. The result type consists of
+     * Returns the type the row which results when two relations are joined.
+     *
+     * <p>The resulting row type consists of
      * the fields of the left type plus the fields of the right type. The field
      * name list, if present, overrides the original names of the fields.
      *
@@ -227,7 +241,7 @@ public abstract class JoinRelBase
      * @param fieldNameList If not null, overrides the original names of the
      * fields
      *
-     * @return
+     * @return type of row which results when two relations are joined
      *
      * @pre fieldNameList == null || fieldNameList.size() ==
      * leftType.getFields().length + rightType.getFields().length
@@ -266,7 +280,7 @@ public abstract class JoinRelBase
         RelDataType type,
         List<RelDataType> typeList,
         List<String> nameList,
-        HashSet<String> uniqueNameList)   
+        HashSet<String> uniqueNameList)
     {
         final RelDataTypeField [] fields = type.getFields();
         for (int i = 0; i < fields.length; i++) {

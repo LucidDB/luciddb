@@ -61,7 +61,7 @@ public class FarragoJdbcMetaDataImpl
     protected RelDataType getFieldType(int fieldOrdinal)
     {
         RelDataType namedType = getFieldNamedType(fieldOrdinal);
-        if (namedType.getSqlTypeName() == SqlTypeName.Distinct) {
+        if (namedType.getSqlTypeName() == SqlTypeName.DISTINCT) {
             // for most metadata calls, report information about the
             // predefined type on which the distinct type is based
             return namedType.getFields()[0].getType();
@@ -103,15 +103,15 @@ public class FarragoJdbcMetaDataImpl
         if (typeName == null) {
             return type.toString();
         }
-        switch (typeName.getOrdinal()) {
-        case SqlTypeName.Structured_ordinal:
-        case SqlTypeName.Distinct_ordinal:
+        switch (typeName) {
+        case STRUCTURED:
+        case DISTINCT:
             return type.getSqlIdentifier().toString();
-        case SqlTypeName.IntervalDayTime_ordinal:
-        case SqlTypeName.IntervalYearMonth_ordinal:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             return type.toString();
         }
-        return typeName.getName();
+        return typeName.name();
     }
 
     protected int getFieldPrecision(int fieldOrdinal)

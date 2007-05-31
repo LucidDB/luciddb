@@ -81,8 +81,7 @@ public class LcsTableAppendRel
             true);
 
         // Only INSERT is supported currently.
-        assert (getOperation().getOrdinal()
-                == TableModificationRel.Operation.INSERT_ORDINAL);
+        assert (getOperation() == TableModificationRel.Operation.INSERT);
 
         this.lcsTable = lcsTable;
         assert lcsTable.getPreparingStmt()

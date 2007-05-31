@@ -165,9 +165,11 @@ public abstract class OJUtil
      * Each thread's enclosing {@link OJClass}. Synthetic classes are declared
      * as inner classes of this.
      */
-    public static final ThreadLocal threadDeclarers = new ThreadLocal();
+    public static final ThreadLocal<OJClass> threadDeclarers =
+        new ThreadLocal<OJClass>();
 
-    private static ThreadLocal threadTypeFactories = new ThreadLocal();
+    private static final ThreadLocal<OJTypeFactory> threadTypeFactories =
+        new ThreadLocal<OJTypeFactory>();
 
     //~ Methods ----------------------------------------------------------------
 
@@ -178,7 +180,7 @@ public abstract class OJUtil
 
     public static OJTypeFactory threadTypeFactory()
     {
-        return (OJTypeFactory) threadTypeFactories.get();
+        return threadTypeFactories.get();
     }
 
     public static RelDataType ojToType(
@@ -221,7 +223,7 @@ public abstract class OJUtil
         RelDataType rowType,
         RelDataTypeFactory typeFactory)
     {
-        OJClass declarer = (OJClass) threadDeclarers.get();
+        OJClass declarer = threadDeclarers.get();
         if (declarer == null) {
             assert (false) : "threadDeclarers.get() != null";
         }

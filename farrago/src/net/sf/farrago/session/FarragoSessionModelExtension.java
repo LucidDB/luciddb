@@ -23,10 +23,7 @@ package net.sf.farrago.session;
 
 import java.util.*;
 
-import net.sf.farrago.fem.security.*;
-
-import org.eigenbase.util.*;
-
+import net.sf.farrago.ddl.DdlHandler;
 
 /**
  * FarragoSessionModelExtension defines the SPI for plugging in custom behavior
@@ -50,11 +47,10 @@ public interface FarragoSessionModelExtension
      *
      * @param ddlValidator validator which will invoke handlers
      * @param handlerList receives handler objects in order in which they should
-     * be tried
      */
     public void defineDdlHandlers(
         FarragoSessionDdlValidator ddlValidator,
-        List handlerList);
+        List<DdlHandler> handlerList);
 
     /**
      * Defines resource bundles to be used for localizing model object names.
@@ -64,7 +60,7 @@ public interface FarragoSessionModelExtension
      * @param bundleList receives instances of ResourceBundle
      */
     public void defineResourceBundles(
-        List bundleList);
+        List<ResourceBundle> bundleList);
 
     /**
      * Defines privileges allowed on various object types.

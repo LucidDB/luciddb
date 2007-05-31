@@ -46,10 +46,10 @@ public abstract class AbstractSqlTester
 
     // ~ Constants ------------------------------------------------------------
     public static final TypeChecker IntegerTypeChecker =
-        new SqlTypeChecker(SqlTypeName.Integer);
+        new SqlTypeChecker(SqlTypeName.INTEGER);
 
     public static final TypeChecker BooleanTypeChecker =
-        new SqlTypeChecker(SqlTypeName.Boolean);
+        new SqlTypeChecker(SqlTypeName.BOOLEAN);
 
     /**
      * Checker which allows any type.
@@ -94,11 +94,11 @@ public abstract class AbstractSqlTester
      */
     public static String getTypeString(RelDataType sqlType)
     {
-        switch (sqlType.getSqlTypeName().getOrdinal()) {
-        case SqlTypeName.Varchar_ordinal:
+        switch (sqlType.getSqlTypeName()) {
+        case VARCHAR:
             String actual = "VARCHAR(" + sqlType.getPrecision() + ")";
             return sqlType.isNullable() ? actual : (actual + " NOT NULL");
-        case SqlTypeName.Char_ordinal:
+        case CHAR:
             actual = "CHAR(" + sqlType.getPrecision() + ")";
             return sqlType.isNullable() ? actual : (actual + " NOT NULL");
         default:

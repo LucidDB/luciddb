@@ -26,8 +26,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
-
 
 /**
  * Definition of the "TRIM" builtin SQL function.
@@ -98,7 +96,7 @@ public class SqlTrimFunction
         assert functionQualifier == null;
         assert (3 == operands.length);
         if (null == operands[0]) {
-            operands[0] = SqlLiteral.createSymbol(Flag.Both, pos);
+            operands[0] = SqlLiteral.createSymbol(Flag.BOTH, pos);
         }
 
         if (null == operands[1]) {
@@ -146,27 +144,17 @@ public class SqlTrimFunction
     /**
      * Defines the enumerated values "LEADING", "TRAILING", "BOTH".
      */
-    public static class Flag
-        extends EnumeratedValues.BasicValue
+    public enum Flag implements SqlLiteral.SqlSymbol
     {
-        public static final int Both_ordinal = 0;
-        public static final Flag Both = new Flag("Both", 1, 1, Both_ordinal);
-        public static final int Leading_ordinal = 1;
-        public static final Flag Leading =
-            new Flag("Leading", 1, 0, Leading_ordinal);
-        public static final int Trailing_ordinal = 2;
-        public static final Flag Trailing =
-            new Flag("Trailing", 0, 1, Trailing_ordinal);
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(new Flag[] { Both, Leading, Trailing });
+        BOTH(1, 1),
+        LEADING(1, 0),
+        TRAILING(0, 1);
+
         private final int left;
         private final int right;
 
-        private Flag(String name,
-            int left,
-            int right, int ordinal)
+        Flag(int left, int right)
         {
-            super(name, ordinal, null);
             this.left = left;
             this.right = right;
         }

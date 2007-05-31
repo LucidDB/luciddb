@@ -198,7 +198,7 @@ public abstract class RelDataTypeImpl
             return null;
         }
         return new SqlIdentifier(
-                typeName.getName(),
+            typeName.name(),
                 SqlParserPos.ZERO);
     }
 

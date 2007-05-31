@@ -54,8 +54,8 @@ public class RelOptUtilTest
         RelDataType t1 =
             typeFactory.createStructType(
                 new RelDataType[] {
-                    typeFactory.createSqlType(SqlTypeName.Decimal, 5, 2),
-                typeFactory.createSqlType(SqlTypeName.Varchar, 10),
+                    typeFactory.createSqlType(SqlTypeName.DECIMAL, 5, 2),
+                typeFactory.createSqlType(SqlTypeName.VARCHAR, 10),
                 },
                 new String[] {
                     "f0",

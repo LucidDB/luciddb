@@ -787,7 +787,7 @@ public class SqlJdbcFunctionCall
                         SqlNode [] newOperands = new SqlNode[3];
                         newOperands[0] =
                             SqlLiteral.createSymbol(
-                                SqlTrimFunction.Flag.Leading,
+                                SqlTrimFunction.Flag.LEADING,
                                 null);
                         newOperands[1] = SqlLiteral.createCharString(" ", null);
                         newOperands[2] = operands[0];
@@ -805,7 +805,7 @@ public class SqlJdbcFunctionCall
                         SqlNode [] newOperands = new SqlNode[3];
                         newOperands[0] =
                             SqlLiteral.createSymbol(
-                                SqlTrimFunction.Flag.Trailing,
+                                SqlTrimFunction.Flag.TRAILING,
                                 null);
                         newOperands[1] = SqlLiteral.createCharString(" ", null);
                         newOperands[2] = operands[0];

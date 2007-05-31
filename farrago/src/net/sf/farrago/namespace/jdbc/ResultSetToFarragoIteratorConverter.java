@@ -138,7 +138,7 @@ class ResultSetToFarragoIteratorConverter
                 String methodName =
                     ReflectUtil.getByteBufferReadMethod(
                         factory.getClassForPrimitive(type)).getName();
-                if (type.getSqlTypeName() == SqlTypeName.Boolean) {
+                if (type.getSqlTypeName() == SqlTypeName.BOOLEAN) {
                     methodName = "getBoolean";
                 }
                 rhsExp =
@@ -147,11 +147,11 @@ class ResultSetToFarragoIteratorConverter
                 String methodName;
                 if (SqlTypeUtil.inCharFamily(type)) {
                     methodName = "getString";
-                } else if (type.getSqlTypeName() == SqlTypeName.Timestamp) {
+                } else if (type.getSqlTypeName() == SqlTypeName.TIMESTAMP) {
                     methodName = "getTimestamp";
-                } else if (type.getSqlTypeName() == SqlTypeName.Date) {
+                } else if (type.getSqlTypeName() == SqlTypeName.DATE) {
                     methodName = "getDate";
-                } else if (type.getSqlTypeName() == SqlTypeName.Time) {
+                } else if (type.getSqlTypeName() == SqlTypeName.TIME) {
                     methodName = "getTime";
                 } else {
                     methodName = "getObject";
@@ -163,7 +163,7 @@ class ResultSetToFarragoIteratorConverter
             // cast to target type, or perhaps narrow the external data if  
             // it is of greater precision that Farrago supports
             boolean narrow = false;
-            if (type.getSqlTypeName() == SqlTypeName.Decimal
+            if (type.getSqlTypeName() == SqlTypeName.DECIMAL
                 && type.getPrecision() >= SqlTypeName.MAX_NUMERIC_PRECISION) 
             {
                 FarragoPreparingStmt stmt = 

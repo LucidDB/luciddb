@@ -25,12 +25,13 @@ import net.sf.farrago.fennel.tuple.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.Util;
 
 /**
- * Static utility methods related to Fennel storage. Historically, these 
- * methods were refactored from FennelRelUtil to remove their dependency 
+ * Static utility methods related to Fennel storage. Historically, these
+ * methods were refactored from FennelRelUtil to remove their dependency
  * on the Farrago query package.
- * 
+ *
  * @author John Pham
  * @version $Id$
  */
@@ -72,27 +73,27 @@ public abstract class FennelUtil
      * <th>Comments</th>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Boolean}</td>
+     * <td>{@link SqlTypeName#BOOLEAN}</td>
      * <td>{@link FennelStandardTypeDescriptor#BOOL BOOL}</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Tinyint}</td>
+     * <td>{@link SqlTypeName#TINYINT}</td>
      * <td>{@link FennelStandardTypeDescriptor#INT_8 INT_8}</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Smallint}</td>
+     * <td>{@link SqlTypeName#SMALLINT}</td>
      * <td>{@link FennelStandardTypeDescriptor#INT_16 INT_16}</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Integer}</td>
+     * <td>{@link SqlTypeName#INTEGER}</td>
      * <td>{@link FennelStandardTypeDescriptor#INT_32 INT_32}</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Decimal}(precision, scale)</td>
+     * <td>{@link SqlTypeName#DECIMAL}(precision, scale)</td>
      * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
      * <td>
      * <p>We plan to use a shifted representation. For example, the <code>
@@ -101,17 +102,17 @@ public abstract class FennelUtil
      * 10 ^ 2)</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Date}</td>
+     * <td>{@link SqlTypeName#DATE}</td>
      * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
      * <td>Milliseconds since the epoch.</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Time}</td>
+     * <td>{@link SqlTypeName#TIME}</td>
      * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
      * <td>Milliseconds since midnight.</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Timestamp}</td>
+     * <td>{@link SqlTypeName#TIMESTAMP}</td>
      * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
      * <td>Milliseconds since the epoch.</td>
      * </tr>
@@ -122,7 +123,7 @@ public abstract class FennelUtil
      * of a TIMESTAMP and a VARCHAR.</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#IntervalDayTime}</td>
+     * <td>{@link SqlTypeName#INTERVAL_DAY_TIME}</td>
      * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
      * <td>Not implemented.
      *
@@ -135,7 +136,7 @@ public abstract class FennelUtil
      * for example, <code>INTERVAL SECOND(6)</code>.</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#IntervalYearMonth}</td>
+     * <td>{@link SqlTypeName#INTERVAL_YEAR_MONTH}</td>
      * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
      * <td>Not implemented.
      *
@@ -145,22 +146,22 @@ public abstract class FennelUtil
      * represented as 24.
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Bigint}</td>
+     * <td>{@link SqlTypeName#BIGINT}</td>
      * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Varchar}(precision)</td>
+     * <td>{@link SqlTypeName#VARCHAR}(precision)</td>
      * <td>{@link FennelStandardTypeDescriptor#VARCHAR VARCHAR}</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Varbinary}(precision)</td>
+     * <td>{@link SqlTypeName#VARBINARY}(precision)</td>
      * <td>{@link FennelStandardTypeDescriptor#VARBINARY VARBINARY}</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Multiset}</td>
+     * <td>{@link SqlTypeName#MULTISET}</td>
      * <td>{@link FennelStandardTypeDescriptor#VARBINARY VARBINARY}</td>
      * <td>The fields are serialized into the VARBINARY field in the standard
      * Fennel serialization format. There is no 'count' field. To deduce the
@@ -172,7 +173,7 @@ public abstract class FennelUtil
      * <code>LONG VARBINARY</code> is implemented.</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Row}</td>
+     * <td>{@link SqlTypeName#ROW}</td>
      * <td>&nbsp;</td>
      * <td>The fields are 'flattened' so that they become top-level fields of
      * the relation.
@@ -183,27 +184,27 @@ public abstract class FennelUtil
      * NULL.</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Char}(precision)</td>
+     * <td>{@link SqlTypeName#CHAR}(precision)</td>
      * <td>{@link FennelStandardTypeDescriptor#CHAR CHAR}</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Binary}(precision)</td>
+     * <td>{@link SqlTypeName#BINARY}(precision)</td>
      * <td>{@link FennelStandardTypeDescriptor#BINARY BINARY}</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Real}</td>
+     * <td>{@link SqlTypeName#REAL}</td>
      * <td>{@link FennelStandardTypeDescriptor#REAL REAL}</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Float}</td>
+     * <td>{@link SqlTypeName#FLOAT}</td>
      * <td>{@link FennelStandardTypeDescriptor#DOUBLE DOUBLE}</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
-     * <td>{@link SqlTypeName#Double}</td>
+     * <td>{@link SqlTypeName#DOUBLE}</td>
      * <td>{@link FennelStandardTypeDescriptor#DOUBLE DOUBLE}</td>
      * <td>&nbsp;</td>
      * </tr>
@@ -212,40 +213,40 @@ public abstract class FennelUtil
     public static FennelStandardTypeDescriptor convertSqlTypeNameToFennelType(
         SqlTypeName sqlType)
     {
-        switch (sqlType.getOrdinal()) {
-        case SqlTypeName.Boolean_ordinal:
+        switch (sqlType) {
+        case BOOLEAN:
             return FennelStandardTypeDescriptor.BOOL;
-        case SqlTypeName.Tinyint_ordinal:
+        case TINYINT:
             return FennelStandardTypeDescriptor.INT_8;
-        case SqlTypeName.Smallint_ordinal:
+        case SMALLINT:
             return FennelStandardTypeDescriptor.INT_16;
-        case SqlTypeName.Integer_ordinal:
+        case INTEGER:
             return FennelStandardTypeDescriptor.INT_32;
-        case SqlTypeName.Date_ordinal:
-        case SqlTypeName.Time_ordinal:
-        case SqlTypeName.Timestamp_ordinal:
-        case SqlTypeName.Bigint_ordinal:
-        case SqlTypeName.IntervalDayTime_ordinal:
-        case SqlTypeName.IntervalYearMonth_ordinal:
+        case DATE:
+        case TIME:
+        case TIMESTAMP:
+        case BIGINT:
+        case INTERVAL_DAY_TIME:
+        case INTERVAL_YEAR_MONTH:
             return FennelStandardTypeDescriptor.INT_64;
-        case SqlTypeName.Varchar_ordinal:
+        case VARCHAR:
             return FennelStandardTypeDescriptor.VARCHAR;
-        case SqlTypeName.Varbinary_ordinal:
-        case SqlTypeName.Multiset_ordinal:
+        case VARBINARY:
+        case MULTISET:
             return FennelStandardTypeDescriptor.VARBINARY;
-        case SqlTypeName.Char_ordinal:
+        case CHAR:
             return FennelStandardTypeDescriptor.CHAR;
-        case SqlTypeName.Binary_ordinal:
+        case BINARY:
             return FennelStandardTypeDescriptor.BINARY;
-        case SqlTypeName.Real_ordinal:
+        case REAL:
             return FennelStandardTypeDescriptor.REAL;
-        case SqlTypeName.Decimal_ordinal:
+        case DECIMAL:
             return FennelStandardTypeDescriptor.INT_64;
-        case SqlTypeName.Float_ordinal:
-        case SqlTypeName.Double_ordinal:
+        case FLOAT:
+        case DOUBLE:
             return FennelStandardTypeDescriptor.DOUBLE;
         default:
-            throw sqlType.unexpected();
+            throw Util.unexpected(sqlType);
         }
     }
 }

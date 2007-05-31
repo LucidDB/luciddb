@@ -44,10 +44,11 @@ import org.eigenbase.xom.*;
  *
  * <p>The name of the class is misleading; it is not itself a metadata factory.
  * MockMetadataFactory uses dynamic proxies (see {@link Proxy}) to generate the
- * necessary interfaces on the fly. Inside every proxy is an instance of {@link
- * ElementImpl}, which stores attributes in a {@link HashMap} and implements the
+ * necessary interfaces on the fly. Inside every proxy is an instance of
+ * {@link org.eigenbase.jmi.mem.JmiMemFactory.ElementImpl}, which stores
+ * attributes in a {@link HashMap} and implements the
  * {@link InvocationHandler} interface required by the proxy. There are
- * specialized subtypes of {@link ElementImpl} for packages and classes.
+ * specialized subtypes of <code>ElementImpl</code> for packages and classes.
  *
  * <p>Since there is no repository to provide metadata, the factory infers the
  * object model from the Java interfaces:
@@ -62,6 +63,8 @@ import org.eigenbase.xom.*;
  * created.
  * <li>All other types are presumed to be regular attributes.
  * </ul>
+ *
+ * @version $Id$
  */
 public abstract class MockMetadataFactory
     extends JmiMemFactory
@@ -116,12 +119,13 @@ public abstract class MockMetadataFactory
     {
         protected void accept(Object o)
         {
-            List attrNames = new ArrayList();
-            List attrValues = new ArrayList();
-            List collectionNames = new ArrayList();
-            List collectionValues = new ArrayList();
-            List refNames = new ArrayList();
-            List refValues = new ArrayList();
+            List<String> attrNames = new ArrayList<String>();
+            List<Object> attrValues = new ArrayList<Object>();
+            List<String> collectionNames = new ArrayList<String>();
+            List<Collection<?>> collectionValues =
+                new ArrayList<Collection<?>>();
+            List<String> refNames = new ArrayList<String>();
+            List<RefBaseObject> refValues = new ArrayList<RefBaseObject>();
             extractProperties(
                 o,
                 attrNames,
@@ -146,14 +150,14 @@ public abstract class MockMetadataFactory
          */
         protected void extractProperties(
             Object o,
-            List attrNames,
-            List attrValues,
-            List collectionNames,
-            List collectionValues,
-            List refNames,
-            List refValues)
+            List<String> attrNames,
+            List<Object> attrValues,
+            List<String> collectionNames,
+            List<Collection<?>> collectionValues,
+            List<String> refNames,
+            List<RefBaseObject> refValues)
         {
-            Class clazz = o.getClass();
+            Class<? extends Object> clazz = o.getClass();
             Method [] methods = sortMethods(clazz.getMethods());
             for (int i = 0; i < methods.length; i++) {
                 Method method = methods[i];
@@ -190,12 +194,12 @@ public abstract class MockMetadataFactory
 
         protected abstract void visit(
             Object o,
-            List attrNames,
-            List attrValues,
-            List collectionNames,
-            List collectionValues,
-            List refNames,
-            List refValues);
+            List<String> attrNames,
+            List<Object> attrValues,
+            List<String> collectionNames,
+            List<Collection<?>> collectionValues,
+            List<String> refNames,
+            List<RefBaseObject> refValues);
     }
 
     /**
@@ -215,30 +219,29 @@ public abstract class MockMetadataFactory
 
         protected void visit(
             Object o,
-            List attrNames,
-            List attrValues,
-            List collectionNames,
-            List collectionValues,
-            List refNames,
-            List refValues)
+            List<String> attrNames,
+            List<Object> attrValues,
+            List<String> collectionNames,
+            List<Collection<?>> collectionValues,
+            List<String> refNames,
+            List<RefBaseObject> refValues)
         {
             String tagName = getTagName(o);
             xmlOutput.beginBeginTag(tagName);
             onElement(o);
             for (int i = 0; i < attrNames.size(); i++) {
-                String attrName = (String) attrNames.get(i);
+                String attrName = attrNames.get(i);
                 Object attrValue = attrValues.get(i);
                 onAttribute(attrName, attrValue);
             }
             xmlOutput.endBeginTag(tagName);
             for (int i = 0; i < refNames.size(); i++) {
-                String refName = (String) refNames.get(i);
-                RefBaseObject ref = (RefBaseObject) refValues.get(i);
+                String refName = refNames.get(i);
+                RefBaseObject ref = refValues.get(i);
                 onRef(refName, ref);
-                continue;
             }
             for (int i = 0; i < collectionNames.size(); i++) {
-                String collectionName = (String) collectionNames.get(i);
+                String collectionName = collectionNames.get(i);
                 List list = (List) collectionValues.get(i);
                 onCollection(collectionName, list);
             }

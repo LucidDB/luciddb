@@ -368,9 +368,9 @@ public class JmiModelGraph
         ModelPackage mofPackage = (ModelPackage) mofAssoc.refImmediatePackage();
         MofClass endType =
             (MofClass) mofPackage.getAssociationEnd().refMetaObject();
-        List ends = mofAssoc.findElementsByType(endType, false);
-        mofAssocEnds[0] = (AssociationEnd) ends.get(0);
-        mofAssocEnds[1] = (AssociationEnd) ends.get(1);
+        List<AssociationEnd> ends = mofAssoc.findElementsByType(endType, false);
+        mofAssocEnds[0] = ends.get(0);
+        mofAssocEnds[1] = ends.get(1);
 
         boolean swapEnds = false;
 

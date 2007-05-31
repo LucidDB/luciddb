@@ -23,7 +23,6 @@
 package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
 
 
 /**
@@ -51,7 +50,7 @@ public abstract class AbstractSqlType
     {
         super(fields);
         this.typeName = typeName;
-        if (typeName == SqlTypeName.Null) {
+        if (typeName == SqlTypeName.NULL) {
             this.isNullable = true;
         } else {
             this.isNullable = isNullable;

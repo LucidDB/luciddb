@@ -125,12 +125,12 @@ public abstract class ReflectiveSqlOperatorTable
         // REVIEW jvs 1-Jan-2005:  why is this extra lookup required?
         // Shouldn't it be covered by search above?
         SqlOperator extra = null;
-        switch (syntax.getOrdinal()) {
-        case SqlSyntax.Binary_ordinal:
+        switch (syntax) {
+        case Binary:
             extra = mapNameToOp.get(simpleName + ":BINARY");
-        case SqlSyntax.Prefix_ordinal:
+        case Prefix:
             extra = mapNameToOp.get(simpleName + ":PREFIX");
-        case SqlSyntax.Postfix_ordinal:
+        case Postfix:
             extra = mapNameToOp.get(simpleName + ":POSTFIX");
         default:
             break;
@@ -160,7 +160,7 @@ public abstract class ReflectiveSqlOperatorTable
     /**
      * Registers a function in the table.
      *
-     * @param function
+     * @param function Function to register
      */
     public void register(SqlFunction function)
     {
