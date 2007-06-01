@@ -317,7 +317,7 @@
       <indentSizeAfterRight>1</indentSizeAfterRight>
      </catch>
      <treatDifferent>
-      <methodClassIfWrapped>true</methodClassIfWrapped>
+      <methodClassIfWrapped>false</methodClassIfWrapped>
       <methodClass>true</methodClass>
       <statementWrapped>true</statementWrapped>
      </treatDifferent>
@@ -344,7 +344,7 @@
     <indentation>
      <continuation>
       <parameter>false</parameter>
-      <return>false</return>
+      <return>true</return>
       <block>false</block>
       <operator>false</operator>
      </continuation>
@@ -580,12 +580,12 @@
       <lineLength>80</lineLength>
       <minSpace>20</minSpace>
       <singleLine>true</singleLine>
-      <multiLine>true</multiLine>
+      <multiLine>false</multiLine>
      </wrap>
      <moveAfterBrace>-1</moveAfterBrace>
      <reflow>
       <singeLine>true</singeLine>
-      <multiLine>true</multiLine>
+      <multiLine>false</multiLine>
      </reflow>
     </comments>
     <sorting>

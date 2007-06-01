@@ -650,7 +650,7 @@ public class LcsIndexOptimizer
     /**
      * maps each index in the list of usable indexes to filters
      * satisfiable by the index and populates the indexFilterSet
-     * with tuples <index, satisfiable filters>.
+     * with tuples (index, satisfiable filters).
      * The set is ordered by effective selectivity of the index.
      *
      * @param usableIndexes list of indexes to be mapped
@@ -1613,11 +1613,13 @@ public class LcsIndexOptimizer
                 LcsIndexSearchRel oldIndexSearchRel;
 
                 if (call.rels.length == (rowScanRelPosInCall + 3)) {
-                    // call tree shape:
-                    // ....
-                    //   RowScanRel
-                    //     origIndexMerge
-                    //       origIndexSearch
+                    /*
+                     * call tree shape:
+                     * ....
+                     *   RowScanRel
+                     *     origIndexMerge
+                     *       origIndexSearch
+                     */
 
                     // recreate the index merge rel with the appropriate dynamic
                     // params
@@ -1636,8 +1638,10 @@ public class LcsIndexOptimizer
                     // and the merge rel is recently created, i.e, does not
                     // come from the call tree
                     // call tree shape:
-                    // ....
-                    //   RowScanRel
+                    /*
+                     * ....
+                     *   RowScanRel
+                     */
 
                     assert (call.rels.length == (rowScanRelPosInCall + 1));
                     assert (oldIndexAccessRel.getInputs()[0] instanceof
@@ -2025,21 +2029,27 @@ public class LcsIndexOptimizer
         /**
          * adds a tuple(index,listOfFilters). a tuple (filter, index) is always
          * added regardless the existence of the filter in the filter2IndexMap
-         * existing <filter,index> will be overridden, but the mapped position
+         * existing (filter,index) will be overridden, but the mapped position
          * of the overridden index will not be changed
          *
          * Example:
-         * with point filters on columns A,B,C
-         * Index X(A,B) and Y(B,C)
-         * generated tuples will be <X, A,B> and <Y, B,C>
+         *<ul>
+         *<li>with point filters on columns A,B,C
+         *<li>Index X(A,B) and Y(B,C)
+         *<li>generated tuples will be (X,A,B) and (Y,B,C)
+         *</ul>
          *
-         * adding first tuple:
-         * filter2IndexMap will have <A,X> and <B,X>
-         * index2MatchedPosMap will have <X,2>
+         *<ul>
+         *<li>adding first tuple:
+         *<li>filter2IndexMap will have (A,X) and (B,X)
+         *<li>index2MatchedPosMap will have (X,2)
+         *</ul>
          *
-         * adding second tuple:
-         * filter2IndexMap will have <A,X> and <B,Y> and <C,Y>
-         * index2MatchedPosMap will have <X,2> and <Y,2>
+         *<ul>
+         *<li>adding second tuple:
+         *<li>filter2IndexMap will have (A,X) and (B,Y) and (C,Y)
+         *<li>index2MatchedPosMap will have (X,2) and (Y,2)
+         *</ul>
          *
          * @param tup the tuple to add
          */
@@ -2061,16 +2071,23 @@ public class LcsIndexOptimizer
          * in the reverse order they are matched to index positions, and the
          * adjustment to "mapped index position" is therefore -1.
          *
-         * Example,
-         * Filters on A, B, C
-         * Index X on C,A,B
-         * Index Y on C,B,A
+         *<p>
+         *
+         * Example:
+         *<ul>
+         *<li>Filters on A, B, C
+         *<li>Index X on C,A,B
+         *<li>Index Y on C,B,A
+         *</ul>
+         *
+         *<p>
          *
          * Filter2Indexmapping goes through the following state change in one
          * call of getBestIndex(). The fields in () are the index and its
          * current mapped position. The mapping in [] are the ones costed.
-         * C (X,1) -> C,A (X,2) -> [C,A,B (X,3)] -> C,A (X,2) -> C (X,1)
-         * -> C (Y,1) -> C,B(Y,2) -> [C,B,A (Y,3)]
+         * C (X,1) -&gt; C,A (X,2) -&gt; [C,A,B (X,3)] -&gt;
+         * C,A (X,2) -&gt; C (X,1)
+         * -&gt; C (Y,1) -&gt; C,B(Y,2) -&gt; [C,B,A (Y,3)]
          * @param filter filter to unmap
          */
         void remove(SargColumnFilter filter)
@@ -2120,7 +2137,7 @@ public class LcsIndexOptimizer
     }
 
     /*
-     * A tuple of <index, filters satisfiable by that index>
+     * A tuple of (index, filters satisfiable by that index)
      * Notes:
      * Filter Map contains the ALL filters satisfiable by the index.
      * Effective selectivity is the combined selectivity of filters
@@ -2136,17 +2153,31 @@ public class LcsIndexOptimizer
         private Double effectiveSelectivity;
 
         /**
-         * Constructs a tuple <index, filters satisfiable by this index>
+         * Constructs a tuple (index, filters satisfiable by this index)
          * for each indexed column, search in pointList and intervalList to see
          * if that indexed column satisfies any filters. Uses prefix matching rule
          * with one restriction: matching stops at the first matched range filter.
          * Example:
-         * point filters  | range filters   | index on   | index satisfies
-         * A,B,C          |                 | (A,B,D,C)  | A,B
-         * B,C            |                 | (A,B,C)    | none
-         * B              | A               | (A,B,C)    | A
-         * A,C            | B               | (A,B,C)    | A,B
-         *                | A,B             | (A,B,C)    | A
+         *<table>
+         *<tr>
+         *<td>point filters</td><td>range filters</td><td>index on</td><td>index satisfies</td>
+         *</tr>
+         *<tr>
+         *<td>A,B,C</td><td>&nbsp;</td><td>(A,B,D,C)</td><td>A,B</td>
+         *</tr>
+         *<tr>
+         *<td>B,C</td><td>&nbsp;</td><td>(A,B,C)</td><td>none</td>
+         *</tr>
+         *<tr>
+         *<td>B</td><td>A</td><td>(A,B,C)</td><td>A</td>
+         *</tr>
+         *<tr>
+         *<td>A,C</td><td>B</td><td>(A,B,C)</td><td>A,B</td>
+         *</tr>
+         *<tr>
+         *<td>&nbsp;</td><td>A,B</td><td>(A,B,C)</td><td>A</td>
+         *</tr>
+         *</table>
          *
          * @param index the index to be matched with filters
          * @param pointList list of point filters
