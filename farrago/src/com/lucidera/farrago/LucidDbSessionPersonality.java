@@ -20,14 +20,16 @@
 */
 package com.lucidera.farrago;
 
+import com.lucidera.farrago.fennel.*;
 import com.lucidera.lcs.*;
 import com.lucidera.opt.*;
 import com.lucidera.runtime.*;
 import com.lucidera.type.*;
-import com.lucidera.farrago.fennel.*;
 
 import java.io.*;
+
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -63,11 +65,11 @@ import org.eigenbase.sql.parser.*;
 public class LucidDbSessionPersonality
     extends FarragoDefaultSessionPersonality
 {
-    //~ Static fields ----------------------------------------------------------
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final String LOG_DIR = FarragoSessionVariables.LOG_DIR;
-    public static final String[] LOG_DIR_DEFAULT = 
-        { "log", "testlog", "trace" };
+    public static final String [] LOG_DIR_DEFAULT =
+    { "log", "testlog", "trace" };
     public static final String ETL_PROCESS_ID = "etlProcessId";
     public static final String ETL_PROCESS_ID_DEFAULT = null;
     public static final String ETL_ACTION_ID = "etlActionId";
@@ -79,20 +81,20 @@ public class LucidDbSessionPersonality
     public static final String LAST_UPSERT_ROWS_INSERTED =
         "lastUpsertRowsInserted";
     public static final String LAST_UPSERT_ROWS_INSERTED_DEFAULT = null;
-    
+
     //~ Instance fields --------------------------------------------------------
-    
+
     /**
      * If true, this session's default personality is LucidDb, as opposed to one
      * that was switched from some other personality to LucidDb
      */
     private boolean defaultLucidDb;
-    
+
     /**
      * If true, enable index only scan rules
      */
     private boolean enableIndexOnlyScans;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     protected LucidDbSessionPersonality(
@@ -105,11 +107,20 @@ public class LucidDbSessionPersonality
         paramValidator.registerStringParam(ETL_PROCESS_ID, true);
         paramValidator.registerStringParam(ETL_ACTION_ID, true);
         paramValidator.registerIntParam(
-            ERROR_MAX, true, 0, Integer.MAX_VALUE);
+            ERROR_MAX,
+            true,
+            0,
+            Integer.MAX_VALUE);
         paramValidator.registerIntParam(
-            ERROR_LOG_MAX, true, 0, Integer.MAX_VALUE);
+            ERROR_LOG_MAX,
+            true,
+            0,
+            Integer.MAX_VALUE);
         paramValidator.registerLongParam(
-            LAST_UPSERT_ROWS_INSERTED, true, 0, Long.MAX_VALUE);
+            LAST_UPSERT_ROWS_INSERTED,
+            true,
+            0,
+            Long.MAX_VALUE);
         defaultLucidDb = (defaultPersonality == null);
         this.enableIndexOnlyScans = enableIndexOnlyScans;
     }
@@ -151,7 +162,7 @@ public class LucidDbSessionPersonality
         if (feature == featureResource.SQLFeature_F312) {
             return true;
         }
-        
+
         return super.supportsFeature(feature);
     }
 
@@ -238,36 +249,33 @@ public class LucidDbSessionPersonality
         // since they modify the projection
         builder.addRuleInstance(new LcsTableDeleteRule());
         builder.addRuleInstance(new LcsTableMergeRule());
-        
+
         // Convert ProjectRels underneath an insert into RenameRels before
         // applying any merge projection rules.  Otherwise, we end up losing
         // column information used in error reporting during inserts.
         if (fennelEnabled) {
             builder.addRuleInstance(new FennelInsertRenameRule());
         }
-        
-        // Execute rules that are needed to do proper join optimization:
-        // 1) Push down filters so they're closest to the RelNode they apply to.
-        //    This also needs to be done before the pull project rules because
-        //    filters need to be pushed into joins in order for the pull up
-        //    project rules to properly determine whether projects can be pulled
-        //    up.
-        // 2) Pull up projects above joins to maximize the number of join
-        //    factors.
-        // 3) Push the projects back down so row scans are projected and also so
-        //    we can determine which fields are projected above each join.
-        // 4) Push down filters a second time to push filters past any projects
-        //    that were pushed down.
-        // 5) Convert the join inputs into MultiJoinRels and also pull projects
-        //    back up, but only the ones above joins so we preserve projects
-        //    on top of row scans but maximize the number of join factors.
+
+        // Execute rules that are needed to do proper join optimization: 1) Push
+        // down filters so they're closest to the RelNode they apply to. This
+        // also needs to be done before the pull project rules because filters
+        // need to be pushed into joins in order for the pull up project rules
+        // to properly determine whether projects can be pulled up. 2) Pull up
+        // projects above joins to maximize the number of join factors. 3) Push
+        // the projects back down so row scans are projected and also so we can
+        // determine which fields are projected above each join. 4) Push down
+        // filters a second time to push filters past any projects that were
+        // pushed down. 5) Convert the join inputs into MultiJoinRels and also
+        // pull projects back up, but only the ones above joins so we preserve
+        // projects on top of row scans but maximize the number of join factors.
         // 6) Optimize join ordering.
-   
+
         // Push down filters
         applyPushDownFilterRules(builder);
-        
+
         // Pull up projects
-        builder.addGroupBegin();      
+        builder.addGroupBegin();
         builder.addRuleInstance(RemoveTrivialProjectRule.instance);
         builder.addRuleInstance(
             PullUpProjectsAboveJoinRule.instanceTwoProjectChildren);
@@ -275,18 +283,20 @@ public class LucidDbSessionPersonality
             PullUpProjectsAboveJoinRule.instanceLeftProjectChild);
         builder.addRuleInstance(
             PullUpProjectsAboveJoinRule.instanceRightProjectChild);
+
         // push filter past project to move the project up in the tree
         builder.addRuleInstance(new PushFilterPastProjectRule());
+
         // merge any projects we pull up
         builder.addRuleInstance(new MergeProjectRule(true));
         builder.addGroupEnd();
-        
+
         // Push the projects back down
         applyPushDownProjectRules(builder);
-        
+
         // Push filters down again after pulling and pushing projects
         applyPushDownFilterRules(builder);
-        
+
         // Merge any projects that are now on top of one another as a result
         // of pushing filters.  This ensures that the subprogram below fires
         // the 3 rules described in lockstep fashion on only the nodes related
@@ -305,7 +315,7 @@ public class LucidDbSessionPersonality
         // applied one after the other in lockstep fashion.
         HepProgramBuilder subprogramBuilder = new HepProgramBuilder();
         subprogramBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
-        subprogramBuilder.addMatchLimit(1);       
+        subprogramBuilder.addMatchLimit(1);
         subprogramBuilder.addRuleInstance(new ConvertMultiJoinRule());
         subprogramBuilder.addRuleInstance(
             PullUpProjectsOnTopOfMultiJoinRule.instanceTwoProjectChildren);
@@ -315,19 +325,19 @@ public class LucidDbSessionPersonality
             PullUpProjectsOnTopOfMultiJoinRule.instanceRightProjectChild);
         subprogramBuilder.addRuleInstance(new MergeProjectRule(true));
         builder.addSubprogram(subprogramBuilder.createProgram());
-        
+
         // Push projection information in the remaining projections that sit
         // on top of MultiJoinRels into the MultiJoinRels.  These aren't
         // handled by PullUpProjectsOnTopOfMultiJoinRule because these
         // projects are not beneath joins.
         builder.addRuleInstance(new PushProjectIntoMultiJoinRule());
-        
+
         // Optimize join order; this will spit back out all 2-way joins and
         // semijoins.  Note that the match order is bottom-up, so we
         // can optimize lower-level joins before their ancestors.  That allows
         // ancestors to have better cost info to work with (well, eventually).
         builder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
-        builder.addRuleInstance(new LoptOptimizeJoinRule()); 
+        builder.addRuleInstance(new LoptOptimizeJoinRule());
         builder.addMatchOrder(HepMatchOrder.ARBITRARY);
 
         // Push semijoins down to tables.  (The join part is a NOP for now,
@@ -344,9 +354,9 @@ public class LucidDbSessionPersonality
         builder.addRuleClass(LcsIndexSemiJoinRule.class);
 
         // Convert filters to bitmap index searches and boolean operators.
-        // Do this after LcsIndexSemiJoinRule 
-        builder.addRuleClass(LcsIndexAccessRule.class);       
-        
+        // Do this after LcsIndexSemiJoinRule
+        builder.addRuleClass(LcsIndexAccessRule.class);
+
         // TODO zfong 10/27/06 - This rule is currently a no-op because we
         // won't generate a semijoin if it can't be converted to physical
         // RelNodes.  But it's currently left in place in case of bugs.
@@ -356,7 +366,7 @@ public class LucidDbSessionPersonality
         // removing the semijoin, which could result in an incorrect query
         // result.
         builder.addRuleInstance(new RemoveSemiJoinRule());
-    
+
         // Now that we've finished join ordering optimization, have converted
         // filters where possible, and have converted semijoins, push projects
         // back down.
@@ -365,7 +375,7 @@ public class LucidDbSessionPersonality
         // Apply physical projection to row scans, eliminating access
         // to clustered indexes we don't need.
         builder.addRuleInstance(new LcsTableProjectionRule());
-        
+
         // Consider index only access.  Multiple rules are required
         // for various patterns.  Apply these rules after we've pushed down
         // all projections.
@@ -443,7 +453,7 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(ProjectToCalcRule.instance);
         builder.addRuleInstance(MergeCalcRule.instance);
         builder.addGroupEnd();
-        
+
         // First, try to use ReshapeRel for calcs before firing the other
         // physical calc conversion rules.  Fire this rule before
         // ReduceDecimalsRule so we avoid decimal reinterprets that can
@@ -451,9 +461,9 @@ public class LucidDbSessionPersonality
         if (fennelEnabled) {
             builder.addRuleInstance(new FennelReshapeRule());
         }
-        
+
         // Replace the DECIMAL datatype with primitive ints.
-        builder.addRuleInstance(new ReduceDecimalsRule());   
+        builder.addRuleInstance(new ReduceDecimalsRule());
 
         // The rest of these are all physical implementation rules
         // which are safe to apply simultaneously.
@@ -470,12 +480,12 @@ public class LucidDbSessionPersonality
             builder.addRuleInstance(new FennelValuesRule());
 
             // Requires CoerceInputsRule.
-            builder.addRuleInstance(FennelUnionRule.instance);         
+            builder.addRuleInstance(FennelUnionRule.instance);
         } else {
             builder.addRuleInstance(
                 new IterRules.HomogeneousUnionToIteratorRule());
         }
-        
+
         // If FennelCartesianJoinRule swapped its join inputs and added a
         // new CalcRel on top of the new cartesian join, we may need to
         // merge the calc with other calcs
@@ -526,10 +536,10 @@ public class LucidDbSessionPersonality
 
         return builder.createProgram();
     }
-    
+
     /**
      * Applies rules that push filters past various RelNodes.
-     * 
+     *
      * @param builder HEP program builder
      */
     private void applyPushDownFilterRules(HepProgramBuilder builder)
@@ -548,15 +558,16 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(
             new PushFilterPastJoinRule(
                 new RelOptRuleOperand(JoinRel.class, null),
-                "without filter above join"));      
+                "without filter above join"));
+
         // merge filters
         builder.addRuleInstance(new MergeFilterRule());
-        builder.addGroupEnd();     
+        builder.addGroupEnd();
     }
-    
+
     /**
      * Applies rules that push projects past various RelNodes.
-     * 
+     *
      * @param builder HEP program builder
      */
     private void applyPushDownProjectRules(HepProgramBuilder builder)
@@ -569,6 +580,7 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(
             new PushProjectPastJoinRule(
                 LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
+
         // Rules to push projects past filters.  There are two rule
         // patterns because the second is needed to handle the case where
         // the projection has been trivially removed but we still need to
@@ -589,6 +601,234 @@ public class LucidDbSessionPersonality
                 "without project"));
         builder.addRuleInstance(new MergeProjectRule(true));
         builder.addGroupEnd();
+    }
+
+    // override FarragoDefaultSessionPersonality
+    public void loadDefaultSessionVariables(
+        FarragoSessionVariables variables)
+    {
+        super.loadDefaultSessionVariables(variables);
+
+        // try to pick a good default variable for log directory. this would
+        // not be used in practice, but could be helpful during development.
+        String homeDirPath = FarragoProperties.instance().homeDir.get();
+        File homeDir = new File(homeDirPath);
+        assert (homeDir.exists() && homeDir.isDirectory());
+        String logDirPath = homeDirPath;
+        for (String subDirPath : LOG_DIR_DEFAULT) {
+            File logDir = new File(homeDir, subDirPath);
+            if (logDir.exists()) {
+                logDirPath = logDir.getPath();
+                break;
+            }
+        }
+        variables.setDefault(LOG_DIR, logDirPath);
+        variables.setDefault(ETL_PROCESS_ID, ETL_PROCESS_ID_DEFAULT);
+        variables.setDefault(ETL_ACTION_ID, ETL_ACTION_ID_DEFAULT);
+        variables.setDefault(ERROR_MAX, ERROR_MAX_DEFAULT);
+        variables.setDefault(ERROR_LOG_MAX, ERROR_LOG_MAX_DEFAULT);
+        variables.setDefault(
+            LAST_UPSERT_ROWS_INSERTED,
+            LAST_UPSERT_ROWS_INSERTED_DEFAULT);
+    }
+
+    // implement FarragoSessionPersonality
+    public FarragoSessionVariables createInheritedSessionVariables(
+        FarragoSessionVariables variables)
+    {
+        // for reentrant sessions, don't inherit the "errorMax" setting because
+        // it may cause misbehavior in internal SQL for something like ANALYZE
+        // or constant reduction
+        FarragoSessionVariables clone =
+            super.createInheritedSessionVariables(variables);
+        clone.set(
+            LucidDbSessionPersonality.ERROR_MAX,
+            LucidDbSessionPersonality.ERROR_MAX_DEFAULT);
+        return clone;
+    }
+
+    // override FarragoDefaultSessionPersonality
+    public FarragoSessionRuntimeContext newRuntimeContext(
+        FarragoSessionRuntimeParams params)
+    {
+        return new LucidDbRuntimeContext(params);
+    }
+
+    // override FarragoDefaultSessionPersonality
+    public FarragoSessionPreparingStmt newPreparingStmt(
+        FarragoSessionStmtContext stmtContext,
+        FarragoSessionStmtValidator stmtValidator)
+    {
+        String sql = (stmtContext == null) ? "?" : stmtContext.getSql();
+        LucidDbPreparingStmt stmt =
+            new LucidDbPreparingStmt(stmtValidator, sql);
+        initPreparingStmt(stmt);
+        return stmt;
+    }
+
+    // implement FarragoSessionPersonality
+    public RelDataTypeFactory newTypeFactory(
+        FarragoRepos repos)
+    {
+        return new LucidDbTypeFactory(repos);
+    }
+
+    // implement FarragoSessionPersonality
+    public void getRowCounts(
+        ResultSet resultSet,
+        List<Long> rowCounts,
+        TableModificationRel.Operation tableModOp)
+        throws SQLException
+    {
+        boolean found = resultSet.next();
+        assert (found);
+        boolean nextRowCount = addRowCount(resultSet, rowCounts);
+        if ((tableModOp == TableModificationRel.Operation.INSERT)
+            || (tableModOp == TableModificationRel.Operation.MERGE))
+        {
+            // inserts may have a violation rowcount whereas merges may have
+            // both a violation count and a deletion count
+            if (nextRowCount) {
+                nextRowCount = addRowCount(resultSet, rowCounts);
+            }
+        }
+        if (tableModOp == TableModificationRel.Operation.MERGE) {
+            if (nextRowCount) {
+                nextRowCount = addRowCount(resultSet, rowCounts);
+            }
+        }
+        assert (!nextRowCount);
+    }
+
+    // implement FarragoSessionPersonality
+    public long updateRowCounts(
+        FarragoSession session,
+        List<String> tableName,
+        List<Long> rowCounts,
+        TableModificationRel.Operation tableModOp)
+    {
+        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
+        FarragoRepos repos = session.getRepos();
+        long affectedRowCount = 0;
+        FarragoReposTxnContext txn = repos.newTxnContext();
+
+        try {
+            txn.beginWriteTxn();
+
+            // get the current rowcounts
+            assert (tableName.size() == 3);
+            SqlIdentifier qualifiedName =
+                new SqlIdentifier(
+                    tableName.toArray(new String[tableName.size()]),
+                    new SqlParserPos(0, 0));
+            FemAbstractColumnSet columnSet =
+                stmtValidator.findSchemaObject(
+                    qualifiedName,
+                    FemAbstractColumnSet.class);
+            long currRowCount = columnSet.getRowCount();
+            long currDeletedRowCount = columnSet.getDeletedRowCount();
+
+            // categorize the rowcounts returned by the statement
+            long insertedRowCount = 0;
+            long deletedRowCount = 0;
+            long violationRowCount = 0;
+            int numRowCounts = rowCounts.size();
+            if (tableModOp == TableModificationRel.Operation.DELETE) {
+                deletedRowCount = rowCounts.get(0);
+            } else if (tableModOp == TableModificationRel.Operation.INSERT) {
+                insertedRowCount = rowCounts.get(0);
+                if (numRowCounts == 2) {
+                    violationRowCount = rowCounts.get(1);
+                }
+            } else if (tableModOp == TableModificationRel.Operation.MERGE) {
+                insertedRowCount = rowCounts.get(0);
+                if (FarragoCatalogUtil.hasUniqueKey(columnSet)) {
+                    violationRowCount = rowCounts.get(1);
+                    if (numRowCounts == 3) {
+                        deletedRowCount = rowCounts.get(2);
+                    }
+                } else {
+                    if (numRowCounts == 2) {
+                        deletedRowCount = rowCounts.get(1);
+                    }
+                }
+            } else {
+                assert (false);
+            }
+
+            // update the rowcounts based on the operation
+            if (tableModOp == TableModificationRel.Operation.INSERT) {
+                affectedRowCount = insertedRowCount - violationRowCount;
+                currRowCount += affectedRowCount;
+            } else if (tableModOp == TableModificationRel.Operation.DELETE) {
+                affectedRowCount = deletedRowCount;
+                currRowCount -= deletedRowCount;
+                currDeletedRowCount += deletedRowCount;
+            } else if (tableModOp == TableModificationRel.Operation.MERGE) {
+                affectedRowCount = insertedRowCount - violationRowCount;
+                long newRowCount = affectedRowCount - deletedRowCount;
+                currRowCount += newRowCount;
+                currDeletedRowCount += deletedRowCount;
+                session.getSessionVariables().setLong(
+                    LAST_UPSERT_ROWS_INSERTED,
+                    newRowCount);
+            } else {
+                assert (false);
+            }
+
+            // update the catalog; don't let the rowcount go below zero; it
+            // may go below zero if a crash occurred in the middle of a prior
+            // update
+            if (currRowCount < 0) {
+                currRowCount = 0;
+            }
+            columnSet.setRowCount(currRowCount);
+            assert (currDeletedRowCount >= 0);
+            columnSet.setDeletedRowCount(currDeletedRowCount);
+
+            txn.commit();
+        } finally {
+            txn.rollback();
+            stmtValidator.closeAllocation();
+        }
+
+        return affectedRowCount;
+    }
+
+    // implement FarragoSessionPersonality
+    public void resetRowCounts(FemAbstractColumnSet table)
+    {
+        FarragoCatalogUtil.resetRowCounts(table);
+    }
+
+    // implement FarragoStreamFactoryProvider
+    public void registerStreamFactories(long hStreamGraph)
+    {
+        // REVIEW jvs 22-Mar-2007:  We override FarragoDefaultSessionPersonality
+        // here to prevent dependency on DisruptiveTechJni unless explicitly
+        // requested via calc system parameter.
+        final CalcVirtualMachine calcVM =
+            database.getSystemRepos().getCurrentConfig()
+            .getCalcVirtualMachine();
+        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
+            LucidEraJni.registerStreamFactory(hStreamGraph);
+        } else {
+            super.registerStreamFactories(hStreamGraph);
+        }
+    }
+
+    //  implement FarragoSessionPersonality
+    public void updateIndexRoot(
+        FemLocalIndex index,
+        FarragoDataWrapperCache wrapperCache,
+        FarragoSessionIndexMap baseIndexMap,
+        Long newRoot)
+    {
+        if (defaultLucidDb) {
+            baseIndexMap.versionIndexRoot(wrapperCache, index, newRoot);
+        } else {
+            super.updateIndexRoot(index, wrapperCache, baseIndexMap, newRoot);
+        }
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -635,7 +875,7 @@ public class LucidDbSessionPersonality
         public JavaRelImplementor getJavaRelImplementor(RelNode rel)
         {
             return stmt.getRelImplementor(
-                    rel.getCluster().getRexBuilder());
+                rel.getCluster().getRexBuilder());
         }
 
         // implement RelOptPlanner
@@ -645,232 +885,6 @@ public class LucidDbSessionPersonality
                 medPluginRules.add(rule);
             }
             return super.addRule(rule);
-        }
-    }
-
-    // override FarragoDefaultSessionPersonality
-    public void loadDefaultSessionVariables(
-        FarragoSessionVariables variables)
-    {
-        super.loadDefaultSessionVariables(variables);
-        // try to pick a good default variable for log directory. this would 
-        // not be used in practice, but could be helpful during development.
-        String homeDirPath = FarragoProperties.instance().homeDir.get();
-        File homeDir = new File(homeDirPath);
-        assert (homeDir.exists() && homeDir.isDirectory());
-        String logDirPath = homeDirPath;
-        for (String subDirPath : LOG_DIR_DEFAULT) {
-            File logDir = new File(homeDir, subDirPath);
-            if (logDir.exists()) {
-                logDirPath = logDir.getPath();
-                break;
-            }
-        }
-        variables.setDefault(LOG_DIR, logDirPath);
-        variables.setDefault(ETL_PROCESS_ID, ETL_PROCESS_ID_DEFAULT);
-        variables.setDefault(ETL_ACTION_ID, ETL_ACTION_ID_DEFAULT);
-        variables.setDefault(ERROR_MAX, ERROR_MAX_DEFAULT);
-        variables.setDefault(ERROR_LOG_MAX, ERROR_LOG_MAX_DEFAULT);
-        variables.setDefault(
-            LAST_UPSERT_ROWS_INSERTED,
-            LAST_UPSERT_ROWS_INSERTED_DEFAULT);
-    }
-
-    // implement FarragoSessionPersonality
-    public FarragoSessionVariables createInheritedSessionVariables(
-        FarragoSessionVariables variables)
-    {
-        // for reentrant sessions, don't inherit the "errorMax" setting because
-        // it may cause misbehavior in internal SQL for something like ANALYZE
-        // or constant reduction
-        FarragoSessionVariables clone =
-            super.createInheritedSessionVariables(variables);
-        clone.set(
-            LucidDbSessionPersonality.ERROR_MAX,
-            LucidDbSessionPersonality.ERROR_MAX_DEFAULT);
-        return clone;
-    }
-    
-    // override FarragoDefaultSessionPersonality
-    public FarragoSessionRuntimeContext newRuntimeContext(
-        FarragoSessionRuntimeParams params)
-    {
-        return new LucidDbRuntimeContext(params);
-    }
-    
-    // override FarragoDefaultSessionPersonality
-    public FarragoSessionPreparingStmt newPreparingStmt(
-        FarragoSessionStmtContext stmtContext,
-        FarragoSessionStmtValidator stmtValidator)
-    {
-        String sql = (stmtContext == null) ? "?" : stmtContext.getSql();
-        LucidDbPreparingStmt stmt =
-            new LucidDbPreparingStmt(stmtValidator, sql);
-        initPreparingStmt(stmt);
-        return stmt;
-    }
-
-    // implement FarragoSessionPersonality
-    public RelDataTypeFactory newTypeFactory(
-        FarragoRepos repos)
-    {
-        return new LucidDbTypeFactory(repos);
-    }
-    
-    // implement FarragoSessionPersonality
-    public void getRowCounts(
-        ResultSet resultSet,
-        List<Long> rowCounts,
-        TableModificationRel.Operation tableModOp)
-        throws SQLException
-    {
-        boolean found = resultSet.next();
-        assert (found);
-        boolean nextRowCount = addRowCount(resultSet, rowCounts);
-        if (tableModOp == TableModificationRel.Operation.INSERT ||
-            tableModOp == TableModificationRel.Operation.MERGE)
-        {
-            // inserts may have a violation rowcount whereas merges may have
-            // both a violation count and a deletion count
-            if (nextRowCount) {
-                nextRowCount = addRowCount(resultSet, rowCounts);
-            }
-        }
-        if (tableModOp == TableModificationRel.Operation.MERGE) {
-            if (nextRowCount) {
-                nextRowCount = addRowCount(resultSet, rowCounts);
-            }
-        }
-        assert (!nextRowCount);
-    }
-    
-    // implement FarragoSessionPersonality
-    public long updateRowCounts(
-        FarragoSession session,
-        List<String> tableName,
-        List<Long> rowCounts,
-        TableModificationRel.Operation tableModOp)
-    {      
-        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
-        FarragoRepos repos = session.getRepos();
-        long affectedRowCount = 0;
-        FarragoReposTxnContext txn = repos.newTxnContext();
-        
-        try {
-            txn.beginWriteTxn();
-        
-            // get the current rowcounts
-            assert(tableName.size() == 3);
-            SqlIdentifier qualifiedName =
-                new SqlIdentifier(
-                    tableName.toArray(new String[tableName.size()]),
-                    new SqlParserPos(0,0));
-            FemAbstractColumnSet columnSet =
-                stmtValidator.findSchemaObject(
-                    qualifiedName,
-                    FemAbstractColumnSet.class);       
-            long currRowCount = columnSet.getRowCount();
-            long currDeletedRowCount = columnSet.getDeletedRowCount();
-            
-            // categorize the rowcounts returned by the statement
-            long insertedRowCount = 0;
-            long deletedRowCount = 0;
-            long violationRowCount = 0;
-            int numRowCounts = rowCounts.size();
-            if (tableModOp == TableModificationRel.Operation.DELETE) {
-                deletedRowCount = rowCounts.get(0);
-            } else if (tableModOp == TableModificationRel.Operation.INSERT) {
-                insertedRowCount = rowCounts.get(0);
-                if (numRowCounts == 2) {
-                    violationRowCount = rowCounts.get(1);
-                }
-            } else if (tableModOp == TableModificationRel.Operation.MERGE) {
-                insertedRowCount = rowCounts.get(0);
-                if (FarragoCatalogUtil.hasUniqueKey(columnSet)) {
-                    violationRowCount = rowCounts.get(1);
-                    if (numRowCounts == 3) {
-                        deletedRowCount = rowCounts.get(2);
-                    }
-                } else {
-                    if (numRowCounts == 2) {
-                        deletedRowCount = rowCounts.get(1);
-                    }
-                }              
-            } else {
-                assert(false);
-            }
-               
-            // update the rowcounts based on the operation
-            if (tableModOp == TableModificationRel.Operation.INSERT) {
-                affectedRowCount = insertedRowCount - violationRowCount;
-                currRowCount += affectedRowCount;               
-            } else if (tableModOp == TableModificationRel.Operation.DELETE) {
-                affectedRowCount = deletedRowCount;
-                currRowCount -= deletedRowCount;
-                currDeletedRowCount += deletedRowCount;
-            } else if (tableModOp == TableModificationRel.Operation.MERGE) {
-                affectedRowCount = insertedRowCount - violationRowCount;
-                long newRowCount = affectedRowCount - deletedRowCount;
-                currRowCount += newRowCount;
-                currDeletedRowCount += deletedRowCount;
-                session.getSessionVariables().setLong(
-                    LAST_UPSERT_ROWS_INSERTED,
-                    newRowCount);
-            } else {
-                assert(false);
-            }
- 
-            // update the catalog; don't let the rowcount go below zero; it
-            // may go below zero if a crash occurred in the middle of a prior
-            // update
-            if (currRowCount < 0) {
-                currRowCount = 0;
-            }
-            columnSet.setRowCount(currRowCount);
-            assert(currDeletedRowCount >= 0);
-            columnSet.setDeletedRowCount(currDeletedRowCount);
-
-            txn.commit();
-        } finally {
-            txn.rollback();
-            stmtValidator.closeAllocation();
-        }
-        
-        return affectedRowCount;
-    }
-    
-    // implement FarragoSessionPersonality
-    public void resetRowCounts(FemAbstractColumnSet table)
-    {
-        FarragoCatalogUtil.resetRowCounts(table);
-    }
-    
-    // implement FarragoStreamFactoryProvider
-    public void registerStreamFactories(long hStreamGraph)
-    {
-        // REVIEW jvs 22-Mar-2007:  We override FarragoDefaultSessionPersonality
-        // here to prevent dependency on DisruptiveTechJni unless
-        // explicitly requested via calc system parameter.
-        final CalcVirtualMachine calcVM =
-            database.getSystemRepos().getCurrentConfig().getCalcVirtualMachine();
-        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
-            LucidEraJni.registerStreamFactory(hStreamGraph);
-        } else {
-            super.registerStreamFactories(hStreamGraph);
-        }
-    }
-
-    //  implement FarragoSessionPersonality
-    public void updateIndexRoot(
-        FemLocalIndex index,
-        FarragoDataWrapperCache wrapperCache,
-        FarragoSessionIndexMap baseIndexMap,
-        Long newRoot)
-    {
-        if (defaultLucidDb) {
-            baseIndexMap.versionIndexRoot(wrapperCache, index, newRoot);
-        } else {
-            super.updateIndexRoot(index, wrapperCache, baseIndexMap, newRoot);
         }
     }
 }

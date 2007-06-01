@@ -40,7 +40,6 @@ import net.sf.farrago.type.runtime.*;
 public class RuntimeTest
     extends TestCase
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -51,8 +50,7 @@ public class RuntimeTest
         assertEquals(
             0,
             CharStringComparator.compareCharStrings("x ", "x"));
-        assertEquals(
-            -1,
+        assertEquals(-1,
             CharStringComparator.compareCharStrings("a", "b"));
         assertEquals(
             1,

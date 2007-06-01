@@ -43,7 +43,6 @@ public abstract class FennelDoubleRel
     extends AbstractRelNode
     implements FennelRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected RelNode left;
@@ -107,11 +106,10 @@ public abstract class FennelDoubleRel
         Expression expr1 = (Expression) implementor.visitChild(this, 0, left);
         Expression expr2 = (Expression) implementor.visitChild(this, 1, right);
         FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
-        return
-            new MethodCall(
-                stmt.getConnectionVariable(),
-                "dummyPair",
-                new ExpressionList(expr1, expr2));
+        return new MethodCall(
+            stmt.getConnectionVariable(),
+            "dummyPair",
+            new ExpressionList(expr1, expr2));
     }
 
     // implement RelNode
@@ -119,9 +117,8 @@ public abstract class FennelDoubleRel
     {
         RelDataType leftType = left.getRowType();
         RelDataType rightType = right.getRowType();
-        return
-            getCluster().getTypeFactory().createJoinType(
-                new RelDataType[] { leftType, rightType });
+        return getCluster().getTypeFactory().createJoinType(
+            new RelDataType[] { leftType, rightType });
     }
 
     /**

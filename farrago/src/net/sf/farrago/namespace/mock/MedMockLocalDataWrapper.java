@@ -42,7 +42,6 @@ import net.sf.farrago.resource.*;
 public class MedMockLocalDataWrapper
     extends MedAbstractDataWrapper
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

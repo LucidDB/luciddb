@@ -30,6 +30,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 
+
 /**
  * Registers standard rules needed by most planner implementations.
  *
@@ -38,6 +39,8 @@ import org.eigenbase.relopt.*;
  */
 public class FarragoStandardPlannerRules
 {
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Adds a set of default rules to a planner.
      *
@@ -82,10 +85,10 @@ public class FarragoStandardPlannerRules
 
         planner.addRule(ReduceAggregatesRule.instance);
 
-        // NOTE zfong 9/27/06: PullUpProjectsAboveJoinRule has not been 
+        // NOTE zfong 9/27/06: PullUpProjectsAboveJoinRule has not been
         // added because together with PushProjectPastJoinRule, it causes
         // Volcano to go into an infinite loop
-        
+
         planner.addRule(new PushFilterPastJoinRule());
         planner.addRule(new PushFilterPastSetOpRule());
         planner.addRule(new MergeFilterRule());
@@ -122,13 +125,15 @@ public class FarragoStandardPlannerRules
         }
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)
-            || calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)) {
+            || calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO))
+        {
             // use Java code generation for calculating expressions
             planner.addRule(IterRules.IterCalcRule.instance);
         }
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)
-            && fennelEnabled) {
+            && fennelEnabled)
+        {
             // add rule for pure calculator usage plus rule for
             // decomposing rels into mixed Java/Fennel impl
             FarragoDefaultPlanner.addFennelCalcRules(planner, true);

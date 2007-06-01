@@ -25,9 +25,9 @@ package org.eigenbase.rex;
 import java.util.*;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.SqlOperator;
 
 
 /**
@@ -43,7 +43,6 @@ import org.eigenbase.sql.SqlOperator;
  */
 public class RexTransformer
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private RexNode root;
@@ -96,9 +95,8 @@ public class RexTransformer
 
         if (node instanceof RexCall) {
             RexCall call = (RexCall) node;
-            return
-                !transformableOperators.contains(
-                    call.getOperator())
+            return !transformableOperators.contains(
+                call.getOperator())
                 && isNullable(node);
         }
         return isNullable(node);
@@ -135,7 +133,8 @@ public class RexTransformer
             RexNode operand = call.operands[0];
             if (((operand instanceof RexLiteral)
                     || (operand instanceof RexInputRef)
-                    || (operand instanceof RexDynamicParam))) {
+                    || (operand instanceof RexDynamicParam)))
+            {
                 if (isNullable(node)) {
                     RexNode notNullNode =
                         rexBuilder.makeCall(

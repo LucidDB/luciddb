@@ -42,7 +42,6 @@ import org.jgrapht.graph.*;
 public class JmiModelGraph
     extends UnmodifiableDirectedGraph<JmiClassVertex, DefaultEdge>
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -60,12 +59,14 @@ public class JmiModelGraph
     /**
      * Subgraph with just inheritance edges.
      */
-    private final DirectedGraph<JmiClassVertex, JmiInheritanceEdge> inheritanceGraph;
+    private final DirectedGraph<JmiClassVertex, JmiInheritanceEdge>
+        inheritanceGraph;
 
     /**
      * Unmodifiable view of inheritanceGraph.
      */
-    private final DirectedGraph<JmiClassVertex, JmiInheritanceEdge> unmodifiableInheritanceGraph;
+    private final DirectedGraph<JmiClassVertex, JmiInheritanceEdge>
+        unmodifiableInheritanceGraph;
 
     /**
      * Subgraph with just inheritance edges.
@@ -75,7 +76,8 @@ public class JmiModelGraph
     /**
      * Unmodifiable view of assocGraph.
      */
-    private final DirectedGraph<JmiClassVertex, DefaultEdge> unmodifiableAssocGraph;
+    private final DirectedGraph<JmiClassVertex, DefaultEdge>
+        unmodifiableAssocGraph;
 
     /**
      * Map from Ref and Mof instances to corresponding graph vertices and edges.
@@ -163,7 +165,7 @@ public class JmiModelGraph
      * @return the subgraph of only inheritance edges
      */
     public DirectedGraph<JmiClassVertex, JmiInheritanceEdge>
-        getInheritanceGraph()
+    getInheritanceGraph()
     {
         return unmodifiableInheritanceGraph;
     }
@@ -379,7 +381,8 @@ public class JmiModelGraph
         }
 
         if ((mofAssocEnds[0].getMultiplicity().getUpper() != 1)
-            && (mofAssocEnds[1].getMultiplicity().getUpper() == 1)) {
+            && (mofAssocEnds[1].getMultiplicity().getUpper() == 1))
+        {
             swapEnds = true;
         }
 

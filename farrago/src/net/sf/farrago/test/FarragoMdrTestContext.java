@@ -22,7 +22,9 @@
 package net.sf.farrago.test;
 
 import java.io.*;
+
 import java.sql.*;
+
 import java.util.*;
 
 import javax.jmi.reflect.*;
@@ -40,18 +42,22 @@ import net.sf.farrago.util.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
-import org.netbeans.mdr.handlers.*;
 import org.netbeans.api.mdr.*;
+import org.netbeans.mdr.handlers.*;
+
 
 /**
- * FarragoMdrTestContext holds information needed by a test UDR which
- * accesses catalog metadata via an MDR foreign server.
+ * FarragoMdrTestContext holds information needed by a test UDR which accesses
+ * catalog metadata via an MDR foreign server.
  *
  * @author John Sichi
  * @version $Id$
  */
-public class FarragoMdrTestContext extends FarragoCompoundAllocation
+public class FarragoMdrTestContext
+    extends FarragoCompoundAllocation
 {
+    //~ Instance fields --------------------------------------------------------
+
     private FarragoSession session;
     private FarragoDatabase db;
     private FarragoObjectCache objCache;
@@ -62,7 +68,9 @@ public class FarragoMdrTestContext extends FarragoCompoundAllocation
     private JmiModelGraph modelGraph;
     private JmiModelView modelView;
     private MDRepository mdrRepos;
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public void init(String foreignServerName)
         throws Exception
     {
@@ -147,7 +155,7 @@ public class FarragoMdrTestContext extends FarragoCompoundAllocation
     {
         return modelView;
     }
-    
+
     public MDRepository getMdrRepos()
     {
         return mdrRepos;

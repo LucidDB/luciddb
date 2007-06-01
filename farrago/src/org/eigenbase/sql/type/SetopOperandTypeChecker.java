@@ -43,7 +43,6 @@ import org.eigenbase.util.*;
 public class SetopOperandTypeChecker
     implements SqlOperandTypeChecker
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public boolean checkOperandTypes(
@@ -57,8 +56,7 @@ public class SetopOperandTypeChecker
         final SqlValidator validator = callBinding.getValidator();
         for (int i = 0; i < argTypes.length; i++) {
             final RelDataType argType =
-                argTypes[i] =
-                    callBinding.getOperandType(i);
+                argTypes[i] = callBinding.getOperandType(i);
             Util.permAssert(
                 argType.isStruct(),
                 "setop arg must be a struct");

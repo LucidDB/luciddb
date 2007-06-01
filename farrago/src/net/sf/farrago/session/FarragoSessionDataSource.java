@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
 public class FarragoSessionDataSource
     extends JdbcDataSource
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoSessionConnectionSource connectionSource;

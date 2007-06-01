@@ -40,7 +40,6 @@ import org.eigenbase.util.*;
 class MedMockTableModificationRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

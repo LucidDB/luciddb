@@ -48,7 +48,6 @@ class MedMockLocalDataServer
     extends MedMockDataServer
     implements FarragoMedLocalDataServer
 {
-
     //~ Constructors -----------------------------------------------------------
 
     MedMockLocalDataServer(
@@ -66,7 +65,7 @@ class MedMockLocalDataServer
     {
         // ignore
     }
-    
+
     // implement FarragoMedLocalDataServer
     public void validateTableDefinition(
         FemLocalTable table,
@@ -129,28 +128,27 @@ class MedMockLocalDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map<String,Properties> columnPropMap)
+        Map<String, Properties> columnPropMap)
         throws SQLException
     {
         long nRows = getLongProperty(tableProps, PROP_ROW_COUNT, 0);
         String executorImpl =
             tableProps.getProperty(PROP_EXECUTOR_IMPL, PROPVAL_JAVA);
         assert (executorImpl.equals(PROPVAL_JAVA)
-                || executorImpl.equals(PROPVAL_FENNEL));
+            || executorImpl.equals(PROPVAL_FENNEL));
         String udxSpecificName = tableProps.getProperty(PROP_UDX_SPECIFIC_NAME);
 
         if (udxSpecificName != null) {
             assert (executorImpl.equals(PROPVAL_JAVA));
         }
 
-        return
-            new MedMockColumnSet(
-                this,
-                localName,
-                rowType,
-                nRows,
-                executorImpl,
-                udxSpecificName);
+        return new MedMockColumnSet(
+            this,
+            localName,
+            rowType,
+            nRows,
+            executorImpl,
+            udxSpecificName);
     }
 
     // implement FarragoMedLocalDataServer
@@ -176,10 +174,10 @@ class MedMockLocalDataServer
 
         // Add a dummy project on top to keep the optimizer happy.
         return RelOptUtil.createRenameRel(
-                rel.getRowType(),
-                rel);
+            rel.getRowType(),
+            rel);
     }
-    
+
     //  implement FarragoMedLocalDataServer
     public void versionIndexRoot(
         Long oldRoot,

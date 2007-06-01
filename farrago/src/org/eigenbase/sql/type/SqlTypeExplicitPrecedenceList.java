@@ -38,7 +38,6 @@ import org.eigenbase.reltype.*;
 public class SqlTypeExplicitPrecedenceList
     implements RelDataTypePrecedenceList
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -46,7 +45,7 @@ public class SqlTypeExplicitPrecedenceList
      *
      * @sql.2003 Part 2 Section 9.5
      */
-    private static final Map<SqlTypeName,SqlTypeExplicitPrecedenceList>
+    private static final Map<SqlTypeName, SqlTypeExplicitPrecedenceList>
         typeNameToPrecedenceList;
 
     static {
@@ -72,7 +71,7 @@ public class SqlTypeExplicitPrecedenceList
             new HashMap<SqlTypeName, SqlTypeExplicitPrecedenceList>();
         addList(
             SqlTypeName.BOOLEAN,
-            new SqlTypeName[] { SqlTypeName.BOOLEAN});
+            new SqlTypeName[] { SqlTypeName.BOOLEAN });
         addNumericList(
             SqlTypeName.TINYINT,
             numericList);
@@ -99,31 +98,31 @@ public class SqlTypeExplicitPrecedenceList
             numericList);
         addList(
             SqlTypeName.CHAR,
-            new SqlTypeName[] { SqlTypeName.CHAR, SqlTypeName.VARCHAR});
+            new SqlTypeName[] { SqlTypeName.CHAR, SqlTypeName.VARCHAR });
         addList(
             SqlTypeName.VARCHAR,
-            new SqlTypeName[] { SqlTypeName.VARCHAR});
+            new SqlTypeName[] { SqlTypeName.VARCHAR });
         addList(
             SqlTypeName.BINARY,
-            new SqlTypeName[] { SqlTypeName.BINARY, SqlTypeName.VARBINARY});
+            new SqlTypeName[] { SqlTypeName.BINARY, SqlTypeName.VARBINARY });
         addList(
             SqlTypeName.VARBINARY,
-            new SqlTypeName[] { SqlTypeName.VARBINARY});
+            new SqlTypeName[] { SqlTypeName.VARBINARY });
         addList(
             SqlTypeName.DATE,
-            new SqlTypeName[] { SqlTypeName.DATE});
+            new SqlTypeName[] { SqlTypeName.DATE });
         addList(
             SqlTypeName.TIME,
-            new SqlTypeName[] { SqlTypeName.TIME});
+            new SqlTypeName[] { SqlTypeName.TIME });
         addList(
             SqlTypeName.TIMESTAMP,
-            new SqlTypeName[] { SqlTypeName.TIMESTAMP});
+            new SqlTypeName[] { SqlTypeName.TIMESTAMP });
         addList(
             SqlTypeName.INTERVAL_YEAR_MONTH,
-            new SqlTypeName[] { SqlTypeName.INTERVAL_YEAR_MONTH});
+            new SqlTypeName[] { SqlTypeName.INTERVAL_YEAR_MONTH });
         addList(
             SqlTypeName.INTERVAL_DAY_TIME,
-            new SqlTypeName[] { SqlTypeName.INTERVAL_DAY_TIME});
+            new SqlTypeName[] { SqlTypeName.INTERVAL_DAY_TIME });
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -154,8 +153,7 @@ public class SqlTypeExplicitPrecedenceList
     {
         int i = getListPosition(typeName, numericList);
         List<SqlTypeName> subList = numericList.subList(i, numericList.size());
-        SqlTypeName [] array =
-            subList.toArray(new SqlTypeName[subList.size()]);
+        SqlTypeName [] array = subList.toArray(new SqlTypeName[subList.size()]);
         addList(typeName, array);
     }
 
@@ -175,10 +173,12 @@ public class SqlTypeExplicitPrecedenceList
         assert (containsType(type1));
         assert (containsType(type2));
 
-        int p1 = getListPosition(
+        int p1 =
+            getListPosition(
                 type1.getSqlTypeName(),
                 typeNames);
-        int p2 = getListPosition(
+        int p2 =
+            getListPosition(
                 type2.getSqlTypeName(),
                 typeNames);
         return p2 - p1;

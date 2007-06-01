@@ -27,16 +27,13 @@ import java.sql.*;
 
 /**
  * FarragoJdbcEngineParamDefFactory create a FarragoJdbcParamDef (refactored
- * from FarragoJdbcEngineParamDefFactory)
- *
- * This class is JDK 1.4 compatible.
+ * from FarragoJdbcEngineParamDefFactory) This class is JDK 1.4 compatible.
  *
  * @author Angel Chang
  * @version $Id$
  */
 public class FarragoJdbcParamDefFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public static FarragoJdbcParamDef newParamDef(
@@ -56,11 +53,10 @@ public class FarragoJdbcParamDefFactory
         FarragoParamFieldMetaData paramMetaData)
     {
         FarragoJdbcParamDef paramDef = newParamDef(paramName, paramMetaData);
-        return
-            new FarragoJdbcFennelTupleParamDef(
-                paramName,
-                paramMetaData,
-                paramDef);
+        return new FarragoJdbcFennelTupleParamDef(
+            paramName,
+            paramMetaData,
+            paramDef);
     }
 
     private static FarragoJdbcParamDef newParamDef(

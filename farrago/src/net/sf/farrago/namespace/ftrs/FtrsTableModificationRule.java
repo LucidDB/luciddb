@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
 class FtrsTableModificationRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -81,7 +80,8 @@ class FtrsTableModificationRule
         if (!RelOptUtil.areRowTypesEqual(
                 inputRel.getRowType(),
                 tableModification.getExpectedInputRowType(0),
-                false)) {
+                false))
+        {
             return;
         }
 

@@ -31,7 +31,6 @@ package net.sf.farrago.ddl;
 public class DdlReleaseSavepointStmt
     extends DdlSavepointTxnStmt
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

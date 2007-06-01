@@ -40,7 +40,6 @@ import java.util.*;
 public class RexShuttle
     implements RexVisitor<RexNode>
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public RexNode visitOver(RexOver over)
@@ -54,12 +53,11 @@ public class RexShuttle
             // To do that, we would need to take a RexBuilder and
             // watch out for special operators like CAST and NEW where
             // the type is embedded in the original call.
-            return
-                new RexOver(
-                    over.getType(),
-                    over.getAggOperator(),
-                    clonedOperands,
-                    window);
+            return new RexOver(
+                over.getType(),
+                over.getAggOperator(),
+                clonedOperands,
+                window);
         } else {
             return over;
         }
@@ -72,13 +70,12 @@ public class RexShuttle
         RexNode [] clonedPartitionKeys =
             visitArray(window.partitionKeys, update);
         if (update[0]) {
-            return
-                new RexWindow(
-                    clonedPartitionKeys,
-                    clonedOrderKeys,
-                    window.getLowerBound(),
-                    window.getUpperBound(),
-                    window.isRows());
+            return new RexWindow(
+                clonedPartitionKeys,
+                clonedOrderKeys,
+                window.getLowerBound(),
+                window.getUpperBound(),
+                window.isRows());
         } else {
             return window;
         }
@@ -94,11 +91,10 @@ public class RexShuttle
             // To do that, we would need to take a RexBuilder and
             // watch out for special operators like CAST and NEW where
             // the type is embedded in the original call.
-            return
-                new RexCall(
-                    call.getType(),
-                    call.getOperator(),
-                    clonedOperands);
+            return new RexCall(
+                call.getType(),
+                call.getOperator(),
+                clonedOperands);
         } else {
             return call;
         }
@@ -132,8 +128,8 @@ public class RexShuttle
             return fieldAccess;
         } else {
             return new RexFieldAccess(
-                    after,
-                    fieldAccess.getField());
+                after,
+                fieldAccess.getField());
         }
     }
 

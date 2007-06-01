@@ -28,9 +28,7 @@ import java.io.*;
 /**
  * FennelTupleAttributeDescriptor holds metadata describing a particular entry
  * in a tuple. These are contained in a FennelTupleDescriptor object to describe
- * the layout of a tuple.
- *
- * This class is JDK 1.4 compatible.
+ * the layout of a tuple. This class is JDK 1.4 compatible.
  *
  * @author Mike Bennett
  * @version $Id$
@@ -38,7 +36,6 @@ import java.io.*;
 public class FennelTupleAttributeDescriptor
     implements Serializable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

@@ -38,14 +38,13 @@ import org.eigenbase.sql.*;
 public class FamilyOperandTypeChecker
     implements SqlSingleOperandTypeChecker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected SqlTypeFamily [] families;
 
     //~ Constructors -----------------------------------------------------------
 
-    public FamilyOperandTypeChecker(SqlTypeFamily... families)
+    public FamilyOperandTypeChecker(SqlTypeFamily ... families)
     {
         this.families = families;
     }
@@ -104,7 +103,8 @@ public class FamilyOperandTypeChecker
                     callBinding,
                     operand,
                     i,
-                    throwOnFailure)) {
+                    throwOnFailure))
+            {
                 return false;
             }
         }
@@ -121,9 +121,9 @@ public class FamilyOperandTypeChecker
     public String getAllowedSignatures(SqlOperator op, String opName)
     {
         return SqlUtil.getAliasedSignature(
-                op,
-                opName,
-                Arrays.asList(families));
+            op,
+            opName,
+            Arrays.asList(families));
     }
 
     // hack for FarragoCalcSystemTest

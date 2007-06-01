@@ -50,7 +50,6 @@ import org.eigenbase.util14.*;
 public class DdlAnalyzeStmt
     extends DdlStmt
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private final static int DEFAULT_HISTOGRAM_BAR_COUNT = 100;
@@ -174,13 +173,15 @@ public class DdlAnalyzeStmt
         // Compute index page counts
         Map<FemLocalIndex, Long> indexPageCounts =
             new HashMap<FemLocalIndex, Long>();
-        for (FemLocalIndex index :
-            FarragoCatalogUtil.getTableIndexes(repos, table))
+        for (
+            FemLocalIndex index
+            : FarragoCatalogUtil.getTableIndexes(repos, table))
         {
-            long pageCount = ddlValidator.getIndexMap().computeIndexStats(
-                ddlValidator.getDataWrapperCache(),
-                index,
-                estimate);
+            long pageCount =
+                ddlValidator.getIndexMap().computeIndexStats(
+                    ddlValidator.getDataWrapperCache(),
+                    index,
+                    estimate);
             indexPageCounts.put(index, pageCount);
         }
 
@@ -316,8 +317,7 @@ public class DdlAnalyzeStmt
         long rowsPerBar)
         throws SQLException
     {
-        List<ColumnHistogramBar> bars =
-            new LinkedList<ColumnHistogramBar>();
+        List<ColumnHistogramBar> bars = new LinkedList<ColumnHistogramBar>();
         boolean newBar = true;
         String barStartValue = null;
         long barValueCount = 0;
@@ -435,7 +435,8 @@ public class DdlAnalyzeStmt
             Set<FemLocalIndex> indexes = indexPageCounts.keySet();
             for (FemLocalIndex index : indexes) {
                 FarragoCatalogUtil.updatePageCount(
-                    index, indexPageCounts.get(index));
+                    index,
+                    indexPageCounts.get(index));
             }
 
             txn.commit();
@@ -443,6 +444,8 @@ public class DdlAnalyzeStmt
             txn.rollback();
         }
     }
+
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Class used to store column histogram information
@@ -486,7 +489,6 @@ public class DdlAnalyzeStmt
             this.startValue = startValue;
             this.valueCount = valueCount;
         }
-
     }
 }
 

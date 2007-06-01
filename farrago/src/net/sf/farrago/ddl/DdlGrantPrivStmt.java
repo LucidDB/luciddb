@@ -41,7 +41,6 @@ import org.eigenbase.sql.*;
 public class DdlGrantPrivStmt
     extends DdlGrantStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private CwmModelElement grantedObject;

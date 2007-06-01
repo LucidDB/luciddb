@@ -49,7 +49,6 @@ import org.jgrapht.graph.*;
 public class JmiAssocEdge
     extends DefaultEdge
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Association mofAssoc;
@@ -125,8 +124,7 @@ public class JmiAssocEdge
     // implement Object
     public String toString()
     {
-        return
-            mofAssocEnds[0].getType().getName() + ":"
+        return mofAssocEnds[0].getType().getName() + ":"
             + mofAssocEnds[0].getName()
             + "_" + mofAssoc.getName() + "_"
             + mofAssocEnds[1].getType().getName() + ":"

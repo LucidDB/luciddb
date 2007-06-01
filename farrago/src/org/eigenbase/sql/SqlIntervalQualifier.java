@@ -21,14 +21,13 @@
 */
 package org.eigenbase.sql;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.regex.*;
 
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -80,6 +79,45 @@ import org.eigenbase.util.Util;
 public class SqlIntervalQualifier
     extends SqlNode
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final int USE_DEFAULT_PRECISION = -1;
+
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Enumeration of time units used to construct an interval.
+     */
+    public enum TimeUnit
+        implements SqlLiteral.SqlSymbol
+    {
+        Year(true, 12 /* months */), Month(true, 1 /* months */),
+        Day(false, 86400000 /* millis = 24 * 3600000 */),
+        Hour(false, 3600000 /* millis */), Minute(false, 60000 /* millis */),
+        Second(false, 1000 /* millis */);
+
+        public final boolean yearMonth;
+        public final long multiplier;
+        private static final TimeUnit [] CachedValues = values();
+
+        private TimeUnit(boolean yearMonth, long multiplier)
+        {
+            this.yearMonth = yearMonth;
+            this.multiplier = multiplier;
+        }
+
+        /**
+         * Returns the TimeUnit associated with an ordinal. The value returned
+         * is null if the ordinal is not a member of the TimeUnit enumeration.
+         */
+        public static TimeUnit getValue(int ordinal)
+        {
+            return ((ordinal < 0) || (ordinal >= CachedValues.length)) ? null
+                : CachedValues[ordinal];
+        }
+
+        public static final String GET_VALUE_METHOD_NAME = "getValue";
+    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -91,10 +129,7 @@ public class SqlIntervalQualifier
     private final boolean useDefaultStartPrecision;
     private final boolean useDefaultFractionalSecondPrecision;
 
-    private static final int USE_DEFAULT_PRECISION = -1;
-
     //~ Constructors -----------------------------------------------------------
-
 
     public SqlIntervalQualifier(
         TimeUnit startUnit,
@@ -123,8 +158,9 @@ public class SqlIntervalQualifier
             useDefaultStartPrecision = false;
             this.startPrecision = startPrecision;
         }
+
         // unspecified fractional second precision = 6
-        if  (fractionalSecondPrecision == USE_DEFAULT_PRECISION) {
+        if (fractionalSecondPrecision == USE_DEFAULT_PRECISION) {
             useDefaultFractionalSecondPrecision = true;
             if (this.isYearMonth()) {
                 this.fractionalSecondPrecision =
@@ -198,31 +234,33 @@ public class SqlIntervalQualifier
 
     public static int combineStartPrecisionPreservingDefault(
         SqlIntervalQualifier qual1,
-        SqlIntervalQualifier qual2
-    )
+        SqlIntervalQualifier qual2)
     {
-       if (qual1.getStartPrecision() >
-           qual2.getStartPrecision()) {
-           // qual1 is more precise, but if it has the default indicator
-           // set, we need to return that indicator so result will also
-           // use default
-           return( qual1.getStartPrecisionPreservingDefault() );
-       } else if (qual1.getStartPrecision() <
-                  qual2.getStartPrecision()) {
-           // qual2 is more precise, but if it has the default indicator
-           // set, we need to return that indicator so result will also
-           // use default
-           return( qual2.getStartPrecisionPreservingDefault() );
-       } else {
-           // they are equal.  return default if both are default,
-           // otherwise return exact precision
-           if  (qual1.useDefaultStartPrecision &&
-                qual2.useDefaultStartPrecision) {
-               return qual1.getStartPrecisionPreservingDefault();
-           } else {
-               return qual1.getStartPrecision();
-           }
-       }
+        if (qual1.getStartPrecision()
+            > qual2.getStartPrecision())
+        {
+            // qual1 is more precise, but if it has the default indicator
+            // set, we need to return that indicator so result will also
+            // use default
+            return (qual1.getStartPrecisionPreservingDefault());
+        } else if (qual1.getStartPrecision()
+            < qual2.getStartPrecision())
+        {
+            // qual2 is more precise, but if it has the default indicator
+            // set, we need to return that indicator so result will also
+            // use default
+            return (qual2.getStartPrecisionPreservingDefault());
+        } else {
+            // they are equal.  return default if both are default,
+            // otherwise return exact precision
+            if (qual1.useDefaultStartPrecision
+                && qual2.useDefaultStartPrecision)
+            {
+                return qual1.getStartPrecisionPreservingDefault();
+            } else {
+                return qual1.getStartPrecision();
+            }
+        }
     }
 
     public int getFractionalSecondPrecision()
@@ -239,34 +277,36 @@ public class SqlIntervalQualifier
         }
     }
 
-
     public static int combineFractionalSecondPrecisionPreservingDefault(
         SqlIntervalQualifier qual1,
-        SqlIntervalQualifier qual2
-    )
+        SqlIntervalQualifier qual2)
     {
-       if (qual1.getFractionalSecondPrecision() >
-           qual2.getFractionalSecondPrecision()) {
-           // qual1 is more precise, but if it has the default indicator
-           // set, we need to return that indicator so result will also
-           // use default
-           return( qual1.getFractionalSecondPrecisionPreservingDefault() );
-       } else if (qual1.getFractionalSecondPrecision() <
-                  qual2.getFractionalSecondPrecision()) {
-           // qual2 is more precise, but if it has the default indicator
-           // set, we need to return that indicator so result will also
-           // use default
-           return( qual2.getFractionalSecondPrecisionPreservingDefault() );
-       } else {
-           // they are equal.  return default if both are default,
-           // otherwise return exact precision
-           if  (qual1.useDefaultFractionalSecondPrecision &&
-                qual2.useDefaultFractionalSecondPrecision) {
-               return qual1.getFractionalSecondPrecisionPreservingDefault();
-           } else {
-               return qual1.getFractionalSecondPrecision();
-           }
-       }
+        if (qual1.getFractionalSecondPrecision()
+            > qual2.getFractionalSecondPrecision())
+        {
+            // qual1 is more precise, but if it has the default indicator
+            // set, we need to return that indicator so result will also
+            // use default
+            return (qual1.getFractionalSecondPrecisionPreservingDefault());
+        } else if (
+            qual1.getFractionalSecondPrecision()
+            < qual2.getFractionalSecondPrecision())
+        {
+            // qual2 is more precise, but if it has the default indicator
+            // set, we need to return that indicator so result will also
+            // use default
+            return (qual2.getFractionalSecondPrecisionPreservingDefault());
+        } else {
+            // they are equal.  return default if both are default,
+            // otherwise return exact precision
+            if (qual1.useDefaultFractionalSecondPrecision
+                && qual2.useDefaultFractionalSecondPrecision)
+            {
+                return qual1.getFractionalSecondPrecisionPreservingDefault();
+            } else {
+                return qual1.getFractionalSecondPrecision();
+            }
+        }
     }
 
     public TimeUnit getStartUnit()
@@ -281,13 +321,12 @@ public class SqlIntervalQualifier
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return
-            new SqlIntervalQualifier(
-                startUnit,
-                startPrecision,
-                endUnit,
-                fractionalSecondPrecision,
-                pos);
+        return new SqlIntervalQualifier(
+            startUnit,
+            startPrecision,
+            endUnit,
+            fractionalSecondPrecision,
+            pos);
     }
 
     public void unparse(
@@ -322,16 +361,19 @@ public class SqlIntervalQualifier
             if (null != endUnit) {
                 writer.keyword("TO");
                 final String end = endUnit.name().toUpperCase();
-                if ( (TimeUnit.Second.equals(endUnit)) &&
-                      (!useDefaultFractionalSecondPrecision) ){
+                if ((TimeUnit.Second.equals(endUnit))
+                    && (!useDefaultFractionalSecondPrecision))
+                {
                     final SqlWriter.Frame frame = writer.startFunCall(end);
                     writer.print(fractionalSecondPrecision);
                     writer.endList(frame);
                 } else {
                     writer.keyword(end);
                 }
-            } else if ( (TimeUnit.Second.equals(startUnit)) &&
-                            (!useDefaultFractionalSecondPrecision) ){
+            } else if (
+                (TimeUnit.Second.equals(startUnit))
+                && (!useDefaultFractionalSecondPrecision))
+            {
                 final SqlWriter.Frame frame = writer.startList("(", ")");
                 writer.print(fractionalSecondPrecision);
                 writer.endList(frame);
@@ -341,60 +383,56 @@ public class SqlIntervalQualifier
 
     public boolean isYearMonth()
     {
-        return
-            TimeUnit.Year.equals(startUnit)
+        return TimeUnit.Year.equals(startUnit)
             || TimeUnit.Month.equals(startUnit);
     }
 
-
-
-
-    private  int getIntervalSign( String value )
+    private int getIntervalSign(String value)
     {
-        int sign = 1;  // positive until proven otherwise
+        int sign = 1; // positive until proven otherwise
 
-        if ( !Util.isNullOrEmpty(value) ) {
+        if (!Util.isNullOrEmpty(value)) {
             if ('-' == value.charAt(0)) {
-                sign = -1;  // Negative
+                sign = -1; // Negative
             }
         }
 
         return (sign);
     }
 
-    private String stripLeadingSign( String value)
+    private String stripLeadingSign(String value)
     {
         String unsignedValue = value;
 
-        if ( !Util.isNullOrEmpty(value) ) {
-            if ( ('-' == value.charAt(0)) || ('+' == value.charAt(0)) ) {
+        if (!Util.isNullOrEmpty(value)) {
+            if (('-' == value.charAt(0)) || ('+' == value.charAt(0))) {
                 unsignedValue = value.substring(1);
             }
         }
 
-        return(unsignedValue);
+        return (unsignedValue);
     }
 
-    private boolean isLeadFieldInRange( int field, TimeUnit unit)
+    private boolean isLeadFieldInRange(int field, TimeUnit unit)
     {
         // we should never get handed a negative field value
-        assert( field >= 0);
+        assert (field >= 0);
 
         // Leading fields are only restricted by startPrecision, which
         // has already been checked for using pattern matching.
         // Therefore, always return true
-        return ( true );
+        return (true);
     }
 
-    private boolean isFractionalSecondFieldInRange( int field )
+    private boolean isFractionalSecondFieldInRange(int field)
     {
         // we should never get handed a negative field value
-        assert( field >= 0);
+        assert (field >= 0);
 
         // Fractional second fields are only restricted by precision, which
         // has already been checked for using pattern matching.
         // Therefore, always return true
-        return ( true );
+        return (true);
     }
 
     private boolean isSecondaryFieldInRange(int field, TimeUnit unit)
@@ -402,28 +440,27 @@ public class SqlIntervalQualifier
         boolean retval = false;
 
         // we should never get handed a negative field value
-        assert( field >= 0);
+        assert (field >= 0);
 
         // YEAR and DAY can never be secondary units,
         // nor can unit be null
-        assert( unit != null);
-        assert( unit != TimeUnit.Year);
-        assert( unit != TimeUnit.Day);
+        assert (unit != null);
+        assert (unit != TimeUnit.Year);
+        assert (unit != TimeUnit.Day);
 
         // Secondary field limits, as per section 4.6.3 of SQL2003 spec
-        if (
-            ( (TimeUnit.Month == unit) && (field <= 11) ) ||
-            ( (TimeUnit.Hour == unit) && (field <= 23) ) ||
-            ( (TimeUnit.Minute == unit) && (field <= 59) ) ||
-            ( (TimeUnit.Second == unit) && (field <= 59) )
-            ) {
-                retval = true;
+        if (((TimeUnit.Month == unit) && (field <= 11))
+            || ((TimeUnit.Hour == unit) && (field <= 23))
+            || ((TimeUnit.Minute == unit) && (field <= 59))
+            || ((TimeUnit.Second == unit) && (field <= 59)))
+        {
+            retval = true;
         }
 
-        return( retval );
+        return (retval);
     }
 
-    private int normalizeSecondFraction( String secondFracStr)
+    private int normalizeSecondFraction(String secondFracStr)
     {
         // Decimal value can be more than 3 digits. So just get
         // the millisecond part.
@@ -431,21 +468,21 @@ public class SqlIntervalQualifier
         return (ret);
     }
 
-    private int[] fillIntervalValueArray(
+    private int [] fillIntervalValueArray(
         int sign,
         int year,
         int month)
     {
-        int[] ret = new int[3];
+        int [] ret = new int[3];
 
         ret[0] = sign;
         ret[1] = year;
         ret[2] = month;
 
-        return( ret );
+        return (ret);
     }
 
-    private int[] fillIntervalValueArray(
+    private int [] fillIntervalValueArray(
         int sign,
         int day,
         int hour,
@@ -453,7 +490,7 @@ public class SqlIntervalQualifier
         int second,
         int secondFrac)
     {
-        int[] ret = new int[6];
+        int [] ret = new int[6];
 
         ret[0] = sign;
         ret[1] = day;
@@ -462,18 +499,17 @@ public class SqlIntervalQualifier
         ret[4] = second;
         ret[5] = secondFrac;
 
-        return( ret );
+        return (ret);
     }
 
     /**
-     * Validates an INTERVAL literal against a
-     * YEAR interval qualifier.
+     * Validates an INTERVAL literal against a YEAR interval qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsYear(
+    private int [] evaluateIntervalLiteralAsYear(
         int sign,
-        String value )
+        String value)
     {
         int year;
 
@@ -495,22 +531,20 @@ public class SqlIntervalQualifier
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, year, 0) );
+            return (fillIntervalValueArray(sign, year, 0));
         } else {
             return null;
         }
-
     }
 
     /**
-     * Validates an INTERVAL literal against a
-     * YEAR TO MONTH interval qualifier.
+     * Validates an INTERVAL literal against a YEAR TO MONTH interval qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsYearToMonth(
+    private int [] evaluateIntervalLiteralAsYearToMonth(
         int sign,
-        String value )
+        String value)
     {
         int year, month;
 
@@ -528,29 +562,27 @@ public class SqlIntervalQualifier
             }
 
             // Validate individual fields
-            if ( !( isLeadFieldInRange(year, TimeUnit.Year) ) ||
-                  !( isSecondaryFieldInRange(month, TimeUnit.Month) )
-                ) {
+            if (!(isLeadFieldInRange(year, TimeUnit.Year))
+                || !(isSecondaryFieldInRange(month, TimeUnit.Month)))
+            {
                 return null;
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, year, month) );
+            return (fillIntervalValueArray(sign, year, month));
         } else {
             return null;
         }
-
     }
 
     /**
-     * Validates an INTERVAL literal against a
-     * MONTH interval qualifier.
+     * Validates an INTERVAL literal against a MONTH interval qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsMonth(
+    private int [] evaluateIntervalLiteralAsMonth(
         int sign,
-        String value )
+        String value)
     {
         int month;
 
@@ -572,21 +604,20 @@ public class SqlIntervalQualifier
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, 0, month) );
+            return (fillIntervalValueArray(sign, 0, month));
         } else {
             return null;
         }
     }
 
     /**
-     * Validates an INTERVAL literal against a
-     * DAY interval qualifier.
+     * Validates an INTERVAL literal against a DAY interval qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsDay(
+    private int [] evaluateIntervalLiteralAsDay(
         int sign,
-        String value )
+        String value)
     {
         int day;
 
@@ -608,21 +639,20 @@ public class SqlIntervalQualifier
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, day, 0, 0, 0, 0) );
+            return (fillIntervalValueArray(sign, day, 0, 0, 0, 0));
         } else {
             return null;
         }
     }
 
     /**
-     * Validates an INTERVAL literal against a
-     * DAY TO HOUR interval qualifier.
+     * Validates an INTERVAL literal against a DAY TO HOUR interval qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsDayToHour(
+    private int [] evaluateIntervalLiteralAsDayToHour(
         int sign,
-        String value )
+        String value)
     {
         int day, hour;
 
@@ -633,35 +663,34 @@ public class SqlIntervalQualifier
         if (m.matches()) {
             // Break out  field values
             try {
-                day  = Integer.parseInt(m.group(1));
+                day = Integer.parseInt(m.group(1));
                 hour = Integer.parseInt(m.group(2));
             } catch (NumberFormatException e) {
                 return null;
             }
 
             // Validate individual fields
-            if ( !( isLeadFieldInRange(day, TimeUnit.Day) ) ||
-                  !( isSecondaryFieldInRange(hour, TimeUnit.Hour) )
-                ) {
+            if (!(isLeadFieldInRange(day, TimeUnit.Day))
+                || !(isSecondaryFieldInRange(hour, TimeUnit.Hour)))
+            {
                 return null;
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, day, hour, 0, 0, 0) );
+            return (fillIntervalValueArray(sign, day, hour, 0, 0, 0));
         } else {
             return null;
         }
     }
 
     /**
-     * Validates an INTERVAL literal against a
-     * DAY TO MINUTE interval qualifier.
+     * Validates an INTERVAL literal against a DAY TO MINUTE interval qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsDayToMinute(
+    private int [] evaluateIntervalLiteralAsDayToMinute(
         int sign,
-        String value )
+        String value)
     {
         int day, hour, minute;
 
@@ -673,7 +702,7 @@ public class SqlIntervalQualifier
         if (m.matches()) {
             // Break out  field values
             try {
-                day  = Integer.parseInt(m.group(1));
+                day = Integer.parseInt(m.group(1));
                 hour = Integer.parseInt(m.group(2));
                 minute = Integer.parseInt(m.group(3));
             } catch (NumberFormatException e) {
@@ -681,29 +710,28 @@ public class SqlIntervalQualifier
             }
 
             // Validate individual fields
-            if ( !( isLeadFieldInRange(day, TimeUnit.Day) ) ||
-                  !( isSecondaryFieldInRange(hour, TimeUnit.Hour) ) ||
-                  !( isSecondaryFieldInRange(minute, TimeUnit.Minute) )
-                ) {
+            if (!(isLeadFieldInRange(day, TimeUnit.Day))
+                || !(isSecondaryFieldInRange(hour, TimeUnit.Hour))
+                || !(isSecondaryFieldInRange(minute, TimeUnit.Minute)))
+            {
                 return null;
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, day, hour, minute, 0, 0) );
+            return (fillIntervalValueArray(sign, day, hour, minute, 0, 0));
         } else {
             return null;
         }
     }
 
     /**
-     * Validates an INTERVAL literal against a
-     * DAY TO SECOND interval qualifier.
+     * Validates an INTERVAL literal against a DAY TO SECOND interval qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsDayToSecond(
+    private int [] evaluateIntervalLiteralAsDayToSecond(
         int sign,
-        String value )
+        String value)
     {
         int day, hour, minute, second, secondFrac;
         boolean hasFractionalSecond;
@@ -711,16 +739,15 @@ public class SqlIntervalQualifier
         // validate as DAY(startPrecision) TO MINUTE,
         // e.g. 'DD HH:MM:SS' or 'DD HH:MM:SS.SSS'
         // Note: must check two patterns, since fractional second is optional
-        String intervalPatternWithFracSec
-            = "(\\d{1," + startPrecision + "})" +
-                    " (\\d{1,2}):(\\d{1,2}):(\\d{1,2})\\.(\\d{1," +
-                    fractionalSecondPrecision + "})";
-        String intervalPatternWithoutFracSec
-            = "(\\d{1," + startPrecision + "})" +
-                    " (\\d{1,2}):(\\d{1,2}):(\\d{1,2})";
+        String intervalPatternWithFracSec =
+            "(\\d{1," + startPrecision + "})"
+            + " (\\d{1,2}):(\\d{1,2}):(\\d{1,2})\\.(\\d{1,"
+            + fractionalSecondPrecision + "})";
+        String intervalPatternWithoutFracSec =
+            "(\\d{1," + startPrecision + "})"
+            + " (\\d{1,2}):(\\d{1,2}):(\\d{1,2})";
 
-        Matcher m =
-            Pattern.compile(intervalPatternWithFracSec).matcher(value);
+        Matcher m = Pattern.compile(intervalPatternWithFracSec).matcher(value);
         if (m.matches()) {
             hasFractionalSecond = true;
         } else {
@@ -731,7 +758,7 @@ public class SqlIntervalQualifier
         if (m.matches()) {
             // Break out  field values
             try {
-                day  = Integer.parseInt(m.group(1));
+                day = Integer.parseInt(m.group(1));
                 hour = Integer.parseInt(m.group(2));
                 minute = Integer.parseInt(m.group(3));
                 second = Integer.parseInt(m.group(4));
@@ -746,32 +773,36 @@ public class SqlIntervalQualifier
             }
 
             // Validate individual fields
-            if ( !( isLeadFieldInRange(day, TimeUnit.Day) ) ||
-                  !( isSecondaryFieldInRange(hour, TimeUnit.Hour) ) ||
-                  !( isSecondaryFieldInRange(minute, TimeUnit.Minute) ) ||
-                  !( isSecondaryFieldInRange(second, TimeUnit.Second) ) ||
-                  !( isFractionalSecondFieldInRange(secondFrac) )
-                ) {
+            if (!(isLeadFieldInRange(day, TimeUnit.Day))
+                || !(isSecondaryFieldInRange(hour, TimeUnit.Hour))
+                || !(isSecondaryFieldInRange(minute, TimeUnit.Minute))
+                || !(isSecondaryFieldInRange(second, TimeUnit.Second))
+                || !(isFractionalSecondFieldInRange(secondFrac)))
+            {
                 return null;
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, day, hour,
-                                                            minute, second, secondFrac) );
+            return (fillIntervalValueArray(
+                sign,
+                day,
+                hour,
+                minute,
+                second,
+                secondFrac));
         } else {
             return null;
         }
     }
 
     /**
-     * Validates an INTERVAL literal against an
-     * HOUR interval qualifier.
+     * Validates an INTERVAL literal against an HOUR interval qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsHour(
+    private int [] evaluateIntervalLiteralAsHour(
         int sign,
-        String value )
+        String value)
     {
         int hour;
 
@@ -793,21 +824,21 @@ public class SqlIntervalQualifier
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, 0, hour, 0, 0, 0) );
+            return (fillIntervalValueArray(sign, 0, hour, 0, 0, 0));
         } else {
             return null;
         }
     }
 
     /**
-     * Validates an INTERVAL literal against an
-     * HOUR TO MINUTE interval qualifier.
+     * Validates an INTERVAL literal against an HOUR TO MINUTE interval
+     * qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsHourToMinute(
+    private int [] evaluateIntervalLiteralAsHourToMinute(
         int sign,
-        String value )
+        String value)
     {
         int hour, minute;
 
@@ -825,28 +856,28 @@ public class SqlIntervalQualifier
             }
 
             // Validate individual fields
-            if ( !( isLeadFieldInRange(hour, TimeUnit.Hour) ) ||
-                  !( isSecondaryFieldInRange(minute, TimeUnit.Minute) )
-                ) {
+            if (!(isLeadFieldInRange(hour, TimeUnit.Hour))
+                || !(isSecondaryFieldInRange(minute, TimeUnit.Minute)))
+            {
                 return null;
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, 0, hour, minute, 0, 0) );
+            return (fillIntervalValueArray(sign, 0, hour, minute, 0, 0));
         } else {
             return null;
         }
     }
 
     /**
-     * Validates an INTERVAL literal against an
-     * HOUR TO SECOND interval qualifier.
+     * Validates an INTERVAL literal against an HOUR TO SECOND interval
+     * qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsHourToSecond(
+    private int [] evaluateIntervalLiteralAsHourToSecond(
         int sign,
-        String value )
+        String value)
     {
         int hour, minute, second, secondFrac;
         boolean hasFractionalSecond;
@@ -854,11 +885,11 @@ public class SqlIntervalQualifier
         // validate as HOUR(startPrecision) TO SECOND,
         // e.g. 'HH:MM:SS' or 'HH:MM:SS.SSS'
         // Note: must check two patterns, since fractional second is optional
-        String intervalPatternWithFracSec
-            = "(\\d{1," + startPrecision + "}):(\\d{1,2}):(\\d{1,2})\\.(\\d{1," +
-                    fractionalSecondPrecision + "})";
-        String intervalPatternWithoutFracSec
-            = "(\\d{1," + startPrecision + "}):(\\d{1,2}):(\\d{1,2})";
+        String intervalPatternWithFracSec =
+            "(\\d{1," + startPrecision + "}):(\\d{1,2}):(\\d{1,2})\\.(\\d{1,"
+            + fractionalSecondPrecision + "})";
+        String intervalPatternWithoutFracSec =
+            "(\\d{1," + startPrecision + "}):(\\d{1,2}):(\\d{1,2})";
 
         Matcher m = Pattern.compile(intervalPatternWithFracSec).matcher(value);
         if (m.matches()) {
@@ -885,31 +916,35 @@ public class SqlIntervalQualifier
             }
 
             // Validate individual fields
-            if ( !( isLeadFieldInRange(hour, TimeUnit.Hour) ) ||
-                  !( isSecondaryFieldInRange(minute, TimeUnit.Minute) ) ||
-                  !( isSecondaryFieldInRange(second, TimeUnit.Second) ) ||
-                  !( isFractionalSecondFieldInRange(secondFrac) )
-                ) {
+            if (!(isLeadFieldInRange(hour, TimeUnit.Hour))
+                || !(isSecondaryFieldInRange(minute, TimeUnit.Minute))
+                || !(isSecondaryFieldInRange(second, TimeUnit.Second))
+                || !(isFractionalSecondFieldInRange(secondFrac)))
+            {
                 return null;
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, 0,
-                                hour, minute, second, secondFrac) );
+            return (fillIntervalValueArray(
+                sign,
+                0,
+                hour,
+                minute,
+                second,
+                secondFrac));
         } else {
             return null;
         }
     }
 
     /**
-     * Validates an INTERVAL literal against an
-     * MINUTE interval qualifier.
+     * Validates an INTERVAL literal against an MINUTE interval qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsMinute(
+    private int [] evaluateIntervalLiteralAsMinute(
         int sign,
-        String value )
+        String value)
     {
         int minute;
 
@@ -931,21 +966,21 @@ public class SqlIntervalQualifier
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, 0, 0, minute, 0, 0) );
+            return (fillIntervalValueArray(sign, 0, 0, minute, 0, 0));
         } else {
             return null;
         }
     }
 
     /**
-     * Validates an INTERVAL literal against an
-     * MINUTE TO SECOND interval qualifier.
+     * Validates an INTERVAL literal against an MINUTE TO SECOND interval
+     * qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsMinuteToSecond(
+    private int [] evaluateIntervalLiteralAsMinuteToSecond(
         int sign,
-        String value )
+        String value)
     {
         int minute, second, secondFrac;
         boolean hasFractionalSecond;
@@ -953,11 +988,11 @@ public class SqlIntervalQualifier
         // validate as MINUTE(startPrecision) TO SECOND,
         // e.g. 'MM:SS' or 'MM:SS.SSS'
         // Note: must check two patterns, since fractional second is optional
-        String intervalPatternWithFracSec
-            = "(\\d{1," + startPrecision + "}):(\\d{1,2})\\.(\\d{1," +
-                    fractionalSecondPrecision + "})";
-        String intervalPatternWithoutFracSec
-            = "(\\d{1," + startPrecision + "}):(\\d{1,2})";
+        String intervalPatternWithFracSec =
+            "(\\d{1," + startPrecision + "}):(\\d{1,2})\\.(\\d{1,"
+            + fractionalSecondPrecision + "})";
+        String intervalPatternWithoutFracSec =
+            "(\\d{1," + startPrecision + "}):(\\d{1,2})";
 
         Matcher m = Pattern.compile(intervalPatternWithFracSec).matcher(value);
         if (m.matches()) {
@@ -983,30 +1018,34 @@ public class SqlIntervalQualifier
             }
 
             // Validate individual fields
-            if ( !( isLeadFieldInRange(minute, TimeUnit.Minute) ) ||
-                  !( isSecondaryFieldInRange(second, TimeUnit.Second) ) ||
-                  !( isFractionalSecondFieldInRange(secondFrac) )
-                ) {
+            if (!(isLeadFieldInRange(minute, TimeUnit.Minute))
+                || !(isSecondaryFieldInRange(second, TimeUnit.Second))
+                || !(isFractionalSecondFieldInRange(secondFrac)))
+            {
                 return null;
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, 0, 0,
-                                        minute, second, secondFrac) );
+            return (fillIntervalValueArray(
+                sign,
+                0,
+                0,
+                minute,
+                second,
+                secondFrac));
         } else {
             return null;
         }
     }
 
     /**
-     * Validates an INTERVAL literal against an
-     * SECOND interval qualifier.
+     * Validates an INTERVAL literal against an SECOND interval qualifier.
      *
      * @return null if the interval value is illegal.
      */
-    private int[] evaluateIntervalLiteralAsSecond(
+    private int [] evaluateIntervalLiteralAsSecond(
         int sign,
-        String value )
+        String value)
     {
         int second, secondFrac;
         boolean hasFractionalSecond;
@@ -1014,11 +1053,11 @@ public class SqlIntervalQualifier
         // validate as SECOND(startPrecision, fractionalSecondPrecision)
         // e.g. 'SS' or 'SS.SSS'
         // Note: must check two patterns, since fractional second is optional
-        String intervalPatternWithFracSec
-            = "(\\d{1," + startPrecision + "})\\.(\\d{1,"
-                + fractionalSecondPrecision + "})";
-        String intervalPatternWithoutFracSec
-            = "(\\d{1," + startPrecision + "})";
+        String intervalPatternWithFracSec =
+            "(\\d{1," + startPrecision + "})\\.(\\d{1,"
+            + fractionalSecondPrecision + "})";
+        String intervalPatternWithoutFracSec =
+            "(\\d{1," + startPrecision + "})";
 
         Matcher m = Pattern.compile(intervalPatternWithFracSec).matcher(value);
         if (m.matches()) {
@@ -1043,30 +1082,28 @@ public class SqlIntervalQualifier
             }
 
             // Validate individual fields
-            if ( !( isLeadFieldInRange(second, TimeUnit.Second) ) ||
-                  !( isFractionalSecondFieldInRange(secondFrac) )
-                ) {
+            if (!(isLeadFieldInRange(second, TimeUnit.Second))
+                || !(isFractionalSecondFieldInRange(secondFrac)))
+            {
                 return null;
             }
 
             // package values up for return
-            return( fillIntervalValueArray(sign, 0, 0, 0, second, secondFrac) );
+            return (fillIntervalValueArray(sign, 0, 0, 0, second, secondFrac));
         } else {
             return null;
         }
     }
 
     /**
-     * Validates an INTERVAL literal according to the rules specified by
-     * the interval qualifier.
-     *
-     * The assumption is made that the interval qualfier has
-     * been validated prior to calling this method.  Evaluating
-     * against an invalid qualifier could lead to strange results.
+     * Validates an INTERVAL literal according to the rules specified by the
+     * interval qualifier. The assumption is made that the interval qualfier has
+     * been validated prior to calling this method. Evaluating against an
+     * invalid qualifier could lead to strange results.
      *
      * @return null if the interval value is illegal.
      */
-    public  int [] evaluateIntervalLiteral(
+    public int [] evaluateIntervalLiteral(
         String value)
     {
         // we should have passed the validator
@@ -1078,140 +1115,122 @@ public class SqlIntervalQualifier
         // check if the sign was explicitly specified.  Record
         // the explicit or implicit sign, and strip it off to
         // simplify pattern matching later.
-        int sign = getIntervalSign( value );
-        value = stripLeadingSign( value );
+        int sign = getIntervalSign(value);
+        value = stripLeadingSign(value);
 
         // If we have an empty or null literal at this point,
         // it's illegal.  Complain and bail out.
-        if (Util.isNullOrEmpty( value )) {
+        if (Util.isNullOrEmpty(value)) {
             return null;
         }
 
         // Validate remaining string according to the pattern
         // that corresponds to the start and end units as
         // well as explicit or implicit precision and range.
-        if ( TimeUnit.Year.equals(startUnit)
-            && (null == endUnit) )  {
+        if (TimeUnit.Year.equals(startUnit)
+            && (null == endUnit))
+        {
             // YEAR
-            ret = evaluateIntervalLiteralAsYear( sign, value );
-        } if ( TimeUnit.Year.equals(startUnit)
-            && TimeUnit.Month.equals(endUnit) ){
+            ret = evaluateIntervalLiteralAsYear(sign, value);
+        }
+        if (TimeUnit.Year.equals(startUnit)
+            && TimeUnit.Month.equals(endUnit))
+        {
             // YEAR TO MONTH
-            ret = evaluateIntervalLiteralAsYearToMonth( sign, value );
+            ret = evaluateIntervalLiteralAsYearToMonth(sign, value);
         } else if (TimeUnit.Month.equals(startUnit)
-            && (null == endUnit) )  {
+            && (null == endUnit))
+        {
             // MONTH
-            ret = evaluateIntervalLiteralAsMonth( sign, value );
+            ret = evaluateIntervalLiteralAsMonth(sign, value);
         } else if (TimeUnit.Day.equals(startUnit)
-            && (null == endUnit) )  {
+            && (null == endUnit))
+        {
             // DAY
-            ret = evaluateIntervalLiteralAsDay( sign, value );
-        } else if (TimeUnit.Day.equals(startUnit)
-            && TimeUnit.Hour.equals(endUnit)) {
+            ret = evaluateIntervalLiteralAsDay(sign, value);
+        } else if (
+            TimeUnit.Day.equals(startUnit)
+            && TimeUnit.Hour.equals(endUnit))
+        {
             // DAY TO HOUR
-            ret = evaluateIntervalLiteralAsDayToHour( sign, value );
-        } else if (TimeUnit.Day.equals(startUnit)
-            && TimeUnit.Minute.equals(endUnit)) {
+            ret = evaluateIntervalLiteralAsDayToHour(sign, value);
+        } else if (
+            TimeUnit.Day.equals(startUnit)
+            && TimeUnit.Minute.equals(endUnit))
+        {
             // DAY TO MINUTE
-            ret = evaluateIntervalLiteralAsDayToMinute( sign, value );
-        } else if (TimeUnit.Day.equals(startUnit)
-            && TimeUnit.Second.equals(endUnit)) {
+            ret = evaluateIntervalLiteralAsDayToMinute(sign, value);
+        } else if (
+            TimeUnit.Day.equals(startUnit)
+            && TimeUnit.Second.equals(endUnit))
+        {
             // DAY TO SECOND
-            ret = evaluateIntervalLiteralAsDayToSecond( sign, value );
+            ret = evaluateIntervalLiteralAsDayToSecond(sign, value);
         } else if (TimeUnit.Hour.equals(startUnit)
-            && (null == endUnit) )  {
+            && (null == endUnit))
+        {
             // HOUR
-            ret = evaluateIntervalLiteralAsHour( sign, value );
-        }  else if (TimeUnit.Hour.equals(startUnit)
-            && TimeUnit.Minute.equals(endUnit)) {
+            ret = evaluateIntervalLiteralAsHour(sign, value);
+        } else if (
+            TimeUnit.Hour.equals(startUnit)
+            && TimeUnit.Minute.equals(endUnit))
+        {
             // HOUR TO MINUTE
-            ret = evaluateIntervalLiteralAsHourToMinute( sign, value );
-        } else if (TimeUnit.Hour.equals(startUnit)
-            && TimeUnit.Second.equals(endUnit)) {
+            ret = evaluateIntervalLiteralAsHourToMinute(sign, value);
+        } else if (
+            TimeUnit.Hour.equals(startUnit)
+            && TimeUnit.Second.equals(endUnit))
+        {
             // HOUR TO SECOND
-            ret = evaluateIntervalLiteralAsHourToSecond( sign, value );
+            ret = evaluateIntervalLiteralAsHourToSecond(sign, value);
         } else if (TimeUnit.Minute.equals(startUnit)
-            && (null == endUnit) )  {
+            && (null == endUnit))
+        {
             // MINUTE
-            ret = evaluateIntervalLiteralAsMinute( sign, value );
-        } else if (TimeUnit.Minute.equals(startUnit)
-            && TimeUnit.Second.equals(endUnit)) {
+            ret = evaluateIntervalLiteralAsMinute(sign, value);
+        } else if (
+            TimeUnit.Minute.equals(startUnit)
+            && TimeUnit.Second.equals(endUnit))
+        {
             // MINUTE TO SECOND
-            ret = evaluateIntervalLiteralAsMinuteToSecond( sign, value );
+            ret = evaluateIntervalLiteralAsMinuteToSecond(sign, value);
         } else if (TimeUnit.Second.equals(startUnit)
-            && (null == endUnit) )  {
+            && (null == endUnit))
+        {
             // SECOND
-            ret = evaluateIntervalLiteralAsSecond( sign, value );
+            ret = evaluateIntervalLiteralAsSecond(sign, value);
         }
 
         return ret;
     }
-
 
     public static long getConversion(TimeUnit unit)
     {
         long val = 0;
         switch (unit) {
         case Day:
-            val = 24 * 3600000;  // number of millis
+            val = 24 * 3600000; // number of millis
             break;
         case Hour:
-            val = 3600000;  // number of millis
+            val = 3600000; // number of millis
             break;
         case Minute:
-            val = 60000;  // number of millis
+            val = 60000; // number of millis
             break;
         case Second:
-            val = 1000;  // number of millis
+            val = 1000; // number of millis
             break;
         case Year:
             val = 12; // number of months
             break;
         case Month:
-            val = 1;  // number of months
+            val = 1; // number of months
             break;
         default:
             assert false : "invalid interval qualifier";
             break;
         }
         return val;
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Enumeration of time units used to construct an interval.
-     */
-    public enum TimeUnit implements SqlLiteral.SqlSymbol
-    {
-        Year(true, 12 /* months */),
-        Month(true, 1 /* months */),
-        Day(false, 24 * 3600000 /* millis */),
-        Hour(false, 3600000 /* millis */),
-        Minute(false, 60000 /* millis */),
-        Second(false, 1000 /* millis */);
-
-        public final boolean yearMonth;
-        public final long multiplier;
-        private static final TimeUnit[] CachedValues = values();
-
-        private TimeUnit(boolean yearMonth, long multiplier) {
-            this.yearMonth = yearMonth;
-            this.multiplier = multiplier;
-        }
-
-        /**
-         * Returns the TimeUnit associated with an ordinal. The value
-         * returned is null if the ordinal is not a member of the
-         * TimeUnit enumeration.
-         */
-        public static TimeUnit getValue(int ordinal)
-        {
-            return ordinal < 0 || ordinal >= CachedValues.length ? null :
-                CachedValues[ordinal];
-        }
-
-        public static final String GET_VALUE_METHOD_NAME = "getValue";
     }
 }
 

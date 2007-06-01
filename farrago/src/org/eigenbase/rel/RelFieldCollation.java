@@ -30,7 +30,6 @@ package org.eigenbase.rel;
  */
 public class RelFieldCollation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final RelFieldCollation [] emptyCollationArray =
@@ -41,7 +40,8 @@ public class RelFieldCollation
     /**
      * Direction that a field is ordered in.
      */
-    public static enum Direction {
+    public static enum Direction
+    {
         /**
          * Ascending direction: A value is always followed by a greater
          * or equal value.
@@ -115,8 +115,8 @@ public class RelFieldCollation
             return false;
         }
         RelFieldCollation other = (RelFieldCollation) obj;
-        return
-            (fieldIndex == other.fieldIndex) && (direction == other.direction);
+        return (fieldIndex == other.fieldIndex)
+            && (direction == other.direction);
     }
 
     // implement Object

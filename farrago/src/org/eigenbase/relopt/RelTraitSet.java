@@ -35,7 +35,6 @@ import org.eigenbase.util.*;
  */
 public class RelTraitSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private RelTrait [] traits;
@@ -209,7 +208,8 @@ public class RelTraitSet
      */
     public boolean matches(RelTraitSet that)
     {
-        final int n = Math.min(
+        final int n =
+            Math.min(
                 this.size(),
                 that.size());
 

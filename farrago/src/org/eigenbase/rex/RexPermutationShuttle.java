@@ -22,34 +22,40 @@
 */
 package org.eigenbase.rex;
 
-import org.eigenbase.util.Permutation;
+import org.eigenbase.util.*;
+
 
 /**
- * Visitor which replaces {@link RexLocalRef} objects after the expressions
- * in a {@link RexProgram} have been reordered.
- *
- * @see RexPermuteInputsShuttle
+ * Visitor which replaces {@link RexLocalRef} objects after the expressions in a
+ * {@link RexProgram} have been reordered.
  *
  * @author jhyde
  * @version $Id$
+ * @see RexPermuteInputsShuttle
  */
 public class RexPermutationShuttle
     extends RexShuttle
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final Permutation permutation;
+
+    //~ Constructors -----------------------------------------------------------
 
     public RexPermutationShuttle(Permutation permutation)
     {
         this.permutation = permutation;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public RexNode visitLocalRef(RexLocalRef local)
     {
         final int index = local.getIndex();
         int target = permutation.getTarget(index);
         return new RexLocalRef(
-                target,
-                local.getType());
+            target,
+            local.getType());
     }
 }
 

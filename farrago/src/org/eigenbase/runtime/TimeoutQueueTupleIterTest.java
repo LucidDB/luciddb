@@ -35,7 +35,6 @@ import org.eigenbase.util.*;
 public class TimeoutQueueTupleIterTest
     extends TestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -155,11 +154,10 @@ public class TimeoutQueueTupleIterTest
     /**
      * Iterator which returns an element from an array on a regular basis.
      *
-     * <p>Every clock tick until the array is exhausted,
-     * {@link Iterator#hasNext} returns true, then the following clock tick,
-     * {@link Iterator#next} returns an
-     * object. If you call a method too early, the method waits until the
-     * appropriate time.
+     * <p>Every clock tick until the array is exhausted, {@link
+     * Iterator#hasNext} returns true, then the following clock tick, {@link
+     * Iterator#next} returns an object. If you call a method too early, the
+     * method waits until the appropriate time.
      */
     private static class TickIterator
         implements TupleIter

@@ -39,7 +39,6 @@ import org.eigenbase.sql.*;
 public class ParameterScope
     extends EmptyScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

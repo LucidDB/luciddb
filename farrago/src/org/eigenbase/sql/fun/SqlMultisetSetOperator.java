@@ -41,7 +41,6 @@ import org.eigenbase.sql.type.*;
 public class SqlMultisetSetOperator
     extends SqlBinaryOperator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final boolean all;
@@ -50,7 +49,8 @@ public class SqlMultisetSetOperator
 
     public SqlMultisetSetOperator(String name, int prec, boolean all)
     {
-        super(name,
+        super(
+            name,
             SqlKind.Other,
             prec,
             true,

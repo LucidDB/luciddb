@@ -31,7 +31,6 @@ import java.util.*;
  */
 public interface FarragoSessionExecutingStmtInfo
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

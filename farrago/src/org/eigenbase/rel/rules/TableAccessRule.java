@@ -35,7 +35,6 @@ import org.eigenbase.relopt.*;
 public class TableAccessRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final TableAccessRule instance = new TableAccessRule();

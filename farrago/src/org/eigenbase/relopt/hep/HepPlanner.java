@@ -24,16 +24,16 @@ package org.eigenbase.relopt.hep;
 import java.util.*;
 import java.util.logging.*;
 
-import org.jgrapht.*;
-import org.jgrapht.alg.*;
-import org.jgrapht.graph.*;
-import org.jgrapht.traverse.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
+
+import org.jgrapht.*;
+import org.jgrapht.alg.*;
+import org.jgrapht.graph.*;
+import org.jgrapht.traverse.*;
 
 
 /**
@@ -46,7 +46,6 @@ import org.eigenbase.util.*;
 public class HepPlanner
     extends AbstractRelOptPlanner
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private HepProgram mainProgram;
@@ -85,27 +84,28 @@ public class HepPlanner
      */
     public HepPlanner(HepProgram program)
     {
-    	this(program, false);
+        this(program, false);
     }
 
     /**
-     * Creates a new HepPlanner with the option to keep the
-     * graph a tree(noDAG=true) or allow DAG(noDAG=false).
+     * Creates a new HepPlanner with the option to keep the graph a
+     * tree(noDAG=true) or allow DAG(noDAG=false).
      *
      * @param program program controlling rule application
      */
     public HepPlanner(HepProgram program, boolean noDAG)
     {
-    	this.mainProgram = program;
+        this.mainProgram = program;
 
-    	mapDigestToVertex = new HashMap<String, HepRelVertex>();
-    	graph = new DefaultDirectedGraph<HepRelVertex, DefaultEdge>(
-            DefaultEdge.class);
+        mapDigestToVertex = new HashMap<String, HepRelVertex>();
+        graph =
+            new DefaultDirectedGraph<HepRelVertex, DefaultEdge>(
+                DefaultEdge.class);
 
-    	// NOTE jvs 24-Apr-2006:  We use LinkedHashSet here and below
-    	// in order to provide deterministic behavior.
-    	allRules = new LinkedHashSet<RelOptRule>();
-    	this.noDAG = noDAG;
+        // NOTE jvs 24-Apr-2006:  We use LinkedHashSet here and below
+        // in order to provide deterministic behavior.
+        allRules = new LinkedHashSet<RelOptRule>();
+        this.noDAG = noDAG;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -327,7 +327,8 @@ public class HepPlanner
         tracer.finest("Leaving group");
     }
 
-    private void applyRules(Collection<RelOptRule> rules,
+    private void applyRules(
+        Collection<RelOptRule> rules,
         boolean forceConversions)
     {
         if (currentProgram.group != null) {
@@ -391,10 +392,9 @@ public class HepPlanner
         collectGarbage();
 
         if (currentProgram.matchOrder == HepMatchOrder.ARBITRARY) {
-            return
-                new DepthFirstIterator<HepRelVertex, DefaultEdge>(
-                    graph,
-                    start);
+            return new DepthFirstIterator<HepRelVertex, DefaultEdge>(
+                graph,
+                start);
         }
 
         assert (start == root);
@@ -461,9 +461,9 @@ public class HepPlanner
 
         if (!call.getResults().isEmpty()) {
             return applyTransformationResults(
-                    vertex,
-                    call,
-                    parentTraits);
+                vertex,
+                call,
+                parentTraits);
         }
 
         return null;
@@ -474,8 +474,7 @@ public class HepPlanner
         HepRelVertex vertex)
     {
         RelTraitSet outTraits = converterRule.getOutTraits();
-        List<HepRelVertex> parents =
-            Graphs.predecessorListOf(graph, vertex);
+        List<HepRelVertex> parents = Graphs.predecessorListOf(graph, vertex);
         for (HepRelVertex parent : parents) {
             RelNode parentRel = parent.getCurrentRel();
             if (parentRel instanceof ConverterRel) {
@@ -571,8 +570,7 @@ public class HepPlanner
         // we only update the existing parents, not the new parents
         // (otherwise loops can result).  Also take care of filtering
         // out parents by traits in case we're dealing with a converter rule.
-        List<HepRelVertex> allParents =
-            Graphs.predecessorListOf(graph, vertex);
+        List<HepRelVertex> allParents = Graphs.predecessorListOf(graph, vertex);
         List<HepRelVertex> parents = new ArrayList<HepRelVertex>();
         for (HepRelVertex parent : allParents) {
             if (parentTraits != null) {

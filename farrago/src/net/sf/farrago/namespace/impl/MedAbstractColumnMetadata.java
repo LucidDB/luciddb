@@ -48,7 +48,6 @@ import org.eigenbase.util14.*;
  */
 public abstract class MedAbstractColumnMetadata
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public Set<BitSet> getUniqueKeys(
@@ -117,7 +116,8 @@ public abstract class MedAbstractColumnMetadata
         BitSet colMask = new BitSet();
         for (FemAbstractColumn keyCol : keyCols) {
             if (checkNulls
-                && FarragoCatalogUtil.isColumnNullable(repos, keyCol)) {
+                && FarragoCatalogUtil.isColumnNullable(repos, keyCol))
+            {
                 return;
             }
             int fieldNo = mapColumnToField(rel, keyCol);
@@ -159,7 +159,7 @@ public abstract class MedAbstractColumnMetadata
         }
         return false;
     }
-    
+
     public Double getPopulationSize(RelNode rel, BitSet groupKey)
     {
         // this method only handles table level relnodes
@@ -181,8 +181,11 @@ public abstract class MedAbstractColumnMetadata
         }
 
         // multiply by the cardinality of each column
-        for (int col = groupKey.nextSetBit(0); col >= 0;
-            col = groupKey.nextSetBit(col + 1)) {
+        for (
+            int col = groupKey.nextSetBit(0);
+            col >= 0;
+            col = groupKey.nextSetBit(col + 1))
+        {
             // calculate the original ordinal (before projection)
             int origCol = mapFieldToColumnOrdinal(rel, col);
             if (origCol == -1) {
@@ -202,10 +205,9 @@ public abstract class MedAbstractColumnMetadata
         }
 
         // cap the number of distinct values
-        return
-            RelMdUtil.numDistinctVals(
-                population,
-                RelMetadataQuery.getRowCount(rel));
+        return RelMdUtil.numDistinctVals(
+            population,
+            RelMetadataQuery.getRowCount(rel));
     }
 
     /**
@@ -235,10 +237,9 @@ public abstract class MedAbstractColumnMetadata
         // predicate
         boolean uniq = RelMdUtil.areColumnsDefinitelyUnique(rel, groupKey);
         if (uniq) {
-            return
-                NumberUtil.multiply(
-                    RelMetadataQuery.getRowCount(rel),
-                    RelMetadataQuery.getSelectivity(rel, predicate));
+            return NumberUtil.multiply(
+                RelMetadataQuery.getRowCount(rel),
+                RelMetadataQuery.getSelectivity(rel, predicate));
         }
 
         // if no stats are available, return null
@@ -283,8 +284,11 @@ public abstract class MedAbstractColumnMetadata
         // loop through each column and determine the cardinality of the
         // column
         Double distRowCount = 1.0;
-        for (int fieldNo = groupKey.nextSetBit(0); fieldNo >= 0;
-            fieldNo = groupKey.nextSetBit(fieldNo + 1)) {
+        for (
+            int fieldNo = groupKey.nextSetBit(0);
+            fieldNo >= 0;
+            fieldNo = groupKey.nextSetBit(fieldNo + 1))
+        {
             // if the column has sargable predicates, compute the
             // cardinality based on the predicates; otherwise, just compute
             // the full cardinality of the column

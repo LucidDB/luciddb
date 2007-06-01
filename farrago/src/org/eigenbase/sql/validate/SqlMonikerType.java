@@ -34,7 +34,6 @@ import org.eigenbase.util.*;
 public class SqlMonikerType
     extends EnumeratedValues.BasicValue
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final SqlMonikerType Column = new SqlMonikerType("Column", 0);

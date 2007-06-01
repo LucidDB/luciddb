@@ -22,28 +22,33 @@
 package net.sf.farrago.runtime;
 
 import java.nio.*;
+
 import java.sql.*;
+
 import java.util.*;
 import java.util.logging.*;
+
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.fennel.tuple.*;
+import net.sf.farrago.type.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 
-import net.sf.farrago.fennel.*;
-import net.sf.farrago.fennel.tuple.*;
-import net.sf.farrago.type.*;
 
 /**
- * NativeRuntimeContext integrates Fennel with FarragoRuntimeContext. 
- * Currently, it supports Fennel errors.
+ * NativeRuntimeContext integrates Fennel with FarragoRuntimeContext. Currently,
+ * it supports Fennel errors.
  *
  * @author John Pham
  * @version $Id$
  */
 class NativeRuntimeContext
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
      * ErrorLevel. Keep this consistent with fennel/exec/ErrorTarget.h
      */
@@ -58,7 +63,7 @@ class NativeRuntimeContext
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new NativeRuntimeContext instance as a wrapper around a 
+     * Creates a new NativeRuntimeContext instance as a wrapper around a
      * FarragoRuntimeContext.
      */
     public NativeRuntimeContext(FarragoRuntimeContext context)
@@ -67,12 +72,14 @@ class NativeRuntimeContext
         streamMap = new HashMap<String, StreamDescriptor>();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Handles a Fennel row exception by converting Fennel data into 
-     * Farrago data. Delegates to {@link StreamDescriptor}.
-     * 
-     * @see FennelJavaErrorTarget#handleRowError for a description of the 
-     *   parameters
+     * Handles a Fennel row exception by converting Fennel data into Farrago
+     * data. Delegates to {@link StreamDescriptor}.
+     *
+     * @see FennelJavaErrorTarget#handleRowError for a description of the
+     * parameters
      */
     public Object handleRowError(
         String source,
@@ -91,30 +98,30 @@ class NativeRuntimeContext
         return streamDesc.postError(isWarning, msg, byteBuffer, index);
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
-     * StreamDescriptor represents a unique Fennel error source. Each 
-     * instance has it's own error tag and record format.
+     * StreamDescriptor represents a unique Fennel error source. Each instance
+     * has it's own error tag and record format.
      */
     private class StreamDescriptor
     {
-        //~ Instance fields --------------------------------------------------------
-
         private final FarragoRuntimeContext runtimeContext;
         private final String tag;
         private final FennelTupleData tupleData;
         private final FennelTupleAccessor tupleAccessor;
-        private final String[] columnNames;
-        private final Object[] columnValues;
+        private final String [] columnNames;
+        private final Object [] columnValues;
         private final ResultSetMetaData metadata;
 
         /**
          * Constructs a StreamDescriptor
-         * 
+         *
          * @param runtimeContext reference to the runtime context
          * @param source name of the Fennel error source
          */
         public StreamDescriptor(
-            FarragoRuntimeContext runtimeContext, 
+            FarragoRuntimeContext runtimeContext,
             String source)
         {
             this.runtimeContext = runtimeContext;
@@ -143,20 +150,21 @@ class NativeRuntimeContext
 
         /**
          * Builds an error record and posts an error with the runtime context
-         * 
-         * @see FennelJavaErrorTarget#handleRowError for a description of the 
-         *   parameters
+         *
+         * @see FennelJavaErrorTarget#handleRowError for a description of the
+         * parameters
          */
         public Object postError(
             boolean isWarning,
-            String msg, 
+            String msg,
             ByteBuffer byteBuffer,
             int index)
         {
             // decoding Fennel data requires metadata
             if (metadata == null) {
                 EigenbaseTrace.getStatementTracer().log(
-                    Level.WARNING, "failed to get metadata for '" + tag + "'");
+                    Level.WARNING,
+                    "failed to get metadata for '" + tag + "'");
                 return null;
             }
 
@@ -165,19 +173,27 @@ class NativeRuntimeContext
             try {
                 for (int i = 0; i < columnValues.length; i++) {
                     // Note: result sets are 1-indexed
-                    columnValues[i] = 
+                    columnValues[i] =
                         FennelTupleResultSet.getRawColumnData(
-                            i+1, metadata, tupleData);
+                            i + 1,
+                            metadata,
+                            tupleData);
                 }
             } catch (SQLException ex) {
                 EigenbaseTrace.getStatementTracer().log(
-                    Level.WARNING, "failed to get raw column data", ex);
+                    Level.WARNING,
+                    "failed to get raw column data",
+                    ex);
                 return null;
             }
 
             return runtimeContext.handleRowError(
-                columnNames, columnValues, 
-                new EigenbaseException(msg, null), index, tag, isWarning);
+                columnNames,
+                columnValues,
+                new EigenbaseException(msg, null),
+                index,
+                tag,
+                isWarning);
         }
     }
 }

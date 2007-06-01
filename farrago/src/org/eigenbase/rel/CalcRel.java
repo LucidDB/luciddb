@@ -27,9 +27,9 @@ import java.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.Permutation;
-import org.eigenbase.util.mapping.Mapping;
-import org.eigenbase.util.mapping.MappingType;
+import org.eigenbase.util.*;
+import org.eigenbase.util.mapping.*;
+
 
 /**
  * A relational expression which computes project expressions and also filters.
@@ -58,7 +58,6 @@ import org.eigenbase.util.mapping.MappingType;
 public final class CalcRel
     extends CalcRelBase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final boolean DeprecateProjectAndFilter = false;
@@ -80,14 +79,13 @@ public final class CalcRel
 
     public CalcRel clone()
     {
-        return
-            new CalcRel(
-                getCluster(),
-                cloneTraits(),
-                getChild(),
-                rowType,
-                program.copy(),
-                getCollationList());
+        return new CalcRel(
+            getCluster(),
+            cloneTraits(),
+            getChild(),
+            rowType,
+            program.copy(),
+            getCollationList());
     }
 
     /**
@@ -102,16 +100,14 @@ public final class CalcRel
         List<RexNode> exprList,
         List<String> fieldNameList)
     {
-        RexNode[] exprs = exprList.toArray(new RexNode[exprList.size()]);
-        String[] fieldNames =
-            fieldNameList == null ?
-                null :
-                fieldNameList.toArray(new String[fieldNameList.size()]);
-        return
-            CalcRel.createProject(
-                child,
-                exprs,
-                fieldNames);
+        RexNode [] exprs = exprList.toArray(new RexNode[exprList.size()]);
+        String [] fieldNames =
+            (fieldNameList == null) ? null
+            : fieldNameList.toArray(new String[fieldNameList.size()]);
+        return CalcRel.createProject(
+            child,
+            exprs,
+            fieldNames);
     }
 
     /**
@@ -134,23 +130,23 @@ public final class CalcRel
         List<Integer> posList)
     {
         RexNode [] exprList = new RexNode[posList.size()];
-        
-        final RelOptCluster cluster = child.getCluster();        
+
+        final RelOptCluster cluster = child.getCluster();
         RexBuilder rexBuilder = cluster.getRexBuilder();
-        
-        for (int i = 0; i < posList.size(); i ++) {
-            exprList[i] = rexBuilder.makeInputRef(
-                (child.getRowType().getFields()[posList.get(i)]).getType(),
-                posList.get(i));
+
+        for (int i = 0; i < posList.size(); i++) {
+            exprList[i] =
+                rexBuilder.makeInputRef(
+                    (child.getRowType().getFields()[posList.get(i)]).getType(),
+                    posList.get(i));
         }
-        
-        return
-            CalcRel.createProject(
-                child,
-                exprList,
-                null);
+
+        return CalcRel.createProject(
+            child,
+            exprList,
+            null);
     }
-    
+
     /**
      * Creates a relational expression which projects a set of expressions.
      *
@@ -162,7 +158,7 @@ public final class CalcRel
      * @param exprs set of expressions for the input columns
      * @param fieldNames aliases of the expressions, or null to generate
      * @param optimize Whether to return <code>child</code> unchanged if the
-     *   projections are trivial.
+     * projections are trivial.
      */
     public static RelNode createProject(
         RelNode child,
@@ -187,23 +183,24 @@ public final class CalcRel
         final List<RelCollation> collationList =
             program.getCollations(child.getCollationList());
         if (DeprecateProjectAndFilter) {
-            return
-                new CalcRel(
-                    cluster,
-                    RelOptUtil.clone(child.getTraits()),
-                    child,
-                    program.getOutputRowType(),
-                    program,
-                    collationList);
+            return new CalcRel(
+                cluster,
+                RelOptUtil.clone(child.getTraits()),
+                child,
+                program.getOutputRowType(),
+                program,
+                collationList);
         } else {
             final RelDataType rowType =
                 RexUtil.createStructType(
                     child.getCluster().getTypeFactory(),
                     exprs,
                     fieldNames);
-            if (optimize &&
-                RemoveTrivialProjectRule.isIdentity(
-                    exprs, rowType, child.getRowType()))
+            if (optimize
+                && RemoveTrivialProjectRule.isIdentity(
+                    exprs,
+                    rowType,
+                    child.getRowType()))
             {
                 return child;
             }
@@ -242,19 +239,18 @@ public final class CalcRel
             builder.addIdentity();
             builder.addCondition(condition);
             final RexProgram program = builder.getProgram();
-            return
-                new CalcRel(
-                    cluster,
-                    RelOptUtil.clone(child.getTraits()),
-                    child,
-                    program.getOutputRowType(),
-                    program,
-                    RelCollation.emptyList);
+            return new CalcRel(
+                cluster,
+                RelOptUtil.clone(child.getTraits()),
+                child,
+                program.getOutputRowType(),
+                program,
+                RelCollation.emptyList);
         } else {
             return new FilterRel(
-                    child.getCluster(),
-                    child,
-                    condition);
+                child.getCluster(),
+                child,
+                condition);
         }
     }
 
@@ -275,7 +271,8 @@ public final class CalcRel
         assert fieldNames.length == fields.length;
         final RexInputRef [] refs = new RexInputRef[fieldNames.length];
         for (int i = 0; i < refs.length; i++) {
-            refs[i] = new RexInputRef(
+            refs[i] =
+                new RexInputRef(
                     i,
                     fields[i].getType());
         }
@@ -293,16 +290,19 @@ public final class CalcRel
     }
 
     /**
-     * Creates a relational expression which permutes the output fields of
-     * a relational expression according to a permutation.
+     * Creates a relational expression which permutes the output fields of a
+     * relational expression according to a permutation.
      *
-     * <p>Optimizations:<ul>
-     * <li>If the relational expression is a {@link CalcRel} or
-     *   {@link ProjectRel} which is already acting as a permutation, combines
-     *   the new permuation with the old;</li>
+     * <p>Optimizations:
+     *
+     * <ul>
+     * <li>If the relational expression is a {@link CalcRel} or {@link
+     * ProjectRel} which is already acting as a permutation, combines the new
+     * permuation with the old;</li>
      * <li>If the permutation is the identity, returns the original relational
-     *   expression.</li>
-     * </ul></p>
+     * expression.</li>
+     * </ul>
+     * </p>
      *
      * <p>If a permutation is combined with its inverse, these optimizations
      * would combine to remove them both.
@@ -310,7 +310,8 @@ public final class CalcRel
      * @param rel
      * @param permutation
      * @param fieldNames Field names; if null, or if a particular entry is null,
-     *   the name of the permuted field is used
+     * the name of the permuted field is used
+     *
      * @return relational expression which permutes its input fields
      */
     public static RelNode permute(
@@ -340,34 +341,35 @@ public final class CalcRel
         final List<String> outputNameList = new ArrayList<String>();
         final List<RexNode> exprList = new ArrayList<RexNode>();
         final List<RexLocalRef> projectRefList = new ArrayList<RexLocalRef>();
-        final RelDataTypeField[] fields = rel.getRowType().getFields();
+        final RelDataTypeField [] fields = rel.getRowType().getFields();
         for (int i = 0; i < permutation.getTargetCount(); i++) {
             int target = permutation.getTarget(i);
             final RelDataTypeField targetField = fields[target];
             outputTypeList.add(targetField.getType());
             outputNameList.add(
-                fieldNames == null ||
-                    fieldNames.size() <= i ||
-                    fieldNames.get(i) == null ?
-                    targetField.getName() :
-                    fieldNames.get(i));
+                ((fieldNames == null)
+                    || (fieldNames.size() <= i)
+                    || (fieldNames.get(i) == null)) ? targetField.getName()
+                : fieldNames.get(i));
             exprList.add(
                 rel.getCluster().getRexBuilder().makeInputRef(
-                    fields[i].getType(), i));
+                    fields[i].getType(),
+                    i));
             final int source = permutation.getSource(i);
             projectRefList.add(
                 new RexLocalRef(
                     source,
                     fields[source].getType()));
         }
-        final RexProgram program = new RexProgram(
-            rel.getRowType(),
-            exprList,
-            projectRefList,
-            null,
-            rel.getCluster().getTypeFactory().createStructType(
-                outputTypeList,
-                outputNameList));
+        final RexProgram program =
+            new RexProgram(
+                rel.getRowType(),
+                exprList,
+                projectRefList,
+                null,
+                rel.getCluster().getTypeFactory().createStructType(
+                    outputTypeList,
+                    outputNameList));
         return new CalcRel(
             rel.getCluster(),
             rel.getTraits(),
@@ -378,24 +380,25 @@ public final class CalcRel
     }
 
     /**
-     * Creates a relational expression which projects the output fields of
-     * a relational expression according to a partial mapping.
+     * Creates a relational expression which projects the output fields of a
+     * relational expression according to a partial mapping.
      *
-     * <p>A partial mapping is weaker than a permutation: every target has
-     * one source, but a source may have 0, 1 or more than one targets.
-     * Usually the result will have fewer fields than the source, unless some
-     * source fields are projected multiple times.
+     * <p>A partial mapping is weaker than a permutation: every target has one
+     * source, but a source may have 0, 1 or more than one targets. Usually the
+     * result will have fewer fields than the source, unless some source fields
+     * are projected multiple times.
      *
      * <p>This method could optimize the result as {@link #permute} does, but
      * does not at present.
      *
      * @param rel Relational expression
      * @param mapping Mapping from source fields to target fields. The mapping
-     *   type must obey the constaints {@link MappingType#isMandatorySource()}
-     *   and {@link MappingType#isSingleSource()}, as does
-     *   {@link MappingType#InverseFunction}.
+     * type must obey the constaints {@link MappingType#isMandatorySource()} and
+     * {@link MappingType#isSingleSource()}, as does {@link
+     * MappingType#InverseFunction}.
      * @param fieldNames Field names; if null, or if a particular entry is null,
-     *   the name of the permuted field is used
+     * the name of the permuted field is used
+     *
      * @return relational expression which projects a subset of the input fields
      */
     public static RelNode projectMapping(
@@ -412,36 +415,36 @@ public final class CalcRel
         final List<String> outputNameList = new ArrayList<String>();
         final List<RexNode> exprList = new ArrayList<RexNode>();
         final List<RexLocalRef> projectRefList = new ArrayList<RexLocalRef>();
-        final RelDataTypeField[] fields = rel.getRowType().getFields();
+        final RelDataTypeField [] fields = rel.getRowType().getFields();
         for (int i = 0; i < fields.length; i++) {
             final RelDataTypeField field = fields[i];
             exprList.add(
                 rel.getCluster().getRexBuilder().makeInputRef(
-                    field.getType(), i));
+                    field.getType(),
+                    i));
         }
         for (int i = 0; i < mapping.getTargetCount(); i++) {
             int source = mapping.getSource(i);
             final RelDataTypeField sourceField = fields[source];
             outputTypeList.add(sourceField.getType());
             outputNameList.add(
-                fieldNames == null ||
-                    fieldNames.size() <= i ||
-                    fieldNames.get(i) == null ?
-                    sourceField.getName() :
-                    fieldNames.get(i));
-            projectRefList.add(
-                new RexLocalRef(
+                ((fieldNames == null)
+                    || (fieldNames.size() <= i)
+                    || (fieldNames.get(i) == null)) ? sourceField.getName()
+                : fieldNames.get(i));
+            projectRefList.add(new RexLocalRef(
                     source,
                     sourceField.getType()));
         }
-        final RexProgram program = new RexProgram(
-            rel.getRowType(),
-            exprList,
-            projectRefList,
-            null,
-            rel.getCluster().getTypeFactory().createStructType(
-                outputTypeList,
-                outputNameList));
+        final RexProgram program =
+            new RexProgram(
+                rel.getRowType(),
+                exprList,
+                projectRefList,
+                null,
+                rel.getCluster().getTypeFactory().createStructType(
+                    outputTypeList,
+                    outputNameList));
         return new CalcRel(
             rel.getCluster(),
             rel.getTraits(),

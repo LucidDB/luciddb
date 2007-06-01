@@ -42,7 +42,6 @@ public abstract class MedAbstractLocalDataServer
     extends MedAbstractDataServer
     implements FarragoMedLocalDataServer
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FennelDbHandle fennelDbHandle;
@@ -87,7 +86,7 @@ public abstract class MedAbstractLocalDataServer
     {
         // by default, no special validation rules
     }
-    
+
     // implement FarragoMedLocalDataServer
     public void validateTableDefinition(
         FemLocalTable table,

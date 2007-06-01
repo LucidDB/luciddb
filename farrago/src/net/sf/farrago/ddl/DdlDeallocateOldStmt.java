@@ -30,6 +30,8 @@ package net.sf.farrago.ddl;
 public class DdlDeallocateOldStmt
     extends DdlStmt
 {
+    //~ Constructors -----------------------------------------------------------
+
     public DdlDeallocateOldStmt()
     {
         super(null);

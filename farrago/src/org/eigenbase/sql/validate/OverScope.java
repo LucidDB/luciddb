@@ -53,7 +53,6 @@ import org.eigenbase.sql.*;
 public class OverScope
     extends ListScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlCall overCall;

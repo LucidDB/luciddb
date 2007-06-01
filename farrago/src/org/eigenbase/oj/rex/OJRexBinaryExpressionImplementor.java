@@ -39,7 +39,6 @@ import org.eigenbase.sql.*;
 public class OJRexBinaryExpressionImplementor
     implements OJRexImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int ojBinaryExpressionOrdinal;
@@ -58,10 +57,10 @@ public class OJRexBinaryExpressionImplementor
         RexCall call,
         Expression [] operands)
     {
-        return
-            new BinaryExpression(operands[0],
-                ojBinaryExpressionOrdinal,
-                operands[1]);
+        return new BinaryExpression(
+            operands[0],
+            ojBinaryExpressionOrdinal,
+            operands[1]);
     }
 
     public boolean canImplement(RexCall call)

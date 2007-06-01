@@ -26,6 +26,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 
+
 /**
  * MergeFilterRule implements the rule for combining two {@link FilterRel}s
  *
@@ -71,21 +72,21 @@ public class MergeFilterRule
         RexNode newCondition =
             mergedProgram.expandLocalRef(
                 mergedProgram.getCondition());
-        
+
         FilterRel newFilterRel =
             new FilterRel(
                 topFilter.getCluster(),
                 bottomFilter.getChild(),
                 newCondition);
-               
-        call.transformTo(newFilterRel); 
+
+        call.transformTo(newFilterRel);
     }
-    
+
     /**
      * Creates a RexProgram corresponding to a FilterRel
-     * 
+     *
      * @param filterRel the FilterRel
-     * 
+     *
      * @return created RexProgram
      */
     private RexProgram createProgram(FilterRel filterRel)

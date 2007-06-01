@@ -36,7 +36,6 @@ import org.eigenbase.sql.*;
 public class CursorReturnTypeInference
     implements SqlReturnTypeInference
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int ordinal;

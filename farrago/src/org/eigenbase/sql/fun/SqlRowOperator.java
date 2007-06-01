@@ -39,12 +39,12 @@ import org.eigenbase.sql.type.*;
 public class SqlRowOperator
     extends SqlSpecialOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlRowOperator()
     {
-        super("ROW",
+        super(
+            "ROW",
             SqlKind.Row,
             MaxPrec,
             false,
@@ -73,10 +73,9 @@ public class SqlRowOperator
         for (int i = 0; i < fieldNames.length; i++) {
             fieldNames[i] = SqlUtil.deriveAliasFromOrdinal(i);
         }
-        return
-            opBinding.getTypeFactory().createStructType(
-                argTypes,
-                fieldNames);
+        return opBinding.getTypeFactory().createStructType(
+            argTypes,
+            fieldNames);
     }
 
     public void unparse(

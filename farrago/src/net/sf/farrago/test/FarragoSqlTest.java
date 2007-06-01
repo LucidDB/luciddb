@@ -40,7 +40,6 @@ import net.sf.farrago.util.*;
 public class FarragoSqlTest
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoSqlTest(String testName)
@@ -54,16 +53,15 @@ public class FarragoSqlTest
     public static Test suite()
         throws Exception
     {
-        return
-            gatherSuite(
-                FarragoProperties.instance().testFilesetUnitsql.get(true),
-                new FarragoSqlTestFactory() {
-                    public FarragoTestCase createSqlTest(String testName)
-                        throws Exception
-                    {
-                        return new FarragoSqlTest(testName);
-                    }
-                });
+        return gatherSuite(
+            FarragoProperties.instance().testFilesetUnitsql.get(true),
+            new FarragoSqlTestFactory() {
+                public FarragoTestCase createSqlTest(String testName)
+                    throws Exception
+                {
+                    return new FarragoSqlTest(testName);
+                }
+            });
     }
 
     protected static Test gatherSuite(

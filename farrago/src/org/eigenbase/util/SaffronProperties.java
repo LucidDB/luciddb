@@ -55,7 +55,6 @@ import org.eigenbase.util.property.*;
 public class SaffronProperties
     extends Properties
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -78,7 +77,8 @@ public class SaffronProperties
      * compiling it.
      */
     public final BooleanProperty printBeforeCompile =
-        new BooleanProperty(this,
+        new BooleanProperty(
+            this,
             "saffron.Statement.printBeforeCompile",
             false);
 
@@ -89,7 +89,8 @@ public class SaffronProperties
      * "JP.ac.tsukuba.openjava.SunJavaCompiler".
      */
     public final StringProperty javaCompilerClass =
-        new StringProperty(this,
+        new StringProperty(
+            this,
             "saffron.java.compiler.class",
             "JP.ac.tsukuba.openjava.SunJavaCompiler");
 
@@ -193,7 +194,8 @@ public class SaffronProperties
      * another. The default value is <code>true</code>.
      */
     public final BooleanProperty allowInfiniteCostConverters =
-        new BooleanProperty(this,
+        new BooleanProperty(
+            this,
             "saffron.opt.allowInfiniteCostConverters",
             true);
 
@@ -213,7 +215,8 @@ public class SaffronProperties
      * org.eigenbase.sql.SqlLiteral#SqlLiteral}
      */
     public final StringProperty defaultNationalCharset =
-        new StringProperty(this,
+        new StringProperty(
+            this,
             "saffron.default.nationalcharset",
             "ISO-8859-1");
 
@@ -224,7 +227,8 @@ public class SaffronProperties
      * org.eigenbase.sql.SqlLiteral#SqlLiteral}
      */
     public final StringProperty defaultCollation =
-        new StringProperty(this,
+        new StringProperty(
+            this,
             "saffron.default.collation.name",
             "ISO-8859-1$en_US");
 
@@ -235,7 +239,8 @@ public class SaffronProperties
      * org.eigenbase.sql.SqlLiteral#SqlLiteral}
      */
     public final StringProperty defaultCollationStrength =
-        new StringProperty(this,
+        new StringProperty(
+            this,
             "saffron.default.collation.strength",
             "primary");
 
@@ -302,7 +307,8 @@ public class SaffronProperties
             String key = (String) keys.nextElement();
             String value = source.getProperty(key);
             if (key.startsWith("saffron.")
-                || key.startsWith("net.sf.saffron.")) {
+                || key.startsWith("net.sf.saffron."))
+            {
                 properties.setProperty(key, value);
             }
         }
@@ -332,8 +338,7 @@ public class SaffronProperties
         if (value == null) {
             return defaultValue;
         }
-        return
-            value.equalsIgnoreCase("1") || value.equalsIgnoreCase("true")
+        return value.equalsIgnoreCase("1") || value.equalsIgnoreCase("true")
             || value.equalsIgnoreCase("yes");
     }
 

@@ -42,7 +42,6 @@ import org.eigenbase.reltype.*;
 public class LcsIndexOnlyScanRel
     extends FennelOptionalRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final boolean fullScan;
@@ -74,7 +73,8 @@ public class LcsIndexOnlyScanRel
         FemLocalIndex index,
         Integer [] proj)
     {
-        this(cluster,
+        this(
+            cluster,
             child,
             searchRel.lcsTable,
             index,
@@ -122,8 +122,8 @@ public class LcsIndexOnlyScanRel
      * @param index the index to be scanned
      * @param projectedColumns for full scans, the output projection. Should be
      * null for searches
-     * @param isUniqueKey   TODO
-     * @param isOuter       TODO
+     * @param isUniqueKey TODO
+     * @param isOuter TODO
      * @param inputKeyProj for searches, the key columns
      * @param inputJoinProj for index joins applied to searches, the input keys
      * to be output
@@ -180,7 +180,8 @@ public class LcsIndexOnlyScanRel
     protected RelDataType deriveRowType()
     {
         RelDataType rowType =
-            table.getIndexGuide().createUnclusteredRowType(index,
+            table.getIndexGuide().createUnclusteredRowType(
+                index,
                 projectedColumns);
         return rowType;
     }
@@ -199,12 +200,12 @@ public class LcsIndexOnlyScanRel
                 this,
                 new String[] {
                     "input", "table", "index", "projection",
-                "inputKeyProj", "inputDirectiveProj"
+                    "inputKeyProj", "inputDirectiveProj"
                 },
                 new Object[] {
                     Arrays.asList(table.getQualifiedName()),
-                index.getName(), projectionObj,
-                inputKeyProjObj, inputDirectiveProjObj
+                    index.getName(), projectionObj,
+                    inputKeyProjObj, inputDirectiveProjObj
                 });
         } else {
             // index scan
@@ -215,8 +216,8 @@ public class LcsIndexOnlyScanRel
                 },
                 new Object[] {
                     Arrays.asList(table.getQualifiedName()),
-                index.getName(),
-                projectionObj
+                    index.getName(),
+                    projectionObj
                 });
         }
     }

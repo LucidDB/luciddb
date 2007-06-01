@@ -53,7 +53,6 @@ import org.eigenbase.util.*;
  */
 public class FarragoSqlOperatorsSuite
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlTypeFactoryImpl sqlTypeFactory =
@@ -105,7 +104,8 @@ public class FarragoSqlOperatorsSuite
             this.farragoTest = new MyFarragoTestCase();
         }
 
-        protected FarragoSqlTester(FarragoCalcSystemTest.VirtualMachine vm,
+        protected FarragoSqlTester(
+            FarragoCalcSystemTest.VirtualMachine vm,
             FarragoTestCase farragoTest)
             throws Exception
         {
@@ -463,7 +463,6 @@ public class FarragoSqlOperatorsSuite
                 FarragoReduceExpressionsRule.EXCLUSION_PATTERN);
         }
     }
-
 }
 
 // End FarragoSqlOperatorsSuite.java

@@ -31,7 +31,6 @@ import org.eigenbase.sql.type.*;
 public abstract class SqlInternalOperator
     extends SqlSpecialOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlInternalOperator(
@@ -58,7 +57,8 @@ public abstract class SqlInternalOperator
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name,
+        super(
+            name,
             kind,
             prec,
             isLeftAssoc,

@@ -20,18 +20,21 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import org.eigenbase.util14.ConversionUtil;
-import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.util.Util;
+import java.io.*;
 
-import java.io.PrintWriter;
-import java.nio.charset.Charset;
-import java.nio.ByteBuffer;
-import java.math.BigDecimal;
+import java.math.*;
+
+import java.nio.*;
+import java.nio.charset.*;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
+
 
 /**
- * Represents a virtual register. Each register lives in a register set of
- * type {@link CalcProgramBuilder.RegisterSetType}<br>
+ * Represents a virtual register. Each register lives in a register set of type
+ * {@link CalcProgramBuilder.RegisterSetType}<br>
  * Each register is of type {@link CalcProgramBuilder.OpType}
  *
  * @author jhyde
@@ -41,6 +44,8 @@ import java.math.BigDecimal;
 public class CalcReg
     implements CalcProgramBuilder.Operand
 {
+    //~ Instance fields --------------------------------------------------------
+
     final CalcProgramBuilder.OpType opType;
     final Object value;
     CalcProgramBuilder.RegisterSetType registerType;
@@ -50,6 +55,8 @@ public class CalcReg
      */
     int storageBytes;
     int index;
+
+    //~ Constructors -----------------------------------------------------------
 
     CalcReg(
         CalcProgramBuilder.OpType opType,
@@ -64,6 +71,8 @@ public class CalcReg
         this.storageBytes = storageBytes;
         this.index = index;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     final public CalcProgramBuilder.OpType getOpType()
     {
@@ -87,8 +96,8 @@ public class CalcReg
 
     /**
      * Serializes the {@link #value} in the virtual register if not null<br>
-     * <b>NOTE</b> See also {@link #print} which serializes the "identity"
-     * of the register
+     * <b>NOTE</b> See also {@link #print} which serializes the "identity" of
+     * the register
      *
      * @param writer
      * @param outputComments
@@ -135,8 +144,8 @@ public class CalcReg
     }
 
     /**
-     * Serializes the identity of the register. It does not attempt to
-     * serialize its value; see {@link #printValue} for that.
+     * Serializes the identity of the register. It does not attempt to serialize
+     * its value; see {@link #printValue} for that.
      *
      * @param writer
      */

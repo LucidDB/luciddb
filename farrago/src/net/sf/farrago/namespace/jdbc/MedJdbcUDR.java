@@ -35,7 +35,6 @@ import java.sql.*;
  */
 public abstract class MedJdbcUDR
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -58,7 +57,8 @@ public abstract class MedJdbcUDR
         Connection connection = null;
         try {
             Class.forName(driverClassName);
-            connection = DriverManager.getConnection(
+            connection =
+                DriverManager.getConnection(
                     url,
                     userName,
                     password);

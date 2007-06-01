@@ -43,7 +43,6 @@ import java.nio.*;
 public class ExclusivePipe
     extends Interlock
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final ByteBuffer buf;

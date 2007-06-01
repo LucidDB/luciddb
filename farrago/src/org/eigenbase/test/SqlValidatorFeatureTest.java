@@ -42,7 +42,6 @@ import org.eigenbase.util.*;
 public class SqlValidatorFeatureTest
     extends SqlValidatorTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String FEATURE_DISABLED = "feature_disabled";
@@ -133,12 +132,11 @@ public class SqlValidatorFeatureTest
         public SqlValidator getValidator()
         {
             final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-            return
-                new FeatureValidator(
-                    SqlStdOperatorTable.instance(),
-                    new MockCatalogReader(typeFactory),
-                    typeFactory,
-                    getCompatible());
+            return new FeatureValidator(
+                SqlStdOperatorTable.instance(),
+                new MockCatalogReader(typeFactory),
+                typeFactory,
+                getCompatible());
         }
     }
 

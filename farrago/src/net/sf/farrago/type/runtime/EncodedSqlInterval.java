@@ -21,18 +21,16 @@
 */
 package net.sf.farrago.type.runtime;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.util.Util;
+import java.text.*;
 
-import java.text.NumberFormat;
-import java.text.DecimalFormat;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
- * Runtime type for interval values.
- *
- * TODO: Need to include precision
- * TODO: Need to support casting from string, exact numerics
- * TODO: both of above would be easier if we just get the SqlIntervalQualifier
+ * Runtime type for interval values. TODO: Need to include precision TODO: Need
+ * to support casting from string, exact numerics TODO: both of above would be
+ * easier if we just get the SqlIntervalQualifier
  *
  * @author angel
  * @version $Id$
@@ -126,6 +124,7 @@ public abstract class EncodedSqlInterval
         if (isNull()) {
             return null;
         }
+
         // TODO: What should be the correct type to return?
         // Returns String representation of interval
         return toString();
@@ -133,9 +132,39 @@ public abstract class EncodedSqlInterval
 
     // Implemented by code generation
     protected abstract SqlIntervalQualifier.TimeUnit getStartUnit();
+
     protected abstract SqlIntervalQualifier.TimeUnit getEndUnit();
 
-    public abstract static class EncodedSqlIntervalYM extends EncodedSqlInterval
+    private static void appendHours(StringBuffer buf, long hours)
+    {
+        buf.append(' ');
+        buf.append(NF2.format(hours));
+    }
+
+    private static void appendMinutes(StringBuffer buf, long minutes)
+    {
+        buf.append(':');
+        buf.append(NF2.format(minutes));
+    }
+
+    private static void appendSeconds(
+        StringBuffer buf,
+        long seconds,
+        long fractions)
+    {
+        buf.append(':');
+        buf.append(NF2.format(seconds));
+
+        if (fractions > 0) {
+            buf.append('.');
+            buf.append(NF3.format(fractions));
+        }
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    public abstract static class EncodedSqlIntervalYM
+        extends EncodedSqlInterval
     {
         public static long MONTHS_PER_YEAR = 12;
 
@@ -153,7 +182,8 @@ public abstract class EncodedSqlInterval
 
         protected void parse(String interval)
         {
-            throw Util.needToImplement("Conversion from string to month year interval");
+            throw Util.needToImplement(
+                "Conversion from string to month year interval");
         }
 
         public String toString()
@@ -165,7 +195,7 @@ public abstract class EncodedSqlInterval
                 v = -v;
                 sign = '-';
             }
-            long years = v/MONTHS_PER_YEAR;
+            long years = v / MONTHS_PER_YEAR;
             long months = v % MONTHS_PER_YEAR;
 
             SqlIntervalQualifier.TimeUnit startUnit = getStartUnit();
@@ -181,24 +211,25 @@ public abstract class EncodedSqlInterval
                 strbuf.append(years);
                 if (endUnit == SqlIntervalQualifier.TimeUnit.Month) {
                     strbuf.append('-');
-                    synchronized(NF2) {
+                    synchronized (NF2) {
                         strbuf.append(NF2.format(months));
                     }
                 }
             } else {
                 strbuf.append(months);
             }
-                
+
             return strbuf.toString();
         }
     }
 
-    public abstract static class EncodedSqlIntervalDT extends EncodedSqlInterval
+    public abstract static class EncodedSqlIntervalDT
+        extends EncodedSqlInterval
     {
         public static long MS_PER_SECOND = 1000;
-        public static long MS_PER_MINUTE = 60*MS_PER_SECOND;
-        public static long MS_PER_HOUR = 60*MS_PER_MINUTE;
-        public static long MS_PER_DAY = 24*MS_PER_HOUR;
+        public static long MS_PER_MINUTE = 60 * MS_PER_SECOND;
+        public static long MS_PER_HOUR = 60 * MS_PER_MINUTE;
+        public static long MS_PER_DAY = 24 * MS_PER_HOUR;
 
         // implement AssignableValue
         public void assignFrom(Object obj)
@@ -214,7 +245,8 @@ public abstract class EncodedSqlInterval
 
         protected void parse(String interval)
         {
-            throw Util.needToImplement("Conversion from string to day time interval");
+            throw Util.needToImplement(
+                "Conversion from string to day time interval");
         }
 
         public String toString()
@@ -226,16 +258,15 @@ public abstract class EncodedSqlInterval
                 v = -v;
                 sign = '-';
             }
-            long days = v/MS_PER_DAY;
+            long days = v / MS_PER_DAY;
             v = v % MS_PER_DAY;
-            long hours = v/MS_PER_HOUR;
+            long hours = v / MS_PER_HOUR;
             v = v % MS_PER_HOUR;
-            long minutes = v/MS_PER_MINUTE;
+            long minutes = v / MS_PER_MINUTE;
             v = v % MS_PER_MINUTE;
-            long seconds = v/MS_PER_SECOND;
+            long seconds = v / MS_PER_SECOND;
             v = v % MS_PER_SECOND;
             long fractions = v;
-
 
             SqlIntervalQualifier.TimeUnit startUnit = getStartUnit();
             SqlIntervalQualifier.TimeUnit endUnit = getEndUnit();
@@ -246,45 +277,52 @@ public abstract class EncodedSqlInterval
             // and synchronize.
             //
             // Also, don't enforce precision format on leading fields
-            synchronized(NF2) {
+            synchronized (NF2) {
                 if (startUnit == SqlIntervalQualifier.TimeUnit.Day) {
-
                     strbuf.append(days);
 
-                    if ( (endUnit != null) &&
-                         (endUnit != SqlIntervalQualifier.TimeUnit.Day)) {
+                    if ((endUnit != null)
+                        && (endUnit != SqlIntervalQualifier.TimeUnit.Day))
+                    {
                         appendHours(strbuf, hours);
                         if (endUnit != SqlIntervalQualifier.TimeUnit.Hour) {
                             appendMinutes(strbuf, minutes);
-                            if (endUnit != SqlIntervalQualifier.TimeUnit.Minute) {
+                            if (endUnit
+                                != SqlIntervalQualifier.TimeUnit.Minute)
+                            {
                                 appendSeconds(strbuf, seconds, fractions);
                             }
                         }
                     }
-
-                } else if (getStartUnit() == SqlIntervalQualifier.TimeUnit.Hour) {
-
+                } else if (
+                    getStartUnit()
+                    == SqlIntervalQualifier.TimeUnit.Hour)
+                {
                     strbuf.append(hours);
 
-                    if ( (endUnit != null) &&
-                         (endUnit != SqlIntervalQualifier.TimeUnit.Hour)) {
+                    if ((endUnit != null)
+                        && (endUnit != SqlIntervalQualifier.TimeUnit.Hour))
+                    {
                         appendMinutes(strbuf, minutes);
                         if (endUnit != SqlIntervalQualifier.TimeUnit.Minute) {
                             appendSeconds(strbuf, seconds, fractions);
                         }
                     }
-
-                } else if (getStartUnit() == SqlIntervalQualifier.TimeUnit.Minute) {
-
+                } else if (
+                    getStartUnit()
+                    == SqlIntervalQualifier.TimeUnit.Minute)
+                {
                     strbuf.append(minutes);
 
-                    if ( (endUnit != null) &&
-                         (endUnit != SqlIntervalQualifier.TimeUnit.Minute)) {
+                    if ((endUnit != null)
+                        && (endUnit != SqlIntervalQualifier.TimeUnit.Minute))
+                    {
                         appendSeconds(strbuf, seconds, fractions);
                     }
-
-                } else if (getStartUnit() == SqlIntervalQualifier.TimeUnit.Second) {
-
+                } else if (
+                    getStartUnit()
+                    == SqlIntervalQualifier.TimeUnit.Second)
+                {
                     strbuf.append(seconds);
 
                     if (fractions > 0) {
@@ -297,30 +335,6 @@ public abstract class EncodedSqlInterval
             return strbuf.toString();
         }
     }
-
-    private static void appendHours(StringBuffer buf, long hours)
-    {
-        buf.append(' ');
-        buf.append(NF2.format(hours));
-    }
-
-    private static void appendMinutes(StringBuffer buf, long minutes)
-    {
-        buf.append(':');
-        buf.append(NF2.format(minutes));
-    }
-
-    private static void appendSeconds(StringBuffer buf, long seconds, long fractions)
-    {
-        buf.append(':');
-        buf.append(NF2.format(seconds));
-
-        if (fractions > 0) {
-            buf.append('.');
-            buf.append(NF3.format(fractions));
-        }
-    }
-
 }
 
 // End EncodedSqlInterval.java

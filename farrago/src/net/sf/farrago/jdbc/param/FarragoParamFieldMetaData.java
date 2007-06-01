@@ -29,9 +29,8 @@ import java.sql.*;
 
 /**
  * This defines the per parameter field metadata required by the client-side
- * driver to implement the JDBC ParameterMetaData API.
- *
- * This class is JDK 1.4 compatible.
+ * driver to implement the JDBC ParameterMetaData API. This class is JDK 1.4
+ * compatible.
  *
  * @author Angel Chang
  * @version $Id$
@@ -40,7 +39,6 @@ import java.sql.*;
 public class FarragoParamFieldMetaData
     implements Serializable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

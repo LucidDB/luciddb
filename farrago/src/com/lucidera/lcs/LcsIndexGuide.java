@@ -23,6 +23,7 @@ package com.lucidera.lcs;
 import com.lucidera.farrago.*;
 
 import java.math.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -56,7 +57,6 @@ import org.eigenbase.util.*;
  */
 public class LcsIndexGuide
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final int LbmBitmapSegMaxSize = 512;
@@ -168,8 +168,9 @@ public class LcsIndexGuide
         // Get the columns of the index
         //
         Set<CwmColumn> requiredColumns = new HashSet<CwmColumn>();
-        for (CwmIndexedFeature indexedFeature :
-            unclusteredIndex.getIndexedFeature())
+        for (
+            CwmIndexedFeature indexedFeature
+            : unclusteredIndex.getIndexedFeature())
         {
             requiredColumns.add((CwmColumn) indexedFeature.getFeature());
         }
@@ -186,8 +187,9 @@ public class LcsIndexGuide
         List<FemLocalIndex> coverageIndexes = new ArrayList<FemLocalIndex>();
         for (FemLocalIndex clusteredIndex : clusteredIndexes) {
             boolean include = false;
-            for (CwmIndexedFeature indexedFeature :
-                clusteredIndex.getIndexedFeature())
+            for (
+                CwmIndexedFeature indexedFeature
+                : clusteredIndex.getIndexedFeature())
             {
                 CwmColumn column = (CwmColumn) indexedFeature.getFeature();
                 if (requiredColumns.contains(column)) {
@@ -447,8 +449,8 @@ public class LcsIndexGuide
     }
 
     /**
-     * Returns the unflattened column ordinal corresponding to a flattened
-     * field ordinal
+     * Returns the unflattened column ordinal corresponding to a flattened field
+     * ordinal
      *
      * @param fieldOrdinal flattened ordinal
      *
@@ -525,8 +527,8 @@ public class LcsIndexGuide
     public FemTupleProjection createClusteredBTreeRidDesc()
     {
         return FennelRelUtil.createTupleProjection(
-                repos,
-                new Integer[] { 0 });
+            repos,
+            new Integer[] { 0 });
     }
 
     /**
@@ -540,8 +542,8 @@ public class LcsIndexGuide
     public FemTupleProjection createClusteredBTreePageIdDesc()
     {
         return FennelRelUtil.createTupleProjection(
-                repos,
-                new Integer[] { 1 });
+            repos,
+            new Integer[] { 1 });
     }
 
     /**
@@ -612,10 +614,9 @@ public class LcsIndexGuide
         // number of key fields = number of columns plus RID
         int n = index.getIndexedFeature().size() + 1;
 
-        return
-            FennelRelUtil.createTupleProjection(
-                repos,
-                FennelRelUtil.newIotaProjection(n));
+        return FennelRelUtil.createTupleProjection(
+            repos,
+            FennelRelUtil.newIotaProjection(n));
     }
 
     public FemTupleProjection createUnclusteredBTreeBitmapProj(
@@ -634,8 +635,8 @@ public class LcsIndexGuide
         bitmapProj.add(startPos + 2);
 
         return FennelRelUtil.createTupleProjection(
-                repos,
-                bitmapProj);
+            repos,
+            bitmapProj);
     }
 
     /**
@@ -679,18 +680,19 @@ public class LcsIndexGuide
     }
 
     /**
-     * Creates the row data type of error records produced by a splicer
-     * when there unique constraint violations. The row type generated
-     * contains the same column types as the btree key [K1, K2, ..., RID]
+     * Creates the row data type of error records produced by a splicer when
+     * there unique constraint violations. The row type generated contains the
+     * same column types as the btree key [K1, K2, ..., RID]
      *
      * @param uniqueIndex the unique index updated by the splicer
      *
      * @return row data type for splicer error records
      */
-    public RelDataType createSplicerErrorType(FemLocalIndex uniqueIndex) {
+    public RelDataType createSplicerErrorType(FemLocalIndex uniqueIndex)
+    {
         // get projections for [keys ..., rid]
         int nKeys = uniqueIndex.getIndexedFeature().size();
-        Integer[] keyProj = FennelRelUtil.newIotaProjection(nKeys+1);
+        Integer [] keyProj = FennelRelUtil.newIotaProjection(nKeys + 1);
         return createUnclusteredRowType(uniqueIndex, keyProj);
     }
 
@@ -758,7 +760,9 @@ public class LcsIndexGuide
         // Figure out the projection covering columns contained in each index.
         //
         int i = 0;
-        for (CwmIndexedFeature indexedFeature : clusterIndex.getIndexedFeature()) {
+        for (
+            CwmIndexedFeature indexedFeature : clusterIndex.getIndexedFeature())
+        {
             FemAbstractColumn column =
                 (FemAbstractColumn) indexedFeature.getFeature();
             int n = getNumFlattenedSubCols(column.getOrdinal());
@@ -820,6 +824,7 @@ public class LcsIndexGuide
                 index,
                 createIndex,
                 implementor.translateParamId(insertDynParamId).intValue());
+
         // do an early close in the sorter, in case there was an upstream
         // insert into the deletion index, which the splicer may need to read
         FemExecutionStreamDef sorter = newSorter(index, null, false, true);
@@ -893,7 +898,7 @@ public class LcsIndexGuide
         //
         // This to keeps the repository validator happy
         //
-        Integer[] clusterResidualColumns = new Integer[] {};
+        Integer [] clusterResidualColumns = new Integer[] {};
         generator.setResidualFilterColumns(
             FennelRelUtil.createTupleProjection(repos, clusterResidualColumns));
 
@@ -933,6 +938,7 @@ public class LcsIndexGuide
         if (!ridOnly) {
             sortingStream.setOutputDesc(createUnclusteredBTreeTupleDesc(index));
         }
+
         // estimated number of rows in the sort input; if unknown, set to -1
         if (estimatedNumRows == null) {
             sortingStream.setEstimatedNumRows(-1);
@@ -987,9 +993,12 @@ public class LcsIndexGuide
         // NOTE zfong 11/30/06 - Splicer may also write out rid values.
         // As it turns out, the type of a rid is currently the same as a
         // rowcount.
-        RelDataType rowType = typeFactory.createStructType(
-            new RelDataType[] { typeFactory.createSqlType(SqlTypeName.BIGINT) },
-            new String[] { "ROWCOUNT" });
+        RelDataType rowType =
+            typeFactory.createStructType(
+                new RelDataType[] {
+                    typeFactory.createSqlType(SqlTypeName.BIGINT)
+                },
+                new String[] { "ROWCOUNT" });
         splicer.setOutputDesc(
             FennelRelUtil.createTupleDescriptorFromRowType(
                 repos,
@@ -1229,19 +1238,17 @@ public class LcsIndexGuide
             typeFactory.createSqlType(SqlTypeName.BIGINT);
         RelDataType ridType = rowCountType;
 
-        return
-            typeFactory.createStructType(
-                new RelDataType[] { rowCountType, ridType },
-                new String[] { "ROWCOUNT", "SRID" });
+        return typeFactory.createStructType(
+            new RelDataType[] { rowCountType, ridType },
+            new String[] { "ROWCOUNT", "SRID" });
     }
 
     protected FemTupleDescriptor getUnclusteredInputDesc()
     {
-        return
-            FennelRelUtil.createTupleDescriptorFromRowType(
-                repos,
-                typeFactory,
-                getUnclusteredInputType());
+        return FennelRelUtil.createTupleDescriptorFromRowType(
+            repos,
+            typeFactory,
+            getUnclusteredInputType());
     }
 
     // ~ Methods for unclustered(bitmap) index ------------------------
@@ -1253,7 +1260,8 @@ public class LcsIndexGuide
     {
         RelDataType ridType = typeFactory.createSqlType(SqlTypeName.BIGINT);
         RelDataType bitmapType =
-            typeFactory.createSqlType(SqlTypeName.VARBINARY,
+            typeFactory.createSqlType(
+                SqlTypeName.VARBINARY,
                 LbmBitmapSegMaxSize);
 
         RelDataType segDescType =
@@ -1262,10 +1270,9 @@ public class LcsIndexGuide
         RelDataType segType =
             typeFactory.createTypeWithNullability(bitmapType, true);
 
-        return
-            typeFactory.createStructType(
-                new RelDataType[] { ridType, segDescType, segType },
-                new String[] { "SRID", "SegmentDesc", "Segment" });
+        return typeFactory.createStructType(
+            new RelDataType[] { ridType, segDescType, segType },
+            new String[] { "SRID", "SegmentDesc", "Segment" });
     }
 
     /**
@@ -1273,11 +1280,10 @@ public class LcsIndexGuide
      */
     public FemTupleDescriptor createUnclusteredBitmapTupleDesc()
     {
-        return
-            FennelRelUtil.createTupleDescriptorFromRowType(
-                repos,
-                typeFactory,
-                createUnclusteredBitmapRowType());
+        return FennelRelUtil.createTupleDescriptorFromRowType(
+            repos,
+            typeFactory,
+            createUnclusteredBitmapRowType());
     }
 
     /**
@@ -1286,10 +1292,9 @@ public class LcsIndexGuide
      */
     public FemTupleProjection createUnclusteredBitmapKeyProj()
     {
-        return
-            FennelRelUtil.createTupleProjection(
-                repos,
-                FennelRelUtil.newIotaProjection(1));
+        return FennelRelUtil.createTupleProjection(
+            repos,
+            FennelRelUtil.newIotaProjection(1));
     }
 
     public boolean isValid(FemLocalIndex index)
@@ -1304,6 +1309,7 @@ public class LcsIndexGuide
         sortingStream.setKeyProj(createUnclusteredBitmapKeyProj());
         sortingStream.setOutputDesc(createUnclusteredBitmapTupleDesc());
         sortingStream.setEarlyClose(false);
+
         // TODO zfong 8/16/06 - replace this with real stats when we can
         // call RelMetadataQuery.getRowCount on physical RelNodes
         sortingStream.setEstimatedNumRows(-1);
@@ -1466,15 +1472,15 @@ public class LcsIndexGuide
             typeFactory.createStructType(
                 new RelDataType[] {
                     directiveType,
-                keyType,
-                directiveType,
-                keyType
+                    keyType,
+                    directiveType,
+                    keyType
                 },
                 new String[] {
                     "lowerBoundDirective",
-                "lowerBoundKey",
-                "upperBoundDirective",
-                "upperBoundKey"
+                    "lowerBoundKey",
+                    "upperBoundDirective",
+                    "upperBoundKey"
                 });
 
         List<List<RexLiteral>> inputTuples = new ArrayList<List<RexLiteral>>();
@@ -1525,7 +1531,6 @@ public class LcsIndexGuide
         return keyInput;
     }
 
-
     private FemAbstractColumn getIndexColumn(
         FemLocalIndex index,
         int position)
@@ -1561,7 +1566,10 @@ public class LcsIndexGuide
         Integer [] bestKeyOrder = {};
         FemLocalIndex bestIndex = null;
         int maxNkeys = 0;
-        for (FemLocalIndex index : FarragoCatalogUtil.getUnclusteredIndexes(repos, table)) {
+        for (
+            FemLocalIndex index
+            : FarragoCatalogUtil.getUnclusteredIndexes(repos, table))
+        {
             Integer [] keyOrder = new Integer[semiJoinKeys.size()];
             int nKeys = matchIndexKeys(index, semiJoinKeys, keyOrder);
             if (nKeys > maxNkeys) {
@@ -1620,9 +1628,6 @@ public class LcsIndexGuide
         }
         return nMatches;
     }
-
-    //~ Inner Classes ----------------------------------------------------------
-
 }
 
 //End LcsIndexGuide.java

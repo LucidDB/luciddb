@@ -34,23 +34,25 @@ import org.eigenbase.rel.*;
  *
  * <ul>
  * <li>extend {@link org.eigenbase.rel.AbstractRelNode}, and</li>
- * <li>return one of the following calling-conventions from their
- * {@link #getConvention} method: <ul>
- *   <li>{@link org.eigenbase.relopt.CallingConvention#ARRAY ARRAY},
- *   <li>{@link org.eigenbase.relopt.CallingConvention#ITERABLE ITERABLE},
- *   <li>{@link org.eigenbase.relopt.CallingConvention#ITERATOR ITERATOR},
- *   <li>{@link org.eigenbase.relopt.CallingConvention#COLLECTION COLLECTION},
- *   <li>{@link org.eigenbase.relopt.CallingConvention#MAP MAP},
- *   <li>{@link org.eigenbase.relopt.CallingConvention#VECTOR VECTOR},
- *   <li>{@link org.eigenbase.relopt.CallingConvention#HASHTABLE HASHTABLE},
- *   <li>{@link org.eigenbase.relopt.CallingConvention#JAVA JAVA}
+ * <li>return one of the following calling-conventions from their {@link
+ * #getConvention} method:
+ *
+ * <ul>
+ * <li>{@link org.eigenbase.relopt.CallingConvention#ARRAY ARRAY},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#ITERABLE ITERABLE},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#ITERATOR ITERATOR},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#COLLECTION COLLECTION},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#MAP MAP},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#VECTOR VECTOR},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#HASHTABLE HASHTABLE},
+ * <li>{@link org.eigenbase.relopt.CallingConvention#JAVA JAVA}
  * </ul>
  * </li>
  * </ul>
  *
- * <p>For {@link org.eigenbase.relopt.CallingConvention#JAVA JAVA calling-convention}, see the
- * sub-interface {@link JavaLoopRel}, and the auxilliary interface {@link
- * JavaSelfRel}.
+ * <p>For {@link org.eigenbase.relopt.CallingConvention#JAVA JAVA
+ * calling-convention}, see the sub-interface {@link JavaLoopRel}, and the
+ * auxilliary interface {@link JavaSelfRel}.
  *
  * @author jhyde
  * @version $Id$
@@ -59,7 +61,6 @@ import org.eigenbase.rel.*;
 public interface JavaRel
     extends RelNode
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -44,7 +44,6 @@ import net.sf.farrago.trace.*;
  */
 public abstract class FarragoKillUDR
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static Logger tracer = FarragoTrace.getSyslibTracer();
@@ -67,7 +66,6 @@ public abstract class FarragoKillUDR
      * Kills a running session.
      *
      * @param id unique session identifier
-     *
      * @param cancelOnly if true, just cancel current execution; if false,
      * destroy session
      */
@@ -84,8 +82,8 @@ public abstract class FarragoKillUDR
     }
 
     /**
-     * Kills an executing statement, destroying it and releasing any
-     * resources associated with it.
+     * Kills an executing statement, destroying it and releasing any resources
+     * associated with it.
      *
      * @param id unique statement identifier
      */
@@ -99,7 +97,6 @@ public abstract class FarragoKillUDR
      * Kills an executing statement.
      *
      * @param id unique statement identifier
-     *
      * @param cancelOnly if true, just cancel current execution; if false,
      * destroy statement
      */
@@ -125,12 +122,11 @@ public abstract class FarragoKillUDR
     {
         killStatementMatch(s, false);
     }
-    
+
     /**
      * Kills all statements executing SQL that matches a given substring.
      *
      * @param s substring to look for in statement SQL text
-     *
      * @param cancelOnly if true, just cancel current execution; if false,
      * destroy statement
      */

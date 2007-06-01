@@ -43,7 +43,6 @@ package org.eigenbase.relopt;
  */
 public interface RelOptConnection
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

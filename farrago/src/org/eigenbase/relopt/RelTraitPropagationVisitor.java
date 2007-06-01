@@ -36,7 +36,6 @@ import org.eigenbase.rel.*;
 public class RelTraitPropagationVisitor
     extends RelVisitor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelTraitSet baseTraits;

@@ -22,19 +22,18 @@
 */
 package org.eigenbase.util;
 
-import java.util.List;
-import java.util.AbstractList;
+import java.util.*;
+
 
 /**
- * Converts a list whose members are automatically down-cast to a given
- * type.
+ * Converts a list whose members are automatically down-cast to a given type.
  *
- * <p>If a member of the backing list is not an instanceof <code>E</code>,
- * the accessing method (such as {@link List#get}) will throw a
- * {@link ClassCastException}.
+ * <p>If a member of the backing list is not an instanceof <code>E</code>, the
+ * accessing method (such as {@link List#get}) will throw a {@link
+ * ClassCastException}.
  *
- * <p>All modifications are automatically written to the backing list.
- * Not synchronized.
+ * <p>All modifications are automatically written to the backing list. Not
+ * synchronized.
  *
  * @author jhyde
  * @version $Id$
@@ -43,8 +42,12 @@ public class CastingList<E>
     extends AbstractList<E>
     implements List<E>
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final List<? super E> list;
     private final Class<E> clazz;
+
+    //~ Constructors -----------------------------------------------------------
 
     protected CastingList(List<? super E> list, Class<E> clazz)
     {
@@ -52,6 +55,8 @@ public class CastingList<E>
         this.list = list;
         this.clazz = clazz;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public E get(int index)
     {

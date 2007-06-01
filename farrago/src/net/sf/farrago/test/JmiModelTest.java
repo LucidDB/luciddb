@@ -29,10 +29,10 @@ import javax.jmi.reflect.*;
 
 import junit.framework.*;
 
-import org.jgrapht.*;
-
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
+
+import org.jgrapht.*;
 
 
 /**
@@ -48,7 +48,6 @@ import org.eigenbase.util.*;
 public class JmiModelTest
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

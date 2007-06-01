@@ -35,7 +35,6 @@ import org.eigenbase.relopt.*;
  */
 public interface ConverterFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

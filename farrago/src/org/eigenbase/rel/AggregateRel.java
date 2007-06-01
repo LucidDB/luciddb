@@ -43,13 +43,12 @@ import org.eigenbase.relopt.*;
 public final class AggregateRel
     extends AggregateRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an AggregateRel.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param child input relational expression
      * @param groupCount Number of columns to group on

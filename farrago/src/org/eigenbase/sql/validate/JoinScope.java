@@ -40,7 +40,6 @@ import org.eigenbase.sql.*;
 public class JoinScope
     extends ListScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlValidatorScope usingScope;
@@ -50,6 +49,7 @@ public class JoinScope
 
     /**
      * Creates a <code>JoinScope</code>.
+     *
      * @param parent Parent scope
      * @param usingScope Scope for resolving USING clause
      * @param join Call to JOIN operator

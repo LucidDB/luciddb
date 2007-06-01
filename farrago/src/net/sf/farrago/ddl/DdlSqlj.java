@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
  */
 public abstract class DdlSqlj
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

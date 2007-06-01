@@ -35,7 +35,6 @@ import java.util.*;
 public class StringProperty
     extends Property
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

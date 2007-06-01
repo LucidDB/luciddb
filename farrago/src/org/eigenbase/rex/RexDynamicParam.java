@@ -34,7 +34,6 @@ import org.eigenbase.reltype.*;
 public class RexDynamicParam
     extends RexVariable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int index;

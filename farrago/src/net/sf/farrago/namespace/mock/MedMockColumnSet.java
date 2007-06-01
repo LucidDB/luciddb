@@ -54,7 +54,6 @@ import org.eigenbase.util.*;
 class MedMockColumnSet
     extends MedAbstractColumnSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final MedMockDataServer server;
@@ -103,7 +102,7 @@ class MedMockColumnSet
         long nRowsActual = nRows;
         if (nRowsActual < 0) {
             nRowsActual = 0;
-            FarragoWarningQueue warningQueue = 
+            FarragoWarningQueue warningQueue =
                 getPreparingStmt().getStmtValidator().getWarningQueue();
             warningQueue.postWarning(
                 new SQLWarning("slow down:  mock turtle crossing"));
@@ -120,13 +119,12 @@ class MedMockColumnSet
         RexNode arg = rexBuilder.makeExactLiteral(new BigDecimal(nRows));
 
         // Call to super handles the rest.
-        return
-            toUdxRel(
-                cluster,
-                connection,
-                udxSpecificName,
-                server.getServerMofId(),
-                new RexNode[] { arg });
+        return toUdxRel(
+            cluster,
+            connection,
+            udxSpecificName,
+            server.getServerMofId(),
+            new RexNode[] { arg });
     }
 }
 

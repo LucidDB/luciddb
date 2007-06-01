@@ -35,16 +35,16 @@ import net.sf.farrago.session.*;
  * @author Zelaine Fong
  * @version $Id$
  */
-public class FarragoUpdateCatalogUDR extends FarragoAbstractCatalogInit
+public class FarragoUpdateCatalogUDR
+    extends FarragoAbstractCatalogInit
 {
-
     //~ Constructors -----------------------------------------------------------
 
     private FarragoUpdateCatalogUDR(FarragoRepos repos)
     {
         super(repos);
     }
-    
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -56,7 +56,7 @@ public class FarragoUpdateCatalogUDR extends FarragoAbstractCatalogInit
         tracer.info("Updating system-owned catalog objects");
         FarragoSession session = FarragoUdrRuntime.getSession();
         FarragoRepos repos = session.getRepos();
-        
+
         FarragoUpdateCatalogUDR init = null;
         FarragoReposTxnContext txn = repos.newTxnContext();
         try {

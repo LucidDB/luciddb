@@ -34,7 +34,6 @@ import org.eigenbase.util.*;
 public class SqlPostfixOperator
     extends SqlOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlPostfixOperator(
@@ -68,7 +67,8 @@ public class SqlPostfixOperator
         return "{1} {0}";
     }
 
-    protected RelDataType adjustType(SqlValidator validator,
+    protected RelDataType adjustType(
+        SqlValidator validator,
         SqlCall call,
         RelDataType type)
     {

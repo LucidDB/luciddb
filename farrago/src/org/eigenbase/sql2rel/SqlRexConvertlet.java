@@ -36,7 +36,6 @@ import org.eigenbase.sql.*;
  */
 public interface SqlRexConvertlet
 {
-
     //~ Methods ----------------------------------------------------------------
 
     RexNode convertCall(

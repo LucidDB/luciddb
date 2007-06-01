@@ -34,7 +34,6 @@ import org.eigenbase.sql.type.*;
 public class RelRecordType
     extends RelDataTypeImpl
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

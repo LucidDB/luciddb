@@ -22,7 +22,6 @@
 */
 package org.eigenbase.util;
 
-import java.awt.HeadlessException;
 import java.awt.Toolkit;
 
 import java.io.*;
@@ -38,6 +37,7 @@ import java.net.*;
 import java.nio.charset.*;
 
 import java.sql.*;
+
 import java.text.*;
 
 import java.util.*;
@@ -61,14 +61,13 @@ import org.eigenbase.sql.validate.*;
 public class Util
     extends Toolbox
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Name of the system property that controls whether the AWT work-around
-     * is enabled.  This workaround allows Farrago to load its native
-     * libraries despite a conflict with AWT and allows applications that
-     * use AWT to function normally.
+     * Name of the system property that controls whether the AWT work-around is
+     * enabled. This workaround allows Farrago to load its native libraries
+     * despite a conflict with AWT and allows applications that use AWT to
+     * function normally.
      *
      * @see #loadLibrary(String)
      */
@@ -88,8 +87,8 @@ public class Util
         System.getProperty("file.separator");
 
     /**
-     * Datetime format string for generating a timestamp string to be used
-     * as part of a filename. Conforms to SimpleDateFormat conventions.
+     * Datetime format string for generating a timestamp string to be used as
+     * part of a filename. Conforms to SimpleDateFormat conventions.
      */
     public static final String fileTimestampFormat = "yyyy-MM-dd_HH_mm_ss";
 
@@ -106,7 +105,9 @@ public class Util
     private static final Pattern javaIdPattern =
         Pattern.compile("[a-zA-Z_$][a-zA-Z0-9$]*");
 
-    /** @see #loadLibrary(String) */
+    /**
+     * @see #loadLibrary(String)
+     */
     private static Toolkit awtToolkit;
 
     //~ Methods ----------------------------------------------------------------
@@ -334,14 +335,17 @@ public class Util
         Class clazz = o.getClass();
         if (o instanceof String) {
             printJavaString(pw, (String) o, true);
-        } else if ((clazz == Integer.class) || (clazz == Boolean.class)
+        } else if (
+            (clazz == Integer.class)
+            || (clazz == Boolean.class)
             || (clazz == Character.class)
             || (clazz == Byte.class)
             || (clazz == Short.class)
             || (clazz == Long.class)
             || (clazz == Float.class)
             || (clazz == Double.class)
-            || (clazz == Void.class)) {
+            || (clazz == Void.class))
+        {
             pw.print(o.toString());
         } else if (clazz.isArray()) {
             // o is an array, but we can't cast to Object[] because it may be
@@ -468,7 +472,7 @@ public class Util
     /**
      * Prints a flat array of objects as [e1,e2,...]
      */
-    public static String flatArrayToString(Object[] a)
+    public static String flatArrayToString(Object [] a)
     {
         StringBuffer sb = new StringBuffer("[");
         for (int i = 0; i < a.length; i++) {
@@ -513,7 +517,8 @@ public class Util
         }
 
         //do truncation
-        unscaled = unscaled.substring(
+        unscaled =
+            unscaled.substring(
                 0,
                 Math.min(truncateAt, len));
         ret.append(unscaled.charAt(0));
@@ -602,8 +607,8 @@ public class Util
     }
 
     /**
-     * Gets a timestamp string for use in file names. The generated
-     * timestamp string reflects the current time.
+     * Gets a timestamp string for use in file names. The generated timestamp
+     * string reflects the current time.
      */
     public static String getFileTimestamp()
     {
@@ -691,12 +696,12 @@ public class Util
             char c = s.charAt(i);
             if (c == '_') {
                 buf.append("__");
-            } else if ((c < 0x7F) /* Normal ascii character */
+            } else if (
+                (c < 0x7F) /* Normal ascii character */
                 && !Character.isISOControl(c)
-                && (
-                    (i == 0) ? Character.isJavaIdentifierStart(c)
-                    : Character.isJavaIdentifierPart(c)
-                   )) {
+                && ((i == 0) ? Character.isJavaIdentifierStart(c)
+                    : Character.isJavaIdentifierPart(c)))
+            {
                 buf.append(c);
             } else {
                 buf.append("_");
@@ -743,10 +748,9 @@ public class Util
     {
         int elementCount = v.size();
         if (a.length < elementCount) {
-            a =
-                (Object []) Array.newInstance(
-                    a.getClass().getComponentType(),
-                    elementCount);
+            a = (Object []) Array.newInstance(
+                a.getClass().getComponentType(),
+                elementCount);
         }
         v.copyInto(a);
         if (a.length > elementCount) {
@@ -811,9 +815,8 @@ public class Util
      */
     public static Charset getDefaultCharset()
     {
-        return
-            Charset.forName(
-                SaffronProperties.instance().defaultCharset.get());
+        return Charset.forName(
+            SaffronProperties.instance().defaultCharset.get());
     }
 
     public static Error newInternal()
@@ -848,6 +851,7 @@ public class Util
     /**
      * Retrieves messages in a exception and writes them to a string. In the
      * string returned, each message will appear on a different line.
+     *
      * @return a non-null string containing all messages of the exception
      */
     public static String getMessages(Exception ex)
@@ -856,8 +860,8 @@ public class Util
         for (Throwable curr = ex; curr != null; curr = curr.getCause()) {
             String msg =
                 ((curr instanceof EigenbaseException)
-                    || (curr instanceof SQLException))
-                ? curr.getMessage() : curr.toString();
+                    || (curr instanceof SQLException)) ? curr.getMessage()
+                : curr.toString();
             if (sb.length() > 0) {
                 sb.append("\n");
             }
@@ -1030,20 +1034,19 @@ public class Util
      * Uses {@link System#loadLibrary(String)} to load a native library
      * correctly under mingw (Windows/Cygwin) and Linux environments.
      *
-     * <p>This method also implements a work-around for applications that
-     * wish to load AWT.  AWT conflicts with some native libraries in a
-     * way that requires AWT to be loaded first.  This method checks the
-     * system property named {@link #awtWorkaroundProperty} and if it is
-     * set to "on" (default; case-insensitive) it pre-loads AWT to avoid
-     * the conflict.
+     * <p>This method also implements a work-around for applications that wish
+     * to load AWT. AWT conflicts with some native libraries in a way that
+     * requires AWT to be loaded first. This method checks the system property
+     * named {@link #awtWorkaroundProperty} and if it is set to "on" (default;
+     * case-insensitive) it pre-loads AWT to avoid the conflict.
      *
-     * @param libName the name of the library to load, as in
-     *                {@link System#loadLibrary(String)}.
+     * @param libName the name of the library to load, as in {@link
+     * System#loadLibrary(String)}.
      */
     public static void loadLibrary(String libName)
     {
         String awtSetting = System.getProperty(awtWorkaroundProperty, "on");
-        if (awtToolkit == null && awtSetting.equalsIgnoreCase("on")) {
+        if ((awtToolkit == null) && awtSetting.equalsIgnoreCase("on")) {
             // REVIEW jvs 8-Sept-2006:  workaround upon workaround.  This
             // is required because in native code, we sometimes (see Farrago)
             // have to use dlopen("libfoo.so", RTLD_GLOBAL) in order for native
@@ -1101,11 +1104,10 @@ public class Util
         try {
             node.accept(visitor);
         } catch (FoundOne e) {
-            return
-                new SqlNodeDescriptor(
-                    (SqlNode) e.getNode(),
-                    visitor.getCurrentParent(),
-                    visitor.getCurrentOffset());
+            return new SqlNodeDescriptor(
+                (SqlNode) e.getNode(),
+                visitor.getCurrentParent(),
+                visitor.getCurrentOffset());
         }
         return null;
     }
@@ -1313,7 +1315,6 @@ public class Util
      * Pads a string with spaces up to a given length.
      *
      * @param s string to be padded
-     *
      * @param len desired length
      *
      * @return padded string
@@ -1416,14 +1417,15 @@ public class Util
      * type.
      *
      * <p>If a member of the backing list is not an instanceof <code>E</code>,
-     * the accessing method (such as {@link List#get}) will throw a
-     * {@link ClassCastException}.
+     * the accessing method (such as {@link List#get}) will throw a {@link
+     * ClassCastException}.
      *
-     * <p>All modifications are automatically written to the backing list.
-     * Not synchronized.
+     * <p>All modifications are automatically written to the backing list. Not
+     * synchronized.
      *
      * @param list Backing list.
      * @param clazz Class to cast to.
+     *
      * @return A list whose members are of the desired type.
      */
     public static <E> List<E> cast(List<? super E> list, Class<E> clazz)
@@ -1435,15 +1437,16 @@ public class Util
      * Converts a iterator whose members are automatically down-cast to a given
      * type.
      *
-     * <p>If a member of the backing iterator is not an instanceof
-     * <code>E</code>, {@link Iterator#next()}) will throw a
-     * {@link ClassCastException}.
+     * <p>If a member of the backing iterator is not an instanceof <code>
+     * E</code>, {@link Iterator#next()}) will throw a {@link
+     * ClassCastException}.
      *
      * <p>All modifications are automatically written to the backing iterator.
      * Not synchronized.
      *
      * @param iter Backing iterator.
      * @param clazz Class to cast to.
+     *
      * @return An iterator whose members are of the desired type.
      */
     public static <E> Iterator<E> cast(
@@ -1469,15 +1472,14 @@ public class Util
     }
 
     /**
-     * Converts an {@link Iterable} whose members are automatically down-cast
-     * to a given type.
+     * Converts an {@link Iterable} whose members are automatically down-cast to
+     * a given type.
      */
     public static <E> Iterable<E> cast(
         final Iterable<?> iterable,
         final Class<E> clazz)
     {
-        return new Iterable<E>()
-        {
+        return new Iterable<E>() {
             public Iterator<E> iterator()
             {
                 return cast(iterable.iterator(), clazz);
@@ -1486,32 +1488,28 @@ public class Util
     }
 
     /**
-     * Makes a collection of untyped elements appear as a list of strictly
-     * typed elements, by filtering out those which are not of the correct
-     * type.
+     * Makes a collection of untyped elements appear as a list of strictly typed
+     * elements, by filtering out those which are not of the correct type.
      *
      * <p>The returned object is an {@link org.eigenbase.runtime.Iterable},
      * which makes it ideal for use with the 'foreach' construct. For example,
      *
-     * <blockquote>
-     * <code>
-     * List&lt;Number&gt; numbers = Arrays.asList(1, 2, 3.14, 4, null, 6E23);<br/>
+     * <blockquote><code>List&lt;Number&gt; numbers = Arrays.asList(1, 2, 3.14,
+     * 4, null, 6E23);<br/>
      * for (int myInt : filter(numbers, Integer.class)) {<br/>
      * &nbsp;&nbsp;&nbsp;&nbsp;print(i);<br/>
-     * }
-     * </code>
-     * </blockquote>
+     * }</code></blockquote>
      *
      * will print 1, 2, 4.
+     *
      * @param iterable
      * @param includeFilter
      */
-    public static<E> Iterable<E> filter(
+    public static <E> Iterable<E> filter(
         final Iterable<? extends Object> iterable,
         final Class<E> includeFilter)
     {
-        return new Iterable<E>()
-        {
+        return new Iterable<E>() {
             public Iterator<E> iterator()
             {
                 return new Filterator<E>(iterable.iterator(), includeFilter);
@@ -1519,12 +1517,11 @@ public class Util
         };
     }
 
-    public static<E> Collection<E> filter(
+    public static <E> Collection<E> filter(
         final Collection<?> collection,
         final Class<E> includeFilter)
     {
-        return new AbstractCollection<E>()
-        {
+        return new AbstractCollection<E>() {
             public Iterator<E> iterator()
             {
                 return new Filterator<E>(collection.iterator(), includeFilter);
@@ -1544,9 +1541,10 @@ public class Util
      *
      * @param list List of objects
      * @param includeFilter Class to filter for
+     *
      * @return List of objects of given class (or a subtype)
      */
-    public static<E> List<E> filter(
+    public static <E> List<E> filter(
         final List<?> list,
         final Class<E> includeFilter)
     {
@@ -1560,11 +1558,11 @@ public class Util
     }
 
     /**
-     * Converts a {@link Properties} object to a
-     * <code>{@link Map}&lt;String, String&gt;</code>.
+     * Converts a {@link Properties} object to a <code>{@link Map}&lt;String,
+     * String&gt;</code>.
      *
-     * <p>This is necessary because {@link Properties} is a dinosaur class.
-     * It ought to extend <code>Map&lt;String,String&gt;</code>, but instead
+     * <p>This is necessary because {@link Properties} is a dinosaur class. It
+     * ought to extend <code>Map&lt;String,String&gt;</code>, but instead
      * extends <code>{@link Hashtable}&lt;Object,Object&gt;</code>.
      *
      * <p>Typical usage, to iterate over a {@link Properties}:
@@ -1590,11 +1588,10 @@ public class Util
      */
     public static <E extends Enum<E>> Error unexpected(E value)
     {
-        return
-            new AssertionError(
-                "Was not expecting value '" + value
-                + "' for enumeration '" + value.getDeclaringClass().getName()
-                + "' in this context");
+        return new AssertionError(
+            "Was not expecting value '" + value
+            + "' for enumeration '" + value.getDeclaringClass().getName()
+            + "' in this context");
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -1628,12 +1625,13 @@ public class Util
         private final SqlNode parent;
         private final Integer parentOffset;
 
-        public SqlNodeDescriptor(SqlNode node,
+        public SqlNodeDescriptor(
+            SqlNode node,
             SqlNode parent,
             Integer parentOffset)
         {
             assert ((null == parent) || (parent instanceof SqlCall)
-                    || (parent instanceof SqlNodeList));
+                || (parent instanceof SqlNodeList));
             this.node = node;
             this.parent = parent;
             this.parentOffset = parentOffset;
@@ -1705,7 +1703,8 @@ public class Util
                         return null;
                     }
 
-                    public R visitChild(SqlVisitor<R> visitor,
+                    public R visitChild(
+                        SqlVisitor<R> visitor,
                         SqlNode expr,
                         int i,
                         SqlNode operand)
@@ -1720,7 +1719,6 @@ public class Util
             return argHandler.result();
         }
     }
-
 }
 
 // End Util.java

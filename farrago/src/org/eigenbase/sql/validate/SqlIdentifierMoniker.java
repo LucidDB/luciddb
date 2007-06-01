@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
 public class SqlIdentifierMoniker
     implements SqlMoniker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlIdentifier id;

@@ -31,9 +31,7 @@ import org.eigenbase.util14.*;
  * FennelStandardTypeDescriptor implements the {@link
  * FennelStandardTypeDescriptor} enumerations as kept in fennel. This must be
  * kept in sync with any changes to fennel's <code>
- * FennelStandardTypeDescriptor.h</code>.
- *
- * This class is JDK 1.4 compatible.
+ * FennelStandardTypeDescriptor.h</code>. This class is JDK 1.4 compatible.
  *
  * @author Mike Bennett
  * @version $Id$
@@ -42,7 +40,6 @@ public abstract class FennelStandardTypeDescriptor
     extends Enum14.BasicValue
     implements FennelStoredTypeDescriptor
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -144,23 +141,23 @@ public abstract class FennelStandardTypeDescriptor
     public static final Type_VARBINARY VARBINARY = new Type_VARBINARY();
 
     private static final FennelStandardTypeDescriptor [] values =
-        {
-            INT_8,
-            UINT_8,
-            INT_16,
-            UINT_16,
-            INT_32,
-            UINT_32,
-            INT_64,
-            UINT_64,
-            BOOL,
-            REAL,
-            DOUBLE,
-            CHAR,
-            VARCHAR,
-            BINARY,
-            VARBINARY,
-        };
+    {
+        INT_8,
+        UINT_8,
+        INT_16,
+        UINT_16,
+        INT_32,
+        UINT_32,
+        INT_64,
+        UINT_64,
+        BOOL,
+        REAL,
+        DOUBLE,
+        CHAR,
+        VARCHAR,
+        BINARY,
+        VARBINARY,
+    };
 
     public static final Enum14 enumeration = new Enum14(values);
 
@@ -207,8 +204,8 @@ public abstract class FennelStandardTypeDescriptor
      */
     public boolean isNativeNotBool()
     {
-        return
-            (getOrdinal() <= DOUBLE_ORDINAL) && (getOrdinal() != BOOL_ORDINAL);
+        return (getOrdinal() <= DOUBLE_ORDINAL)
+            && (getOrdinal() != BOOL_ORDINAL);
     }
 
     /**
@@ -239,7 +236,8 @@ public abstract class FennelStandardTypeDescriptor
     public boolean isApprox()
     {
         if ((getOrdinal() == REAL_ORDINAL)
-            || (getOrdinal() == DOUBLE_ORDINAL)) {
+            || (getOrdinal() == DOUBLE_ORDINAL))
+        {
             return true;
         }
         return false;
@@ -251,7 +249,8 @@ public abstract class FennelStandardTypeDescriptor
     public boolean isArray()
     {
         if ((getOrdinal() >= CHAR_ORDINAL)
-            && (getOrdinal() <= VARBINARY_ORDINAL)) {
+            && (getOrdinal() <= VARBINARY_ORDINAL))
+        {
             return true;
         }
         return false;
@@ -263,7 +262,8 @@ public abstract class FennelStandardTypeDescriptor
     public boolean isVariableLenArray()
     {
         if ((getOrdinal() == VARCHAR_ORDINAL)
-            || (getOrdinal() == VARBINARY_ORDINAL)) {
+            || (getOrdinal() == VARBINARY_ORDINAL))
+        {
             return true;
         }
         return false;
@@ -275,7 +275,8 @@ public abstract class FennelStandardTypeDescriptor
     public boolean isFixedLenArray()
     {
         if ((getOrdinal() == CHAR_ORDINAL)
-            || (getOrdinal() == BINARY_ORDINAL)) {
+            || (getOrdinal() == BINARY_ORDINAL))
+        {
             return true;
         }
         return false;
@@ -287,7 +288,8 @@ public abstract class FennelStandardTypeDescriptor
     public boolean isTextArray()
     {
         if ((getOrdinal() == CHAR_ORDINAL)
-            || (getOrdinal() == VARCHAR_ORDINAL)) {
+            || (getOrdinal() == VARCHAR_ORDINAL))
+        {
             return true;
         }
         return false;
@@ -299,7 +301,8 @@ public abstract class FennelStandardTypeDescriptor
     public boolean isBinaryArray()
     {
         if ((getOrdinal() == VARBINARY_ORDINAL)
-            || (getOrdinal() == BINARY_ORDINAL)) {
+            || (getOrdinal() == BINARY_ORDINAL))
+        {
             return true;
         }
         return false;
@@ -783,11 +786,13 @@ public abstract class FennelStandardTypeDescriptor
             if (c != 0) {
                 return c;
             }
-            final String s1 = new String(
+            final String s1 =
+                new String(
                     d1.getBytes(),
                     0,
                     c);
-            final String s2 = new String(
+            final String s2 =
+                new String(
                     d2.getBytes(),
                     0,
                     c);
@@ -833,11 +838,13 @@ public abstract class FennelStandardTypeDescriptor
             if (c != 0) {
                 return c;
             }
-            final String s1 = new String(
+            final String s1 =
+                new String(
                     d1.getBytes(),
                     0,
                     c);
-            final String s2 = new String(
+            final String s2 =
+                new String(
                     d2.getBytes(),
                     0,
                     c);
@@ -888,11 +895,13 @@ public abstract class FennelStandardTypeDescriptor
             if (c != 0) {
                 return c;
             }
-            final String s1 = new String(
+            final String s1 =
+                new String(
                     d1.getBytes(),
                     0,
                     c);
-            final String s2 = new String(
+            final String s2 =
+                new String(
                     d2.getBytes(),
                     0,
                     c);
@@ -938,11 +947,13 @@ public abstract class FennelStandardTypeDescriptor
             if (c != 0) {
                 return c;
             }
-            final String s1 = new String(
+            final String s1 =
+                new String(
                     d1.getBytes(),
                     0,
                     c);
-            final String s2 = new String(
+            final String s2 =
+                new String(
                     d2.getBytes(),
                     0,
                     c);

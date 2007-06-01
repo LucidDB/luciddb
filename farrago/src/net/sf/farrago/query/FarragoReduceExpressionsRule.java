@@ -54,7 +54,6 @@ import org.eigenbase.util.*;
 public class FarragoReduceExpressionsRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = FarragoTrace.getOptimizerRuleTracer();
@@ -137,7 +136,8 @@ public class FarragoReduceExpressionsRule
         if (rel instanceof FilterRel) {
             assert (exps.length == 1);
             FilterRel oldRel = (FilterRel) rel;
-            newRel = CalcRel.createFilter(
+            newRel =
+                CalcRel.createFilter(
                     oldRel.getChild(),
                     exps[0]);
         } else if (rel instanceof ProjectRel) {
@@ -180,7 +180,8 @@ public class FarragoReduceExpressionsRule
         RexNode [] exps)
     {
         List<RexNode> result = new ArrayList<RexNode>();
-        ConstantGardener gardener = new ConstantGardener(
+        ConstantGardener gardener =
+            new ConstantGardener(
                 preparingStmt,
                 typeFactory,
                 result);
@@ -194,10 +195,13 @@ public class FarragoReduceExpressionsRule
     private static SqlTypeName broadenType(SqlTypeName typeName)
     {
         if (SqlTypeFamily.APPROXIMATE_NUMERIC.getTypeNames().contains(
-                typeName)) {
+                typeName))
+        {
             return SqlTypeName.DOUBLE;
-        } else if (SqlTypeFamily.EXACT_NUMERIC.getTypeNames().contains(
-                typeName)) {
+        } else if (
+            SqlTypeFamily.EXACT_NUMERIC.getTypeNames().contains(
+                typeName))
+        {
             return SqlTypeName.DECIMAL;
         } else if (SqlTypeFamily.CHARACTER.getTypeNames().contains(typeName)) {
             return SqlTypeName.CHAR;
@@ -243,9 +247,8 @@ public class FarragoReduceExpressionsRule
             }
             RexNode replacement = reducedValues.get(i);
             if (addCasts
-                && (true
-                ? (replacement.getType() != call.getType())
-                : call.getOperator() != SqlStdOperatorTable.castFunc))
+                && (true ? (replacement.getType() != call.getType())
+                    : (call.getOperator() != SqlStdOperatorTable.castFunc)))
             {
                 // Handle change from nullable to NOT NULL by claiming
                 // that the result is still nullable, even though
@@ -255,7 +258,8 @@ public class FarragoReduceExpressionsRule
                 // If we make 'abc' of type VARCHAR(4), we may later encounter
                 // the same expression in a ProjectRel's digest where it has
                 // type VARCHAR(3), and that's wrong.
-                replacement = rexBuilder.makeCast(
+                replacement =
+                    rexBuilder.makeCast(
                         call.getType(),
                         replacement);
             }
@@ -291,7 +295,8 @@ public class FarragoReduceExpressionsRule
             RelNode oneRowRel =
                 new OneRowRel(
                     getPreparingStmt().getRelOptCluster());
-            RelNode projectRel = CalcRel.createProject(
+            RelNode projectRel =
+                CalcRel.createProject(
                     oneRowRel,
                     exprs,
                     null);
@@ -337,7 +342,8 @@ public class FarragoReduceExpressionsRule
                 RexNode result;
                 if (resultSet.wasNull()) {
                     result = rexBuilder.constantNull();
-                    result = rexBuilder.makeCast(
+                    result =
+                        rexBuilder.makeCast(
                             expr.getType(),
                             result);
                 } else {
@@ -386,7 +392,8 @@ public class FarragoReduceExpressionsRule
     private static class ConstantGardener
         extends RexVisitorImpl<Void>
     {
-        enum Constancy {
+        enum Constancy
+        {
             NON_CONSTANT, REDUCIBLE_CONSTANT, IRREDUCIBLE_CONSTANT
         }
 
@@ -498,7 +505,7 @@ public class FarragoReduceExpressionsRule
             // be non-deterministic.
             if (!call.getOperator().isDeterministic()) {
                 callConstancy = Constancy.NON_CONSTANT;
-            } else  if (call.getOperator().isDynamicFunction()) {
+            } else if (call.getOperator().isDynamicFunction()) {
                 // We can reduce the call to a constant, but we can't
                 // cache the plan if the function is dynamic
                 preparingStmt.disableStatementCaching();

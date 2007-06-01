@@ -56,7 +56,6 @@ import org.eigenbase.util.*;
 public class SqlValidatorTestCase
     extends TestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final String NL = System.getProperty("line.separator");
@@ -321,7 +320,8 @@ public class SqlValidatorTestCase
         SqlParseException spe = null;
         for (Throwable x = ex; x != null; x = x.getCause()) {
             if ((x instanceof SqlParseException)
-                && (((SqlParseException) x).getPos() != null)) {
+                && (((SqlParseException) x).getPos() != null))
+            {
                 spe = (SqlParseException) x;
                 break;
             }
@@ -388,9 +388,11 @@ public class SqlValidatorTestCase
                     + "]; expected [" + expectedMsgPattern + "]");
             } else {
                 String sqlWithCarets;
-                if ((actualColumn <= 0) || (actualLine <= 0)
+                if ((actualColumn <= 0)
+                    || (actualLine <= 0)
                     || (actualEndColumn <= 0)
-                    || (actualEndLine <= 0)) {
+                    || (actualEndLine <= 0))
+                {
                     if (FailIfNoPosition) {
                         throw new AssertionFailedError(
                             "Error did not have position: "
@@ -414,12 +416,12 @@ public class SqlValidatorTestCase
                         "todo: add carets to sql: " + sqlWithCarets);
                 }
                 if ((actualMessage == null)
-                    || !actualMessage.matches(expectedMsgPattern)) {
+                    || !actualMessage.matches(expectedMsgPattern))
+                {
                     actualException.printStackTrace();
                     final String actualJavaRegexp =
-                        actualMessage == null ?
-                        "null" :
-                        TestUtil.quoteForJava(
+                        (actualMessage == null) ? "null"
+                        : TestUtil.quoteForJava(
                             TestUtil.quotePattern(actualMessage));
                     fail(
                         "Validator threw different "
@@ -435,13 +437,13 @@ public class SqlValidatorTestCase
                         + " thru line " + actualEndLine
                         + " col " + actualEndColumn
                         + "]; sql [" + sqlWithCarets + "]");
-                } else if ((sap.pos != null)
-                    && (
-                        (actualLine != sap.pos.getLineNum())
+                } else if (
+                    (sap.pos != null)
+                    && ((actualLine != sap.pos.getLineNum())
                         || (actualColumn != sap.pos.getColumnNum())
                         || (actualEndLine != sap.pos.getEndLineNum())
-                        || (actualEndColumn != sap.pos.getEndColumnNum())
-                       )) {
+                        || (actualEndColumn != sap.pos.getEndColumnNum())))
+                {
                     fail(
                         "Validator threw expected "
                         + "exception [" + actualMessage
@@ -477,7 +479,8 @@ public class SqlValidatorTestCase
          * Checks that a query is valid, or, if invalid, throws the right
          * message at the right location.
          *
-         * <p>If <code>expectedMsgPattern</code> is null, the query must succeed.
+         * <p>If <code>expectedMsgPattern</code> is null, the query must
+         * succeed.
          *
          * <p>If <code>expectedMsgPattern</code> is not null, the query must
          * fail, and give an error location of (expectedLine, expectedColumn)
@@ -593,11 +596,10 @@ public class SqlValidatorTestCase
         public SqlValidator getValidator()
         {
             final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-            return
-                SqlValidatorUtil.newValidator(
-                    opTab,
-                    new MockCatalogReader(typeFactory),
-                    typeFactory);
+            return SqlValidatorUtil.newValidator(
+                opTab,
+                new MockCatalogReader(typeFactory),
+                typeFactory);
         }
 
         public void assertExceptionIsThrown(
@@ -616,13 +618,15 @@ public class SqlValidatorTestCase
                     e.printStackTrace();
                     throw new AssertionFailedError(
                         "Error while parsing query [" + sap.sql + "]");
-                } else if ((null == errMessage)
-                    || !errMessage.matches(expectedMsgPattern)) {
+                } else if (
+                    (null == errMessage)
+                    || !errMessage.matches(expectedMsgPattern))
+                {
                     e.printStackTrace();
                     throw new AssertionFailedError(
                         "Error did not match expected ["
-                            + expectedMsgPattern + "] while parsing query ["
-                            + sap.sql + "]");
+                        + expectedMsgPattern + "] while parsing query ["
+                        + sap.sql + "]");
                 }
                 return;
             } catch (Throwable e) {
@@ -692,7 +696,8 @@ public class SqlValidatorTestCase
         {
             RelDataType actualType = getColumnType(sql);
             if (expected.startsWith("todo:")) {
-                Util.permAssert(!Bug.Dt1204Fixed,
+                Util.permAssert(
+                    !Bug.Dt1204Fixed,
                     "After bug 315 is fixed, no type should start 'todo:'");
                 return; // don't check the type for now
             }
@@ -727,12 +732,12 @@ public class SqlValidatorTestCase
             }
 
             SqlIntervalLiteral.IntervalValue interval =
-            (SqlIntervalLiteral.IntervalValue)
-                    ((SqlIntervalLiteral) node).getValue();
+                (SqlIntervalLiteral.IntervalValue) ((SqlIntervalLiteral) node)
+                .getValue();
             long l =
-                interval.getIntervalQualifier().isYearMonth()?
-                SqlParserUtil.intervalToMonths(interval):
-                SqlParserUtil.intervalToMillis(interval);
+                interval.getIntervalQualifier().isYearMonth()
+                ? SqlParserUtil.intervalToMonths(interval)
+                : SqlParserUtil.intervalToMillis(interval);
             String actual = l + "";
             assertEquals(expected, actual);
         }
@@ -898,7 +903,9 @@ public class SqlValidatorTestCase
         }
 
         public void checkFails(
-            String expression, String expectedError, boolean runtime)
+            String expression,
+            String expectedError,
+            boolean runtime)
         {
             if (runtime) {
                 // We need to test that the expression fails at runtime.

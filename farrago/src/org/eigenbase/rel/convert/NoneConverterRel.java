@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 public class NoneConverterRel
     extends ConverterRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public NoneConverterRel(
@@ -56,7 +55,8 @@ public class NoneConverterRel
 
     public NoneConverterRel clone()
     {
-        NoneConverterRel clone = new NoneConverterRel(
+        NoneConverterRel clone =
+            new NoneConverterRel(
                 getCluster(),
                 getChild());
         clone.inheritTraitsFrom(this);

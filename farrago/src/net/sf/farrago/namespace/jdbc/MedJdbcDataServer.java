@@ -37,9 +37,9 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.jdbc.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -57,7 +57,6 @@ import org.eigenbase.sql.*;
 public class MedJdbcDataServer
     extends MedAbstractDataServer
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String PROP_URL = "URL";
@@ -162,10 +161,11 @@ public class MedJdbcDataServer
                 PROP_LENIENT,
                 DEFAULT_LENIENT);
 
-        disabledPushdownPattern = Pattern.compile(
-            props.getProperty(
-                PROP_DISABLED_PUSHDOWN_REL_PATTERN,
-                DEFAULT_DISABLED_PUSHDOWN_REL_PATTERN));
+        disabledPushdownPattern =
+            Pattern.compile(
+                props.getProperty(
+                    PROP_DISABLED_PUSHDOWN_REL_PATTERN,
+                    DEFAULT_DISABLED_PUSHDOWN_REL_PATTERN));
 
         String tableTypeString = props.getProperty(PROP_TABLE_TYPES);
         if (tableTypeString == null) {
@@ -182,8 +182,7 @@ public class MedJdbcDataServer
             }
         }
 
-        fetchSize =
-            getIntProperty(props, PROP_FETCH_SIZE, DEFAULT_FETCH_SIZE);
+        fetchSize = getIntProperty(props, PROP_FETCH_SIZE, DEFAULT_FETCH_SIZE);
         autocommit =
             getBooleanProperty(props, PROP_AUTOCOMMIT, DEFAULT_AUTOCOMMIT);
 
@@ -199,8 +198,8 @@ public class MedJdbcDataServer
     protected void createConnection()
         throws SQLException
     {
-        if (connection != null && !connection.isClosed()) {
-            if (validateConnection && validationQuery != null) {
+        if ((connection != null) && !connection.isClosed()) {
+            if (validateConnection && (validationQuery != null)) {
                 Statement testStatement = connection.createStatement();
                 try {
                     testStatement.executeQuery(validationQuery);
@@ -320,7 +319,7 @@ public class MedJdbcDataServer
         String tableSchemaName = tableProps.getProperty(PROP_SCHEMA_NAME);
         if (tableSchemaName == null) {
             tableSchemaName = schemaName;
-        } else if (schemaName != null && !useSchemaNameAsForeignQualifier) {
+        } else if ((schemaName != null) && !useSchemaNameAsForeignQualifier) {
             if (!tableSchemaName.equals(schemaName)) {
                 throw FarragoResource.instance().MedPropertyMismatch.ex(
                     schemaName,
@@ -336,12 +335,11 @@ public class MedJdbcDataServer
         }
         MedJdbcNameDirectory directory =
             new MedJdbcNameDirectory(this, tableSchemaName);
-        return
-            directory.lookupColumnSetAndImposeType(
-                typeFactory,
-                tableName,
-                localName,
-                rowType);
+        return directory.lookupColumnSetAndImposeType(
+            typeFactory,
+            tableName,
+            localName,
+            rowType);
     }
 
     // implement FarragoMedDataServer
@@ -382,16 +380,16 @@ public class MedJdbcDataServer
 
         // tell optimizer how to convert data from JDBC into Farrago
         planner.addRule(
-            new ConverterRule(RelNode.class,
+            new ConverterRule(
+                RelNode.class,
                 CallingConvention.RESULT_SET,
                 CallingConvention.ITERATOR,
                 "ResultSetToFarragoIteratorRule") {
                 public RelNode convert(RelNode rel)
                 {
-                    return
-                        new ResultSetToFarragoIteratorConverter(
-                            rel.getCluster(),
-                            rel);
+                    return new ResultSetToFarragoIteratorConverter(
+                        rel.getCluster(),
+                        rel);
                 }
 
                 public boolean isGuaranteed()
@@ -403,18 +401,18 @@ public class MedJdbcDataServer
         // optimizer sometimes can't figure out how to convert data
         // from JDBC directly into Fennel, so help it out
         planner.addRule(
-            new ConverterRule(RelNode.class,
+            new ConverterRule(
+                RelNode.class,
                 CallingConvention.RESULT_SET,
                 FennelRel.FENNEL_EXEC_CONVENTION,
                 "ResultSetToFennelRule") {
                 public RelNode convert(RelNode rel)
                 {
-                    return
-                        new IteratorToFennelConverter(
+                    return new IteratorToFennelConverter(
+                        rel.getCluster(),
+                        new ResultSetToFarragoIteratorConverter(
                             rel.getCluster(),
-                            new ResultSetToFarragoIteratorConverter(
-                                rel.getCluster(),
-                                rel));
+                            rel));
                 }
 
                 public boolean isGuaranteed()
@@ -425,37 +423,52 @@ public class MedJdbcDataServer
 
         // case 1: projection on top of a filter (with push down projection)
         // ie: filtering on variables which are not in projection
-        MedJdbcPushDownRule r1 = new MedJdbcPushDownRule(
-            new RelOptRuleOperand(
-                ProjectRel.class, new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(
-                        FilterRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(ProjectRel.class,
-                                new RelOptRuleOperand[] {
-                                    new RelOptRuleOperand(
-                                        MedJdbcQueryRel.class, null) }) }) }),
-            "proj on filter on proj");
+        MedJdbcPushDownRule r1 =
+            new MedJdbcPushDownRule(
+                new RelOptRuleOperand(
+                    ProjectRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(
+                            FilterRel.class,
+                            new RelOptRuleOperand[] {
+                                new RelOptRuleOperand(
+                                    ProjectRel.class,
+                                    new RelOptRuleOperand[] {
+                                        new RelOptRuleOperand(
+                                            MedJdbcQueryRel.class,
+                                            null)
+                                    })
+                            })
+                    }),
+                "proj on filter on proj");
 
         // case 2: filter with push down projection
         // ie: proj only has values which are already in filter expression
-        MedJdbcPushDownRule r2 = new MedJdbcPushDownRule(
-            new RelOptRuleOperand(
-                FilterRel.class, new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(ProjectRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                MedJdbcQueryRel.class, null) }) }),
-            "filter on proj");
+        MedJdbcPushDownRule r2 =
+            new MedJdbcPushDownRule(
+                new RelOptRuleOperand(
+                    FilterRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(
+                            ProjectRel.class,
+                            new RelOptRuleOperand[] {
+                                new RelOptRuleOperand(
+                                    MedJdbcQueryRel.class,
+                                    null)
+                            })
+                    }),
+                "filter on proj");
 
         // case 3: filter with no projection to push down.
         // ie: select *
-        MedJdbcPushDownRule r3 = new MedJdbcPushDownRule(
-            new RelOptRuleOperand(
-                FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(MedJdbcQueryRel.class, null) }),
-            "filter");
+        MedJdbcPushDownRule r3 =
+            new MedJdbcPushDownRule(
+                new RelOptRuleOperand(
+                    FilterRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(MedJdbcQueryRel.class, null)
+                    }),
+                "filter");
 
         // all pushdown rules
         ArrayList<MedJdbcPushDownRule> pushdownRuleList =
@@ -469,7 +482,8 @@ public class MedJdbcDataServer
             boolean ruledOut = false;
             for (RelOptRuleOperand op : rule.getOperands()) {
                 if (disabledPushdownPattern.matcher(
-                        op.getMatchedClass().getSimpleName()).matches()) {
+                        op.getMatchedClass().getSimpleName()).matches())
+                {
                     ruledOut = true;
                     break;
                 }
@@ -501,10 +515,11 @@ public class MedJdbcDataServer
     private void createSchemaMaps(String mapping)
         throws SQLException
     {
-        String[] allMapping = mapping.split(";");
+        String [] allMapping = mapping.split(";");
 
         for (String s : allMapping) {
-            String[] map = s.split(":");
+            String [] map = s.split(":");
+
             // not a valid mapping
             if (map.length != 2) {
                 continue;
@@ -515,7 +530,7 @@ public class MedJdbcDataServer
             if (!key.equals("") && !value.equals("")) {
                 HashMap h = new HashMap();
                 if (schemaMaps.get(value) != null) {
-                    h = (HashMap)schemaMaps.get(value);
+                    h = (HashMap) schemaMaps.get(value);
                 }
                 ResultSet resultSet = null;
                 try {

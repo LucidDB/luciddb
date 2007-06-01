@@ -29,7 +29,6 @@ import org.eigenbase.util.*;
 public class TupleIterResultSet
     extends AbstractIterResultSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final TupleIter tupleIter;

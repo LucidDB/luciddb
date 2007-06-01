@@ -35,7 +35,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlUpdate
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions

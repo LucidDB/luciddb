@@ -36,16 +36,14 @@ import org.eigenbase.rel.*;
 public class LcsColumnMetadata
     extends MedAbstractColumnMetadata
 {
-
     //~ Methods ----------------------------------------------------------------
 
     protected int mapColumnToField(
         RelNode rel,
         FemAbstractColumn keyCol)
     {
-        return
-            ((LcsRowScanRel) rel).getProjectedColumnOrdinal(
-                keyCol.getOrdinal());
+        return ((LcsRowScanRel) rel).getProjectedColumnOrdinal(
+            keyCol.getOrdinal());
     }
 
     protected int mapFieldToColumnOrdinal(RelNode rel, int fieldNo)

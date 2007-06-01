@@ -48,7 +48,6 @@ import org.eigenbase.util.*;
  */
 public abstract class FarragoStatsUDR
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

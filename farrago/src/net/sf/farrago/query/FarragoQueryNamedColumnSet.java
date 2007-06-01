@@ -41,7 +41,6 @@ public abstract class FarragoQueryNamedColumnSet
     extends RelOptAbstractTable
     implements FarragoQueryColumnSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

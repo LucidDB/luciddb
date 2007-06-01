@@ -41,12 +41,12 @@ import org.eigenbase.sql.validate.*;
 public class SqlMultisetQueryConstructor
     extends SqlSpecialOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlMultisetQueryConstructor()
     {
-        super("MULTISET",
+        super(
+            "MULTISET",
             SqlKind.MultisetQueryConstructor,
             MaxPrec,
             false,
@@ -67,11 +67,10 @@ public class SqlMultisetQueryConstructor
         if (null == type) {
             return null;
         }
-        return
-            SqlTypeUtil.createMultisetType(
-                opBinding.getTypeFactory(),
-                type,
-                false);
+        return SqlTypeUtil.createMultisetType(
+            opBinding.getTypeFactory(),
+            type,
+            false);
     }
 
     private RelDataType getComponentType(
@@ -113,11 +112,10 @@ public class SqlMultisetQueryConstructor
         subSelect.validateExpr(validator, scope);
         SqlValidatorNamespace ns = validator.getNamespace(subSelect);
         assert null != ns.getRowType();
-        return
-            SqlTypeUtil.createMultisetType(
-                validator.getTypeFactory(),
-                ns.getRowType(),
-                false);
+        return SqlTypeUtil.createMultisetType(
+            validator.getTypeFactory(),
+            ns.getRowType(),
+            false);
     }
 
     public void unparse(

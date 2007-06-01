@@ -45,7 +45,6 @@ class FarragoRJMedDataWrapper
     implements FarragoMedDataWrapperInfo,
         java.io.Serializable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final FarragoRJMedDataWrapperInterface rmiDataWrapper_;
@@ -64,11 +63,10 @@ class FarragoRJMedDataWrapper
         Properties wrapperProps)
     {
         try {
-            return
-                getDriverPropertyInfo(
-                    rmiDataWrapper_.getPluginPropertyInfo(
-                        locale,
-                        wrapperProps));
+            return getDriverPropertyInfo(
+                rmiDataWrapper_.getPluginPropertyInfo(
+                    locale,
+                    wrapperProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new
@@ -82,12 +80,11 @@ class FarragoRJMedDataWrapper
         Properties serverProps)
     {
         try {
-            return
-                getDriverPropertyInfo(
-                    rmiDataWrapper_.getServerPropertyInfo(
-                        locale,
-                        wrapperProps,
-                        serverProps));
+            return getDriverPropertyInfo(
+                rmiDataWrapper_.getServerPropertyInfo(
+                    locale,
+                    wrapperProps,
+                    serverProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new
@@ -102,13 +99,12 @@ class FarragoRJMedDataWrapper
         Properties tableProps)
     {
         try {
-            return
-                getDriverPropertyInfo(
-                    rmiDataWrapper_.getColumnSetPropertyInfo(
-                        locale,
-                        wrapperProps,
-                        serverProps,
-                        tableProps));
+            return getDriverPropertyInfo(
+                rmiDataWrapper_.getColumnSetPropertyInfo(
+                    locale,
+                    wrapperProps,
+                    serverProps,
+                    tableProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new
@@ -124,13 +120,13 @@ class FarragoRJMedDataWrapper
         Properties columnProps)
     {
         try {
-            return
-                getDriverPropertyInfo(
-                    rmiDataWrapper_.getColumnPropertyInfo(locale,
-                        wrapperProps,
-                        serverProps,
-                        tableProps,
-                        columnProps));
+            return getDriverPropertyInfo(
+                rmiDataWrapper_.getColumnPropertyInfo(
+                    locale,
+                    wrapperProps,
+                    serverProps,
+                    tableProps,
+                    columnProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new

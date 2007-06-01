@@ -25,9 +25,7 @@ package net.sf.farrago.jdbc.param;
 /**
  * FarragoJdbcEngineStringParamDef defines a string parameter. Values which are
  * not strings are converted into strings. Strings are not padded, even for CHAR
- * columns.
- *
- * This class is JDK 1.4 compatible.
+ * columns. This class is JDK 1.4 compatible.
  *
  * @author Julian Hyde
  * @version $Id$
@@ -35,7 +33,6 @@ package net.sf.farrago.jdbc.param;
 class FarragoJdbcStringParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int maxCharCount;

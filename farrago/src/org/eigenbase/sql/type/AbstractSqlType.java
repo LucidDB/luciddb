@@ -35,7 +35,6 @@ public abstract class AbstractSqlType
     extends RelDataTypeImpl
     implements Cloneable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final SqlTypeName typeName;

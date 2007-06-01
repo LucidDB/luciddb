@@ -30,15 +30,13 @@ import org.eigenbase.sql.*;
  * Parameter type-checking strategy types must be [nullable] Multiset,
  * [nullable] Multiset and the two types must have the same element type
  *
- * @see MultisetSqlType#getComponentType
- *
  * @author Wael Chatila
  * @version $Id$
+ * @see MultisetSqlType#getComponentType
  */
 public class MultisetOperandTypeChecker
     implements SqlOperandTypeChecker
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public boolean checkOperandTypes(
@@ -51,7 +49,8 @@ public class MultisetOperandTypeChecker
                 callBinding,
                 op0,
                 0,
-                throwOnFailure)) {
+                throwOnFailure))
+        {
             return false;
         }
 
@@ -60,7 +59,8 @@ public class MultisetOperandTypeChecker
                 callBinding,
                 op1,
                 0,
-                throwOnFailure)) {
+                throwOnFailure))
+        {
             return false;
         }
 

@@ -37,7 +37,6 @@ import net.sf.farrago.namespace.*;
 public interface FarragoQueryColumnSet
     extends FarragoMedColumnSet
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

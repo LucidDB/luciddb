@@ -28,7 +28,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.sql2003.FemAbstractColumn;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 
@@ -47,7 +47,6 @@ import org.eigenbase.util.*;
 class FtrsTableModificationRel
     extends MedAbstractFennelTableModRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -117,8 +116,10 @@ class FtrsTableModificationRel
     {
         int n = getUpdateColumnList().size();
         List<E> list = new ArrayList<E>();
-        Collection<E> columns = Util.cast(
-            ftrsTable.getCwmColumnSet().getFeature(), clazz);
+        Collection<E> columns =
+            Util.cast(
+                ftrsTable.getCwmColumnSet().getFeature(),
+                clazz);
         for (int i = 0; i < n; i++) {
             String columnName = getUpdateColumnList().get(i);
             E column =
@@ -186,8 +187,10 @@ class FtrsTableModificationRel
 
         FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
 
-        for (FemLocalIndex index
-            : FarragoCatalogUtil.getTableIndexes(repos, table)) {
+        for (
+            FemLocalIndex index
+            : FarragoCatalogUtil.getTableIndexes(repos, table))
+        {
             boolean updateInPlace = false;
 
             if (updateCwmColumnList != null) {

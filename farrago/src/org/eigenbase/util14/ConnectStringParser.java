@@ -70,7 +70,6 @@ import java.util.*;
  */
 public class ConnectStringParser
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String s;

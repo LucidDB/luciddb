@@ -41,7 +41,6 @@ package org.eigenbase.runtime;
  */
 public class Interlock
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

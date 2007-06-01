@@ -50,7 +50,6 @@ import org.eigenbase.reltype.*;
 public interface FarragoTypeFactory
     extends OJTypeFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -130,8 +129,9 @@ public interface FarragoTypeFactory
      * DatabaseMetaData#getColumns} call. See {@link #createResultSetType} for
      * details on type substitutions.
      *
-     * @param getColumnsResultSet {@link ResultSet} positioned on a row returned
-     * from the getColumns call; result set position is unchanged by this method
+     * @param getColumnsResultSet {@link ResultSet}  positioned on a row
+     * returned from the getColumns call; result set position is unchanged by
+     * this method
      * @param substitute if true, use substitutions; if false, throw exception
      * for unsupported types or type attributes
      *
@@ -146,8 +146,9 @@ public interface FarragoTypeFactory
      * DatabaseMetaData#getColumns} call. See {@link #createResultSetType} for
      * details on type substitutions.
      *
-     * @param getColumnsResultSet {@link ResultSet} positioned on a row returned
-     * from the getColumns call; result set position is unchanged by this method
+     * @param getColumnsResultSet {@link ResultSet}  positioned on a row
+     * returned from the getColumns call; result set position is unchanged by
+     * this method
      * @param substitute if true, use substitutions; if false, throw exception
      * for unsupported types or type attributes
      * @param typeMapping types to substitute

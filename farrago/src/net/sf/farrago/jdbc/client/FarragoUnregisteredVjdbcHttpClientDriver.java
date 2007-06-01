@@ -21,19 +21,20 @@
 */
 package net.sf.farrago.jdbc.client;
 
-import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.SQLException;
-import java.util.Properties;
+import de.simplicit.vjdbc.*;
 
-import de.simplicit.vjdbc.VirtualDriver;
-import net.sf.farrago.jdbc.FarragoAbstractJdbcDriver;
-import net.sf.farrago.release.FarragoReleaseProperties;
+import java.sql.*;
+
+import java.util.*;
+
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.release.*;
+
 
 /**
- * FarragoUnregisteredVJdbcHttpClientDriver implements the Farrago client side of
- * the {@link java.sql.Driver} interface via the VJDBC HTTP servlet proxy.  It does 
- * not register itself; for that, use {@link FarragoVjdbcHttpClientDriver}.
+ * FarragoUnregisteredVJdbcHttpClientDriver implements the Farrago client side
+ * of the {@link java.sql.Driver} interface via the VJDBC HTTP servlet proxy. It
+ * does not register itself; for that, use {@link FarragoVjdbcHttpClientDriver}.
  *
  * @author Oscar Gothberg
  * @version $Id$
@@ -41,6 +42,8 @@ import net.sf.farrago.release.FarragoReleaseProperties;
 public class FarragoUnregisteredVjdbcHttpClientDriver
     extends FarragoAbstractJdbcDriver
 {
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * @return the prefix for JDBC URL's understood by this driver; subclassing
      * drivers can override this to customize the URL scheme
@@ -48,11 +51,11 @@ public class FarragoUnregisteredVjdbcHttpClientDriver
     public String getUrlPrefix()
     {
         // this should be refactored, along with it's sibling in the RMI driver,
-        // the only reason this doesn't break it's caller in connect() is that 
+        // the only reason this doesn't break it's caller in connect() is that
         // "farrago" and "luciddb" both happen to be 7 letter words
         return getBaseUrl() + "servlet:http://";
     }
-    
+
     public Connection connect(String url, Properties info)
         throws SQLException
     {
@@ -86,12 +89,15 @@ public class FarragoUnregisteredVjdbcHttpClientDriver
                 FarragoReleaseProperties.instance();
             urlHttp = urlHttp + ":" + props.jdbcUrlHttpPortDefault.get();
         }
-        urlHttp = "jdbc:vjdbc:servlet:http://" + urlHttp + "/vjdbc_servlet/vjdbc,FarragoDBMS";
+        urlHttp =
+            "jdbc:vjdbc:servlet:http://" + urlHttp
+            + "/vjdbc_servlet/vjdbc,FarragoDBMS";
 
         // NOTE:  can't call DriverManager.connect here, because that
         // would deadlock in the case where client and server are
         // running in the same VM
         return httpDriver.connect(urlHttp, driverProps);
     }
-
 }
+
+// End FarragoUnregisteredVjdbcHttpClientDriver.java

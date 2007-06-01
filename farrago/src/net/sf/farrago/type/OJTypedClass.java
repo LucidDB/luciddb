@@ -39,7 +39,6 @@ import org.eigenbase.reltype.*;
 class OJTypedClass
     extends OJClass
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

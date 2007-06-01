@@ -40,7 +40,6 @@ import org.eigenbase.util.*;
 public class FarragoSqlRunnerTest
     extends FarragoTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String userName = "sa";
@@ -76,7 +75,8 @@ public class FarragoSqlRunnerTest
     public void testNullUrl()
     {
         try {
-            SqlRunner.instance().runScript(testScript,
+            SqlRunner.instance().runScript(
+                testScript,
                 null,
                 userName,
                 password);
@@ -88,7 +88,8 @@ public class FarragoSqlRunnerTest
     public void testNullUser()
     {
         try {
-            SqlRunner.instance().runScript(testScript,
+            SqlRunner.instance().runScript(
+                testScript,
                 serverUrl,
                 null,
                 password);
@@ -100,7 +101,8 @@ public class FarragoSqlRunnerTest
     public void testInvalidPath()
     {
         try {
-            SqlRunner.instance().runScript("foo.sql",
+            SqlRunner.instance().runScript(
+                "foo.sql",
                 serverUrl,
                 userName,
                 password);
@@ -112,7 +114,8 @@ public class FarragoSqlRunnerTest
     public void testInvalidUrl()
     {
         try {
-            SqlRunner.instance().runScript(testScript,
+            SqlRunner.instance().runScript(
+                testScript,
                 "jdbc:notfarrago",
                 userName,
                 password);
@@ -124,7 +127,8 @@ public class FarragoSqlRunnerTest
     public void testInvalidUser()
     {
         try {
-            SqlRunner.instance().runScript(testScript,
+            SqlRunner.instance().runScript(
+                testScript,
                 serverUrl,
                 "bozo",
                 "clown");
@@ -138,7 +142,8 @@ public class FarragoSqlRunnerTest
     public void testScript()
         throws SQLException
     {
-        SqlRunner.instance().runScript(testScript,
+        SqlRunner.instance().runScript(
+            testScript,
             serverUrl,
             userName,
             password);
@@ -154,7 +159,8 @@ public class FarragoSqlRunnerTest
                 testScript.lastIndexOf('.'));
         File f = new File(scriptBase);
         PrintStream stream = new PrintStream(openTestLogOutputStream(f));
-        SqlRunner.instance().runScript(testScript,
+        SqlRunner.instance().runScript(
+            testScript,
             serverUrl,
             userName,
             password,

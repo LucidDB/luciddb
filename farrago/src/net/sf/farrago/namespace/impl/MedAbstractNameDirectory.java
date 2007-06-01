@@ -43,7 +43,6 @@ public abstract class MedAbstractNameDirectory
     extends MedAbstractBase
     implements FarragoMedNameDirectory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedNameDirectory

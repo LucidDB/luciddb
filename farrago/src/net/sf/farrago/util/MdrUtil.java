@@ -48,7 +48,6 @@ import org.openide.util.lookup.*;
  */
 public abstract class MdrUtil
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // NOTE jvs 23-Dec-2004: This tracer cannot be statically initialized,
@@ -191,9 +190,10 @@ public abstract class MdrUtil
 
             // Register our custom ErrorManager together with the default.
             ErrorManager em = new TracingErrorManager(tracer);
-            setLookups(new Lookup[] {
+            setLookups(
+                new Lookup[] {
                     defaultLookup,
-                Lookups.singleton(em)
+                    Lookups.singleton(em)
                 });
         }
     }

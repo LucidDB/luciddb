@@ -62,7 +62,6 @@ public class IterCalcRel
     extends SingleRel
     implements JavaRel
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static boolean abortOnError = true;
@@ -133,10 +132,9 @@ public class IterCalcRel
 
     public double getRows()
     {
-        return
-            FilterRel.estimateFilteredRows(
-                getChild(),
-                program);
+        return FilterRel.estimateFilteredRows(
+            getChild(),
+            program);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -169,8 +167,8 @@ public class IterCalcRel
 
     public boolean isBoxed()
     {
-        return
-            (flags & ProjectRelBase.Flags.Boxed) == ProjectRelBase.Flags.Boxed;
+        return (flags & ProjectRelBase.Flags.Boxed)
+            == ProjectRelBase.Flags.Boxed;
     }
 
     /**
@@ -182,18 +180,17 @@ public class IterCalcRel
         String fieldName)
     {
         if (!isBoxed()) {
-            return
-                implementor.implementFieldAccess((JavaRel) getChild(),
-                    fieldName);
+            return implementor.implementFieldAccess(
+                (JavaRel) getChild(),
+                fieldName);
         }
         RelDataType type = getRowType();
         int field = type.getFieldOrdinal(fieldName);
         RexLocalRef ref = program.getProjectList().get(field);
         final int index = ref.getIndex();
-        return
-            implementor.findRel(
-                (JavaRel) this,
-                program.getExprList().get(index));
+        return implementor.findRel(
+            (JavaRel) this,
+            program.getExprList().get(index));
     }
 
     /**
@@ -207,8 +204,8 @@ public class IterCalcRel
     }
 
     /**
-     * Allows errors to be buffered, in the event that they overflow the
-     * error handler.
+     * Allows errors to be buffered, in the event that they overflow the error
+     * handler.
      *
      * @param errorBuffering whether to buffer errors
      */
@@ -227,33 +224,30 @@ public class IterCalcRel
         RexProgram program,
         String tag)
     {
-        return
-            implementAbstractTupleIter(
-                implementor,
-                rel,
-                childExp,
-                varInputRow,
-                inputRowType,
-                outputRowType,
-                program,
-                tag);
+        return implementAbstractTupleIter(
+            implementor,
+            rel,
+            childExp,
+            varInputRow,
+            inputRowType,
+            outputRowType,
+            program,
+            tag);
     }
 
     /**
-     * Generates code for a Java expression satisfying the
-     * {@link org.eigenbase.runtime.TupleIter} interface. The generated
-     * code allocates a {@link org.eigenbase.runtime.CalcTupleIter}
-     * with a dynamic {@link org.eigenbase.runtime.TupleIter#fetchNext()}
-     * method. If the "abort on error" flag is false, or an error handling
-     * tag is specified, then fetchNext is written to handle row errors.
+     * Generates code for a Java expression satisfying the {@link
+     * org.eigenbase.runtime.TupleIter} interface. The generated code allocates
+     * a {@link org.eigenbase.runtime.CalcTupleIter} with a dynamic {@link
+     * org.eigenbase.runtime.TupleIter#fetchNext()} method. If the "abort on
+     * error" flag is false, or an error handling tag is specified, then
+     * fetchNext is written to handle row errors.
      *
-     * <p>
-     *
-     * Row errors are handled by wrapping expressions that can fail
-     * with a try/catch block. A caught RuntimeException is then published
-     * to an "connection variable." In the event that errors can overflow,
-     * an "error buffering" flag allows them to be posted again on the next
-     * iteration of fetchNext.
+     * <p>Row errors are handled by wrapping expressions that can fail with a
+     * try/catch block. A caught RuntimeException is then published to an
+     * "connection variable." In the event that errors can overflow, an "error
+     * buffering" flag allows them to be posted again on the next iteration of
+     * fetchNext.
      *
      * @param implementor an object that implements relations as Java code
      * @param rel the relation to be implemented
@@ -263,6 +257,7 @@ public class IterCalcRel
      * @param outputRowType the rel data type of the output row
      * @param program the rex program to implemented by the relation
      * @param tag an error handling tag
+     *
      * @return a Java expression satisfying the TupleIter interface
      */
     public static Expression implementAbstractTupleIter(
@@ -279,7 +274,8 @@ public class IterCalcRel
 
         // Perform error recovery if continuing on errors or if
         // an error handling tag has been specified
-        boolean errorRecovery = !abortOnError || tag != null;
+        boolean errorRecovery = !abortOnError || (tag != null);
+
         // Error buffering should not be enabled unless error recovery is
         assert !errorBuffering || errorRecovery;
 
@@ -302,7 +298,8 @@ public class IterCalcRel
             OJUtil.typeToOJClass(
                 outputRowType,
                 typeFactory);
-        OJClass inputRowClass = OJUtil.typeToOJClass(
+        OJClass inputRowClass =
+            OJUtil.typeToOJClass(
                 inputRowType,
                 typeFactory);
 
@@ -377,7 +374,7 @@ public class IterCalcRel
 
         // Push up the row declaration for new error handling so that the
         // input row is available to the error handler
-        if (! backwardsCompatible) {
+        if (!backwardsCompatible) {
             whileBody.add(
                 assignInputRow(inputRowClass, varInputRow, varInputObj));
         }
@@ -508,14 +505,13 @@ public class IterCalcRel
             int i = -1;
             for (RexLocalRef rhs : projectRefList) {
                 // NOTE jvs 14-Sept-2006:  Put complicated project expressions
-                // into their own method, otherwise a big select list
-                // can easily blow the 64K Java limit on method bytecode
-                // size.  Make methods private final in the hopes that they
-                // will get inlined JIT.  For now we decide "complicated"
-                // based on the size of the generated Java parse tree.
-                // A big enough select list of simple expressions could
-                // still blow the limit, so we may need to group them
-                // together, sub-divide, etc.
+                // into their own method, otherwise a big select list can easily
+                // blow the 64K Java limit on method bytecode size.  Make
+                // methods private final in the hopes that they will get inlined
+                // JIT.  For now we decide "complicated" based on the size of
+                // the generated Java parse tree. A big enough select list of
+                // simple expressions could still blow the limit, so we may need
+                // to group them together, sub-divide, etc.
 
                 StatementList projMethodBody = new StatementList();
 
@@ -530,7 +526,8 @@ public class IterCalcRel
 
                 RexToOJTranslator projTranslator =
                     translator.push(projMethodBody);
-                String javaFieldName = Util.toJavaId(
+                String javaFieldName =
+                    Util.toJavaId(
                         fields[i].getName(),
                         i);
                 Expression lhs = new FieldAccess(varOutputRow, javaFieldName);
@@ -615,16 +612,15 @@ public class IterCalcRel
             getChild(),
             varInputRow);
 
-        return
-            implementAbstract(
-                implementor,
-                this,
-                childExp,
-                varInputRow,
-                inputRowType,
-                outputRowType,
-                program,
-                tag);
+        return implementAbstract(
+            implementor,
+            this,
+            childExp,
+            varInputRow,
+            inputRowType,
+            outputRowType,
+            program,
+            tag);
     }
 
     public RexProgram getProgram()
@@ -638,7 +634,9 @@ public class IterCalcRel
     }
 
     private static Statement assignInputRow(
-        OJClass inputRowClass, Variable varInputRow, Variable varInputObj)
+        OJClass inputRowClass,
+        Variable varInputRow,
+        Variable varInputObj)
     {
         return new ExpressionStatement(
             new AssignmentExpression(

@@ -26,8 +26,10 @@ import de.simplicit.vjdbc.server.rmi.*;
 import de.simplicit.vjdbc.util.*;
 
 import java.io.*;
-import java.util.*;
+
 import java.sql.*;
+
+import java.util.*;
 
 import net.sf.farrago.jdbc.engine.*;
 
@@ -42,6 +44,8 @@ import net.sf.farrago.jdbc.engine.*;
 public class FarragoVjdbcServer
     extends FarragoAbstractServer
 {
+    //~ Instance fields --------------------------------------------------------
+
     private FarragoJdbcServerDriver jdbcDriver;
 
     //~ Constructors -----------------------------------------------------------
@@ -78,7 +82,7 @@ public class FarragoVjdbcServer
         // REVIEW jvs 7-Sept-2006: seems like we should null this out in
         // stopNetwork, but that causes problems in FarragoVjdbcServerTest.
         this.jdbcDriver = jdbcDriver;
-        
+
         VJdbcConfiguration vjdbcConfig = new VJdbcConfiguration();
         ConnectionConfiguration configFarrago =
             new FarragoConnectionConfiguration();
@@ -112,6 +116,8 @@ public class FarragoVjdbcServer
         return rmiRegistryPort;
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     // NOTE jvs 7-Sept-2006:  This is to avoid calling DriverManager,
     // which can deadlock when client and server are in same process.
     private class FarragoConnectionConfiguration
@@ -123,10 +129,11 @@ public class FarragoVjdbcServer
             try {
                 // set remoteProtocol to RMI to tell engine driver that
                 // this is a remote connection
-                
+
                 // NOTE: if basing authentication on whether a connection is
-                // remote or not, it is VITAL that the remoteProtocol is 
-                // overwritten here. Otherwise this is a potential security hole!
+                // remote or not, it is VITAL that the remoteProtocol is
+                // overwritten here. Otherwise this is a potential security
+                // hole!
                 props.setProperty("remoteProtocol", "RMI");
                 return jdbcDriver.connect(jdbcDriver.getBaseUrl(), props);
             } catch (Throwable t) {

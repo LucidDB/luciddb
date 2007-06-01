@@ -35,7 +35,6 @@ import org.eigenbase.rel.*;
  */
 public interface RelImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -44,7 +44,6 @@ import org.eigenbase.util.*;
 public abstract class FarragoAbstractParser
     implements FarragoSessionParser
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected FarragoSessionStmtValidator stmtValidator;
@@ -75,10 +74,9 @@ public abstract class FarragoAbstractParser
             return FarragoResource.instance().ValidatorNoPositionContext.ex(ex);
         } else {
             String msg = getCurrentPosition().toString();
-            return
-                FarragoResource.instance().ValidatorPositionContext.ex(
-                    msg,
-                    ex);
+            return FarragoResource.instance().ValidatorPositionContext.ex(
+                msg,
+                ex);
         }
     }
 
@@ -98,6 +96,7 @@ public abstract class FarragoAbstractParser
      * Factory method to instantiate a dialect-specific generated parser.
      *
      * @param reader Reader that provides the input to the parser
+     *
      * @return Dialect-specific generated parser
      */
     protected abstract FarragoAbstractParserImpl newParserImpl(Reader reader);

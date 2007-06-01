@@ -40,7 +40,6 @@ import java.util.*;
  */
 public class JavaCompilerArgs
 {
-
     //~ Instance fields --------------------------------------------------------
 
     List<String> argsList = new ArrayList<String>();

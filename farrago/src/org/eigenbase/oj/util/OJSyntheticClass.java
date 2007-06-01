@@ -51,7 +51,6 @@ import org.eigenbase.util.*;
 public class OJSyntheticClass
     extends OJClass
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String JOIN_CLASS_PREFIX = "Oj_";
@@ -138,8 +137,7 @@ public class OJSyntheticClass
     // override Object
     public boolean equals(Object o)
     {
-        return
-            (o instanceof OJSyntheticClass)
+        return (o instanceof OJSyntheticClass)
             && this.description.equals(((OJSyntheticClass) o).description);
     }
 
@@ -164,8 +162,10 @@ outer:
             if (classes[i] instanceof OJSyntheticClass) {
                 ClassDeclaration innerClassDecl =
                     ((OJSyntheticClass) classes[i]).decl;
-                for (Enumeration existingDecls = memberDecls.elements();
-                    existingDecls.hasMoreElements();) {
+                for (
+                    Enumeration existingDecls = memberDecls.elements();
+                    existingDecls.hasMoreElements();)
+                {
                     if (existingDecls.nextElement() == innerClassDecl) {
                         continue outer;
                     }
@@ -218,7 +218,8 @@ outer:
                     (MethodDeclaration) memberDecl;
                 if (existingMethodDecl.getName().equals(name)
                     && existingMethodDecl.getParameters().equals(
-                        parameterList)) {
+                        parameterList))
+                {
                     oldMethodDecl = existingMethodDecl;
                 }
             }

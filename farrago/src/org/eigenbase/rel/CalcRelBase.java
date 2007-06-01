@@ -39,7 +39,6 @@ import org.eigenbase.rex.*;
 public abstract class CalcRelBase
     extends SingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final RexProgram program;
@@ -72,7 +71,8 @@ public abstract class CalcRelBase
                 program.getInputRowType(),
                 "child's output type",
                 getChild().getRowType(),
-                fail)) {
+                fail))
+        {
             return false;
         }
         if (!RelOptUtil.equal(
@@ -80,7 +80,8 @@ public abstract class CalcRelBase
                 program.getOutputRowType(),
                 "declared rowtype of rel",
                 rowType,
-                fail)) {
+                fail))
+        {
             return false;
         }
         if (!program.isValid(fail)) {
@@ -89,7 +90,8 @@ public abstract class CalcRelBase
         if (!RelCollationImpl.isValid(
                 getRowType(),
                 collationList,
-                fail)) {
+                fail))
+        {
             return false;
         }
         return true;
@@ -102,10 +104,9 @@ public abstract class CalcRelBase
 
     public double getRows()
     {
-        return
-            FilterRel.estimateFilteredRows(
-                getChild(),
-                program);
+        return FilterRel.estimateFilteredRows(
+            getChild(),
+            program);
     }
 
     public List<RelCollation> getCollationList()

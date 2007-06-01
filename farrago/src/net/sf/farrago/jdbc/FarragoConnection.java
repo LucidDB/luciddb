@@ -40,7 +40,6 @@ import java.util.*;
 public interface FarragoConnection
     extends java.sql.Connection
 {
-
     //~ Methods ----------------------------------------------------------------
 
     long getFarragoSessionId()

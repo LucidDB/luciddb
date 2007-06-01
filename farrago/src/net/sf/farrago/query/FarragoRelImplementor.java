@@ -57,7 +57,6 @@ public class FarragoRelImplementor
     implements FennelRelImplementor,
         FarragoOJRexRelImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     FarragoPreparingStmt preparingStmt;
@@ -89,8 +88,8 @@ public class FarragoRelImplementor
             rexBuilder,
             new UdfAwareOJRexImplementorTable(
                 preparingStmt.getSession().getPersonality()
-                .getOJRexImplementorTable(
-                    preparingStmt)));
+                             .getOJRexImplementorTable(
+                                 preparingStmt)));
 
         this.preparingStmt = preparingStmt;
         ojAssignableValue = OJClass.forClass(AssignableValue.class);
@@ -171,7 +170,7 @@ public class FarragoRelImplementor
         FemExecutionStreamDef streamDef,
         RelDataType errorType)
     {
-        // retrieve the stream name early to perform a 
+        // retrieve the stream name early to perform a
         // (stream => error record type) mapping by stream name
         String streamName = getStreamGlobalName(streamDef, rel);
         streamDef.setName(streamName);
@@ -287,11 +286,10 @@ public class FarragoRelImplementor
     protected FemTupleDescriptor computeStreamDefOutputDesc(
         RelDataType rowType)
     {
-        return
-            FennelRelUtil.createTupleDescriptorFromRowType(
-                preparingStmt.getRepos(),
-                preparingStmt.getTypeFactory(),
-                rowType);
+        return FennelRelUtil.createTupleDescriptorFromRowType(
+            preparingStmt.getRepos(),
+            preparingStmt.getTypeFactory(),
+            rowType);
     }
 
     private void registerStreamDef(
@@ -365,15 +363,14 @@ public class FarragoRelImplementor
         // this translator is not usable for actual code generation, but
         // it's sufficient for use in TranslationTester, which is
         // currently the only caller
-        return
-            new FarragoRexToOJTranslator(
-                preparingStmt.getRepos(),
-                this,
-                rel,
-                implementorTable,
-                null,
-                null,
-                null);
+        return new FarragoRexToOJTranslator(
+            preparingStmt.getRepos(),
+            this,
+            rel,
+            implementorTable,
+            null,
+            null,
+            null);
     }
 
     // override JavaRelImplementor
@@ -382,15 +379,14 @@ public class FarragoRelImplementor
         StatementList stmtList,
         MemberDeclarationList memberList)
     {
-        return
-            new FarragoRexToOJTranslator(
-                preparingStmt.getRepos(),
-                this,
-                rel,
-                implementorTable,
-                stmtList,
-                memberList,
-                null);
+        return new FarragoRexToOJTranslator(
+            preparingStmt.getRepos(),
+            this,
+            rel,
+            implementorTable,
+            stmtList,
+            memberList,
+            null);
     }
 
     // override JavaRelImplementor

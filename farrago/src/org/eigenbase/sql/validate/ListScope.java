@@ -40,7 +40,6 @@ import org.eigenbase.util.*;
 public abstract class ListScope
     extends DelegatingScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

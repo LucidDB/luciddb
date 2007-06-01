@@ -24,9 +24,10 @@ package net.sf.farrago.runtime;
 
 import java.nio.*;
 
+import net.sf.farrago.fennel.tuple.*;
+
 import org.eigenbase.runtime.*;
 
-import net.sf.farrago.fennel.tuple.*;
 
 /**
  * FennelAbstractTupleIter implements the {@link TupleIter} interface by
@@ -48,13 +49,13 @@ import net.sf.farrago.fennel.tuple.*;
 public abstract class FennelAbstractTupleIter
     implements TupleIter
 {
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
      * Singleton helper for aligning tuple buffers correctly.
      */
-    private static FennelTupleAccessor tupleAligner
-        = new FennelTupleAccessor();
-    
+    private static FennelTupleAccessor tupleAligner = new FennelTupleAccessor();
+
     //~ Instance fields --------------------------------------------------------
 
     protected final FennelTupleReader tupleReader;
@@ -142,7 +143,7 @@ public abstract class FennelAbstractTupleIter
 
         // eat final alignment padding
         newPosition = tupleAligner.alignRoundUp(newPosition);
-        
+
         byteBuffer.position(newPosition);
         traceNext(obj);
         if (!byteBuffer.hasRemaining()) {

@@ -40,7 +40,6 @@ import org.eigenbase.sql.type.*;
 public class SqlDateLiteral
     extends SqlAbstractDateTimeLiteral
 {
-
     //~ Constructors -----------------------------------------------------------
 
     SqlDateLiteral(Calendar d, SqlParserPos pos)

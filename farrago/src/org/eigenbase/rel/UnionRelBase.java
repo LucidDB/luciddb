@@ -36,7 +36,6 @@ import org.eigenbase.reltype.*;
 public abstract class UnionRelBase
     extends SetOpRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected UnionRelBase(

@@ -39,7 +39,6 @@ import org.eigenbase.relopt.*;
 public interface FennelRel
     extends RelNode
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

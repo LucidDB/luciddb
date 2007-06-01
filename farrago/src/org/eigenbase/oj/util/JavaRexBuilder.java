@@ -45,7 +45,6 @@ import org.eigenbase.util.*;
 public class JavaRexBuilder
     extends RexBuilder
 {
-
     //~ Instance fields --------------------------------------------------------
 
     OJTranslator translator = new OJTranslator();
@@ -93,8 +92,8 @@ public class JavaRexBuilder
         ExpressionList ojArgs = translator.toJava(args);
         Expression ojExp = translator.toJava(exp);
         return makeJava(
-                env,
-                new MethodCall(ojExp, methodName, ojArgs));
+            env,
+            new MethodCall(ojExp, methodName, ojArgs));
     }
 
     public RexNode makeJava(
@@ -105,7 +104,8 @@ public class JavaRexBuilder
         try {
             ojClass = expr.getType(env);
         } catch (Exception e) {
-            throw Util.newInternal(e,
+            throw Util.newInternal(
+                e,
                 "Error deriving type of expression " + expr);
         }
         RelDataType type = OJUtil.ojToType(this.typeFactory, ojClass);

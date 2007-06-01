@@ -23,6 +23,7 @@ package org.eigenbase.sql;
 
 import java.util.*;
 
+
 /**
  * SqlAccessType is represented by a set of allowed access types
  *
@@ -32,7 +33,6 @@ import java.util.*;
  */
 public class SqlAccessType
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final SqlAccessType ALL =
@@ -68,8 +68,7 @@ public class SqlAccessType
     public static SqlAccessType create(String [] accessNames)
     {
         assert accessNames != null;
-        EnumSet<SqlAccessEnum> enumSet =
-            EnumSet.noneOf(SqlAccessEnum.class);
+        EnumSet<SqlAccessEnum> enumSet = EnumSet.noneOf(SqlAccessEnum.class);
         for (int i = 0; i < accessNames.length; i++) {
             enumSet.add(
                 SqlAccessEnum.valueOf(

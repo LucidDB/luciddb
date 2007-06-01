@@ -44,12 +44,12 @@ import org.eigenbase.sql.type.*;
 public class SqlThrowOperator
     extends SqlInternalOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlThrowOperator()
     {
-        super("$throw",
+        super(
+            "$throw",
             SqlKind.Other,
             2,
             true,

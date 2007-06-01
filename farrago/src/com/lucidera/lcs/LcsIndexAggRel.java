@@ -36,7 +36,6 @@ import org.eigenbase.relopt.*;
 public class LcsIndexAggRel
     extends FennelAggRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public LcsIndexAggRel(

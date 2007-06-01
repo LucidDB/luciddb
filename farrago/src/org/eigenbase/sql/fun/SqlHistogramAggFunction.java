@@ -42,7 +42,6 @@ import org.eigenbase.sql.type.*;
 public class SqlHistogramAggFunction
     extends SqlAggFunction
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType type;

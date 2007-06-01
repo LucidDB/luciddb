@@ -50,7 +50,6 @@ import org.eigenbase.util.property.*;
 public class FarragoReleaseProperties
     extends Properties
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static FarragoReleaseProperties instance;
@@ -122,12 +121,12 @@ public class FarragoReleaseProperties
      */
     public final IntegerProperty jdbcUrlPortDefault =
         new IntegerProperty(this, "jdbc.url.port.default", 5433);
-    
+
     /**
      * Default port to use for JDBC connections over HTTP. Note that this is the
      * release-level default; the actual port to use for a server can be
-     * overridden at each site through app server settings, and
-     * for a client by explicitly including the port in the connection URL.
+     * overridden at each site through app server settings, and for a client by
+     * explicitly including the port in the connection URL.
      */
     public final IntegerProperty jdbcUrlHttpPortDefault =
         new IntegerProperty(this, "jdbc.url.http.port.default", 8080);

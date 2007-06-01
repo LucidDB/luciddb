@@ -51,7 +51,6 @@ public class JdbcQuery
     extends AbstractRelNode
     implements ResultSetRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final DataSource dataSource;
@@ -73,7 +72,7 @@ public class JdbcQuery
     /**
      * Creates a <code>JdbcQuery</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param connection a {@link RelOptConnection}; must also implement {@link
      * DataSource}, because that's how we will acquire the JDBC
@@ -83,10 +82,10 @@ public class JdbcQuery
      * @param dataSource Provides a JDBC connection to run this query against.
      *
      * <p>In saffron, if the query is implementing a JDBC table, then the
-     * connection's schema will implement
-     * <code>net.sf.saffron.ext.JdbcSchema</code>, and data source
-     * will typically be the same as calling the <code>getDataSource()</code>
-     * method on that schema. But non-JDBC schemas are also acceptable.
+     * connection's schema will implement <code>
+     * net.sf.saffron.ext.JdbcSchema</code>, and data source will typically be
+     * the same as calling the <code>getDataSource()</code> method on that
+     * schema. But non-JDBC schemas are also acceptable.
      *
      * @pre connection != null
      * @pre sql == null || sql.isA(SqlNode.Kind.Select)
@@ -110,7 +109,8 @@ public class JdbcQuery
         this.dialect = dialect;
         if (sql == null) {
             sql =
-                SqlStdOperatorTable.selectOperator.createCall(null,
+                SqlStdOperatorTable.selectOperator.createCall(
+                    null,
                     null,
                     null,
                     null,
@@ -163,9 +163,9 @@ public class JdbcQuery
      * Returns the SQL that this query will execute against the foreign
      * database, in the SQL dialect of that database.
      *
-     * @see #getSql()
-     *
      * @return foreign SQL
+     *
+     * @see #getSql()
      */
     public String getForeignSql()
     {
@@ -221,8 +221,8 @@ public class JdbcQuery
     }
 
     /**
-     * Registers any planner rules needed to implement queries using
-     * JdbcQuery objects.
+     * Registers any planner rules needed to implement queries using JdbcQuery
+     * objects.
      *
      * @param planner Planner
      */
@@ -280,16 +280,14 @@ public class JdbcQuery
                     Literal.makeLiteral(url),
                     Literal.makeLiteral("SA"),
                     Literal.makeLiteral("")));
-        return
-            new MethodCall(
-                new MethodCall(connectionExpr, "createStatement", null),
-                "executeQuery",
-                new ExpressionList(Literal.makeLiteral(queryString)));
+        return new MethodCall(
+            new MethodCall(connectionExpr, "createStatement", null),
+            "executeQuery",
+            new ExpressionList(Literal.makeLiteral(queryString)));
     }
 
     /**
-     * Returns the parse tree of the SQL statement which populates this
-     * query.
+     * Returns the parse tree of the SQL statement which populates this query.
      *
      * @return SQL query
      */
@@ -297,7 +295,6 @@ public class JdbcQuery
     {
         return this.sql;
     }
-
 }
 
 // End JdbcQuery.java

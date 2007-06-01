@@ -31,7 +31,6 @@ package net.sf.farrago.fennel;
  */
 public interface FennelJavaStreamMap
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

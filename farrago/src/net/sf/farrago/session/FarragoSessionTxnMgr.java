@@ -39,7 +39,6 @@ import org.eigenbase.relopt.*;
  */
 public interface FarragoSessionTxnMgr
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

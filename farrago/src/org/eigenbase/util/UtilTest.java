@@ -25,6 +25,7 @@ package org.eigenbase.util;
 import java.io.*;
 
 import java.math.*;
+
 import java.util.*;
 
 import junit.framework.*;
@@ -44,7 +45,6 @@ import org.eigenbase.runtime.*;
 public class UtilTest
     extends TestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public UtilTest(String name)
@@ -164,7 +164,8 @@ public class UtilTest
         // Try some funny non-ASCII charsets
         assertEquals(
             "ID$0$_f6__cb__c4__ca__ae__c1__f9__cb_",
-            Util.toJavaId("\u00f6\u00cb\u00c4\u00ca\u00ae\u00c1\u00f9\u00cb",
+            Util.toJavaId(
+                "\u00f6\u00cb\u00c4\u00ca\u00ae\u00c1\u00f9\u00cb",
                 0));
         assertEquals(
             "ID$0$_f6cb__c4ca__aec1__f9cb_",
@@ -172,15 +173,13 @@ public class UtilTest
         byte [] bytes1 = { 3, 12, 54, 23, 33, 23, 45, 21, 127, -34, -92, -113 };
         assertEquals(
             "ID$0$_3__c_6_17__21__17__2d__15__7f__6cd9__fffd_",
-            Util.toJavaId(
-                new String(bytes1, "EUC-JP"),
+            Util.toJavaId(new String(bytes1, "EUC-JP"),
                 0));
         byte [] bytes2 =
-            { 64, 32, 43, -45, -23, 0, 43, 54, 119, -32, -56, -34 };
+        { 64, 32, 43, -45, -23, 0, 43, 54, 119, -32, -56, -34 };
         assertEquals(
             "ID$0$_30c__3617__2117__2d15__7fde__a48f_",
-            Util.toJavaId(
-                new String(bytes1, "UTF-16"),
+            Util.toJavaId(new String(bytes1, "UTF-16"),
                 0));
     }
 
@@ -395,7 +394,9 @@ public class UtilTest
         properties.put("foo", "george");
         properties.put("bar", "ringo");
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, String> entry : Util.toMap(properties).entrySet()) {
+        for (
+            Map.Entry<String, String> entry : Util.toMap(properties).entrySet())
+        {
             sb.append(entry.getKey()).append("=").append(entry.getValue());
             sb.append(";");
         }
@@ -405,7 +406,10 @@ public class UtilTest
 
         properties.put("nonString", 34);
         try {
-            for (Map.Entry<String, String> entry : Util.toMap(properties).entrySet()) {
+            for (
+                Map.Entry<String, String> entry
+                : Util.toMap(properties).entrySet())
+            {
                 String s = entry.getValue();
                 Util.discard(s);
             }

@@ -36,13 +36,14 @@ import net.sf.farrago.session.*;
 public class LucidDbLocalDriver
     extends FarragoUnregisteredJdbcEngineDriver
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static {
         new LucidDbLocalDriver().register();
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement FarragoJdbcServerDriver
     public FarragoSessionFactory newSessionFactory()
     {

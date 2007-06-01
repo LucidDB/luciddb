@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
 public class SqlKind
     extends EnumeratedValues.BasicValue
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // the basics 0 - 99
@@ -449,7 +448,8 @@ public class SqlKind
      */
     public static final int MultisetValueConstructorORDINAL = 164;
     public static final SqlKind MultisetValueConstructor =
-        new SqlKind("MultisetValueConstructor",
+        new SqlKind(
+            "MultisetValueConstructor",
             MultisetValueConstructorORDINAL);
 
     /**
@@ -457,7 +457,8 @@ public class SqlKind
      */
     public static final int MultisetQueryConstructorORDINAL = 165;
     public static final SqlKind MultisetQueryConstructor =
-        new SqlKind("MultisetQueryConstructor",
+        new SqlKind(
+            "MultisetQueryConstructor",
             MultisetQueryConstructorORDINAL);
 
     /**
@@ -562,11 +563,10 @@ public class SqlKind
     public static final int ScalarQueryORDINAL = 305;
     public static final SqlKind ScalarQuery =
         new SqlKind("ScalarQuery", ScalarQueryORDINAL);
-    
+
     /**
-     * COLUMN_LIST constructor, for example, the ROW() call in
-     * <code>select * from TABLE(udx(CURSOR(select ...), ROW(a, b, c, d),
-     * x, y, z))</code>
+     * COLUMN_LIST constructor, for example, the ROW() call in <code>select *
+     * from TABLE(udx(CURSOR(select ...), ROW(a, b, c, d), x, y, z))</code>
      */
     public static final int ColumnListConstructorORDINAL = 306;
     public static final SqlKind ColumnListConstructor =
@@ -574,24 +574,37 @@ public class SqlKind
 
     public static final EnumeratedValues enumeration =
         new EnumeratedValues(
-            new SqlKind[] {  // the basics
-            Other, Select, Join, Identifier, Literal, Function, Explain, Insert, Update, Delete, Union, Except, Intersect, As, Over, Window, Merge, 
+            new SqlKind[] { // the basics
+                Other, Select, Join, Identifier, Literal, Function, Explain,
+                Insert, Update, Delete, Union, Except, Intersect, As, Over,
+                Window, Merge,
+
                 // arithmetic
-            Times, Divide, Plus, Minus, 
+                Times, Divide, Plus, Minus,
+
                 // comparisons
-            In, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual, Equals, NotEquals, 
+                In, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual,
+                Equals, NotEquals,
+
                 // boolean
-            Or, And, 
+                Or, And,
+
                 // other infix
-            Dot, Overlaps, Like, Similar, Between, Case, 
+                Dot, Overlaps, Like, Similar, Between, Case,
+
                 // prefix
-            Not, PlusPrefix, MinusPrefix, Exists, Values, ExplicitTable, 
+                Not, PlusPrefix, MinusPrefix, Exists, Values, ExplicitTable,
+
                 // postfix
-            Descending, IsTrue, IsFalse, IsNull, Preceding, Following, 
+                Descending, IsTrue, IsFalse, IsNull, Preceding, Following,
+
                 // row
-            Row, Cast, Trim, 
+                Row, Cast, Trim,
+
                 // special
-            MultisetValueConstructor, MultisetQueryConstructor, LiteralChain, Unnest, Lateral, ScalarQuery });
+                MultisetValueConstructor, MultisetQueryConstructor,
+                LiteralChain, Unnest, Lateral, ScalarQuery
+            });
 
     //~ Constructors -----------------------------------------------------------
 
@@ -615,8 +628,7 @@ public class SqlKind
         case TopLevelORDINAL:
             return this.isA(Query) || this.isA(Dml);
         case QueryORDINAL:
-            return
-                (this == Select) || (this == Union) || (this == Intersect)
+            return (this == Select) || (this == Union) || (this == Intersect)
                 || (this == Except) || (this == Values) || (this == OrderBy)
                 || (this == ExplicitTable);
         case SetQueryORDINAL:
@@ -628,34 +640,28 @@ public class SqlKind
         // in the future we support procedures which return results sets,
         // we'll need to refine this.
         case DmlORDINAL:
-            return
-                (this == Insert) || (this == Delete) || (this == Update)
+            return (this == Insert) || (this == Delete) || (this == Update)
                 || (this == Merge) || (this == ProcedureCall);
         case ExpressionORDINAL:
-            return
-                !(
-                    (this == As)
-                    || (this == Descending)
-                    || (this == Select)
-                    || (this == Join)
-                    || (this == Function)
-                    || (this == Cast)
-                    || (this == Trim)
-                    || (this == LiteralChain)
-                    || (this == JdbcFn)
-                    || (this == Preceding)
-                    || (this == Following)
-                    || (this == OrderBy)
-                    || (this == CollectionTable)
-                    || (this == TableSample)
-                 );
+            return !((this == As)
+                || (this == Descending)
+                || (this == Select)
+                || (this == Join)
+                || (this == Function)
+                || (this == Cast)
+                || (this == Trim)
+                || (this == LiteralChain)
+                || (this == JdbcFn)
+                || (this == Preceding)
+                || (this == Following)
+                || (this == OrderBy)
+                || (this == CollectionTable)
+                || (this == TableSample));
         case FunctionORDINAL:
-            return
-                (this == Function) || (this == Row) || (this == Trim)
+            return (this == Function) || (this == Row) || (this == Trim)
                 || (this == Cast) || (this == JdbcFn);
         case ComparisonORDINAL:
-            return
-                (this == In) || (this == LessThan) || (this == GreaterThan)
+            return (this == In) || (this == LessThan) || (this == GreaterThan)
                 || (this == LessThanOrEqual) || (this == GreaterThanOrEqual)
                 || (this == Equals) || (this == NotEquals);
         default:

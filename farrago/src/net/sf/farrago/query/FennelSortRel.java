@@ -32,6 +32,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
+
 // REVIEW jvs 3-Dec-2006: Need to implement getChildExps() like SortRel?
 // Should probably factor out a SortRelBase.
 
@@ -45,11 +46,10 @@ import org.eigenbase.util.*;
 public class FennelSortRel
     extends FennelSingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelFieldCollation [] collations;
-    
+
     /**
      * Whether to discard tuples with duplicate keys.
      */
@@ -62,8 +62,8 @@ public class FennelSortRel
      *
      * @param cluster RelOptCluster for this rel
      * @param child rel producing rows to be sorted
-     * @param keyProjection 0-based ordinals of fields making up sort key
-     * (all ascending)
+     * @param keyProjection 0-based ordinals of fields making up sort key (all
+     * ascending)
      * @param discardDuplicates whether to discard duplicates based on key
      */
     public FennelSortRel(
@@ -73,7 +73,8 @@ public class FennelSortRel
         boolean discardDuplicates)
     {
         this(
-            cluster, child,
+            cluster,
+            child,
             convertKeyProjection(keyProjection),
             discardDuplicates);
     }
@@ -105,22 +106,22 @@ public class FennelSortRel
         Integer [] keyProjection)
     {
         RelFieldCollation [] collations =
-            new RelFieldCollation [keyProjection.length];
+            new RelFieldCollation[keyProjection.length];
         for (int i = 0; i < keyProjection.length; ++i) {
-            collations[i] = new RelFieldCollation(
-                keyProjection[i],
-                RelFieldCollation.Direction.Ascending);
+            collations[i] =
+                new RelFieldCollation(
+                    keyProjection[i],
+                    RelFieldCollation.Direction.Ascending);
         }
         return collations;
     }
-    
+
     // override Rel
     public boolean isDistinct()
     {
         // sort results are distinct if duplicates are discarded AND
         // the sort key is the whole tuple
-        return
-            discardDuplicates
+        return discardDuplicates
             && (collations.length == getRowType().getFieldList().size());
     }
 
@@ -165,20 +166,19 @@ public class FennelSortRel
         // TODO:  the real thing
         double rowCount = RelMetadataQuery.getRowCount(this);
         double bytesPerRow = 1;
-        return
-            planner.makeCost(
-                rowCount,
-                Util.nLogN(rowCount),
-                rowCount * bytesPerRow);
+        return planner.makeCost(
+            rowCount,
+            Util.nLogN(rowCount),
+            rowCount * bytesPerRow);
     }
 
     // override RelNode
     public void explain(RelOptPlanWriter pw)
     {
         // TODO jvs 3-Dec-2006:  fix this and SortRel to be consistent
-        
+
         String [] keys = new String[collations.length];
-        for (int i = 0; i <collations.length; ++i) {
+        for (int i = 0; i < collations.length; ++i) {
             keys[i] = "" + collations[i].getFieldIndex();
             if (collations[i].getDirection()
                 != RelFieldCollation.Direction.Ascending)
@@ -186,7 +186,7 @@ public class FennelSortRel
                 keys[i] += " " + collations[i].getDirection();
             }
         }
-        
+
         pw.explain(
             this,
             new String[] { "child", "key", "discardDuplicates" },
@@ -210,11 +210,11 @@ public class FennelSortRel
         int iKey = 0;
         for (RelFieldCollation collation : collations) {
             keyProj.add(collation.getFieldIndex());
-            if (collation.getDirection() !=
-                RelFieldCollation.Direction.Ascending)
+            if (collation.getDirection()
+                != RelFieldCollation.Direction.Ascending)
             {
-                assert(collation.getDirection() ==
-                    RelFieldCollation.Direction.Descending);
+                assert (collation.getDirection()
+                    == RelFieldCollation.Direction.Descending);
                 descendingProj.add(iKey);
             }
             ++iKey;

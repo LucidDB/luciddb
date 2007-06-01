@@ -39,7 +39,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlDynamicParam
     extends SqlNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int index;

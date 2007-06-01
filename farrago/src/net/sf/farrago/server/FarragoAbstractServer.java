@@ -46,7 +46,6 @@ import net.sf.farrago.util.*;
  */
 public abstract class FarragoAbstractServer
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static Registry rmiRegistry;

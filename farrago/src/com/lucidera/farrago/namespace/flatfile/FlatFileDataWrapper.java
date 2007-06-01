@@ -41,7 +41,6 @@ import net.sf.farrago.resource.*;
 public class FlatFileDataWrapper
     extends MedAbstractDataWrapper
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -155,19 +154,16 @@ public class FlatFileDataWrapper
                 FlatFileParams.PROP_MAPPED,
                 true,
                 BOOLEAN_CHOICES_DEFAULT_FALSE);
-        }        
+        }
         infoMap.addPropInfo(
             FlatFileParams.PROP_DATE_FORMAT,
-            false
-            );
+            false);
         infoMap.addPropInfo(
             FlatFileParams.PROP_TIME_FORMAT,
-            false
-            );
+            false);
         infoMap.addPropInfo(
             FlatFileParams.PROP_TIMESTAMP_FORMAT,
-            false
-            );
+            false);
         return infoMap.toArray();
     }
 

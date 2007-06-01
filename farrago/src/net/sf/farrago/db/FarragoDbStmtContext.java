@@ -54,7 +54,6 @@ public class FarragoDbStmtContext
     extends FarragoDbStmtContextBase
     implements FarragoSessionStmtContext
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private long updateCount;
@@ -107,7 +106,7 @@ public class FarragoDbStmtContext
         String sql,
         boolean isExecDirect)
     {
-        synchronized(session) {
+        synchronized (session) {
             warningQueue.clearWarnings();
             unprepare();
             allocations = new FarragoCompoundAllocation();
@@ -143,14 +142,15 @@ public class FarragoDbStmtContext
         boolean logical,
         FarragoSessionPreparingStmt prep)
     {
-        synchronized(session) {
+        synchronized (session) {
             warningQueue.clearWarnings();
             unprepare();
             allocations = new FarragoCompoundAllocation();
             this.sql = ""; // not available
 
             executableStmt =
-                session.getDatabase().implementStmt(prep,
+                session.getDatabase().implementStmt(
+                    prep,
                     plan,
                     kind,
                     logical,
@@ -165,7 +165,7 @@ public class FarragoDbStmtContext
     // implement FarragoSessionStmtContext
     public RelDataType getPreparedRowType()
     {
-        synchronized(session) {
+        synchronized (session) {
             assert (isPrepared());
             return executableStmt.getRowType();
         }
@@ -174,7 +174,7 @@ public class FarragoDbStmtContext
     // implement FarragoSessionStmtContext
     public RelDataType getPreparedParamType()
     {
-        synchronized(session) {
+        synchronized (session) {
             assert (isPrepared());
             return executableStmt.getDynamicParamRowType();
         }
@@ -195,12 +195,12 @@ public class FarragoDbStmtContext
     // implement FarragoSessionStmtContext
     public void execute()
     {
-        synchronized(session) {
+        synchronized (session) {
             executeImpl();
         }
     }
 
-    private void executeImpl() 
+    private void executeImpl()
     {
         assert (isPrepared());
         if (!isExecDirect) {
@@ -278,11 +278,11 @@ public class FarragoDbStmtContext
         if (isDml) {
             success = false;
             List<Long> rowCounts = new ArrayList<Long>();
-            try {               
+            try {
                 session.getPersonality().getRowCounts(
                     resultSet,
                     rowCounts,
-                    executableStmt.getTableModOp());                
+                    executableStmt.getTableModOp());
                 success = true;
             } catch (SQLException ex) {
                 throw FarragoResource.instance().DmlFailure.ex(ex);
@@ -303,7 +303,7 @@ public class FarragoDbStmtContext
             updateCount = updateRowCounts(rowCounts);
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine("Update count = " + updateCount);
-            }         
+            }
         }
 
         // NOTE:  for result sets, autocommit is taken care of by
@@ -322,7 +322,7 @@ public class FarragoDbStmtContext
     // implement FarragoSessionStmtContext
     public long getUpdateCount()
     {
-        synchronized(session) {
+        synchronized (session) {
             long count = updateCount;
             updateCount = -1;
             return count;
@@ -357,7 +357,7 @@ public class FarragoDbStmtContext
     // implement FarragoSessionStmtContext
     public void closeResultSet()
     {
-        synchronized(session) {
+        synchronized (session) {
             if (resultSet == null) {
                 return;
             }
@@ -379,12 +379,12 @@ public class FarragoDbStmtContext
     // implement FarragoSessionStmtContext
     public void unprepare()
     {
-        synchronized(session) {
+        synchronized (session) {
             // request cancel, and wait until it takes effect before
             // proceeding with cleanup, otherwise we may yank stuff
             // out from under executing threads in a bad way
             cancel(true);
-        
+
             closeResultSet();
             if (allocations != null) {
                 allocations.closeAllocation();
@@ -396,7 +396,7 @@ public class FarragoDbStmtContext
             super.unprepare();
         }
     }
-    
+
     // implement FarragoSessionStmtContext
     public FarragoWarningQueue getWarningQueue()
     {
@@ -405,21 +405,23 @@ public class FarragoDbStmtContext
 
     /**
      * Update catalog row counts
-     * 
+     *
      * @param rowCounts row counts returned by the DML operation
-     * 
+     *
      * @return rowcount affected by the DML operation
      */
     private long updateRowCounts(List<Long> rowCounts)
     {
         TableModificationRel.Operation tableModOp =
             executableStmt.getTableModOp();
+
         // marked as DML, but doesn't actually modify a table; e.g., a
         // procedure call
         if (tableModOp == null) {
             return 0;
         }
         List<String> targetTable = getDmlTarget();
+
         // if there's no target table (e.g., for a create index), then this
         // isn't really a DML statement
         if (targetTable == null) {
@@ -432,7 +434,7 @@ public class FarragoDbStmtContext
             rowCounts,
             executableStmt.getTableModOp());
     }
-    
+
     private List<String> getDmlTarget()
     {
         TableAccessMap tableAccessMap = executableStmt.getTableAccessMap();

@@ -38,7 +38,6 @@ import org.eigenbase.reltype.*;
  */
 public interface RelOptTable
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

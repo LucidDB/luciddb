@@ -69,7 +69,6 @@ import org.eigenbase.stat.*;
  */
 public abstract class RelMetadataQuery
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -112,7 +111,6 @@ public abstract class RelMetadataQuery
                 null);
         assert (assertNonNegative(result));
         return validateResult(result);
-        
     }
 
     /**
@@ -196,8 +194,7 @@ public abstract class RelMetadataQuery
         RelNode rel,
         int iOutputColumn)
     {
-        return
-            (Set<RelColumnOrigin>) rel.getCluster().getMetadataProvider()
+        return (Set<RelColumnOrigin>) rel.getCluster().getMetadataProvider()
             .getRelMetadata(
                 rel,
                 "getColumnOrigins",
@@ -240,21 +237,21 @@ public abstract class RelMetadataQuery
      */
     public static Set<BitSet> getUniqueKeys(RelNode rel)
     {
-        return
-            (Set<BitSet>) rel.getCluster().getMetadataProvider().getRelMetadata(
+        return (Set<BitSet>) rel.getCluster().getMetadataProvider()
+            .getRelMetadata(
                 rel,
                 "getUniqueKeys",
                 null);
     }
-    
+
     /**
      * Determines if a specified set of columns from a specified relational
      * expression are unique.
-     * 
+     *
      * @param rel the relational expression
      * @param columns column mask representing the ssubset of columns for which
      * uniqueness will be determined
-     * 
+     *
      * @return true or false depending on whether the columns are unique, or
      * null if not enough information is available to make that determination
      */
@@ -265,7 +262,7 @@ public abstract class RelMetadataQuery
             "areColumnsUnique",
             new Object[] { columns });
     }
-    
+
     /**
      * Estimates the distinct row count in the original source for the given
      * groupKey, ignoring any filtering being applied by the expression.
@@ -338,12 +335,13 @@ public abstract class RelMetadataQuery
         assert (d >= 0.0);
         return true;
     }
-    
+
     private static Double validateResult(Double result)
     {
         if (result == null) {
             return result;
         }
+
         // never let the result go below 1, as it will result in incorrect
         // calculations if the rowcount is used as the denominator in a
         // division expression

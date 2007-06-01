@@ -44,7 +44,6 @@ import org.eigenbase.util.*;
 public class RexLocalRef
     extends RexSlot
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // array of common names, to reduce memory allocations
@@ -92,8 +91,8 @@ public class RexLocalRef
     public int hashCode()
     {
         return Util.hash(
-                type.hashCode(),
-                index);
+            type.hashCode(),
+            index);
     }
 
     public <R> R accept(RexVisitor<R> visitor)

@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 public class SqlCharStringLiteral
     extends SqlAbstractStringLiteral
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected SqlCharStringLiteral(
@@ -92,10 +91,9 @@ public class SqlCharStringLiteral
         for (int i = 0; i < lits.length; i++) {
             args[i] = ((SqlCharStringLiteral) lits[i]).getNlsString();
         }
-        return
-            new SqlCharStringLiteral(
-                NlsString.concat(args),
-                lits[0].getParserPosition());
+        return new SqlCharStringLiteral(
+            NlsString.concat(args),
+            lits[0].getParserPosition());
     }
 }
 

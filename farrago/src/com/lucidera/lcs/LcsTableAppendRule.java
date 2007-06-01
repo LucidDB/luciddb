@@ -36,7 +36,6 @@ import org.eigenbase.relopt.*;
 public class LcsTableAppendRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -85,7 +84,8 @@ public class LcsTableAppendRule
         if (!RelOptUtil.areRowTypesEqual(
                 inputRel.getRowType(),
                 tableModification.getExpectedInputRowType(0),
-                false)) {
+                false))
+        {
             return;
         }
 

@@ -40,7 +40,6 @@ public class FennelPipeIterator
     extends FennelPipeTupleIter
     implements RestartableIterator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Object next = null; // current row

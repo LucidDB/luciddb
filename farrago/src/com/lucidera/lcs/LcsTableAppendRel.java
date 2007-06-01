@@ -42,7 +42,6 @@ import org.eigenbase.relopt.*;
 public class LcsTableAppendRel
     extends MedAbstractFennelTableModRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -163,18 +162,17 @@ public class LcsTableAppendRel
                 input,
                 this,
                 RelMetadataQuery.getRowCount(getChild()));
-        
+
         // create the top half of the insertion stream
         FemBarrierStreamDef clusterAppendBarrier =
-            appendStreamDef.createClusterAppendStreams(implementor);      
-        
+            appendStreamDef.createClusterAppendStreams(implementor);
+
         // if there are clustered indexes, create the bottom half of the
         // insertion stream; otherwise, just return the cluster append barrier
-        return
-            appendStreamDef.createBitmapAppendStreams(
-                implementor,
-                clusterAppendBarrier,
-                0);
+        return appendStreamDef.createBitmapAppendStreams(
+            implementor,
+            clusterAppendBarrier,
+            0);
     }
 }
 

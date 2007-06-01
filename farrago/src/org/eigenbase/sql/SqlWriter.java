@@ -22,7 +22,6 @@
  */
 package org.eigenbase.sql;
 
-
 /**
  * A <code>SqlWriter</code> is the target to construct a SQL statement from a
  * parse tree. It deals with dialect differences; for example, Oracle quotes
@@ -35,6 +34,195 @@ package org.eigenbase.sql;
  */
 public interface SqlWriter
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Style of formatting subqueries.
+     */
+    enum SubqueryStyle
+    {
+        /**
+         * Julian's style of subquery nesting. Like this:
+         *
+         * <pre>SELECT *
+         * FROM (
+         *     SELECT *
+         *     FROM t
+         * )
+         * WHERE condition</pre>
+         */
+        Hyde,
+
+        /**
+         * Damian's style of subquery nesting. Like this:
+         *
+         * <pre>SELECT *
+         * FROM
+         * (   SELECT *
+         *     FROM t
+         * )
+         * WHERE condition</pre>
+         */
+        Black;
+    }
+
+    /**
+     * Enumerates the types of frame.
+     */
+    enum FrameTypeEnum
+        implements FrameType
+    {
+        /**
+         * SELECT query (or UPDATE or DELETE). The items in the list are the
+         * clauses: FROM, WHERE, etc.
+         */
+        Select,
+
+        /**
+         * Simple list.
+         */
+        Simple,
+
+        /**
+         * The SELECT clause of a SELECT statement.
+         */
+        SelectList,
+
+        /**
+         * The WINDOW clause of a SELECT statement.
+         */
+        WindowDeclList,
+
+        /**
+         * The SET clause of an UPDATE statement.
+         */
+        UpdateSetList,
+
+        /**
+         * Function declaration.
+         */
+        FunDecl,
+
+        /**
+         * Function call or datatype declaration.
+         *
+         * <p>Examples:
+         * <li>SUBSTRING('foobar' FROM 1 + 2 TO 4)</li>
+         * <li>DECIMAL(10, 5)</li>
+         */
+        FunCall,
+
+        /**
+         * Window specification.
+         *
+         * <p>Examples:
+         * <li>SUM(x) OVER (ORDER BY hireDate ROWS 3 PRECEDING)</li>
+         * <li>WINDOW w1 AS (ORDER BY hireDate), w2 AS (w1 PARTITION BY gender
+         * RANGE BETWEEN INTERVAL '1' YEAR PRECEDING AND '2' MONTH
+         * PRECEDING)</li>
+         */
+        Window,
+
+        /**
+         * ORDER BY clause of a SELECT statement. The "list" has only two items:
+         * the query and the order by clause, with ORDER BY as the separator.
+         */
+        OrderBy,
+
+        /**
+         * ORDER BY list.
+         *
+         * <p>Example:
+         * <li>ORDER BY x, y DESC, z
+         */
+        OrderByList,
+
+        /**
+         * GROUP BY list.
+         *
+         * <p>Example:
+         * <li>GROUP BY x, FLOOR(y)
+         */
+        GroupByList,
+
+        /**
+         * Sub-query list. Encloses a SELECT, UNION, EXCEPT, INTERSECT query
+         * with optional ORDER BY.
+         *
+         * <p>Example:
+         * <li>GROUP BY x, FLOOR(y)
+         */
+        Subquery,
+
+        /**
+         * Set operation.
+         *
+         * <p>Example:
+         * <li>SELECT * FROM a UNION SELECT * FROM b
+         */
+        Setop,
+
+        /**
+         * FROM clause (containing various kinds of JOIN).
+         */
+        FromList,
+
+        /**
+         * WHERE clause.
+         */
+        WhereList,
+
+        /**
+         * Compound identifier.
+         *
+         * <p>Example:
+         * <li>"A"."B"."C"
+         */
+        Identifier(false);
+
+        private final boolean needsIndent;
+
+        /**
+         * Creates a list type.
+         */
+        FrameTypeEnum()
+        {
+            this(true);
+        }
+
+        /**
+         * Creates a list type.
+         */
+        FrameTypeEnum(boolean needsIndent)
+        {
+            this.needsIndent = needsIndent;
+        }
+
+        public boolean needsIndent()
+        {
+            return needsIndent;
+        }
+
+        public static FrameType create(final String name)
+        {
+            return new FrameType() {
+                public String getName()
+                {
+                    return name;
+                }
+
+                public boolean needsIndent()
+                {
+                    return true;
+                }
+            };
+        }
+
+        public String getName()
+        {
+            return name();
+        }
+    }
 
     //~ Methods ----------------------------------------------------------------
 
@@ -204,201 +392,11 @@ public interface SqlWriter
     {
     }
 
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Style of formatting subqueries.
-     */
-    enum SubqueryStyle
-    {
-        /**
-         * Julian's style of subquery nesting. Like this:
-         *
-         * <pre>SELECT *
-         * FROM (
-         *     SELECT *
-         *     FROM t
-         * )
-         * WHERE condition</pre>
-         */
-        Hyde,
-
-        /**
-         * Damian's style of subquery nesting. Like this:
-         *
-         * <pre>SELECT *
-         * FROM
-         * (   SELECT *
-         *     FROM t
-         * )
-         * WHERE condition</pre>
-         */
-        Black;
-    }
-
     interface FrameType
     {
         String getName();
 
         boolean needsIndent();
-    };
-
-    /**
-     * Enumerates the types of frame.
-     */
-    enum FrameTypeEnum implements FrameType
-    {
-        /**
-         * SELECT query (or UPDATE or DELETE). The items in the list are the
-         * clauses: FROM, WHERE, etc.
-         */
-        Select,
-
-        /**
-         * Simple list.
-         */
-        Simple,
-
-        /**
-         * The SELECT clause of a SELECT statement.
-         */
-        SelectList,
-
-        /**
-         * The WINDOW clause of a SELECT statement.
-         */
-        WindowDeclList,
-
-        /**
-         * The SET clause of an UPDATE statement.
-         */
-        UpdateSetList,
-
-        /**
-         * Function declaration.
-         */
-        FunDecl,
-
-        /**
-         * Function call or datatype declaration.
-         *
-         * <p>Examples:
-         * <li>SUBSTRING('foobar' FROM 1 + 2 TO 4)</li>
-         * <li>DECIMAL(10, 5)</li>
-         */
-        FunCall,
-
-        /**
-         * Window specification.
-         *
-         * <p>Examples:
-         * <li>SUM(x) OVER (ORDER BY hireDate ROWS 3 PRECEDING)</li>
-         * <li>WINDOW w1 AS (ORDER BY hireDate), w2 AS (w1 PARTITION BY gender
-         * RANGE BETWEEN INTERVAL '1' YEAR PRECEDING AND '2' MONTH
-         * PRECEDING)</li>
-         */
-        Window,
-
-        /**
-         * ORDER BY clause of a SELECT statement. The "list" has only two items:
-         * the query and the order by clause, with ORDER BY as the separator.
-         */
-        OrderBy,
-
-        /**
-         * ORDER BY list.
-         *
-         * <p>Example:
-         * <li>ORDER BY x, y DESC, z
-         */
-        OrderByList,
-
-        /**
-         * GROUP BY list.
-         *
-         * <p>Example:
-         * <li>GROUP BY x, FLOOR(y)
-         */
-        GroupByList,
-
-        /**
-         * Sub-query list. Encloses a SELECT, UNION, EXCEPT, INTERSECT query
-         * with optional ORDER BY.
-         *
-         * <p>Example:
-         * <li>GROUP BY x, FLOOR(y)
-         */
-        Subquery,
-
-        /**
-         * Set operation.
-         *
-         * <p>Example:
-         * <li>SELECT * FROM a UNION SELECT * FROM b
-         */
-        Setop,
-
-        /**
-         * FROM clause (containing various kinds of JOIN).
-         */
-        FromList,
-
-        /**
-         * WHERE clause.
-         */
-        WhereList,
-
-        /**
-         * Compound identifier.
-         *
-         * <p>Example:
-         * <li>"A"."B"."C"
-         */
-        Identifier(false);
-
-        private final boolean needsIndent;
-
-        /**
-         * Creates a list type.
-         */
-        FrameTypeEnum()
-        {
-            this(true);
-        }
-
-        /**
-         * Creates a list type.
-         */
-        FrameTypeEnum(boolean needsIndent)
-        {
-            this.needsIndent = needsIndent;
-        }
-
-        public boolean needsIndent()
-        {
-            return needsIndent;
-        }
-
-
-        public static FrameType create(final String name)
-        {
-            return new FrameType() {
-                public String getName()
-                {
-                    return name;
-                }
-
-                public boolean needsIndent()
-                {
-                    return true;
-                }
-            };
-        }
-
-        public String getName()
-        {
-            return name();
-        }
     }
 }
 

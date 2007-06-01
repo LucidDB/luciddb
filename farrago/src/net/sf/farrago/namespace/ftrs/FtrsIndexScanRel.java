@@ -39,6 +39,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
+
 /**
  * FtrsIndexScanRel is the relational expression corresponding to a scan via a
  * particular index over the contents of a table stored in FTRS format.
@@ -50,7 +51,6 @@ class FtrsIndexScanRel
     extends TableAccessRelBase
     implements FennelRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -70,7 +70,7 @@ class FtrsIndexScanRel
      */
     final Integer [] projectedColumns;
     final boolean isOrderPreserving;
-    
+
     private FtrsIndexGuide indexGuide;
 
     //~ Constructors -----------------------------------------------------------
@@ -120,7 +120,7 @@ class FtrsIndexScanRel
         }
         return indexGuide;
     }
-    
+
     /**
      * Gets the column referenced by a FieldAccess relative to this scan.
      *
@@ -135,9 +135,8 @@ class FtrsIndexScanRel
             fieldOrdinal = projectedColumns[fieldOrdinal].intValue();
         }
         int columnOrdinal = getIndexGuide().unFlattenOrdinal(fieldOrdinal);
-        return
-            (FemAbstractColumn) ftrsTable.getCwmColumnSet().getFeature().get(
-                columnOrdinal);
+        return (FemAbstractColumn) ftrsTable.getCwmColumnSet().getFeature().get(
+            columnOrdinal);
     }
 
     // implement RelNode
@@ -179,26 +178,25 @@ class FtrsIndexScanRel
             return flattenedRowType;
         } else {
             final RelDataTypeField [] fields = flattenedRowType.getFields();
-            return
-                getCluster().getTypeFactory().createStructType(
-                    new RelDataTypeFactory.FieldInfo() {
-                        public int getFieldCount()
-                        {
-                            return projectedColumns.length;
-                        }
+            return getCluster().getTypeFactory().createStructType(
+                new RelDataTypeFactory.FieldInfo() {
+                    public int getFieldCount()
+                    {
+                        return projectedColumns.length;
+                    }
 
-                        public String getFieldName(int index)
-                        {
-                            final int i = projectedColumns[index].intValue();
-                            return fields[i].getName();
-                        }
+                    public String getFieldName(int index)
+                    {
+                        final int i = projectedColumns[index].intValue();
+                        return fields[i].getName();
+                    }
 
-                        public RelDataType getFieldType(int index)
-                        {
-                            final int i = projectedColumns[index].intValue();
-                            return fields[i].getType();
-                        }
-                    });
+                    public RelDataType getFieldType(int index)
+                    {
+                        final int i = projectedColumns[index].intValue();
+                        return fields[i].getType();
+                    }
+                });
         }
     }
 
@@ -216,7 +214,7 @@ class FtrsIndexScanRel
             new String[] { "table", "projection", "index", "preserveOrder" },
             new Object[] {
                 Arrays.asList(ftrsTable.getQualifiedName()), projection,
-            index.getName(), Boolean.valueOf(isOrderPreserving)
+                index.getName(), Boolean.valueOf(isOrderPreserving)
             });
     }
 
@@ -328,7 +326,8 @@ class FtrsIndexScanRel
     {
         Integer [] indexedCols =
             ftrsTable.getIndexGuide().getCollationKeyArray(index);
-        List<RelFieldCollation> collationList = new ArrayList<RelFieldCollation>();
+        List<RelFieldCollation> collationList =
+            new ArrayList<RelFieldCollation>();
         for (int i = 0; i < indexedCols.length; ++i) {
             int iCol = indexedCols[i].intValue();
             RelFieldCollation collation = null;
@@ -347,9 +346,8 @@ class FtrsIndexScanRel
             }
             collationList.add(collation);
         }
-        return
-            collationList.toArray(
-                new RelFieldCollation[collationList.size()]);
+        return collationList.toArray(
+            new RelFieldCollation[collationList.size()]);
     }
 }
 

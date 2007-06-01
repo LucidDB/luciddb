@@ -42,7 +42,6 @@ import org.eigenbase.rex.*;
 public class FennelCalcRule
     extends ConverterRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

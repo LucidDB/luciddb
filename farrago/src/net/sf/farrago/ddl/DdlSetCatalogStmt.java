@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
 public class DdlSetCatalogStmt
     extends DdlSetContextStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private SqlIdentifier catalogName;

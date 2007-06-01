@@ -39,7 +39,6 @@ import net.sf.farrago.util.*;
 public class FarragoSqlRegressionTest
     extends FarragoSqlTest
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoSqlRegressionTest(String testName)
@@ -53,16 +52,15 @@ public class FarragoSqlRegressionTest
     public static Test suite()
         throws Exception
     {
-        return
-            gatherSuite(
-                FarragoProperties.instance().testFilesetRegression.get(true),
-                new FarragoSqlTestFactory() {
-                    public FarragoTestCase createSqlTest(String testName)
-                        throws Exception
-                    {
-                        return new FarragoSqlRegressionTest(testName);
-                    }
-                });
+        return gatherSuite(
+            FarragoProperties.instance().testFilesetRegression.get(true),
+            new FarragoSqlTestFactory() {
+                public FarragoTestCase createSqlTest(String testName)
+                    throws Exception
+                {
+                    return new FarragoSqlRegressionTest(testName);
+                }
+            });
     }
 
     protected void runTest()

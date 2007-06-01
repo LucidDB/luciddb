@@ -46,7 +46,6 @@ import org.eigenbase.util.*;
 public class VolcanoPlannerTest
     extends TestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -71,11 +70,10 @@ public class VolcanoPlannerTest
     {
         RelOptQuery query = new RelOptQuery(planner);
         RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-        return
-            query.createCluster(
-                new TestEnvironment(),
-                typeFactory,
-                new RexBuilder(typeFactory));
+        return query.createCluster(
+            new TestEnvironment(),
+            typeFactory,
+            new RexBuilder(typeFactory));
     }
 
     /**
@@ -89,7 +87,8 @@ public class VolcanoPlannerTest
 
         planner.addRule(new PhysLeafRule());
 
-        NoneLeafRel leafRel = new NoneLeafRel(
+        NoneLeafRel leafRel =
+            new NoneLeafRel(
                 newCluster(planner),
                 "a");
         RelNode convertedRel =
@@ -112,7 +111,8 @@ public class VolcanoPlannerTest
         planner.addRule(new PhysLeafRule());
         planner.addRule(new GoodSingleRule());
 
-        NoneLeafRel leafRel = new NoneLeafRel(
+        NoneLeafRel leafRel =
+            new NoneLeafRel(
                 newCluster(planner),
                 "a");
         NoneSingleRel singleRel =
@@ -140,7 +140,8 @@ public class VolcanoPlannerTest
         planner.addRule(new PhysLeafRule());
         planner.addRule(new ReformedSingleRule());
 
-        NoneLeafRel leafRel = new NoneLeafRel(
+        NoneLeafRel leafRel =
+            new NoneLeafRel(
                 newCluster(planner),
                 "a");
         NoneSingleRel singleRel =
@@ -172,19 +173,21 @@ public class VolcanoPlannerTest
         planner.addRule(new PhysProjectRule());
 
         planner.addRule(
-            new ConverterRule(RelNode.class,
+            new ConverterRule(
+                RelNode.class,
                 PHYS_CALLING_CONVENTION,
                 CallingConvention.ITERATOR,
                 "PhysToIteratorRule") {
                 public RelNode convert(RelNode rel)
                 {
                     return new PhysToIteratorConverter(
-                            rel.getCluster(),
-                            rel);
+                        rel.getCluster(),
+                        rel);
                 }
             });
 
-        PhysLeafRel leafRel = new PhysLeafRel(
+        PhysLeafRel leafRel =
+            new PhysLeafRel(
                 newCluster(planner),
                 "a");
         RexInputRef inputRef =
@@ -235,7 +238,8 @@ public class VolcanoPlannerTest
         planner.addRule(new PhysLeafRule());
         planner.addRule(new ReformedRemoveSingleRule());
 
-        NoneLeafRel leafRel = new NoneLeafRel(
+        NoneLeafRel leafRel =
+            new NoneLeafRel(
                 newCluster(planner),
                 "a");
         NoneSingleRel singleRel =
@@ -270,7 +274,8 @@ public class VolcanoPlannerTest
         planner.addRule(new GoodSingleRule());
         planner.addRule(new GoodRemoveSingleRule());
 
-        NoneLeafRel leafRel = new NoneLeafRel(
+        NoneLeafRel leafRel =
+            new NoneLeafRel(
                 newCluster(planner),
                 "a");
         NoneSingleRel singleRel =
@@ -304,7 +309,8 @@ public class VolcanoPlannerTest
 
         planner.addRule(new PhysLeafRule());
 
-        NoneLeafRel leafRel = new NoneLeafRel(
+        NoneLeafRel leafRel =
+            new NoneLeafRel(
                 newCluster(planner),
                 "a");
         RelNode convertedRel =
@@ -468,12 +474,11 @@ public class VolcanoPlannerTest
         // implement RelNode
         protected RelDataType deriveRowType()
         {
-            return
-                getCluster().getTypeFactory().createStructType(
-                    new RelDataType[] {
-                        getCluster().getTypeFactory().createJavaType(Void.TYPE)
-                    },
-                    new String[] { "this" });
+            return getCluster().getTypeFactory().createStructType(
+                new RelDataType[] {
+                    getCluster().getTypeFactory().createJavaType(Void.TYPE)
+                },
+                new String[] { "this" });
         }
 
         public void explain(RelOptPlanWriter pw)
@@ -525,7 +530,8 @@ public class VolcanoPlannerTest
         // implement RelNode
         public NoneSingleRel clone()
         {
-            NoneSingleRel clone = new NoneSingleRel(
+            NoneSingleRel clone =
+                new NoneSingleRel(
                     getCluster(),
                     getChild());
             clone.inheritTraitsFrom(this);
@@ -589,7 +595,8 @@ public class VolcanoPlannerTest
         // implement RelNode
         public PhysSingleRel clone()
         {
-            PhysSingleRel clone = new PhysSingleRel(
+            PhysSingleRel clone =
+                new PhysSingleRel(
                     getCluster(),
                     getChild());
             clone.inheritTraitsFrom(this);

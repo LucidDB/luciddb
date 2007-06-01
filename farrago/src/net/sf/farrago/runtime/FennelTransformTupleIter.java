@@ -44,7 +44,6 @@ import net.sf.farrago.fennel.*;
 public class FennelTransformTupleIter
     extends FennelAbstractTupleIter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int execStreamInputOrdinal;

@@ -35,7 +35,6 @@ import java.util.*;
 public interface RestartableIterator
     extends Iterator
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -21,36 +21,44 @@
 */
 package net.sf.farrago.session.mock;
 
-import net.sf.farrago.catalog.FarragoReposTxnContext;
+import net.sf.farrago.catalog.*;
+
 
 /**
  * MockReposTxnContext overrides FarragoReposTxnContext so that no FarragoRepos
- * implementation is needed.  Note that this class does not actually create
- * any transaction or lock.  See {@link MockSessionStmtValidator}.
- * 
+ * implementation is needed. Note that this class does not actually create any
+ * transaction or lock. See {@link MockSessionStmtValidator}.
+ *
  * @author stephan/jack
- * @since Dec 8, 2006
  * @version $Id$
+ * @since Dec 8, 2006
  */
-public class MockReposTxnContext extends FarragoReposTxnContext
+public class MockReposTxnContext
+    extends FarragoReposTxnContext
 {
+    //~ Instance fields --------------------------------------------------------
+
     private boolean isRead;
     private boolean isWrite;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public MockReposTxnContext()
     {
         super(null);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public void beginReadTxn()
     {
-        assert(!isRead && !isWrite);
+        assert (!isRead && !isWrite);
         isRead = true;
     }
 
     public void beginWriteTxn()
     {
-        assert(!isRead && !isWrite);
+        assert (!isRead && !isWrite);
         isWrite = true;
     }
 
@@ -74,3 +82,5 @@ public class MockReposTxnContext extends FarragoReposTxnContext
         isRead = isWrite = false;
     }
 }
+
+// End MockReposTxnContext.java

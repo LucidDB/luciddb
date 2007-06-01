@@ -58,17 +58,17 @@ public class PushFilterPastSetOpRule
         FilterRel filterRel = (FilterRel) call.rels[0];
         SetOpRel setOpRel = (SetOpRel) call.rels[1];
 
-        RelNode[] setOpInputs = setOpRel.getInputs();
+        RelNode [] setOpInputs = setOpRel.getInputs();
         int nSetOpInputs = setOpInputs.length;
-        RelNode[] newSetOpInputs = new RelNode[nSetOpInputs];
+        RelNode [] newSetOpInputs = new RelNode[nSetOpInputs];
         RelOptCluster cluster = setOpRel.getCluster();
         RexNode condition = filterRel.getCondition();
-        
+
         // create filters on top of each setop child, modifying the filter
         // condition to reference each setop child
         RexBuilder rexBuilder = filterRel.getCluster().getRexBuilder();
-        RelDataTypeField[] origFields = setOpRel.getRowType().getFields();
-        int[] adjustments = new int[origFields.length];
+        RelDataTypeField [] origFields = setOpRel.getRowType().getFields();
+        int [] adjustments = new int[origFields.length];
         for (int i = 0; i < nSetOpInputs; i++) {
             RexNode newCondition =
                 condition.accept(
@@ -80,11 +80,11 @@ public class PushFilterPastSetOpRule
             newSetOpInputs[i] =
                 new FilterRel(cluster, setOpInputs[i], newCondition);
         }
-        
+
         // create a new setop whose children are the filters created above
         SetOpRel newSetOpRel =
             RelOptUtil.createNewSetOpRel(setOpRel, newSetOpInputs);
-        
+
         call.transformTo(newSetOpRel);
     }
 }

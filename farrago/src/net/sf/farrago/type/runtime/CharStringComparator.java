@@ -26,6 +26,7 @@ import java.util.*;
 
 import org.eigenbase.util.*;
 
+
 /**
  * A very slow, generic comparator for two objects with valid toString()
  * methods. It implements SQL character comparison semantics (rtrim before
@@ -37,7 +38,6 @@ import org.eigenbase.util.*;
 public class CharStringComparator
     implements Comparator
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public static final int compareCharStrings(

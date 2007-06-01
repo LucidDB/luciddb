@@ -37,7 +37,6 @@ import org.eigenbase.util.*;
 public class ThreadIteratorTest
     extends EigenbaseTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public ThreadIteratorTest(String s)
@@ -62,21 +61,21 @@ public class ThreadIteratorTest
     {
         Iterator beatles =
             new ThreadIterator(queue) {
-                    String [] strings;
+                String [] strings;
 
-                    public ThreadIterator start(String [] strings)
-                    {
-                        this.strings = strings;
-                        return start();
-                    }
+                public ThreadIterator start(String [] strings)
+                {
+                    this.strings = strings;
+                    return start();
+                }
 
-                    protected void doWork()
-                    {
-                        for (int i = 0; i < strings.length; i++) {
-                            put(new Integer(strings[i].length()));
-                        }
+                protected void doWork()
+                {
+                    for (int i = 0; i < strings.length; i++) {
+                        put(new Integer(strings[i].length()));
                     }
-                }.start(new String[] { "lennon", "mccartney", null, "starr" });
+                }
+            }.start(new String[] { "lennon", "mccartney", null, "starr" });
         assertTrue(beatles.hasNext());
         assertEquals(
             beatles.next(),
@@ -95,29 +94,30 @@ public class ThreadIteratorTest
 
     public void testDigits()
     {
-        Iterator digits = new ThreadIterator() {
-                    int limit;
+        Iterator digits =
+            new ThreadIterator() {
+                int limit;
 
-                    public ThreadIterator start(int limit)
-                    {
-                        this.limit = limit;
-                        return super.start();
-                    }
+                public ThreadIterator start(int limit)
+                {
+                    this.limit = limit;
+                    return super.start();
+                }
 
-                    protected void doWork()
-                    {
-                        for (int i = 0; i < limit; i++) {
-                            put(new Integer(i));
-                        }
+                protected void doWork()
+                {
+                    for (int i = 0; i < limit; i++) {
+                        put(new Integer(i));
                     }
-                }.start(10);
+                }
+            }.start(10);
         assertEquals(
             digits,
             new Integer[] {
                 new Integer(0), new Integer(1), new Integer(2),
-            new Integer(3), new Integer(4), new Integer(5),
-            new Integer(6), new Integer(7), new Integer(8),
-            new Integer(9)
+                new Integer(3), new Integer(4), new Integer(5),
+                new Integer(6), new Integer(7), new Integer(8),
+                new Integer(9)
             });
         assertTrue(!digits.hasNext());
     }
@@ -125,16 +125,14 @@ public class ThreadIteratorTest
     public void testEmpty()
     {
         Object [] empty = new Object[0];
-        assertEquals(
-            new ArrayIterator(empty),
+        assertEquals(new ArrayIterator(empty),
             empty);
     }
 
     public void testXyz()
     {
         String [] xyz = new String[] { "x", "y", "z" };
-        assertEquals(
-            new ArrayIterator(xyz),
+        assertEquals(new ArrayIterator(xyz),
             xyz);
     }
 

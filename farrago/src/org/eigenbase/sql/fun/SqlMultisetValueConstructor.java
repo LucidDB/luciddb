@@ -41,12 +41,12 @@ import org.eigenbase.sql.validate.*;
 public class SqlMultisetValueConstructor
     extends SqlSpecialOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlMultisetValueConstructor()
     {
-        super("MULTISET",
+        super(
+            "MULTISET",
             SqlKind.MultisetValueConstructor,
             MaxPrec,
             false,
@@ -67,11 +67,10 @@ public class SqlMultisetValueConstructor
         if (null == type) {
             return null;
         }
-        return
-            SqlTypeUtil.createMultisetType(
-                opBinding.getTypeFactory(),
-                type,
-                false);
+        return SqlTypeUtil.createMultisetType(
+            opBinding.getTypeFactory(),
+            type,
+            false);
     }
 
     private RelDataType getComponentType(

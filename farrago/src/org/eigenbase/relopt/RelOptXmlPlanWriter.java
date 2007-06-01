@@ -38,7 +38,6 @@ import org.eigenbase.xom.*;
 public class RelOptXmlPlanWriter
     extends RelOptPlanWriter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final XMLOutput xmlOutput;

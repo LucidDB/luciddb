@@ -50,7 +50,6 @@ import org.eigenbase.util.*;
 class FlatFileColumnSet
     extends MedAbstractColumnSet
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String PROP_FILENAME = "FILENAME";
@@ -110,32 +109,32 @@ class FlatFileColumnSet
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        // Implement the flat file scan as physical relations. The scan 
-        // relies on a calculator to convert text into typed data. This 
-        // calculator may either be integrated into the flat file scan 
-        // as a Fennel calc, or may be a separate relation, probably a 
+        // Implement the flat file scan as physical relations. The scan
+        // relies on a calculator to convert text into typed data. This
+        // calculator may either be integrated into the flat file scan
+        // as a Fennel calc, or may be a separate relation, probably a
         // Java calc.
-        // 
-        // In addition, if custom datetime formats are specified, they are 
+        //
+        // In addition, if custom datetime formats are specified, they are
         // always implemented in a separate CalcRel (because the Fennel
         // calc only understands ISO formats).
 
-        FlatFileProgramWriter pw = 
+        FlatFileProgramWriter pw =
             new FlatFileProgramWriter(
-                cluster.getRexBuilder(), 
-                getPreparingStmt(), 
+                cluster.getRexBuilder(),
+                getPreparingStmt(),
                 params,
                 rowType);
 
         if (schemaType == FlatFileParams.SchemaType.QUERY) {
             RexProgram program = pw.getProgram();
             return newCalcRel(
-                cluster, 
+                cluster,
                 newFennelRel(
-                    cluster, 
-                    connection, 
-                    FlatFileParams.SchemaType.QUERY_TEXT, 
-                    program.getInputRowType()), 
+                    cluster,
+                    connection,
+                    FlatFileParams.SchemaType.QUERY_TEXT,
+                    program.getInputRowType()),
                 program);
         } else {
             return newFennelRel(cluster, connection, schemaType, rowType);
@@ -151,22 +150,21 @@ class FlatFileColumnSet
         FlatFileParams.SchemaType schemaType,
         RelDataType rowType)
     {
-        return
-            new FlatFileFennelRel(
-                this,
-                cluster,
-                connection,
-                schemaType,
-                params,
-                rowType);
+        return new FlatFileFennelRel(
+            this,
+            cluster,
+            connection,
+            schemaType,
+            params,
+            rowType);
     }
 
     /**
      * Constructs a new CalcRel
      */
     private CalcRel newCalcRel(
-        RelOptCluster cluster, 
-        FennelRel child, 
+        RelOptCluster cluster,
+        FennelRel child,
         RexProgram program)
     {
         return new CalcRel(
@@ -177,7 +175,7 @@ class FlatFileColumnSet
             program,
             Collections.EMPTY_LIST);
     }
-    
+
     /**
      * Constructs the full path to the file for a table, based upon the server
      * directory, filename option (if specified), and the server data file
@@ -224,11 +222,9 @@ class FlatFileColumnSet
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
             String timeStamp = formatter.format(new java.util.Date());
             name =
-                (
-                    root + TIMESTAMP_PREFIX + timeStamp
+                (root + TIMESTAMP_PREFIX + timeStamp
                     + FlatFileParams.FILE_EXTENSION_PREFIX
-                    + FlatFileParams.LOG_FILE_EXTENSION
-                );
+                    + FlatFileParams.LOG_FILE_EXTENSION);
         }
         return params.getLogDirectory() + name;
     }

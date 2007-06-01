@@ -26,9 +26,8 @@ import org.eigenbase.util14.*;
 
 
 /**
- * FarragoJdbcEngineBooleanParamDef defines a boolean parameter.
- *
- * This class is JDK 1.4 compatible.
+ * FarragoJdbcEngineBooleanParamDef defines a boolean parameter. This class is
+ * JDK 1.4 compatible.
  *
  * @author Angel Chang
  * @version $Id$
@@ -36,7 +35,6 @@ import org.eigenbase.util14.*;
 class FarragoJdbcBooleanParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Constructors -----------------------------------------------------------
 
     FarragoJdbcBooleanParamDef(

@@ -34,7 +34,6 @@ import org.eigenbase.util.*;
 public class SqlSpecialOperator
     extends SqlOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlSpecialOperator(
@@ -61,7 +60,8 @@ public class SqlSpecialOperator
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name,
+        super(
+            name,
             kind,
             prec,
             leftAssoc,
@@ -97,10 +97,9 @@ public class SqlSpecialOperator
      *
      * @param ordinal indicating the ordinal of the current operator in the list
      * on which a possible reduction can be made
-     *
-     * @param list List of alternating
-     * {@link org.eigenbase.sql.parser.SqlParserUtil.ToTreeListItem}
-     * and {@link SqlNode}
+     * @param list List of alternating {@link
+     * org.eigenbase.sql.parser.SqlParserUtil.ToTreeListItem} and {@link
+     * SqlNode}
      *
      * @return ordinal of the node which replaced the expression
      */

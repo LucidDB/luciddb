@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 public class CachingRelMetadataProvider
     implements RelMetadataProvider
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Map<List, CacheEntry> cache;

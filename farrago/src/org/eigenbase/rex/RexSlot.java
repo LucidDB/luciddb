@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
 public abstract class RexSlot
     extends RexVariable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final int index;

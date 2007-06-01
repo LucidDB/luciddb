@@ -42,7 +42,6 @@ import org.eigenbase.relopt.*;
 public final class ExtractJoinFilterRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

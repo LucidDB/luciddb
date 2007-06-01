@@ -49,7 +49,6 @@ import org.netbeans.api.mdr.events.*;
 public class JmiChangeSet
     implements MDRPreChangeListener
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = EigenbaseTrace.getJmiChangeSetTracer();
@@ -130,7 +129,8 @@ public class JmiChangeSet
         // associations set (though someone will probably come up with a
         // pathological case eventually).
         activeThread = Thread.currentThread();
-        getMdrRepos().addListener(this,
+        getMdrRepos().addListener(
+            this,
             InstanceEvent.EVENT_INSTANCE_DELETE
             | AttributeEvent.EVENTMASK_ATTRIBUTE
             | AssociationEvent.EVENTMASK_ASSOCIATION);
@@ -150,10 +150,10 @@ public class JmiChangeSet
     }
 
     /**
-     * Controls cascaded delete behavior.  By default, cascades recursively.
+     * Controls cascaded delete behavior. By default, cascades recursively.
      *
-     * @param singleLevelCascade if true, only cascade to one level; if
-     * false, cascade recursively.
+     * @param singleLevelCascade if true, only cascade to one level; if false,
+     * cascade recursively.
      */
     public void setSingleLevelCascade(boolean singleLevelCascade)
     {
@@ -188,13 +188,10 @@ public class JmiChangeSet
         RefObject refObject,
         JmiValidationAction status)
     {
-        return
-            (schedulingMap.get(refObject.refMofId()) == status)
+        return (schedulingMap.get(refObject.refMofId()) == status)
             || (validatedMap.get(refObject) == status)
-            || (
-                (transitMap != null)
-                && (transitMap.get(refObject.refMofId()) == status)
-               );
+            || ((transitMap != null)
+                && (transitMap.get(refObject.refMofId()) == status));
     }
 
     private void stopListening()
@@ -218,15 +215,17 @@ public class JmiChangeSet
 
         // build deletion list
         List<RefObject> deletionList = new ArrayList<RefObject>();
-        for (Map.Entry<RefObject, JmiValidationAction> mapEntry
-            : validatedMap.entrySet()) {
+        for (
+            Map.Entry<RefObject, JmiValidationAction> mapEntry
+            : validatedMap.entrySet())
+        {
             RefObject obj = (RefObject) mapEntry.getKey();
             Object action = mapEntry.getValue();
 
             if (action != JmiValidationAction.DELETION) {
                 continue;
             }
-            
+
             dispatcher.clearDependencySuppliers(obj);
             RefFeatured container = obj.refImmediateComposite();
             if (container != null) {
@@ -257,7 +256,8 @@ public class JmiChangeSet
         }
 
         // verify repository integrity post-delete
-        for (Map.Entry<RefObject, JmiValidationAction> mapEntry
+        for (
+            Map.Entry<RefObject, JmiValidationAction> mapEntry
             : validatedMap.entrySet())
         {
             RefObject obj = (RefObject) mapEntry.getKey();
@@ -318,7 +318,8 @@ public class JmiChangeSet
                 for (JmiDeletionRule rule : rules) {
                     if ((rule != null)
                         && rule.getEndName().equals(
-                            associationEvent.getEndName())) {
+                            associationEvent.getEndName()))
+                    {
                         fireDeletionRule(
                             refAssoc,
                             rule,
@@ -390,8 +391,10 @@ public class JmiChangeSet
 
             boolean progress = false;
             boolean unvalidatedDependency = false;
-            for (Map.Entry<String, JmiValidationAction> mapEntry
-                : transitMap.entrySet()) {
+            for (
+                Map.Entry<String, JmiValidationAction> mapEntry
+                : transitMap.entrySet())
+            {
                 RefObject obj =
                     (RefObject) getMdrRepos().getByMofId(mapEntry.getKey());
                 if (obj == null) {
@@ -405,8 +408,7 @@ public class JmiChangeSet
                     JmiValidationAction prevAction = validatedMap.get(obj);
                     if (prevAction != null) {
                         if (action != JmiValidationAction.DELETION) {
-                            assert(action == prevAction)
-                                : "Illegal conflict from prevAction = "
+                            assert (action == prevAction) : "Illegal conflict from prevAction = "
                                 + prevAction + " to action = " + action;
                         }
                     }
@@ -473,7 +475,8 @@ public class JmiChangeSet
             RefObject other = nameMap.get(nameKey);
             if (other != null) {
                 if (dispatcher.isNewObject(other)
-                    && dispatcher.isNewObject(element)) {
+                    && dispatcher.isNewObject(element))
+                {
                     // clash between two new objects being defined
                     // simultaneously
                     dispatcher.notifyNameCollision(
@@ -538,6 +541,7 @@ public class JmiChangeSet
                 // actually editing a table to delete a column.
                 return;
             }
+
             // Swap ends
             RefObject tmp = droppedEnd;
             droppedEnd = otherEnd;
@@ -550,13 +554,15 @@ public class JmiChangeSet
             return;
         }
         if ((rule.getSuperInterface() != null)
-            && !(rule.getSuperInterface().isInstance(droppedEnd))) {
+            && !(rule.getSuperInterface().isInstance(droppedEnd)))
+        {
             return;
         }
         JmiDeletionAction action = rule.getAction();
 
         if ((action == JmiDeletionAction.CASCADE)
-            || (dispatcher.getDeletionAction() == JmiDeletionAction.CASCADE)) {
+            || (dispatcher.getDeletionAction() == JmiDeletionAction.CASCADE))
+        {
             if (singleLevelCascade) {
                 scheduleDeletion(otherEnd);
             } else {
@@ -584,7 +590,8 @@ public class JmiChangeSet
         // NOTE: We can't construct the exception now since the object is
         // deleted.  Instead, defer until after rollback.
         final String mofId = droppedEnd.refMofId();
-        enqueueValidationExcn(new DeferredException() {
+        enqueueValidationExcn(
+            new DeferredException() {
                 RuntimeException getException()
                 {
                     RefObject droppedElement =
@@ -627,13 +634,12 @@ public class JmiChangeSet
 
     /**
      * Decides whether an object requires validation processing on creation or
-     * modification.  (Deletion validation processing is carried out
-     * regardless of this decision.)
+     * modification. (Deletion validation processing is carried out regardless
+     * of this decision.)
      *
      * @param obj object being touched
      *
-     * @return true to carry out validation processing; false to
-     * suppress
+     * @return true to carry out validation processing; false to suppress
      */
     protected boolean shouldValidateModification(RefObject obj)
     {
@@ -694,14 +700,17 @@ public class JmiChangeSet
      */
     private void sortOrderedAssocsInTransitMap()
     {
-        for (Map.Entry<String, JmiValidationAction> mapEntry
-            : transitMap.entrySet()) {
+        for (
+            Map.Entry<String, JmiValidationAction> mapEntry
+            : transitMap.entrySet())
+        {
             JmiValidationAction action = mapEntry.getValue();
             if (action == JmiValidationAction.DELETION) {
                 continue;
             }
             RefObject refObj =
                 (RefObject) getMdrRepos().getByMofId(mapEntry.getKey());
+
             // Check for null because object might have been deleted
             // by a trigger.
             if (refObj != null) {
@@ -714,17 +723,13 @@ public class JmiChangeSet
      * Synchronizes the "ordinal" attribute of targets in ordered composite
      * associations of which the given object is a source.
      *
-     *<p>
+     * <p>If none of the targets has a null ordinal value, it is assumed that
+     * the existing ordinals should be used to reorder the association.
+     * Otherwise, it is assumed that the ordinals should be reassigned based on
+     * existing association order (ignoring existing ordinal values).
      *
-     * If none of the targets has a null ordinal value, it is assumed that the
-     * existing ordinals should be used to reorder the association.  Otherwise,
-     * it is assumed that the ordinals should be reassigned based on existing
-     * association order (ignoring existing ordinal values).
-     *
-     *<p>
-     *
-     * Either way, the result is always a contiguous sequence of
-     * ordinals from 0 to n-1 for n targets.
+     * <p>Either way, the result is always a contiguous sequence of ordinals
+     * from 0 to n-1 for n targets.
      *
      * @param refObj source of associations to maintain
      */
@@ -739,7 +744,8 @@ public class JmiChangeSet
         for (Object edgeObj : edges) {
             JmiAssocEdge edge = (JmiAssocEdge) edgeObj;
             if (edge.getSourceEnd().getAggregation()
-                != AggregationKindEnum.COMPOSITE) {
+                != AggregationKindEnum.COMPOSITE)
+            {
                 continue;
             }
             if (!edge.getTargetEnd().getMultiplicity().isOrdered()) {
@@ -823,10 +829,11 @@ public class JmiChangeSet
             return;
         }
 
-        ArrayList<RefObject> copy = new ArrayList<RefObject>(
-            (List<RefObject>) targets);
+        ArrayList<RefObject> copy =
+            new ArrayList<RefObject>((List<RefObject>) targets);
         Collections.sort(
-            copy, new JmiOrdinalComparator());
+            copy,
+            new JmiOrdinalComparator());
         targets.clear();
         targets.addAll(copy);
     }
@@ -850,7 +857,8 @@ public class JmiChangeSet
         abstract RuntimeException getException();
     }
 
-    private static class JmiOrdinalComparator implements Comparator<RefObject>
+    private static class JmiOrdinalComparator
+        implements Comparator<RefObject>
     {
         // implement Comparator
         public int compare(RefObject o1, RefObject o2)

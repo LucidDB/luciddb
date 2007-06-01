@@ -36,7 +36,6 @@ import org.eigenbase.relopt.*;
 public class FennelValuesRule
     extends ConverterRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FennelValuesRule()

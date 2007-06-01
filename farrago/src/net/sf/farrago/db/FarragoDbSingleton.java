@@ -41,7 +41,6 @@ import net.sf.farrago.util.*;
 public abstract class FarragoDbSingleton
     extends FarragoCompoundAllocation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final Logger tracer = FarragoTrace.getDatabaseTracer();

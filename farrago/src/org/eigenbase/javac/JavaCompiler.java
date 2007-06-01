@@ -29,7 +29,6 @@ package org.eigenbase.javac;
  */
 public interface JavaCompiler
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public void compile();

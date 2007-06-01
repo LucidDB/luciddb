@@ -23,6 +23,7 @@
 package net.sf.farrago.runtime;
 
 import java.sql.*;
+
 import java.util.logging.*;
 
 import net.sf.farrago.fennel.tuple.*;
@@ -32,9 +33,10 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 
+
 /**
- * FennelOnlyResultSet is a refinement of FarragoTupleIterResultSet, where
- * the result set consists of Fennel tuples.
+ * FennelOnlyResultSet is a refinement of FarragoTupleIterResultSet, where the
+ * result set consists of Fennel tuples.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -42,8 +44,6 @@ import org.eigenbase.runtime.*;
 public class FennelOnlyResultSet
     extends FarragoTupleIterResultSet
 {
-    //~ Static fields/initializers ---------------------------------------------
-    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -70,7 +70,9 @@ public class FennelOnlyResultSet
             tracer.fine(toString());
         }
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement AbstractResultSet
     protected Object getRaw(int columnIndex)
     {
@@ -78,17 +80,20 @@ public class FennelOnlyResultSet
         wasNull = (obj == null);
         return obj;
     }
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * ColumnGetter that reads columns from a Fennel tuple
-     * 
+     *
      * @author Zelaine Fong
      */
-    private static class FennelColumnGetter implements ColumnGetter
+    private static class FennelColumnGetter
+        implements ColumnGetter
     {
         final private ResultSetMetaData metaData;
         final private RelDataType rowType;
-        
+
         /**
          * @param metaData metadata corresponding to the result set from which
          * the columns will be read
@@ -102,7 +107,7 @@ public class FennelOnlyResultSet
             this.metaData = metaData;
             this.rowType = rowType;
         }
-        
+
         public String [] getColumnNames()
         {
             return RelOptUtil.getFieldNames(rowType);
@@ -120,7 +125,7 @@ public class FennelOnlyResultSet
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-        }       
+        }
     }
 }
 

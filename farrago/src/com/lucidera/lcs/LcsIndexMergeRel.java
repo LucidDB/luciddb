@@ -39,7 +39,6 @@ import org.eigenbase.relopt.*;
 class LcsIndexMergeRel
     extends FennelSingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final LcsTable lcsTable;
@@ -81,13 +80,12 @@ class LcsIndexMergeRel
     // implement Cloneable
     public LcsIndexMergeRel clone()
     {
-        return
-            new LcsIndexMergeRel(
-                lcsTable,
-                (LcsIndexSearchRel) getChild().clone(),
-                consumerSridParamId,
-                segmentLimitParamId,
-                ridLimitParamId);
+        return new LcsIndexMergeRel(
+            lcsTable,
+            (LcsIndexSearchRel) getChild().clone(),
+            consumerSridParamId,
+            segmentLimitParamId,
+            ridLimitParamId);
     }
 
     // implement RelNode
@@ -154,7 +152,7 @@ class LcsIndexMergeRel
             names,
             new Object[] {
                 print(consumerSridParamId), print(segmentLimitParamId),
-            print(ridLimitParamId)
+                print(ridLimitParamId)
             });
     }
 

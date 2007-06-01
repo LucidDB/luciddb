@@ -21,7 +21,8 @@
 */
 package org.eigenbase.reltype;
 
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
+
 
 /**
  * RelDataTypeComparability is an enumeration of the categories of comparison
@@ -36,8 +37,7 @@ import org.eigenbase.util.Util;
  */
 public enum RelDataTypeComparability
 {
-    None("No comparisons allowed"),
-    Unordered("Only equals/not-equals allowed"),
+    None("No comparisons allowed"), Unordered("Only equals/not-equals allowed"),
     All("All comparisons allowed");
 
     RelDataTypeComparability(String description)

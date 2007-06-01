@@ -39,7 +39,6 @@ import net.sf.farrago.jdbc.*;
 public interface FarragoRJMedDataWrapperInterface
     extends Remote
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

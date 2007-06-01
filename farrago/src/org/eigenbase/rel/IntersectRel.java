@@ -38,7 +38,6 @@ import org.eigenbase.relopt.*;
 public final class IntersectRel
     extends SetOpRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public IntersectRel(
@@ -61,7 +60,8 @@ public final class IntersectRel
         // REVIEW jvs 30-May-2005:  I just pulled this out of a hat.
         double dRows = Double.MAX_VALUE;
         for (int i = 0; i < inputs.length; i++) {
-            dRows = Math.min(
+            dRows =
+                Math.min(
                     dRows,
                     RelMetadataQuery.getRowCount(inputs[i]));
         }
@@ -82,7 +82,8 @@ public final class IntersectRel
 
     public IntersectRel clone(RelNode [] inputs, boolean all)
     {
-        final IntersectRel clone = new IntersectRel(
+        final IntersectRel clone =
+            new IntersectRel(
                 getCluster(),
                 inputs,
                 all);

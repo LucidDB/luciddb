@@ -21,8 +21,10 @@
 */
 package org.eigenbase.util14;
 
-import java.sql.Timestamp;
+import java.sql.*;
+
 import java.text.*;
+
 
 /**
  * ZonelessTimestamp is a timestamp value without a time zone.
@@ -30,8 +32,15 @@ import java.text.*;
  * @author John Pham
  * @version $Id$
  */
-public class ZonelessTimestamp extends ZonelessDatetime
+public class ZonelessTimestamp
+    extends ZonelessDatetime
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * SerialVersionUID created with JDK 1.5 serialver tool.
+     */
+    private static final long serialVersionUID = -6829714640541648394L;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -39,10 +48,7 @@ public class ZonelessTimestamp extends ZonelessDatetime
 
     protected transient Timestamp tempTimestamp;
 
-    /** SerialVersionUID created with JDK 1.5 serialver tool. */
-    private static final long serialVersionUID = -6829714640541648394L;
-
-    //~ Methods ----------------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a ZonelessTimestamp.
@@ -66,6 +72,8 @@ public class ZonelessTimestamp extends ZonelessDatetime
         this.precision = precision;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement ZonelessDatetime
     public Object toJdbcObject()
     {
@@ -73,15 +81,13 @@ public class ZonelessTimestamp extends ZonelessDatetime
     }
 
     /**
-     * Converts this ZonelessTimestamp to a java.sql.Timestamp and formats
-     * it via the {@link java.sql.Timestamp#toString() toString()} method of
-     * that class.
+     * Converts this ZonelessTimestamp to a java.sql.Timestamp and formats it
+     * via the {@link java.sql.Timestamp#toString() toString()} method of that
+     * class.
      *
-     * <p>
-     *
-     * Note: Jdbc formatting always includes a decimal point and at least
-     * one digit of milliseconds precision. Trailing zeros, except for the
-     * first one after the decimal point, do not appear in the output.
+     * <p>Note: Jdbc formatting always includes a decimal point and at least one
+     * digit of milliseconds precision. Trailing zeros, except for the first one
+     * after the decimal point, do not appear in the output.
      *
      * @return the formatted time string
      */
@@ -93,10 +99,11 @@ public class ZonelessTimestamp extends ZonelessDatetime
     }
 
     /**
-     * Formats this ZonelessTimestamp via a SimpleDateFormat. This method
-     * does not display milliseconds precision.
+     * Formats this ZonelessTimestamp via a SimpleDateFormat. This method does
+     * not display milliseconds precision.
      *
      * @param format format string, as required by SimpleDateFormat
+     *
      * @return the formatted timestamp string
      */
     public String toString(String format)
@@ -109,11 +116,12 @@ public class ZonelessTimestamp extends ZonelessDatetime
     /**
      * Parses a string as a ZonelessTimestamp.
      *
-     * <p>This method's parsing is strict and may parse fractional seconds
-     * (as opposed to just milliseconds.)
+     * <p>This method's parsing is strict and may parse fractional seconds (as
+     * opposed to just milliseconds.)
      *
-     * @param s a string representing a time in ISO format, i.e. according
-     *   to the SimpleDateFormat string "yyyy-MM-dd HH:mm:ss"
+     * @param s a string representing a time in ISO format, i.e. according to
+     * the SimpleDateFormat string "yyyy-MM-dd HH:mm:ss"
+     *
      * @return the parsed time, or null if parsing failed
      */
     public static ZonelessTimestamp parse(String s)
@@ -124,12 +132,13 @@ public class ZonelessTimestamp extends ZonelessDatetime
     /**
      * Parses a string as a ZonelessTimestamp using a given format string.
      *
-     * <p>This method's parsing is strict and may parse fractional seconds
-     * (as opposed to just milliseconds.)
+     * <p>This method's parsing is strict and may parse fractional seconds (as
+     * opposed to just milliseconds.)
      *
-     * @param s a string representing a time in ISO format, i.e. according
-     *   to the SimpleDateFormat string "yyyy-MM-dd HH:mm:ss"
+     * @param s a string representing a time in ISO format, i.e. according to
+     * the SimpleDateFormat string "yyyy-MM-dd HH:mm:ss"
      * @param format format string as per {@link SimpleDateFormat}
+     *
      * @return the parsed timestamp, or null if parsing failed
      */
     public static ZonelessTimestamp parse(String s, String format)
@@ -148,8 +157,8 @@ public class ZonelessTimestamp extends ZonelessDatetime
     }
 
     /**
-     * Gets a temporary Timestamp object. The same object is returned
-     * every time.
+     * Gets a temporary Timestamp object. The same object is returned every
+     * time.
      */
     protected Timestamp getTempTimestamp(long value)
     {

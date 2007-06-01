@@ -31,10 +31,11 @@ import java.util.*;
 import java.util.logging.*;
 
 import net.sf.farrago.resource.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.trace.*;
-import net.sf.farrago.session.*;
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
+import net.sf.farrago.util.*;
+
 
 /**
  * FarragoExportSchemaUDR provides system procedures to export tables from a
@@ -45,19 +46,19 @@ import net.sf.farrago.runtime.*;
  */
 public abstract class FarragoExportSchemaUDR
 {
-    private static Logger tracer = FarragoTrace.getSyslibTracer();
-
     //~ Static fields/initializers ---------------------------------------------
+
+    private static Logger tracer = FarragoTrace.getSyslibTracer();
 
     private static final String QUOTE = "\"";
     private static final String TAB = "\t";
     private static final String NEWLINE = "\r\n";
     private static final String [] TABLE_TYPES =
-        {
-            "TABLE",
-            "FOREIGN TABLE",
-            "VIEW"
-        };
+    {
+        "TABLE",
+        "FOREIGN TABLE",
+        "VIEW"
+    };
 
     private static final String LOGFILE_PREFIX = "Export_";
 
@@ -76,8 +77,8 @@ public abstract class FarragoExportSchemaUDR
     /**
      * Exports tables within a schema to flat files with BCP files
      *
-     * @param catalog name of the catalog where schema resides, if null,
-     * default catalog
+     * @param catalog name of the catalog where schema resides, if null, default
+     * catalog
      * @param schema name of local schema
      * @param exclude if true, tables matching either the table_list of the
      * table_pattern will be excluded. if false, tables will be included
@@ -85,14 +86,14 @@ public abstract class FarragoExportSchemaUDR
      * table_pattern is being used
      * @param tablePattern table name pattern where '_' represents any single
      * character
-     * @param directory the directory in which to place the exported CSV and
-     * BCP files
+     * @param directory the directory in which to place the exported CSV and BCP
+     * files
      * @param withBcp indicates whether BCP files should be created. If true,
      * BCP files will be created. If false, they will not be created
-     * @param deleteFailedFiles if true, csv and bcp files for tables which
-     * fail during export will be deleted, otherwise they will remain
-     * @param fieldDelimiter used to delimit column fields in the flat file
-     * if null, defaults to tab separated
+     * @param deleteFailedFiles if true, csv and bcp files for tables which fail
+     * during export will be deleted, otherwise they will remain
+     * @param fieldDelimiter used to delimit column fields in the flat file if
+     * null, defaults to tab separated
      * @param fileExtension the file extension for the created flat file, if
      * null, defaults to .txt
      * @param dateFormat format for DATE fields ({@link SimpleDateFormat})
@@ -119,23 +120,24 @@ public abstract class FarragoExportSchemaUDR
         Connection conn =
             DriverManager.getConnection("jdbc:default:connection");
 
-        HashSet<String> tableNames = getLocalTableNames(
-            catalog,
-            schema,
-            exclude,
-            tableList,
-            tablePattern,
-            conn);
+        HashSet<String> tableNames =
+            getLocalTableNames(
+                catalog,
+                schema,
+                exclude,
+                tableList,
+                tablePattern,
+                conn);
 
         // create Csv files
         toCsv(
             FULL_EXPORT,
             catalog,
             schema,
-            null,  // lastModified
-            null,  // columnName
-            null,  // incrCatalog
-            null,  // incrSchema
+            null, // lastModified
+            null, // columnName
+            null, // incrCatalog
+            null, // incrSchema
             directory,
             withBcp,
             true,
@@ -146,15 +148,15 @@ public abstract class FarragoExportSchemaUDR
             timeFormat,
             timestampFormat,
             tableNames,
-            null,  // querySql
+            null, // querySql
             conn);
     }
 
     /**
      * Exports tables within a schema to flat files with BCP files
      *
-     * @param catalog name of the catalog where schema resides, if null,
-     * default catalog
+     * @param catalog name of the catalog where schema resides, if null, default
+     * catalog
      * @param schema name of local schema
      * @param exclude if true, tables matching either the table_list of the
      * table_pattern will be excluded. if false, tables will be included
@@ -162,14 +164,14 @@ public abstract class FarragoExportSchemaUDR
      * table_pattern is being used
      * @param tablePattern table name pattern where '_' represents any single
      * character
-     * @param directory the directory in which to place the exported CSV and
-     * BCP files
+     * @param directory the directory in which to place the exported CSV and BCP
+     * files
      * @param withBcp indicates whether BCP files should be created. If true,
      * BCP files will be created. If false, they will not be created
-     * @param deleteFailedFiles if true, csv and bcp files for tables which
-     * fail during export will be deleted, otherwise they will remain
-     * @param fieldDelimiter used to delimit column fields in the flat file
-     * if null, defaults to tab separated
+     * @param deleteFailedFiles if true, csv and bcp files for tables which fail
+     * during export will be deleted, otherwise they will remain
+     * @param fieldDelimiter used to delimit column fields in the flat file if
+     * null, defaults to tab separated
      * @param fileExtension the file extension for the created flat file, if
      * null, defaults to .txt
      */
@@ -197,22 +199,19 @@ public abstract class FarragoExportSchemaUDR
             deleteFailedFiles,
             fieldDelimiter,
             fileExtension,
-            null,     // dateFormat
-            null,     // timeFormat
-            null);     // timestampFormat
-
+            null, // dateFormat
+            null, // timeFormat
+            null); // timestampFormat
     }
 
-
     /**
-     * Exports tables within a schema to flat files with BCP files
+     * Exports tables within a schema to flat files with BCP files Older version
+     * of the export local schema UDP without file extension, field delimiter
+     * and datetime format parameters. To be eventually either retired, or
+     * changed to output csv files instead of tab separated
      *
-     * Older version of the export local schema UDP without file extension,
-     * field delimiter and datetime format parameters.  To be eventually
-     * either retired, or changed to output csv files instead of tab separated
-     *
-     * @param catalog name of the catalog where schema resides, if null,
-     * default catalog
+     * @param catalog name of the catalog where schema resides, if null, default
+     * catalog
      * @param schema name of local schema
      * @param exclude if true, tables matching either the table_list of the
      * table_pattern will be excluded. if false, tables will be included
@@ -220,12 +219,12 @@ public abstract class FarragoExportSchemaUDR
      * table_pattern is being used
      * @param tablePattern table name pattern where '_' represents any single
      * character
-     * @param directory the directory in which to place the exported CSV and
-     * BCP files
+     * @param directory the directory in which to place the exported CSV and BCP
+     * files
      * @param withBcp indicates whether BCP files should be created. If true,
      * BCP files will be created. If false, they will not be created
-     * @param deleteFailedFiles if true, csv and bcp files for tables which
-     * fail during export will be deleted, otherwise they will remain
+     * @param deleteFailedFiles if true, csv and bcp files for tables which fail
+     * during export will be deleted, otherwise they will remain
      */
     public static void exportSchemaToCsv(
         String catalog,
@@ -241,40 +240,41 @@ public abstract class FarragoExportSchemaUDR
         Connection conn =
             DriverManager.getConnection("jdbc:default:connection");
 
-        HashSet<String> tableNames = getLocalTableNames(
-            catalog,
-            schema,
-            exclude,
-            tableList,
-            tablePattern,
-            conn);
+        HashSet<String> tableNames =
+            getLocalTableNames(
+                catalog,
+                schema,
+                exclude,
+                tableList,
+                tablePattern,
+                conn);
 
         // create Csv files
         toCsv(
             FULL_EXPORT,
             catalog,
             schema,
-            null,  // lastModified
-            null,  // columnName
-            null,  // incrCatalog
-            null,  // incrSchema
+            null, // lastModified
+            null, // columnName
+            null, // incrCatalog
+            null, // incrSchema
             directory,
             withBcp,
             true,
             deleteFailedFiles,
-            null,  // fieldDelimiter
-            null,  //fileExtension
-            null,  // dateFormat
-            null,  // timeFormat
-            null,  // timestampFormat
+            null, // fieldDelimiter
+            null, //fileExtension
+            null, // dateFormat
+            null, // timeFormat
+            null, // timestampFormat
             tableNames,
-            null,  // querySql
+            null, // querySql
             conn);
     }
 
     /**
-     * Standard version of local schema export which always creates
-     * bcp files and deletes any leftover files from failed table exports
+     * Standard version of local schema export which always creates bcp files
+     * and deletes any leftover files from failed table exports
      */
     public static void exportSchemaToCsv(
         String catalog,
@@ -292,7 +292,7 @@ public abstract class FarragoExportSchemaUDR
             tableList,
             tablePattern,
             directory,
-            true,  // withBcp
+            true, // withBcp
             true); // deleteFailedFiles
     }
 
@@ -308,12 +308,12 @@ public abstract class FarragoExportSchemaUDR
      * @param tablePattern table name pattern where '_' represents any single
      * character and '%' represents any sequence of zero or more characters. Set
      * to null value if tableList is being used
-     * @param directory the directory in which to place the exported CSV and
-     * BCP files
+     * @param directory the directory in which to place the exported CSV and BCP
+     * files
      * @param withBcp indicates whether bcp files should be created. if true,
      * bcp files will be created. If false, they will not be created
-     * @param deleteFailedFiles if true, csv and bcp files for tables which
-     * fail during export will be deleted, otherwise they will remain
+     * @param deleteFailedFiles if true, csv and bcp files for tables which fail
+     * during export will be deleted, otherwise they will remain
      */
     public static void exportForeignSchemaToCsv(
         String foreignServer,
@@ -333,17 +333,16 @@ public abstract class FarragoExportSchemaUDR
             exclude,
             tableList,
             tablePattern,
-            null,   // lastModified
-            null,   // lastModifiedColumn
+            null, // lastModified
+            null, // lastModifiedColumn
             directory,
             withBcp,
             deleteFailedFiles);
     }
 
-
     /**
-     * Standard version of foreign schema export which always creates
-     * bcp files and deletes any leftover files from failed table exports
+     * Standard version of foreign schema export which always creates bcp files
+     * and deletes any leftover files from failed table exports
      */
     public static void exportForeignSchemaToCsv(
         String foreignServer,
@@ -366,11 +365,11 @@ public abstract class FarragoExportSchemaUDR
     }
 
     /**
-     * Exports tables within a schema to CSV/BCP files for rows modified
-     * after a specified timestamp
+     * Exports tables within a schema to CSV/BCP files for rows modified after a
+     * specified timestamp
      *
-     * @param catalog name of the catalog where schema resides, if null,
-     * default catalog
+     * @param catalog name of the catalog where schema resides, if null, default
+     * catalog
      * @param schema name of local schema
      * @param exclude if true, tables matching either the tableList of the
      * tablePattern will be excluded. if false, tables will be included
@@ -379,16 +378,16 @@ public abstract class FarragoExportSchemaUDR
      * @param tablePattern table name pattern where '_' represents any single
      * character
      * @param lastModified if specified, only rows which were modified after
-     * this timestamp will be written to the csv file; lastModifiedColumn
-     * must be valid for this field to be used
-     * @param lastModifiedColumn name of the column for last modified
-     * timestamp, if not specified then all rows will be written
-     * @param directory the directory in which to place the exported CSV and
-     * BCP files
+     * this timestamp will be written to the csv file; lastModifiedColumn must
+     * be valid for this field to be used
+     * @param lastModifiedColumn name of the column for last modified timestamp,
+     * if not specified then all rows will be written
+     * @param directory the directory in which to place the exported CSV and BCP
+     * files
      * @param withBcp indicates whether BCP files should be created. If true,
      * BCP files will be created. If false, they will not be created
-     * @param deleteFailedFiles if true, csv and bcp files for tables which
-     * fail during export will be deleted, otherwise they will remain
+     * @param deleteFailedFiles if true, csv and bcp files for tables which fail
+     * during export will be deleted, otherwise they will remain
      */
     public static void exportSchemaIncrementalToCsv(
         String catalog,
@@ -406,18 +405,18 @@ public abstract class FarragoExportSchemaUDR
         Connection conn =
             DriverManager.getConnection("jdbc:default:connection");
 
-        HashSet<String> tableNames = getLocalTableNames(
-            catalog,
-            schema,
-            exclude,
-            tableList,
-            tablePattern,
-            conn);
-
+        HashSet<String> tableNames =
+            getLocalTableNames(
+                catalog,
+                schema,
+                exclude,
+                tableList,
+                tablePattern,
+                conn);
 
         if ((lastModified == null) || (lastModifiedColumn == null)) {
-            throw FarragoResource.instance()
-                .ExportSchemaSpecifyLastModified.ex();
+            throw FarragoResource.instance().ExportSchemaSpecifyLastModified
+            .ex();
         }
 
         // create Csv files
@@ -427,26 +426,25 @@ public abstract class FarragoExportSchemaUDR
             schema,
             lastModified,
             lastModifiedColumn,
-            null,      // incrCatalog
-            null,      // incrSchema
+            null, // incrCatalog
+            null, // incrSchema
             directory,
             withBcp,
             true,
             deleteFailedFiles,
-            null,      // fieldDelimiter
-            null,      // fileExtension
-            null,      // dateFormat
-            null,      // timeFormat
-            null,      // timestampFormat
+            null, // fieldDelimiter
+            null, // fileExtension
+            null, // dateFormat
+            null, // timeFormat
+            null, // timestampFormat
             tableNames,
-            null,      // querySql
+            null, // querySql
             conn);
     }
 
     /**
-     * Standard version of incremental local schema export which
-     * always creates bcp files and deletes any leftover files from failed
-     * table exports
+     * Standard version of incremental local schema export which always creates
+     * bcp files and deletes any leftover files from failed table exports
      */
     public static void exportSchemaIncrementalToCsv(
         String catalog,
@@ -468,13 +466,13 @@ public abstract class FarragoExportSchemaUDR
             lastModified,
             lastModifiedColumn,
             directory,
-            true,   // withBcp
-            true);  // deleteFailedFiles
+            true, // withBcp
+            true); // deleteFailedFiles
     }
 
     /**
-     * Exports tables within a foreign schema to CSV/BCP files for rows
-     * modified after a specified timestamp
+     * Exports tables within a foreign schema to CSV/BCP files for rows modified
+     * after a specified timestamp
      *
      * @param foreignServer name of the foreign server
      * @param foreignSchema name of the foreign schema
@@ -483,18 +481,18 @@ public abstract class FarragoExportSchemaUDR
      * @param tableList comma separated list of tables or null value if
      * tablePattern is being used
      * @param tablePattern table name pattern where '_' represents any single
-     * character and '%' represents any sequence of zero or more characters.
-     * Set to null value if tableList is being used
-     * @param lastModified only rows which were modified after
-     * this timestamp will be returned
-     * @param lastModifiedColumn name of the column for last modified
-     * timestamp; if not valid for a table, all rows will be returned
-     * @param directory the directory in which to place the exported CSV and
-     * BCP files
+     * character and '%' represents any sequence of zero or more characters. Set
+     * to null value if tableList is being used
+     * @param lastModified only rows which were modified after this timestamp
+     * will be returned
+     * @param lastModifiedColumn name of the column for last modified timestamp;
+     * if not valid for a table, all rows will be returned
+     * @param directory the directory in which to place the exported CSV and BCP
+     * files
      * @param withBcp indicates whether bcp files should be created. if true,
      * bcp files will be created. If false, they will not be created
-     * @param deleteFailedFiles if true, csv and bcp files for tables which
-     * fail during export will be deleted, otherwise they will remain
+     * @param deleteFailedFiles if true, csv and bcp files for tables which fail
+     * during export will be deleted, otherwise they will remain
      */
     public static void exportForeignSchemaIncrementalToCsv(
         String foreignServer,
@@ -524,9 +522,9 @@ public abstract class FarragoExportSchemaUDR
     }
 
     /**
-     * Standard version of incremental foreign schema export which
-     * always creates bcp files and deletes any leftover files from failed
-     * table exports
+     * Standard version of incremental foreign schema export which always
+     * creates bcp files and deletes any leftover files from failed table
+     * exports
      */
     public static void exportForeignSchemaIncrementalToCsv(
         String foreignServer,
@@ -548,27 +546,27 @@ public abstract class FarragoExportSchemaUDR
             lastModified,
             lastModifiedColumn,
             directory,
-            true,  // withBcp
+            true, // withBcp
             true); // deleteFailedFiles
     }
 
     /**
-     * Used to combine original data and incremental data.  The data from
-     * the original schema which has been deleted will not be updated.  Only
-     * updates and new records from the incremental schema will be.  The
-     * tables in the schemas must have the same structure.
+     * Used to combine original data and incremental data. The data from the
+     * original schema which has been deleted will not be updated. Only updates
+     * and new records from the incremental schema will be. The tables in the
+     * schemas must have the same structure.
      *
      * @param origCatalog name of catalog where original data tables reside
      * @param origSchema name of schema where original data tables reside
      * @param incrCatalog name of catalog where incremental data tables reside
      * @param incrSchema name of schema where incremental data tables reside
      * @param idColumn name of the id column used to join tables
-     * @param directory the directory in which to place the exported CSV and
-     * BCP files
+     * @param directory the directory in which to place the exported CSV and BCP
+     * files
      * @param withBcp indicates whether bcp files should be created. if true,
      * bcp files will be created. If false, they will not be created
-     * @param deleteFailedFiles if true, csv and bcp files for tables which
-     * fail during export will be deleted, otherwise they will remain
+     * @param deleteFailedFiles if true, csv and bcp files for tables which fail
+     * during export will be deleted, otherwise they will remain
      */
     public static void exportMergedSchemas(
         String origCatalog,
@@ -588,27 +586,28 @@ public abstract class FarragoExportSchemaUDR
             DriverManager.getConnection("jdbc:default:connection");
 
         // get tables from first schema with original data
-        HashSet<String> origTblNames = getLocalTableNames(
-            origCatalog,
-            origSchema,
-            exclude,
-            tableList,
-            tablePattern,
-            conn);
+        HashSet<String> origTblNames =
+            getLocalTableNames(
+                origCatalog,
+                origSchema,
+                exclude,
+                tableList,
+                tablePattern,
+                conn);
 
         // get tables from the 2nd schema with incremental data
-        HashSet<String> incrTblNames = getLocalTableNames(
-            incrCatalog,
-            incrSchema,
-            exclude,
-            tableList,
-            tablePattern,
-            conn);
+        HashSet<String> incrTblNames =
+            getLocalTableNames(
+                incrCatalog,
+                incrSchema,
+                exclude,
+                tableList,
+                tablePattern,
+                conn);
 
         // check that they match
         if (!incrTblNames.equals(origTblNames)) {
-            throw FarragoResource.instance()
-                .ExportSchemaMergeTablesDiffer.ex();
+            throw FarragoResource.instance().ExportSchemaMergeTablesDiffer.ex();
         }
 
         // call toCsv
@@ -616,7 +615,7 @@ public abstract class FarragoExportSchemaUDR
             MERGE_EXPORT,
             origCatalog,
             origSchema,
-            null,   // last modified timestamp
+            null, // last modified timestamp
             idColumn,
             incrCatalog,
             incrSchema,
@@ -624,20 +623,19 @@ public abstract class FarragoExportSchemaUDR
             withBcp,
             true,
             deleteFailedFiles,
-            null,   // fieldDelimiter
-            null,   // fileExtension
-            null,   // dateFormat
-            null,   // timeFormat
-            null,   // timestampFormat
+            null, // fieldDelimiter
+            null, // fileExtension
+            null, // dateFormat
+            null, // timeFormat
+            null, // timestampFormat
             incrTblNames,
-            null,   // querySql
+            null, // querySql
             conn);
     }
 
     /**
-     * Standard version of local merge schema export which always
-     * creates bcp files and deletes any leftover files from failed table
-     * exports
+     * Standard version of local merge schema export which always creates bcp
+     * files and deletes any leftover files from failed table exports
      */
     public static void exportMergedSchemas(
         String origCatalog,
@@ -661,8 +659,8 @@ public abstract class FarragoExportSchemaUDR
             tablePattern,
             idColumn,
             directory,
-            true,   // withBcp
-            true);  // deleteFailedFiles
+            true, // withBcp
+            true); // deleteFailedFiles
     }
 
     /**
@@ -677,6 +675,7 @@ public abstract class FarragoExportSchemaUDR
      * @param tablePattern table name pattern where '_' represents any single
      * character
      * @param conn connection to the database
+     *
      * @return HashSet of types String with the names of all the tables to be
      * exported
      */
@@ -705,12 +704,11 @@ public abstract class FarragoExportSchemaUDR
                 .ExportSchemaSpecifyListOrPattern.ex();
             } else if ((tableList == null) && (tablePattern != null)) {
                 // use tablePattern to retrieve table names
-                rs =
-                    conn.getMetaData().getTables(
-                        catalog,
-                        schema,
-                        tablePattern,
-                        TABLE_TYPES);
+                rs = conn.getMetaData().getTables(
+                    catalog,
+                    schema,
+                    tablePattern,
+                    TABLE_TYPES);
 
                 // filter out the excluded table names
                 if (exclude) {
@@ -741,12 +739,11 @@ public abstract class FarragoExportSchemaUDR
             } else {
                 // either tableList is being used or there is no filtering
                 // retrive all the table names in the schema.
-                rs =
-                    conn.getMetaData().getTables(
-                        catalog,
-                        schema,
-                        "%",
-                        TABLE_TYPES);
+                rs = conn.getMetaData().getTables(
+                    catalog,
+                    schema,
+                    "%",
+                    TABLE_TYPES);
                 while (rs.next()) {
                     tableNames.add(rs.getString(3));
                 }
@@ -824,19 +821,19 @@ public abstract class FarragoExportSchemaUDR
      * @param tableList comma separated list of tables or null value if
      * tablePattern is being used
      * @param tablePattern table name pattern where '_' represents any single
-     * character and '%' represents any sequence of zero or more characters.
-     * Set to null value if tableList is being used
+     * character and '%' represents any sequence of zero or more characters. Set
+     * to null value if tableList is being used
      * @param lastModified if specified, only rows which were modified after
-     * this timestamp will be returned; lastModifiedColumn must be valid
-     * for this field to be used
-     * @param lastModifiedColumn name of the column for last modified
-     * timestamp, if not specified all rows will be returned
-     * @param directory the directory in which to place the exported CSV and
-     * BCP files
+     * this timestamp will be returned; lastModifiedColumn must be valid for
+     * this field to be used
+     * @param lastModifiedColumn name of the column for last modified timestamp,
+     * if not specified all rows will be returned
+     * @param directory the directory in which to place the exported CSV and BCP
+     * files
      * @param withBcp indicates whether bcp files should be created. if true,
      * bcp files will be created. If false, they will not be created
-     * @param deleteFailedFiles if true, csv and bcp files for tables which
-     * fail during export will be deleted, otherwise they will remain
+     * @param deleteFailedFiles if true, csv and bcp files for tables which fail
+     * during export will be deleted, otherwise they will remain
      */
     private static void exportForeignSchemaHelper(
         int expType,
@@ -882,13 +879,14 @@ public abstract class FarragoExportSchemaUDR
             }
             tmpSchemaExists = true;
 
-            String importSql = buildImportForeignSchemaSql(
-                foreignServer,
-                foreignSchema,
-                tableList,
-                tablePattern,
-                exclude,
-                tmpLocalSchema);
+            String importSql =
+                buildImportForeignSchemaSql(
+                    foreignServer,
+                    foreignSchema,
+                    tableList,
+                    tablePattern,
+                    exclude,
+                    tmpLocalSchema);
 
             // import foreign schema into temp schema
             try {
@@ -935,19 +933,19 @@ public abstract class FarragoExportSchemaUDR
                 tmpLocalSchema,
                 lastModified,
                 lastModifiedColumn,
-                null,  // incrCatalog
-                null,  // incrSchema
+                null, // incrCatalog
+                null, // incrSchema
                 directory,
                 withBcp,
                 true,
                 deleteFailedFiles,
-                null,  // fieldDelimiter
-                null,  // fileExtension
-                null,  // dateFormat
-                null,  // timeFormat
-                null,  // timestampFormat
+                null, // fieldDelimiter
+                null, // fileExtension
+                null, // dateFormat
+                null, // timeFormat
+                null, // timestampFormat
                 tableNames,
-                null,  // querySql
+                null, // querySql
                 conn);
 
             // drop temp schema
@@ -956,14 +954,13 @@ public abstract class FarragoExportSchemaUDR
                     "drop schema " + QUOTE + tmpLocalSchema
                     + QUOTE + " cascade");
             } catch (SQLException se) {
-                throw FarragoResource.instance()
-                    .ExportSchemaDropTempSchemaError.ex(
-                        tmpLocalSchema,
-                        se.getMessage());
+                throw FarragoResource.instance().ExportSchemaDropTempSchemaError
+                .ex(
+                    tmpLocalSchema,
+                    se.getMessage());
             }
 
             tmpSchemaExists = false;
-
         } finally {
             if (tmpSchemaExists) {
                 try {
@@ -1004,8 +1001,8 @@ public abstract class FarragoExportSchemaUDR
      * @param directory location to write CSV and BCP files
      * @param withBcp if true creates BCP files, if false, doesn't
      * @param withData if true creates data files, if false, doesn't
-     * @param deleteFailedFiles if true, csv and bcp files for tables which
-     * fail during export will be deleted, otherwise they will remain
+     * @param deleteFailedFiles if true, csv and bcp files for tables which fail
+     * during export will be deleted, otherwise they will remain
      * @param dateFormat format for DATE fields ({@link SimpleDateFormat})
      * @param timeFormat format for TIME fields ({@link SimpleDateFormat})
      * @param timestampFormat format for TIMESTAMP fields ({@link
@@ -1067,7 +1064,8 @@ public abstract class FarragoExportSchemaUDR
         }
         if (!csvDir.exists() || !csvDir.isDirectory()) {
             throw FarragoResource.instance().ExportSchemaCreateDirFailed.ex(
-                csvDir.toString(), "mkdir");
+                csvDir.toString(),
+                "mkdir");
         }
 
         // create export log file
@@ -1087,10 +1085,11 @@ public abstract class FarragoExportSchemaUDR
             logDir = csvDir;
         }
 
-        logFile = new File(
-            logDir,
-            LOGFILE_PREFIX + EXPORT_TYPES[expType]
-            + "_" + getTimestampString() + ".log");
+        logFile =
+            new File(
+                logDir,
+                LOGFILE_PREFIX + EXPORT_TYPES[expType]
+                + "_" + getTimestampString() + ".log");
         String logFileName = logFile.toString();
         try {
             logOut = new FileWriter(logFile, false);
@@ -1105,10 +1104,10 @@ public abstract class FarragoExportSchemaUDR
 
         Iterator<String> tableIter;
         if (tableNames != null) {
-            assert(querySql == null);
+            assert (querySql == null);
             tableIter = tableNames.iterator();
         } else {
-            assert(querySql != null);
+            assert (querySql != null);
             tableIter = Collections.singleton("{QUERY}").iterator();
         }
         Statement stmt = conn.createStatement();
@@ -1127,11 +1126,10 @@ public abstract class FarragoExportSchemaUDR
                 logOut.close();
                 logFile.delete();
             } catch (IOException ie2) {
-                throw FarragoResource.instance()
-                    .ExportSchemaFileWriterError.ex(
-                        logFileName,
-                        ie.getMessage() + ie2.getMessage(),
-                        ie);
+                throw FarragoResource.instance().ExportSchemaFileWriterError.ex(
+                    logFileName,
+                    ie.getMessage() + ie2.getMessage(),
+                    ie);
             }
             throw FarragoResource.instance().ExportSchemaFileWriterError.ex(
                 logFileName,
@@ -1143,6 +1141,7 @@ public abstract class FarragoExportSchemaUDR
         if ((fieldDelimiter == null) || (fieldDelimiter.contains("\\t"))) {
             fieldDelimiter = TAB;
         }
+
         // file extension for data file defaults to .txt
         if (fileExtension == null) {
             fileExtension = ".txt";
@@ -1158,26 +1157,28 @@ public abstract class FarragoExportSchemaUDR
                 // if column doesn't exist in table, does a full export
                 // for incremental, for merge table won't be merged
                 // but will be logged in log file
-                int export = checkColumnName(
-                    expType,
-                    catalog,
-                    schema,
-                    incrCatalog,
-                    incrSchema,
-                    tblName,
-                    columnName,
-                    conn);
-
-                if (tableNames != null) {
-                    querySql = buildQuerySql(
-                        export,
+                int export =
+                    checkColumnName(
+                        expType,
                         catalog,
                         schema,
-                        tblName,
-                        lastModified,
-                        columnName,
                         incrCatalog,
-                        incrSchema);
+                        incrSchema,
+                        tblName,
+                        columnName,
+                        conn);
+
+                if (tableNames != null) {
+                    querySql =
+                        buildQuerySql(
+                            export,
+                            catalog,
+                            schema,
+                            tblName,
+                            lastModified,
+                            columnName,
+                            incrCatalog,
+                            incrSchema);
                 }
 
                 logOut.write(EXPORT_TYPES[export] + TAB);
@@ -1232,16 +1233,20 @@ public abstract class FarragoExportSchemaUDR
             try {
                 if (withData) {
                     csvFile = new File(csvName);
-                    csvOut = new OutputStreamWriter(
-                        new FileOutputStream(csvFile), "ISO-8859-1");
+                    csvOut =
+                        new OutputStreamWriter(
+                            new FileOutputStream(csvFile),
+                            "ISO-8859-1");
                     csvOut = new BufferedWriter(csvOut);
                 }
                 int numCols = tblMeta.getColumnCount();
                 if (withBcp) {
                     // write BCP header
                     bcpFile = new File(bcpName);
-                    bcpOut = new OutputStreamWriter(
-                        new FileOutputStream(bcpFile), "ISO-8859-1");
+                    bcpOut =
+                        new OutputStreamWriter(
+                            new FileOutputStream(bcpFile),
+                            "ISO-8859-1");
                     bcpOut = new BufferedWriter(bcpOut);
 
                     // version using BroadBase
@@ -1280,21 +1285,31 @@ public abstract class FarragoExportSchemaUDR
                         // format date/time/timestamp fields
                         int columnType = tblMeta.getColumnType(i);
 
-                        if ((columnType == Types.DATE) && (dateFormat != null))
+                        if ((columnType == Types.DATE)
+                            && (dateFormat != null))
                         {
-                            field = FarragoConvertDatetimeUDR.date_to_char(
-                                dateFormat, tblData.getDate(i), true);
-                        } else if ((columnType == Types.TIME) &&
-                            (timeFormat != null))
+                            field =
+                                FarragoConvertDatetimeUDR.date_to_char(
+                                    dateFormat,
+                                    tblData.getDate(i),
+                                    true);
+                        } else if (
+                            (columnType == Types.TIME)
+                            && (timeFormat != null))
                         {
-                            field = FarragoConvertDatetimeUDR.time_to_char(
-                                timeFormat, tblData.getTime(i), true);
-                        } else if ((columnType == Types.TIMESTAMP) &&
-                            (timestampFormat != null))
+                            field =
+                                FarragoConvertDatetimeUDR.time_to_char(
+                                    timeFormat,
+                                    tblData.getTime(i),
+                                    true);
+                        } else if (
+                            (columnType == Types.TIMESTAMP)
+                            && (timestampFormat != null))
                         {
                             field =
                                 FarragoConvertDatetimeUDR.timestamp_to_char(
-                                    timestampFormat, tblData.getTimestamp(i),
+                                    timestampFormat,
+                                    tblData.getTimestamp(i),
                                     true);
                         } else {
                             // everything else
@@ -1355,11 +1370,11 @@ public abstract class FarragoExportSchemaUDR
                             ie.getMessage() + ie2.getMessage(),
                             ie);
                     }
-                    throw FarragoResource.instance()
-                        .ExportSchemaFileWriterError.ex(
-                            logFileName,
-                            ie.getMessage(),
-                            ie);
+                    throw FarragoResource.instance().ExportSchemaFileWriterError
+                    .ex(
+                        logFileName,
+                        ie.getMessage(),
+                        ie);
                 }
             } catch (SQLException se) {
                 tableFailed = true;
@@ -1379,11 +1394,11 @@ public abstract class FarragoExportSchemaUDR
                             ie.getMessage() + ie2.getMessage(),
                             ie);
                     }
-                    throw FarragoResource.instance()
-                        .ExportSchemaFileWriterError.ex(
-                            logFileName,
-                            ie.getMessage(),
-                            ie);
+                    throw FarragoResource.instance().ExportSchemaFileWriterError
+                    .ex(
+                        logFileName,
+                        ie.getMessage(),
+                        ie);
                 }
             } catch (IOException ie) {
                 tableFailed = true;
@@ -1470,18 +1485,16 @@ public abstract class FarragoExportSchemaUDR
     // support to take CURSOR parameters.
 
     /**
-     * Exports results of a single query to CSV/BCP files.
-     * (Actually currently tab-separated .txt rather than CSV; see
-     * FRG-197).
+     * Exports results of a single query to CSV/BCP files. (Actually currently
+     * tab-separated .txt rather than CSV; see FRG-197).
      *
      * @param querySql query whose result is to be executed
      * @param pathWithoutExtension location to write CSV and BCP files; this
-     * should be a directory-qualified filename without an extension
-     * (correct extension will be appended automatically)
+     * should be a directory-qualified filename without an extension (correct
+     * extension will be appended automatically)
      * @param withBcp if true creates BCP files, if false, doesn't
-     * @param deleteFailedFiles if true, csv and bcp files will be deleted
-     * if export fails, otherwise they may remain
-     * rowcount
+     * @param deleteFailedFiles if true, csv and bcp files will be deleted if
+     * export fails, otherwise they may remain rowcount
      *
      * @deprecated Use widest version instead.
      */
@@ -1497,11 +1510,11 @@ public abstract class FarragoExportSchemaUDR
             pathWithoutExtension,
             withBcp,
             deleteFailedFiles,
-            null,               // fieldDelimiter
-            null,               // fileExtension
-            null,               // dateFormat
-            null,               // timeFormat
-            null                // timestampFormat
+            null, // fieldDelimiter
+            null, // fileExtension
+            null, // dateFormat
+            null, // timeFormat
+            null // timestampFormat
             );
     }
 
@@ -1510,14 +1523,13 @@ public abstract class FarragoExportSchemaUDR
      *
      * @param querySql query whose result is to be executed
      * @param pathWithoutExtension location to write CSV and BCP files; this
-     * should be a directory-qualified filename without an extension
-     * (correct extension will be appended automatically)
+     * should be a directory-qualified filename without an extension (correct
+     * extension will be appended automatically)
      * @param withBcp if true creates BCP files, if false, doesn't
-     * @param deleteFailedFiles if true, csv and bcp files will be deleted
-     * if export fails, otherwise they may remain
-     * rowcount
-     * @param fieldDelimiter used to delimit column fields in the flat file
-     * if null, defaults to tab separated
+     * @param deleteFailedFiles if true, csv and bcp files will be deleted if
+     * export fails, otherwise they may remain rowcount
+     * @param fieldDelimiter used to delimit column fields in the flat file if
+     * null, defaults to tab separated
      * @param fileExtension the file extension for the created flat file, if
      * null, defaults to .txt
      * @param dateFormat format for DATE fields ({@link SimpleDateFormat})
@@ -1545,11 +1557,11 @@ public abstract class FarragoExportSchemaUDR
             withBcp,
             true,
             deleteFailedFiles,
-            null,               // fieldDelimiter
-            null,               // fileExtension
-            null,               // dateFormat
-            null,               // timeFormat
-            null                // timestampFormat
+            null, // fieldDelimiter
+            null, // fileExtension
+            null, // dateFormat
+            null, // timeFormat
+            null // timestampFormat
             );
     }
 
@@ -1558,15 +1570,14 @@ public abstract class FarragoExportSchemaUDR
      *
      * @param querySql query whose result is to be executed
      * @param pathWithoutExtension location to write CSV and BCP files; this
-     * should be a directory-qualified filename without an extension
-     * (correct extension will be appended automatically)
+     * should be a directory-qualified filename without an extension (correct
+     * extension will be appended automatically)
      * @param withBcp if true creates BCP file, if false, doesn't
      * @param withData if true creates data file, if false, doesn't
-     * @param deleteFailedFiles if true, csv and bcp files will be deleted
-     * if export fails, otherwise they may remain
-     * rowcount
-     * @param fieldDelimiter used to delimit column fields in the flat file
-     * if null, defaults to tab separated
+     * @param deleteFailedFiles if true, csv and bcp files will be deleted if
+     * export fails, otherwise they may remain rowcount
+     * @param fieldDelimiter used to delimit column fields in the flat file if
+     * null, defaults to tab separated
      * @param fileExtension the file extension for the created flat file, if
      * null, defaults to .txt
      * @param dateFormat format for DATE fields ({@link SimpleDateFormat})
@@ -1595,12 +1606,12 @@ public abstract class FarragoExportSchemaUDR
 
         toCsv(
             FULL_EXPORT,
-            null,               // catalog
-            null,               // schema
-            null,               // lastModified
-            null,               // columnName
-            null,               // incrCatalog
-            null,               // incrSchema
+            null, // catalog
+            null, // schema
+            null, // lastModified
+            null, // columnName
+            null, // incrCatalog
+            null, // incrSchema
             pathWithoutExtension,
             withBcp,
             withData,
@@ -1610,7 +1621,7 @@ public abstract class FarragoExportSchemaUDR
             dateFormat,
             timeFormat,
             timestampFormat,
-            null,               // tableNames
+            null, // tableNames
             querySql,
             conn);
     }
@@ -1625,7 +1636,9 @@ public abstract class FarragoExportSchemaUDR
      * @param rsmd metadata for the table
      */
     public static String getBcpLine(
-        int colNum, ResultSetMetaData rsmd, String fieldDelim)
+        int colNum,
+        ResultSetMetaData rsmd,
+        String fieldDelim)
         throws SQLException
     {
         String literalSep;
@@ -1647,103 +1660,86 @@ public abstract class FarragoExportSchemaUDR
 
         switch (colJdbcType) {
         case Types.BIGINT:
-            return
-                colStr + TAB + "SQLBIGINT" + TAB + "0" + TAB
+            return colStr + TAB + "SQLBIGINT" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.BINARY:
-            return
-                colStr + TAB + "SQLBINARY" + TAB + "0" + TAB
+            return colStr + TAB + "SQLBINARY" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.BOOLEAN:
-            return
-                colStr + TAB + "SQLBIT" + TAB + "0" + TAB
+            return colStr + TAB + "SQLBIT" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.CHAR:
-            return
-                colStr + TAB + "SQLCHAR" + TAB + "0" + TAB
+            return colStr + TAB + "SQLCHAR" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.DATE:
-            return
-                colStr + TAB + "SQLDATE" + TAB + "0" + TAB
+            return colStr + TAB + "SQLDATE" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.DECIMAL:
-            return
-                colStr + TAB + "SQLDECIMAL" + TAB + "0" + TAB
+            return colStr + TAB + "SQLDECIMAL" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + TAB
                 + String.valueOf(rsmd.getPrecision(colNum)) + TAB
                 + String.valueOf(rsmd.getScale(colNum)) + NEWLINE;
         case Types.DOUBLE:
-            return
-                colStr + TAB + "SQLFLT8" + TAB + "0" + TAB
+            return colStr + TAB + "SQLFLT8" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.FLOAT:
-            return
-                colStr + TAB + "SQLFLT4" + TAB + "0" + TAB
+            return colStr + TAB + "SQLFLT4" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.INTEGER:
-            return
-                colStr + TAB + "SQLINT" + TAB + "0" + TAB
+            return colStr + TAB + "SQLINT" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.NUMERIC:
-            return
-                colStr + TAB + "SQLNUMERIC" + TAB + "0" + TAB
+            return colStr + TAB + "SQLNUMERIC" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + TAB
                 + String.valueOf(rsmd.getPrecision(colNum)) + TAB
                 + String.valueOf(rsmd.getScale(colNum)) + NEWLINE;
         case Types.REAL:
-            return
-                colStr + TAB + "SQLREAL" + TAB + "0" + TAB
+            return colStr + TAB + "SQLREAL" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.SMALLINT:
-            return
-                colStr + TAB + "SQLSMALLINT" + TAB + "0" + TAB
+            return colStr + TAB + "SQLSMALLINT" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.TIME:
-            return
-                colStr + TAB + "SQLTIME" + TAB + "0" + TAB
+            return colStr + TAB + "SQLTIME" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.TIMESTAMP:
-            return
-                colStr + TAB + "SQLTIMESTAMP" + TAB + "0" + TAB
+            return colStr + TAB + "SQLTIMESTAMP" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.TINYINT:
-            return
-                colStr + TAB + "SQLTINYINT" + TAB + "0" + TAB
+            return colStr + TAB + "SQLTINYINT" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.VARBINARY:
-            return
-                colStr + TAB + "SQLBINARY" + TAB + "0" + TAB
+            return colStr + TAB + "SQLBINARY" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         case Types.VARCHAR:
         default:
-            return
-                colStr + TAB + "SQLVARCHAR" + TAB + "0" + TAB
+            return colStr + TAB + "SQLVARCHAR" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
                 + TAB + colStr + TAB + colName + NEWLINE;
         }
     }
 
-
     /**
      * Helper function which escapes the quotes by quoting them
      *
      * @param value string in which to replace quotes with quoted quotes
+     *
      * @return string with all quotes escaped
      */
     private static String quote(String value)
@@ -1778,47 +1774,59 @@ public abstract class FarragoExportSchemaUDR
         String oldQualifiedTable;
 
         if (catalog != null) {
-            oldQualifiedTable = QUOTE + catalog + QUOTE + "." + QUOTE + schema
+            oldQualifiedTable =
+                QUOTE + catalog + QUOTE + "." + QUOTE + schema
                 + QUOTE + "." + QUOTE + tblName + QUOTE;
         } else {
-            oldQualifiedTable = QUOTE + schema + QUOTE + "." + QUOTE + tblName
+            oldQualifiedTable =
+                QUOTE + schema + QUOTE + "." + QUOTE + tblName
                 + QUOTE;
         }
 
-        StringBuilder querySql = new StringBuilder("select * from "
-            + oldQualifiedTable);
+        StringBuilder querySql =
+            new StringBuilder("select * from "
+                + oldQualifiedTable);
 
         switch (expType) {
         case FULL_EXPORT:
+
             // does nothing, sql complete
             break;
         case INCR_EXPORT:
+
             // appends where clause to filter out incremental data here
-            querySql.append(" where " + QUOTE + colName + QUOTE
+            querySql.append(
+                " where " + QUOTE + colName + QUOTE
                 + " >= TIMESTAMP'" + lastModifiedTs.toString() + "'");
             break;
         case MERGE_EXPORT:
+
             // gets all records which haven't been changed in the old schema
             // and all the new and updated records from the new/incr schema
             String incrQualifiedTable;
-            String tempTableName1 = QUOTE + UUID.randomUUID().toString()
+            String tempTableName1 =
+                QUOTE + UUID.randomUUID().toString()
                 + QUOTE;
-            String tempTableName2 = QUOTE + UUID.randomUUID().toString()
+            String tempTableName2 =
+                QUOTE + UUID.randomUUID().toString()
                 + QUOTE;
 
             if (incrCatalog != null) {
-                incrQualifiedTable = QUOTE + incrCatalog + QUOTE + "." + QUOTE
+                incrQualifiedTable =
+                    QUOTE + incrCatalog + QUOTE + "." + QUOTE
                     + incrSchema + QUOTE + "." + QUOTE + tblName + QUOTE;
             } else {
-                incrQualifiedTable = QUOTE + incrSchema + QUOTE + "." + QUOTE
+                incrQualifiedTable =
+                    QUOTE + incrSchema + QUOTE + "." + QUOTE
                     + tblName + QUOTE;
             }
 
             // select out one set of columns only
             querySql.insert(7, tempTableName1 + ".");
 
-            querySql.append(" " + tempTableName1 + " inner join ( select "
-                 + QUOTE + colName + QUOTE + " from " + oldQualifiedTable
+            querySql.append(
+                " " + tempTableName1 + " inner join ( select "
+                + QUOTE + colName + QUOTE + " from " + oldQualifiedTable
                 + " except select " + QUOTE + colName + QUOTE + " from "
                 + incrQualifiedTable + ") " + tempTableName2 + " on "
                 + tempTableName1 + "." + colName + "=" + tempTableName2
@@ -1826,14 +1834,16 @@ public abstract class FarragoExportSchemaUDR
 
             // put incremental first in union all so resulting column names
             // will be the same as the columns in incremental table
-            querySql.insert(0, "select * from " + incrQualifiedTable +
-                " union all (");
+            querySql.insert(
+                0,
+                "select * from " + incrQualifiedTable
+                + " union all (");
             break;
         default:
+
             // should never get here
             throw FarragoResource.instance().ExportSchemaInvalidExpType.ex(
                 String.valueOf(expType));
-
         }
         return querySql.toString();
     }
@@ -1892,9 +1902,15 @@ public abstract class FarragoExportSchemaUDR
      * @return export type to attempt, same as the export type passed in if
      * column exists, full export otherwise
      */
-    private static int checkColumnName(int expType, String catalog,
-        String schema, String incrCatalog, String incrSchema, String tableName,
-        String columnName, Connection conn)
+    private static int checkColumnName(
+        int expType,
+        String catalog,
+        String schema,
+        String incrCatalog,
+        String incrSchema,
+        String tableName,
+        String columnName,
+        Connection conn)
         throws SQLException
     {
         ResultSet rs;
@@ -1902,6 +1918,7 @@ public abstract class FarragoExportSchemaUDR
 
         switch (expType) {
         case FULL_EXPORT:
+
             // does nothing, export type doesn't change for full export
             break;
         case INCR_EXPORT:
@@ -1925,11 +1942,13 @@ public abstract class FarragoExportSchemaUDR
             if (!rs.next()) {
                 // id column doesn't exist in first table
                 rs.close();
-                throw new SQLException("ID column not found in table: "
+                throw new SQLException(
+                    "ID column not found in table: "
                     + "catalog=" + catalog + ",schema=" + schema + ",table="
                     + tableName + ",column=" + columnName);
             }
             rs.close();
+
             // Merge export does a column check for the 2nd table
             rs = conn.getMetaData().getColumns(
                 incrCatalog,
@@ -1942,6 +1961,7 @@ public abstract class FarragoExportSchemaUDR
                 break;
             }
         default:
+
             // should never get here
             throw FarragoResource.instance().ExportSchemaInvalidExpType.ex(
                 String.valueOf(expType));

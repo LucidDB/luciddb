@@ -42,7 +42,6 @@ import net.sf.farrago.fennel.*;
 public class FennelTupleIter
     extends FennelAbstractTupleIter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FennelStreamGraph streamGraph;

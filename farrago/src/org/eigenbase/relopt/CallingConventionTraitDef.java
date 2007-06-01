@@ -46,7 +46,6 @@ import org.eigenbase.util.*;
 public class CallingConventionTraitDef
     extends RelTraitDef
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final CallingConventionTraitDef instance =
@@ -59,8 +58,7 @@ public class CallingConventionTraitDef
      * the planner goes away, so does the map entry.
      */
     private final WeakHashMap<RelOptPlanner, ConversionData>
-        plannerConversionMap =
-        new WeakHashMap<RelOptPlanner, ConversionData>();
+        plannerConversionMap = new WeakHashMap<RelOptPlanner, ConversionData>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -91,7 +89,8 @@ public class CallingConventionTraitDef
         if (converterRule.isGuaranteed()) {
             ConversionData conversionData = getConversionData(planner);
 
-            final Graph<CallingConvention> conversionGraph = conversionData.conversionGraph;
+            final Graph<CallingConvention> conversionGraph =
+                conversionData.conversionGraph;
             final MultiMap<Graph.Arc, ConverterRule> mapArcToConverterRule =
                 conversionData.mapArcToConverterRule;
 
@@ -157,7 +156,8 @@ loop:
             RelNode converted = rel;
             for (int i = 0; i < arcs.length; i++) {
                 if (planner.getCost(converted).isInfinite()
-                    && !allowInfiniteCostConverters) {
+                    && !allowInfiniteCostConverters)
+                {
                     continue loop;
                 }
                 converted =
@@ -191,9 +191,11 @@ loop:
 
         // Try to apply each converter rule for this arc's source/target calling
         // conventions.
-        for (Iterator<ConverterRule> converterRuleIter =
+        for (
+            Iterator<ConverterRule> converterRuleIter =
                 mapArcToConverterRule.getMulti(arc).iterator();
-            converterRuleIter.hasNext();) {
+            converterRuleIter.hasNext();)
+        {
             ConverterRule converterRule = converterRuleIter.next();
             assert (converterRule.getInTraits().getTrait(this) == arc.from);
             assert (converterRule.getOutTraits().getTrait(this) == arc.to);
@@ -216,10 +218,9 @@ loop:
         CallingConvention fromConvention = (CallingConvention) fromTrait;
         CallingConvention toConvention = (CallingConvention) toTrait;
 
-        return
-            conversionData.conversionGraph.getShortestPath(
-                fromConvention,
-                toConvention) != null;
+        return conversionData.conversionGraph.getShortestPath(
+            fromConvention,
+            toConvention) != null;
     }
 
     private ConversionData getConversionData(RelOptPlanner planner)

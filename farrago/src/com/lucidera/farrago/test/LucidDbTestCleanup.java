@@ -39,7 +39,6 @@ import net.sf.farrago.test.*;
 public class LucidDbTestCleanup
     extends FarragoTestCase.Cleanup
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static Thread shutdownHook;
@@ -76,8 +75,7 @@ public class LucidDbTestCleanup
     protected boolean isBlessedSchema(CwmSchema schema)
     {
         String name = schema.getName();
-        return
-            name.equals("SQLJ")
+        return name.equals("SQLJ")
             || name.equals("APPLIB")
             || name.equals("INFORMATION_SCHEMA")
             || name.equals("SYSTEM")
@@ -88,8 +86,7 @@ public class LucidDbTestCleanup
     protected boolean isBlessedWrapper(FemDataWrapper wrapper)
     {
         String name = wrapper.getName();
-        return
-            name.equals("ORACLE")
+        return name.equals("ORACLE")
             || name.equals("SQL SERVER")
             || name.equals("FLAT FILE")
             || name.equals("LUCIDDB LOCAL")
@@ -118,12 +115,12 @@ public class LucidDbTestCleanup
         LucidDbTestCleanup cleanup = newCleanup();
         cleanup.execute();
     }
-    
+
     public void execute()
         throws Exception
     {
         super.execute();
-        ldbStmt.executeUpdate("alter system deallocate old");       
+        ldbStmt.executeUpdate("alter system deallocate old");
     }
 
     private static LucidDbTestCleanup newCleanup()

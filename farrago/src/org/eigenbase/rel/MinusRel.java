@@ -39,7 +39,6 @@ import org.eigenbase.relopt.*;
 public final class MinusRel
     extends SetOpRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public MinusRel(
@@ -83,7 +82,8 @@ public final class MinusRel
 
     public MinusRel clone(RelNode [] inputs, boolean all)
     {
-        MinusRel clone = new MinusRel(
+        MinusRel clone =
+            new MinusRel(
                 getCluster(),
                 inputs,
                 all);

@@ -47,7 +47,6 @@ public class FarragoRJConnection
     implements java.io.Serializable,
         FarragoConnection
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

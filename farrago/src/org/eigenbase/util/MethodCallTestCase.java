@@ -41,7 +41,6 @@ import junit.framework.*;
 public class MethodCallTestCase
     extends TestCase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Dispatcher dispatcher;

@@ -39,7 +39,6 @@ import org.eigenbase.sql.fun.*;
  */
 public class SargRexAnalyzer
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SargFactory factory;
@@ -391,7 +390,8 @@ public class SargRexAnalyzer
      *
      * @return the rex predicate reconstructed from the list of SargBindings.
      */
-    public RexNode getSargBindingListToRexNode(List<SargBinding> sargBindingList)
+    public RexNode getSargBindingListToRexNode(
+        List<SargBinding> sargBindingList)
     {
         if (sargBindingList.isEmpty()) {
             return null;
@@ -502,8 +502,8 @@ public class SargRexAnalyzer
             }
 
             SqlOperator op = call.getOperator();
-            if (op == SqlStdOperatorTable.isNullOperator ||
-                op == SqlStdOperatorTable.isUnknownOperator)
+            if ((op == SqlStdOperatorTable.isNullOperator)
+                || (op == SqlStdOperatorTable.isUnknownOperator))
             {
                 coordinate = factory.getRexBuilder().constantNull();
             } else if (op == SqlStdOperatorTable.isTrueOperator) {

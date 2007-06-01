@@ -52,7 +52,6 @@ public class BytePointer
     implements AssignableValue,
         CharSequence
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String ENFORCE_PRECISION_METHOD_NAME =
@@ -282,7 +281,8 @@ public class BytePointer
                 ownBytes,
                 S1,
                 bp2.getByteCount());
-            System.arraycopy(bp1.buf,
+            System.arraycopy(
+                bp1.buf,
                 bp1.pos + S1 + L1,
                 ownBytes,
                 S1 + bp2.getByteCount(),
@@ -709,7 +709,6 @@ public class BytePointer
             d.getScale());
     }
 
-
     /**
      * Attempts to convert this pointer's contents from a
      * single-byte-ASCII-encoded integer string into a long.
@@ -738,7 +737,7 @@ public class BytePointer
         }
 
         // read up to 19 digits, the most for a long value
-        if (start >= end || end - start > 19) {
+        if ((start >= end) || ((end - start) > 19)) {
             return Long.MAX_VALUE;
         }
         long value = 0;
@@ -750,6 +749,7 @@ public class BytePointer
             value *= 10;
             value += x;
         }
+
         // handle overflow
         if (value < 0) {
             return Long.MAX_VALUE;

@@ -36,6 +36,8 @@ import org.jgrapht.graph.*;
 public class JmiInheritanceEdge
     extends DefaultEdge
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final JmiClassVertex superClass;
     private final JmiClassVertex subClass;
 

@@ -37,7 +37,6 @@ import net.sf.farrago.fem.med.*;
  */
 class LcsCompositeStreamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FemExecutionStreamDef consumer;

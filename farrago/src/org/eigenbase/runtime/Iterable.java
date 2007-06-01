@@ -58,7 +58,6 @@ import java.util.*;
  */
 public interface Iterable
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

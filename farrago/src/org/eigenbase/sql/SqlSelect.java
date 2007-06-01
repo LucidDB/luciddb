@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
 public class SqlSelect
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
@@ -58,15 +57,20 @@ public class SqlSelect
         SqlParserPos pos)
     {
         super(operator, operands, pos);
-        Util.pre(operands.length == OPERAND_COUNT,
+        Util.pre(
+            operands.length == OPERAND_COUNT,
             "operands.length == OPERAND_COUNT");
-        Util.pre(operands[KEYWORDS_OPERAND] != null,
+        Util.pre(
+            operands[KEYWORDS_OPERAND] != null,
             "operands[KEYWORDS_OPERAND] != null");
-        Util.pre(operands[KEYWORDS_OPERAND] instanceof SqlNodeList,
+        Util.pre(
+            operands[KEYWORDS_OPERAND] instanceof SqlNodeList,
             "operands[KEYWORDS_OPERAND] instanceof SqlNodeList");
-        Util.pre(operands[WINDOW_OPERAND] != null,
+        Util.pre(
+            operands[WINDOW_OPERAND] != null,
             "operands[WINDOW_OPERAND] != null");
-        Util.pre(operands[WINDOW_OPERAND] instanceof SqlNodeList,
+        Util.pre(
+            operands[WINDOW_OPERAND] instanceof SqlNodeList,
             "operands[WINDOW_OPERAND] instanceof SqlNodeList");
         Util.pre(pos != null, "pos != null");
     }

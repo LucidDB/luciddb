@@ -43,7 +43,6 @@ import org.eigenbase.reltype.*;
 class FlatFileNameDirectory
     extends MedAbstractNameDirectory
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final FlatFileDataServer server;
@@ -70,13 +69,12 @@ class FlatFileNameDirectory
             return null;
         }
 
-        return
-            server.newColumnSet(
-                localName,
-                server.getProperties(),
-                typeFactory,
-                null,
-                Collections.EMPTY_MAP);
+        return server.newColumnSet(
+            localName,
+            server.getProperties(),
+            typeFactory,
+            null,
+            Collections.EMPTY_MAP);
     }
 
     // implement FarragoMedNameDirectory
@@ -87,9 +85,9 @@ class FlatFileNameDirectory
             FlatFileParams.SchemaType schemaType =
                 FlatFileParams.getSchemaType(foreignName, false);
             if (schemaType != null) {
-                return
-                    new FlatFileNameDirectory(server,
-                        FarragoMedMetadataQuery.OTN_TABLE);
+                return new FlatFileNameDirectory(
+                    server,
+                    FarragoMedMetadataQuery.OTN_TABLE);
             } else {
                 return null;
             }
@@ -144,7 +142,8 @@ class FlatFileNameDirectory
         String [] files = dir.list(new FlatFileFilter());
 
         for (int i = 0; i < files.length; i++) {
-            String tableName = files[i].substring(
+            String tableName =
+                files[i].substring(
                     0,
                     files[i].indexOf("."));
             sink.writeObjectDescriptor(
@@ -179,11 +178,11 @@ class FlatFileNameDirectory
                         sink.getTypeFactory());
                 if (!testFile.exists()) {
                     String [] localName =
-                        {
-                            server.getProperties().getProperty("NAME"),
-                            FlatFileParams.SchemaType.QUERY.getSchemaName(),
-                            tableName
-                        };
+                    {
+                        server.getProperties().getProperty("NAME"),
+                        FlatFileParams.SchemaType.QUERY.getSchemaName(),
+                        tableName
+                    };
                     server.sampleAndCreateBcp(localName, bcpFile);
                 }
             }
@@ -191,7 +190,8 @@ class FlatFileNameDirectory
             String [] files = dir.list(new BCPFileFilter());
 
             for (int i = 0; i < files.length; i++) {
-                String tableName = files[i].substring(
+                String tableName =
+                    files[i].substring(
                         0,
                         files[i].indexOf("."));
                 String bcpFilePath =
@@ -233,9 +233,8 @@ class FlatFileNameDirectory
         public boolean accept(File dir, String name)
         {
             String fileExt = server.params.getFileExtenstion();
-            return
-                (name.endsWith(fileExt) &&
-                !(name.startsWith(".") || name.startsWith(",")));
+            return (name.endsWith(fileExt)
+                && !(name.startsWith(".") || name.startsWith(",")));
         }
     }
 

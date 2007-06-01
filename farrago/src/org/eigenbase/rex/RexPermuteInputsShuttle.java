@@ -22,33 +22,39 @@
 */
 package org.eigenbase.rex;
 
-import org.eigenbase.util.Permutation;
+import org.eigenbase.util.*;
+
 
 /**
  * Shuttle which applies a permutation to its input fields.
  *
- * @see RexPermutationShuttle
- *
  * @author jhyde
  * @version $Id$
+ * @see RexPermutationShuttle
  */
 public class RexPermuteInputsShuttle
     extends RexShuttle
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final Permutation permutation;
+
+    //~ Constructors -----------------------------------------------------------
 
     public RexPermuteInputsShuttle(Permutation permutation)
     {
         this.permutation = permutation;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public RexNode visitInputRef(RexInputRef local)
     {
         final int index = local.getIndex();
         int target = permutation.getTarget(index);
         return new RexInputRef(
-                target,
-                local.getType());
+            target,
+            local.getType());
     }
 }
 

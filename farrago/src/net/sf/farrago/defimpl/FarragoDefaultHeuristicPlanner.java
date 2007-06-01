@@ -47,7 +47,6 @@ public class FarragoDefaultHeuristicPlanner
     extends HepPlanner
     implements FarragoSessionPlanner
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoSessionPreparingStmt stmt;
@@ -114,7 +113,7 @@ public class FarragoDefaultHeuristicPlanner
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
         return stmt.getRelImplementor(
-                rel.getCluster().getRexBuilder());
+            rel.getCluster().getRexBuilder());
     }
 
     // implement RelOptPlanner
@@ -172,7 +171,7 @@ public class FarragoDefaultHeuristicPlanner
         builder.addRuleInstance(
             new PushFilterPastJoinRule(
                 new RelOptRuleOperand(JoinRel.class, null),
-                "without filter above join"));      
+                "without filter above join"));
         builder.addRuleInstance(new MergeFilterRule());
         builder.addGroupEnd();
 
@@ -232,7 +231,7 @@ public class FarragoDefaultHeuristicPlanner
         if (fennelEnabled) {
             builder.addRuleInstance(new FennelRenameRule());
         }
-        
+
         // Convert remaining filters and projects to logical calculators,
         // merging adjacent ones.  Calculator expressions containing
         // multisets and windowed aggs may yield new projections,
@@ -268,8 +267,8 @@ public class FarragoDefaultHeuristicPlanner
 
         // Implement DISTINCT via tree-sort instead of letting it
         // be handled via normal sort plus agg.
-        builder.addRuleInstance(new FennelDistinctSortRule());       
-        
+        builder.addRuleInstance(new FennelDistinctSortRule());
+
         // The rest of these are all physical implementation rules
         // which are safe to apply simultaneously.
         builder.addGroupBegin();
@@ -290,7 +289,7 @@ public class FarragoDefaultHeuristicPlanner
             builder.addRuleInstance(
                 new IterRules.HomogeneousUnionToIteratorRule());
         }
-        
+
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use Fennel for calculating expressions
             assert (fennelEnabled);

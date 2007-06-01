@@ -36,7 +36,6 @@ import org.eigenbase.rel.*;
 public class FactoryConverterRule
     extends ConverterRule
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final ConverterFactory factory;

@@ -36,7 +36,6 @@ import org.eigenbase.sql.type.*;
  */
 public class FarragoJdbcMetaDataImpl
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -196,8 +195,7 @@ public class FarragoJdbcMetaDataImpl
     protected int isFieldNullable(int fieldOrdinal)
     {
         RelDataType type = getFieldType(fieldOrdinal);
-        return
-            type.isNullable() ? ResultSetMetaData.columnNullable
+        return type.isNullable() ? ResultSetMetaData.columnNullable
             : ResultSetMetaData.columnNoNulls;
     }
 

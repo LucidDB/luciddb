@@ -39,7 +39,6 @@ import org.eigenbase.reltype.*;
 public abstract class RelOptAbstractTable
     implements RelOptTable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected RelOptSchema schema;

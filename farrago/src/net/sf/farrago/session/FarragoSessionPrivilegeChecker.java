@@ -35,7 +35,6 @@ import net.sf.farrago.fem.security.*;
  */
 public interface FarragoSessionPrivilegeChecker
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -42,7 +42,6 @@ import java.lang.reflect.*;
 public class BarfingInvocationHandler
     implements InvocationHandler
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected BarfingInvocationHandler()

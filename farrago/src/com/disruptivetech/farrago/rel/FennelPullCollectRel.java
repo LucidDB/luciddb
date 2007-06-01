@@ -48,7 +48,6 @@ import org.eigenbase.sql.type.*;
 public class FennelPullCollectRel
     extends FennelSingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final String fieldName;

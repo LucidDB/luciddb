@@ -22,11 +22,12 @@
 */
 package org.eigenbase.test;
 
+import java.lang.ref.*;
+
 import junit.framework.*;
 
 import org.eigenbase.util.property.*;
 
-import java.lang.ref.SoftReference;
 
 /**
  * Unit test for properties system ({@link TriggerableProperties}, {@link
@@ -39,7 +40,9 @@ import java.lang.ref.SoftReference;
 public class PropertyTest
     extends TestCase
 {
-    private static final boolean[] FalseTrue = new boolean[] {false, true};
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final boolean [] FalseTrue = new boolean[] { false, true };
 
     //~ Methods ----------------------------------------------------------------
 
@@ -79,11 +82,9 @@ public class PropertyTest
 
         int prev = props.intPropNoDefault.set(-56);
         Assert.assertEquals(0, prev);
-        Assert.assertEquals(
-            -56,
+        Assert.assertEquals(-56,
             props.intPropNoDefault.get());
-        Assert.assertEquals(
-            -56,
+        Assert.assertEquals(-56,
             props.intPropNoDefault.get(17));
 
         // Second time set returns the previous value.
@@ -177,11 +178,9 @@ public class PropertyTest
         // prev is "no value" == 0; set value is limited
         int prev = props.intPropLimitNoDefault.set(-100);
         assertEquals(0, prev);
-        assertEquals(
-            -5,
+        assertEquals(-5,
             props.intPropLimitNoDefault.get());
-        assertEquals(
-            -5,
+        assertEquals(-5,
             props.intPropLimitNoDefault.get(0));
 
         // prev is "no value" == 1; set value is limited
@@ -211,8 +210,7 @@ public class PropertyTest
         final MyProperties props = new MyProperties();
 
         // Default value.
-        Assert.assertEquals(
-            -3.14,
+        Assert.assertEquals(-3.14,
             props.doubleProp.get());
         Assert.assertEquals(
             .789,
@@ -242,11 +240,9 @@ public class PropertyTest
 
         double prev = props.doublePropNoDefault.set(-.56);
         Assert.assertEquals(.0, prev);
-        Assert.assertEquals(
-            -.56,
+        Assert.assertEquals(-.56,
             props.doublePropNoDefault.get());
-        Assert.assertEquals(
-            -.56,
+        Assert.assertEquals(-.56,
             props.doublePropNoDefault.get(.17));
 
         // Second time set returns the previous value.
@@ -278,14 +274,12 @@ public class PropertyTest
         assertEquals(
             Math.PI,
             props.doublePropLimit.get(5.1));
-        assertEquals(
-            -Math.PI,
+        assertEquals(-Math.PI,
             props.doublePropLimit.get(-4.0));
         assertEquals(
             Math.PI,
             props.doublePropLimit.get(Double.MAX_VALUE));
-        assertEquals(
-            -Math.PI,
+        assertEquals(-Math.PI,
             props.doublePropLimit.get(-Double.MAX_VALUE));
 
         double prev = props.doublePropLimit.set(2.5);
@@ -301,8 +295,7 @@ public class PropertyTest
         assertEquals(2.5, prev);
 
         prev = props.doublePropLimit.set(-10.0);
-        assertEquals(
-            -Math.PI,
+        assertEquals(-Math.PI,
             props.doublePropLimit.get());
         assertEquals(Math.PI, prev);
 
@@ -313,8 +306,7 @@ public class PropertyTest
             props.doublePropLimit.get());
 
         props.doublePropLimit.setString("-20.2");
-        assertEquals(
-            -Math.PI,
+        assertEquals(-Math.PI,
             props.doublePropLimit.get());
 
         // Setting null is not OK.
@@ -340,11 +332,9 @@ public class PropertyTest
         // prev is "no value" == 0.0; set value is limited
         double prev = props.doublePropLimitNoDefault.set(-100.0);
         assertEquals(0.0, prev);
-        assertEquals(
-            -1.0,
+        assertEquals(-1.0,
             props.doublePropLimitNoDefault.get());
-        assertEquals(
-            -1.0,
+        assertEquals(-1.0,
             props.doublePropLimitNoDefault.get(0));
 
         // prev is "no value" == 1.0; set value is limited
@@ -616,7 +606,8 @@ public class PropertyTest
         final MyProperties props = new MyProperties();
 
         String path = "test.mondrian.properties.change.value";
-        BooleanProperty boolProp = new BooleanProperty(
+        BooleanProperty boolProp =
+            new BooleanProperty(
                 props,
                 path,
                 false);
@@ -635,7 +626,8 @@ public class PropertyTest
         String v = props.getProperty(path);
         assertTrue("Check property value is null",
             (v != null));
-        assertTrue("Check property value is true",
+        assertTrue(
+            "Check property value is true",
             (!Boolean.valueOf(v).booleanValue()));
 
         final State state = new State();
@@ -671,7 +663,8 @@ public class PropertyTest
 
         assertTrue("Check trigger was NOT called",
             state.triggerCalled);
-        assertTrue("Check trigger value was null",
+        assertTrue(
+            "Check trigger value was null",
             (state.triggerValue != null));
         assertTrue(
             "Check trigger value is NOT correct",
@@ -685,7 +678,8 @@ public class PropertyTest
     {
         final MyProperties props = new MyProperties();
         String path = "test.mondrian.properties.call.order";
-        BooleanProperty boolProp = new BooleanProperty(
+        BooleanProperty boolProp =
+            new BooleanProperty(
                 props,
                 path,
                 false);
@@ -699,7 +693,8 @@ public class PropertyTest
         String v = props.getProperty(path);
         assertTrue("Check property value is null",
             (v != null));
-        assertTrue("Check property value is true",
+        assertTrue(
+            "Check property value is true",
             (!Boolean.valueOf(v).booleanValue()));
 
         // primaryOne
@@ -832,37 +827,50 @@ public class PropertyTest
 
         assertTrue("Check trigger was NOT called",
             (state.callCounter != 0));
-        assertTrue("Check triggers was NOT called correct number of times",
+        assertTrue(
+            "Check triggers was NOT called correct number of times",
             (state.callCounter == 6));
 
         // now make sure that primary are called before secondary which are
         // before tertiary
-        assertTrue("Check primaryOne > secondaryOne",
+        assertTrue(
+            "Check primaryOne > secondaryOne",
             (state.primaryOne < state.secondaryOne));
-        assertTrue("Check primaryOne > secondaryTwo",
+        assertTrue(
+            "Check primaryOne > secondaryTwo",
             (state.primaryOne < state.secondaryTwo));
-        assertTrue("Check primaryOne > tertiaryOne",
+        assertTrue(
+            "Check primaryOne > tertiaryOne",
             (state.primaryOne < state.tertiaryOne));
-        assertTrue("Check primaryOne > tertiaryTwo",
+        assertTrue(
+            "Check primaryOne > tertiaryTwo",
             (state.primaryOne < state.tertiaryTwo));
 
-        assertTrue("Check primaryTwo > secondaryOne",
+        assertTrue(
+            "Check primaryTwo > secondaryOne",
             (state.primaryTwo < state.secondaryOne));
-        assertTrue("Check primaryTwo > secondaryTwo",
+        assertTrue(
+            "Check primaryTwo > secondaryTwo",
             (state.primaryTwo < state.secondaryTwo));
-        assertTrue("Check primaryTwo > tertiaryOne",
+        assertTrue(
+            "Check primaryTwo > tertiaryOne",
             (state.primaryTwo < state.tertiaryOne));
-        assertTrue("Check primaryTwo > tertiaryTwo",
+        assertTrue(
+            "Check primaryTwo > tertiaryTwo",
             (state.primaryTwo < state.tertiaryTwo));
 
-        assertTrue("Check secondaryOne > tertiaryOne",
+        assertTrue(
+            "Check secondaryOne > tertiaryOne",
             (state.secondaryOne < state.tertiaryOne));
-        assertTrue("Check secondaryOne > tertiaryTwo",
+        assertTrue(
+            "Check secondaryOne > tertiaryTwo",
             (state.secondaryOne < state.tertiaryTwo));
 
-        assertTrue("Check secondaryTwo > tertiaryOne",
+        assertTrue(
+            "Check secondaryTwo > tertiaryOne",
             (state.secondaryTwo < state.tertiaryOne));
-        assertTrue("Check secondaryTwo > tertiaryTwo",
+        assertTrue(
+            "Check secondaryTwo > tertiaryTwo",
             (state.secondaryTwo < state.tertiaryTwo));
 
         // remove some of the triggers
@@ -882,17 +890,21 @@ public class PropertyTest
         props.setProperty(path, falseStr);
         assertTrue("Check trigger was NOT called",
             (state.callCounter != 0));
-        assertTrue("Check triggers was NOT called correct number of times",
+        assertTrue(
+            "Check triggers was NOT called correct number of times",
             (state.callCounter == 3));
 
         // now make sure that primary are called before secondary which are
         // before tertiary
-        assertTrue("Check primaryOne > secondaryOne",
+        assertTrue(
+            "Check primaryOne > secondaryOne",
             (state.primaryOne < state.secondaryOne));
-        assertTrue("Check primaryOne > tertiaryOne",
+        assertTrue(
+            "Check primaryOne > tertiaryOne",
             (state.primaryOne < state.tertiaryOne));
 
-        assertTrue("Check secondaryOne > tertiaryOne",
+        assertTrue(
+            "Check secondaryOne > tertiaryOne",
             (state.secondaryOne < state.tertiaryOne));
     }
 
@@ -910,10 +922,11 @@ public class PropertyTest
 
     /**
      * Checks that one can veto a property change.
+     *
      * @param persistent Whether to make strong references to triggers, to
-     *   prevent them from being garbage collected
+     * prevent them from being garbage collected
      * @param save Whether to keep a pointer to each trigger on the stack, to
-     *   prevent them from being garbage collected
+     * prevent them from being garbage collected
      */
     private void checkVetoChangeValue(
         final boolean persistent,
@@ -922,7 +935,8 @@ public class PropertyTest
     {
         final MyProperties props = new MyProperties();
         String path = "test.mondrian.properties.veto.change.value";
-        IntegerProperty intProp = new IntegerProperty(
+        IntegerProperty intProp =
+            new IntegerProperty(
                 props,
                 path,
                 -1);
@@ -937,7 +951,8 @@ public class PropertyTest
         assertTrue("Check property value is null",
             (v != null));
 
-        assertTrue("Check property value is -1",
+        assertTrue(
+            "Check property value is -1",
             (Integer.decode(v).intValue() == -1));
 
         final State3 state = new State3();
@@ -999,7 +1014,7 @@ public class PropertyTest
         // if persistent=false.
         Object saver;
         if (save) {
-            saver = new Trigger[] {trigger1, trigger2};
+            saver = new Trigger[] { trigger1, trigger2 };
         } else {
             saver = "dummy";
         }
@@ -1021,7 +1036,7 @@ public class PropertyTest
                 // changed.
                 if (!persistent
                     && !save
-                    && (ref1.get() == null || ref2.get() == null))
+                    && ((ref1.get() == null) || (ref2.get() == null)))
                 {
                     continue;
                 }
@@ -1039,7 +1054,7 @@ public class PropertyTest
                 // changed.
                 if (!persistent
                     && !save
-                    && (ref1.get() == null || ref2.get() == null))
+                    && ((ref1.get() == null) || (ref2.get() == null)))
                 {
                     continue;
                 }
@@ -1052,7 +1067,7 @@ public class PropertyTest
 
                 // the property value was reset to the previous value of "i"
                 // so we add "1" to it to get the current value.
-                if (i != val + 1) {
+                if (i != (val + 1)) {
                     fail("Even counter not value plus one: " + i + ", " + val);
                 }
             }

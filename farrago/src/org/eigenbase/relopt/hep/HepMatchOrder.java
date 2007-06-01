@@ -28,7 +28,8 @@ package org.eigenbase.relopt.hep;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum HepMatchOrder {
+public enum HepMatchOrder
+{
     /**
      * Match in arbitrary order.  This is the default because it is the most
      * efficient, and most rules don't care about order.

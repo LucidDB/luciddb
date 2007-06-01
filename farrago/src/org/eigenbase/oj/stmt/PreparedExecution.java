@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
 public class PreparedExecution
     implements PreparedResult
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final ParseTree parseTree;
@@ -80,7 +79,7 @@ public class PreparedExecution
     {
         return isDml;
     }
-    
+
     public TableModificationRel.Operation getTableModOp()
     {
         return tableModOp;
@@ -100,7 +99,7 @@ public class PreparedExecution
     {
         return boundMethod.method;
     }
-    
+
     public RelNode getRootRel()
     {
         return rootRel;

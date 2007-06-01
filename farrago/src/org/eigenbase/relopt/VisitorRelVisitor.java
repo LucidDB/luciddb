@@ -37,7 +37,6 @@ import org.eigenbase.rex.*;
 public class VisitorRelVisitor
     extends RelVisitor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final RexShuttle shuttle;

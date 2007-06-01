@@ -47,7 +47,6 @@ public class SargIntervalExpr
     extends SargIntervalBase
     implements SargExpr
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private SqlNullSemantics nullSemantics;
@@ -151,7 +150,8 @@ public class SargIntervalExpr
         // If at least one of the bounds got flipped by overflow, the
         // result is empty.
         if ((lowerBound.getBoundType() != SargBoundType.LOWER)
-            || (upperBound.getBoundType() != SargBoundType.UPPER)) {
+            || (upperBound.getBoundType() != SargBoundType.UPPER))
+        {
             // empty sequence
             return seq;
         }
@@ -159,13 +159,15 @@ public class SargIntervalExpr
         // Under the default null semantics, if one of the endpoints is
         // known to be null, the result is empty.
         if ((nullSemantics == SqlNullSemantics.NULL_MATCHES_NOTHING)
-            && (lowerBound.isNull() || upperBound.isNull())) {
+            && (lowerBound.isNull() || upperBound.isNull()))
+        {
             // empty sequence
             return seq;
         }
 
         // Copy the endpoints to the new interval.
-        SargInterval interval = new SargInterval(
+        SargInterval interval =
+            new SargInterval(
                 factory,
                 getDataType());
         interval.copyFrom(this);
@@ -178,7 +180,8 @@ public class SargIntervalExpr
         if ((nullSemantics == SqlNullSemantics.NULL_MATCHES_NOTHING)
             && getDataType().isNullable()
             && (lowerBound.isFinite() || upperBound.isFinite())
-            && (!lowerBound.isFinite() || lowerBound.isNull())) {
+            && (!lowerBound.isFinite() || lowerBound.isNull()))
+        {
             // The test above says that this is a constrained range
             // with no lower bound (or null for the lower bound).  Since nulls
             // aren't supposed to match anything, adjust the lower bound
@@ -187,8 +190,10 @@ public class SargIntervalExpr
                 factory.newNullLiteral(),
                 SargStrictness.OPEN);
         } else if (nullSemantics == SqlNullSemantics.NULL_MATCHES_ANYTHING) {
-            if (!lowerBound.isFinite() || lowerBound.isNull()
-                || upperBound.isNull()) {
+            if (!lowerBound.isFinite()
+                || lowerBound.isNull()
+                || upperBound.isNull())
+            {
                 // Since null is supposed to match anything, and it
                 // is included in the interval, expand the interval to
                 // match anything.
@@ -245,7 +250,8 @@ public class SargIntervalExpr
         // flag by now.  Is there ever a case where other null
         // semantics are required here?
 
-        SargInterval interval = new SargInterval(
+        SargInterval interval =
+            new SargInterval(
                 factory,
                 getDataType());
         interval.setLower(
@@ -253,7 +259,8 @@ public class SargIntervalExpr
             SargStrictness.OPEN);
 
         if (originalInterval.getUpperBound().isFinite()
-            && originalInterval.getLowerBound().isFinite()) {
+            && originalInterval.getLowerBound().isFinite())
+        {
             // Complement of a fully bounded range is the union of two
             // disjoint half-bounded ranges.
             interval.setUpper(
@@ -265,7 +272,8 @@ public class SargIntervalExpr
                 // Don't bother adding an empty interval.
             }
 
-            interval = new SargInterval(
+            interval =
+                new SargInterval(
                     factory,
                     getDataType());
             interval.setLower(

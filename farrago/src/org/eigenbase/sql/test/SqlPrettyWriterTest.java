@@ -42,9 +42,8 @@ import org.eigenbase.test.*;
  * @since 2005/8/24
  */
 public class SqlPrettyWriterTest
-extends TestCase
+    extends TestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String NL = System.getProperty("line.separator");
@@ -52,7 +51,7 @@ extends TestCase
     //~ Constructors -----------------------------------------------------------
 
     public SqlPrettyWriterTest(String testCaseName)
-    throws Exception
+        throws Exception
     {
         super(testCaseName);
     }
@@ -135,9 +134,9 @@ extends TestCase
         SqlPrettyWriter prettyWriter,
         String expectedDesc,
         String expected)
-    throws Exception
+        throws Exception
     {
-        final SqlNode node = 
+        final SqlNode node =
             parseQuery(
                 "select x as a, b as b, c as c, d,"
                 + " 'mixed-Case string',"
@@ -168,7 +167,7 @@ extends TestCase
     }
 
     public void testDefault()
-    throws Exception
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -176,7 +175,7 @@ extends TestCase
     }
 
     public void testIndent8()
-    throws Exception
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -185,7 +184,7 @@ extends TestCase
     }
 
     public void testClausesNotOnNewLine()
-    throws Exception
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -194,7 +193,7 @@ extends TestCase
     }
 
     public void testSelectListItemsOnSeparateLines()
-    throws Exception
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -203,7 +202,7 @@ extends TestCase
     }
 
     public void testSelectListExtraIndentFlag()
-    throws Exception
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -213,7 +212,7 @@ extends TestCase
     }
 
     public void testKeywordsLowerCase()
-    throws Exception
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -222,7 +221,7 @@ extends TestCase
     }
 
     public void testParenthesizeAllExprs()
-    throws Exception
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -231,7 +230,7 @@ extends TestCase
     }
 
     public void testOnlyQuoteIdentifiersWhichNeedIt()
-    throws Exception
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -240,7 +239,7 @@ extends TestCase
     }
 
     public void testDamiansSubqueryStyle()
-    throws Exception
+        throws Exception
     {
         // Note that ( is at the indent, SELECT is on the same line, and ) is
         // below it.
@@ -260,7 +259,8 @@ extends TestCase
     {
         // Note that CASE is rewritten to the searched form. Wish it weren't
         // so, but that's beyond the control of the pretty-printer.
-        assertExprPrintsTo(true,
+        assertExprPrintsTo(
+            true,
             "case 1 when 2 + 3 then 4 when case a when b then c else d end then 6 else 7 end",
             "CASE" + NL
             + "WHEN 1 = 2 + 3" + NL
@@ -277,29 +277,34 @@ extends TestCase
 
     public void testCase2()
     {
-        assertExprPrintsTo(false,
+        assertExprPrintsTo(
+            false,
             "case 1 when 2 + 3 then 4 when case a when b then c else d end then 6 else 7 end",
-        "CASE WHEN 1 = 2 + 3 THEN 4 WHEN 1 = CASE WHEN `A` = `B` THEN `C` ELSE `D` END THEN 6 ELSE 7 END");
+            "CASE WHEN 1 = 2 + 3 THEN 4 WHEN 1 = CASE WHEN `A` = `B` THEN `C` ELSE `D` END THEN 6 ELSE 7 END");
     }
 
     public void testBetween()
     {
-        assertExprPrintsTo(true,
+        assertExprPrintsTo(
+            true,
             "x not between symmetric y and z",
-        "`X` NOT BETWEEN SYMMETRIC `Y` AND `Z`"); // todo: remove leading
+            "`X` NOT BETWEEN SYMMETRIC `Y` AND `Z`"); // todo: remove leading
+
         // space
     }
 
     public void testCast()
     {
-        assertExprPrintsTo(true,
+        assertExprPrintsTo(
+            true,
             "cast(x + y as decimal(5, 10))",
-        "CAST(`X` + `Y` AS DECIMAL(5, 10))");
+            "CAST(`X` + `Y` AS DECIMAL(5, 10))");
     }
 
     public void testLiteralChain()
     {
-        assertExprPrintsTo(true,
+        assertExprPrintsTo(
+            true,
             "'x' /* comment */ 'y'" + NL
             + "  'z' ",
             "'x'" + NL + "'y'" + NL + "'z'");
@@ -307,9 +312,10 @@ extends TestCase
 
     public void testOverlaps()
     {
-        assertExprPrintsTo(true,
+        assertExprPrintsTo(
+            true,
             "(x,xx) overlaps (y,yy) or x is not null",
-        "(`X`, `XX`) OVERLAPS (`Y`, `YY`) OR `X` IS NOT NULL");
+            "(`X`, `XX`) OVERLAPS (`Y`, `YY`) OR `X` IS NOT NULL");
     }
 
     public void testUnion()
@@ -328,7 +334,7 @@ extends TestCase
             //     SELECT *
             //     FROM `W`
 
-        "${formatted}");
+            "${formatted}");
     }
 
     public void testMultiset()
@@ -336,7 +342,7 @@ extends TestCase
         assertPrintsTo(
             false,
             "values (multiset (select * from t))",
-        "${formatted}");
+            "${formatted}");
     }
 
     public void testInnerJoin()
@@ -344,22 +350,22 @@ extends TestCase
         assertPrintsTo(
             true,
             "select * from x inner join y on x.k=y.k",
-        "${formatted}");
+            "${formatted}");
     }
 
     public void testWhereListItemsOnSeparateLines()
-    throws Exception
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
         prettyWriter.setSelectListItemsOnSeparateLines(true);
         prettyWriter.setSelectListExtraIndentFlag(false);
 
-        final SqlNode node = 
+        final SqlNode node =
             parseQuery(
                 "select x"
                 + " from y"
-                + " where h is not null and i < j" 
+                + " where h is not null and i < j"
                 + " or ((a or b) is true) and d not in (f,g)"
                 + " or x <> z");
 

@@ -34,6 +34,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 
+
 /**
  * LcsTableProjectionRule implements the rule for pushing a Projection into a
  * LcsRowScanRel.
@@ -44,7 +45,8 @@ import org.eigenbase.sql.*;
 public class LcsTableProjectionRule
     extends MedAbstractFennelProjectionRule
 {
-    //  ~ Constructors ----------------------------------------------------------
+    //  ~ Constructors
+    // ----------------------------------------------------------
 
     //~ Constructors -----------------------------------------------------------
 
@@ -80,6 +82,7 @@ public class LcsTableProjectionRule
         // out references from expressions, if necessary
         List<Integer> projectedColumnList = new ArrayList<Integer>();
         List<ProjectRel> newProjList = new ArrayList<ProjectRel>();
+
         // create a rid expression to be used in the case where no fields
         // are being projected
         RexNode defaultExpr =
@@ -90,20 +93,21 @@ public class LcsTableProjectionRule
             createProjectionList(
                 origScan,
                 origProject,
-                projectedColumnList,              
+                projectedColumnList,
                 LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
                 defaultExpr,
                 newProjList);
+
         // empty list indicates that nothing can be projected
         if (projectedColumnList.size() == 0) {
             return;
         }
         ProjectRel newProject;
         if (newProjList.isEmpty()) {
-            newProject = null;         
+            newProject = null;
         } else {
             newProject = newProjList.get(0);
-        }        
+        }
 
         // Find all the clustered indexes that reference columns in
         // the projection list.  If the index references any column
@@ -112,23 +116,26 @@ public class LcsTableProjectionRule
 
         // Test which clustered indexes are needed to cover the
         // projectedColumns and filterColumns.
-        Integer[] readColumns =
+        Integer [] readColumns =
             projectedColumnList.toArray(
-                new Integer[projectedColumnList.size()+
-                    origScan.residualColumns.length]);
-        
-        System.arraycopy(origScan.residualColumns,
-                0, readColumns, projectedColumnList.size(),
-                origScan.residualColumns.length);
+                new Integer[projectedColumnList.size()
+                    + origScan.residualColumns.length]);
 
-        Integer[] projectedColumns =
+        System.arraycopy(
+            origScan.residualColumns,
+            0,
+            readColumns,
+            projectedColumnList.size(),
+            origScan.residualColumns.length);
+
+        Integer [] projectedColumns =
             projectedColumnList.toArray(
                 new Integer[projectedColumnList.size()]);
 
         for (FemLocalIndex index : origScan.clusteredIndexes) {
             if (!origScan.getIndexGuide().testIndexCoverage(
-                index,
-                readColumns))
+                    index,
+                    readColumns))
             {
                 continue;
             }
@@ -167,8 +174,8 @@ public class LcsTableProjectionRule
                 origProject,
                 needRename,
                 newProject);
-        
-        call.transformTo(modRelNode);       
+
+        call.transformTo(modRelNode);
     }
 
     /**
@@ -201,8 +208,8 @@ public class LcsTableProjectionRule
                     projIndex =
                         new Integer(
                             LucidDbOperatorTable.ldbInstance()
-                            .getSpecialOpColumnId(
-                                op));
+                                                .getSpecialOpColumnId(
+                                                    op));
                     origFieldName.add(
                         LucidDbOperatorTable.ldbInstance().getSpecialOpName(
                             op));

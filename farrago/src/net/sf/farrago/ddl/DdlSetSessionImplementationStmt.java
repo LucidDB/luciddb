@@ -40,7 +40,6 @@ import org.eigenbase.sql.*;
 public class DdlSetSessionImplementationStmt
     extends DdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlIdentifier jarName;
@@ -95,10 +94,9 @@ public class DdlSetSessionImplementationStmt
                 (FarragoSessionPersonalityFactory) session
                 .getPluginClassLoader().newPluginInstance(
                     factoryClass);
-            return
-                factory.newSessionPersonality(
-                    session,
-                    add ? session.getPersonality() : defaultPersonality);
+            return factory.newSessionPersonality(
+                session,
+                add ? session.getPersonality() : defaultPersonality);
         } catch (Throwable ex) {
             throw FarragoResource.instance().PluginInitFailed.ex(url, ex);
         }

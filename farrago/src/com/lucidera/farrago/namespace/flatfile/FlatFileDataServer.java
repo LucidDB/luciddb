@@ -52,7 +52,6 @@ import org.eigenbase.util.*;
 class FlatFileDataServer
     extends MedAbstractDataServer
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =
@@ -98,21 +97,21 @@ class FlatFileDataServer
         // with incompatible parameters
         if (params.getFieldDelimiter() == 0) {
             if ((params.getQuoteChar() != 0)
-                || (params.getEscapeChar() != 0)) {
+                || (params.getEscapeChar() != 0))
+            {
                 throw FarragoResource.instance().FlatFileInvalidFixedPosParams
                 .ex();
             }
         }
 
-        if (params.getMapped() && params.getWithHeader() == false) {
+        if (params.getMapped() && (params.getWithHeader() == false)) {
             throw FarragoResource.instance().FlatFileMappedRequiresWithHeader
-                .ex();
+            .ex();
         }
 
-        if (params.getMapped() && params.getLenient() == false) {
-            throw FarragoResource.instance().FlatFileMappedRequiresLenient
-                .ex();
-        }        
+        if (params.getMapped() && (params.getLenient() == false)) {
+            throw FarragoResource.instance().FlatFileMappedRequiresLenient.ex();
+        }
     }
 
     // implement FarragoMedDataServer
@@ -120,10 +119,9 @@ class FlatFileDataServer
         throws SQLException
     {
         // scan directory and files for metadata (Phase II)
-        return
-            new FlatFileNameDirectory(
-                this,
-                FarragoMedMetadataQuery.OTN_SCHEMA);
+        return new FlatFileNameDirectory(
+            this,
+            FarragoMedMetadataQuery.OTN_SCHEMA);
     }
 
     // implement FarragoMedDataServer
@@ -132,7 +130,7 @@ class FlatFileDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map<String,Properties> columnPropMap)
+        Map<String, Properties> columnPropMap)
         throws SQLException
     {
         String schemaName = getSchemaName(localName);
@@ -172,13 +170,12 @@ class FlatFileDataServer
         if (rowType == null) {
             return null;
         }
-        return
-            new FlatFileColumnSet(
-                localName,
-                rowType,
-                params,
-                tableProps,
-                schemaType);
+        return new FlatFileColumnSet(
+            localName,
+            rowType,
+            params,
+            tableProps,
+            schemaType);
     }
 
     // implement FarragoMedDataServer
@@ -230,11 +227,11 @@ class FlatFileDataServer
         List<RelDataType> fieldTypes = new ArrayList<RelDataType>();
         List<String> fieldNames = new ArrayList<String>();
         String [] foreignName =
-            {
-                this.getProperties().getProperty("NAME"),
-                FlatFileParams.SchemaType.QUERY.getSchemaName(),
-                filename
-            };
+        {
+            this.getProperties().getProperty("NAME"),
+            FlatFileParams.SchemaType.QUERY.getSchemaName(),
+            filename
+        };
 
         // Cannot describe or sample a fixed position data file
         if (params.getFieldDelimiter() == 0) {
@@ -276,11 +273,10 @@ class FlatFileDataServer
                     }
                 }
                 if (bcpFile.parse()) {
-                    return
-                        createRowType(
-                            typeFactory,
-                            bcpFile.types,
-                            bcpFile.colNames);
+                    return createRowType(
+                        typeFactory,
+                        bcpFile.types,
+                        bcpFile.colNames);
                 }
 
                 // couldn't parse control file
@@ -365,7 +361,7 @@ class FlatFileDataServer
 
                 String [] cols = new String[rsmeta.getColumnCount()];
                 String [] numRows =
-                    { Integer.toString(rsmeta.getColumnCount()) };
+                { Integer.toString(rsmeta.getColumnCount()) };
 
                 if (!bcpFile.create()) { // write version
                     throw FarragoResource.instance().FileWriteFailed.ex(

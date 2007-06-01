@@ -37,7 +37,6 @@ import org.eigenbase.sql.parser.*;
 public interface SqlValidatorWithHints
     extends SqlValidator
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public SqlMoniker [] lookupHints(SqlNode topNode, SqlParserPos pos);

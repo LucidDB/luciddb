@@ -43,7 +43,6 @@ import org.eigenbase.sql.fun.*;
  */
 public class LoptSemiJoinOptimizer
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // minimum score required for a join filter to be considered
@@ -102,7 +101,7 @@ public class LoptSemiJoinOptimizer
     public void makePossibleSemiJoins(LoptMultiJoin multiJoin)
     {
         possibleSemiJoins = new HashMap<Integer, Map<Integer, SemiJoinRel>>();
-       
+
         // semijoins can't be used with any type of outer join, including full
         if (multiJoin.getMultiJoinRel().isFullOuterJoin()) {
             return;
@@ -122,10 +121,11 @@ public class LoptSemiJoinOptimizer
                 if (dimIdx == -1) {
                     continue;
                 }
+
                 // if either the fact or dimension table is null generating,
                 // we cannot use semijoins
-                if (multiJoin.isNullGenerating(factIdx) ||
-                    multiJoin.isNullGenerating(dimIdx))
+                if (multiJoin.isNullGenerating(factIdx)
+                    || multiJoin.isNullGenerating(dimIdx))
                 {
                     continue;
                 }
@@ -164,7 +164,7 @@ public class LoptSemiJoinOptimizer
             }
         }
     }
-    
+
     /**
      * Determines if a join filter can be used with a semijoin against a
      * specified fact table. A suitable filter is of the form "factable.col1 =
@@ -185,15 +185,15 @@ public class LoptSemiJoinOptimizer
         // ignore non-equality filters where the operands are not
         // RexInputRefs
         if (!(joinFilter instanceof RexCall)
-            || (
-                ((RexCall) joinFilter).getOperator()
-                != SqlStdOperatorTable.equalsOperator
-               )) {
+            || (((RexCall) joinFilter).getOperator()
+                != SqlStdOperatorTable.equalsOperator))
+        {
             return -1;
         }
         RexNode [] operands = ((RexCall) joinFilter).getOperands();
         if (!(operands[0] instanceof RexInputRef)
-            || !(operands[1] instanceof RexInputRef)) {
+            || !(operands[1] instanceof RexInputRef))
+        {
             return -1;
         }
 
@@ -245,7 +245,7 @@ public class LoptSemiJoinOptimizer
         for (int i = 0; i < factIdx; i++) {
             leftAdjustment -= multiJoin.getNumFieldsInJoinFactor(i);
         }
-        
+
         semiJoinCondition =
             adjustSemiJoinCondition(
                 multiJoin,
@@ -265,7 +265,7 @@ public class LoptSemiJoinOptimizer
             leftKeys,
             rightKeys);
         assert (leftKeys.size() > 0);
-        
+
         // make sure all the fact table keys originate from the same table
         // and are simple column references
         List<Integer> actualLeftKeys = new ArrayList<Integer>();
@@ -282,16 +282,17 @@ public class LoptSemiJoinOptimizer
         // find the best index
         List<Integer> bestKeyOrder = new ArrayList<Integer>();
         LcsRowScanRel tmpFactRel =
-            (LcsRowScanRel)factTable.toRel(
-                factRel.getCluster(), 
+            (LcsRowScanRel) factTable.toRel(
+                factRel.getCluster(),
                 factTable.getPreparingStmt());
-        
-        LcsIndexOptimizer indexOptimizer =
-            new LcsIndexOptimizer(tmpFactRel);
+
+        LcsIndexOptimizer indexOptimizer = new LcsIndexOptimizer(tmpFactRel);
         FemLocalIndex bestIndex =
             indexOptimizer.findSemiJoinIndexByCost(
-                dimRel, actualLeftKeys, rightKeys, bestKeyOrder);
-      
+                dimRel,
+                actualLeftKeys,
+                rightKeys,
+                bestKeyOrder);
 
         if (bestIndex == null) {
             return null;
@@ -330,7 +331,7 @@ public class LoptSemiJoinOptimizer
                 truncatedRightKeys);
         return semiJoin;
     }
-    
+
     /**
      * Modifies the semijoin condition to reflect the fact that the RHS is now
      * the second factor into a join and the LHS is the first
@@ -368,40 +369,45 @@ public class LoptSemiJoinOptimizer
         if ((leftAdjustment != 0) || (rightAdjustment != 0)) {
             int [] adjustments = new int[multiJoin.getNumTotalFields()];
             if (leftAdjustment != 0) {
-                for (int i = -leftAdjustment;
-                     i < (-leftAdjustment + numFieldsLeftIdx); i++) {
+                for (
+                    int i = -leftAdjustment;
+                    i < (-leftAdjustment + numFieldsLeftIdx);
+                    i++)
+                {
                     adjustments[i] = leftAdjustment;
                 }
             }
             if (rightAdjustment != 0) {
-                for (int i = rightStart; i < (rightStart + numFieldsRightIdx);
-                     i++) {
+                for (
+                    int i = rightStart;
+                    i < (rightStart + numFieldsRightIdx);
+                    i++)
+                {
                     adjustments[i] = rightAdjustment;
                 }
             }
-            return
-                semiJoinCondition.accept(
-                    new RelOptUtil.RexInputConverter(
-                        rexBuilder,
-                        multiJoin.getMultiJoinFields(),
-                        adjustments));
+            return semiJoinCondition.accept(
+                new RelOptUtil.RexInputConverter(
+                    rexBuilder,
+                    multiJoin.getMultiJoinFields(),
+                    adjustments));
         }
 
         return semiJoinCondition;
     }
-    
+
     /**
      * Validates the candidate semijoin keys corresponding to the fact table.
      * Ensure the keys all originate from the same underlying table, and they
-     * all correspond to simple column references.  If unsuitable keys are
-     * found, they're removed from the key list and a new list corresponding 
-     * to the remaining valid keys is returned.
-     * 
+     * all correspond to simple column references. If unsuitable keys are found,
+     * they're removed from the key list and a new list corresponding to the
+     * remaining valid keys is returned.
+     *
      * @param factRel fact table RelNode
      * @param leftKeys fact table semijoin keys
      * @param rightKeys dimension table semijoin keys
      * @param actualLeftKeys the remaining valid fact table semijoin keys
-     * 
+     *
      * @return the underlying fact table if the semijoin keys are valid;
      * otherwise null
      */
@@ -420,7 +426,7 @@ public class LoptSemiJoinOptimizer
                 LoptMetadataQuery.getSimpleColumnOrigins(
                     factRel,
                     keyIter.next());
-            if (colOrigin == null || colOrigin.size() != 1) {
+            if ((colOrigin == null) || (colOrigin.size() != 1)) {
                 // references > 1 column
                 removeKey = true;
             } else {
@@ -450,15 +456,15 @@ public class LoptSemiJoinOptimizer
                         actualLeftKeys.add(coList[0].getOriginColumnOrdinal());
                         keyIdx++;
                     }
-                }              
+                }
             }
-            
+
             if (removeKey) {
                 keyIter.remove();
                 rightKeys.remove(keyIdx);
             }
         }
-        
+
         // if all keys have been removed, then we don't have any valid semijoin
         // keys
         if (actualLeftKeys.isEmpty()) {
@@ -467,7 +473,7 @@ public class LoptSemiJoinOptimizer
             return (LcsTable) theTable;
         }
     }
-    
+
     /**
      * Removes from an expression any sub-expressions that reference key values
      * that aren't contained in a key list passed in. The keys represent join
@@ -482,7 +488,8 @@ public class LoptSemiJoinOptimizer
      * @return modified expression with filters that don't reference specified
      * keys removed
      */
-    private RexNode removeExtraFilters(List<Integer> keys,
+    private RexNode removeExtraFilters(
+        List<Integer> keys,
         int nFields,
         RexNode condition)
     {
@@ -493,11 +500,13 @@ public class LoptSemiJoinOptimizer
         RexCall call = (RexCall) condition;
         if (condition.isA(RexKind.And)) {
             RexNode [] operands = call.getOperands();
-            RexNode left = removeExtraFilters(
+            RexNode left =
+                removeExtraFilters(
                     keys,
                     nFields,
                     operands[0]);
-            RexNode right = removeExtraFilters(
+            RexNode right =
+                removeExtraFilters(
                     keys,
                     nFields,
                     operands[1]);
@@ -507,11 +516,10 @@ public class LoptSemiJoinOptimizer
             if (right == null) {
                 return left;
             }
-            return
-                rexBuilder.makeCall(
-                    SqlStdOperatorTable.andOperator,
-                    left,
-                    right);
+            return rexBuilder.makeCall(
+                SqlStdOperatorTable.andOperator,
+                left,
+                right);
         }
 
         // determine which side of the equality filter references the join
@@ -609,11 +617,11 @@ public class LoptSemiJoinOptimizer
                         semiJoin.getLeftKeys(),
                         semiJoin.getRightKeys());
                 chosenSemiJoins[factIdx] = chosenSemiJoin;
-                
+
                 // determine if the dimension table doesn't need to be joined
                 // as a result of this semijoin
                 removeJoin(multiJoin, chosenSemiJoin, factIdx, bestDimIdx);
-                
+
                 removePossibleSemiJoin(
                     possibleDimensions,
                     factIdx,
@@ -684,8 +692,10 @@ public class LoptSemiJoinOptimizer
         Double dimSortCost = RelMetadataQuery.getRowCount(dimRel);
         Double dupRemCost = uniq ? 0 : dimSortCost;
         RelOptCost dimCost = RelMetadataQuery.getCumulativeCost(dimRel);
-        if ((dimSortCost == null) || (dupRemCost == null)
-            || (dimCost == null)) {
+        if ((dimSortCost == null)
+            || (dupRemCost == null)
+            || (dimCost == null))
+        {
             return 0;
         }
 
@@ -698,13 +708,13 @@ public class LoptSemiJoinOptimizer
 
     /**
      * Determines whether a join of the dimension table in a semijoin can be
-     * removed.  It can be if the dimension keys are unique and the only fields 
-     * referenced from the dimension table are its semijoin keys.  The
-     * semijoin keys can be mapped to the corresponding keys from the fact
-     * table (because of the equality condition associated with the semijoin
-     * keys).  Therefore, that's why the dimension table can be removed even
-     * though those fields are referenced elsewhere in the query tree.
-     * 
+     * removed. It can be if the dimension keys are unique and the only fields
+     * referenced from the dimension table are its semijoin keys. The semijoin
+     * keys can be mapped to the corresponding keys from the fact table (because
+     * of the equality condition associated with the semijoin keys). Therefore,
+     * that's why the dimension table can be removed even though those fields
+     * are referenced elsewhere in the query tree.
+     *
      * @param multiJoin join factors being optimized
      * @param semiJoin semijoin under consideration
      * @param factIdx id of the fact table in the semijoin
@@ -721,7 +731,7 @@ public class LoptSemiJoinOptimizer
         if (multiJoin.getJoinRemovalFactor(dimIdx) != null) {
             return;
         }
-        
+
         // check if the semijoin keys corresponding to the dimension table
         // are unique
         BitSet dimKeys = new BitSet();
@@ -732,7 +742,7 @@ public class LoptSemiJoinOptimizer
         if (!RelMdUtil.areColumnsDefinitelyUnique(dimRel, dimKeys)) {
             return;
         }
-        
+
         // check that the only fields referenced from the dimension table
         // in either its projection or join conditions are the dimension
         // keys
@@ -753,12 +763,12 @@ public class LoptSemiJoinOptimizer
                 }
             }
         }
-        
+
         // criteria met; keep track of the fact table and the semijoin that
         // allow the join of this dimension table to be removed
         multiJoin.setJoinRemovalFactor(dimIdx, factIdx);
         multiJoin.setJoinRemovalSemiJoin(dimIdx, semiJoin);
-        
+
         // if the dimension table doesn't reference anything in its projection
         // and the only fields referenced in its joins are the dimension keys
         // of this semijoin, then we can decrement the join reference counts
@@ -779,9 +789,9 @@ public class LoptSemiJoinOptimizer
         int [] factJoinRefCounts = multiJoin.getJoinFieldRefCounts(factIdx);
         for (Integer key : semiJoin.getLeftKeys()) {
             factJoinRefCounts[key]--;
-        }    
+        }
     }
-    
+
     /**
      * Removes a dimension table from a fact table's list of possible semijoins
      *

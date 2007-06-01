@@ -30,10 +30,11 @@ import java.util.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.release.*;
 
+
 /**
- * FarragoUnregisteredJdbcClientDriver implements the Farrago client side of
- * the {@link java.sql.Driver} interface via the VJDBC proxy.  It does not
- * register itself; for that, use {@link FarragoVjdbcClientDriver}.
+ * FarragoUnregisteredJdbcClientDriver implements the Farrago client side of the
+ * {@link java.sql.Driver} interface via the VJDBC proxy. It does not register
+ * itself; for that, use {@link FarragoVjdbcClientDriver}.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -41,7 +42,6 @@ import net.sf.farrago.release.*;
 public abstract class FarragoUnregisteredVjdbcClientDriver
     extends FarragoAbstractJdbcDriver
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

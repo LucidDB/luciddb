@@ -35,7 +35,6 @@ import org.eigenbase.rel.metadata.*;
 class HepRelMetadataProvider
     implements RelMetadataProvider
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement RelMetadataProvider

@@ -35,7 +35,6 @@ import org.eigenbase.sql.parser.*;
 public class SqlJoin
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final int LEFT_OPERAND = 0;
@@ -47,15 +46,15 @@ public class SqlJoin
     public static final int IS_NATURAL_OPERAND = 1;
 
     /**
-     * Value must be a {@link SqlLiteral}, one of the integer codes for
-     * {@link SqlJoinOperator.JoinType}.
+     * Value must be a {@link SqlLiteral}, one of the integer codes for {@link
+     * SqlJoinOperator.JoinType}.
      */
     public static final int TYPE_OPERAND = 2;
     public static final int RIGHT_OPERAND = 3;
 
     /**
-     * Value must be a {@link SqlLiteral}, one of the integer codes for
-     * {@link SqlJoinOperator.ConditionType}.
+     * Value must be a {@link SqlLiteral}, one of the integer codes for {@link
+     * SqlJoinOperator.ConditionType}.
      */
     public static final int CONDITION_TYPE_OPERAND = 4;
     public static final int CONDITION_OPERAND = 5;
@@ -84,9 +83,8 @@ public class SqlJoin
      */
     public final SqlJoinOperator.ConditionType getConditionType()
     {
-        return
-            (SqlJoinOperator.ConditionType) SqlLiteral.symbolValue(
-                operands[CONDITION_TYPE_OPERAND]);
+        return (SqlJoinOperator.ConditionType) SqlLiteral.symbolValue(
+            operands[CONDITION_TYPE_OPERAND]);
     }
 
     /**
@@ -96,9 +94,8 @@ public class SqlJoin
      */
     public final SqlJoinOperator.JoinType getJoinType()
     {
-        return
-            (SqlJoinOperator.JoinType) SqlLiteral.symbolValue(
-                operands[TYPE_OPERAND]);
+        return (SqlJoinOperator.JoinType) SqlLiteral.symbolValue(
+            operands[TYPE_OPERAND]);
     }
 
     public final SqlNode getLeft()

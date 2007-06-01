@@ -28,11 +28,11 @@ import java.util.*;
 
 import javax.sql.*;
 
+import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.jdbc.engine.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
@@ -52,7 +52,6 @@ import org.eigenbase.util.*;
 class MedJdbcColumnSet
     extends MedAbstractColumnSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final MedJdbcNameDirectory directory;
@@ -120,12 +119,11 @@ class MedJdbcColumnSet
                 dialect,
                 select);
         if (directory.server.lenient) {
-            return
-                toLenientRel(
-                    cluster,
-                    rel,
-                    origRowType,
-                    srcRowType);
+            return toLenientRel(
+                cluster,
+                rel,
+                origRowType,
+                srcRowType);
         }
         return rel;
     }
@@ -141,12 +139,14 @@ class MedJdbcColumnSet
         if (directory.server == null) {
             return null;
         }
-        if (directory.server.schemaName != null &&
-            !directory.server.useSchemaNameAsForeignQualifier) {
+        if ((directory.server.schemaName != null)
+            && !directory.server.useSchemaNameAsForeignQualifier)
+        {
             // Schema name should never be specified for a connection to
             // Farrago; if it is, bail.
             return null;
         }
+
         // Instead, schema name should always be present in foreign name.
         String [] schemaQualifiedName = getForeignName();
         if (schemaQualifiedName.length < 2) {

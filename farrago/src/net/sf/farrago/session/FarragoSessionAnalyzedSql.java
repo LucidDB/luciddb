@@ -41,7 +41,6 @@ import org.eigenbase.reltype.*;
  */
 public class FarragoSessionAnalyzedSql
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

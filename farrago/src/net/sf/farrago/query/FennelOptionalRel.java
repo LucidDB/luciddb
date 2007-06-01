@@ -38,7 +38,6 @@ import org.eigenbase.relopt.*;
 public abstract class FennelOptionalRel
     extends FennelSingleRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

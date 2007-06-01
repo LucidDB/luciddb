@@ -37,11 +37,10 @@ import net.sf.farrago.session.*;
 public abstract class DdlStmt
     implements FarragoSessionDdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final CwmModelElement modelElement;
-    
+
     /**
      * True if the DDL statement is treated as a DML statement with respect to
      * how locking behaves
@@ -54,7 +53,7 @@ public abstract class DdlStmt
     {
         this(modelElement, false);
     }
-    
+
     protected DdlStmt(CwmModelElement modelElement, boolean runsAsDml)
     {
         this.modelElement = modelElement;
@@ -104,7 +103,7 @@ public abstract class DdlStmt
     {
         return true;
     }
-    
+
     // implement FarragoSessionDdlStmt
     public boolean runsAsDml()
     {

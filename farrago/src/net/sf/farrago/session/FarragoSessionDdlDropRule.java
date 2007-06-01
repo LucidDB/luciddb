@@ -33,7 +33,6 @@ import net.sf.farrago.cwm.relational.enumerations.*;
  */
 public class FarragoSessionDdlDropRule
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Class superInterface;

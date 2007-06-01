@@ -47,7 +47,6 @@ import org.eigenbase.util.*;
 public class SqlIntervalLiteral
     extends SqlLiteral
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected SqlIntervalLiteral(
@@ -78,11 +77,10 @@ public class SqlIntervalLiteral
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return
-            new SqlIntervalLiteral(
-                (IntervalValue) value,
-                getTypeName(),
-                pos);
+        return new SqlIntervalLiteral(
+            (IntervalValue) value,
+            getTypeName(),
+            pos);
     }
 
     public void unparse(
@@ -136,8 +134,7 @@ public class SqlIntervalLiteral
                 return false;
             }
             IntervalValue that = (IntervalValue) obj;
-            return
-                this.intervalStr.equals(that.intervalStr)
+            return this.intervalStr.equals(that.intervalStr)
                 && (this.sign == that.sign)
                 && this.intervalQualifier.equalsDeep(
                     that.intervalQualifier,

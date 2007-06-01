@@ -44,6 +44,8 @@ import org.eigenbase.sql.*;
 public class DdlSetSessionParamStmt
     extends DdlStmt
 {
+    //~ Instance fields --------------------------------------------------------
+
     final private String paramName;
     final private SqlLiteral paramValue;
 
@@ -73,9 +75,9 @@ public class DdlSetSessionParamStmt
         String valueString = paramValue.toValue();
 
         session.getPersonality().validateSessionVariable(
-            ddlValidator, 
+            ddlValidator,
             session.getSessionVariables(),
-            paramName, 
+            paramName,
             valueString);
     }
 

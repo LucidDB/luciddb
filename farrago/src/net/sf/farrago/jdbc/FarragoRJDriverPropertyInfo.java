@@ -41,7 +41,6 @@ public class FarragoRJDriverPropertyInfo
     extends RJDriverPropertyInfo
     implements java.io.Serializable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

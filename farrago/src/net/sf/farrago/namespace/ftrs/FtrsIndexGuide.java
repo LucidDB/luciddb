@@ -37,7 +37,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -54,7 +54,6 @@ import org.eigenbase.util.Util;
  */
 class FtrsIndexGuide
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoTypeFactory typeFactory;
@@ -132,7 +131,8 @@ class FtrsIndexGuide
             FarragoCatalogUtil.getClusteredIndex(
                 repos,
                 index.getSpannedClass());
-        List<FemAbstractColumn> indexColumnList = new ArrayList<FemAbstractColumn>();
+        List<FemAbstractColumn> indexColumnList =
+            new ArrayList<FemAbstractColumn>();
         appendDefinedKey(indexColumnList, index);
         appendClusteredDistinctKey(clusteredIndex, indexColumnList);
         return indexColumnList;
@@ -183,8 +183,7 @@ class FtrsIndexGuide
         appendClusteredDistinctKey(index, indexColumnList);
         Integer [] array = new Integer[indexColumnList.size()];
         for (int i = 0; i < array.length; ++i) {
-            FemAbstractColumn column =
-                indexColumnList.get(i);
+            FemAbstractColumn column = indexColumnList.get(i);
             array[i] = flattenOrdinal(column.getOrdinal());
         }
         return array;
@@ -193,7 +192,8 @@ class FtrsIndexGuide
     List<? extends Object> getDistinctKeyColList(
         FemLocalIndex index)
     {
-        List<FemAbstractColumn> indexColumnList = new ArrayList<FemAbstractColumn>();
+        List<FemAbstractColumn> indexColumnList =
+            new ArrayList<FemAbstractColumn>();
         if (index.isClustered()) {
             appendClusteredDistinctKey(index, indexColumnList);
         } else {
@@ -263,10 +263,9 @@ class FtrsIndexGuide
             // deletions and rollbacks without requiring linear search.
             n = getUnclusteredCoverageColList(index).size();
         }
-        return
-            FennelRelUtil.createTupleProjection(
-                repos,
-                FennelRelUtil.newIotaProjection(n));
+        return FennelRelUtil.createTupleProjection(
+            repos,
+            FennelRelUtil.newIotaProjection(n));
     }
 
     /**
@@ -302,11 +301,10 @@ class FtrsIndexGuide
     {
         if (index.isClustered()) {
             // clustered index tuple is full table tuple
-            return
-                FennelRelUtil.createTupleProjection(
-                    repos,
-                    FennelRelUtil.newIotaProjection(
-                        flattenedRowType.getFieldList().size()));
+            return FennelRelUtil.createTupleProjection(
+                repos,
+                FennelRelUtil.newIotaProjection(
+                    flattenedRowType.getFieldList().size()));
         }
 
         List<FemAbstractColumn> indexColumnList =
@@ -329,8 +327,7 @@ class FtrsIndexGuide
     {
         FemTupleProjection tupleProj = repos.newFemTupleProjection();
         for (FemAbstractColumn column : indexColumnList) {
-            FemTupleAttrProjection attrProj =
-                repos.newFemTupleAttrProjection();
+            FemTupleAttrProjection attrProj = repos.newFemTupleAttrProjection();
             tupleProj.getAttrProjection().add(attrProj);
             attrProj.setAttributeIndex(
                 flattenOrdinal(
@@ -379,8 +376,10 @@ class FtrsIndexGuide
         List<FemAbstractColumn> list,
         FemAbstractUniqueConstraint constraint)
     {
-        for (FemAbstractColumn column :
-            Util.cast(constraint.getFeature(), FemAbstractColumn.class)) {
+        for (
+            FemAbstractColumn column
+            : Util.cast(constraint.getFeature(), FemAbstractColumn.class))
+        {
             if (list.contains(column)) {
                 continue;
             }
@@ -480,13 +479,13 @@ class FtrsIndexGuide
         assert (i != -1);
         return i;
     }
-    
+
     /**
-     * Returns the unflattened column ordinal corresponding to a flattened
-     * field ordinal
-     * 
+     * Returns the unflattened column ordinal corresponding to a flattened field
+     * ordinal
+     *
      * @param fieldOrdinal flattened ordinal
-     * 
+     *
      * @return unflattened ordinal
      */
     public int unFlattenOrdinal(int fieldOrdinal)

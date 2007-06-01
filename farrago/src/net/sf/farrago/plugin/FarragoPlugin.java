@@ -47,7 +47,6 @@ import net.sf.farrago.util.*;
 public interface FarragoPlugin
     extends FarragoAllocation
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

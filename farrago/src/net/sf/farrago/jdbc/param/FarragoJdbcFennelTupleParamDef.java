@@ -35,9 +35,8 @@ import org.eigenbase.util14.*;
 
 /**
  * FarragoJdbcFennelTupleParamDef represents a parameter associated with a
- * FennelTupleDatum. It handles data converstions to the target type.
- *
- * This class is JDK 1.4 compatible.
+ * FennelTupleDatum. It handles data converstions to the target type. This class
+ * is JDK 1.4 compatible.
  *
  * @author Angel Chang
  * @version $Id$
@@ -46,7 +45,6 @@ import org.eigenbase.util14.*;
 public class FarragoJdbcFennelTupleParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /* ParamDef (non fennel version) used to override scrubValue */
@@ -157,7 +155,8 @@ public class FarragoJdbcFennelTupleParamDef
             break;
         case Types.VARCHAR:
         case Types.CHAR:
-            setString(paramMetaData.type == Types.CHAR,
+            setString(
+                paramMetaData.type == Types.CHAR,
                 datum,
                 b ? "true" : "false",
                 Boolean.class);
@@ -402,7 +401,8 @@ public class FarragoJdbcFennelTupleParamDef
         }
     }
 
-    private void setString(boolean pad,
+    private void setString(
+        boolean pad,
         FennelTupleDatum datum,
         String val,
         Class clazz)
@@ -659,9 +659,12 @@ public class FarragoJdbcFennelTupleParamDef
                     datum,
                     n.doubleValue(),
                     true);
-            } else if ((val instanceof Byte) || (val instanceof Short)
+            } else if (
+                (val instanceof Byte)
+                || (val instanceof Short)
                 || (val instanceof Integer)
-                || (val instanceof Long)) {
+                || (val instanceof Long))
+            {
                 setLong(
                     datum,
                     n.longValue(),

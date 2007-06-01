@@ -36,7 +36,6 @@ import net.sf.farrago.namespace.util.*;
  */
 public interface FarragoSessionIndexMap
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -58,14 +57,13 @@ public interface FarragoSessionIndexMap
     public long getIndexRoot(FemLocalIndex index);
 
     /**
-     * Gets the root PageId of an index to be used for reading or
-     * for writing.
+     * Gets the root PageId of an index to be used for reading or for writing.
      *
      * @param index the index of interest
-     * @param write whether to access a root for reading or writing. A root
-     *   for reading reflects the index before modifications. A root for
-     *   writing may be the same root, or may reflect an updated index,
-     *   depending on the implementation of the session index map.
+     * @param write whether to access a root for reading or writing. A root for
+     * reading reflects the index before modifications. A root for writing may
+     * be the same root, or may reflect an updated index, depending on the
+     * implementation of the session index map.
      *
      * @return root PageId as a long
      */

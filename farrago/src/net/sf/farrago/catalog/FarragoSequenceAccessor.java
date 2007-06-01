@@ -55,7 +55,6 @@ import org.eigenbase.util.*;
 public class FarragoSequenceAccessor
     extends CompoundClosableAllocation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static String NEXT_VALUE_METHOD_NAME = "getNext";

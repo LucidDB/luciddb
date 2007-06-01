@@ -58,9 +58,7 @@ import org.eigenbase.util.*;
  */
 public abstract class OJPreparingStmt
 {
-
     //~ Static fields/initializers ---------------------------------------------
-
 
     public static final String connectionVariable = "connection";
     private static final Logger tracer = EigenbaseTrace.getStatementTracer();
@@ -101,7 +99,8 @@ public abstract class OJPreparingStmt
             ((connection == null) && (this instanceof RelOptConnection))
             ? (RelOptConnection) this
             : connection;
-        Util.pre(this.connection != null,
+        Util.pre(
+            this.connection != null,
             "connection != null || this instanceof RelOptConnection");
         this.resultCallingConvention = CallingConvention.RESULT_SET;
         this.containsJava = true;
@@ -188,7 +187,8 @@ public abstract class OJPreparingStmt
                     argument.clazz = argument.value.getClass();
                 }
                 if ((argument.value instanceof Iterator)
-                    && !(argument.value instanceof Iterable)) {
+                    && !(argument.value instanceof Iterable))
+                {
                     argument.value =
                         new BufferedIterator((Iterator) argument.value);
                     argument.clazz = argument.value.getClass();
@@ -223,13 +223,12 @@ public abstract class OJPreparingStmt
         SqlValidator validator,
         boolean needsValidation)
     {
-        return
-            prepareSql(
-                sqlQuery,
-                sqlQuery,
-                runtimeContextClass,
-                validator,
-                needsValidation);
+        return prepareSql(
+            sqlQuery,
+            sqlQuery,
+            runtimeContextClass,
+            validator,
+            needsValidation);
     }
 
     /**
@@ -250,11 +249,11 @@ public abstract class OJPreparingStmt
         }
 
         final Argument [] arguments =
-            {
-                new Argument(connectionVariable,
-                    runtimeContextClass,
-                    connection)
-            };
+        {
+            new Argument(connectionVariable,
+                runtimeContextClass,
+                connection)
+        };
         ClassDeclaration decl = init(arguments);
 
         SqlExplain sqlExplain = null;
@@ -283,19 +282,17 @@ public abstract class OJPreparingStmt
             SqlExplainLevel detailLevel = sqlExplain.getDetailLevel();
             switch (explainDepth) {
             case Type:
-                return
-                    new PreparedExplanation(
-                        resultType,
-                        null,
-                        explainAsXml,
-                        detailLevel);
+                return new PreparedExplanation(
+                    resultType,
+                    null,
+                    explainAsXml,
+                    detailLevel);
             case Logical:
-                return
-                    new PreparedExplanation(
-                        null,
-                        rootRel,
-                        explainAsXml,
-                        detailLevel);
+                return new PreparedExplanation(
+                    null,
+                    rootRel,
+                    explainAsXml,
+                    detailLevel);
             default:
             }
         }
@@ -315,15 +312,15 @@ public abstract class OJPreparingStmt
             switch (explainDepth) {
             case Physical:
             default:
-                rootRel = optimize(
+                rootRel =
+                    optimize(
                         rootRel.getRowType(),
                         rootRel);
-                return
-                    new PreparedExplanation(
-                        null,
-                        rootRel,
-                        explainAsXml,
-                        detailLevel);
+                return new PreparedExplanation(
+                    null,
+                    rootRel,
+                    explainAsXml,
+                    detailLevel);
             }
         }
 
@@ -334,13 +331,12 @@ public abstract class OJPreparingStmt
             timingTracer.traceTime("end optimization");
         }
 
-        return
-            implement(
-                resultType,
-                rootRel,
-                sqlNodeOriginal.getKind(),
-                decl,
-                arguments);
+        return implement(
+            resultType,
+            rootRel,
+            sqlNodeOriginal.getKind(),
+            decl,
+            arguments);
     }
 
     /**
@@ -379,7 +375,7 @@ public abstract class OJPreparingStmt
     }
 
     /**
-     * Determines if the RelNode tree contains Java RelNodes.  Also, if the row
+     * Determines if the RelNode tree contains Java RelNodes. Also, if the row
      * contains an interval type, then effectively, the tree is treated as
      * containing Java, since we currently cannot read raw interval columns.
      *
@@ -445,6 +441,7 @@ public abstract class OJPreparingStmt
         } else {
             boundMethod = null;
             parseTree = null;
+
             // Need to create a new result rowtype where the field names of
             // the row originate from the original projection list. E.g,
             // if you have a query like:
@@ -456,13 +453,15 @@ public abstract class OJPreparingStmt
             // resultant row is a single rowcount column, so we don't want to
             // change the field name in those cases.
             if (!isDml) {
-                assert(rowType.getFieldCount() == resultType.getFieldCount());
+                assert (rowType.getFieldCount() == resultType.getFieldCount());
                 String [] fieldNames = RelOptUtil.getFieldNames(rowType);
                 RelDataType [] types = RelOptUtil.getFieldTypes(resultType);
                 resultType =
                     rootRel.getCluster().getTypeFactory().createStructType(
-                        types, fieldNames);
+                        types,
+                        fieldNames);
             }
+
             // strip off the topmost, special converter RelNode, now that we no
             // longer need it
             rootRel = rootRel.getInput(0);
@@ -523,7 +522,8 @@ public abstract class OJPreparingStmt
     {
         if (needOpt) {
             rootRel = flattenTypes(rootRel, true);
-            rootRel = optimize(
+            rootRel =
+                optimize(
                     rootRel.getRowType(),
                     rootRel);
         }
@@ -604,7 +604,8 @@ public abstract class OJPreparingStmt
                 pakkage = Object.class.getPackage();
             }
             if (!Modifier.isPrivate(modifiers)
-                && pakkage.getName().equals(fromPackageName)) {
+                && pakkage.getName().equals(fromPackageName))
+            {
                 return c;
             }
         }
@@ -729,9 +730,12 @@ public abstract class OJPreparingStmt
         String s = compUnit.toString();
         String className = decl.getName();
         packageName = compUnit.getPackage(); // e.g. "abc.def", or null
-        return
-            compile(packageName, className, s, parameterTypes,
-                parameterNames);
+        return compile(
+            packageName,
+            className,
+            s,
+            parameterTypes,
+            parameterNames);
     }
 
     private BoundMethod compile(
@@ -818,18 +822,18 @@ public abstract class OJPreparingStmt
                 fw.write(source);
                 fw.close();
             } catch (java.io.IOException e2) {
-                throw Util.newInternal(e2,
+                throw Util.newInternal(
+                    e2,
                     "while writing java file '" + javaFile + "'");
             }
         }
 
         javaCompiler.compile();
         try {
-            return
-                Class.forName(
-                    fullClassName,
-                    true,
-                    javaCompiler.getClassLoader());
+            return Class.forName(
+                fullClassName,
+                true,
+                javaCompiler.getClassLoader());
         } catch (ClassNotFoundException e) {
             throw Util.newInternal(e);
         }
@@ -905,12 +909,13 @@ public abstract class OJPreparingStmt
     }
 
     /**
-     * Walks a {@link RelNode} tree and determines if it contains any
-     * {@link JavaRel}s.
+     * Walks a {@link RelNode} tree and determines if it contains any {@link
+     * JavaRel}s.
      *
      * @author Zelaine Fong
      */
-    public static class JavaRelFinder extends RelVisitor
+    public static class JavaRelFinder
+        extends RelVisitor
     {
         private boolean javaRelFound;
 

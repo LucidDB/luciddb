@@ -73,6 +73,61 @@ import org.eigenbase.util.*;
  */
 public interface SqlValidator
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Enumeration of valid SQL compatiblity modes.
+     *
+     * <p>TODO jvs 16-June-2006: Move this to top-level as enum SqlConformance.
+     */
+    public enum Compatible
+    {
+        Default, Strict92, Strict99, Pragmatic99, Oracle10g, Sql2003,
+        Pragmatic2003;
+
+        /**
+         * Whether 'order by 2' is interpreted to mean 'sort by the 2nd column
+         * in the select list'.
+         */
+        public boolean isSortByOrdinal()
+        {
+            switch (this) {
+            case Default:
+            case Oracle10g:
+            case Strict92:
+            case Pragmatic99:
+            case Pragmatic2003:
+                return true;
+            default:
+                return false;
+            }
+        }
+
+        /**
+         * Whether 'order by x' is interpreted to mean 'sort by the select list
+         * item whose alias is x' even if there is a column called x.
+         */
+        public boolean isSortByAlias()
+        {
+            switch (this) {
+            case Default:
+            case Oracle10g:
+            case Strict92:
+                return true;
+            default:
+                return false;
+            }
+        }
+
+        /**
+         * Whether "empno" is invalid in "select empno as x from emp order by
+         * empno" because the alias "x" obscures it.
+         */
+        public boolean isSortByAliasObscures()
+        {
+            return this == Compatible.Strict92;
+        }
+    }
 
     //~ Methods ----------------------------------------------------------------
 
@@ -280,10 +335,9 @@ public interface SqlValidator
      * @param windowOrRef Either the name of a window (a {@link SqlIdentifier})
      * or a window specification (a {@link SqlWindow}).
      * @param scope Scope in which to resolve window names
-     *
      * @param populateBounds Whether to populate bounds. Doing so may alter the
-     *   definition of the window. It is recommended that populate bounds when
-     *   translating to physical algebra, but not when validating.
+     * definition of the window. It is recommended that populate bounds when
+     * translating to physical algebra, but not when validating.
      *
      * @return A window
      *
@@ -450,8 +504,8 @@ public interface SqlValidator
     void declareCursor(SqlSelect select, SqlValidatorScope scope);
 
     /**
-     * Pushes a new instance of a cursor map on to the cursor map stack.
-     * Each cursor map corresponds to a specific function call.
+     * Pushes a new instance of a cursor map on to the cursor map stack. Each
+     * cursor map corresponds to a specific function call.
      */
     void pushCursorMap();
 
@@ -461,17 +515,16 @@ public interface SqlValidator
     void popCursorMap();
 
     /**
-     * Enables or disables expansion of identifiers other than
-     * column references.
+     * Enables or disables expansion of identifiers other than column
+     * references.
      *
      * @param expandIdentifiers new setting
      */
     void setIdentifierExpansion(boolean expandIdentifiers);
 
     /**
-     * Enables or disables expansion of column references.
-     * (Currently this does not apply to the ORDER BY clause;
-     * may be fixed in the future.)
+     * Enables or disables expansion of column references. (Currently this does
+     * not apply to the ORDER BY clause; may be fixed in the future.)
      *
      * @param expandColumnReferences new setting
      */
@@ -480,7 +533,7 @@ public interface SqlValidator
     /**
      * Returns expansion of identifiers.
      */
-     boolean shouldExpandIdentifiers();
+    boolean shouldExpandIdentifiers();
 
     /**
      * Enables or disables rewrite of "macro-like" calls such as COALESCE.
@@ -497,6 +550,7 @@ public interface SqlValidator
      * @param unresolvedConstructor TODO
      * @param resolvedConstructor TODO
      * @param argTypes Types of arguments
+     *
      * @return Resolved type of constructor
      */
     RelDataType deriveConstructorType(
@@ -547,70 +601,10 @@ public interface SqlValidator
      *
      * @param expr Expression
      * @param scope Scope
+     *
      * @return Expanded expression
      */
     SqlNode expand(SqlNode expr, SqlValidatorScope scope);
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Enumeration of valid SQL compatiblity modes.
-     *
-     * <p>TODO jvs 16-June-2006: Move this to top-level as enum SqlConformance.
-     */
-    public enum Compatible
-    {
-        Default,
-        Strict92,
-        Strict99,
-        Pragmatic99,
-        Oracle10g,
-        Sql2003,
-        Pragmatic2003;
-
-        /**
-         * Whether 'order by 2' is interpreted to mean 'sort by the 2nd column
-         * in the select list'.
-         */
-        public boolean isSortByOrdinal()
-        {
-            switch (this) {
-            case Default:
-            case Oracle10g:
-            case Strict92:
-            case Pragmatic99:
-            case Pragmatic2003:
-                return true;
-            default:
-                return false;
-            }
-        }
-
-        /**
-         * Whether 'order by x' is interpreted to mean 'sort by the select list
-         * item whose alias is x' even if there is a column called x.
-         */
-        public boolean isSortByAlias()
-        {
-            switch (this) {
-            case Default:
-            case Oracle10g:
-            case Strict92:
-                return true;
-            default:
-                return false;
-            }
-        }
-
-        /**
-         * Whether "empno" is invalid in "select empno as x from emp order by
-         * empno" because the alias "x" obscures it.
-         */
-        public boolean isSortByAliasObscures()
-        {
-            return this == Compatible.Strict92;
-        }
-    }
 }
 
 // End SqlValidator.java

@@ -30,7 +30,6 @@ package net.sf.farrago.session;
  */
 public interface FarragoSessionPersonalityFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -54,7 +54,6 @@ import org.eigenbase.util.*;
 public class SqlBetweenOperator
     extends SqlInfixOperator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String [] betweenNames =
@@ -92,6 +91,17 @@ public class SqlBetweenOperator
     private static final SqlWriter.FrameType BetweenFrameType =
         SqlWriter.FrameTypeEnum.create("BETWEEN");
 
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Defines the "SYMMETRIC" and "ASYMMETRIC" keywords.
+     */
+    public enum Flag
+        implements SqlLiteral.SqlSymbol
+    {
+        ASYMMETRIC, SYMMETRIC;
+    }
+
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -113,7 +123,8 @@ public class SqlBetweenOperator
         Flag flag,
         boolean negated)
     {
-        super(negated ? notBetweenNames : betweenNames,
+        super(
+            negated ? notBetweenNames : betweenNames,
             SqlKind.Between,
             30,
             null,
@@ -141,11 +152,11 @@ public class SqlBetweenOperator
                 scope,
                 call.operands);
         RelDataType [] newArgTypes =
-            {
-                argTypes[VALUE_OPERAND],
-                argTypes[LOWER_OPERAND],
-                argTypes[UPPER_OPERAND]
-            };
+        {
+            argTypes[VALUE_OPERAND],
+            argTypes[LOWER_OPERAND],
+            argTypes[UPPER_OPERAND]
+        };
         return newArgTypes;
     }
 
@@ -160,9 +171,8 @@ public class SqlBetweenOperator
                     callBinding.getValidator(),
                     callBinding.getScope(),
                     callBinding.getCall()));
-        return
-            SqlTypeStrategies.rtiNullableBoolean.inferReturnType(
-                newOpBinding);
+        return SqlTypeStrategies.rtiNullableBoolean.inferReturnType(
+            newOpBinding);
     }
 
     public String getSignatureTemplate(final int operandsCount)
@@ -255,7 +265,8 @@ public class SqlBetweenOperator
                 EigenbaseResource.instance().BetweenWithoutAnd.ex());
         }
         if (((SqlParserUtil.ToTreeListItem) o).getOperator().getKind()
-            != SqlKind.And) {
+            != SqlKind.And)
+        {
             SqlParserPos errPos = ((SqlParserUtil.ToTreeListItem) o).getPos();
             throw SqlUtil.newContextException(
                 errPos,
@@ -299,15 +310,6 @@ public class SqlBetweenOperator
     }
 
     //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Defines the "SYMMETRIC" and "ASYMMETRIC" keywords.
-     */
-    public enum Flag implements SqlLiteral.SqlSymbol
-    {
-        ASYMMETRIC,
-        SYMMETRIC;
-    }
 
     /**
      * Finds an AND operator in an expression.

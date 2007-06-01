@@ -40,7 +40,6 @@ import org.eigenbase.util.*;
 public abstract class ReflectiveSqlOperatorTable
     implements SqlOperatorTable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final MultiMap<String, SqlOperator> operators =
@@ -74,15 +73,19 @@ public abstract class ReflectiveSqlOperatorTable
                     if (op != null) {
                         register(op);
                     }
-                } else if (SqlOperator.class.isAssignableFrom(field.getType())) {
+                } else if (
+                    SqlOperator.class.isAssignableFrom(field.getType()))
+                {
                     SqlOperator op = (SqlOperator) field.get(this);
                     register(op);
                 }
             } catch (IllegalArgumentException e) {
-                throw Util.newInternal(e,
+                throw Util.newInternal(
+                    e,
                     "Error while initializing operator table");
             } catch (IllegalAccessException e) {
-                throw Util.newInternal(e,
+                throw Util.newInternal(
+                    e,
                     "Error while initializing operator table");
             }
         }
@@ -100,7 +103,8 @@ public abstract class ReflectiveSqlOperatorTable
         String simpleName;
         if (opName.names.length > 1) {
             if (opName.names[opName.names.length - 2].equals(
-                    "INFORMATION_SCHEMA")) {
+                    "INFORMATION_SCHEMA"))
+            {
                 // per SQL99 Part 2 Section 10.4 Syntax Rule 7.b.ii.1
                 simpleName = opName.names[opName.names.length - 1];
             } else {
@@ -114,8 +118,10 @@ public abstract class ReflectiveSqlOperatorTable
             SqlOperator op = list.get(i);
             if (op.getSyntax() == syntax) {
                 overloads.add(op);
-            } else if ((syntax == SqlSyntax.Function)
-                && (op instanceof SqlFunction)) {
+            } else if (
+                (syntax == SqlSyntax.Function)
+                && (op instanceof SqlFunction))
+            {
                 // this special case is needed for operators like CAST,
                 // which are treated as functions but have special syntax
                 overloads.add(op);

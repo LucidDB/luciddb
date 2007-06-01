@@ -38,7 +38,6 @@ import org.eigenbase.sql.util.*;
 public class MockSqlOperatorTable
     extends ChainedSqlOperatorTable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final ListSqlOperatorTable listOpTab = new ListSqlOperatorTable();
@@ -77,7 +76,7 @@ public class MockSqlOperatorTable
                     final RelDataTypeFactory typeFactory =
                         opBinding.getTypeFactory();
                     final RelDataType [] types =
-                        { typeFactory.createSqlType(SqlTypeName.INTEGER) };
+                    { typeFactory.createSqlType(SqlTypeName.INTEGER) };
                     final String [] fieldNames = new String[] { "I" };
                     return typeFactory.createStructType(types, fieldNames);
                 }
@@ -97,7 +96,7 @@ public class MockSqlOperatorTable
                     final RelDataTypeFactory typeFactory =
                         opBinding.getTypeFactory();
                     final RelDataType [] types =
-                        { typeFactory.createSqlType(SqlTypeName.VARCHAR, 1024) };
+                    { typeFactory.createSqlType(SqlTypeName.VARCHAR, 1024) };
                     final String [] fieldNames = new String[] { "NAME" };
                     return typeFactory.createStructType(types, fieldNames);
                 }

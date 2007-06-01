@@ -22,9 +22,11 @@
 package org.eigenbase.dmv;
 
 import java.util.*;
+
 import javax.jmi.reflect.*;
 
 import org.eigenbase.jmi.*;
+
 
 /**
  * DmvResponse represents the result of a DMV query.
@@ -34,9 +36,13 @@ import org.eigenbase.jmi.*;
  */
 public class DmvResponse
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final Collection<RefObject> searchResult;
 
     private final JmiDependencyGraph transformationResult;
+
+    //~ Constructors -----------------------------------------------------------
 
     public DmvResponse(
         Collection<RefObject> searchResult,
@@ -45,12 +51,14 @@ public class DmvResponse
         this.searchResult = searchResult;
         this.transformationResult = transformationResult;
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public Collection<RefObject> getSearchResult()
     {
         return searchResult;
     }
-    
+
     public JmiDependencyGraph getTransformationResult()
     {
         return transformationResult;

@@ -41,7 +41,6 @@ import org.eigenbase.relopt.*;
 public class RelMetadataTest
     extends SqlToRelTestBase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final double EPSILON = 1.0e-5;

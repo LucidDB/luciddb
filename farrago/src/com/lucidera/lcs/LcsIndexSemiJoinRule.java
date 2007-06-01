@@ -42,7 +42,7 @@ import org.eigenbase.trace.*;
  * into the actual operations used to execute the semijoin. Specfically,
  *
  * <pre>
- * SemiJoinRel(LcsRowScanRel, D) -> 
+ * SemiJoinRel(LcsRowScanRel, D) ->
  *     LcsRowScanRel(
  *         LcsIndexMergeRel(
  *             LcsIndexSearchRel(
@@ -50,9 +50,9 @@ import org.eigenbase.trace.*;
  *                     AggregateRel(
  *                         ProjectRel(D))))))
  * </pre>
- * 
- * <p>Note that this rule assumes that no projections have been pushed into
- * the LcsRowScanRels.
+ *
+ * <p>Note that this rule assumes that no projections have been pushed into the
+ * LcsRowScanRels.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -61,6 +61,8 @@ public class LcsIndexSemiJoinRule
     extends RelOptRule
 {
     // ~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public LcsIndexSemiJoinRule(RelOptRuleOperand rule, String id)
     {
@@ -122,14 +124,14 @@ public class LcsIndexSemiJoinRule
 
         // find the best index to filter the LHS of a SemiJoinRel
         List<Integer> bestKeyOrder = new ArrayList<Integer>();
-                
-        LcsIndexOptimizer indexOptimizer =
-            new LcsIndexOptimizer(origRowScan);
+
+        LcsIndexOptimizer indexOptimizer = new LcsIndexOptimizer(origRowScan);
         FemLocalIndex bestIndex =
             indexOptimizer.findSemiJoinIndexByCost(
-                rightRel, semiJoin.getLeftKeys(),
-                semiJoin.getRightKeys(), bestKeyOrder);
-        
+                rightRel,
+                semiJoin.getLeftKeys(),
+                semiJoin.getRightKeys(),
+                bestKeyOrder);
 
         if (bestIndex != null) {
             transformSemiJoin(
@@ -231,7 +233,7 @@ public class LcsIndexSemiJoinRule
         // keys
         AggregateRel distinctRel =
             (AggregateRel) RelOptUtil.createDistinctRel(distInput);
-        
+
         // then sort the result so we will search the index in key order
         FennelSortRel sort =
             new FennelSortRel(
@@ -242,7 +244,7 @@ public class LcsIndexSemiJoinRule
 
         // Add the new semi join filtering index to the access path.
         int rowScanRelPosInCall = 1;
-        
+
         RelNode [] inputRels =
             addNewIndexAccessRel(
                 call,
@@ -252,7 +254,7 @@ public class LcsIndexSemiJoinRule
 
         Double rowScanInputSelectivity =
             RelMdUtil.computeSemiJoinSelectivity(semiJoin);
-        
+
         LcsRowScanRel newRowScan =
             new LcsRowScanRel(
                 origRowScan.getCluster(),
@@ -284,7 +286,8 @@ public class LcsIndexSemiJoinRule
      *
      * @return cast expression
      */
-    private RexNode [] castJoinKeys(List<Integer> leftKeys,
+    private RexNode [] castJoinKeys(
+        List<Integer> leftKeys,
         RelDataTypeField [] leftFields,
         int nKeys,
         List<Integer> keyOrder,
@@ -310,15 +313,14 @@ public class LcsIndexSemiJoinRule
     }
 
     /**
-     * 
      * @param call call this rule is matched against
      * @param rowScanRelPosInCall the position(start from 0) of the
      * LcsRowScanRel in the sequence of rels matched by this rule
      * @param sort input to the index search rel to be created
      * @param index the index to use in the index search rel
-     * 
-     * @return the new input rels, after adding the new index search rel,
-     * to the row scan rel.
+     *
+     * @return the new input rels, after adding the new index search rel, to the
+     * row scan rel.
      */
     private static RelNode [] addNewIndexAccessRel(
         RelOptRuleCall call,
@@ -328,23 +330,24 @@ public class LcsIndexSemiJoinRule
     {
         assert (call.rels[rowScanRelPosInCall] instanceof LcsRowScanRel);
         LcsRowScanRel origRowScanRel =
-            (LcsRowScanRel)call.rels[rowScanRelPosInCall];        
-        
+            (LcsRowScanRel) call.rels[rowScanRelPosInCall];
+
         RelNode newIndexAccessRel = null;
+
         // AND the INDEX rels together.
         if (!origRowScanRel.isFullScan) {
-            assert (call.rels.length > rowScanRelPosInCall+1);
-            newIndexAccessRel = call.rels[rowScanRelPosInCall+1];
+            assert (call.rels.length > (rowScanRelPosInCall + 1));
+            newIndexAccessRel = call.rels[rowScanRelPosInCall + 1];
         }
-        
+
         // Always require merge for the index access to be added
         boolean requireMerge = true;
-        
+
         // No input key proj required
         // An equality condition using the input sort values is implied.
-        Integer[] inputKeyProj = null;
-        Integer[] inputDirectiveProj = null;
-        
+        Integer [] inputKeyProj = null;
+        Integer [] inputDirectiveProj = null;
+
         newIndexAccessRel =
             LcsIndexOptimizer.addNewIndexAccessRel(
                 newIndexAccessRel,
@@ -359,29 +362,31 @@ public class LcsIndexSemiJoinRule
         // Number of existing residual filters
         int origResidualColumnCount = 0;
         if (origRowScanRel.hasResidualFilter) {
-            origResidualColumnCount =
-                origRowScanRel.residualColumns.length;
+            origResidualColumnCount = origRowScanRel.residualColumns.length;
         }
 
         int origIndexRelCount =
             origRowScanRel.getInputs().length - origResidualColumnCount;
         int indexRelCount = 1;
-        
+
         RelNode [] rowScanInputRels =
-            new RelNode[indexRelCount + 
-                        origResidualColumnCount];
-                
+            new RelNode[indexRelCount
+                + origResidualColumnCount];
+
         // finally create the new row scan
         rowScanInputRels[0] = newIndexAccessRel;
-        
+
         if (origRowScanRel.hasResidualFilter) {
             System.arraycopy(
-                origRowScanRel.getInputs(), origIndexRelCount,
-                rowScanInputRels, indexRelCount, origResidualColumnCount);
+                origRowScanRel.getInputs(),
+                origIndexRelCount,
+                rowScanInputRels,
+                indexRelCount,
+                origResidualColumnCount);
         }
 
         return rowScanInputRels;
-    }    
+    }
 }
 
 // End LcsIndexSemiJoinRule.java

@@ -58,7 +58,6 @@ import org.eigenbase.util.*;
 public class SqlMinMaxAggFunction
     extends SqlAggFunction
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final int MINMAX_INVALID = -1;

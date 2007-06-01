@@ -26,8 +26,8 @@ import java.util.*;
 import java.util.concurrent.locks.*;
 import java.util.logging.*;
 
-import javax.jmi.reflect.*;
 import javax.jmi.model.*;
+import javax.jmi.reflect.*;
 
 import net.sf.farrago.*;
 import net.sf.farrago.cwm.core.*;
@@ -53,7 +53,6 @@ public abstract class FarragoReposImpl
     extends FarragoMetadataFactoryImpl
     implements FarragoRepos
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = FarragoTrace.getReposTracer();
@@ -70,9 +69,11 @@ public abstract class FarragoReposImpl
     protected final FarragoCompoundAllocation allocations =
         new FarragoCompoundAllocation();
 
-    private final Map<String, String> localizedClassNames = new HashMap<String, String>();
+    private final Map<String, String> localizedClassNames =
+        new HashMap<String, String>();
 
-    private final List<ResourceBundle> resourceBundles = new ArrayList<ResourceBundle>();
+    private final List<ResourceBundle> resourceBundles =
+        new ArrayList<ResourceBundle>();
 
     private JmiModelGraph modelGraph;
 
@@ -80,8 +81,7 @@ public abstract class FarragoReposImpl
 
     private Map<String, FarragoSequenceAccessor> sequenceMap;
 
-    private final ReentrantReadWriteLock sxLock =
-        new ReentrantReadWriteLock();
+    private final ReentrantReadWriteLock sxLock = new ReentrantReadWriteLock();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -114,7 +114,8 @@ public abstract class FarragoReposImpl
     protected void initGraphOnly()
     {
         ClassLoader classLoader = BaseObjectHandler.getDefaultClassLoader();
-        modelGraph = new JmiModelGraph(
+        modelGraph =
+            new JmiModelGraph(
                 getRootPackage(),
                 classLoader,
                 true);
@@ -211,8 +212,8 @@ public abstract class FarragoReposImpl
         CwmModelElement modelElement)
     {
         return getLocalizedObjectName(
-                modelElement,
-                modelElement.refClass());
+            modelElement,
+            modelElement.refClass());
     }
 
     /**
@@ -247,11 +248,10 @@ public abstract class FarragoReposImpl
         if (namespace != null) {
             qualifierName = namespace.getName();
         }
-        return
-            getLocalizedObjectName(
-                qualifierName,
-                modelElement.getName(),
-                refClass);
+        return getLocalizedObjectName(
+            qualifierName,
+            modelElement.getName(),
+            refClass);
     }
 
     /**
@@ -319,10 +319,9 @@ public abstract class FarragoReposImpl
      */
     public CwmCatalog getCatalog(String catalogName)
     {
-        return
-            FarragoCatalogUtil.getModelElementByName(
-                allOfType(CwmCatalog.class),
-                catalogName);
+        return FarragoCatalogUtil.getModelElementByName(
+            allOfType(CwmCatalog.class),
+            catalogName);
     }
 
     // implement FarragoRepos
@@ -577,24 +576,21 @@ public abstract class FarragoReposImpl
     }
 
     /**
-     * Places either a shared or exclusive lock on the repository.  Multiple
+     * Places either a shared or exclusive lock on the repository. Multiple
      * shared locks are allowed from different threads when no thread holds an
-     * exclusive lock, but only one thread can hold an exclusive lock at a
-     * time, preventing shared locks from other threads.  If a conflicting lock
-     * is requested, that requester will wait until the requested lock is
-     * available.  Locks are reentrant: a thread can take the same lock more
-     * than once, but must make a matching number of calls to {@link
-     * #unlockRepos} iin order to release the lock.  Upgrade and downgrade are
-     * not supported.
+     * exclusive lock, but only one thread can hold an exclusive lock at a time,
+     * preventing shared locks from other threads. If a conflicting lock is
+     * requested, that requester will wait until the requested lock is
+     * available. Locks are reentrant: a thread can take the same lock more than
+     * once, but must make a matching number of calls to {@link #unlockRepos}
+     * iin order to release the lock. Upgrade and downgrade are not supported.
      *
-     *<p>
-     *
-     * This lock is independent of MDR transaction state (i.e. it can
-     * be held even when no MDR transaction is in progress; an MDR transaction
-     * can be started without taking this lock; and an exclusive lock can be
-     * taken even for a read-only MDR transaction).  Currently,
-     * its only public exposure is via {@link FarragoReposTxnContext},
-     * which matches shared with read and exclusive with write.
+     * <p>This lock is independent of MDR transaction state (i.e. it can be held
+     * even when no MDR transaction is in progress; an MDR transaction can be
+     * started without taking this lock; and an exclusive lock can be taken even
+     * for a read-only MDR transaction). Currently, its only public exposure is
+     * via {@link FarragoReposTxnContext}, which matches shared with read and
+     * exclusive with write.
      *
      * @param lockLevel 1 for a shared lock, 2 for an exclusive lock
      */
@@ -605,13 +601,13 @@ public abstract class FarragoReposImpl
         } else if (lockLevel == 2) {
             sxLock.writeLock().lock();
         } else {
-            assert(false);
+            assert (false);
         }
     }
 
     /**
-     * Releases either a shared or exclusive lock on the repository that
-     * was previously acquired (caller must ensure consistency).
+     * Releases either a shared or exclusive lock on the repository that was
+     * previously acquired (caller must ensure consistency).
      *
      * @param lockLevel 1 for a shared lock, 2 for an exclusive lock
      */
@@ -622,7 +618,7 @@ public abstract class FarragoReposImpl
         } else if (lockLevel == 2) {
             sxLock.writeLock().unlock();
         } else {
-            assert(false);
+            assert (false);
         }
     }
 }

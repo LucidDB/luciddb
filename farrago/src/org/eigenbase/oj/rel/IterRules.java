@@ -37,7 +37,6 @@ import org.eigenbase.rex.*;
  */
 public abstract class IterRules
 {
-
     //~ Inner Classes ----------------------------------------------------------
 
     /**
@@ -54,14 +53,16 @@ public abstract class IterRules
 
         protected UnionToIteratorRule(String description)
         {
-            super(UnionRel.class,
+            super(
+                UnionRel.class,
                 CallingConvention.NONE,
                 CallingConvention.ITERATOR,
                 description);
         }
 
         // factory method
-        protected RelNode newIterConcatenateRel(RelOptCluster cluster,
+        protected RelNode newIterConcatenateRel(
+            RelOptCluster cluster,
             RelNode [] inputs)
         {
             return new IterConcatenateRel(cluster, inputs);
@@ -86,8 +87,8 @@ public abstract class IterRules
                 }
             }
             return newIterConcatenateRel(
-                    union.getCluster(),
-                    newInputs);
+                union.getCluster(),
+                newInputs);
         }
     }
 
@@ -124,7 +125,8 @@ public abstract class IterRules
     {
         public OneRowToIteratorRule()
         {
-            super(OneRowRel.class,
+            super(
+                OneRowRel.class,
                 CallingConvention.NONE,
                 CallingConvention.ITERATOR,
                 "OneRowToIteratorRule");
@@ -147,7 +149,8 @@ public abstract class IterRules
 
         private IterCalcRule()
         {
-            super(CalcRel.class,
+            super(
+                CalcRel.class,
                 CallingConvention.NONE,
                 CallingConvention.ITERATOR,
                 "IterCalcRule");
@@ -178,17 +181,17 @@ public abstract class IterRules
                 rel.getCluster().getPlanner().getJavaRelImplementor(rel);
             if (!relImplementor.canTranslate(
                     convertedChild,
-                    calc.getProgram())) {
+                    calc.getProgram()))
+            {
                 // Some of the expressions cannot be translated into Java
                 return null;
             }
 
-            return
-                new IterCalcRel(
-                    rel.getCluster(),
-                    convertedChild,
-                    calc.getProgram(),
-                    ProjectRelBase.Flags.Boxed);
+            return new IterCalcRel(
+                rel.getCluster(),
+                convertedChild,
+                calc.getProgram(),
+                ProjectRelBase.Flags.Boxed);
         }
     }
 }

@@ -33,7 +33,6 @@ import org.eigenbase.rel.*;
  */
 public interface PreparedResult
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -47,7 +46,7 @@ public interface PreparedResult
      * affected.
      */
     boolean isDml();
-    
+
     /**
      * @return the table modification operation corresponding to this statement
      * if it is a table modification statement; otherwise null

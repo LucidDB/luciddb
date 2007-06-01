@@ -30,9 +30,9 @@ import openjava.mop.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.runtime.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
-import org.eigenbase.runtime.SyntheticObject;
 
 
 /**
@@ -44,7 +44,6 @@ import org.eigenbase.runtime.SyntheticObject;
  */
 public class OJClassMap
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = EigenbaseTrace.getClassMapTracer();
@@ -58,7 +57,8 @@ public class OJClassMap
      * classes and names to the {@link OJSyntheticClass} which implements that
      * array of types.
      */
-    private Hashtable<String,OJSyntheticClass> mapKey2SyntheticClass = new Hashtable<String, OJSyntheticClass>();
+    private Hashtable<String, OJSyntheticClass> mapKey2SyntheticClass =
+        new Hashtable<String, OJSyntheticClass>();
 
     /**
      * Class from which synthetic classes should be subclassed.
@@ -148,15 +148,12 @@ public class OJClassMap
         String description = sb.toString();
 
         // is there already an equivalent OJSyntheticClass?
-        OJSyntheticClass clazz =
-            mapKey2SyntheticClass.get(description);
+        OJSyntheticClass clazz = mapKey2SyntheticClass.get(description);
         if (clazz == null) {
             Environment env = declarer.getEnvironment();
             String className =
-                (
-                    isJoin ? OJSyntheticClass.JOIN_CLASS_PREFIX
-                    : OJSyntheticClass.PROJECT_CLASS_PREFIX
-                )
+                (isJoin ? OJSyntheticClass.JOIN_CLASS_PREFIX
+                    : OJSyntheticClass.PROJECT_CLASS_PREFIX)
                 + Integer.toHexString(id++);
             ClassDeclaration decl =
                 makeDeclaration(
@@ -321,7 +318,9 @@ public class OJClassMap
         return createJoin(declarer, classes);
     }
 
-    private static void addAtomicClasses(Vector<OJClass> classesVector, OJClass clazz)
+    private static void addAtomicClasses(
+        Vector<OJClass> classesVector,
+        OJClass clazz)
     {
         if (OJSyntheticClass.isJoinClass(clazz)) {
             OJClass [] classes = ((OJSyntheticClass) clazz).classes;

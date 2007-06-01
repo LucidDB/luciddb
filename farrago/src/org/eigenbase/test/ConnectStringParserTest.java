@@ -43,7 +43,6 @@ import org.eigenbase.util14.*;
 public class ConnectStringParserTest
     extends TestCase
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -166,84 +165,84 @@ public class ConnectStringParserTest
     {
         // test the parser with examples from OLE DB documentation
         String [][] quads =
+        {
+            // {reason for test, key, val, string to parse},
             {
-                // {reason for test, key, val, string to parse},
-                {
-                    "printable chars",
-                    "Jet OLE DB:System Database", "c:\\system.mda",
-                    "Jet OLE DB:System Database=c:\\system.mda"
-                },
-                {
-                    "key embedded semi",
-                    "Authentication;Info", "Column 5",
-                    "Authentication;Info=Column 5"
-                },
-                {
-                    "key embedded equal",
-                    "Verification=Security", "True",
-                    "Verification==Security=True"
-                },
-                {
-                    "key many equals",
-                    "Many==One", "Valid",
-                    "Many====One=Valid"
-                },
-                {
-                    "key too many equal",
-                    "TooMany=", "False",
-                    "TooMany===False"
-                },
-                {
-                    "value embedded quote and semi",
-                    "ExtProps", "Data Source='localhost';Key Two='value 2'",
-                    "ExtProps=\"Data Source='localhost';Key Two='value 2'\""
-                },
-                {
-                    "value embedded double quote and semi",
-                    "ExtProps", "Integrated Security=\"SSPI\";Key Two=\"value 2\"",
-                    "ExtProps='Integrated Security=\"SSPI\";Key Two=\"value 2\"'"
-                },
-                {
-                    "value double quoted",
-                    "DataSchema", "\"MyCustTable\"",
-                    "DataSchema='\"MyCustTable\"'"
-                },
-                {
-                    "value single quoted",
-                    "DataSchema", "'MyCustTable'",
-                    "DataSchema=\"'MyCustTable'\""
-                },
-                {
-                    "value double quoted double trouble",
-                    "Caption", "\"Company's \"new\" customer\"",
-                    "Caption=\"\"\"Company's \"\"new\"\" customer\"\"\""
-                },
-                {
-                    "value single quoted double trouble",
-                    "Caption", "\"Company's \"new\" customer\"",
-                    "Caption='\"Company''s \"new\" customer\"'"
-                },
-                {
-                    "embedded blanks and trim",
-                    "My Keyword", "My Value",
-                    " My Keyword = My Value ;MyNextValue=Value"
-                },
-                {
-                    "value single quotes preserve blanks",
-                    "My Keyword", " My Value ",
-                    " My Keyword =' My Value ';MyNextValue=Value"
-                },
-                {
-                    "value double quotes preserve blanks",
-                    "My Keyword", " My Value ",
-                    " My Keyword =\" My Value \";MyNextValue=Value"
-                },
-                {
-                    "last redundant key wins",
-                    "SomeKey", "NextValue",
-                    "SomeKey=FirstValue;SomeKey=NextValue"
-                },
-            };
+                "printable chars",
+                "Jet OLE DB:System Database", "c:\\system.mda",
+                "Jet OLE DB:System Database=c:\\system.mda"
+            },
+            {
+                "key embedded semi",
+                "Authentication;Info", "Column 5",
+                "Authentication;Info=Column 5"
+            },
+            {
+                "key embedded equal",
+                "Verification=Security", "True",
+                "Verification==Security=True"
+            },
+            {
+                "key many equals",
+                "Many==One", "Valid",
+                "Many====One=Valid"
+            },
+            {
+                "key too many equal",
+                "TooMany=", "False",
+                "TooMany===False"
+            },
+            {
+                "value embedded quote and semi",
+                "ExtProps", "Data Source='localhost';Key Two='value 2'",
+                "ExtProps=\"Data Source='localhost';Key Two='value 2'\""
+            },
+            {
+                "value embedded double quote and semi",
+                "ExtProps", "Integrated Security=\"SSPI\";Key Two=\"value 2\"",
+                "ExtProps='Integrated Security=\"SSPI\";Key Two=\"value 2\"'"
+            },
+            {
+                "value double quoted",
+                "DataSchema", "\"MyCustTable\"",
+                "DataSchema='\"MyCustTable\"'"
+            },
+            {
+                "value single quoted",
+                "DataSchema", "'MyCustTable'",
+                "DataSchema=\"'MyCustTable'\""
+            },
+            {
+                "value double quoted double trouble",
+                "Caption", "\"Company's \"new\" customer\"",
+                "Caption=\"\"\"Company's \"\"new\"\" customer\"\"\""
+            },
+            {
+                "value single quoted double trouble",
+                "Caption", "\"Company's \"new\" customer\"",
+                "Caption='\"Company''s \"new\" customer\"'"
+            },
+            {
+                "embedded blanks and trim",
+                "My Keyword", "My Value",
+                " My Keyword = My Value ;MyNextValue=Value"
+            },
+            {
+                "value single quotes preserve blanks",
+                "My Keyword", " My Value ",
+                " My Keyword =' My Value ';MyNextValue=Value"
+            },
+            {
+                "value double quotes preserve blanks",
+                "My Keyword", " My Value ",
+                " My Keyword =\" My Value \";MyNextValue=Value"
+            },
+            {
+                "last redundant key wins",
+                "SomeKey", "NextValue",
+                "SomeKey=FirstValue;SomeKey=NextValue"
+            },
+        };
         for (int i = 0; i < quads.length; ++i) {
             String why = quads[i][0];
             String key = quads[i][1];

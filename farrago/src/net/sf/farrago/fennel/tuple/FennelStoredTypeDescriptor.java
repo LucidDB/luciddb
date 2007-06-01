@@ -37,16 +37,13 @@ package net.sf.farrago.fennel.tuple;
  * <p>NOTE: this interface varies from the C++ implementation by requiring the
  * stored type to know how to create a FennelAttributeAccessor for itself. This
  * seems cleaner than trying to infer it within the standard
- * FennelTupleAccessor.
- *
- * This class is JDK 1.4 compatible.
+ * FennelTupleAccessor. This class is JDK 1.4 compatible.
  *
  * @author Mike Bennett
  * @version $Id$
  */
 public interface FennelStoredTypeDescriptor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -33,7 +33,6 @@ import org.eigenbase.relopt.*;
 public class UnionToDistinctRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public UnionToDistinctRule()

@@ -38,7 +38,6 @@ import org.eigenbase.sql.type.*;
 public class SqlDatetimeSubtractionOperator
     extends SqlSpecialOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlDatetimeSubtractionOperator()

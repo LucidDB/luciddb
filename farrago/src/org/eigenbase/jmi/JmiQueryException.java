@@ -30,7 +30,6 @@ package org.eigenbase.jmi;
 public class JmiQueryException
     extends Exception
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

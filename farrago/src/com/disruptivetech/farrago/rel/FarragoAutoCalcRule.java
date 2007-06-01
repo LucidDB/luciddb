@@ -118,7 +118,6 @@ import org.eigenbase.rex.*;
 public class FarragoAutoCalcRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -182,7 +181,8 @@ public class FarragoAutoCalcRule
         // If can translate, do nothing, and let FennelCalcRule handle this
         // CalcRel.
         if ((fennelInput != null)
-            && translator.canTranslate(calc.getProgram())) {
+            && translator.canTranslate(calc.getProgram()))
+        {
             return;
         }
 
@@ -199,19 +199,23 @@ public class FarragoAutoCalcRule
         if (convertedChild != null) {
             if (relImplementor.canTranslate(
                     convertedChild,
-                    calc.getProgram())) {
+                    calc.getProgram()))
+            {
                 // yes: do nothing, let IterCalcRule handle this CalcRel
                 return;
             }
         }
 
         RelNode root = calc.getCluster().getPlanner().getRoot();
-        boolean promoteIteratorConvention = 
+        boolean promoteIteratorConvention =
             root.getConvention() == CallingConvention.ITERATOR;
-        
+
         AutoCalcRelSplitter transform =
             new AutoCalcRelSplitter(
-                calc, relImplementor, translator, promoteIteratorConvention);
+                calc,
+                relImplementor,
+                translator,
+                promoteIteratorConvention);
 
         if (transform.canImplement(calc)) {
             RelNode resultCalcRelTree = transform.execute();
@@ -233,14 +237,15 @@ public class FarragoAutoCalcRule
 
     //~ Inner Classes ----------------------------------------------------------
 
-    private static class FennelRelType extends CalcRelSplitter.RelType
+    private static class FennelRelType
+        extends CalcRelSplitter.RelType
     {
         private final RexToCalcTranslator translator;
-        
+
         private FennelRelType(RexToCalcTranslator translator)
         {
             super("REL_TYPE_FENNEL");
-            
+
             this.translator = translator;
         }
 
@@ -266,16 +271,17 @@ public class FarragoAutoCalcRule
             return translator.canTranslate(call, false);
         }
     }
-    
-    private static class JavaRelType extends CalcRelSplitter.RelType
+
+    private static class JavaRelType
+        extends CalcRelSplitter.RelType
     {
         private final CalcRel calc;
         private final JavaRelImplementor relImplementor;
-        
+
         private JavaRelType(CalcRel calc, JavaRelImplementor relImplementor)
         {
             super("REL_TYPE_JAVA");
-            
+
             this.calc = calc;
             this.relImplementor = relImplementor;
         }
@@ -300,7 +306,7 @@ public class FarragoAutoCalcRule
             return relImplementor.canTranslate(calc, call, false);
         }
     }
-    
+
     private static class AutoCalcRelSplitter
         extends CalcRelSplitter
     {
@@ -316,23 +322,22 @@ public class FarragoAutoCalcRule
             // iterator convention ends up on top.
             super(
                 calc,
-                (promoteIteratorConvention
-                    ? new RelType[] {
+                (promoteIteratorConvention ? new RelType[] {
                         new FennelRelType(translator),
                         new JavaRelType(calc, relImplementor)
-                      }
+                    }
                     : new RelType[] {
                         new JavaRelType(calc, relImplementor),
                         new FennelRelType(translator)
-                      })
-                );
+                    }));
         }
 
         protected boolean canImplement(CalcRel rel)
         {
             if (RexUtil.requiresDecimalExpansion(
                     rel.getProgram(),
-                    true)) {
+                    true))
+            {
                 return false;
             }
             return true;

@@ -32,7 +32,6 @@ package net.sf.farrago.type.runtime;
 public interface NullableValue
     extends DataValue
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

@@ -37,7 +37,6 @@ import junit.framework.*;
 public class ArrayQueueTest
     extends TestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public ArrayQueueTest(String name)

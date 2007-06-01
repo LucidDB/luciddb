@@ -30,6 +30,7 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.reltype.*;
 
+
 /**
  * LcsAppendStreamDef creates an append execution stream def
  *
@@ -38,7 +39,6 @@ import org.eigenbase.reltype.*;
  */
 public class LcsAppendStreamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoRepos repos;
@@ -74,8 +74,8 @@ public class LcsAppendStreamDef
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Creates the top half of an insert execution stream, i.e., the part
-     * that appends to the clustered indexes.
+     * Creates the top half of an insert execution stream, i.e., the part that
+     * appends to the clustered indexes.
      *
      * @param implementor FennelRel implementor
      *
@@ -162,15 +162,14 @@ public class LcsAppendStreamDef
     }
 
     /**
-     * Creates the bottom half of an insert execution stream, i.e., the part
-     * the inserts into the unclustered indexes.
+     * Creates the bottom half of an insert execution stream, i.e., the part the
+     * inserts into the unclustered indexes.
      *
      * @param implementor FennelRel implementor
      * @param clusterAppendBarrier the barrier from the cluster appends that
      * serves as the producer for the unclustered index append streams
-     * @param writeRowCountParamId parameter id the final barrier will
-     * use to retrieve the upstream deletion rowcount, in the case of a
-     * MERGE statement
+     * @param writeRowCountParamId parameter id the final barrier will use to
+     * retrieve the upstream deletion rowcount, in the case of a MERGE statement
      *
      * @return the final barrier that anchors the full insert stream or the
      * clusterAppendBarrier if the table does not have any unclustered indexes
@@ -297,23 +296,22 @@ public class LcsAppendStreamDef
      */
     private LcsIndexGuide getIndexGuide(FemLocalIndex unclusteredIndex)
     {
-        return
-            new LcsIndexGuide(
-                lcsTable.getPreparingStmt().getFarragoTypeFactory(),
-                lcsTable.getCwmColumnSet(),
-                unclusteredIndex);
+        return new LcsIndexGuide(
+            lcsTable.getPreparingStmt().getFarragoTypeFactory(),
+            lcsTable.getCwmColumnSet(),
+            unclusteredIndex);
     }
 
     /**
-     * Creates the substream that inserts unique constraint violations into
-     * the table's deletion index.  Only bitmap appenders that are writing to
-     * a unique index will create violations.  Those streams are then merged
+     * Creates the substream that inserts unique constraint violations into the
+     * table's deletion index. Only bitmap appenders that are writing to a
+     * unique index will create violations. Those streams are then merged
      * together into a single stream of violating rids.
      *
      * <p>Bitmap appenders that do not write to unique indexes don't need to be
-     * involved.  In fact, the violation substream can even proceed before
-     * those appenders have finished because they don't access the deletion
-     * index and therefore there is no conflict.
+     * involved. In fact, the violation substream can even proceed before those
+     * appenders have finished because they don't access the deletion index and
+     * therefore there is no conflict.
      *
      * @param implementor FennelRel implementor
      * @param bitmapAppendDefs bitmap append substreams that created the
@@ -321,15 +319,15 @@ public class LcsAppendStreamDef
      * @param numUniqueIndexes number of unique indexes on the table; must be
      * &gt; 0
      *
-     * @return the stream def corresponding to the splicer that inserts into
-     * the deletion index
+     * @return the stream def corresponding to the splicer that inserts into the
+     * deletion index
      */
     private FemLbmSplicerStreamDef createViolationStream(
         FennelRelImplementor implementor,
         ArrayList<LcsCompositeStreamDef> bitmapAppendDefs,
         int numUniqueIndexes)
     {
-        assert(numUniqueIndexes > 0);
+        assert (numUniqueIndexes > 0);
 
         // create a merge stream if there is more than one stream of violation
         // rids
@@ -381,19 +379,19 @@ public class LcsAppendStreamDef
 
     /**
      * Creates a substream that takes an input stream of rids, sorts them,
-     * optionally removes duplicates, and then adds them into the deletion
-     * index associated with the table we're appending to
+     * optionally removes duplicates, and then adds them into the deletion index
+     * associated with the table we're appending to
      *
      * @param implementor FennelRel implementor
      * @param inputStream input stream containing rids
-     * @param inputRowCount estimated number of rids to be added to the
-     * deletion index
+     * @param inputRowCount estimated number of rids to be added to the deletion
+     * index
      * @param writeRowCountParamId > 0 if the splicer that writes to the
      * deletion index needs to return a count of the number of rids written
      * @param removeDups if true, remove duplicate rids from the stream
      *
-     * @return the stream def corresponding to the splicer that inserts into
-     * the deletion index
+     * @return the stream def corresponding to the splicer that inserts into the
+     * deletion index
      */
     public FemLbmSplicerStreamDef createDeleteRidStream(
         FennelRelImplementor implementor,

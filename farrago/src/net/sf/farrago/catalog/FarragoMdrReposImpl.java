@@ -24,12 +24,10 @@ package net.sf.farrago.catalog;
 
 import java.io.*;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.*;
 
-import javax.jmi.reflect.RefPackage;
 import javax.jmi.model.*;
+import javax.jmi.reflect.*;
 
 import net.sf.farrago.*;
 import net.sf.farrago.fem.config.*;
@@ -38,10 +36,10 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.jmi.JmiModelGraph;
-import org.eigenbase.jmi.mem.JmiModeledMemFactory;
+import org.eigenbase.jmi.*;
+import org.eigenbase.jmi.mem.*;
+
 import org.netbeans.api.mdr.*;
-import org.netbeans.mdr.NBMDRepositoryImpl;
 
 
 /**
@@ -53,7 +51,6 @@ import org.netbeans.mdr.NBMDRepositoryImpl;
 public class FarragoMdrReposImpl
     extends FarragoReposImpl
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = FarragoTrace.getReposTracer();
@@ -161,23 +158,24 @@ public class FarragoMdrReposImpl
     private void checkModelTimestamp()
     {
         String prefix = "TIMESTAMP = ";
-        
+
         MofPackage pkg = (MofPackage) getFarragoPackage().refMetaObject();
         String storedTimestamp = pkg.getAnnotation();
         String compiledTimestamp = prefix + getCompiledModelTimestamp();
         if ((storedTimestamp == null) || !storedTimestamp.startsWith(prefix)) {
-            // first time:  add timestamp 
+            // first time:  add timestamp
             pkg.setAnnotation(compiledTimestamp);
         } else {
             // on reload:  verify timestamps
             if (!storedTimestamp.equals(compiledTimestamp)) {
-                throw FarragoResource.instance().
-                    CatalogModelTimestampCheckFailed.ex(
-                        storedTimestamp, compiledTimestamp);
+                throw FarragoResource.instance()
+                .CatalogModelTimestampCheckFailed.ex(
+                    storedTimestamp,
+                    compiledTimestamp);
             }
         }
     }
-    
+
     // implement FarragoRepos
     public MDRepository getMdrRepos()
     {
@@ -250,43 +248,44 @@ public class FarragoMdrReposImpl
     {
         return modelLoader;
     }
-    
-    //~ Inner classes ---------------------------------------------------------
-    
-    protected class FarragoMemFactory extends FarragoMetadataFactoryImpl
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    protected class FarragoMemFactory
+        extends FarragoMetadataFactoryImpl
     {
         private final FactoryImpl factoryImpl;
-    
+
         public FarragoMemFactory(JmiModelGraph modelGraph)
         {
             factoryImpl = new FactoryImpl(modelGraph);
             this.setRootPackage((FarragoPackage) factoryImpl.getRootPackage());
         }
-    
+
         public FactoryImpl getImpl()
         {
             return factoryImpl;
         }
-        
+
         public RefPackage newRefPackage(Class ifacePackage)
         {
             return factoryImpl.newRefPackage(ifacePackage);
         }
     }
 
-    private class FactoryImpl extends JmiModeledMemFactory
+    private class FactoryImpl
+        extends JmiModeledMemFactory
     {
         FactoryImpl(JmiModelGraph modelGraph)
         {
             super(modelGraph);
         }
-    
+
         protected RefPackageImpl newRootPackage()
         {
             return new RefPackageImpl(FarragoPackage.class);
         }
     }
-    
 }
 
 // End FarragoReposImpl.java

@@ -35,7 +35,6 @@ import java.sql.*;
 public interface FarragoStatement
     extends java.sql.Statement
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -34,7 +34,6 @@ import junit.framework.*;
  */
 public abstract class TestUtil
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Pattern LineBreakPattern =
@@ -124,8 +123,8 @@ public abstract class TestUtil
      *  + "across lines")</pre>
      * </code>
      */
-    public static String toJavaString(String s) {
-
+    public static String toJavaString(String s)
+    {
         // Convert [string with "quotes" split
         // across lines]
         // into [fold(
@@ -181,8 +180,8 @@ public abstract class TestUtil
      */
     public static String quotePattern(String s)
     {
-        return
-            s.replaceAll("\\\\", "\\\\").replaceAll("\\.", "\\\\.").replaceAll(
+        return s.replaceAll("\\\\", "\\\\").replaceAll("\\.", "\\\\.")
+            .replaceAll(
                 "\\+",
                 "\\\\+").replaceAll("\\{", "\\\\{").replaceAll("\\}", "\\\\}")
             .replaceAll("\\|", "\\\\||").replaceAll("[$]", "\\\\\\$")

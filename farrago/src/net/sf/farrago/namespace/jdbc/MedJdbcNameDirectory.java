@@ -48,7 +48,6 @@ import org.eigenbase.sql.type.*;
 class MedJdbcNameDirectory
     extends MedAbstractNameDirectory
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final MedJdbcDataServer server;
@@ -78,12 +77,12 @@ class MedJdbcNameDirectory
         this.typeMapping = new Properties();
         String mappingsString =
             server.getProperties().getProperty(
-                MedJdbcDataServer.PROP_TYPE_MAPPING, "");
-        String[] mappingsArray = mappingsString.split(";");
+                MedJdbcDataServer.PROP_TYPE_MAPPING,
+                "");
+        String [] mappingsArray = mappingsString.split(";");
         for (int i = 0; i < mappingsArray.length; i++) {
             addTypeMapping(mappingsArray[i]);
         }
-
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -95,12 +94,11 @@ class MedJdbcNameDirectory
         String [] localName)
         throws SQLException
     {
-        return
-            lookupColumnSetAndImposeType(
-                typeFactory,
-                foreignName,
-                localName,
-                null);
+        return lookupColumnSetAndImposeType(
+            typeFactory,
+            foreignName,
+            localName,
+            null);
     }
 
     FarragoMedColumnSet lookupColumnSetAndImposeType(
@@ -115,23 +113,25 @@ class MedJdbcNameDirectory
         }
 
         String [] foreignQualifiedName;
-        if (server.schemaName != null &&
-            !server.useSchemaNameAsForeignQualifier) {
+        if ((server.schemaName != null)
+            && !server.useSchemaNameAsForeignQualifier)
+        {
             foreignQualifiedName = new String[] { foreignName };
         } else {
             // schema mapping
-            HashMap map = (HashMap)server.schemaMaps.get(schemaName);
+            HashMap map = (HashMap) server.schemaMaps.get(schemaName);
             if (map != null) {
-                schemaName = (String)map.get(foreignName);
+                schemaName = (String) map.get(foreignName);
             }
             if (server.catalogName != null) {
-                foreignQualifiedName = new String[] {
-                    server.catalogName, schemaName, foreignName
-                };
+                foreignQualifiedName =
+                    new String[] {
+                        server.catalogName, schemaName, foreignName
+                    };
             } else {
                 foreignQualifiedName = new String[] {
-                    schemaName, foreignName
-                };
+                        schemaName, foreignName
+                    };
             }
         }
         RelDataType origRowType = null;
@@ -198,19 +198,22 @@ class MedJdbcNameDirectory
                         md,
                         true,
                         typeMapping);
+
                 // if LENIENT, map names
                 if (server.lenient) {
-                    rowType = updateRowType(
-                        typeFactory,
-                        rowType,
-                        mdRowType);
+                    rowType =
+                        updateRowType(
+                            typeFactory,
+                            rowType,
+                            mdRowType);
 
                     List<SqlIdentifier> projList =
                         new ArrayList<SqlIdentifier>();
                     for (RelDataTypeField field : rowType.getFieldList()) {
                         projList.add(
                             new SqlIdentifier(
-                                field.getName(), SqlParserPos.ZERO));
+                                field.getName(),
+                                SqlParserPos.ZERO));
                     }
 
                     // push down projections, if any
@@ -223,7 +226,8 @@ class MedJdbcNameDirectory
                                         projList),
                                     SqlParserPos.ZERO),
                                 new SqlIdentifier(
-                                    foreignQualifiedName, SqlParserPos.ZERO),
+                                    foreignQualifiedName,
+                                    SqlParserPos.ZERO),
                                 null,
                                 null,
                                 null,
@@ -254,16 +258,15 @@ class MedJdbcNameDirectory
             }
         }
 
-        return
-            new MedJdbcColumnSet(
-                this,
-                foreignQualifiedName,
-                localName,
-                select,
-                dialect,
-                rowType,
-                origRowType,
-                mdRowType);
+        return new MedJdbcColumnSet(
+            this,
+            foreignQualifiedName,
+            localName,
+            select,
+            dialect,
+            rowType,
+            origRowType,
+            mdRowType);
     }
 
     String normalizeQueryString(String sql)
@@ -317,7 +320,8 @@ class MedJdbcNameDirectory
                         query,
                         sink,
                         tableListActual,
-                        tableListOptimized)) {
+                        tableListOptimized))
+                {
                     return false;
                 }
             }
@@ -326,7 +330,8 @@ class MedJdbcNameDirectory
                         query,
                         sink,
                         tableListActual,
-                        tableListOptimized)) {
+                        tableListOptimized))
+                {
                     return false;
                 }
             }
@@ -390,7 +395,7 @@ class MedJdbcNameDirectory
         // to let the optimizer handle this, but KISS for now.
         int nTablesReturned = 0;
 
-        String[] schemaPatterns = getSchemaPattern();
+        String [] schemaPatterns = getSchemaPattern();
         String tablePattern =
             getFilterPattern(
                 query,
@@ -408,7 +413,7 @@ class MedJdbcNameDirectory
                         tablePattern,
                         server.tableTypes);
                 if (resultSet == null) {
-                    if (noResults && (i+1 == schemaPatterns.length)) {
+                    if (noResults && ((i + 1) == schemaPatterns.length)) {
                         return false;
                     }
                     continue;
@@ -430,7 +435,8 @@ class MedJdbcNameDirectory
                     String tableName = resultSet.getString(3);
                     String remarks = resultSet.getString(5);
                     if (schemaName != null) {
-                        props.put(MedJdbcDataServer.PROP_SCHEMA_NAME,
+                        props.put(
+                            MedJdbcDataServer.PROP_SCHEMA_NAME,
                             schemaName);
                     }
                     props.put(MedJdbcDataServer.PROP_TABLE_NAME,
@@ -475,12 +481,11 @@ class MedJdbcNameDirectory
         throws SQLException
     {
         if (tableListOptimized.equals(Collections.singletonList("*"))) {
-            return
-                queryColumnsImpl(
-                    query,
-                    sink,
-                    null,
-                    new HashSet(tableListActual));
+            return queryColumnsImpl(
+                query,
+                sink,
+                null,
+                new HashSet(tableListActual));
         } else {
             Iterator iter = tableListOptimized.iterator();
             while (iter.hasNext()) {
@@ -500,7 +505,7 @@ class MedJdbcNameDirectory
         Set tableSet)
         throws SQLException
     {
-        String[] schemaPatterns = getSchemaPattern();
+        String [] schemaPatterns = getSchemaPattern();
         String tablePattern;
         if (tableName != null) {
             tablePattern = tableName;
@@ -527,7 +532,7 @@ class MedJdbcNameDirectory
                         tablePattern,
                         columnPattern);
                 if (resultSet == null) {
-                    if (noResults && (i+1 == schemaPatterns.length)) {
+                    if (noResults && ((i + 1) == schemaPatterns.length)) {
                         return false;
                     }
                     continue;
@@ -577,23 +582,25 @@ class MedJdbcNameDirectory
         return true;
     }
 
-    private String[] getSchemaPattern()
+    private String [] getSchemaPattern()
     {
-        if (server.schemaName != null &&
-            !server.useSchemaNameAsForeignQualifier) {
+        if ((server.schemaName != null)
+            && !server.useSchemaNameAsForeignQualifier)
+        {
             // schemaName is fake; don't use it
-            return new String[] {null};
+            return new String[] { null };
         }
 
         ArrayList allSchemas = new ArrayList();
-        String mapping = server.getProperties().getProperty(
-            MedJdbcDataServer.PROP_SCHEMA_MAPPING);
+        String mapping =
+            server.getProperties().getProperty(
+                MedJdbcDataServer.PROP_SCHEMA_MAPPING);
         if (mapping == null) {
-            return new String[] {schemaName};
+            return new String[] { schemaName };
         }
-        String[] allMapping = mapping.split(";");
+        String [] allMapping = mapping.split(";");
         for (String map : allMapping) {
-            String[] oneMap = map.split(":");
+            String [] oneMap = map.split(":");
             if (oneMap.length != 2) {
                 continue;
             }
@@ -602,9 +609,10 @@ class MedJdbcNameDirectory
             }
         }
         if (allSchemas.size() > 0) {
-            return (String[])allSchemas.toArray(new String[allSchemas.size()]);
+            return (String []) allSchemas.toArray(
+                new String[allSchemas.size()]);
         } else {
-            return new String[] {schemaName};
+            return new String[] { schemaName };
         }
     }
 
@@ -633,15 +641,16 @@ class MedJdbcNameDirectory
 
     private void addTypeMapping(String s)
     {
-        String[] map = s.split(":");
+        String [] map = s.split(":");
         if (map.length != 2) {
             return;
         }
 
         // store in Properties as DATATYPE(P,S);
         // ie. all upper-case and lose whitespace
-        String key = map[0].trim().toUpperCase().replaceAll("\\s","");
-        String value = map[1].trim().toUpperCase().replaceAll("\\s","");;
+        String key = map[0].trim().toUpperCase().replaceAll("\\s", "");
+        String value = map[1].trim().toUpperCase().replaceAll("\\s", "");
+        ;
 
         if (!key.equals("") && !value.equals("")) {
             this.typeMapping.setProperty(key, value);
@@ -664,10 +673,11 @@ class MedJdbcNameDirectory
 
         for (RelDataTypeField currField : currRowType.getFieldList()) {
             RelDataType type;
-            if (((type =
-                     srcMap.get(currField.getName())) != null) &&
-                SqlTypeUtil.canCastFrom(
-                    currField.getType(), type, true))
+            if (((type = srcMap.get(currField.getName())) != null)
+                && SqlTypeUtil.canCastFrom(
+                    currField.getType(),
+                    type,
+                    true))
             {
                 fieldsVector.add(currField.getName());
                 typesVector.add(currField.getType());
@@ -676,10 +686,11 @@ class MedJdbcNameDirectory
 
         typesVector.trimToSize();
         fieldsVector.trimToSize();
-        RelDataType[] types = (RelDataType[])
-            typesVector.toArray(new RelDataType[typesVector.size()]);
-        String[] fields =
-            (String[]) fieldsVector.toArray(new String[fieldsVector.size()]);
+        RelDataType [] types =
+            (RelDataType []) typesVector.toArray(
+                new RelDataType[typesVector.size()]);
+        String [] fields =
+            (String []) fieldsVector.toArray(new String[fieldsVector.size()]);
 
         RelDataType rowType = typeFactory.createStructType(types, fields);
         return rowType;
@@ -687,8 +698,8 @@ class MedJdbcNameDirectory
 
     private void validateRowType(RelDataType rowType, RelDataType srcRowType)
     {
-        RelDataTypeField[] fieldList = rowType.getFields();
-        RelDataTypeField[] srcFieldList = srcRowType.getFields();
+        RelDataTypeField [] fieldList = rowType.getFields();
+        RelDataTypeField [] srcFieldList = srcRowType.getFields();
 
         // check that the number of fields match
         if (fieldList.length != srcFieldList.length) {
@@ -702,7 +713,8 @@ class MedJdbcNameDirectory
             if (!SqlTypeUtil.canCastFrom(
                     fieldList[i].getType(),
                     srcFieldList[i].getType(),
-                    true)) {
+                    true))
+            {
                 throw FarragoResource.instance().TypesOfColumnsMismatch.ex(
                     srcFieldList[i].getName(),
                     srcFieldList[i].getType().toString(),

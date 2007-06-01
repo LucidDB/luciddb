@@ -49,7 +49,6 @@ import net.sf.farrago.util.*;
  */
 public abstract class FarragoTrace
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -23,6 +23,7 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.sql.*;
 
+
 /**
  * SqlSingleOperandTypeChecker is an extension of {@link SqlOperandTypeChecker}
  * for implementations which are cabable of checking the type of a single
@@ -36,7 +37,6 @@ import org.eigenbase.sql.*;
 public interface SqlSingleOperandTypeChecker
     extends SqlOperandTypeChecker
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -51,10 +51,10 @@ public interface SqlSingleOperandTypeChecker
      * <pre>C(X, Y, Z)</pre>
      * </blockquote>
      *
-     * the strategy for validating the operand Z might involve checking
-     * its type against the formal signature OP(W). In this case,
-     * <code>iFormalOperand</code>
-     * would be zero, even though the position of Z within call C is two.
+     * the strategy for validating the operand Z might involve checking its type
+     * against the formal signature OP(W). In this case, <code>
+     * iFormalOperand</code> would be zero, even though the position of Z within
+     * call C is two.
      *
      * @param callBinding description of the call being checked; this is only
      * provided for context when throwing an exception; the implementation

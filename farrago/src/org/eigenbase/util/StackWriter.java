@@ -65,7 +65,6 @@ import java.util.*;
 public class StackWriter
     extends FilterWriter
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

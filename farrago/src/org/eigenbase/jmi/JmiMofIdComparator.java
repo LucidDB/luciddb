@@ -36,7 +36,6 @@ import javax.jmi.reflect.*;
 public class JmiMofIdComparator
     implements Comparator<RefBaseObject>
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final JmiMofIdComparator instance = new JmiMofIdComparator();

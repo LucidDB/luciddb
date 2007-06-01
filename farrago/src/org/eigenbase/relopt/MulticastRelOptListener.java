@@ -34,7 +34,6 @@ import java.util.*;
 public class MulticastRelOptListener
     implements RelOptListener
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final List<RelOptListener> listeners;

@@ -36,7 +36,6 @@ public class Permutation
     implements Mapping,
         Mappings.TargetMapping
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private int [] targets;
@@ -102,8 +101,8 @@ public class Permutation
     public Object clone()
     {
         return new Permutation(
-                targets.clone(),
-                sources.clone());
+            targets.clone(),
+            sources.clone());
     }
 
     /**
@@ -412,8 +411,9 @@ public class Permutation
      */
     public Permutation inverse()
     {
-        return
-            new Permutation((int []) sources.clone(), (int []) targets.clone());
+        return new Permutation(
+            (int []) sources.clone(),
+            (int []) targets.clone());
     }
 
     /**
@@ -496,8 +496,7 @@ public class Permutation
     public boolean equals(Object obj)
     {
         // not very efficient
-        return
-            (obj instanceof Permutation)
+        return (obj instanceof Permutation)
             && toString().equals(obj.toString());
     }
 
@@ -505,25 +504,25 @@ public class Permutation
     public Iterator<IntPair> iterator()
     {
         return new Iterator<IntPair>() {
-                private int i = 0;
+            private int i = 0;
 
-                public boolean hasNext()
-                {
-                    return i < targets.length;
-                }
+            public boolean hasNext()
+            {
+                return i < targets.length;
+            }
 
-                public IntPair next()
-                {
-                    final IntPair pair = new IntPair(i, targets[i]);
-                    ++i;
-                    return pair;
-                }
+            public IntPair next()
+            {
+                final IntPair pair = new IntPair(i, targets[i]);
+                ++i;
+                return pair;
+            }
 
-                public void remove()
-                {
-                    throw new UnsupportedOperationException();
-                }
-            };
+            public void remove()
+            {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 
     public int getSourceCount()
@@ -559,8 +558,8 @@ public class Permutation
     }
 
     /**
-     * Returns the product of this Permutation with a given Permutation.
-     * Does not modify this Permutation or <code>permutation</code>.
+     * Returns the product of this Permutation with a given Permutation. Does
+     * not modify this Permutation or <code>permutation</code>.
      *
      * <p>For example, perm.product(perm.inverse()) yields the identity.
      */

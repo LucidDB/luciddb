@@ -38,7 +38,6 @@ import org.eigenbase.resource.*;
 public class EigenbaseResourceTest
     extends TestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public EigenbaseResourceTest(String name)

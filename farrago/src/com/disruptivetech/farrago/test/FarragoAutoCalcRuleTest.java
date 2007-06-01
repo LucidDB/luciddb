@@ -67,7 +67,6 @@ import org.eigenbase.sql.type.*;
 public class FarragoAutoCalcRuleTest
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -218,7 +217,8 @@ public class FarragoAutoCalcRuleTest
         final SqlStdOperatorTable opTab)
     {
         SqlFunction jplusFunc =
-            new SqlFunction("JPLUS",
+            new SqlFunction(
+                "JPLUS",
                 SqlKind.Function,
                 SqlTypeStrategies.rtiLeastRestrictive,
                 SqlTypeStrategies.otiFirstKnown,
@@ -231,7 +231,8 @@ public class FarragoAutoCalcRuleTest
             implementorTable.get(SqlStdOperatorTable.plusOperator));
 
         SqlFunction jrowFunc =
-            new SqlFunction("JROW",
+            new SqlFunction(
+                "JROW",
                 SqlKind.Function,
                 null,
                 SqlTypeStrategies.otiFirstKnown,
@@ -242,10 +243,9 @@ public class FarragoAutoCalcRuleTest
                 {
                     assert (opBinding.getOperandCount() == 2);
                     String [] names = new String[] { "first", "second" };
-                    return
-                        opBinding.getTypeFactory().createStructType(
-                            opBinding.collectOperandTypes(),
-                            names);
+                    return opBinding.getTypeFactory().createStructType(
+                        opBinding.collectOperandTypes(),
+                        names);
                 }
             };
         opTab.register(jrowFunc);
@@ -343,10 +343,10 @@ public class FarragoAutoCalcRuleTest
             FarragoSession session,
             FarragoSessionPersonality defaultPersonality)
         {
-            return
-                new TestDbSessionPersonality((FarragoDbSession) session,
-                    ojRexImplementor,
-                    calcRexImplementor);
+            return new TestDbSessionPersonality(
+                (FarragoDbSession) session,
+                ojRexImplementor,
+                calcRexImplementor);
         }
     }
 
@@ -436,10 +436,9 @@ public class FarragoAutoCalcRuleTest
 
         public FarragoSessionFactory newSessionFactory()
         {
-            return
-                new TestDbSessionFactory(
-                    testOjRexImplementor,
-                    testCalcRexImplementor);
+            return new TestDbSessionFactory(
+                testOjRexImplementor,
+                testCalcRexImplementor);
         }
 
         public String getBaseUrl()

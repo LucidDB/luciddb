@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
 public class LurqlFollow
     extends LurqlPathBranch
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String AF_ORIGIN_END = "origin end";

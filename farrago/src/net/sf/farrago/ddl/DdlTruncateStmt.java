@@ -58,7 +58,7 @@ public class DdlTruncateStmt
     }
 
     //~ Methods ----------------------------------------------------------------
-    
+
     // implement DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
@@ -76,21 +76,22 @@ public class DdlTruncateStmt
     {
         visitor.visit(this);
     }
-    
+
     private void execute(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session)
     {
         FarragoRepos repos = session.getRepos();
         FarragoSessionIndexMap baseIndexMap = ddlValidator.getIndexMap();
-        FarragoDataWrapperCache wrapperCache = 
+        FarragoDataWrapperCache wrapperCache =
             ddlValidator.getDataWrapperCache();
-        for (FemLocalIndex index :
-            FarragoCatalogUtil.getTableIndexes(repos, table))
+        for (
+            FemLocalIndex index
+            : FarragoCatalogUtil.getTableIndexes(repos, table))
         {
             baseIndexMap.dropIndexStorage(wrapperCache, index, true);
         }
-        
+
         FarragoReposTxnContext txn = repos.newTxnContext();
         try {
             txn.beginWriteTxn();

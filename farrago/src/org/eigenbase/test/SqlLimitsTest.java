@@ -22,18 +22,18 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.BasicSqlType;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.sql.SqlUtil;
+import java.io.*;
+
+import java.text.*;
 
 import java.util.*;
-import java.io.StringWriter;
-import java.io.PrintWriter;
-import java.text.DateFormat;
 
-import junit.framework.TestCase;
+import junit.framework.*;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
  * Unit test for SQL limits.
@@ -41,8 +41,11 @@ import junit.framework.TestCase;
  * @author jhyde
  * @version $Id$
  */
-public class SqlLimitsTest extends TestCase
+public class SqlLimitsTest
+    extends TestCase
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final List<BasicSqlType> typeList =
         new ArrayList<BasicSqlType>();
 
@@ -55,8 +58,17 @@ public class SqlLimitsTest extends TestCase
         typeList.add(new BasicSqlType(SqlTypeName.DECIMAL));
         typeList.add(new BasicSqlType(SqlTypeName.DECIMAL, 5));
         typeList.add(new BasicSqlType(SqlTypeName.DECIMAL, 6, 2));
-        typeList.add(new BasicSqlType(SqlTypeName.DECIMAL, SqlTypeName.DECIMAL.getMaxPrecision(), 0));
-        typeList.add(new BasicSqlType(SqlTypeName.DECIMAL, SqlTypeName.DECIMAL.getMaxPrecision(), 5));
+        typeList.add(
+            new BasicSqlType(
+                SqlTypeName.DECIMAL,
+                SqlTypeName.DECIMAL.getMaxPrecision(),
+                0));
+        typeList.add(
+            new BasicSqlType(
+                SqlTypeName.DECIMAL,
+                SqlTypeName.DECIMAL.getMaxPrecision(),
+                5));
+
         // todo: test Float, Real, Double
         typeList.add(new BasicSqlType(SqlTypeName.CHAR, 5));
         typeList.add(new BasicSqlType(SqlTypeName.VARCHAR, 1));
@@ -69,10 +81,14 @@ public class SqlLimitsTest extends TestCase
         // todo: test IntervalDayTime and IntervalYearMonth
     }
 
+    //~ Constructors -----------------------------------------------------------
+
     public SqlLimitsTest(String name)
     {
         super(name);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     protected DiffRepository getDiffRepos()
     {
@@ -93,15 +109,69 @@ public class SqlLimitsTest extends TestCase
         PrintWriter pw = new PrintWriter(sw);
         for (BasicSqlType type : typeList) {
             pw.println(type.toString());
-            printLimit(pw, "  min - epsilon:          ", type, false, SqlTypeName.Limit.OVERFLOW, true);
-            printLimit(pw, "  min:                    ", type, false, SqlTypeName.Limit.OVERFLOW, false);
-            printLimit(pw, "  zero - delta:           ", type, false, SqlTypeName.Limit.UNDERFLOW, false);
-            printLimit(pw, "  zero - delta + epsilon: ", type, false, SqlTypeName.Limit.UNDERFLOW, true);
-            printLimit(pw, "  zero:                   ", type, false, SqlTypeName.Limit.ZERO, false);
-            printLimit(pw, "  zero + delta - epsilon: ", type, true, SqlTypeName.Limit.UNDERFLOW, true);
-            printLimit(pw, "  zero + delta:           ", type, true, SqlTypeName.Limit.UNDERFLOW, false);
-            printLimit(pw, "  max:                    ", type, true, SqlTypeName.Limit.OVERFLOW, false);
-            printLimit(pw, "  max + epsilon:          ", type, true, SqlTypeName.Limit.OVERFLOW, true);
+            printLimit(
+                pw,
+                "  min - epsilon:          ",
+                type,
+                false,
+                SqlTypeName.Limit.OVERFLOW,
+                true);
+            printLimit(
+                pw,
+                "  min:                    ",
+                type,
+                false,
+                SqlTypeName.Limit.OVERFLOW,
+                false);
+            printLimit(
+                pw,
+                "  zero - delta:           ",
+                type,
+                false,
+                SqlTypeName.Limit.UNDERFLOW,
+                false);
+            printLimit(
+                pw,
+                "  zero - delta + epsilon: ",
+                type,
+                false,
+                SqlTypeName.Limit.UNDERFLOW,
+                true);
+            printLimit(
+                pw,
+                "  zero:                   ",
+                type,
+                false,
+                SqlTypeName.Limit.ZERO,
+                false);
+            printLimit(
+                pw,
+                "  zero + delta - epsilon: ",
+                type,
+                true,
+                SqlTypeName.Limit.UNDERFLOW,
+                true);
+            printLimit(
+                pw,
+                "  zero + delta:           ",
+                type,
+                true,
+                SqlTypeName.Limit.UNDERFLOW,
+                false);
+            printLimit(
+                pw,
+                "  max:                    ",
+                type,
+                true,
+                SqlTypeName.Limit.OVERFLOW,
+                false);
+            printLimit(
+                pw,
+                "  max + epsilon:          ",
+                type,
+                true,
+                SqlTypeName.Limit.OVERFLOW,
+                true);
             pw.println();
         }
         pw.flush();
@@ -113,7 +183,8 @@ public class SqlLimitsTest extends TestCase
         String desc,
         BasicSqlType type,
         boolean sign,
-        SqlTypeName.Limit limit, boolean beyond)
+        SqlTypeName.Limit limit,
+        boolean beyond)
     {
         Object o = type.getLimit(sign, limit, beyond);
         if (o == null) {
@@ -121,10 +192,10 @@ public class SqlLimitsTest extends TestCase
         }
         pw.print(desc);
         String s;
-        if (o instanceof byte[]) {
+        if (o instanceof byte []) {
             int k = 0;
             StringBuilder buf = new StringBuilder("{");
-            for (byte b : (byte[]) o) {
+            for (byte b : (byte []) o) {
                 if (k++ > 0) {
                     buf.append(", ");
                 }
@@ -153,7 +224,7 @@ public class SqlLimitsTest extends TestCase
         }
         pw.print(s);
         SqlLiteral literal =
-                type.getSqlTypeName().createLiteral(o, SqlParserPos.ZERO);
+            type.getSqlTypeName().createLiteral(o, SqlParserPos.ZERO);
         pw.print("; as SQL: ");
         pw.print(literal.toSqlString(SqlUtil.dummyDialect));
         pw.println();

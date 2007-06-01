@@ -26,6 +26,7 @@ import java.io.*;
 
 import java.util.*;
 
+
 /**
  * FarragoTestConcurrentScriptedTestCase is a base class for multi-threaded,
  * scripted tests. Subclasses must implement the suite() method in order to get
@@ -37,7 +38,6 @@ import java.util.*;
 public abstract class FarragoTestConcurrentScriptedTestCase
     extends FarragoTestConcurrentTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -61,7 +61,6 @@ public abstract class FarragoTestConcurrentScriptedTestCase
     protected void runScript(String mtsqlFile, String jdbcUrl)
         throws Exception
     {
-
         File mtsqlFileSansExt =
             new File(mtsqlFile.substring(0, mtsqlFile.length() - 6));
 
@@ -92,7 +91,8 @@ public abstract class FarragoTestConcurrentScriptedTestCase
             String threadName = "thread " + threadResult[0];
             if (FarragoTestConcurrentScriptedCommandGenerator.SETUP_THREAD_ID
                 .equals(
-                    threadId)) {
+                    threadId))
+            {
                 threadName = "setup";
             }
 

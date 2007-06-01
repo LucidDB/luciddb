@@ -21,44 +21,46 @@
 */
 package net.sf.farrago.session.mock;
 
-import net.sf.farrago.catalog.FarragoRepos;
-import net.sf.farrago.catalog.FarragoReposTxnContext;
-import net.sf.farrago.cwm.core.CwmModelElement;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.ProcedureType;
-import net.sf.farrago.fem.med.FemDataServer;
-import net.sf.farrago.fem.med.FemDataWrapper;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fennel.FennelDbHandle;
-import net.sf.farrago.namespace.util.FarragoDataWrapperCache;
-import net.sf.farrago.session.*;
-import net.sf.farrago.type.FarragoTypeFactory;
-import net.sf.farrago.util.*;
-import org.eigenbase.resgen.ResourceDefinition;
-import org.eigenbase.sql.SqlDataTypeSpec;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.validate.SqlMoniker;
-import org.eigenbase.sql.validate.SqlValidatorException;
-import org.eigenbase.trace.EigenbaseTimingTracer;
-import org.eigenbase.util.ClosableAllocation;
+import java.util.*;
 
-import java.util.List;
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.resgen.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.trace.*;
+import org.eigenbase.util.*;
+
 
 /**
  * MockSessionStmtValidator provides a bare-bones implementation of
- * FarragoSessionStmtValidator.  It primarily exists to support the
- * retrieval of a MockReposTxnContext in the SQL parser.
+ * FarragoSessionStmtValidator. It primarily exists to support the retrieval of
+ * a MockReposTxnContext in the SQL parser.
  *
  * @author stephan/jack
- * @since Dec 8, 2006
  * @version $Id$
+ * @since Dec 8, 2006
  */
 public class MockSessionStmtValidator
     implements FarragoSessionStmtValidator
 {
+    //~ Instance fields --------------------------------------------------------
+
     FarragoSessionParser parser;
     FarragoReposTxnContext reposTxnContext;
+
+    //~ Methods ----------------------------------------------------------------
 
     public void setParser(FarragoSessionParser parser)
     {
@@ -140,7 +142,8 @@ public class MockSessionStmtValidator
     }
 
     public CwmColumn findColumn(
-        CwmNamedColumnSet namedColumnSet, String columnName)
+        CwmNamedColumnSet namedColumnSet,
+        String columnName)
     {
         return null;
     }
@@ -160,7 +163,9 @@ public class MockSessionStmtValidator
         return null;
     }
 
-    public FemDataWrapper findDataWrapper(SqlIdentifier wrapperName, boolean isForeign)
+    public FemDataWrapper findDataWrapper(
+        SqlIdentifier wrapperName,
+        boolean isForeign)
     {
         return null;
     }
@@ -176,19 +181,22 @@ public class MockSessionStmtValidator
     }
 
     public <T extends CwmModelElement> T findSchemaObject(
-        SqlIdentifier qualifiedName, Class<T> clazz)
+        SqlIdentifier qualifiedName,
+        Class<T> clazz)
     {
         return null;
     }
 
     public <T extends CwmModelElement> T findUnqualifiedObject(
-        SqlIdentifier unqualifiedName, Class<T> clazz)
+        SqlIdentifier unqualifiedName,
+        Class<T> clazz)
     {
         return null;
     }
 
     public List<FemRoutine> findRoutineOverloads(
-        SqlIdentifier invocationName, ProcedureType routineType)
+        SqlIdentifier invocationName,
+        ProcedureType routineType)
     {
         return null;
     }
@@ -204,12 +212,12 @@ public class MockSessionStmtValidator
     }
 
     public <T extends CwmModelElement> FarragoSessionResolvedObject<T>
-    resolveSchemaObjectName(String[] names, Class<T> clazz)
+    resolveSchemaObjectName(String [] names, Class<T> clazz)
     {
         return null;
     }
 
-    public SqlMoniker[] getAllSchemaObjectNames(String[] names)
+    public SqlMoniker [] getAllSchemaObjectNames(String [] names)
     {
         return null;
     }
@@ -218,7 +226,9 @@ public class MockSessionStmtValidator
     {
     }
 
-    public void validateFeature(ResourceDefinition feature, SqlParserPos context)
+    public void validateFeature(
+        ResourceDefinition feature,
+        SqlParserPos context)
     {
     }
 
@@ -232,12 +242,14 @@ public class MockSessionStmtValidator
     }
 
     public CwmNamedColumnSet getSampleDataset(
-        CwmNamedColumnSet columnSet, String datasetName)
+        CwmNamedColumnSet columnSet,
+        String datasetName)
     {
         return null;
     }
 
-    public void validateDataType(SqlDataTypeSpec dataType) throws SqlValidatorException
+    public void validateDataType(SqlDataTypeSpec dataType)
+        throws SqlValidatorException
     {
     }
 

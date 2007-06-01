@@ -35,7 +35,6 @@ import org.eigenbase.relopt.*;
 public class FennelSortRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

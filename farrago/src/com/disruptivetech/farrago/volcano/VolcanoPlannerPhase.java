@@ -21,18 +21,15 @@
 package com.disruptivetech.farrago.volcano;
 
 /**
- * VolcanoPlannerPhase represents the phases of operation that the 
- * {@link VolcanoPlanner} passes through during optimization of a tree
- * of {@link org.eigenbase.rel.RelNode} objects.
- * 
+ * VolcanoPlannerPhase represents the phases of operation that the {@link
+ * VolcanoPlanner} passes through during optimization of a tree of {@link
+ * org.eigenbase.rel.RelNode} objects.
+ *
  * @author stephan
  */
 public enum VolcanoPlannerPhase
 {
-    PRE_PROCESS_MDR,
-    PRE_PROCESS,
-    OPTIMIZE,
-    CLEANUP,
+    PRE_PROCESS_MDR, PRE_PROCESS, OPTIMIZE, CLEANUP,
 }
 
 // End VolcanoPlannerPhase.java

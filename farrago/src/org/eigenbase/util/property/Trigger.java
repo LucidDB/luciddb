@@ -65,7 +65,6 @@ package org.eigenbase.util.property;
  */
 public interface Trigger
 {
-
     //~ Instance fields --------------------------------------------------------
 
     int PRIMARY_PHASE = 1;

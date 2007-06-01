@@ -20,50 +20,56 @@
 */
 package com.disruptivetech.farrago.volcano;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
 
 /**
- * ChainedPhaseRuleMappingInitializer is an abstract implementation of
- * {@link VolcanoPlannerPhaseRuleMappingInitializer} that allows additional
- * rules to be layered ontop of those configured by a subordinate
+ * ChainedPhaseRuleMappingInitializer is an abstract implementation of {@link
+ * VolcanoPlannerPhaseRuleMappingInitializer} that allows additional rules to be
+ * layered ontop of those configured by a subordinate
  * VolcanoPlannerPhaseRuleMappingInitializer.
- * 
- * @see VolcanoPlannerPhaseRuleMappingInitializer
  *
  * @author Stephan Zuercher
+ * @see VolcanoPlannerPhaseRuleMappingInitializer
  */
 public abstract class ChainedPhaseRuleMappingInitializer
     implements VolcanoPlannerPhaseRuleMappingInitializer
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final VolcanoPlannerPhaseRuleMappingInitializer subordinate;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public ChainedPhaseRuleMappingInitializer(
         VolcanoPlannerPhaseRuleMappingInitializer subordinate)
     {
         this.subordinate = subordinate;
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public final void initialize(
         Map<VolcanoPlannerPhase, Set<String>> phaseRuleMap)
     {
         // Initialize subordinate's mappings.
         subordinate.initialize(phaseRuleMap);
-        
+
         // Initialize our mappings.
         chainedInitialize(phaseRuleMap);
     }
-    
+
     /**
      * Extend this method to provide phase-to-rule mappings beyond what is
      * provided by this initializer's subordinate.
-     * 
-     * <p>When this method is called, the map will already be pre-initialized 
-     * with empty sets for each VolcanoPlannerPhase.  Implementations must not 
-     * return having added or removed keys from the map, although it is safe 
-     * to temporarily add or remove keys.
-     * 
+     *
+     * <p>When this method is called, the map will already be pre-initialized
+     * with empty sets for each VolcanoPlannerPhase. Implementations must not
+     * return having added or removed keys from the map, although it is safe to
+     * temporarily add or remove keys.
+     *
      * @param phaseRuleMap the {@link VolcanoPlannerPhase}-rule description map
+     *
      * @see VolcanoPlannerPhaseRuleMappingInitializer
      */
     public abstract void chainedInitialize(

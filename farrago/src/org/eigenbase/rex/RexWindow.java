@@ -39,7 +39,6 @@ import org.eigenbase.sql.*;
  */
 public class RexWindow
 {
-
     //~ Instance fields --------------------------------------------------------
 
     public final RexNode [] partitionKeys;

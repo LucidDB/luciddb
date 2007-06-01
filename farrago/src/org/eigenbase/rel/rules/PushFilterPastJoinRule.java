@@ -147,7 +147,8 @@ public class PushFilterPastJoinRule
                 !joinRel.getJoinType().generatesNullsOnRight(),
                 joinFilters,
                 leftFilters,
-                rightFilters)) {
+                rightFilters))
+        {
             filterPushed = true;
         }
 
@@ -164,7 +165,8 @@ public class PushFilterPastJoinRule
                 !joinRel.getJoinType().generatesNullsOnLeft(),
                 joinFilters,
                 leftFilters,
-                rightFilters)) {
+                rightFilters))
+        {
             filterPushed = true;
         }
 

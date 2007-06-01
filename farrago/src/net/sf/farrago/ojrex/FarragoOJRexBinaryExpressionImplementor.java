@@ -45,7 +45,6 @@ import org.eigenbase.sql.type.*;
 public class FarragoOJRexBinaryExpressionImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int ojBinaryExpressionOrdinal;
@@ -80,7 +79,8 @@ public class FarragoOJRexBinaryExpressionImplementor
 
         if (!call.getType().isNullable()) {
             Expression expr = implementNotNull(translator, call, valueOperands);
-            Statement ifstmt = checkOverflow(
+            Statement ifstmt =
+                checkOverflow(
                     expr,
                     call.getType());
             if (ifstmt != null) {
@@ -94,23 +94,21 @@ public class FarragoOJRexBinaryExpressionImplementor
 
         // special cases for three-valued logic
         if (ojBinaryExpressionOrdinal == BinaryExpression.LOGICAL_AND) {
-            return
-                implement3VL(
-                    translator,
-                    call,
-                    operands,
-                    valueOperands,
-                    varResult,
-                    "assignFromAnd3VL");
+            return implement3VL(
+                translator,
+                call,
+                operands,
+                valueOperands,
+                varResult,
+                "assignFromAnd3VL");
         } else if (ojBinaryExpressionOrdinal == BinaryExpression.LOGICAL_OR) {
-            return
-                implement3VL(
-                    translator,
-                    call,
-                    operands,
-                    valueOperands,
-                    varResult,
-                    "assignFromOr3VL");
+            return implement3VL(
+                translator,
+                call,
+                operands,
+                valueOperands,
+                varResult,
+                "assignFromOr3VL");
         }
 
         Expression nullTest = null;
@@ -241,7 +239,8 @@ public class FarragoOJRexBinaryExpressionImplementor
         case BinaryExpression.LESSEQUAL:
             for (int i = 0; i < 2; i++) {
                 if (call.operands[i].getType().getSqlTypeName()
-                    == SqlTypeName.BOOLEAN) {
+                    == SqlTypeName.BOOLEAN)
+                {
                     valueOperands[i] =
                         new ConditionalExpression(
                             operands[i],
@@ -254,18 +253,19 @@ public class FarragoOJRexBinaryExpressionImplementor
         if (factory.getClassForPrimitive(type) != null) {
             RelDataType returnType = call.getType();
             Expression expr =
-                new BinaryExpression(valueOperands[0],
+                new BinaryExpression(
+                    valueOperands[0],
                     ojBinaryExpressionOrdinal,
                     valueOperands[1]);
 
             if ((returnType.getSqlTypeName() != SqlTypeName.BOOLEAN)
-                && (factory.getClassForPrimitive(returnType) != null)) {
+                && (factory.getClassForPrimitive(returnType) != null))
+            {
                 // Cast to correct primitive return type so compiler is happy
-                return
-                    new CastExpression(
-                        OJClass.forClass(
-                            factory.getClassForPrimitive(returnType)),
-                        expr);
+                return new CastExpression(
+                    OJClass.forClass(
+                        factory.getClassForPrimitive(returnType)),
+                    expr);
             } else {
                 return expr;
             }
@@ -286,20 +286,18 @@ public class FarragoOJRexBinaryExpressionImplementor
                     "compareVarbinary",
                     new ExpressionList(operands[0], operands[1]));
         }
-        return
-            new BinaryExpression(
-                comparisonResultExp,
-                ojBinaryExpressionOrdinal,
-                Literal.makeLiteral(0));
+        return new BinaryExpression(
+            comparisonResultExp,
+            ojBinaryExpressionOrdinal,
+            Literal.makeLiteral(0));
     }
 
     private Statement checkOverflow(Expression expr, RelDataType returnType)
     {
         if (SqlTypeUtil.isApproximateNumeric(returnType)
-            && (
-                (ojBinaryExpressionOrdinal == BinaryExpression.DIVIDE)
-                || (ojBinaryExpressionOrdinal == BinaryExpression.TIMES)
-               )) {
+            && ((ojBinaryExpressionOrdinal == BinaryExpression.DIVIDE)
+                || (ojBinaryExpressionOrdinal == BinaryExpression.TIMES)))
+        {
             Statement ifStatement =
                 new IfStatement(
                     new MethodCall(

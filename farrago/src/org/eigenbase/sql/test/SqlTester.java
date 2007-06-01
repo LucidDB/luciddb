@@ -45,7 +45,6 @@ import org.eigenbase.sql.*;
  */
 public interface SqlTester
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -235,13 +234,13 @@ public interface SqlTester
      *
      * @param expression SQL scalar expression
      * @param expectedError Pattern for expected error. If !runtime, must
-     *   include an error location.
+     * include an error location.
      * @param runtime If true, must fail at runtime; if false, must fail at
-     *   validate time
+     * validate time
      */
     void checkFails(
         String expression,
-        String expectedError, 
+        String expectedError,
         boolean runtime);
 
     //~ Inner Interfaces -------------------------------------------------------

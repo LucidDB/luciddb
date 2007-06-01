@@ -39,7 +39,6 @@ import org.eigenbase.sql.type.*;
 public class SqlCollectionTableOperator
     extends SqlFunctionalOperator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final int MODALITY_RELATIONAL = 1;
@@ -53,7 +52,8 @@ public class SqlCollectionTableOperator
 
     public SqlCollectionTableOperator(String name, int modality)
     {
-        super(name,
+        super(
+            name,
             SqlKind.CollectionTable,
             200,
             true,

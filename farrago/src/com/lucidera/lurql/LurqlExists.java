@@ -34,7 +34,6 @@ import java.util.*;
 public class LurqlExists
     extends LurqlQueryNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final List<String> selectList;

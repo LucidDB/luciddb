@@ -36,7 +36,6 @@ import org.eigenbase.sql.validate.*;
  */
 public interface SqlOperandTypeChecker
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

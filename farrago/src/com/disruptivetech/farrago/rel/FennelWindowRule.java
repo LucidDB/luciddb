@@ -48,7 +48,6 @@ import org.eigenbase.util.*;
 public abstract class FennelWindowRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -197,7 +196,6 @@ public abstract class FennelWindowRule
             }
         };
 
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -239,15 +237,17 @@ public abstract class FennelWindowRule
         // The input calculations will be implemented using a Fennel
         // calculator. If they contain Java-specific operations, quit now. The
         // splitter rule will carve out the Java parts.
-        if (inCalc != null &&
-            !FarragoAutoCalcRule.instance.canImplementInFennel(inCalc)) {
+        if ((inCalc != null)
+            && !FarragoAutoCalcRule.instance.canImplementInFennel(inCalc))
+        {
             return;
         }
 
         // Likewise, the output calculations need to be implementable in a
         // Fennel calculator.
-        if (outCalc != null &&
-            !FarragoAutoCalcRule.instance.canImplementInFennel(outCalc)) {
+        if ((outCalc != null)
+            && !FarragoAutoCalcRule.instance.canImplementInFennel(outCalc))
+        {
             return;
         }
 
@@ -286,7 +286,6 @@ public abstract class FennelWindowRule
                 inputProgramBuilder.addProject(
                     i,
                     aggProgram.getInputRowType().getFields()[i].getName());
-
             } else {
                 inputProgramBuilder.addExpr(expr);
             }
@@ -361,11 +360,11 @@ public abstract class FennelWindowRule
                         aggMap.get(over);
                     assert aggCall != null;
                     assert RelOptUtil.eq(
-                            "over",
-                            over.getType(),
-                            "aggCall",
-                            aggCall.getType(),
-                            true);
+                        "over",
+                        over.getType(),
+                        "aggCall",
+                        aggCall.getType(),
+                        true);
 
                     // Find the index of the aggCall among all partitions of all
                     // windows.
@@ -376,14 +375,14 @@ public abstract class FennelWindowRule
                     // Replace expression with a reference to the window slot.
                     final int index = inputFieldCount + aggCallIndex;
                     assert RelOptUtil.eq(
-                            "over",
-                            over.getType(),
-                            "intermed",
-                            intermediateTypeList.get(index),
-                            true);
+                        "over",
+                        over.getType(),
+                        "intermed",
+                        intermediateTypeList.get(index),
+                        true);
                     return new RexInputRef(
-                            index,
-                            over.getType());
+                        index,
+                        over.getType());
                 }
 
                 public RexNode visitLocalRef(RexLocalRef localRef)
@@ -393,10 +392,9 @@ public abstract class FennelWindowRule
                         // Reference to input field.
                         return localRef;
                     }
-                    return
-                        new RexLocalRef(
-                            flattenedAggCallList.size() + index,
-                            localRef.getType());
+                    return new RexLocalRef(
+                        flattenedAggCallList.size() + index,
+                        localRef.getType());
                 }
             };
         for (RexNode expr : aggProgram.getExprList()) {
@@ -422,11 +420,11 @@ public abstract class FennelWindowRule
         if (outCalc == null) {
             outputProgram = outputProgramBuilder.getProgram();
             assert RelOptUtil.eq(
-                    "type1",
-                    outputProgram.getOutputRowType(),
-                    "type2",
-                    winAggRel.getRowType(),
-                    true);
+                "type1",
+                outputProgram.getOutputRowType(),
+                "type2",
+                winAggRel.getRowType(),
+                true);
         } else {
             // Merge intermediate program (from winAggRel) with output program
             // (from outCalc).
@@ -437,17 +435,17 @@ public abstract class FennelWindowRule
                     intermediateProgram,
                     cluster.getRexBuilder());
             assert RelOptUtil.eq(
-                    "type1",
-                    outputProgram.getInputRowType(),
-                    "type2",
-                    intermediateRowType,
-                    true);
+                "type1",
+                outputProgram.getInputRowType(),
+                "type2",
+                intermediateRowType,
+                true);
             assert RelOptUtil.eq(
-                    "type1",
-                    outputProgram.getOutputRowType(),
-                    "type2",
-                    outCalc.getRowType(),
-                    true);
+                "type1",
+                outputProgram.getOutputRowType(),
+                "type2",
+                outCalc.getRowType(),
+                true);
         }
 
         // Put all these programs together in the final relational expression.
@@ -490,12 +488,11 @@ public abstract class FennelWindowRule
         // Create a clone the 'over' expression, omitting the window (which is
         // already part of the partition spec), and add the clone to the
         // partition.
-        return
-            fennelPartition.addOver(
-                over.getType(),
-                over.getAggOperator(),
-                over.getOperands(),
-                programBuilder);
+        return fennelPartition.addOver(
+            over.getType(),
+            over.getAggOperator(),
+            over.getOperands(),
+            programBuilder);
     }
 
     private FennelWindowRel.Window lookupWindow(
@@ -510,7 +507,8 @@ public abstract class FennelWindowRule
             if ((physical == window.physical)
                 && Util.equal(lowerBound, window.lowerBound)
                 && Util.equal(upperBound, window.upperBound)
-                && Util.equal(orderKeys, window.orderKeys)) {
+                && Util.equal(orderKeys, window.orderKeys))
+            {
                 return window;
             }
         }

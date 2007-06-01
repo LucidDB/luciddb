@@ -38,7 +38,6 @@ public class FarragoParameterMetaData
     extends FarragoJdbcMetaDataImpl
     implements ParameterMetaData
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

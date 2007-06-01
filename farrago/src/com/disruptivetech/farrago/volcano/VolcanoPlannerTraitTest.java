@@ -22,7 +22,7 @@ package com.disruptivetech.farrago.volcano;
 
 import junit.framework.*;
 
-import openjava.ptree.ParseTree;
+import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
 public class VolcanoPlannerTraitTest
     extends TestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -272,18 +271,16 @@ public class VolcanoPlannerTraitTest
             RelTrait fromTrait = rel.getTraits().getTrait(this);
 
             if (conversionMap.containsKey(fromTrait)) {
-                for (Object[] traitAndRule : conversionMap.getMulti(fromTrait))
-                {
+                for (Object [] traitAndRule : conversionMap.getMulti(fromTrait)) {
                     RelTrait trait = (RelTrait) traitAndRule[0];
                     ConverterRule rule = (ConverterRule) traitAndRule[1];
 
                     if (trait == toTrait) {
                         RelNode converted = rule.convert(rel);
                         if ((converted != null)
-                            && (
-                            !planner.getCost(converted).isInfinite()
-                                || allowInfiniteCostConverters
-                        )) {
+                            && (!planner.getCost(converted).isInfinite()
+                                || allowInfiniteCostConverters))
+                        {
                             return converted;
                         }
                     }
@@ -299,8 +296,7 @@ public class VolcanoPlannerTraitTest
             RelTrait toTrait)
         {
             if (conversionMap.containsKey(fromTrait)) {
-                for (Object[] traitAndRule : conversionMap.getMulti(fromTrait))
-                {
+                for (Object [] traitAndRule : conversionMap.getMulti(fromTrait)) {
                     if (traitAndRule[0] == toTrait) {
                         return true;
                     }
@@ -361,12 +357,11 @@ public class VolcanoPlannerTraitTest
         // implement RelNode
         protected RelDataType deriveRowType()
         {
-            return
-                getCluster().getTypeFactory().createStructType(
-                    new RelDataType[] {
-                        getCluster().getTypeFactory().createJavaType(Void.TYPE)
-                    },
-                    new String[] { "this" });
+            return getCluster().getTypeFactory().createStructType(
+                new RelDataType[] {
+                    getCluster().getTypeFactory().createJavaType(Void.TYPE)
+                },
+                new String[] { "this" });
         }
 
         public void explain(RelOptPlanWriter pw)
@@ -456,7 +451,8 @@ public class VolcanoPlannerTraitTest
         // implement RelNode
         public NoneSingleRel clone()
         {
-            NoneSingleRel clone = new NoneSingleRel(
+            NoneSingleRel clone =
+                new NoneSingleRel(
                     getCluster(),
                     getChild());
             clone.inheritTraitsFrom(this);
@@ -484,7 +480,8 @@ public class VolcanoPlannerTraitTest
 
         public IterSingleRel clone()
         {
-            IterSingleRel clone = new IterSingleRel(
+            IterSingleRel clone =
+                new IterSingleRel(
                     getCluster(),
                     getInput(0));
             clone.inheritTraitsFrom(this);
@@ -611,9 +608,9 @@ public class VolcanoPlannerTraitTest
         public RelNode convert(RelNode rel)
         {
             return new AltTraitConverter(
-                    rel.getCluster(),
-                    rel,
-                    toTrait);
+                rel.getCluster(),
+                rel,
+                toTrait);
         }
 
         public boolean isGuaranteed()
@@ -671,8 +668,8 @@ public class VolcanoPlannerTraitTest
         public RelNode convert(RelNode rel)
         {
             return new PhysToIteratorConverter(
-                    rel.getCluster(),
-                    rel);
+                rel.getCluster(),
+                rel);
         }
     }
 

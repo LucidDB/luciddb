@@ -50,7 +50,6 @@ import net.sf.farrago.fem.sql2003.*;
  */
 public interface FemSqltypedElement
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

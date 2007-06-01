@@ -26,10 +26,10 @@ import java.util.*;
 
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.defimpl.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
@@ -51,7 +51,6 @@ public class ReposDefaultValueFactory
     implements DefaultValueFactory,
         FarragoObjectCache.CachedObjectFactory
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Map<FemRoutine, SqlNodeList> constructorToSqlMap =
@@ -101,8 +100,7 @@ public class ReposDefaultValueFactory
         int iColumn)
     {
         if (!(table instanceof FarragoQueryColumnSet)) {
-            return
-                farragoPreparingStmt.sqlToRelConverter.getRexBuilder()
+            return farragoPreparingStmt.sqlToRelConverter.getRexBuilder()
                 .constantNull();
         }
         FarragoQueryColumnSet queryColumnSet = (FarragoQueryColumnSet) table;
@@ -190,8 +188,7 @@ public class ReposDefaultValueFactory
     private RexNode convertExpression(CwmExpression cwmExp)
     {
         if (cwmExp.getBody().equalsIgnoreCase("NULL")) {
-            return
-                farragoPreparingStmt.sqlToRelConverter.getRexBuilder()
+            return farragoPreparingStmt.sqlToRelConverter.getRexBuilder()
                 .constantNull();
         }
 
@@ -210,10 +207,9 @@ public class ReposDefaultValueFactory
     {
         RexBuilder rexBuilder =
             farragoPreparingStmt.sqlToRelConverter.getRexBuilder();
-        return
-            rexBuilder.makeCall(
-                SqlStdOperatorTable.nextValueFunc,
-                rexBuilder.makeLiteral(sequence.refMofId()));
+        return rexBuilder.makeCall(
+            SqlStdOperatorTable.nextValueFunc,
+            rexBuilder.makeLiteral(sequence.refMofId()));
     }
 
     // implement CachedObjectFactory
@@ -239,7 +235,8 @@ public class ReposDefaultValueFactory
             farragoPreparingStmt.sqlToRelConverter.convertExpression(sqlNode);
 
         // TODO:  better memory usage estimate
-        entry.initialize(exp,
+        entry.initialize(
+            exp,
             3 * FarragoUtil.getStringMemoryUsage(defaultString));
     }
 }

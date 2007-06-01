@@ -33,7 +33,6 @@ public class SqlInsertKeyword
     extends EnumeratedValues.BasicValue
     implements SqlLiteral.SqlSymbol
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final EnumeratedValues enumeration =
@@ -46,6 +45,7 @@ public class SqlInsertKeyword
         super(name, ordinal, null);
     }
 
+    //~ Methods ----------------------------------------------------------------
 
     public String name()
     {

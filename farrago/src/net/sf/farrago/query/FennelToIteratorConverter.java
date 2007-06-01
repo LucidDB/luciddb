@@ -88,7 +88,6 @@ public class FennelToIteratorConverter
     extends ConverterRel
     implements JavaRel
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -105,8 +104,8 @@ public class FennelToIteratorConverter
             public RelNode convert(RelNode rel)
             {
                 return new FennelToIteratorConverter(
-                        rel.getCluster(),
-                        rel);
+                    rel.getCluster(),
+                    rel);
             }
 
             public boolean isGuaranteed()
@@ -114,7 +113,6 @@ public class FennelToIteratorConverter
                 return true;
             }
         };
-
 
     //~ Constructors -----------------------------------------------------------
 
@@ -153,7 +151,7 @@ public class FennelToIteratorConverter
     public ParseTree implement(JavaRelImplementor implementor)
     {
         assert (getChild().getConvention().equals(
-                    FennelRel.FENNEL_EXEC_CONVENTION)) : getChild().getClass()
+            FennelRel.FENNEL_EXEC_CONVENTION)) : getChild().getClass()
             .getName();
 
         boolean useTransformer = false;
@@ -263,8 +261,8 @@ public class FennelToIteratorConverter
         Variable varPrevEndOffset = null;
         assert (fields.length == tupleAccessor.getAttrAccessor().size());
         int i = -1;
-        for (FemTupleAttrAccessor attrAccessor :
-            tupleAccessor.getAttrAccessor())
+        for (
+            FemTupleAttrAccessor attrAccessor : tupleAccessor.getAttrAccessor())
         {
             ++i;
             if (attrAccessor.getBitValueIndex() != -1) {
@@ -390,7 +388,8 @@ public class FennelToIteratorConverter
             // variable-width tuple:  end is same as end of last variable-width
             // field
             expTupleEndOffset =
-                new BinaryExpression(varPrevEndOffset,
+                new BinaryExpression(
+                    varPrevEndOffset,
                     BinaryExpression.MINUS,
                     varTupleStartOffset);
         }
@@ -467,11 +466,10 @@ public class FennelToIteratorConverter
             argList.add(Literal.makeLiteral(rootStreamId));
             argList.add(childrenExp);
 
-            return
-                new MethodCall(
-                    connectionVariable,
-                    "newFennelTupleIter",
-                    argList);
+            return new MethodCall(
+                connectionVariable,
+                "newFennelTupleIter",
+                argList);
         } else {
             // Pass tuple reader to
             // FarragoRuntimeContext.newFennelTransformTupleIter to produce
@@ -486,18 +484,12 @@ public class FennelToIteratorConverter
             // assert that the children's code generation didn't place code
             // here -- we want it in a separate class that implements
             // FarragoTransform.
-            assert ((
-                        (childrenExp instanceof Literal)
-                        && (
-                            ((Literal) childrenExp).getLiteralType()
-                            == Literal.NULL
-                           )
-                    )
-                    || (
-                        (childrenExp instanceof MethodCall)
-                        && ((MethodCall) childrenExp).getName().startsWith(
-                            "dummy")
-                       )) : childrenExp.toString();
+            assert (((childrenExp instanceof Literal)
+                    && (((Literal) childrenExp).getLiteralType()
+                        == Literal.NULL))
+                || ((childrenExp instanceof MethodCall)
+                    && ((MethodCall) childrenExp).getName().startsWith(
+                        "dummy"))) : childrenExp.toString();
 
             // Register this stream def with our ancestral
             // IteratorToFennelConverter.  Note that this converter instance
@@ -515,11 +507,10 @@ public class FennelToIteratorConverter
                     IteratorToFennelConverter.INPUT_BINDINGS_VAR_NAME));
             argList.add(childrenExp);
 
-            return
-                new MethodCall(
-                    connectionVariable,
-                    "newFennelTransformTupleIter",
-                    argList);
+            return new MethodCall(
+                connectionVariable,
+                "newFennelTransformTupleIter",
+                argList);
         }
     }
 
@@ -577,13 +568,13 @@ public class FennelToIteratorConverter
         for (RelNode ancestor : ancestors) {
             if (ancestor instanceof IteratorToFennelConverter) {
                 ((IteratorToFennelConverter) ancestor).registerChildStreamDef(
-                    streamDef, implicit);
+                    streamDef,
+                    implicit);
                 return;
             }
         }
 
-        assert (implicit)
-            : "Ancestor IteratorToFennelConverter not found";
+        assert (implicit) : "Ancestor IteratorToFennelConverter not found";
     }
 
     /**

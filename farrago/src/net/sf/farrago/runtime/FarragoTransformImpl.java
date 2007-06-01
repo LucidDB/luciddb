@@ -36,7 +36,6 @@ import org.eigenbase.runtime.*;
 public abstract class FarragoTransformImpl
     implements FarragoTransform
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FennelTupleWriter tupleWriter;
@@ -65,17 +64,18 @@ public abstract class FarragoTransformImpl
      * Execute this transform. Execution continues until the underlying {@link
      * #tupleIter} returns END_OF_DATA or UNDERFLOW or until the underlying
      * {@link #tupleWriter} can no longer marshal tuples into the output buffer.
-     * 
-     * @param outputBuffer output ByteBuffer, written to via 
-     *                     {@link #tupleWriter}
+     *
+     * @param outputBuffer output ByteBuffer, written to via {@link
+     * #tupleWriter}
      * @param quantum the maximum number of tuples to process before returning
+     *
      * @return number of bytes marshaled into outputBuffer; 0 on END_OF_DATA; -1
      * on UNDERFLOW
      */
     public int execute(ByteBuffer outputBuffer, long quantum)
     {
         long tupleCount = 0;
-        
+
         // If next is not null, then a row was previous fetched but
         // there wasn't room to marshal it.
         if (next == null) {
@@ -106,7 +106,7 @@ public abstract class FarragoTransformImpl
                 next = null;
                 break;
             }
-            
+
             Object o = tupleIter.fetchNext();
             if (o == TupleIter.NoDataReason.END_OF_DATA) {
                 // Will return 0 on next call to this method -- we've already

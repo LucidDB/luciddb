@@ -42,7 +42,6 @@ import net.sf.farrago.resource.*;
 public class FtrsDataWrapper
     extends MedAbstractDataWrapper
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -75,9 +74,9 @@ public class FtrsDataWrapper
         throws SQLException
     {
         return new FtrsDataServer(
-                serverMofId,
-                props,
-                getRepos());
+            serverMofId,
+            props,
+            getRepos());
     }
 
     // implement FarragoMedDataWrapper

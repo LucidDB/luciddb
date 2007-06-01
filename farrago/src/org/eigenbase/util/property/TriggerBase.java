@@ -32,7 +32,6 @@ package org.eigenbase.util.property;
 public class TriggerBase
     implements Trigger
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final boolean persistent;

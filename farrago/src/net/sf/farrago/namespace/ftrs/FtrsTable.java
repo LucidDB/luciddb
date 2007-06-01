@@ -43,7 +43,6 @@ import org.eigenbase.reltype.*;
 class FtrsTable
     extends MedAbstractColumnSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FtrsIndexGuide indexGuide;
@@ -54,7 +53,7 @@ class FtrsTable
         String [] localName,
         RelDataType rowType,
         Properties tableProps,
-        Map<String,Properties> columnPropMap)
+        Map<String, Properties> columnPropMap)
     {
         super(localName, null, rowType, tableProps, columnPropMap);
     }
@@ -66,16 +65,15 @@ class FtrsTable
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        return
-            new FtrsIndexScanRel(
-                cluster,
-                this,
-                FarragoCatalogUtil.getClusteredIndex(
-                    getPreparingStmt().getRepos(),
-                    getCwmColumnSet()),
-                connection,
-                null,
-                false);
+        return new FtrsIndexScanRel(
+            cluster,
+            this,
+            FarragoCatalogUtil.getClusteredIndex(
+                getPreparingStmt().getRepos(),
+                getCwmColumnSet()),
+            connection,
+            null,
+            false);
     }
 
     public FtrsIndexGuide getIndexGuide()

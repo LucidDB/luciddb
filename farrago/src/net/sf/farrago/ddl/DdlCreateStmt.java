@@ -40,7 +40,6 @@ import org.eigenbase.sql.*;
 public class DdlCreateStmt
     extends DdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     DdlReplaceOptions replaceOptions;
@@ -52,7 +51,8 @@ public class DdlCreateStmt
      *
      * @param createdElement top-level element created by this stmt
      */
-    public DdlCreateStmt(CwmModelElement createdElement,
+    public DdlCreateStmt(
+        CwmModelElement createdElement,
         DdlReplaceOptions replaceOptions)
     {
         super(createdElement);

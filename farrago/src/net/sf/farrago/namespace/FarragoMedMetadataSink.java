@@ -42,7 +42,6 @@ import org.eigenbase.reltype.*;
  */
 public interface FarragoMedMetadataSink
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -60,7 +59,7 @@ public interface FarragoMedMetadataSink
         String typeName,
         String remarks,
         Properties properties);
-    
+
     /**
      * Writes a descriptor for a column.
      *
@@ -82,7 +81,7 @@ public interface FarragoMedMetadataSink
         String remarks,
         String defaultValue,
         Properties properties);
-    
+
     /**
      * @return a type factory for use in creating type instances for calls such
      * as {@link #writeColumnDescriptor}

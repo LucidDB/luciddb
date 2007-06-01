@@ -22,10 +22,11 @@
 */
 package net.sf.farrago.jdbc.engine;
 
+import java.io.*;
+
 import java.sql.*;
 
 import java.util.*;
-import java.io.Serializable;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.release.*;
@@ -45,7 +46,6 @@ import org.eigenbase.sql.*;
 public class FarragoJdbcEngineDatabaseMetaData
     implements DatabaseMetaData
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoJdbcEngineConnection connection;
@@ -141,8 +141,7 @@ public class FarragoJdbcEngineDatabaseMetaData
         throws SQLException
     {
         FarragoReleaseProperties props = FarragoReleaseProperties.instance();
-        return
-            ""
+        return ""
             + props.productVersionMajor.get()
             + "."
             + props.productVersionMinor.get()
@@ -193,8 +192,7 @@ public class FarragoJdbcEngineDatabaseMetaData
         throws SQLException
     {
         FarragoReleaseProperties props = FarragoReleaseProperties.instance();
-        return
-            ""
+        return ""
             + props.jdbcDriverVersionMajor.get()
             + "."
             + props.jdbcDriverVersionMinor.get();
@@ -912,17 +910,15 @@ public class FarragoJdbcEngineDatabaseMetaData
     public boolean supportsTransactions()
         throws SQLException
     {
-        return
-            connection.getSession().getPersonality().supportsFeature(
-                EigenbaseResource.instance().SQLFeature_E151);
+        return connection.getSession().getPersonality().supportsFeature(
+            EigenbaseResource.instance().SQLFeature_E151);
     }
 
     // implement DatabaseMetaData
     public boolean supportsTransactionIsolationLevel(int level)
         throws SQLException
     {
-        return
-            supportsTransactions()
+        return supportsTransactions()
             && (level == Connection.TRANSACTION_READ_UNCOMMITTED);
     }
 
@@ -1041,30 +1037,27 @@ public class FarragoJdbcEngineDatabaseMetaData
     public ResultSet getSchemas()
         throws SQLException
     {
-        return
-            executeDaemonQuery(
-                "select * from sys_boot.jdbc_metadata.schemas_view "
-                + "order by table_schem,table_catalog");
+        return executeDaemonQuery(
+            "select * from sys_boot.jdbc_metadata.schemas_view "
+            + "order by table_schem,table_catalog");
     }
 
     // implement DatabaseMetaData
     public ResultSet getCatalogs()
         throws SQLException
     {
-        return
-            executeDaemonQuery(
-                "select * from sys_boot.jdbc_metadata.catalogs_view "
-                + "order by table_cat");
+        return executeDaemonQuery(
+            "select * from sys_boot.jdbc_metadata.catalogs_view "
+            + "order by table_cat");
     }
 
     // implement DatabaseMetaData
     public ResultSet getTableTypes()
         throws SQLException
     {
-        return
-            executeDaemonQuery(
-                "select * from sys_boot.jdbc_metadata.table_types_view "
-                + "order by table_type");
+        return executeDaemonQuery(
+            "select * from sys_boot.jdbc_metadata.table_types_view "
+            + "order by table_type");
     }
 
     // implement DatabaseMetaData
@@ -1185,10 +1178,9 @@ public class FarragoJdbcEngineDatabaseMetaData
     public ResultSet getTypeInfo()
         throws SQLException
     {
-        return
-            executeDaemonQuery(
-                "select * from sys_boot.jdbc_metadata.type_info_view "
-                + "order by data_type");
+        return executeDaemonQuery(
+            "select * from sys_boot.jdbc_metadata.type_info_view "
+            + "order by data_type");
     }
 
     // implement DatabaseMetaData
@@ -1232,8 +1224,7 @@ public class FarragoJdbcEngineDatabaseMetaData
         int concurrency)
         throws SQLException
     {
-        return
-            (type == ResultSet.TYPE_FORWARD_ONLY)
+        return (type == ResultSet.TYPE_FORWARD_ONLY)
             && (concurrency == ResultSet.CONCUR_READ_ONLY);
     }
 
@@ -1380,9 +1371,8 @@ public class FarragoJdbcEngineDatabaseMetaData
     {
         // For now, ignore all parameters because we always return
         // empty set.
-        return
-            executeDaemonQuery(
-                "select * from sys_boot.jdbc_metadata.super_types_view");
+        return executeDaemonQuery(
+            "select * from sys_boot.jdbc_metadata.super_types_view");
     }
 
     // implement DatabaseMetaData
@@ -1394,9 +1384,8 @@ public class FarragoJdbcEngineDatabaseMetaData
     {
         // For now, ignore all parameters because we always return
         // empty set.
-        return
-            executeDaemonQuery(
-                "select * from sys_boot.jdbc_metadata.super_tables_view");
+        return executeDaemonQuery(
+            "select * from sys_boot.jdbc_metadata.super_tables_view");
     }
 
     // implement DatabaseMetaData

@@ -44,7 +44,6 @@ import org.eigenbase.sql.type.*;
  */
 public interface RelDataType
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

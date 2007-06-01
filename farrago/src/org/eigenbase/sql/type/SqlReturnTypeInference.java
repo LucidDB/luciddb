@@ -41,7 +41,6 @@ import org.eigenbase.sql.*;
  */
 public interface SqlReturnTypeInference
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

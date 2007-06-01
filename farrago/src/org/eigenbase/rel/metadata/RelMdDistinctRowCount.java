@@ -41,7 +41,6 @@ import org.eigenbase.util14.*;
 public class RelMdDistinctRowCount
     extends ReflectiveRelMetadataProvider
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public RelMdDistinctRowCount()
@@ -74,12 +73,13 @@ public class RelMdDistinctRowCount
             if (predicate == null) {
                 modifiedPred = null;
             } else {
-                modifiedPred = predicate.accept(
-                    new RelOptUtil.RexInputConverter(
-                        rexBuilder,
-                        null,
-                        input.getRowType().getFields(),
-                        adjustments));
+                modifiedPred =
+                    predicate.accept(
+                        new RelOptUtil.RexInputConverter(
+                            rexBuilder,
+                            null,
+                            input.getRowType().getFields(),
+                            adjustments));
             }
             Double partialRowCount =
                 RelMetadataQuery.getDistinctRowCount(
@@ -99,11 +99,10 @@ public class RelMdDistinctRowCount
         BitSet groupKey,
         RexNode predicate)
     {
-        return
-            RelMetadataQuery.getDistinctRowCount(
-                rel.getChild(),
-                groupKey,
-                predicate);
+        return RelMetadataQuery.getDistinctRowCount(
+            rel.getChild(),
+            groupKey,
+            predicate);
     }
 
     public Double getDistinctRowCount(
@@ -120,11 +119,10 @@ public class RelMdDistinctRowCount
                 predicate,
                 rel.getCondition());
 
-        return
-            RelMetadataQuery.getDistinctRowCount(
-                rel.getChild(),
-                groupKey,
-                unionPreds);
+        return RelMetadataQuery.getDistinctRowCount(
+            rel.getChild(),
+            groupKey,
+            unionPreds);
     }
 
     public Double getDistinctRowCount(
@@ -156,11 +154,10 @@ public class RelMdDistinctRowCount
                     predicate);
         }
 
-        return
-            RelMetadataQuery.getDistinctRowCount(
-                rel.getLeft(),
-                groupKey,
-                newPred);
+        return RelMetadataQuery.getDistinctRowCount(
+            rel.getLeft(),
+            groupKey,
+            newPred);
     }
 
     public Double getDistinctRowCount(
@@ -186,11 +183,10 @@ public class RelMdDistinctRowCount
         BitSet childKey = new BitSet();
         RelMdUtil.setAggChildKeys(groupKey, rel, childKey);
 
-        return
-            RelMetadataQuery.getDistinctRowCount(
-                rel.getChild(),
-                childKey,
-                childPreds);
+        return RelMetadataQuery.getDistinctRowCount(
+            rel.getChild(),
+            childKey,
+            childPreds);
     }
 
     public Double getDistinctRowCount(
@@ -244,8 +240,11 @@ public class RelMdDistinctRowCount
         }
 
         // multiply by the cardinality of the non-child projection expressions
-        for (int bit = projCols.nextSetBit(0); bit >= 0;
-            bit = projCols.nextSetBit(bit + 1)) {
+        for (
+            int bit = projCols.nextSetBit(0);
+            bit >= 0;
+            bit = projCols.nextSetBit(bit + 1))
+        {
             Double subRowCount = RelMdUtil.cardOfProjExpr(rel, projExprs[bit]);
             if (subRowCount == null) {
                 return null;
@@ -253,10 +252,9 @@ public class RelMdDistinctRowCount
             distinctRowCount *= subRowCount;
         }
 
-        return
-            RelMdUtil.numDistinctVals(
-                distinctRowCount,
-                RelMetadataQuery.getRowCount(rel));
+        return RelMdUtil.numDistinctVals(
+            distinctRowCount,
+            RelMetadataQuery.getRowCount(rel));
     }
 
     // Catch-all rule when none of the others apply.
@@ -270,10 +268,9 @@ public class RelMdDistinctRowCount
         // assume the rows are unique even if the table is not
         boolean uniq = RelMdUtil.areColumnsDefinitelyUnique(rel, groupKey);
         if (uniq) {
-            return
-                NumberUtil.multiply(
-                    RelMetadataQuery.getRowCount(rel),
-                    RelMetadataQuery.getSelectivity(rel, predicate));
+            return NumberUtil.multiply(
+                RelMetadataQuery.getRowCount(rel),
+                RelMetadataQuery.getSelectivity(rel, predicate));
         }
         return null;
     }

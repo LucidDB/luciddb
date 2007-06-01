@@ -39,7 +39,6 @@ import junit.framework.*;
 public class FennelDmlTest
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

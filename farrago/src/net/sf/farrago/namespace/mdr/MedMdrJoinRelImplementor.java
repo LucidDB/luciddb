@@ -56,7 +56,6 @@ import org.netbeans.api.mdr.*;
  */
 class MedMdrJoinRelImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoRelImplementor implementor;
@@ -225,7 +224,8 @@ class MedMdrJoinRelImplementor
 
         if ((joinRel.getRightReference() == null)
             || !joinRel.getRightReference().getType().equals(
-                rightRel.mdrClassExtent.refClass.refMetaObject())) {
+                rightRel.mdrClassExtent.refClass.refMetaObject()))
+        {
             // since the right-hand input is more specific than the
             // corresponding association end, we have to filter out any
             // unrelated types we might encounter
@@ -418,7 +418,8 @@ class MedMdrJoinRelImplementor
                     varRepository,
                     "getByMofId",
                     new ExpressionList(
-                        new MethodCall(new FieldAccess(
+                        new MethodCall(
+                            new FieldAccess(
                                 varLeftRow,
                                 Util.toJavaId(
                                     leftFields[joinRel.getLeftOrdinal()]
@@ -435,7 +436,8 @@ class MedMdrJoinRelImplementor
                         OJUtil.typeNameForClass(leftKeyClass))),
                 new StatementList(
                     new ReturnStatement(
-                        new MethodCall(new FieldAccess(
+                        new MethodCall(
+                            new FieldAccess(
                                 OJClass.forClass(Collections.class),
                                 "EMPTY_LIST"),
                             "iterator",
@@ -492,14 +494,13 @@ class MedMdrJoinRelImplementor
                     new ExpressionList(
                         Literal.makeLiteral(
                             joinRel.getRightReference().getReferencedEnd()
-                            .getName()),
+                                   .getName()),
                         varLeftObj));
         }
-        return
-            new AllocationExpression(
-                OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
-                new ExpressionList(
-                    collectionExpr));
+        return new AllocationExpression(
+            OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
+            new ExpressionList(
+                collectionExpr));
     }
 
     private Expression generateManyToOneLookup()
@@ -525,16 +526,15 @@ class MedMdrJoinRelImplementor
                     "getByMofId",
                     new ExpressionList(varLeftObj)));
 
-        return
-            new ConditionalExpression(
-                new BinaryExpression(
-                    varLeftObj,
-                    BinaryExpression.EQUAL,
-                    Literal.constantNull()),
-                new CastExpression(
-                    OJSystem.OBJECT,
-                    new Variable("EMPTY_ITERATOR")),
-                lookupExpr);
+        return new ConditionalExpression(
+            new BinaryExpression(
+                varLeftObj,
+                BinaryExpression.EQUAL,
+                Literal.constantNull()),
+            new CastExpression(
+                OJSystem.OBJECT,
+                new Variable("EMPTY_ITERATOR")),
+            lookupExpr);
     }
 }
 

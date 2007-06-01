@@ -43,7 +43,6 @@ import org.eigenbase.reltype.*;
  */
 public abstract class RexNode
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final RexNode [] EMPTY_ARRAY = new RexNode[0];

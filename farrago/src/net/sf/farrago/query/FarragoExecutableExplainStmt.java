@@ -44,7 +44,6 @@ import org.eigenbase.reltype.*;
 class FarragoExecutableExplainStmt
     extends FarragoExecutableStmtImpl
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String explanation;

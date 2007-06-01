@@ -43,10 +43,10 @@ import org.eigenbase.util.*;
 public abstract class RelDataTypeFactoryImpl
     implements RelDataTypeFactory
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    private HashMap<RelDataType,RelDataType> map = new HashMap<RelDataType, RelDataType>();
+    private HashMap<RelDataType, RelDataType> map =
+        new HashMap<RelDataType, RelDataType>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -66,11 +66,10 @@ public abstract class RelDataTypeFactoryImpl
     public RelDataType createJoinType(RelDataType [] types)
     {
         final RelDataType [] flattenedTypes = getTypeArray(types);
-        return
-            canonize(
-                new RelCrossType(
-                    flattenedTypes,
-                    getFieldArray(flattenedTypes)));
+        return canonize(
+            new RelCrossType(
+                flattenedTypes,
+                getFieldArray(flattenedTypes)));
     }
 
     // implement RelDataTypeFactory
@@ -86,7 +85,8 @@ public abstract class RelDataTypeFactoryImpl
     }
 
     // implement RelDataTypeFactory
-    public RelDataType createStructType(List<RelDataType> typeList,
+    public RelDataType createStructType(
+        List<RelDataType> typeList,
         List<String> fieldNameList)
     {
         final RelDataTypeField [] fields =
@@ -168,16 +168,15 @@ public abstract class RelDataTypeFactoryImpl
         if (type instanceof JavaType) {
             JavaType javaType = (JavaType) type;
             if (SqlTypeUtil.inCharFamily(javaType)) {
-                return
-                    new JavaType(
-                        javaType.clazz,
-                        nullable,
-                        javaType.charset,
-                        javaType.collation);
+                return new JavaType(
+                    javaType.clazz,
+                    nullable,
+                    javaType.charset,
+                    javaType.collation);
             } else {
                 return new JavaType(
-                        javaType.clazz,
-                        nullable);
+                    javaType.clazz,
+                    nullable);
             }
         } else {
             // REVIEW: RelCrossType if it stays around; otherwise get rid of
@@ -198,30 +197,29 @@ public abstract class RelDataTypeFactoryImpl
         // For flattening and outer joins, it is desirable to change
         // the nullability of the individual fields.
 
-        return createStructType(new FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return type.getFieldList().size();
-                    }
+        return createStructType(
+            new FieldInfo() {
+                public int getFieldCount()
+                {
+                    return type.getFieldList().size();
+                }
 
-                    public String getFieldName(int index)
-                    {
-                        return type.getFields()[index].getName();
-                    }
+                public String getFieldName(int index)
+                {
+                    return type.getFields()[index].getName();
+                }
 
-                    public RelDataType getFieldType(int index)
-                    {
-                        RelDataType fieldType =
-                            type.getFields()[index].getType();
+                public RelDataType getFieldType(int index)
+                {
+                    RelDataType fieldType = type.getFields()[index].getType();
 
-                        if (ignoreNullable) {
-                            return copyType(fieldType);
-                        } else {
-                            return
-                                createTypeWithNullability(fieldType, nullable);
-                        }
+                    if (ignoreNullable) {
+                        return copyType(fieldType);
+                    } else {
+                        return createTypeWithNullability(fieldType, nullable);
                     }
-                });
+                }
+            });
     }
 
     // implement RelDataTypeFactory
@@ -231,8 +229,8 @@ public abstract class RelDataTypeFactoryImpl
             return copyRecordType((RelRecordType) type, true, false);
         } else {
             return createTypeWithNullability(
-                    type,
-                    type.isNullable());
+                type,
+                type.isNullable());
         }
     }
 
@@ -281,14 +279,14 @@ public abstract class RelDataTypeFactoryImpl
      */
     private static RelDataTypeField [] getFieldArray(RelDataType [] types)
     {
-        ArrayList<RelDataTypeField> fieldList = new ArrayList<RelDataTypeField>();
+        ArrayList<RelDataTypeField> fieldList =
+            new ArrayList<RelDataTypeField>();
         for (int i = 0; i < types.length; i++) {
             RelDataType type = types[i];
             addFields(type, fieldList);
         }
-        return
-            (RelDataTypeField []) fieldList.toArray(
-                new RelDataTypeField[fieldList.size()]);
+        return (RelDataTypeField []) fieldList.toArray(
+            new RelDataTypeField[fieldList.size()]);
     }
 
     /**
@@ -298,8 +296,8 @@ public abstract class RelDataTypeFactoryImpl
     {
         ArrayList<RelDataType> typeList = new ArrayList<RelDataType>();
         getTypeArray(types, typeList);
-        return
-            (RelDataType []) typeList.toArray(new RelDataType[typeList.size()]);
+        return (RelDataType []) typeList.toArray(
+            new RelDataType[typeList.size()]);
     }
 
     private static void getTypeArray(
@@ -345,7 +343,8 @@ public abstract class RelDataTypeFactoryImpl
     private RelDataTypeField [] fieldsOf(Class clazz)
     {
         final Field [] fields = clazz.getFields();
-        ArrayList<RelDataTypeFieldImpl> list = new ArrayList<RelDataTypeFieldImpl>();
+        ArrayList<RelDataTypeFieldImpl> list =
+            new ArrayList<RelDataTypeFieldImpl>();
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
             if (Modifier.isStatic(field.getModifiers())) {
@@ -362,9 +361,8 @@ public abstract class RelDataTypeFactoryImpl
             return null;
         }
 
-        return
-            (RelDataTypeField []) list.toArray(
-                new RelDataTypeField[list.size()]);
+        return (RelDataTypeField []) list.toArray(
+            new RelDataTypeField[list.size()]);
     }
 
     // implement RelDataTypeFactory
@@ -381,12 +379,10 @@ public abstract class RelDataTypeFactoryImpl
     }
 
     /**
-     * implement RelDataTypeFactory with SQL 2003 compliant behavior.
-     *
-     * Let p1, s1 be the precision and scale of the first operand
-     * Let p2, s2 be the precision and scale of the second operand Let p, s be
-     * the precision and scale of the result, Then the result type is a decimal
-     * with:
+     * implement RelDataTypeFactory with SQL 2003 compliant behavior. Let p1, s1
+     * be the precision and scale of the first operand Let p2, s2 be the
+     * precision and scale of the second operand Let p, s be the precision and
+     * scale of the result, Then the result type is a decimal with:
      *
      * <ul>
      * <li>p = p1 + p2</li>
@@ -398,12 +394,15 @@ public abstract class RelDataTypeFactoryImpl
      * @sql.2003 Part 2 Section 6.26
      */
     public RelDataType createDecimalProduct(
-        RelDataType type1, RelDataType type2)
+        RelDataType type1,
+        RelDataType type2)
     {
         if (SqlTypeUtil.isExactNumeric(type1)
-            && SqlTypeUtil.isExactNumeric(type2)) {
+            && SqlTypeUtil.isExactNumeric(type2))
+        {
             if (SqlTypeUtil.isDecimal(type1)
-                || SqlTypeUtil.isDecimal(type2)) {
+                || SqlTypeUtil.isDecimal(type2))
+            {
                 int p1 = type1.getPrecision();
                 int p2 = type2.getPrecision();
                 int s1 = type1.getScale();
@@ -432,19 +431,18 @@ public abstract class RelDataTypeFactoryImpl
 
     // implement RelDataTypeFactory
     public boolean useDoubleMultiplication(
-        RelDataType type1, RelDataType type2)
+        RelDataType type1,
+        RelDataType type2)
     {
-        assert(createDecimalProduct(type1, type2) != null);
+        assert (createDecimalProduct(type1, type2) != null);
         return false;
     }
 
     /**
-     * implement RelDataTypeFactory
-     *
-     * Let p1, s1 be the precision and scale of the first operand
-     * Let p2, s2 be the precision and scale of the second operand Let p, s be
-     * the precision and scale of the result, Let d be the number of whole
-     * digits in the result Then the result type is a decimal with:
+     * implement RelDataTypeFactory Let p1, s1 be the precision and scale of the
+     * first operand Let p2, s2 be the precision and scale of the second operand
+     * Let p, s be the precision and scale of the result, Let d be the number of
+     * whole digits in the result Then the result type is a decimal with:
      *
      * <ul>
      * <li>d = p1 - s1 + s2</li>
@@ -457,12 +455,15 @@ public abstract class RelDataTypeFactoryImpl
      * @sql.2003 Part 2 Section 6.26
      */
     public RelDataType createDecimalQuotient(
-        RelDataType type1, RelDataType type2)
+        RelDataType type1,
+        RelDataType type2)
     {
         if (SqlTypeUtil.isExactNumeric(type1)
-            && SqlTypeUtil.isExactNumeric(type2)) {
+            && SqlTypeUtil.isExactNumeric(type2))
+        {
             if (SqlTypeUtil.isDecimal(type1)
-                || SqlTypeUtil.isDecimal(type2)) {
+                || SqlTypeUtil.isDecimal(type2))
+            {
                 int p1 = type1.getPrecision();
                 int p2 = type2.getPrecision();
                 int s1 = type1.getScale();
@@ -550,8 +551,7 @@ public abstract class RelDataTypeFactoryImpl
                 "Need to be a chartype");
             this.isNullable = nullable;
             this.charset = charset;
-            this.collation =
-                collation;
+            this.collation = collation;
             computeDigest();
         }
 

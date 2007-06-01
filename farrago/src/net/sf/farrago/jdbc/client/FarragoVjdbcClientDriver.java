@@ -21,7 +21,6 @@
 */
 package net.sf.farrago.jdbc.client;
 
-
 /**
  * FarragoJdbcClientDriver implements the Farrago client side of the {@link
  * java.sql.Driver} interface via the VJDBC proxy.
@@ -32,7 +31,6 @@ package net.sf.farrago.jdbc.client;
 public class FarragoVjdbcClientDriver
     extends FarragoUnregisteredVjdbcClientDriver
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static {

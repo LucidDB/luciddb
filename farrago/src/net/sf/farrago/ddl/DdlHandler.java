@@ -54,7 +54,6 @@ import org.eigenbase.util.*;
  */
 public abstract class DdlHandler
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final Logger tracer = FarragoTrace.getDdlValidatorTracer();
@@ -142,7 +141,8 @@ public abstract class DdlHandler
             attribute.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         }
         if (!attribute.getIsNullable().equals(
-                NullableTypeEnum.COLUMN_NO_NULLS)) {
+                NullableTypeEnum.COLUMN_NO_NULLS))
+        {
             if (attribute instanceof FemStoredColumn) {
                 // Store the original user declaration, since we might override
                 // isNullable with derived information (for example, columns in
@@ -231,8 +231,8 @@ public abstract class DdlHandler
 
         // Special handling for cursor and columnList types
         if (typeObj == null) {
-            if (element.getType().getName().equals("CURSOR") ||
-                element.getType().getName().equals("COLUMN_LIST"))
+            if (element.getType().getName().equals("CURSOR")
+                || element.getType().getName().equals("COLUMN_LIST"))
             {
                 // previously validated
                 return;
@@ -240,9 +240,8 @@ public abstract class DdlHandler
         }
         if (typeObj instanceof SqlIdentifier) {
             SqlIdentifier id = (SqlIdentifier) typeObj;
-            assert (
-                id.getSimple().equals("CURSOR") ||
-                id.getSimple().equals("COLUMN_LIST"));
+            assert (id.getSimple().equals("CURSOR")
+                || id.getSimple().equals("COLUMN_LIST"));
             element.setType(
                 validator.getStmtValidator().findSqldataType(id));
             element.setCollationName("");
@@ -305,7 +304,8 @@ public abstract class DdlHandler
             typeFamily = SqlTypeFamily.getFamilyForSqlType(typeName);
         }
         if ((typeFamily == SqlTypeFamily.CHARACTER)
-            || (typeFamily == SqlTypeFamily.BINARY)) {
+            || (typeFamily == SqlTypeFamily.BINARY))
+        {
             // convert precision to length
             if (element.getPrecision() != null) {
                 // Minimum column length for char and binary is 1
@@ -342,8 +342,9 @@ public abstract class DdlHandler
             // creation
         } else if (type instanceof FemSqlrowType) {
             FemSqlrowType rowType = (FemSqlrowType) type;
-            for (FemAbstractAttribute column :
-                Util.cast(rowType.getFeature(), FemAbstractAttribute.class))
+            for (
+                FemAbstractAttribute column
+                : Util.cast(rowType.getFeature(), FemAbstractAttribute.class))
             {
                 validateAttribute(column);
             }
@@ -530,13 +531,12 @@ public abstract class DdlHandler
         }
         endLine += (offsetPos.getLineNum() - 1);
 
-        return
-            SqlUtil.newContextException(
-                line,
-                col,
-                endLine,
-                endCol,
-                ex.getCause());
+        return SqlUtil.newContextException(
+            line,
+            col,
+            endLine,
+            endCol,
+            ex.getCause());
     }
 
     private void validateDefaultClause(

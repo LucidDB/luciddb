@@ -43,7 +43,6 @@ import org.eigenbase.util.*;
 public class SqlFunctionalOperator
     extends SqlSpecialOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlFunctionalOperator(
@@ -55,7 +54,8 @@ public class SqlFunctionalOperator
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name,
+        super(
+            name,
             kind,
             pred,
             isLeftAssoc,

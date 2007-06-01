@@ -36,7 +36,6 @@ import org.eigenbase.sql.parser.*;
 public class IntervalSqlType
     extends AbstractSqlType
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private SqlIntervalQualifier intervalQualifier;
@@ -53,7 +52,7 @@ public class IntervalSqlType
     {
         super(
             intervalQualifier.isYearMonth() ? SqlTypeName.INTERVAL_YEAR_MONTH
-                : SqlTypeName.INTERVAL_DAY_TIME,
+            : SqlTypeName.INTERVAL_DAY_TIME,
             isNullable,
             null);
         this.intervalQualifier = intervalQualifier;
@@ -105,7 +104,8 @@ public class IntervalSqlType
         int secondPrec =
             this.intervalQualifier.getStartPrecisionPreservingDefault();
         int fracPrec =
-            SqlIntervalQualifier.combineFractionalSecondPrecisionPreservingDefault(
+            SqlIntervalQualifier
+            .combineFractionalSecondPrecisionPreservingDefault(
                 this.intervalQualifier,
                 that.intervalQualifier);
 
@@ -119,14 +119,17 @@ public class IntervalSqlType
                 SqlIntervalQualifier.combineStartPrecisionPreservingDefault(
                     this.intervalQualifier,
                     that.intervalQualifier);
-        } else if ((null == thisEnd)
-            || (thisEnd.ordinal() < thatStart.ordinal())) {
+        } else if (
+            (null == thisEnd)
+            || (thisEnd.ordinal() < thatStart.ordinal()))
+        {
             thisEnd = thatStart;
         }
 
         if (null != thatEnd) {
             if ((null == thisEnd)
-                || (thisEnd.ordinal() < thatEnd.ordinal())) {
+                || (thisEnd.ordinal() < thatEnd.ordinal()))
+            {
                 thisEnd = thatEnd;
             }
         }
@@ -139,8 +142,10 @@ public class IntervalSqlType
                     thisEnd,
                     fracPrec,
                     SqlParserPos.ZERO));
-        intervalType = typeFactory.createTypeWithNullability(
-            intervalType, nullable);
+        intervalType =
+            typeFactory.createTypeWithNullability(
+                intervalType,
+                nullable);
         return (IntervalSqlType) intervalType;
     }
 

@@ -22,19 +22,16 @@
 package net.sf.farrago.type.runtime;
 
 /**
- * SpecialDataValue is an interface representing a runtime holder for a 
- * data value. It may be used as an alternative to {@link DataValue}.
- * 
- * <p>
- * 
- * Since DataValue is typically used return Jdbc data, this class may be 
- * used to return non-Jdbc data.
+ * SpecialDataValue is an interface representing a runtime holder for a data
+ * value. It may be used as an alternative to {@link DataValue}.
+ *
+ * <p>Since DataValue is typically used return Jdbc data, this class may be used
+ * to return non-Jdbc data.
  *
  * @version $Id$
  */
 public interface SpecialDataValue
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

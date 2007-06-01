@@ -36,7 +36,6 @@ import java.util.regex.*;
  */
 public class SqlSimpleParser
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private final static String subqueryRegex = "\\$subquery\\$";
@@ -44,10 +43,12 @@ public class SqlSimpleParser
     // patterns are made static, to amortize cost of compiling regexps
     static Pattern psq = Pattern.compile(subqueryRegex);
     static Pattern pparen =
-        Pattern.compile("\\([^()]*(SELECT)+[^()]*\\)",
+        Pattern.compile(
+            "\\([^()]*(SELECT)+[^()]*\\)",
             Pattern.CASE_INSENSITIVE);
     static Pattern pparensq =
-        Pattern.compile("\\([^()]*(SELECT)+[^()]*" + subqueryRegex + "$\\)",
+        Pattern.compile(
+            "\\([^()]*(SELECT)+[^()]*" + subqueryRegex + "$\\)",
             Pattern.CASE_INSENSITIVE);
 
     //~ Instance fields --------------------------------------------------------
@@ -144,7 +145,7 @@ public class SqlSimpleParser
     {
         subquery = handleUnion(subquery);
         List<String> tokenList = tokenizeSubquery(subquery);
-        Map<String,List<String>> buckets = bucketByKeyword(tokenList);
+        Map<String, List<String>> buckets = bucketByKeyword(tokenList);
 
         //printBuckets(buckets);
         simplifyBuckets(buckets);
@@ -178,7 +179,7 @@ public class SqlSimpleParser
         return result.toString();
     }
 
-    private String createNewSql(Map<String,List<String>> buckets)
+    private String createNewSql(Map<String, List<String>> buckets)
     {
         StringBuilder sql = new StringBuilder();
         for (String keyword : keywords) {
@@ -276,9 +277,9 @@ public class SqlSimpleParser
 
     // enter the tokens list into different buckets keyed by its preceding
     // SQL keyword
-    private Map<String,List<String>> bucketByKeyword(List<String> tokenList)
+    private Map<String, List<String>> bucketByKeyword(List<String> tokenList)
     {
-        Map<String,List<String>> buckets = new HashMap<String, List<String>>();
+        Map<String, List<String>> buckets = new HashMap<String, List<String>>();
         String curToken = "";
         List<String> curList = null;
         List<String> nokwList = new ArrayList<String>();
@@ -304,7 +305,7 @@ public class SqlSimpleParser
         return buckets;
     }
 
-    private void printBuckets(HashMap<String,List<String>> buckets)
+    private void printBuckets(HashMap<String, List<String>> buckets)
     {
         for (String keyword : buckets.keySet()) {
             List<String> entries = buckets.get(keyword);
@@ -314,7 +315,7 @@ public class SqlSimpleParser
     }
 
     // remove unnecessary (incomplete) keyword clause
-    private void simplifyBuckets(Map<String,List<String>> buckets)
+    private void simplifyBuckets(Map<String, List<String>> buckets)
     {
         Set<String> toRemove = new HashSet<String>();
 
@@ -531,8 +532,10 @@ public class SqlSimpleParser
         {
             if (entries.isEmpty()) {
                 return null;
-            } else if ((entries.size() == 1)
-                && entries.get(0).trim().equals("by")) {
+            } else if (
+                (entries.size() == 1)
+                && entries.get(0).trim().equals("by"))
+            {
                 // a 'group' or 'order' keyword followed by 'by' but no
                 // actual Sql Identifier
                 return null;

@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
  */
 public abstract class Mappings
 {
-
     //~ Constructors -----------------------------------------------------------
 
     private Mappings()
@@ -61,18 +60,16 @@ public abstract class Mappings
             return new Permutation(sourceCount);
         case InverseSurjection:
         case PartialSurjection:
-            return
-                new Mappings.PartialMapping(
-                    sourceCount,
-                    targetCount,
-                    mappingType);
+            return new Mappings.PartialMapping(
+                sourceCount,
+                targetCount,
+                mappingType);
         case PartialFunction:
         case Function:
-            return
-                new PartialFunctionImpl(
-                    sourceCount,
-                    targetCount,
-                    mappingType);
+            return new PartialFunctionImpl(
+                sourceCount,
+                targetCount,
+                mappingType);
         case InverseFunction:
         case InversePartialFunction:
             return new InverseMapping(
@@ -240,9 +237,9 @@ public abstract class Mappings
                 return false;
             }
             for (int i = 0; i < sourceCount; i++) {
-                  if (getSource(i) != i) {
-                      return false;
-                  }
+                if (getSource(i) != i) {
+                    return false;
+                }
             }
             return true;
         }
@@ -322,8 +319,7 @@ public abstract class Mappings
         public boolean equals(Object obj)
         {
             // not very efficient
-            return
-                (obj instanceof Permutation)
+            return (obj instanceof Permutation)
                 && toString().equals(obj.toString());
         }
     }
@@ -341,8 +337,7 @@ public abstract class Mappings
 
         public boolean hasNext()
         {
-            return
-                (i < mapping.getSourceCount())
+            return (i < mapping.getSourceCount())
                 || (mapping.getSourceCount() == -1);
         }
 
@@ -350,8 +345,8 @@ public abstract class Mappings
         {
             int x = i++;
             return new IntPair(
-                    x,
-                    mapping.getTarget(x));
+                x,
+                mapping.getTarget(x));
         }
 
         public void remove()
@@ -474,8 +469,8 @@ public abstract class Mappings
          *
          * @param sourceList List whose i'th element is the source of target #i
          * @param sourceCount Number of elements in the source domain
-         * @param mappingType Mapping type, must be
-         * {@link org.eigenbase.util.mapping.MappingType#PartialSurjection} or
+         * @param mappingType Mapping type, must be {@link
+         * org.eigenbase.util.mapping.MappingType#PartialSurjection} or
          * stronger.
          */
         public PartialMapping(
@@ -528,11 +523,10 @@ public abstract class Mappings
 
         public Mapping inverse()
         {
-            return
-                new PartialMapping(
-                    targets.clone(),
-                    sources.clone(),
-                    mappingType.inverse());
+            return new PartialMapping(
+                targets.clone(),
+                sources.clone(),
+                mappingType.inverse());
         }
 
         public Iterator<IntPair> iterator()
@@ -751,24 +745,24 @@ public abstract class Mappings
         public Iterator<IntPair> iterator()
         {
             return new Iterator<IntPair>() {
-                    int i = 0;
+                int i = 0;
 
-                    public boolean hasNext()
-                    {
-                        return (size < 0) || (i < size);
-                    }
+                public boolean hasNext()
+                {
+                    return (size < 0) || (i < size);
+                }
 
-                    public IntPair next()
-                    {
-                        int x = i++;
-                        return new IntPair(x, x);
-                    }
+                public IntPair next()
+                {
+                    int x = i++;
+                    return new IntPair(x, x);
+                }
 
-                    public void remove()
-                    {
-                        throw new UnsupportedOperationException();
-                    }
-                };
+                public void remove()
+                {
+                    throw new UnsupportedOperationException();
+                }
+            };
         }
     }
 
@@ -792,10 +786,10 @@ public abstract class Mappings
 
         public Mapping inverse()
         {
-            return
-                new OverridingTargetMapping((TargetMapping) parent.inverse(),
-                    target,
-                    source);
+            return new OverridingTargetMapping(
+                (TargetMapping) parent.inverse(),
+                target,
+                source);
         }
 
         public MappingType getMappingType()
@@ -817,8 +811,8 @@ public abstract class Mappings
         {
             // FIXME: It's possible that parent was not the identity but that
             // this overriding fixed it.
-            return source == target &&
-                parent.isIdentity();
+            return (source == target)
+                && parent.isIdentity();
         }
 
         public Iterator<IntPair> iterator()
@@ -852,11 +846,10 @@ public abstract class Mappings
 
         public Mapping inverse()
         {
-            return
-                new OverridingSourceMapping(
-                    parent.inverse(),
-                    source,
-                    target);
+            return new OverridingSourceMapping(
+                parent.inverse(),
+                source,
+                target);
         }
 
         public MappingType getMappingType()
@@ -869,8 +862,8 @@ public abstract class Mappings
         {
             // FIXME: Possible that parent is not identity but this overriding
             // fixes it.
-            return source == target &&
-                ((Mapping) parent).isIdentity();
+            return (source == target)
+                && ((Mapping) parent).isIdentity();
         }
 
         public int getTarget(int source)
@@ -938,42 +931,42 @@ public abstract class Mappings
         public Iterator<IntPair> iterator()
         {
             return new Iterator<IntPair>() {
-                    int i = -1;
+                int i = -1;
 
-                    {
-                        advance();
-                    }
+                {
+                    advance();
+                }
 
-                    private void advance()
-                    {
-                        while (true) {
-                            ++i;
-                            if (i >= sourceCount) {
-                                break; // end
-                            }
-                            if (targets[i] >= 0) {
-                                break; // found one
-                            }
+                private void advance()
+                {
+                    while (true) {
+                        ++i;
+                        if (i >= sourceCount) {
+                            break; // end
+                        }
+                        if (targets[i] >= 0) {
+                            break; // found one
                         }
                     }
+                }
 
-                    public boolean hasNext()
-                    {
-                        return i < sourceCount;
-                    }
+                public boolean hasNext()
+                {
+                    return i < sourceCount;
+                }
 
-                    public IntPair next()
-                    {
-                        final IntPair pair = new IntPair(i, targets[i]);
-                        advance();
-                        return pair;
-                    }
+                public IntPair next()
+                {
+                    final IntPair pair = new IntPair(i, targets[i]);
+                    advance();
+                    return pair;
+                }
 
-                    public void remove()
-                    {
-                        throw new UnsupportedOperationException();
-                    }
-                };
+                public void remove()
+                {
+                    throw new UnsupportedOperationException();
+                }
+            };
         }
 
         public MappingType getMappingType()
@@ -1032,8 +1025,7 @@ public abstract class Mappings
         public Iterator<IntPair> iterator()
         {
             final Iterator<IntPair> parentIter = parent.iterator();
-            return new Iterator<IntPair>()
-            {
+            return new Iterator<IntPair>() {
                 public boolean hasNext()
                 {
                     return parentIter.hasNext();

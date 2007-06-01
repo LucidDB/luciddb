@@ -47,12 +47,12 @@ import org.eigenbase.sql.validate.*;
 public class SqlOverOperator
     extends SqlBinaryOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlOverOperator()
     {
-        super("OVER",
+        super(
+            "OVER",
             SqlKind.Over,
             20,
             true,
@@ -96,7 +96,8 @@ public class SqlOverOperator
      *
      * @param visitor Visitor.
      */
-    public <R> void acceptCall(SqlVisitor<R> visitor,
+    public <R> void acceptCall(
+        SqlVisitor<R> visitor,
         SqlCall call,
         boolean onlyExpressions,
         SqlBasicVisitor.ArgHandler<R> argHandler)

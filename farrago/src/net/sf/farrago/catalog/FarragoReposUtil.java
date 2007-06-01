@@ -50,7 +50,6 @@ import org.netbeans.mdr.persistence.*;
  */
 public abstract class FarragoReposUtil
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -68,7 +67,8 @@ public abstract class FarragoReposUtil
         throws Exception
     {
         XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
-        ExportRefProvider refProvider = new ExportRefProvider(
+        ExportRefProvider refProvider =
+            new ExportRefProvider(
                 subPackageName);
         xmiWriter.getConfiguration().setReferenceProvider(refProvider);
         FileOutputStream outStream = new FileOutputStream(outputFile);
@@ -95,7 +95,7 @@ public abstract class FarragoReposUtil
         ImportRefResolver refResolver =
             new ImportRefResolver(
                 (Namespace) mdrRepos.getExtent("FarragoCatalog")
-                .refMetaObject());
+                                    .refMetaObject());
         xmiReader.getConfiguration().setReferenceResolver(refResolver);
         boolean rollback = false;
         try {
@@ -364,10 +364,9 @@ public abstract class FarragoReposUtil
                 nameList.add(name);
                 if (subPackageName.equals(name)) {
                     subPackageFound = true;
-                    return
-                        new XMIReferenceProvider.XMIReference(
-                            "SUBMODEL",
-                            Long.toString(JmiUtil.getObjectId(obj)));
+                    return new XMIReferenceProvider.XMIReference(
+                        "SUBMODEL",
+                        Long.toString(JmiUtil.getObjectId(obj)));
                 }
                 parent = (RefObject) parent.refImmediateComposite();
             } while (parent != null);
@@ -380,10 +379,9 @@ public abstract class FarragoReposUtil
                 }
                 sb.append(name);
             }
-            return
-                new XMIReferenceProvider.XMIReference(
-                    "REPOS",
-                    sb.toString());
+            return new XMIReferenceProvider.XMIReference(
+                "REPOS",
+                sb.toString());
         }
     }
 

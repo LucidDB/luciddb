@@ -40,7 +40,6 @@ import org.eigenbase.sql.parser.*;
 public class IdentifierNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlIdentifier id;

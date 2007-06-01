@@ -35,7 +35,6 @@ import java.util.logging.*;
  */
 public class EigenbaseTimingTracer
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final DecimalFormat decimalFormat =

@@ -39,7 +39,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlCall
     extends SqlNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private SqlOperator operator;
@@ -119,7 +118,8 @@ public class SqlCall
     public SqlNode clone(SqlParserPos pos)
     {
         return operator.createCall(
-            pos, SqlNode.cloneArray(operands));
+            pos,
+            SqlNode.cloneArray(operands));
     }
 
     public void unparse(
@@ -129,7 +129,8 @@ public class SqlCall
     {
         if ((leftPrec > operator.getLeftPrec())
             || ((operator.getRightPrec() <= rightPrec) && (rightPrec != 0))
-            || (writer.isAlwaysUseParentheses() && isA(SqlKind.Expression))) {
+            || (writer.isAlwaysUseParentheses() && isA(SqlKind.Expression)))
+        {
             final SqlWriter.Frame frame = writer.startList("(", ")");
             operator.unparse(writer, operands, 0, 0);
             writer.endList(frame);

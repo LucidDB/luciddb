@@ -34,9 +34,10 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
 
+
 /**
- * FennelReshapeRel represents the Fennel implementation of an execution
- * stream that does projections, simple casting, and simple filtering.
+ * FennelReshapeRel represents the Fennel implementation of an execution stream
+ * that does projections, simple casting, and simple filtering.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -45,13 +46,14 @@ class FennelReshapeRel
     extends FennelSingleRel
 {
     //~ Instance fields --------------------------------------------------------
-    Integer[] projection;   
+
+    Integer [] projection;
     RelDataType outputRowType;
     CompOperatorEnum compOp;
-    Integer[] filterOrdinals;
+    Integer [] filterOrdinals;
     List<RexLiteral> literals;
     RelDataType filterRowType;
-    
+
     RexNode condition;
 
     //~ Constructors -----------------------------------------------------------
@@ -71,21 +73,21 @@ class FennelReshapeRel
     public FennelReshapeRel(
         RelOptCluster cluster,
         RelNode child,
-        Integer[] projection,
+        Integer [] projection,
         RelDataType outputRowType,
         CompOperatorEnum compOp,
-        Integer[] filterOrdinals,
+        Integer [] filterOrdinals,
         List<RexLiteral> literals,
         RelDataType filterRowType)
     {
         super(cluster, child);
         this.projection = projection;
-        this.outputRowType = outputRowType;   
+        this.outputRowType = outputRowType;
         this.compOp = compOp;
         this.filterOrdinals = filterOrdinals;
         this.literals = literals;
         this.filterRowType = filterRowType;
-        
+
         condition = null;
     }
 
@@ -112,17 +114,17 @@ class FennelReshapeRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = RelMetadataQuery.getRowCount(this);
+
         // multiple by .5 so this calc comes out smaller than both java
         // calc and fennel calc
         double dCpu =
             RelMetadataQuery.getRowCount(getChild())
-            * (projection.length + filterOrdinals.length) *.5;
+            * (projection.length + filterOrdinals.length) * .5;
 
-        return
-            planner.makeCost(
-                dRows,
-                dCpu,
-                0);
+        return planner.makeCost(
+            dRows,
+            dCpu,
+            0);
     }
 
     // implement RelNode
@@ -130,9 +132,9 @@ class FennelReshapeRel
     {
         // reconstruct a RexNode filter based on the filter ordinals and
         // the literals they're being compared against
-        if (condition == null && filterOrdinals.length > 0) {
+        if ((condition == null) && (filterOrdinals.length > 0)) {
             RexBuilder rexBuilder = getCluster().getRexBuilder();
-            RelDataTypeField[] fields = getChild().getRowType().getFields();
+            RelDataTypeField [] fields = getChild().getRowType().getFields();
             List<RexNode> filterList = new ArrayList<RexNode>();
             for (int i = 0; i < filterOrdinals.length; i++) {
                 RexNode input =
@@ -145,14 +147,12 @@ class FennelReshapeRel
                         input,
                         literals.get(i)));
             }
-            condition =
-                RexUtil.andRexNodeList(rexBuilder, filterList);
+            condition = RexUtil.andRexNodeList(rexBuilder, filterList);
         }
-        
-        return
-            FilterRel.estimateFilteredRows(
-                getChild(),
-                condition);
+
+        return FilterRel.estimateFilteredRows(
+            getChild(),
+            condition);
     }
 
     // override RelNode
@@ -161,7 +161,7 @@ class FennelReshapeRel
         if (filterOrdinals.length == 0) {
             pw.explain(
                 this,
-                new String[] { "child", "projection", "outputRowType"},
+                new String[] { "child", "projection", "outputRowType" },
                 new Object[] {
                     Arrays.asList(projection),
                     outputRowType.getFullTypeString()
@@ -173,23 +173,22 @@ class FennelReshapeRel
                 this,
                 new String[] {
                     "child",
-                    "projection",             
+                    "projection",
                     "filterOp",
                     "filterOrdinals",
                     "filterTuple",
                     "outputRowType"
                 },
                 new Object[] {
-                    Arrays.asList(projection),                 
+                    Arrays.asList(projection),
                     compOp.toString(),
                     Arrays.asList(filterOrdinals),
                     literals.toString(),
                     outputRowType.getFullTypeString()
                 });
         }
-            
     }
-    
+
     public RelDataType deriveRowType()
     {
         return outputRowType;
@@ -206,9 +205,9 @@ class FennelReshapeRel
         implementor.addDataFlowFromProducerToConsumer(
             childInput,
             streamDef);
-        
+
         streamDef.setCompareOp(compOp);
-        
+
         streamDef.setOutputProjection(
             FennelRelUtil.createTupleProjection(repos, projection));
         streamDef.setOutputDesc(
@@ -216,22 +215,22 @@ class FennelReshapeRel
                 repos,
                 getCluster().getRexBuilder().getTypeFactory(),
                 outputRowType));
-        
+
         streamDef.setInputCompareProjection(
             FennelRelUtil.createTupleProjection(repos, filterOrdinals));
-        
+
         if (filterOrdinals.length == 0) {
             streamDef.setTupleCompareBytesBase64("");
         } else {
             List<List<RexLiteral>> compareTuple =
                 new ArrayList<List<RexLiteral>>();
-            compareTuple.add(literals);            
+            compareTuple.add(literals);
             streamDef.setTupleCompareBytesBase64(
                 FennelRelUtil.convertTuplesToBase64String(
                     filterRowType,
                     compareTuple));
         }
-        
+
         return streamDef;
     }
 }

@@ -32,7 +32,6 @@ import org.eigenbase.relopt.*;
 public class RemoveDistinctRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public RemoveDistinctRule()
@@ -62,7 +61,8 @@ public class RemoveDistinctRule
         RelNode child = distinct.getChild();
         if (child.isDistinct()) {
             child = call.getPlanner().register(child, distinct);
-            child = convert(
+            child =
+                convert(
                     child,
                     distinct.getTraits());
             if (child != null) {

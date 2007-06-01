@@ -38,7 +38,6 @@ import org.eigenbase.rex.*;
 public class RelMdUniqueKeys
     extends ReflectiveRelMetadataProvider
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public Set<BitSet> getUniqueKeys(FilterRelBase rel)
@@ -65,18 +64,17 @@ public class RelMdUniqueKeys
         //
         // Further more, the unique bitset coming from the child needs
         // to be mapped to match the output of the project.
-        Map<Integer, Integer> mapInToOutPos =
-            new HashMap<Integer, Integer>();            
-        
-        RexNode[] projExprs = rel.getProjectExps();
+        Map<Integer, Integer> mapInToOutPos = new HashMap<Integer, Integer>();
+
+        RexNode [] projExprs = rel.getProjectExps();
 
         Set<BitSet> projUniqueKeySet = new HashSet<BitSet>();
-        
+
         // Build an input to ouput position map.
-        for (int i = 0; i < projExprs.length; i ++) {
+        for (int i = 0; i < projExprs.length; i++) {
             RexNode projExpr = projExprs[i];
             if (projExpr instanceof RexInputRef) {
-                mapInToOutPos.put(((RexInputRef)projExpr).getIndex(), i);
+                mapInToOutPos.put(((RexInputRef) projExpr).getIndex(), i);
             } else {
                 continue;
             }
@@ -87,25 +85,28 @@ public class RelMdUniqueKeys
             // return empty set.
             return projUniqueKeySet;
         }
-        
-        Set<BitSet> childUniqueKeySet = 
+
+        Set<BitSet> childUniqueKeySet =
             RelMetadataQuery.getUniqueKeys(rel.getChild());
-        
+
         if (childUniqueKeySet != null) {
             // Now add to the projUniqueKeySet the child keys that are fully
             // projected.
             Iterator itChild = childUniqueKeySet.iterator();
-            
+
             while (itChild.hasNext()) {
                 BitSet colMask = (BitSet) itChild.next();
                 BitSet tmpMask = new BitSet();
                 boolean completeKeyProjected = true;
-                for (int bit = colMask.nextSetBit(0); bit >= 0;
-                    bit = colMask.nextSetBit(bit + 1)) {
+                for (
+                    int bit = colMask.nextSetBit(0);
+                    bit >= 0;
+                    bit = colMask.nextSetBit(bit + 1))
+                {
                     if (mapInToOutPos.containsKey(bit)) {
                         tmpMask.set(mapInToOutPos.get(bit));
                     } else {
-                        // Skip the child unique key if part of it is not 
+                        // Skip the child unique key if part of it is not
                         // projected.
                         completeKeyProjected = false;
                         break;
@@ -114,9 +115,9 @@ public class RelMdUniqueKeys
                 if (completeKeyProjected) {
                     projUniqueKeySet.add(tmpMask);
                 }
-            }            
+            }
         }
-        
+
         return projUniqueKeySet;
     }
 
@@ -137,7 +138,7 @@ public class RelMdUniqueKeys
         Set<BitSet> retSet = new HashSet<BitSet>();
         Set<BitSet> leftSet = RelMetadataQuery.getUniqueKeys(left);
         Set<BitSet> rightSet = null;
-        
+
         Set<BitSet> tmpRightSet = RelMetadataQuery.getUniqueKeys(right);
         int nFieldsOnLeft = left.getRowType().getFieldCount();
 
@@ -147,13 +148,16 @@ public class RelMdUniqueKeys
             while (itRight.hasNext()) {
                 BitSet colMask = (BitSet) itRight.next();
                 BitSet tmpMask = new BitSet();
-                for (int bit = colMask.nextSetBit(0); bit >= 0;
-                    bit = colMask.nextSetBit(bit + 1)) {
+                for (
+                    int bit = colMask.nextSetBit(0);
+                    bit >= 0;
+                    bit = colMask.nextSetBit(bit + 1))
+                {
                     tmpMask.set(bit + nFieldsOnLeft);
                 }
                 rightSet.add(tmpMask);
             }
-        
+
             if (leftSet != null) {
                 itRight = rightSet.iterator();
                 while (itRight.hasNext()) {
@@ -163,13 +167,13 @@ public class RelMdUniqueKeys
                         BitSet colMaskLeft = (BitSet) itLeft.next();
                         BitSet colMaskConcat = new BitSet();
                         colMaskConcat.or(colMaskLeft);
-                        colMaskConcat.or(colMaskRight);                
+                        colMaskConcat.or(colMaskRight);
                         retSet.add(colMaskConcat);
                     }
                 }
             }
         }
-            
+
         // locate the columns that participate in equijoins
         BitSet leftJoinCols = new BitSet();
         BitSet rightJoinCols = new BitSet();
@@ -187,18 +191,22 @@ public class RelMdUniqueKeys
         Boolean rightUnique =
             RelMetadataQuery.areColumnsUnique(right, rightJoinCols);
 
-        // if the right hand side is unique on its equijoin columns, then we can 
+        // if the right hand side is unique on its equijoin columns, then we can
         // add the unique keys from left if the left hand side is not null
         // generating
-        if ((rightUnique != null) && rightUnique && (leftSet != null) &&
-            !(rel.getJoinType().generatesNullsOnLeft()))
+        if ((rightUnique != null)
+            && rightUnique
+            && (leftSet != null)
+            && !(rel.getJoinType().generatesNullsOnLeft()))
         {
-            retSet.addAll(leftSet);            
+            retSet.addAll(leftSet);
         }
 
         // same as above except left and right are reversed
-        if ((leftUnique != null) && leftUnique && (rightSet != null) &&
-            !(rel.getJoinType().generatesNullsOnRight()))
+        if ((leftUnique != null)
+            && leftUnique
+            && (rightSet != null)
+            && !(rel.getJoinType().generatesNullsOnRight()))
         {
             retSet.addAll(rightSet);
         }

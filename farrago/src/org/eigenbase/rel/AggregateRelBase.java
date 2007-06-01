@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
 public abstract class AggregateRelBase
     extends SingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected Call [] aggCalls;
@@ -65,8 +64,7 @@ public abstract class AggregateRelBase
     // implement RelNode
     public boolean isDistinct()
     {
-        return
-            (aggCalls.length == 0)
+        return (aggCalls.length == 0)
             && (groupCount == getChild().getRowType().getFieldList().size());
     }
 
@@ -131,28 +129,27 @@ public abstract class AggregateRelBase
             assert typeMatchesInferred(aggCall, true);
             types[groupCount + i] = aggCall.getType();
         }
-        return
-            getCluster().getTypeFactory().createStructType(
-                new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return groupCount + aggCalls.length;
-                    }
+        return getCluster().getTypeFactory().createStructType(
+            new RelDataTypeFactory.FieldInfo() {
+                public int getFieldCount()
+                {
+                    return groupCount + aggCalls.length;
+                }
 
-                    public String getFieldName(int index)
-                    {
-                        if (index < groupCount) {
-                            return childType.getFields()[index].getName();
-                        } else {
-                            return "$f" + index;
-                        }
+                public String getFieldName(int index)
+                {
+                    if (index < groupCount) {
+                        return childType.getFields()[index].getName();
+                    } else {
+                        return "$f" + index;
                     }
+                }
 
-                    public RelDataType getFieldType(int index)
-                    {
-                        return types[index];
-                    }
-                });
+                public RelDataType getFieldType(int index)
+                {
+                    return types[index];
+                }
+            });
     }
 
     /**
@@ -171,13 +168,12 @@ public abstract class AggregateRelBase
         AggCallBinding callBinding = aggCall.createBinding(this);
         RelDataType type = aggFunction.inferReturnType(callBinding);
         RelDataType expectedType = aggCall.getType();
-        return
-            RelOptUtil.eq(
-                "aggCall type",
-                expectedType,
-                "inferred type",
-                type,
-                fail);
+        return RelOptUtil.eq(
+            "aggCall type",
+            expectedType,
+            "inferred type",
+            type,
+            fail);
     }
 
     /**
@@ -264,8 +260,7 @@ public abstract class AggregateRelBase
                 return false;
             }
             Call other = (Call) o;
-            return
-                aggregation.equals(other.aggregation)
+            return aggregation.equals(other.aggregation)
                 && (distinct == other.distinct)
                 && Arrays.equals(args, other.args);
         }
@@ -276,12 +271,11 @@ public abstract class AggregateRelBase
          */
         public AggCallBinding createBinding(AggregateRelBase aggregateRelBase)
         {
-            return
-                new AggCallBinding(
-                    aggregateRelBase.getCluster().getTypeFactory(),
-                    (SqlAggFunction) aggregation,
-                    aggregateRelBase,
-                    args);
+            return new AggCallBinding(
+                aggregateRelBase.getCluster().getTypeFactory(),
+                (SqlAggFunction) aggregation,
+                aggregateRelBase,
+                args);
         }
     }
 

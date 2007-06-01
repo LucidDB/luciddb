@@ -33,6 +33,7 @@ import java.util.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
 
+
 /**
  * FarragoSyntheticObject refines SyntheticObject with Farrago-specific runtime
  * information such as null values.
@@ -44,7 +45,6 @@ public abstract class FarragoSyntheticObject
     extends SyntheticObject
     implements Struct
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -153,7 +153,8 @@ public abstract class FarragoSyntheticObject
                 // NOTE:  order has to match Fennel's TupleAccessor.cpp
                 if (obj instanceof NullablePrimitive.NullableBoolean) {
                     // add this field's holder object as a bit value
-                    bitReferenceList.add((NullablePrimitive.NullableBoolean) obj);
+                    bitReferenceList.add(
+                        (NullablePrimitive.NullableBoolean) obj);
                 } else if (obj instanceof Boolean) {
                     // make up a reflective reference to this field
                     // as a bit value
@@ -213,7 +214,7 @@ public abstract class FarragoSyntheticObject
     }
 
     // implement Struct
-    public Object [] getAttributes(Map<String,Class<?>> map)
+    public Object [] getAttributes(Map<String, Class<?>> map)
     {
         throw new UnsupportedOperationException();
     }
@@ -237,26 +238,24 @@ public abstract class FarragoSyntheticObject
     }
 
     /**
-     * Called at runtime to implement the
-     * {@link org.eigenbase.sql.fun.SqlStdOperatorTable#isDifferentFromOperator}
+     * Called at runtime to implement the {@link
+     * org.eigenbase.sql.fun.SqlStdOperatorTable#isDifferentFromOperator}
      * operator in a row-size fashion.
      *
      * @param row1 first row to compare
+     * @param row2 second row to compare (must be of exact same type as row1)
      *
-     * @param row2 second row to compare (must be of exact same type
-     * as row1)
-     *
-     * @return whether row1 differs from row2 according to the
-     * definition of $IS_DIFFERENT_FROM
+     * @return whether row1 differs from row2 according to the definition of
+     * $IS_DIFFERENT_FROM
      */
     public static boolean testIsDifferentFrom(
         FarragoSyntheticObject row1,
         FarragoSyntheticObject row2)
     {
-        assert(row1.getClass() == row2.getClass());
+        assert (row1.getClass() == row2.getClass());
         Object [] vals1 = row1.getAttributes();
         Object [] vals2 = row2.getAttributes();
-        assert(vals1.length == vals2.length);
+        assert (vals1.length == vals2.length);
         for (int i = 0; i < vals1.length; ++i) {
             Object val1 = vals1[i];
             Object val2 = vals2[i];
@@ -264,6 +263,7 @@ public abstract class FarragoSyntheticObject
                 // one is NULL but the other is not
                 return true;
             }
+
             // fast object identity test also handles case of both NULL
             if (val1 != val2) {
                 // Because types are identical, we can use equals

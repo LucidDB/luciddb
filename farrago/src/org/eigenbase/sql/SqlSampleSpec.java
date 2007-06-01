@@ -21,8 +21,6 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.SqlParserPos;
-
 /**
  * Specification of a SQL sample.
  *
@@ -36,12 +34,11 @@ import org.eigenbase.sql.parser.SqlParserPos;
  * declares a sample which is created using {@link #createNamed}.</p>
  *
  * <p>A sample is not a {@link SqlNode}. To include it in a parse tree, wrap it
- * as a literal, viz:
- * {@link SqlLiteral#createSample(SqlSampleSpec, SqlParserPos)}.
+ * as a literal, viz: {@link SqlLiteral#createSample(SqlSampleSpec,
+ * SqlParserPos)}.
  */
 public abstract class SqlSampleSpec
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected SqlSampleSpec()
@@ -77,8 +74,7 @@ public abstract class SqlSampleSpec
 
         public String toString()
         {
-            return
-                "SUBSTITUTE("
+            return "SUBSTITUTE("
                 + SqlUtil.eigenbaseDialect.quoteStringLiteral(name)
                 + ")";
         }

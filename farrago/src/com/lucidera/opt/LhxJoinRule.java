@@ -41,7 +41,6 @@ import org.eigenbase.rex.*;
 public class LhxJoinRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public LhxJoinRule()
@@ -83,7 +82,8 @@ public class LhxJoinRule
                 filterNulls);
 
         if ((nonEquiCondition != null)
-            && (joinRel.getJoinType() != JoinRelType.INNER)) {
+            && (joinRel.getJoinType() != JoinRelType.INNER))
+        {
             // Cannot use hash outer join types if there're non-equi join
             // conditions.
             // Note this type of join cannot be implemented by cartesian
@@ -104,7 +104,8 @@ public class LhxJoinRule
 
         RelNode [] inputRels = new RelNode[] { leftRel, rightRel };
 
-        RelOptUtil.projectJoinInputs(inputRels,
+        RelOptUtil.projectJoinInputs(
+            inputRels,
             leftJoinKeys,
             rightJoinKeys,
             leftKeys,
@@ -204,7 +205,8 @@ public class LhxJoinRule
 
             // Now let's create a project rel on the output of the join.
             RelNode projectOutputRel =
-                CalcRel.createProject(rel,
+                CalcRel.createProject(
+                    rel,
                     newProjectOutputFields,
                     newProjectOutputNames);
 
@@ -220,7 +222,8 @@ public class LhxJoinRule
         RexNode extraFilter)
     {
         if (extraFilter != null) {
-            rel = new FilterRel(
+            rel =
+                new FilterRel(
                     rel.getCluster(),
                     rel,
                     extraFilter);

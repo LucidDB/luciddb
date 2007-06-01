@@ -47,7 +47,6 @@ public class FarragoRJConnectionServer
     extends RJConnectionServer
     implements FarragoRJConnectionInterface
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -85,11 +84,11 @@ public class FarragoRJConnectionServer
         Properties options)
         throws RemoteException, SQLException
     {
-        return
-            new FarragoRJMedDataWrapperServer(farragoConnection,
-                mofId,
-                libraryName,
-                options);
+        return new FarragoRJMedDataWrapperServer(
+            farragoConnection,
+            mofId,
+            libraryName,
+            options);
     }
 }
 

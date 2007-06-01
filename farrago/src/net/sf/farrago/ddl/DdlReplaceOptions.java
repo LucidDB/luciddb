@@ -33,7 +33,6 @@ import org.eigenbase.sql.*;
  */
 public class DdlReplaceOptions
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private boolean isReplace;

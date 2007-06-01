@@ -35,7 +35,6 @@ import org.eigenbase.sql.*;
  */
 public interface SqlValidatorTable
 {
-
     //~ Methods ----------------------------------------------------------------
 
     RelDataType getRowType();

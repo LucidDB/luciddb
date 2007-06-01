@@ -21,15 +21,15 @@
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.runtime.*;
-import net.sf.farrago.resource.*;
+import java.util.List;
+
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.runtime.*;
 
 import openjava.mop.*;
 
 import openjava.ptree.*;
-
-import java.util.List;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
@@ -40,6 +40,7 @@ import org.eigenbase.rex.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+
 
 /**
  * FarragoJavaUdxRel is the implementation for a {@link TableFunctionRel} which
@@ -52,14 +53,63 @@ public class FarragoJavaUdxRel
     extends TableFunctionRelBase
     implements JavaRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String serverMofId;
 
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a <code>FarragoJavaUdxRel</code>.
+     *
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
+     * to
+     * @param rexCall function invocation expression
+     * @param rowType row type produced by function
+     * @param serverMofId MOFID of data server to associate with this UDX
+     * invocation, or null for none
+     * @param inputs 0 or more relational inputs
+     */
+    public FarragoJavaUdxRel(
+        RelOptCluster cluster,
+        RexNode rexCall,
+        RelDataType rowType,
+        String serverMofId,
+        RelNode [] inputs)
+    {
+        super(
+            cluster,
+            new RelTraitSet(CallingConvention.ITERATOR),
+            rexCall,
+            rowType,
+            inputs);
+        this.serverMofId = serverMofId;
+    }
+
+    /**
+     * Creates a <code>FarragoJavaUdxRel</code> with no relational inputs.
+     *
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
+     * to
+     * @param rexCall function invocation expression
+     * @param rowType row type produced by function
+     * @param serverMofId MOFID of data server to associate with this UDX
+     * invocation, or null for none
+     */
+    public FarragoJavaUdxRel(
+        RelOptCluster cluster,
+        RexNode rexCall,
+        RelDataType rowType,
+        String serverMofId)
+    {
+        this(cluster, rexCall, rowType, serverMofId, RelNode.emptyArray);
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Constructs a new instance of {@link FarragoJavaUdxRel} via a lookup from
-     * the catalog.  This is intended for use by optimizer rules which need to
+     * the catalog. This is intended for use by optimizer rules which need to
      * insert system-defined UDX invocations into a plan.
      *
      * @param preparingStmt statement being prepared
@@ -68,8 +118,8 @@ public class FarragoJavaUdxRel
      * (either via the SPECIFIC keyword or the invocation name if SPECIFIC was
      * not specified); this can be a qualified name, possibly with quoted
      * identifiers, e.g. x.y.z or x."y".z
-     * @param serverMofId if not null, the invoked UDX can access a
-     * SQL/MED data server with the given MOFID at runtime via {@link
+     * @param serverMofId if not null, the invoked UDX can access a SQL/MED data
+     * server with the given MOFID at runtime via {@link
      * FarragoUdrRuntime#getDataServerRuntimeSupport}
      * @param args arguments to UDX invocation
      * @param relInputs relational inputs
@@ -139,60 +189,10 @@ public class FarragoJavaUdxRel
         // Optimizer wants us to preserve original types,
         // so cast back for the final result.
         return RelOptUtil.createCastRel(
-                udxRel,
-                rowType,
-                true);
-    }
-
-    //~ Constructors -----------------------------------------------------------
-
-    /**
-     * Creates a <code>FarragoJavaUdxRel</code>.
-     *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
-     * to
-     * @param rexCall function invocation expression
-     * @param rowType row type produced by function
-     * @param serverMofId MOFID of data server to associate with this UDX
-     * invocation, or null for none
-     * @param inputs 0 or more relational inputs
-     */
-    public FarragoJavaUdxRel(
-        RelOptCluster cluster,
-        RexNode rexCall,
-        RelDataType rowType,
-        String serverMofId,
-        RelNode [] inputs)
-    {
-        super(
-            cluster,
-            new RelTraitSet(CallingConvention.ITERATOR),
-            rexCall,
+            udxRel,
             rowType,
-            inputs);
-        this.serverMofId = serverMofId;
+            true);
     }
-
-    /**
-     * Creates a <code>FarragoJavaUdxRel</code> with no relational inputs.
-     *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
-     * to
-     * @param rexCall function invocation expression
-     * @param rowType row type produced by function
-     * @param serverMofId MOFID of data server to associate with this UDX
-     * invocation, or null for none
-     */
-    public FarragoJavaUdxRel(
-        RelOptCluster cluster,
-        RexNode rexCall,
-        RelDataType rowType,
-        String serverMofId)
-    {
-        this(cluster, rexCall, rowType, serverMofId, RelNode.emptyArray);
-    }
-
-    //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
     public FarragoJavaUdxRel clone()
@@ -277,12 +277,12 @@ public class FarragoJavaUdxRel
             new RexShuttle() {
                 public RexNode visitInputRef(RexInputRef inputRef)
                 {
-                    return
-                        rexBuilder.makeJava(
-                            getCluster().getEnv(),
-                            childExprs[inputRef.getIndex()]);
+                    return rexBuilder.makeJava(
+                        getCluster().getEnv(),
+                        childExprs[inputRef.getIndex()]);
                 }
             };
+
         RexNode rewrittenCall = getCall().accept(shuttle);
 
         MemberDeclarationList memberList = new MemberDeclarationList();
@@ -312,7 +312,8 @@ public class FarragoJavaUdxRel
                 executeMethodBody);
         memberList.add(executeMethodDecl);
 
-        Expression typeLookupCall = generateTypeLookupCall(
+        Expression typeLookupCall =
+            generateTypeLookupCall(
                 implementor,
                 this);
 

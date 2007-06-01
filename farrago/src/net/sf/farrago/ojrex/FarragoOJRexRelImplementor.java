@@ -31,7 +31,6 @@ package net.sf.farrago.ojrex;
  */
 public interface FarragoOJRexRelImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

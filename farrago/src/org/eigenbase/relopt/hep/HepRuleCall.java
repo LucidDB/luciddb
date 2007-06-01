@@ -38,7 +38,6 @@ import org.eigenbase.relopt.*;
 public class HepRuleCall
     extends RelOptRuleCall
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private List<RelNode> results;

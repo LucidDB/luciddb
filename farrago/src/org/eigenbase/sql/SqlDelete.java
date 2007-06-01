@@ -33,7 +33,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlDelete
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions

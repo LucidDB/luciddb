@@ -42,7 +42,6 @@ import org.eigenbase.util.*;
 public class LiteralOperandTypeChecker
     implements SqlSingleOperandTypeChecker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private boolean allowNull;
@@ -89,12 +88,11 @@ public class LiteralOperandTypeChecker
         SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        return
-            checkSingleOperandType(
-                callBinding,
-                callBinding.getCall().operands[0],
-                0,
-                throwOnFailure);
+        return checkSingleOperandType(
+            callBinding,
+            callBinding.getCall().operands[0],
+            0,
+            throwOnFailure);
     }
 
     public SqlOperandCountRange getOperandCountRange()

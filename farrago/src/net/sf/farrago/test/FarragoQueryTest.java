@@ -26,6 +26,8 @@ import java.sql.*;
 
 import java.util.*;
 
+import javax.jmi.reflect.*;
+
 import junit.framework.*;
 
 import net.sf.farrago.cwm.relational.*;
@@ -39,8 +41,6 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.test.*;
 
-import javax.jmi.reflect.RefObject;
-
 
 /**
  * FarragoQueryTest tests miscellaneous aspects of Farrago query processing
@@ -52,7 +52,6 @@ import javax.jmi.reflect.RefObject;
 public class FarragoQueryTest
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -236,7 +235,8 @@ public class FarragoQueryTest
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         FarragoSession session = farragoConnection.getSession();
-        Collection<RefObject> result = session.executeLurqlQuery(
+        Collection<RefObject> result =
+            session.executeLurqlQuery(
                 lurql,
                 argMap);
         assertEquals(
@@ -288,7 +288,8 @@ public class FarragoQueryTest
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         FarragoSession session = farragoConnection.getSession();
-        Collection<RefObject> result = session.executeLurqlQuery(
+        Collection<RefObject> result =
+            session.executeLurqlQuery(
                 lurql,
                 argMap);
         for (RefObject o : result) {
@@ -386,17 +387,17 @@ public class FarragoQueryTest
         stmt.executeUpdate(sql);
 
         sql =
-            "create function udx.digest(c cursor) " +
-            "returns table(c.*, row_digest int) " +
-            "language java " +
-            "parameter style system defined java " +
-            "no sql " +
-            "external name 'class net.sf.farrago.test.FarragoTestUDR.digest'";
+            "create function udx.digest(c cursor) "
+            + "returns table(c.*, row_digest int) "
+            + "language java "
+            + "parameter style system defined java "
+            + "no sql "
+            + "external name 'class net.sf.farrago.test.FarragoTestUDR.digest'";
         stmt.executeUpdate(sql);
 
         sql =
-            "select * from " +
-            "table(udx.digest(cursor(select * from sales.depts)))";
+            "select * from "
+            + "table(udx.digest(cursor(select * from sales.depts)))";
 
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;

@@ -34,7 +34,6 @@ import org.eigenbase.rex.*;
  */
 public interface CalcRexImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -35,7 +35,6 @@ import net.sf.farrago.session.*;
 public class DdlSecurityHandler
     extends DdlHandler
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public DdlSecurityHandler(FarragoSessionDdlValidator validator)

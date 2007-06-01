@@ -43,7 +43,6 @@ import org.eigenbase.util.*;
 public abstract class ReflectiveRelMetadataProvider
     implements RelMetadataProvider
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Map<String, List<Class>> parameterTypeMap;

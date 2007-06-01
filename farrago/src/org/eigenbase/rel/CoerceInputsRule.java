@@ -37,7 +37,6 @@ import org.eigenbase.reltype.*;
 public class CoerceInputsRule
     extends RelOptRule
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Class consumerRelClass;
@@ -94,9 +93,9 @@ public class CoerceInputsRule
                 coerce = true;
             }
             assert (RelOptUtil.areRowTypesEqual(
-                        newInputs[i].getRowType(),
-                        expectedType,
-                        coerceNames));
+                newInputs[i].getRowType(),
+                expectedType,
+                coerceNames));
         }
         if (!coerce) {
             return;

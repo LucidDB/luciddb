@@ -41,7 +41,6 @@ import java.util.logging.*;
  */
 public class EigenbaseLogger
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Logger logger; // delegate
@@ -72,7 +71,8 @@ public class EigenbaseLogger
     /**
      * Conditionally logs a message with three Object parameters
      */
-    public void log(Level level,
+    public void log(
+        Level level,
         String msg,
         Object arg1,
         Object arg2,
@@ -89,7 +89,8 @@ public class EigenbaseLogger
     /**
      * Conditionally logs a message with four Object parameters
      */
-    public void log(Level level,
+    public void log(
+        Level level,
         String msg,
         Object arg1,
         Object arg2,

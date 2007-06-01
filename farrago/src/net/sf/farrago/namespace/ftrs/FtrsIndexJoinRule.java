@@ -50,7 +50,6 @@ import org.eigenbase.util.*;
 class FtrsIndexJoinRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FtrsIndexJoinRule()
@@ -60,7 +59,7 @@ class FtrsIndexJoinRule
                 JoinRel.class,
                 new RelOptRuleOperand[] {
                     new RelOptRuleOperand(RelNode.class, null),
-            new RelOptRuleOperand(FtrsIndexScanRel.class, null)
+                    new RelOptRuleOperand(FtrsIndexScanRel.class, null)
                 }));
     }
 
@@ -122,7 +121,8 @@ class FtrsIndexJoinRule
                 scanRel.ftrsTable.getCwmColumnSet()).iterator();
         while (iter.hasNext()) {
             FemLocalIndex index = (FemLocalIndex) iter.next();
-            considerIndex(joinRel,
+            considerIndex(
+                joinRel,
                 index,
                 scanRel,
                 indexColumn,
@@ -248,7 +248,8 @@ class FtrsIndexJoinRule
                     clusteredKeyColumns,
                     scanRel.isOrderPreserving);
             FtrsIndexSearchRel unclusteredSearch =
-                new FtrsIndexSearchRel(unclusteredScan,
+                new FtrsIndexSearchRel(
+                    unclusteredScan,
                     fennelInput,
                     isUnique,
                     isOuter,
@@ -266,7 +267,8 @@ class FtrsIndexJoinRule
                     inputJoinProj.length);
 
             FtrsIndexSearchRel clusteredSearch =
-                new FtrsIndexSearchRel(scanRel,
+                new FtrsIndexSearchRel(
+                    scanRel,
                     unclusteredSearch,
                     true,
                     isOuter,
@@ -277,7 +279,8 @@ class FtrsIndexJoinRule
             call.transformTo(clusteredSearch);
         } else {
             FtrsIndexSearchRel searchRel =
-                new FtrsIndexSearchRel(scanRel,
+                new FtrsIndexSearchRel(
+                    scanRel,
                     fennelInput,
                     isUnique,
                     isOuter,

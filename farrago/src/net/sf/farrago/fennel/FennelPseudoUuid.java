@@ -42,7 +42,6 @@ import java.util.*;
 public class FennelPseudoUuid
     implements Serializable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final int UUID_LENGTH = 16;
@@ -223,8 +222,7 @@ public class FennelPseudoUuid
         // distribution of hash code values -- if the UUIDs aren't random (for
         // instance if they're based on time, MAC address, etc.), that may not
         // be the case.
-        return
-            (((int) (uuid[0] ^ uuid[4] ^ uuid[8] ^ uuid[12]) & 0xFF) << 24)
+        return (((int) (uuid[0] ^ uuid[4] ^ uuid[8] ^ uuid[12]) & 0xFF) << 24)
             | (((int) (uuid[1] ^ uuid[5] ^ uuid[9] ^ uuid[13]) & 0xFF) << 16)
             | (((int) (uuid[2] ^ uuid[6] ^ uuid[10] ^ uuid[14]) & 0xFF) << 8)
             | ((int) (uuid[3] ^ uuid[7] ^ uuid[11] ^ uuid[15]) & 0xFF);

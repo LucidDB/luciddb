@@ -50,7 +50,6 @@ import org.netbeans.lib.jmi.util.*;
  */
 public class FactoryGen
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -228,13 +227,15 @@ public class FactoryGen
             Package childJavaPackage = refSubPackage.getClass().getPackage();
             if (!childJavaPackage.getName().equals(
                     javaPackage.getName() + "."
-                    + subPackageName.toLowerCase())) {
+                    + subPackageName.toLowerCase()))
+            {
                 continue;
             }
 
             subPackageName = tagProvider.getSubstName(mofSubPackage);
 
-            generatePackage(pw,
+            generatePackage(
+                pw,
                 refSubPackage,
                 packageAccessor + ".get" + subPackageName + "()");
         }

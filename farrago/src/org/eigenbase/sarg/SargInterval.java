@@ -58,7 +58,6 @@ import org.eigenbase.reltype.*;
 public class SargInterval
     extends SargIntervalBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

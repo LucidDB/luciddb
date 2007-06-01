@@ -47,7 +47,6 @@ class FarragoDbSessionIndexMap
     extends FarragoCompoundAllocation
     implements FarragoSessionIndexMap
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoDbSession dbSession;
@@ -55,12 +54,12 @@ class FarragoDbSessionIndexMap
     /**
      * Map from index to root PageId for temporary tables.
      */
-    private Map<FemLocalIndex,Long> tempIndexRootMap;
+    private Map<FemLocalIndex, Long> tempIndexRootMap;
 
     /**
      * Map from index ID to index for all tables.
      */
-    private Map<Long,FemLocalIndex> indexIdMap;
+    private Map<Long, FemLocalIndex> indexIdMap;
 
     /**
      * Repos for this session.
@@ -129,7 +128,8 @@ class FarragoDbSessionIndexMap
         long root)
     {
         if (FarragoCatalogUtil.isIndexTemporary(index)) {
-            Long old = tempIndexRootMap.put(
+            Long old =
+                tempIndexRootMap.put(
                     index,
                     new Long(root));
             assert (old == null);
@@ -153,8 +153,9 @@ class FarragoDbSessionIndexMap
             return;
         }
 
-        for (FemLocalIndex index :
-            FarragoCatalogUtil.getTableIndexes(repos, table))
+        for (
+            FemLocalIndex index
+            : FarragoCatalogUtil.getTableIndexes(repos, table))
         {
             assert (!tempIndexRootMap.containsKey(index));
             createIndexStorage(wrapperCache, index);
@@ -182,7 +183,7 @@ class FarragoDbSessionIndexMap
      * DELETE ROWS.
      */
     public void onCommit()
-    {       
+    {
         for (FemLocalIndex index : tempIndexRootMap.keySet()) {
             String temporaryScope =
                 FarragoCatalogUtil.getIndexTable(index).getTemporaryScope();
@@ -222,8 +223,7 @@ class FarragoDbSessionIndexMap
         if (updateMap) {
             setIndexRoot(index, indexRoot);
         }
-        indexIdMap.put(
-            new Long(JmiUtil.getObjectId(index)),
+        indexIdMap.put(new Long(JmiUtil.getObjectId(index)),
             index);
         return indexRoot;
     }
@@ -270,7 +270,7 @@ class FarragoDbSessionIndexMap
         FarragoMedLocalDataServer server =
             getIndexDataServer(wrapperCache, index);
         try {
-           return server.computeIndexStats(
+            return server.computeIndexStats(
                 index,
                 getIndexRoot(index),
                 estimate,
@@ -293,11 +293,10 @@ class FarragoDbSessionIndexMap
         FemLocalIndex index)
     {
         FemLocalTable localTable = (FemLocalTable) index.getSpannedClass();
-        return
-            (FarragoMedLocalDataServer) wrapperCache.loadServerFromCatalog(
-                localTable.getServer());
+        return (FarragoMedLocalDataServer) wrapperCache.loadServerFromCatalog(
+            localTable.getServer());
     }
-    
+
     public void versionIndexRoot(
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index,

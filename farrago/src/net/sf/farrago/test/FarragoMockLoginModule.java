@@ -20,23 +20,28 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.test;
 
 import java.util.*;
+
 import javax.security.auth.*;
 import javax.security.auth.callback.*;
 import javax.security.auth.login.*;
 import javax.security.auth.spi.*;
 
+
 /**
  * Mock login module for testing farrago authentication.
+ *
  * @author Oscar Gothberg
  * @version $Id$
  */
 
-public class FarragoMockLoginModule implements LoginModule
+public class FarragoMockLoginModule
+    implements LoginModule
 {
+    //~ Instance fields --------------------------------------------------------
+
     CallbackHandler callbackHandler;
     Subject subject;
     Map<String, ?> sharedState;
@@ -51,6 +56,8 @@ public class FarragoMockLoginModule implements LoginModule
     // config options
     boolean debug;
 
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoMockLoginModule()
     {
         success = false;
@@ -58,6 +65,8 @@ public class FarragoMockLoginModule implements LoginModule
         tempCredentials = new ArrayList<FarragoMockCredential>();
         tempPrincipals = new ArrayList<FarragoMockPrincipal>();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Called if LoginContext's required authentications failed.
@@ -115,7 +124,7 @@ public class FarragoMockLoginModule implements LoginModule
 
         // initialize any configured options
         if (options.containsKey("debug")) {
-            debug = "true".equalsIgnoreCase((String)options.get("debug"));
+            debug = "true".equalsIgnoreCase((String) options.get("debug"));
         }
     }
 
@@ -130,15 +139,17 @@ public class FarragoMockLoginModule implements LoginModule
         }
 
         try {
-            Callback[] callbacks = new Callback[] {
-                new NameCallback("Username: "),
-                new PasswordCallback("Password: ", false)
-            };
+            Callback [] callbacks =
+                new Callback[] {
+                    new NameCallback("Username: "),
+                    new PasswordCallback("Password: ", false)
+                };
 
             callbackHandler.handle(callbacks);
-            String username = ((NameCallback)callbacks[0]).getName();
-            String password = new String(((PasswordCallback)callbacks[1]).getPassword());
-            ((PasswordCallback)callbacks[1]).clearPassword();
+            String username = ((NameCallback) callbacks[0]).getName();
+            String password =
+                new String(((PasswordCallback) callbacks[1]).getPassword());
+            ((PasswordCallback) callbacks[1]).clearPassword();
 
             // hardcoded accts
             if (username.equals("MockLoginModuleTestUser")) {
@@ -157,7 +168,6 @@ public class FarragoMockLoginModule implements LoginModule
                 this.tempCredentials.add(c);
                 this.tempPrincipals.add(new FarragoMockPrincipal(username));
             }
-
         } catch (Exception ex) {
             success = false;
             throw new LoginException(ex.getMessage());
@@ -177,15 +187,17 @@ public class FarragoMockLoginModule implements LoginModule
         tempCredentials.clear();
 
         // remove principals
-        for (FarragoMockPrincipal p :
-            subject.getPrincipals(FarragoMockPrincipal.class))
+        for (
+            FarragoMockPrincipal p
+            : subject.getPrincipals(FarragoMockPrincipal.class))
         {
             subject.getPrincipals().remove(p);
         }
 
         // remove credentials
-        for (FarragoMockCredential c :
-            subject.getPublicCredentials(FarragoMockCredential.class))
+        for (
+            FarragoMockCredential c
+            : subject.getPublicCredentials(FarragoMockCredential.class))
         {
             subject.getPublicCredentials().remove(c);
         }

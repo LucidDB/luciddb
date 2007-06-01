@@ -32,7 +32,6 @@ import org.eigenbase.util.*;
  */
 public abstract class DisruptiveTechJni
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static {

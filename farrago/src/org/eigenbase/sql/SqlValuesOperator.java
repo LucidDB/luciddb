@@ -30,7 +30,6 @@ package org.eigenbase.sql;
 public class SqlValuesOperator
     extends SqlSpecialOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlValuesOperator()

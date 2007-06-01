@@ -43,7 +43,6 @@ import org.eigenbase.util.*;
 public abstract class SqlNode
     implements Cloneable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final SqlNode [] emptyArray = new SqlNode[0];

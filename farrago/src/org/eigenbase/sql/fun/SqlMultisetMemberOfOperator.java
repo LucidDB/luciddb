@@ -39,13 +39,13 @@ import org.eigenbase.sql.type.*;
 public class SqlMultisetMemberOfOperator
     extends SqlBinaryOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlMultisetMemberOfOperator()
     {
         //TODO check if precedence is correct
-        super("MEMBER OF",
+        super(
+            "MEMBER OF",
             SqlKind.Other,
             30,
             true,
@@ -64,7 +64,8 @@ public class SqlMultisetMemberOfOperator
                 callBinding,
                 callBinding.getCall().operands[1],
                 0,
-                throwOnFailure)) {
+                throwOnFailure))
+        {
             return false;
         }
 

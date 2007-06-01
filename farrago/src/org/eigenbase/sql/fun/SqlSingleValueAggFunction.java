@@ -30,15 +30,13 @@ import org.eigenbase.sql.type.*;
 
 
 /**
- * <code>SINGLE_VALUE</code> aggregate function
- * returns the input value if there is only one value in the input; Otherwise
- * it triggers a run-time error.
+ * <code>SINGLE_VALUE</code> aggregate function returns the input value if there
+ * is only one value in the input; Otherwise it triggers a run-time error.
  */
 public class SqlSingleValueAggFunction
     extends SqlAggFunction
 {
-
-    //~ Static fields/initializers ---------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private final RelDataType type;
 

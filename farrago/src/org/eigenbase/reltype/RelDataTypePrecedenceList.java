@@ -32,7 +32,6 @@ package org.eigenbase.reltype;
  */
 public interface RelDataTypePrecedenceList
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

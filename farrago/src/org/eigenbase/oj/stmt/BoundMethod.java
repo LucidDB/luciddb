@@ -32,7 +32,6 @@ import java.lang.reflect.*;
  */
 public class BoundMethod
 {
-
     //~ Instance fields --------------------------------------------------------
 
     Method method;

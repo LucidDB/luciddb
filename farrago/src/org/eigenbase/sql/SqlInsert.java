@@ -34,7 +34,6 @@ import org.eigenbase.util.*;
 public class SqlInsert
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions

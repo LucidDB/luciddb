@@ -35,16 +35,15 @@ import org.eigenbase.runtime.*;
 public class ExclusivePipeTest
     extends TestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final int BUF_BYTES = 10;
     private static final int timeoutMillis = Integer.MAX_VALUE;
 
     private static final String [] words =
-        {
-            "the", "quick", "brown", "fox", "jumped", "over", "the", "lazy", "dog",
-        };
+    {
+        "the", "quick", "brown", "fox", "jumped", "over", "the", "lazy", "dog",
+    };
 
     //~ Methods ----------------------------------------------------------------
 

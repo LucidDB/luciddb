@@ -39,7 +39,6 @@ import org.eigenbase.relopt.*;
 public class LhxAggRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

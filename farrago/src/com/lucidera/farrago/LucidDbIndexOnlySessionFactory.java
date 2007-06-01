@@ -25,8 +25,8 @@ import net.sf.farrago.session.*;
 
 
 /**
- * LucidDbIndexOnlySessionFactory extends {@link LucidDbSessionFactory}
- * by enabling index only scans.
+ * LucidDbIndexOnlySessionFactory extends {@link LucidDbSessionFactory} by
+ * enabling index only scans.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -34,7 +34,6 @@ import net.sf.farrago.session.*;
 public class LucidDbIndexOnlySessionFactory
     extends LucidDbSessionFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionPersonalityFactory

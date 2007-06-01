@@ -36,9 +36,9 @@ import org.eigenbase.rex.*;
 
 
 /**
- * FarragoOJRexStaticMethodImplementor implements
- * {@link org.eigenbase.oj.rex.OJRexImplementor} by
- * generating a call to a static Java method.
+ * FarragoOJRexStaticMethodImplementor implements {@link
+ * org.eigenbase.oj.rex.OJRexImplementor} by generating a call to a static Java
+ * method.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -46,7 +46,6 @@ import org.eigenbase.rex.*;
 public class FarragoOJRexStaticMethodImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Method method;
@@ -66,10 +65,8 @@ public class FarragoOJRexStaticMethodImplementor
      * implemented as an external Java static method.
      *
      * @param method UDR implementation
-     *
-     * @param allowSql whether to allow reentrant invocation of SQL from
-     * within the called method
-     *
+     * @param allowSql whether to allow reentrant invocation of SQL from within
+     * the called method
      * @param returnType SQL type to impose on returned Java value
      */
     public FarragoOJRexStaticMethodImplementor(
@@ -77,7 +74,7 @@ public class FarragoOJRexStaticMethodImplementor
         boolean allowSql,
         RelDataType returnType)
     {
-        assert(Modifier.isStatic(method.getModifiers()));
+        assert (Modifier.isStatic(method.getModifiers()));
 
         this.method = method;
         this.allowSql = allowSql;
@@ -90,7 +87,6 @@ public class FarragoOJRexStaticMethodImplementor
      * Creates an implementor for a call to a system-provided static method.
      *
      * @param declaringClass class which declares method
-     *
      * @param methodName name of static method; overload resolution happens
      * implicitly based on operand types in each invocation
      */
@@ -124,8 +120,8 @@ public class FarragoOJRexStaticMethodImplementor
             Expression expr;
             if (javaParams[i].isPrimitive()
                 || (javaParams[i] == ResultSet.class)
-                || (javaParams[i] == PreparedStatement.class
-                || (javaParams[i] == java.util.List.class)))
+                || ((javaParams[i] == PreparedStatement.class)
+                    || (javaParams[i] == java.util.List.class)))
             {
                 expr = operands[i];
             } else {
@@ -190,9 +186,10 @@ public class FarragoOJRexStaticMethodImplementor
                                 Throwable.class)),
                         varException.toString()),
                     new StatementList(
-                        new ThrowStatement(new MethodCall(
+                        new ThrowStatement(
+                            new MethodCall(
                                 translator.getRelImplementor()
-                                .getConnectionVariable(),
+                                          .getConnectionVariable(),
                                 "handleRoutineInvocationException",
                                 new ExpressionList(
                                     varException,

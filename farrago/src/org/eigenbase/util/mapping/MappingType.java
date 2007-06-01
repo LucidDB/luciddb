@@ -171,8 +171,7 @@ public enum MappingType
      */
     public boolean isSurjection()
     {
-        return
-            (ordinal() & (OptionalTarget | MultipleTarget | OptionalSource))
+        return (ordinal() & (OptionalTarget | MultipleTarget | OptionalSource))
             == 0;
     }
 
@@ -182,8 +181,7 @@ public enum MappingType
      */
     public boolean isInjection()
     {
-        return
-            (ordinal() & (OptionalTarget | MultipleTarget | MultipleSource))
+        return (ordinal() & (OptionalTarget | MultipleTarget | MultipleSource))
             == 0;
     }
 
@@ -193,14 +191,9 @@ public enum MappingType
      */
     public boolean isBijection()
     {
-        return
-            (
-                ordinal()
-                & (
-                    OptionalTarget | MultipleTarget | OptionalSource
-                    | MultipleSource
-                  )
-            ) == 0;
+        return (ordinal()
+            & (OptionalTarget | MultipleTarget | OptionalSource
+                | MultipleSource)) == 0;
     }
 
     /**

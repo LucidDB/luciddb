@@ -43,7 +43,6 @@ import org.eigenbase.sql.parser.*;
 public abstract class FarragoAbstractParserImpl
     extends SqlAbstractParserImpl
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

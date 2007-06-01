@@ -34,7 +34,6 @@ package org.eigenbase.sql;
 public class SqlOrderByOperator
     extends SqlSpecialOperator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions

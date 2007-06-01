@@ -47,7 +47,6 @@ import org.eigenbase.util.property.*;
 public class FarragoProperties
     extends Properties
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static FarragoProperties instance;

@@ -42,7 +42,6 @@ import org.eigenbase.util.*;
 public abstract class AbstractRelNode
     implements RelNode
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // TODO jvs 10-Oct-2003:  Make this thread safe.  Either synchronize, or
@@ -135,9 +134,8 @@ public abstract class AbstractRelNode
 
     public final CallingConvention getConvention()
     {
-        return
-            (CallingConvention) traits.getTrait(
-                CallingConventionTraitDef.instance);
+        return (CallingConvention) traits.getTrait(
+            CallingConventionTraitDef.instance);
     }
 
     public RelTraitSet getTraits()
@@ -301,9 +299,9 @@ public abstract class AbstractRelNode
         double rowCount = RelMetadataQuery.getRowCount(this);
         double bytesPerRow = 1;
         return planner.makeCost(
-                rowCount,
-                rowCount,
-                0);
+            rowCount,
+            rowCount,
+            0);
     }
 
     public void explain(RelOptPlanWriter pw)
@@ -320,11 +318,11 @@ public abstract class AbstractRelNode
             if (e != input) {
                 // TODO: change 'equal' to 'eq', which is stronger.
                 assert RelOptUtil.equal(
-                        "rowtype of rel before registration",
-                        input.getRowType(),
-                        "rowtype of rel after registration",
-                        e.getRowType(),
-                        true);
+                    "rowtype of rel before registration",
+                    input.getRowType(),
+                    "rowtype of rel after registration",
+                    e.getRowType(),
+                    true);
                 replaceInput(i, e);
             }
         }
@@ -388,7 +386,9 @@ public abstract class AbstractRelNode
     {
         StringWriter sw = new StringWriter();
         RelOptPlanWriter pw =
-            new RelOptPlanWriter(new PrintWriter(sw), SqlExplainLevel.DIGEST_ATTRIBUTES) {
+            new RelOptPlanWriter(
+                new PrintWriter(sw),
+                SqlExplainLevel.DIGEST_ATTRIBUTES) {
                 public void explain(
                     RelNode rel,
                     String [] terms,

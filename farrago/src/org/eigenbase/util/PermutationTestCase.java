@@ -33,7 +33,6 @@ import junit.framework.*;
 public class PermutationTestCase
     extends TestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public PermutationTestCase(String name)

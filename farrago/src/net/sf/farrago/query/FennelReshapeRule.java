@@ -34,20 +34,20 @@ import org.eigenbase.sarg.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 
+
 /**
- * FennelReshapeRule is a rule that converts a {@link CalcRel} into
- * a {@link FennelReshapeRel}, provided the {@link CalcRel} only references
- * simple projections and contains a simple condition, if it has a condition.
+ * FennelReshapeRule is a rule that converts a {@link CalcRel} into a {@link
+ * FennelReshapeRel}, provided the {@link CalcRel} only references simple
+ * projections and contains a simple condition, if it has a condition.
  *
  * <p>The projection is simple if it consists of only {@link RexInputRef}s or
- * CASTs of {@link RexInputRef}s where the cast effectively does not require
- * any actual data conversion or data validation.
+ * CASTs of {@link RexInputRef}s where the cast effectively does not require any
+ * actual data conversion or data validation.
  *
- * <p>The condition is simple if the expression is an AND of filters, where
- * each filter is of the form {@link RexInputRef} OP {@link RexLiteral}.  Each
- * {@link RexInputRef} can only be referenced once, and OP is either
- * =, &gt, &gt=, &lt, or &lt=.  However, the non-equality operators
- * can only be referenced once.
+ * <p>The condition is simple if the expression is an AND of filters, where each
+ * filter is of the form {@link RexInputRef} OP {@link RexLiteral}. Each {@link
+ * RexInputRef} can only be referenced once, and OP is either =, &gt, &gt=, &lt,
+ * or &lt=. However, the non-equality operators can only be referenced once.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -55,8 +55,8 @@ import org.eigenbase.sql.type.*;
 public class FennelReshapeRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new FennelReshapeRule object.
      */
@@ -83,15 +83,14 @@ public class FennelReshapeRule
 
         // check the projection
         List<Integer> projOrdinals = new ArrayList<Integer>();
-        RelDataType outputRowType =
-            isProjectSimple(calcRel, projOrdinals);
+        RelDataType outputRowType = isProjectSimple(calcRel, projOrdinals);
         if (outputRowType == null) {
             return;
         }
 
         RexLocalRef condition = program.getCondition();
         CompOperatorEnum compOp = CompOperatorEnum.COMP_NOOP;
-        Integer[] filterOrdinals = {};
+        Integer [] filterOrdinals = {};
         List<RexLiteral> literals = new ArrayList<RexLiteral>();
         RelDataType filterRowType = null;
 
@@ -113,8 +112,7 @@ public class FennelReshapeRule
             }
 
             compOp = op.get(0);
-            filterOrdinals =
-                filterList.toArray(new Integer[filterList.size()]);
+            filterOrdinals = filterList.toArray(new Integer[filterList.size()]);
         }
 
         RelNode fennelInput =
@@ -126,7 +124,7 @@ public class FennelReshapeRule
             return;
         }
 
-        Integer[] projection =
+        Integer [] projection =
             projOrdinals.toArray(new Integer[projOrdinals.size()]);
         FennelReshapeRel reshapeRel =
             new FennelReshapeRel(
@@ -146,8 +144,8 @@ public class FennelReshapeRule
      * Determines if a projection is simple.
      *
      * @param calcRel CalcRel containing the projection
-     * @param projOrdinals if the projection is simple, returns the ordinals
-     * of the projection inputs
+     * @param projOrdinals if the projection is simple, returns the ordinals of
+     * the projection inputs
      *
      * @return rowtype corresponding to the projection, provided it is simple;
      * otherwise null is returned
@@ -161,13 +159,12 @@ public class FennelReshapeRule
         RexProgram program = calcRel.getProgram();
         List<RexLocalRef> projList = program.getProjectList();
         int nProjExprs = projList.size();
-        RelDataType[] types = new RelDataType[nProjExprs];
-        String[] fieldNames = new String[nProjExprs];
-        RelDataTypeField[] projFields = calcRel.getRowType().getFields();
+        RelDataType [] types = new RelDataType[nProjExprs];
+        String [] fieldNames = new String[nProjExprs];
+        RelDataTypeField [] projFields = calcRel.getRowType().getFields();
 
         for (int i = 0; i < nProjExprs; i++) {
-            RexNode projExpr =
-                program.expandLocalRef(projList.get(i));
+            RexNode projExpr = program.expandLocalRef(projList.get(i));
             if (projExpr instanceof RexInputRef) {
                 projOrdinals.add(((RexInputRef) projExpr).getIndex());
                 types[i] = projExpr.getType();
@@ -197,16 +194,14 @@ public class FennelReshapeRule
         }
 
         // return the rowtype corresponding to the output of the projection
-        return
-            calcRel.getCluster().getTypeFactory().createStructType(
-                types,
-                fieldNames);
+        return calcRel.getCluster().getTypeFactory().createStructType(
+            types,
+            fieldNames);
     }
 
     /**
-     * Returns true if a type is a simple cast of another type.  It is if
-     * the cast type is nullable and the cast is one of the following:
-     *
+     * Returns true if a type is a simple cast of another type. It is if the
+     * cast type is nullable and the cast is one of the following:
      * <li>x TO x
      * <li>char(n) TO varchar(m)
      * <li>varchar(n) TO varchar(m)
@@ -225,19 +220,20 @@ public class FennelReshapeRule
         if (!(castType.isNullable())) {
             return false;
         }
-        return (
-            (origType == castType) ||
-            (origTypeName == SqlTypeName.CHAR &&
-                castTypeName == SqlTypeName.VARCHAR) ||
+        return ((origType == castType)
+            || ((origTypeName == SqlTypeName.CHAR)
+                && (castTypeName == SqlTypeName.VARCHAR))
+            ||
 
-            (origTypeName == SqlTypeName.VARCHAR &&
-                castTypeName == SqlTypeName.VARCHAR) ||
+            ((origTypeName == SqlTypeName.VARCHAR)
+                && (castTypeName == SqlTypeName.VARCHAR))
+            ||
 
-            (origTypeName == castTypeName &&
-             origType.getPrecision() == castType.getPrecision() &&
-             (origTypeName != SqlTypeName.DECIMAL ||
-                 (origType.getScale() == castType.getScale())) &&
-             (!origType.isNullable() && castType.isNullable())));
+            ((origTypeName == castTypeName)
+                && (origType.getPrecision() == castType.getPrecision())
+                && ((origTypeName != SqlTypeName.DECIMAL)
+                    || (origType.getScale() == castType.getScale()))
+                && (!origType.isNullable() && castType.isNullable())));
     }
 
     /**
@@ -252,8 +248,8 @@ public class FennelReshapeRule
      * comparisons
      * @param op returns the operator to be used in the simple comparison
      *
-     * @return rowtype corresponding to the ordered list of filter columns,
-     * if the filter condition is simple
+     * @return rowtype corresponding to the ordered list of filter columns, if
+     * the filter condition is simple
      */
     private RelDataType isConditionSimple(
         CalcRel calcRel,
@@ -280,17 +276,15 @@ public class FennelReshapeRule
         List<RexInputRef> filterCols = new ArrayList<RexInputRef>();
 
         for (SargBinding sargBinding : sargBindingList) {
-
             SargIntervalSequence sargSeq = sargBinding.getExpr().evaluate();
 
             if (sargSeq.isPoint()) {
                 filterCols.add(sargBinding.getInputRef());
                 List<SargInterval> sargIntervalList = sargSeq.getList();
-                assert(sargIntervalList.size() == 1);
+                assert (sargIntervalList.size() == 1);
                 SargInterval sargInterval = sargIntervalList.get(0);
                 SargEndpoint lowerBound = sargInterval.getLowerBound();
                 literals.add((RexLiteral) lowerBound.getCoordinate());
-
             } else {
                 // if we have a range predicate, just keep track of it for now,
                 // since it needs to be put at the end of our lists
@@ -301,6 +295,7 @@ public class FennelReshapeRule
                 SargInterval sargInterval = sargIntervalList.get(0);
                 SargEndpoint lowerBound = sargInterval.getLowerBound();
                 SargEndpoint upperBound = sargInterval.getUpperBound();
+
                 // check the upper bound first to avoid the null in the
                 // lower bound
                 if (upperBound.isFinite()) {
@@ -320,7 +315,7 @@ public class FennelReshapeRule
                 } else {
                     return null;
                 }
-                assert(rangeRef == null);
+                assert (rangeRef == null);
                 rangeRef = sargBinding.getInputRef();
             }
         }
@@ -335,9 +330,9 @@ public class FennelReshapeRule
         }
 
         int nFilters = filterCols.size();
-        RelDataType[] types = new RelDataType[nFilters];
-        String[] fieldNames = new String[nFilters];
-        RelDataTypeField[] inputFields =
+        RelDataType [] types = new RelDataType[nFilters];
+        String [] fieldNames = new String[nFilters];
+        RelDataTypeField [] inputFields =
             calcRel.getChild().getRowType().getFields();
         for (int i = 0; i < nFilters; i++) {
             RexInputRef filter = filterCols.get(i);

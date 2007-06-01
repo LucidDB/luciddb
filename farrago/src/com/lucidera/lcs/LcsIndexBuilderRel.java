@@ -47,7 +47,6 @@ import org.eigenbase.reltype.*;
 class LcsIndexBuilderRel
     extends FennelSingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -95,13 +94,13 @@ class LcsIndexBuilderRel
         FarragoTypeFactory typeFactory = getFarragoTypeFactory();
 
         FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
-        LcsIndexGuide indexGuide =
-            new LcsIndexGuide(typeFactory, table, index);
+        LcsIndexGuide indexGuide = new LcsIndexGuide(typeFactory, table, index);
         FennelRelParamId paramId = implementor.allocateRelParamId();
         FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemLocalIndex deletionIndex =
-            FarragoCatalogUtil.isIndexUnique(index) ?
-                FarragoCatalogUtil.getDeletionIndex(repos, table) : null;
+            FarragoCatalogUtil.isIndexUnique(index)
+            ? FarragoCatalogUtil.getDeletionIndex(repos, table)
+            : null;
         LcsCompositeStreamDef bitmapSet =
             indexGuide.newBitmapAppend(
                 this,

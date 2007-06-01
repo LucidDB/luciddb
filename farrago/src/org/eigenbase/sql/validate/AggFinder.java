@@ -37,7 +37,6 @@ import org.eigenbase.util.*;
 class AggFinder
     extends SqlBasicVisitor<Void>
 {
-
     //~ Constructors -----------------------------------------------------------
 
     AggFinder()

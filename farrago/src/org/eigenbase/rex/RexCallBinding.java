@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
 public class RexCallBinding
     extends SqlOperatorBinding
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RexNode [] operands;

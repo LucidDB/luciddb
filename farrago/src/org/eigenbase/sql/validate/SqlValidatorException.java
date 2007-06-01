@@ -45,7 +45,6 @@ public class SqlValidatorException
     extends Exception
     implements EigenbaseValidatorException
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static Logger tracer =

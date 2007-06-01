@@ -33,7 +33,6 @@ import java.util.*;
  */
 public class GeneratedDdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final List<String> ddl = new ArrayList<String>();
@@ -92,11 +91,11 @@ public class GeneratedDdlStmt
      * Indicates whether the element is a top-level element, that is, it
      * requires its own DDL statement.
      *
-     * <p>For example, a regular index is top-level but a clustered index is
-     * not (it lives inside a CREATE TABLE statement).
+     * <p>For example, a regular index is top-level but a clustered index is not
+     * (it lives inside a CREATE TABLE statement).
      *
-     * <p>The {@link #clear()} method resets the <code>topLevel</code>
-     * attribute to <code>true</code>.
+     * <p>The {@link #clear()} method resets the <code>topLevel</code> attribute
+     * to <code>true</code>.
      *
      * @param topLevel Whether element has its own DDL statement
      */
@@ -108,9 +107,9 @@ public class GeneratedDdlStmt
     /**
      * Returns whether the element is a top-level element.
      *
-     * @see #setTopLevel(boolean)
-     *
      * @return whether the element is a top-level element
+     *
+     * @see #setTopLevel(boolean)
      */
     public boolean isTopLevel()
     {

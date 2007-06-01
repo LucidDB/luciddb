@@ -52,7 +52,6 @@ import org.eigenbase.sql2rel.*;
 public interface FarragoSessionPreparingStmt
     extends FarragoAllocation
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -122,7 +121,7 @@ public interface FarragoSessionPreparingStmt
      * statement has been prepared.
      */
     public boolean mayCacheImplementation();
-    
+
     /**
      * Disables caching for the statement
      */

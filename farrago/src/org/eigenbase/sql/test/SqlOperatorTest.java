@@ -35,7 +35,6 @@ import org.eigenbase.test.*;
 public class SqlOperatorTest
     extends SqlOperatorTests
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private SqlTester tester =

@@ -37,7 +37,6 @@ import javax.jmi.reflect.*;
  */
 public interface JmiQueryProcessor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

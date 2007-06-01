@@ -35,7 +35,6 @@ import org.eigenbase.relopt.*;
  */
 public class RelColumnOrigin
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelOptTable originTable;
@@ -97,10 +96,9 @@ public class RelColumnOrigin
             return false;
         }
         RelColumnOrigin other = (RelColumnOrigin) obj;
-        return
-            Arrays.equals(
-                originTable.getQualifiedName(),
-                other.originTable.getQualifiedName())
+        return Arrays.equals(
+            originTable.getQualifiedName(),
+            other.originTable.getQualifiedName())
             && (iOriginColumn == other.iOriginColumn)
             && (isDerived == other.isDerived);
     }
@@ -108,8 +106,7 @@ public class RelColumnOrigin
     // override Object
     public int hashCode()
     {
-        return
-            Arrays.hashCode(originTable.getQualifiedName())
+        return Arrays.hashCode(originTable.getQualifiedName())
             + iOriginColumn + (isDerived ? 313 : 0);
     }
 }

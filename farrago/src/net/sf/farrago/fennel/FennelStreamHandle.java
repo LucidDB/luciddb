@@ -31,7 +31,6 @@ package net.sf.farrago.fennel;
  */
 public class FennelStreamHandle
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final long streamHandle;

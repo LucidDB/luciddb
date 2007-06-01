@@ -24,6 +24,7 @@ package net.sf.farrago.util;
 
 import java.util.*;
 
+
 /**
  * FarragoLruVictimPolicy implements an LRU caching policy for the
  * FarragoObjectCache.
@@ -36,15 +37,15 @@ import java.util.*;
 public class FarragoLruVictimPolicy
     implements FarragoCacheVictimPolicy
 {
-    //~ Static fields/initializers --------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     /**
-     * LRU ordering of objects in the cache.  The linked list provides the LRU
+     * LRU ordering of objects in the cache. The linked list provides the LRU
      * ordering.
      */
     private final LinkedHashSet<FarragoCacheEntry> lruCacheOrder;
 
-    //~ Constructor -----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoLruVictimPolicy()
     {
@@ -75,7 +76,7 @@ public class FarragoLruVictimPolicy
     public void unregisterEntry(FarragoCacheEntry entry)
     {
         boolean rc = lruCacheOrder.remove(entry);
-        assert(rc);
+        assert (rc);
     }
 
     // implement FarragoCacheVictimPolicy
@@ -83,7 +84,7 @@ public class FarragoLruVictimPolicy
     {
         // remove the object from the list and add it to the end of the list
         boolean rc = lruCacheOrder.remove(entry);
-        assert(rc);
+        assert (rc);
         lruCacheOrder.add(entry);
     }
 

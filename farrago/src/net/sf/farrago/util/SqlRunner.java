@@ -41,7 +41,6 @@ import sqlline.SqlLine;
  */
 public class SqlRunner
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static SqlRunner singleton = null;
@@ -79,7 +78,8 @@ public class SqlRunner
      *
      * @throws SQLException
      */
-    public void runScript(String pathName,
+    public void runScript(
+        String pathName,
         String url,
         String userName,
         String password)
@@ -101,7 +101,8 @@ public class SqlRunner
      *
      * @throws SQLException
      */
-    public void runScript(String pathName,
+    public void runScript(
+        String pathName,
         String url,
         String userName,
         String password,
@@ -129,7 +130,8 @@ public class SqlRunner
      * SQLException} and thrown. Null values for either <code>pathName</code> or
      * <code>url</code> will assert.
      */
-    public void runScript(String pathName,
+    public void runScript(
+        String pathName,
         String url,
         String userName,
         String password,

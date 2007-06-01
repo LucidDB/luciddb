@@ -36,7 +36,6 @@ import java.util.*;
 public class RestartableCollectionTupleIter
     implements TupleIter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Collection collection;

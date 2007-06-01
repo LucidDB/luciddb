@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
 public class SqlMonikerImpl
     implements SqlMoniker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String [] names;
@@ -63,8 +62,7 @@ public class SqlMonikerImpl
      */
     public SqlMonikerImpl(String name, SqlMonikerType type)
     {
-        this(
-            new String[] { name },
+        this(new String[] { name },
             type);
     }
 

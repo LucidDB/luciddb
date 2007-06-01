@@ -29,7 +29,7 @@ import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -41,7 +41,6 @@ import org.eigenbase.util.Util;
  */
 public class FarragoRoutineInvocation
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoUserDefinedRoutine routine;
@@ -65,8 +64,9 @@ public class FarragoRoutineInvocation
         argCastExprs = new RexNode[argExprs.length];
         List<String> paramNames = new ArrayList<String>();
         int i = -1;
-        for (CwmParameter param :
-            Util.cast(
+        for (
+            CwmParameter param
+            : Util.cast(
                 routine.getFemRoutine().getParameter(),
                 FemRoutineParameter.class))
         {
@@ -77,10 +77,11 @@ public class FarragoRoutineInvocation
             paramNames.add(param.getName());
             RexBuilder rexBuilder =
                 routine.getPreparingStmt().getSqlToRelConverter()
-                    .getRexBuilder();
-            RexNode argCast = rexBuilder.makeCast(
-                paramTypes[i],
-                argExprs[i]);
+                .getRexBuilder();
+            RexNode argCast =
+                rexBuilder.makeCast(
+                    paramTypes[i],
+                    argExprs[i]);
             paramNameToArgMap.put(
                 param.getName(),
                 argCast);

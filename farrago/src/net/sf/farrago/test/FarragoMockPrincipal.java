@@ -20,22 +20,29 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.test;
 
 import java.io.*;
+
 import java.security.*;
+
 
 /**
  * Mock JAAS principal class
+ *
  * @author Oscar Gothberg
  * @version $Id$
  */
 
 public class FarragoMockPrincipal
-    implements Serializable, Principal
+    implements Serializable,
+        Principal
 {
+    //~ Instance fields --------------------------------------------------------
+
     private String name;
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoMockPrincipal()
     {
@@ -47,6 +54,8 @@ public class FarragoMockPrincipal
         name = newName;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public boolean equals(Object o)
     {
         if (o == null) {
@@ -56,7 +65,7 @@ public class FarragoMockPrincipal
         if (this == o) {
             return true;
         }
- 
+
         if (o instanceof FarragoMockPrincipal) {
             if (((FarragoMockPrincipal) o).getName().equals(name)) {
                 return true;
@@ -83,3 +92,5 @@ public class FarragoMockPrincipal
         return name;
     }
 }
+
+// End $file.name$

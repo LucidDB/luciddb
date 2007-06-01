@@ -135,7 +135,6 @@ import org.eigenbase.util.*;
 public class SqlLiteral
     extends SqlNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -215,8 +214,7 @@ public class SqlLiteral
 
         case SYMBOL:
 
-            return
-                (value instanceof SqlSymbol)
+            return (value instanceof SqlSymbol)
                 || (value instanceof SqlSampleSpec);
         case MULTISET:
             return true;
@@ -302,8 +300,10 @@ public class SqlLiteral
                 SqlLiteralChainOperator.concatenateOperands((SqlCall) node);
             assert SqlTypeUtil.inCharFamily(literal.getTypeName());
             return literal.toValue();
-        } else if ((node instanceof SqlCall)
-            && (((SqlCall) node).getOperator() == SqlStdOperatorTable.castFunc)) {
+        } else if (
+            (node instanceof SqlCall)
+            && (((SqlCall) node).getOperator() == SqlStdOperatorTable.castFunc))
+        {
             return stringValue(((SqlCall) node).getOperands()[0]);
         } else {
             throw Util.newInternal("invalid string literal: " + node);
@@ -381,8 +381,7 @@ public class SqlLiteral
         boolean b,
         SqlParserPos pos)
     {
-        return
-            b ? new SqlLiteral(Boolean.TRUE, SqlTypeName.BOOLEAN, pos)
+        return b ? new SqlLiteral(Boolean.TRUE, SqlTypeName.BOOLEAN, pos)
             : new SqlLiteral(Boolean.FALSE, SqlTypeName.BOOLEAN, pos);
     }
 
@@ -589,9 +588,8 @@ public class SqlLiteral
         case INTERVAL_DAY_TIME:
             SqlIntervalLiteral.IntervalValue intervalValue =
                 (SqlIntervalLiteral.IntervalValue) value;
-            return
-                typeFactory.createSqlIntervalType(
-                    intervalValue.getIntervalQualifier());
+            return typeFactory.createSqlIntervalType(
+                intervalValue.getIntervalQualifier());
 
         case SYMBOL:
             return typeFactory.createSqlType(SqlTypeName.SYMBOL);
@@ -644,25 +642,25 @@ public class SqlLiteral
     {
         SqlTypeName typeName =
             intervalQualifier.isYearMonth() ? SqlTypeName.INTERVAL_YEAR_MONTH
-                : SqlTypeName.INTERVAL_DAY_TIME;
-        return
-            new SqlIntervalLiteral(sign,
-                intervalStr,
-                intervalQualifier,
-                typeName,
-                pos);
+            : SqlTypeName.INTERVAL_DAY_TIME;
+        return new SqlIntervalLiteral(
+            sign,
+            intervalStr,
+            intervalQualifier,
+            typeName,
+            pos);
     }
 
     public static SqlNumericLiteral createNegative(
-        SqlNumericLiteral num, SqlParserPos pos)
+        SqlNumericLiteral num,
+        SqlParserPos pos)
     {
-        return
-            new SqlNumericLiteral(
-                ((BigDecimal) num.getValue()).negate(),
-                num.getPrec(),
-                num.getScale(),
-                num.isExact(),
-                pos);
+        return new SqlNumericLiteral(
+            ((BigDecimal) num.getValue()).negate(),
+            num.getPrec(),
+            num.getScale(),
+            num.isExact(),
+            pos);
     }
 
     public static SqlNumericLiteral createExactNumeric(
@@ -688,13 +686,12 @@ public class SqlLiteral
             scale = 0;
             prec = s.length();
         }
-        return
-            new SqlNumericLiteral(
-                value,
-                prec,
-                scale,
-                true,
-                pos);
+        return new SqlNumericLiteral(
+            value,
+            prec,
+            scale,
+            true,
+            pos);
     }
 
     public static SqlNumericLiteral createApproxNumeric(
@@ -730,10 +727,11 @@ public class SqlLiteral
      *
      * @param bytes Contents of binary literal
      * @param pos Parser position
+     *
      * @return Binary string literal
      */
     public static SqlBinaryStringLiteral createBinaryString(
-        byte[] bytes,
+        byte [] bytes,
         SqlParserPos pos)
     {
         BitString bits;
@@ -776,18 +774,21 @@ public class SqlLiteral
         return new SqlCharStringLiteral(slit, pos);
     }
 
+    //~ Inner Interfaces -------------------------------------------------------
+
     /**
      * A value must implement this interface if it is to be embedded as a
      * SqlLiteral of type SYMBOL. If the class is an {@link Enum} it trivially
      * implements this interface.
      *
-     * <p>The {@link #toString()} method should return how the symbol should
-     * be unparsed, which is sometimes not the same as the enumerated value's
-     * name (e.g. "UNBOUNDED PRECEDING" versus "UnboundedPreceeding").
+     * <p>The {@link #toString()} method should return how the symbol should be
+     * unparsed, which is sometimes not the same as the enumerated value's name
+     * (e.g. "UNBOUNDED PRECEDING" versus "UnboundedPreceeding").
      */
     public interface SqlSymbol
     {
         String name();
+
         int ordinal();
     }
 }

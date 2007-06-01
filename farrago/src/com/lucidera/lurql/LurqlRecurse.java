@@ -32,7 +32,6 @@ import java.io.*;
 public class LurqlRecurse
     extends LurqlPathBranch
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final LurqlPathSpec pathSpec;

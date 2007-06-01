@@ -30,9 +30,9 @@ import org.eigenbase.rex.*;
 
 
 /**
- * FarragoOJRexNullTestImplementor implements Farrago specifics of
- * {@link org.eigenbase.oj.rex.OJRexImplementor} for null-test row expressions
- * <code>IS NULL</code> and <code>IS NOT NULL</code>.
+ * FarragoOJRexNullTestImplementor implements Farrago specifics of {@link
+ * org.eigenbase.oj.rex.OJRexImplementor} for null-test row expressions <code>IS
+ * NULL</code> and <code>IS NOT NULL</code>.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -40,7 +40,6 @@ import org.eigenbase.rex.*;
 public class FarragoOJRexNullTestImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private boolean isNull;

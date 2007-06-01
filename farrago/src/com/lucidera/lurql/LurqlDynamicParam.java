@@ -34,7 +34,6 @@ import org.eigenbase.util.*;
 public class LurqlDynamicParam
     extends LurqlQueryNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String id;

@@ -49,7 +49,6 @@ import org.eigenbase.util.*;
 public class FennelPipeTupleIter
     extends FennelAbstractTupleIter
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final Logger tracer =

@@ -37,7 +37,6 @@ import org.eigenbase.util.*;
 public class SqlBinaryOperator
     extends SqlOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlBinaryOperator(
@@ -89,7 +88,8 @@ public class SqlBinaryOperator
         RelDataType operandType2 =
             validator.getValidatedNodeType(call.operands[1]);
         if (SqlTypeUtil.inCharFamily(operandType1)
-            && SqlTypeUtil.inCharFamily(operandType2)) {
+            && SqlTypeUtil.inCharFamily(operandType2))
+        {
             Charset cs1 = operandType1.getCharset();
             Charset cs2 = operandType2.getCharset();
             assert ((null != cs1) && (null != cs2)) : "An implicit or explicit charset should have been set";
@@ -133,7 +133,8 @@ public class SqlBinaryOperator
         RelDataType operandType2 =
             validator.getValidatedNodeType(call.operands[1]);
         if (SqlTypeUtil.inCharFamily(operandType1)
-            && SqlTypeUtil.inCharFamily(operandType2)) {
+            && SqlTypeUtil.inCharFamily(operandType2))
+        {
             Charset cs1 = operandType1.getCharset();
             Charset cs2 = operandType2.getCharset();
             assert ((null != cs1) && (null != cs2)) : "An implicit or explicit charset should have been set";

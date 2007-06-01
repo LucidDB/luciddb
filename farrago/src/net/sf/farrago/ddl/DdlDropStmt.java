@@ -35,7 +35,6 @@ import net.sf.farrago.session.*;
 public class DdlDropStmt
     extends DdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private boolean restrict;

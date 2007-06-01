@@ -22,9 +22,12 @@
 package org.eigenbase.util14;
 
 import java.sql.Time;
+
 import java.text.*;
+
 import java.util.Calendar;
 import java.util.TimeZone;
+
 
 /**
  * ZonelessTime is a time value without a time zone.
@@ -32,18 +35,22 @@ import java.util.TimeZone;
  * @author John Pham
  * @version $Id$
  */
-public class ZonelessTime extends ZonelessDatetime
+public class ZonelessTime
+    extends ZonelessDatetime
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * SerialVersionUID created with JDK 1.5 serialver tool.
+     */
+    private static final long serialVersionUID = 906156904798141861L;
 
     //~ Instance fields --------------------------------------------------------
 
     protected final int precision;
     protected transient Time tempTime;
 
-    /** SerialVersionUID created with JDK 1.5 serialver tool. */
-    private static final long serialVersionUID = 906156904798141861L;
-
-    //~ Methods ----------------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a ZonelessTime
@@ -57,8 +64,8 @@ public class ZonelessTime extends ZonelessDatetime
      * Constructs a ZonelessTime with precision.
      *
      * <p>The precision is the number of digits to the right of the decimal
-     * point in the seconds value. For example, a <code>TIME(6)</code> has
-     * a precision to microseconds.
+     * point in the seconds value. For example, a <code>TIME(6)</code> has a
+     * precision to microseconds.
      *
      * @param precision Number of digits of precision
      */
@@ -66,6 +73,8 @@ public class ZonelessTime extends ZonelessDatetime
     {
         this.precision = precision;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // override ZonelessDatetime
     public void setZonelessTime(long value)
@@ -128,6 +137,7 @@ public class ZonelessTime extends ZonelessDatetime
      * Formats this ZonelessTime via a SimpleDateFormat
      *
      * @param format format string, as required by SimpleDateFormat
+     *
      * @return the formatted time string
      */
     public String toString(String format)
@@ -140,8 +150,9 @@ public class ZonelessTime extends ZonelessDatetime
     /**
      * Parses a string as a ZonelessTime.
      *
-     * @param s a string representing a time in ISO format, i.e. according
-     *   to the {@link SimpleDateFormat} string "HH:mm:ss"
+     * @param s a string representing a time in ISO format, i.e. according to
+     * the {@link SimpleDateFormat} string "HH:mm:ss"
+     *
      * @return the parsed time, or null if parsing failed
      */
     public static ZonelessTime parse(String s)
@@ -154,6 +165,7 @@ public class ZonelessTime extends ZonelessDatetime
      *
      * @param s a string representing a time the given format
      * @param format format string as per {@link SimpleDateFormat}
+     *
      * @return the parsed time, or null if parsing failed
      */
     public static ZonelessTime parse(String s, String format)

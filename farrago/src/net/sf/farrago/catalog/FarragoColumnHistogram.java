@@ -59,7 +59,6 @@ import org.eigenbase.util14.*;
 public class FarragoColumnHistogram
     implements RelStatColumnStatistics
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FemAbstractColumn column;
@@ -267,7 +266,8 @@ public class FarragoColumnHistogram
          * @param interval the search interval
          * @param minBar the first bar to search
          */
-        protected HistogramRange(List<FemColumnHistogramBar> bars,
+        protected HistogramRange(
+            List<FemColumnHistogramBar> bars,
             SargInterval interval,
             int minBar)
         {
@@ -282,10 +282,12 @@ public class FarragoColumnHistogram
          */
         protected void evaluate()
         {
-            int start = findStartBar(
+            int start =
+                findStartBar(
                     minBar,
                     interval.getLowerBound());
-            int end = findEndBar(
+            int end =
+                findEndBar(
                     start,
                     interval.getUpperBound());
 
@@ -394,7 +396,8 @@ public class FarragoColumnHistogram
                 // if the histogram bar starts starts after the point
                 // we know the bar does not contain the point
                 FemColumnHistogramBar bar = bars.get(end);
-                int comparison = compare(
+                int comparison =
+                    compare(
                         bar.getStartingValue(),
                         coordinate);
                 if ((comparison > 0) || (open && (comparison == 0))) {
@@ -426,7 +429,8 @@ public class FarragoColumnHistogram
          * @param coverages set of coverages for each bar
          * @param range histogram bar range to be tabulated
          */
-        protected static void addRange(List<HistogramBarCoverage> coverages,
+        protected static void addRange(
+            List<HistogramBarCoverage> coverages,
             HistogramRange range,
             String minVal)
         {
@@ -473,7 +477,8 @@ public class FarragoColumnHistogram
                 RexLiteral coordinate = (RexLiteral) lower.getCoordinate();
                 int comparison = compare(minVal, coordinate);
                 if ((comparison == 1)
-                    || ((comparison == 0) && lower.isClosed())) {
+                    || ((comparison == 0) && lower.isClosed()))
+                {
                     coverages.get(0).entireBar = true;
                 }
             }
@@ -547,7 +552,8 @@ public class FarragoColumnHistogram
             // there are no ranges.
             double points = cardinalityPoint;
             if (((points > 0) && (points >= estimatedBarCardinality))
-                || (cardinalityRanges == 0)) {
+                || (cardinalityRanges == 0))
+            {
                 return points;
             }
 

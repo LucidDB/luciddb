@@ -47,7 +47,6 @@ import org.eigenbase.sql.validate.*;
 public class OrderByScope
     extends DelegatingScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlNodeList orderList;
@@ -84,7 +83,8 @@ public class OrderByScope
     {
         // If it's a simple identifier, look for an alias.
         if (identifier.isSimple()
-            && validator.getCompatible().isSortByAlias()) {
+            && validator.getCompatible().isSortByAlias())
+        {
             String name = identifier.names[0];
             final SqlValidatorNamespace selectNs =
                 validator.getNamespace(select);

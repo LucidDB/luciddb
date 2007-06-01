@@ -38,7 +38,6 @@ import org.eigenbase.relopt.*;
 class LcsIndexMinusRel
     extends LcsIndexBitOpRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public LcsIndexMinusRel(
@@ -55,13 +54,12 @@ class LcsIndexMinusRel
 
     public LcsIndexMinusRel clone()
     {
-        return
-            new LcsIndexMinusRel(
-                getCluster(),
-                RelOptUtil.clone(getInputs()),
-                lcsTable,
-                startRidParamId,
-                rowLimitParamId);
+        return new LcsIndexMinusRel(
+            getCluster(),
+            RelOptUtil.clone(getInputs()),
+            lcsTable,
+            startRidParamId,
+            rowLimitParamId);
     }
 
     // implement RelNode

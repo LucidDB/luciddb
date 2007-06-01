@@ -51,7 +51,6 @@ import org.eigenbase.reltype.*;
 public interface FarragoSessionExecutableStmt
     extends FarragoAllocationOwner
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -78,7 +77,7 @@ public interface FarragoSessionExecutableStmt
      * @return true if this statement is DML; false if a query
      */
     public boolean isDml();
-    
+
     /**
      * @return the table modification operation type if this is a table
      * modification statement; otherwise null
@@ -97,8 +96,8 @@ public interface FarragoSessionExecutableStmt
     public Set<String> getReferencedObjectIds();
 
     /**
-     * @return the modification time of an object accessed by this statement,
-     *   or null if the modification time is not available
+     * @return the modification time of an object accessed by this statement, or
+     * null if the modification time is not available
      */
     public String getReferencedObjectModTime(String mofid);
 

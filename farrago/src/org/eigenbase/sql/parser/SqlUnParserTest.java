@@ -33,7 +33,6 @@ package org.eigenbase.sql.parser;
 public class SqlUnParserTest
     extends SqlParserTest
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlUnParserTest(String name)

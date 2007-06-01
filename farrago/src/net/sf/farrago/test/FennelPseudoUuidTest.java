@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
 public class FennelPseudoUuidTest
     extends FarragoTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static {

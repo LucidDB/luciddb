@@ -142,8 +142,8 @@ public class SargEndpoint
             RexLiteral literal = (RexLiteral) coordinate;
             if (!RexLiteral.isNullLiteral(literal)) {
                 assert (SqlTypeUtil.canAssignFrom(
-                            dataType,
-                            literal.getType()));
+                    dataType,
+                    literal.getType()));
             }
         }
 
@@ -429,9 +429,11 @@ public class SargEndpoint
         }
 
         if ((coordinate instanceof RexDynamicParam)
-            || (other.coordinate instanceof RexDynamicParam)) {
+            || (other.coordinate instanceof RexDynamicParam))
+        {
             if ((coordinate instanceof RexDynamicParam)
-                && (other.coordinate instanceof RexDynamicParam)) {
+                && (other.coordinate instanceof RexDynamicParam))
+            {
                 // make sure it's the same param
                 RexDynamicParam p1 = (RexDynamicParam) coordinate;
                 RexDynamicParam p2 = (RexDynamicParam) other.coordinate;
@@ -514,7 +516,8 @@ public class SargEndpoint
         }
 
         // both are finite:  compare coordinates
-        int c = compareCoordinates(
+        int c =
+            compareCoordinates(
                 getCoordinate(),
                 other.getCoordinate());
 
@@ -540,8 +543,7 @@ public class SargEndpoint
      */
     public SargStrictness getStrictnessComplement()
     {
-        return
-            (strictness == SargStrictness.OPEN) ? SargStrictness.CLOSED
+        return (strictness == SargStrictness.OPEN) ? SargStrictness.CLOSED
             : SargStrictness.OPEN;
     }
 

@@ -37,7 +37,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlAbstractTimeFunction
     extends SqlFunction
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlOperandTypeChecker otcCustom =
@@ -54,7 +53,8 @@ public class SqlAbstractTimeFunction
 
     protected SqlAbstractTimeFunction(String name, SqlTypeName typeName)
     {
-        super(name,
+        super(
+            name,
             SqlKind.Function,
             null,
             null,

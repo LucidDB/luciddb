@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
 public class SqlAdvisorValidator
     extends SqlValidatorImpl
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

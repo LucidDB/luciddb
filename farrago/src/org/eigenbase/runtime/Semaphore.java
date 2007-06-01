@@ -44,7 +44,6 @@ import java.util.*;
  */
 public class Semaphore
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final boolean verbose = false;

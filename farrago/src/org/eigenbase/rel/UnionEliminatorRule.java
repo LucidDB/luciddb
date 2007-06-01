@@ -37,7 +37,6 @@ import org.eigenbase.relopt.*;
 public class UnionEliminatorRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public UnionEliminatorRule()

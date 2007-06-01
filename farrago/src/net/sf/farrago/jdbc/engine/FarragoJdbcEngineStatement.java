@@ -29,6 +29,7 @@ import net.sf.farrago.session.*;
 
 import org.eigenbase.util14.*;
 
+
 /**
  * FarragoJdbcEngineStatement implements the {@link java.sql.Statement}
  * interface for the Farrago JDBC driver, including extensions from {@link
@@ -40,7 +41,6 @@ import org.eigenbase.util14.*;
 public class FarragoJdbcEngineStatement
     implements FarragoStatement
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final String ERRMSG_NOT_A_QUERY = "Not a query:  ";

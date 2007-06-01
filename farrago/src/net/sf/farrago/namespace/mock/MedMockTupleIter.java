@@ -34,7 +34,6 @@ import org.eigenbase.runtime.*;
 public class MedMockTupleIter
     implements TupleIter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Object obj;

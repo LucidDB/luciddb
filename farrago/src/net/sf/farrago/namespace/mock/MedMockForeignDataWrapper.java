@@ -42,7 +42,6 @@ import net.sf.farrago.resource.*;
 public class MedMockForeignDataWrapper
     extends MedAbstractDataWrapper
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -88,7 +87,7 @@ public class MedMockForeignDataWrapper
             true,
             new String[] {
                 MedMockDataServer.PROPVAL_JAVA,
-            MedMockDataServer.PROPVAL_FENNEL
+                MedMockDataServer.PROPVAL_FENNEL
             });
         return infoMap.toArray();
     }

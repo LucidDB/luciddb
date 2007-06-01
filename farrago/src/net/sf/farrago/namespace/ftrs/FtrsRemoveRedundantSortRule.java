@@ -43,7 +43,6 @@ import org.eigenbase.util.*;
 class FtrsRemoveRedundantSortRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FtrsRemoveRedundantSortRule()

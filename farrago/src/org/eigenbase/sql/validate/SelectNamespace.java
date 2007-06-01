@@ -40,7 +40,6 @@ import org.eigenbase.sql.parser.*;
 public class SelectNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlSelect select;

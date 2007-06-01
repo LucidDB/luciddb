@@ -44,7 +44,6 @@ import org.netbeans.mdr.handlers.*;
  */
 public abstract class JmiObjUtil
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -175,7 +174,8 @@ public abstract class JmiObjUtil
         return list;
     }
 
-    private static <T extends StructuralFeature> void addFeatures(List<T> list,
+    private static <T extends StructuralFeature> void addFeatures(
+        List<T> list,
         MofClass mofClass,
         Class<T> filterClass,
         boolean includeMultiValued)
@@ -245,11 +245,10 @@ public abstract class JmiObjUtil
     {
         XMIReader xmiReader = XMIReaderFactory.getDefault().createXMIReader();
         try {
-            return
-                xmiReader.read(
-                    new ByteArrayInputStream(string.getBytes()),
-                    null,
-                    extent);
+            return xmiReader.read(
+                new ByteArrayInputStream(string.getBytes()),
+                null,
+                extent);
         } catch (Exception ex) {
             throw Util.newInternal(ex);
         }
@@ -283,8 +282,8 @@ public abstract class JmiObjUtil
         throws ClassNotFoundException
     {
         return getJavaInterfaceForProxy(
-                refClass.getClass(),
-                "$Impl");
+            refClass.getClass(),
+            "$Impl");
     }
 
     /**
@@ -298,8 +297,8 @@ public abstract class JmiObjUtil
         throws ClassNotFoundException
     {
         return getJavaInterfaceForProxy(
-                refAssoc.getClass(),
-                "$Impl");
+            refAssoc.getClass(),
+            "$Impl");
     }
 
     /**
@@ -314,8 +313,8 @@ public abstract class JmiObjUtil
         throws ClassNotFoundException
     {
         return getJavaInterfaceForProxy(
-                refClass.getClass(),
-                "Class$Impl");
+            refClass.getClass(),
+            "Class$Impl");
     }
 
     /**
@@ -329,8 +328,8 @@ public abstract class JmiObjUtil
         throws ClassNotFoundException
     {
         return getJavaInterfaceForProxy(
-                refPackage.getClass(),
-                "$Impl");
+            refPackage.getClass(),
+            "$Impl");
     }
 
     private static Class getJavaInterfaceForProxy(
@@ -345,9 +344,9 @@ public abstract class JmiObjUtil
         className =
             className.substring(0, className.length() - classSuffix.length());
         return Class.forName(
-                className,
-                true,
-                proxyClass.getClassLoader());
+            className,
+            true,
+            proxyClass.getClassLoader());
     }
 
     /**
@@ -365,8 +364,8 @@ public abstract class JmiObjUtil
         int colonPos = mofId.indexOf(':');
         assert (colonPos > -1);
         return Long.parseLong(
-                mofId.substring(colonPos + 1),
-                16);
+            mofId.substring(colonPos + 1),
+            16);
     }
 
     /**
@@ -472,11 +471,10 @@ public abstract class JmiObjUtil
         // NOTE jvs 8-Aug-2006:  default to MDR's classloader, otherwise
         // we get visibility problems with generated MDR classes in
         // some contexts
-        return
-            getClassForRefClass(
-                BaseObjectHandler.getDefaultClassLoader(),
-                refClass,
-                false);
+        return getClassForRefClass(
+            BaseObjectHandler.getDefaultClassLoader(),
+            refClass,
+            false);
     }
 
     /**
@@ -513,10 +511,10 @@ public abstract class JmiObjUtil
                 "org\\.netbeans\\.jmiimpl\\.mof",
                 "javax.jmi");
         try {
-            return
-                (Class<? extends RefObject>) Class.forName(className,
-                    true,
-                    classLoader);
+            return (Class<? extends RefObject>) Class.forName(
+                className,
+                true,
+                classLoader);
         } catch (ClassNotFoundException ex) {
             // This is possible when we're querying an external repository
             // for which we don't know the class mappings.  Do everything
@@ -544,8 +542,8 @@ public abstract class JmiObjUtil
 
     /**
      * Asserts that constraints are satisfied. This method exists because
-     * refVerifyConstraints didn't used to work MDR.  Now it does,
-     * so this method is deprecated.
+     * refVerifyConstraints didn't used to work MDR. Now it does, so this method
+     * is deprecated.
      *
      * @param obj the object to be verified
      *
@@ -559,8 +557,10 @@ public abstract class JmiObjUtil
         // so it is easy to invoke it ONLY if assertions are enabled.
 
         RefClass refClass = obj.refClass();
-        for (StructuralFeature feature
-            : getFeatures(refClass, StructuralFeature.class, false)) {
+        for (
+            StructuralFeature feature
+            : getFeatures(refClass, StructuralFeature.class, false))
+        {
             if (feature.getMultiplicity().getLower() != 0) {
                 if (obj.refGetValue(feature) == null) {
                     String featureClassName = getMetaObjectName(refClass);
@@ -582,9 +582,9 @@ public abstract class JmiObjUtil
 
     /**
      * Sets default values for mandatory attributes of primitive type (e.g.
-     * false for boolean).  MDR actually doesn't require this (it synthesizes
-     * the default values on demand), except in refVerifyConstraints, so we
-     * call this just before invoking that method.
+     * false for boolean). MDR actually doesn't require this (it synthesizes the
+     * default values on demand), except in refVerifyConstraints, so we call
+     * this just before invoking that method.
      *
      * @param obj the object being updated
      */
@@ -598,6 +598,7 @@ public abstract class JmiObjUtil
             if (attr.getMultiplicity().getLower() == 0) {
                 continue;
             }
+
             // This is imprecise but does the job.
             Object val = obj.refGetValue(attr);
             if (val == null) {

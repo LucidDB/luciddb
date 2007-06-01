@@ -38,7 +38,6 @@ import java.util.regex.*;
  */
 class PersistentPropertyStorage
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final HashMap propertyFileMap = new HashMap();
@@ -79,8 +78,8 @@ class PersistentPropertyStorage
         String canonicalName = file.getCanonicalPath();
 
         if (propertyFileMap.containsKey(canonicalName)) {
-            return
-                (PersistentPropertyStorage) propertyFileMap.get(canonicalName);
+            return (PersistentPropertyStorage) propertyFileMap.get(
+                canonicalName);
         }
 
         PersistentPropertyStorage storage = new PersistentPropertyStorage(file);

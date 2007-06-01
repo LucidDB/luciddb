@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
  */
 public class FennelPseudoUuidGenerator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final int UUID_LENGTH = 16;

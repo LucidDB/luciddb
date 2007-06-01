@@ -33,7 +33,6 @@ import net.sf.farrago.server.*;
  */
 public class FarragoDebugServer
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

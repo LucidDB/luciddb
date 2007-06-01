@@ -60,7 +60,6 @@ import org.eigenbase.reltype.*;
 public class RexChecker
     extends RexVisitorImpl<Boolean>
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final boolean fail;
@@ -104,7 +103,8 @@ public class RexChecker
                 ref.getType(),
                 "input",
                 fields[index].getType(),
-                fail)) {
+                fail))
+        {
             return false;
         }
         return true;

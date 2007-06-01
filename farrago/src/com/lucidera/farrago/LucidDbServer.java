@@ -20,11 +20,11 @@
 */
 package com.lucidera.farrago;
 
+import com.lucidera.jdbc.*;
+
 import java.io.*;
 
 import net.sf.farrago.server.*;
-
-import com.lucidera.jdbc.*;
 
 
 /**
@@ -37,7 +37,6 @@ import com.lucidera.jdbc.*;
 public class LucidDbServer
     extends FarragoVjdbcServer
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public LucidDbServer()
@@ -51,6 +50,8 @@ public class LucidDbServer
     {
         super(pw);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // override FarragoVjdbcServer
     public static void main(String [] args)

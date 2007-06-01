@@ -46,7 +46,6 @@ import org.eigenbase.reltype.*;
 public interface FarragoMedDataServer
     extends FarragoAllocation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -120,7 +119,7 @@ public interface FarragoMedDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map<String,Properties> columnPropMap)
+        Map<String, Properties> columnPropMap)
         throws SQLException;
 
     /**

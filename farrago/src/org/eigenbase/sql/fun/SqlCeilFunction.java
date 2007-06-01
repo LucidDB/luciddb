@@ -37,12 +37,12 @@ import org.eigenbase.sql.validate.*;
 public class SqlCeilFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlCeilFunction()
     {
-        super("CEIL",
+        super(
+            "CEIL",
             SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgType,
             null,

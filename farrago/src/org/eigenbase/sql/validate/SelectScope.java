@@ -91,7 +91,6 @@ import org.eigenbase.sql.parser.*;
 public class SelectScope
     extends ListScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlSelect select;
@@ -104,12 +103,11 @@ public class SelectScope
      * sorted. Null if has not been computed yet.
      */
     private SqlNodeList orderList;
-    
+
     /**
-     *  Scope to use to resolve windows
+     * Scope to use to resolve windows
      */
     private final SqlValidatorScope windowParent;
-     
 
     //~ Constructors -----------------------------------------------------------
 
@@ -143,7 +141,7 @@ public class SelectScope
     }
 
     public SqlWindow lookupWindow(String name)
-    {  
+    {
         final SqlNodeList windowList = select.getWindowList();
         for (int i = 0; i < windowList.size(); i++) {
             SqlWindow window = (SqlWindow) windowList.get(i);
@@ -153,15 +151,13 @@ public class SelectScope
                 return window;
             }
         }
-        
+
         // if not in the select scope, then check window scope
         if (windowParent != null) {
             return windowParent.lookupWindow(name);
-        } 
-        else {
+        } else {
             return null;
         }
-            
     }
 
     public boolean isMonotonic(SqlNode expr)
@@ -173,7 +169,8 @@ public class SelectScope
         // TODO: compare fully qualified names
         final SqlNodeList orderList = getOrderList();
         if ((orderList.size() == 1)
-            && expr.equalsDeep((SqlNode) orderList.get(0), false)) {
+            && expr.equalsDeep((SqlNode) orderList.get(0), false))
+        {
             return true;
         }
 

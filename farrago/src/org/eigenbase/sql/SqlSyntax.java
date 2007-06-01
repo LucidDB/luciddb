@@ -166,11 +166,9 @@ public enum SqlSyntax
         {
             throw Util.newInternal(
                 "Internal operator '" + operator
-                    + "' cannot be un-parsed");
+                + "' cannot be un-parsed");
         }
     };
-
-    //~ Methods ----------------------------------------------------------------
 
     /**
      * Converts a call to an operator of this syntax into a string.

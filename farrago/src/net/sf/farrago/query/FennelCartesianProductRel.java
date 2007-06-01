@@ -44,7 +44,6 @@ import org.eigenbase.util.*;
 class FennelCartesianProductRel
     extends FennelDoubleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final JoinRelType joinType;
@@ -100,17 +99,16 @@ class FennelCartesianProductRel
     {
         // TODO:  account for buffering I/O and CPU
         double rowCount = RelMetadataQuery.getRowCount(this);
-        return
-            planner.makeCost(rowCount,
-                0,
-                rowCount * getRowType().getFieldList().size());
+        return planner.makeCost(
+            rowCount,
+            0,
+            rowCount * getRowType().getFieldList().size());
     }
 
     // implement RelNode
     public double getRows()
     {
-        return
-            RelMetadataQuery.getRowCount(left)
+        return RelMetadataQuery.getRowCount(left)
             * RelMetadataQuery.getRowCount(right);
     }
 

@@ -30,9 +30,9 @@ import org.eigenbase.rex.*;
 
 
 /**
- * FarragoOJRexTruthTestImplementor implements Farrago specifics of
- * {@link org.eigenbase.oj.rex.OJRexImplementor} for truth-test row expressions
- * <code>IS TRUE</code> and <code>IS FALSE</code>.
+ * FarragoOJRexTruthTestImplementor implements Farrago specifics of {@link
+ * org.eigenbase.oj.rex.OJRexImplementor} for truth-test row expressions <code>
+ * IS TRUE</code> and <code>IS FALSE</code>.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -40,7 +40,6 @@ import org.eigenbase.rex.*;
 public class FarragoOJRexTruthTestImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private boolean isTrue;
@@ -66,16 +65,15 @@ public class FarragoOJRexTruthTestImplementor
                 new FieldAccess(operand, NullablePrimitive.VALUE_FIELD_NAME);
             nonNull = maybeNegate(nonNull);
 
-            return
-                new BinaryExpression(
-                    new UnaryExpression(
-                        UnaryExpression.NOT,
-                        new MethodCall(
-                            operand,
-                            NullableValue.NULL_IND_ACCESSOR_NAME,
-                            new ExpressionList())),
-                    BinaryExpression.LOGICAL_AND,
-                    nonNull);
+            return new BinaryExpression(
+                new UnaryExpression(
+                    UnaryExpression.NOT,
+                    new MethodCall(
+                        operand,
+                        NullableValue.NULL_IND_ACCESSOR_NAME,
+                        new ExpressionList())),
+                BinaryExpression.LOGICAL_AND,
+                nonNull);
         } else {
             return maybeNegate(operand);
         }

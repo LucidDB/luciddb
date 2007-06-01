@@ -33,7 +33,6 @@ import org.eigenbase.sql.*;
  */
 public interface SqlMoniker
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

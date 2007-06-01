@@ -36,7 +36,6 @@ import java.util.*;
 public class MedPropertyInfoMap
     extends MedAbstractBase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final ResourceBundle resourceBundle;
@@ -100,9 +99,8 @@ public class MedPropertyInfoMap
 
     public DriverPropertyInfo [] toArray()
     {
-        return
-            (DriverPropertyInfo []) map.values().toArray(
-                EMPTY_DRIVER_PROPERTIES);
+        return (DriverPropertyInfo []) map.values().toArray(
+            EMPTY_DRIVER_PROPERTIES);
     }
 }
 

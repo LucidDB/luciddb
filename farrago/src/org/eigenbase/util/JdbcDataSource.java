@@ -39,7 +39,6 @@ import javax.sql.*;
 public class JdbcDataSource
     implements DataSource
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String url;

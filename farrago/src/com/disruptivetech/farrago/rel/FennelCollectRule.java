@@ -37,7 +37,6 @@ import org.eigenbase.relopt.*;
 public class FennelCollectRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FennelCollectRule()

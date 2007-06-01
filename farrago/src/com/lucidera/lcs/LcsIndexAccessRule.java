@@ -38,6 +38,7 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.stat.*;
 
+
 /**
  * LcsIndexAccessRule is a rule for converting FilterRel+LcsRowScanRel into
  * LcsIndexAccessRel (when the filter has the appropriate form).
@@ -48,7 +49,6 @@ import org.eigenbase.stat.*;
 public class LcsIndexAccessRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public LcsIndexAccessRule(RelOptRuleOperand rule, String id)
@@ -93,7 +93,7 @@ public class LcsIndexAccessRule
         super(rule);
         description = "LcsIndexAccessRule: " + id;
     }
-    
+
     //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
@@ -112,14 +112,15 @@ public class LcsIndexAccessRule
 
         // if the rowscan is already being used with an index, then let one
         // of the other rules handle those cases
-        if ((call.rels.length == rowScanRelPosInCall + 1)
-            && !origRowScan.isFullScan) {
+        if ((call.rels.length == (rowScanRelPosInCall + 1))
+            && !origRowScan.isFullScan)
+        {
             // Filter
             //   RowScanRel with index access input
             //     some input
             return;
         }
-        
+
         RexBuilder rexBuilder = origRowScan.getCluster().getRexBuilder();
         SargFactory sargFactory = new SargFactory(rexBuilder);
         SargRexAnalyzer rexAnalyzer = sargFactory.newRexAnalyzer();
@@ -143,27 +144,27 @@ public class LcsIndexAccessRule
         List<SargBinding> sargBindingList)
     {
         LcsRowScanRel origRowScan =
-            ((LcsRowScanRel)call.rels[rowScanRelPosInCall]);
-        
+            ((LcsRowScanRel) call.rels[rowScanRelPosInCall]);
+
         RexBuilder rexBuilder = origRowScan.getCluster().getRexBuilder();
 
         Map<CwmColumn, SargIntervalSequence> col2SeqMap =
             LcsIndexOptimizer.getCol2SeqMap(origRowScan, sargBindingList);
 
         Double filterCorrelationFactor = 0.5;
+
         // Combined selectivity for all the sargable filters
         Double sargFilterSelectivity =
             RelMetadataQuery.getSelectivity(
                 origRowScan,
                 rexAnalyzer.getSargBindingListToRexNode(sargBindingList));
-            
+
         // Try cost based index selection
         List<List<LcsIndexOptimizer.SargColumnFilter>> colFilterLists =
             getSargColFilterLists(origRowScan, sargBindingList, col2SeqMap);
-        
-        LcsIndexOptimizer indexOptimizer =
-            new LcsIndexOptimizer(origRowScan);
-        
+
+        LcsIndexOptimizer indexOptimizer = new LcsIndexOptimizer(origRowScan);
+
         Map<FemLocalIndex, Integer> index2PosMap =
             indexOptimizer.getIndex2MatchedPosByCost(colFilterLists);
 
@@ -176,19 +177,19 @@ public class LcsIndexAccessRule
                 new LcsIndexOptimizer.IndexLengthComparator());
 
         indexSet.addAll(index2PosMap.keySet());
-        
-        List<SargBinding> nonResidualSargBindingList = new 
-            ArrayList<SargBinding>();
-        
+
+        List<SargBinding> nonResidualSargBindingList =
+            new ArrayList<SargBinding>();
+
         List<SargBinding> residualSargBindingList =
             getResidualSargBinding(
                 origRowScan,
                 sargBindingList,
-                index2PosMap, 
+                index2PosMap,
                 nonResidualSargBindingList);
 
         int residualColumnCount = residualSargBindingList.size();
-        if (indexSet.size() == 0 && residualColumnCount == 0) {
+        if ((indexSet.size() == 0) && (residualColumnCount == 0)) {
             // no index usable
             // no residual filtering
             return;
@@ -199,7 +200,7 @@ public class LcsIndexAccessRule
                 nonResidualSargBindingList);
         RexNode nonSargFilter = rexAnalyzer.getNonSargFilterRexNode();
         RexNode postFilter = null;
-        
+
         if ((nonResidualFilter != null) && (nonSargFilter != null)) {
             postFilter =
                 rexBuilder.makeCall(
@@ -211,14 +212,14 @@ public class LcsIndexAccessRule
         } else if (nonSargFilter != null) {
             postFilter = nonSargFilter;
         }
-        
+
         // calculate input selectivity now that we know which filters are used
         // for index and residual filtering
         Double rowScanInputSelectivity = 1.0;
         if (sargFilterSelectivity != null) {
             rowScanInputSelectivity = sargFilterSelectivity;
         }
-        
+
         if (nonResidualFilter != null) {
             // Selectivity for the non residual sarg filters
             Double nonResidualSargFilterSelectivity =
@@ -235,30 +236,28 @@ public class LcsIndexAccessRule
 
         int origResidualColumnCount = 0;
         if (origRowScan.hasResidualFilter) {
-            origResidualColumnCount =
-                origRowScan.residualColumns.length;
+            origResidualColumnCount = origRowScan.residualColumns.length;
         }
 
         int origIndexRelCount =
-            origRowScan.getInputs().length - origResidualColumnCount;        
+            origRowScan.getInputs().length - origResidualColumnCount;
         int indexRelCount =
-            (indexSet.size() > 0 || origIndexRelCount == 1) ? 1 : 0;
-        
+            ((indexSet.size() > 0) || (origIndexRelCount == 1)) ? 1 : 0;
+
         RelNode [] rowScanInputRels =
-            new RelNode[indexRelCount + 
-                        residualColumnCount +
-                        origResidualColumnCount];
-        
+            new RelNode[indexRelCount
+                + residualColumnCount
+                + origResidualColumnCount];
+
         // Setup the new index input rel
         if (indexSet.size() > 0) {
-        
             // AND the INDEX rels together.
-            RelNode newIndexAccessRel = null;    
+            RelNode newIndexAccessRel = null;
             if (!origRowScan.isFullScan) {
-                assert (call.rels.length > rowScanRelPosInCall+1);
-                newIndexAccessRel = call.rels[rowScanRelPosInCall+1];
+                assert (call.rels.length > (rowScanRelPosInCall + 1));
+                newIndexAccessRel = call.rels[rowScanRelPosInCall + 1];
             }
-            
+
             for (FemLocalIndex index : indexSet) {
                 int matchedPos = index2PosMap.get(index);
 
@@ -282,13 +281,13 @@ public class LcsIndexAccessRule
         } else if (origIndexRelCount == 1) {
             rowScanInputRels[0] = origRowScan.getInput(0);
         }
-        
+
         Integer [] resCols = new Integer[residualColumnCount];
-        RelNode [] valueRels = new RelNode[residualColumnCount];        
+        RelNode [] valueRels = new RelNode[residualColumnCount];
         final RelTraitSet callTraits = call.rels[0].getTraits();
 
         buildColumnFilters(
-            resCols,        
+            resCols,
             callTraits,
             valueRels,
             residualColumnCount,
@@ -298,38 +297,38 @@ public class LcsIndexAccessRule
         // Setup the new residual input rels and residual columns
         Integer [] newResCols =
             new Integer[residualColumnCount + origResidualColumnCount];
-        
+
         for (int i = 0; i < residualColumnCount; i++) {
             rowScanInputRels[i + indexRelCount] = valueRels[i];
             newResCols[i] = resCols[i];
         }
-        
+
         for (int i = 0; i < origResidualColumnCount; i++) {
             rowScanInputRels[i + indexRelCount + residualColumnCount] =
                 origRowScan.getInput(i + origIndexRelCount);
             newResCols[i + residualColumnCount] =
                 origRowScan.residualColumns[i];
         }
-        
+
         // Build a RowScan rel based on index search with no extra filters.
         LcsRowScanRel rowScan =
             new LcsRowScanRel(
-            origRowScan.getCluster(),
-            rowScanInputRels,
-            origRowScan.lcsTable,
-            origRowScan.clusteredIndexes,
-            origRowScan.getConnection(),
-            origRowScan.projectedColumns,
-            indexRelCount == 0,
-            newResCols.length > 0,
-            newResCols,
-            rowScanInputSelectivity);
+                origRowScan.getCluster(),
+                rowScanInputRels,
+                origRowScan.lcsTable,
+                origRowScan.clusteredIndexes,
+                origRowScan.getConnection(),
+                origRowScan.projectedColumns,
+                indexRelCount == 0,
+                newResCols.length > 0,
+                newResCols,
+                rowScanInputSelectivity);
 
-        transformCall(call, rowScan, postFilter);       
+        transformCall(call, rowScan, postFilter);
     }
 
     private void buildColumnFilters(
-        Integer [] residualColumns,       
+        Integer [] residualColumns,
         RelTraitSet callTraits,
         RelNode [] valueRels,
         int residualColumnCount,
@@ -337,7 +336,6 @@ public class LcsIndexAccessRule
         LcsRowScanRel origRowScan)
     {
         if (residualColumnCount > 0) {
-            
             RelStatSource tabStats =
                 RelMetadataQuery.getStatistics(origRowScan);
 
@@ -346,43 +344,52 @@ public class LcsIndexAccessRule
                 new TreeSet<LcsIndexOptimizer.SargColumnFilter>(
                     new LcsIndexOptimizer.SargColumnFilterSelectivityComparator(
                         tabStats));
-            
+
             for (int i = 0; i < residualColumnCount; i++) {
                 SargBinding sargBinding = residualSargBindingList.get(i);
-                SargIntervalSequence sargSeq = 
+                SargIntervalSequence sargSeq =
                     FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
                 RexInputRef fieldAccess = sargBinding.getInputRef();
                 filterSet.add(
                     new LcsIndexOptimizer.SargColumnFilter(
-                        fieldAccess.getIndex(), sargSeq));
+                        fieldAccess.getIndex(),
+                        sargSeq));
             }
-            
+
             FemAbstractAttribute [] searchColumns = new FemAbstractAttribute[1];
 
             int i = 0;
+
             // then create the actual column filters in that sort order
             for (LcsIndexOptimizer.SargColumnFilter filter : filterSet) {
                 // Residual column position is relative to the underlying
                 // column store table, same with the project column positions.
                 residualColumns[i] =
                     origRowScan.getOriginalColumnOrdinal(filter.columnPos);
-                searchColumns[0] = 
+                searchColumns[0] =
                     origRowScan.getColumnForFieldAccess(filter.columnPos);
 
                 RelDataType keyRowType =
                     getSearchKeyRowType(
-                        origRowScan, 
+                        origRowScan,
                         searchColumns);
 
-                List<SargIntervalSequence> sargSeqList = 
+                List<SargIntervalSequence> sargSeqList =
                     new ArrayList<SargIntervalSequence>();
                 sargSeqList.add(filter.sargSeq);
 
-                valueRels[i] =  FennelRelUtil.convertSargExpr(callTraits,
-                    keyRowType,origRowScan.getCluster(), sargSeqList);
+                valueRels[i] =
+                    FennelRelUtil.convertSargExpr(
+                        callTraits,
+                        keyRowType,
+                        origRowScan.getCluster(),
+                        sargSeqList);
 
-                valueRels[i] = mergeTraitsAndConvert(callTraits, 
-                    FennelRel.FENNEL_EXEC_CONVENTION, valueRels[i]);
+                valueRels[i] =
+                    mergeTraitsAndConvert(
+                        callTraits,
+                        FennelRel.FENNEL_EXEC_CONVENTION,
+                        valueRels[i]);
                 i++;
             }
         }
@@ -394,7 +401,8 @@ public class LcsIndexAccessRule
         RexNode extraFilter)
     {
         if (extraFilter != null) {
-            rel = new FilterRel(
+            rel =
+                new FilterRel(
                     rel.getCluster(),
                     rel,
                     extraFilter);
@@ -426,7 +434,7 @@ public class LcsIndexAccessRule
         List<SargBinding> sargBindingList,
         Map<CwmColumn, SargIntervalSequence> col2SeqMap)
     {
-        List<List<LcsIndexOptimizer.SargColumnFilter>> retLists = 
+        List<List<LcsIndexOptimizer.SargColumnFilter>> retLists =
             new ArrayList<List<LcsIndexOptimizer.SargColumnFilter>>();
         List<LcsIndexOptimizer.SargColumnFilter> pointFilterList =
             new ArrayList<LcsIndexOptimizer.SargColumnFilter>();
@@ -444,10 +452,14 @@ public class LcsIndexAccessRule
 
                 if (sargSeq.isPoint()) {
                     pointFilterList.add(
-                        new LcsIndexOptimizer.SargColumnFilter(colPos, sargSeq));
+                        new LcsIndexOptimizer.SargColumnFilter(
+                            colPos,
+                            sargSeq));
                 } else {
                     intervalFilterList.add(
-                        new LcsIndexOptimizer.SargColumnFilter(colPos, sargSeq));
+                        new LcsIndexOptimizer.SargColumnFilter(
+                            colPos,
+                            sargSeq));
                 }
             }
         }
@@ -470,12 +482,11 @@ public class LcsIndexAccessRule
             SargBinding sargBinding = sargBindingList.get(i);
             RexInputRef fieldAccess = sargBinding.getInputRef();
             FemAbstractColumn filterColumn =
-                origRowScan.getColumnForFieldAccess(fieldAccess.getIndex()); 
+                origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
             if (filterColumn != null) {
                 sargColList.add(i, filterColumn);
                 retSargBindingList.add(sargBindingList.get(i));
-            }
-            else {
+            } else {
                 nonResidualList.add(sargBindingList.get(i));
             }
         }
@@ -487,33 +498,33 @@ public class LcsIndexAccessRule
                 for (int pos = 0; pos < maxPos; pos++) {
                     FemAbstractColumn filterColumn =
                         LcsIndexOptimizer.getIndexColumn(index, pos);
-                    int i = sargColList.indexOf(filterColumn);                    
+                    int i = sargColList.indexOf(filterColumn);
                     retSargBindingList.remove(i);
                     sargColList.remove(i);
                 }
             }
         }
-        
+
         return retSargBindingList;
     }
 
     private RelNode addNewIndexAccessRel(
-        RelNode oldIndexAccessRel,        
+        RelNode oldIndexAccessRel,
         RelOptRuleCall call,
         int rowScanRelPosInCall,
         LcsIndexOptimizer.CandidateIndex candidate)
     {
         assert (call.rels[rowScanRelPosInCall] instanceof LcsRowScanRel);
         LcsRowScanRel rowScanRel =
-            (LcsRowScanRel)call.rels[rowScanRelPosInCall];
-        
+            (LcsRowScanRel) call.rels[rowScanRelPosInCall];
+
         FemLocalIndex index = candidate.index;
         int matchedPos = candidate.matchedPos;
         List<SargIntervalSequence> sargSeqList = candidate.sargSeqList;
         boolean requireMerge = candidate.requireMerge();
 
         RelOptCluster cluster = rowScanRel.getCluster();
-        
+
         final RelTraitSet callTraits =
             call.rels[rowScanRelPosInCall].getTraits();
 
@@ -525,7 +536,7 @@ public class LcsIndexAccessRule
                 keyRowType,
                 cluster,
                 sargSeqList);
-        
+
         RelNode keyInput =
             mergeTraitsAndConvert(
                 callTraits,
@@ -551,17 +562,16 @@ public class LcsIndexAccessRule
                 inputKeyProj,
                 inputDirectiveProj,
                 requireMerge);
-                
+
         return indexRel;
     }
 
-
     /**
-     * Create a type descriptor for the rows representing search keys along
-     * with their directives, given an array of the attributes representing
-     * the search columns. Note that we force the key type to nullable
-     * because we use null for the representation of infinity (rather than
-     * domain-specific values).
+     * Create a type descriptor for the rows representing search keys along with
+     * their directives, given an array of the attributes representing the
+     * search columns. Note that we force the key type to nullable because we
+     * use null for the representation of infinity (rather than domain-specific
+     * values).
      *
      * @param rel the table scan node that is being optimized
      * @param searchColumns array of column attributes representing the search
@@ -611,18 +621,17 @@ public class LcsIndexAccessRule
         return keyRowType;
     }
 
-
     /**
-     * Create a type descriptor for the rows representing index search keys 
+     * Create a type descriptor for the rows representing index search keys
      * along with their directives, given an index and the number of matching
-     * keys from the index. Note that we force the key type to nullable
-     * because we use null for the representation of infinity (rather than 
+     * keys from the index. Note that we force the key type to nullable because
+     * we use null for the representation of infinity (rather than
      * domain-specific values).
-     * 
+     *
      * @param rel the table scan node that is being optimized
      * @param index the index descriptor
      * @param matchedPos the length of matched prefix in the index key
-     * 
+     *
      * @return type descriptor for the index search key
      */
     private static RelDataType getIndexInputType(
@@ -630,16 +639,17 @@ public class LcsIndexAccessRule
         FemLocalIndex index,
         int matchedPos)
     {
-        FemAbstractAttribute [] indexColumns = 
+        FemAbstractAttribute [] indexColumns =
             new FemAbstractColumn[matchedPos];
 
         for (int pos = 0; pos < matchedPos; pos++) {
-            indexColumns[pos] = (FemAbstractAttribute)
-                LcsIndexOptimizer.getIndexColumn(index, pos);
+            indexColumns[pos] =
+                (FemAbstractAttribute) LcsIndexOptimizer.getIndexColumn(
+                    index,
+                    pos);
         }
 
-        RelDataType keyRowType =
-            getSearchKeyRowType(rel, indexColumns);
+        RelDataType keyRowType = getSearchKeyRowType(rel, indexColumns);
         return keyRowType;
     }
 }

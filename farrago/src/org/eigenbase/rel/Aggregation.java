@@ -37,13 +37,13 @@ import org.eigenbase.reltype.*;
  */
 public interface Aggregation
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the parameter types accepted by this Aggregation.
      *
      * @param typeFactory Type factory to create the types
+     *
      * @return Array of parameter types
      */
     RelDataType [] getParameterTypes(RelDataTypeFactory typeFactory);
@@ -52,6 +52,7 @@ public interface Aggregation
      * Returns the type of the result yielded by this Aggregation.
      *
      * @param typeFactory Type factory to create the type
+     *
      * @return Result type
      */
     RelDataType getReturnType(RelDataTypeFactory typeFactory);

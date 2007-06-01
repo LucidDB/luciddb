@@ -37,7 +37,6 @@ import javax.jmi.reflect.*;
 public class JmiDependencyMappedTransform
     implements JmiDependencyTransform
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Map<JmiAssocEdge, List<AssocRule>> map;
@@ -76,10 +75,10 @@ public class JmiDependencyMappedTransform
     {
         return tieBreaker;
     }
-    
+
     /**
-     * Sets a new tie-breaker.  (Default after construction is
-     * {@link JmiMofIdComparator#instance}.)
+     * Sets a new tie-breaker. (Default after construction is {@link
+     * JmiMofIdComparator#instance}.)
      *
      * @param tieBreaker new tie-breaker, or null to disable tie-breaking
      */
@@ -98,8 +97,10 @@ public class JmiDependencyMappedTransform
         RefClass refClass = target.refClass();
         JmiClassVertex targetClassVertex =
             modelView.getModelGraph().getVertexForRefClass(refClass);
-        for (Object assocEdgeObj
-            : modelView.getAllIncomingAssocEdges(targetClassVertex)) {
+        for (
+            Object assocEdgeObj
+            : modelView.getAllIncomingAssocEdges(targetClassVertex))
+        {
             JmiAssocEdge assocEdge = (JmiAssocEdge) assocEdgeObj;
             List<AssocRule> rules = map.get(assocEdge);
             if (rules == null) {
@@ -112,11 +113,10 @@ public class JmiDependencyMappedTransform
                     continue;
                 }
             }
-            if (!(
-                    target.refIsInstanceOf(
+            if (!(target.refIsInstanceOf(
                         assocEdge.getTargetEnd().getType(),
-                        true)
-                 )) {
+                        true)))
+            {
                 continue;
             }
             Collection sources =
@@ -151,7 +151,8 @@ public class JmiDependencyMappedTransform
         return collection;
     }
 
-    private void applyRefinedRules(List<AssocRule> rules,
+    private void applyRefinedRules(
+        List<AssocRule> rules,
         RefObject source,
         RefObject target,
         Collection result,
@@ -192,8 +193,10 @@ public class JmiDependencyMappedTransform
         AggregationKind requestedKind,
         JmiAssocMapping mapping)
     {
-        for (Object assocEdgeObj
-            : modelView.getModelGraph().getAssocGraph().edgeSet()) {
+        for (
+            Object assocEdgeObj
+            : modelView.getModelGraph().getAssocGraph().edgeSet())
+        {
             JmiAssocEdge assocEdge = (JmiAssocEdge) assocEdgeObj;
             AggregationKind actualKind = AggregationKindEnum.NONE;
             for (int i = 0; i < 2; i++) {

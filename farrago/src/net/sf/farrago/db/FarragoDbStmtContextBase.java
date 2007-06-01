@@ -48,17 +48,16 @@ import org.eigenbase.resource.*;
  *
  * <p>Most non-trivial public methods on this class must be synchronized on the
  * parent session, since closeAllocation may be called from a thread shutting
- * down the database.  The exception is cancel, which must NOT be synchronized,
- * since it needs to return immediately.  (We synchronize on the parent
- * session to avoid deadlocks from session/stmt vs. stmt/session lock order;
- * see http://issues.eigenbase.org/browse/LDB-150 for an example.)
+ * down the database. The exception is cancel, which must NOT be synchronized,
+ * since it needs to return immediately. (We synchronize on the parent session
+ * to avoid deadlocks from session/stmt vs. stmt/session lock order; see
+ * http://issues.eigenbase.org/browse/LDB-150 for an example.)
  *
  * @author Stephan Zuercher
  */
 public abstract class FarragoDbStmtContextBase
     implements FarragoSessionStmtContext
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final Logger tracer =
@@ -117,7 +116,7 @@ public abstract class FarragoDbStmtContextBase
     // implement FarragoSessionStmtContext
     public void closeAllocation()
     {
-        synchronized(session) {
+        synchronized (session) {
             unprepare();
 
             // purge self from session's list
@@ -146,7 +145,7 @@ public abstract class FarragoDbStmtContextBase
     // implement FarragoSessionStmtContext
     public void unprepare()
     {
-        synchronized(session) {
+        synchronized (session) {
             sql = null;
             dynamicParamValues = null;
             dynamicParamValuesSet = null;
@@ -157,9 +156,10 @@ public abstract class FarragoDbStmtContextBase
 
     // implement FarragoSessionStmtContext
     public void setDynamicParam(
-        int parameterIndex, Object x)
+        int parameterIndex,
+        Object x)
     {
-        synchronized(session) {
+        synchronized (session) {
             assert (isPrepared());
             Object y = dynamicParamDefs[parameterIndex].scrubValue(x);
             dynamicParamValues[parameterIndex] = y;
@@ -169,9 +169,11 @@ public abstract class FarragoDbStmtContextBase
 
     // implement FarragoSessionStmtContext
     public void setDynamicParam(
-        int parameterIndex, Object x, Calendar cal)
+        int parameterIndex,
+        Object x,
+        Calendar cal)
     {
-        synchronized(session) {
+        synchronized (session) {
             assert (isPrepared());
             Object y = dynamicParamDefs[parameterIndex].scrubValue(x, cal);
             dynamicParamValues[parameterIndex] = y;
@@ -182,7 +184,7 @@ public abstract class FarragoDbStmtContextBase
     // implement FarragoSessionStmtContext
     public void clearParameters()
     {
-        synchronized(session) {
+        synchronized (session) {
             assert (isPrepared());
             Arrays.fill(dynamicParamValuesSet, false);
             Arrays.fill(dynamicParamValues, null);
@@ -280,11 +282,10 @@ public abstract class FarragoDbStmtContextBase
         TableAccessMap accessMap = executableStmt.getTableAccessMap();
         lockTable(accessMap);
     }
-    
+
     /**
-     * Acquires locks (or whatever transaction manager wants) on a single
-     * table
-     * 
+     * Acquires locks (or whatever transaction manager wants) on a single table
+     *
      * @param table fully qualified table name, represented as a list
      * @param mode access mode for the table
      */
@@ -293,10 +294,10 @@ public abstract class FarragoDbStmtContextBase
         TableAccessMap accessMap = new TableAccessMap(table, mode);
         lockTable(accessMap);
     }
-    
+
     /**
      * Calls the transaction manager to access a set of tables
-     * 
+     *
      * @param accessMap map containing the tables being accessed and their
      * access modes
      */
@@ -327,10 +328,10 @@ public abstract class FarragoDbStmtContextBase
             this,
             newExecutableStmt.getReferencedObjectIds());
     }
-    
+
     /**
      * Marks a single object, represented by its mofId, as in-use
-     * 
+     *
      * @param mofId mofId of the object being marked as in-use
      */
     protected void lockObjectInUse(String mofId)

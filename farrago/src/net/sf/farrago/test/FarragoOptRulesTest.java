@@ -49,7 +49,6 @@ import org.eigenbase.test.*;
 public class FarragoOptRulesTest
     extends FarragoSqlToRelTestBase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final String NL = System.getProperty("line.separator");
@@ -106,7 +105,7 @@ public class FarragoOptRulesTest
             + " options(0)");
         stmt.executeUpdate(
             "alter session implementation set jar"
-            + " plannerviz.plannerviz_plugin");    
+            + " plannerviz.plannerviz_plugin");
     }
 
     protected DiffRepository getDiffRepos()
@@ -162,7 +161,8 @@ public class FarragoOptRulesTest
 
     protected void initPlanner(FarragoPreparingStmt stmt)
     {
-        FarragoSessionPlanner planner = new FarragoTestPlanner(
+        FarragoSessionPlanner planner =
+            new FarragoTestPlanner(
                 program,
                 stmt);
         stmt.setPlanner(planner);
@@ -336,8 +336,8 @@ public class FarragoOptRulesTest
             programBuilder.createProgram(),
             "select e.name from sales.emps e, sales.depts d "
             + "where e.deptno = d.deptno and e.name = 'foo'");
-    }    
-   
+    }
+
     public void testConvertMultiJoinRule()
         throws Exception
     {
@@ -350,7 +350,7 @@ public class FarragoOptRulesTest
             "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 "
             + "where e1.deptno = d.deptno and d.deptno = e2.deptno");
     }
-    
+
     public void testReduceConstants()
         throws Exception
     {
@@ -431,7 +431,7 @@ public class FarragoOptRulesTest
             + "where e1.deptno = d.deptno and d.deptno = e2.deptno "
             + "and d.name = 'foo'");
     }
-    
+
     public void testConvertMultiJoinRuleOuterJoins()
         throws Exception
     {
@@ -457,32 +457,32 @@ public class FarragoOptRulesTest
             "create table I(i int primary key)");
         stmt.executeUpdate(
             "create table J(j int primary key)");
-        
+
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
         programBuilder.addRuleInstance(RemoveTrivialProjectRule.instance);
         programBuilder.addRuleInstance(new ConvertMultiJoinRule());
         check(
             programBuilder.createProgram(),
-            "select * from " +
-            "    (select * from " +
-            "        (select * from " +
-            "            (select * from A right outer join B on a = b) " +
-            "            left outer join " +
-            "            (select * from C full outer join D on c = d)" +
-            "            on a = c and b = d) " +
-            "        right outer join " +
-            "        (select * from " +
-            "            (select * from E full outer join F on e = f) " +
-            "            right outer join " +
-            "            (select * from G left outer join H on g = h) " +
-            "            on e = g and f = h) " +
-            "        on a = e and b = f and c = g and d = h) " +
-            "    inner join " +
-            "    (select * from I inner join J on i = j) " +
-            "    on a = i and h = j");
+            "select * from "
+            + "    (select * from "
+            + "        (select * from "
+            + "            (select * from A right outer join B on a = b) "
+            + "            left outer join "
+            + "            (select * from C full outer join D on c = d)"
+            + "            on a = c and b = d) "
+            + "        right outer join "
+            + "        (select * from "
+            + "            (select * from E full outer join F on e = f) "
+            + "            right outer join "
+            + "            (select * from G left outer join H on g = h) "
+            + "            on e = g and f = h) "
+            + "        on a = e and b = f and c = g and d = h) "
+            + "    inner join "
+            + "    (select * from I inner join J on i = j) "
+            + "    on a = i and h = j");
     }
-    
+
     public void testPushSemiJoinPastProject()
         throws Exception
     {

@@ -32,11 +32,11 @@ import org.eigenbase.relopt.*;
 class VolcanoCost
     implements RelOptCost
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static final VolcanoCost INFINITY =
-        new VolcanoCost(Double.POSITIVE_INFINITY,
+        new VolcanoCost(
+            Double.POSITIVE_INFINITY,
             Double.POSITIVE_INFINITY,
             Double.POSITIVE_INFINITY) {
             public String toString()
@@ -44,6 +44,7 @@ class VolcanoCost
                 return "{inf}";
             }
         };
+
     static final VolcanoCost HUGE =
         new VolcanoCost(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE) {
             public String toString()
@@ -51,6 +52,7 @@ class VolcanoCost
                 return "{huge}";
             }
         };
+
     static final VolcanoCost ZERO =
         new VolcanoCost(0.0, 0.0, 0.0) {
             public String toString()
@@ -58,6 +60,7 @@ class VolcanoCost
                 return "{0}";
             }
         };
+
     static final VolcanoCost TINY =
         new VolcanoCost(1.0, 1.0, 0.0) {
             public String toString()
@@ -65,7 +68,6 @@ class VolcanoCost
                 return "{tiny}";
             }
         };
-
 
     //~ Instance fields --------------------------------------------------------
 
@@ -92,8 +94,7 @@ class VolcanoCost
 
     public boolean isInfinite()
     {
-        return
-            (this == INFINITY) || (this.dRows == Double.POSITIVE_INFINITY)
+        return (this == INFINITY) || (this.dRows == Double.POSITIVE_INFINITY)
             || (this.dCpu == Double.POSITIVE_INFINITY)
             || (this.dIo == Double.POSITIVE_INFINITY);
     }
@@ -106,13 +107,10 @@ class VolcanoCost
     public boolean isLe(RelOptCost other)
     {
         VolcanoCost that = (VolcanoCost) other;
-        return
-            (this == that)
-            || (
-                (this.dRows <= that.dRows)
+        return (this == that)
+            || ((this.dRows <= that.dRows)
                 && (this.dCpu <= that.dCpu)
-                && (this.dIo <= that.dIo)
-               );
+                && (this.dIo <= that.dIo));
     }
 
     public boolean isLt(RelOptCost other)
@@ -131,13 +129,10 @@ class VolcanoCost
             return false;
         }
         VolcanoCost that = (VolcanoCost) other;
-        return
-            (this == that)
-            || (
-                (this.dRows == that.dRows)
+        return (this == that)
+            || ((this.dRows == that.dRows)
                 && (this.dCpu == that.dCpu)
-                && (this.dIo == that.dIo)
-               );
+                && (this.dIo == that.dIo));
     }
 
     public RelOptCost minus(RelOptCost other)
@@ -146,10 +141,10 @@ class VolcanoCost
             return this;
         }
         VolcanoCost that = (VolcanoCost) other;
-        return
-            new VolcanoCost(this.dRows - that.dRows,
-                this.dCpu - that.dCpu,
-                this.dIo - that.dIo);
+        return new VolcanoCost(
+            this.dRows - that.dRows,
+            this.dCpu - that.dCpu,
+            this.dIo - that.dIo);
     }
 
     public RelOptCost multiplyBy(double factor)
@@ -166,10 +161,10 @@ class VolcanoCost
         if ((this == INFINITY) || (that == INFINITY)) {
             return INFINITY;
         }
-        return
-            new VolcanoCost(this.dRows + that.dRows,
-                this.dCpu + that.dCpu,
-                this.dIo + that.dIo);
+        return new VolcanoCost(
+            this.dRows + that.dRows,
+            this.dCpu + that.dCpu,
+            this.dIo + that.dIo);
     }
 
     public void set(

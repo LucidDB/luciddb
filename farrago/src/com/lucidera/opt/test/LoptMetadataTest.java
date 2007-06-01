@@ -21,14 +21,13 @@
 package com.lucidera.opt.test;
 
 import com.lucidera.lcs.*;
+import com.lucidera.opt.*;
 
 import java.math.*;
 
 import java.util.*;
 
 import junit.framework.*;
-
-import com.lucidera.opt.*;
 
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.query.*;
@@ -66,7 +65,6 @@ import org.eigenbase.util.*;
 public class LoptMetadataTest
     extends FarragoSqlToRelTestBase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static boolean doneStaticSetup;
@@ -283,7 +281,8 @@ public class LoptMetadataTest
 
     protected void initPlanner(FarragoPreparingStmt stmt)
     {
-        FarragoSessionPlanner planner = new FarragoTestPlanner(
+        FarragoSessionPlanner planner =
+            new FarragoTestPlanner(
                 program,
                 stmt);
         stmt.setPlanner(planner);
@@ -503,8 +502,8 @@ public class LoptMetadataTest
 
         // Cumulative cost is full table access plus the filtered rowcount for
         // the sort.  Note the filter cost uses the default equality selectivity
-        // because the filter expression effectively becomes
-        // upper(name) = 'ZELDA', which isn't sargable
+        // because the filter expression effectively becomes upper(name) =
+        // 'ZELDA', which isn't sargable
         double tableRowCount = COLSTORE_EMPS_ROWCOUNT;
         double sortRowCount = tableRowCount * DEFAULT_EQUAL_SELECTIVITY;
         checkCost(
@@ -758,22 +757,25 @@ public class LoptMetadataTest
 
         // note: this matches a value of each column
         // be careful of 0-indexed month, and timezone
-        value = RexLiteral.fromJdbcString(
-            factory.createSqlType(SqlTypeName.DATE),
-            SqlTypeName.DATE,
-            "2002-01-01");
+        value =
+            RexLiteral.fromJdbcString(
+                factory.createSqlType(SqlTypeName.DATE),
+                SqlTypeName.DATE,
+                "2002-01-01");
         searchColumn(5, value, 0.2, 1.0);
 
-        value = RexLiteral.fromJdbcString(
-            factory.createSqlType(SqlTypeName.TIME),
-            SqlTypeName.TIME,
-            "12:01:01");
+        value =
+            RexLiteral.fromJdbcString(
+                factory.createSqlType(SqlTypeName.TIME),
+                SqlTypeName.TIME,
+                "12:01:01");
         searchColumn(6, value, 0.2, 1.0);
 
-        value = RexLiteral.fromJdbcString(
-            factory.createSqlType(SqlTypeName.TIMESTAMP),
-            SqlTypeName.TIMESTAMP,
-            "2002-01-01 12:01:01");
+        value =
+            RexLiteral.fromJdbcString(
+                factory.createSqlType(SqlTypeName.TIMESTAMP),
+                SqlTypeName.TIMESTAMP,
+                "2002-01-01 12:01:01");
         searchColumn(7, value, 0.4, 1.0);
 
         // all of first bar + 1/2 of second bar
@@ -946,7 +948,8 @@ public class LoptMetadataTest
         BitSet groupKey = new BitSet();
         groupKey.set(1);
         double expected =
-            RelMdUtil.numDistinctVals((double) 90000,
+            RelMdUtil.numDistinctVals(
+                (double) 90000,
                 (double) COLSTORE_EMPS_ROWCOUNT);
         checkDistinctRowCount(
             "select * from emps",
@@ -1108,6 +1111,7 @@ public class LoptMetadataTest
                 null);
         assertTrue(result != null);
         double expected = 90000.0;
+
         // call numDistinctVals twice -- once for the join and then once
         // for the project; no need to call it a 3rd time for the semijoin
         // because that doesn't reduce the distinct count any further
@@ -1253,6 +1257,7 @@ public class LoptMetadataTest
                 groupKey);
         assertTrue(result != null);
         double expected = 90000.0;
+
         // call numDistinctVals three times -- once for the semijoin, once
         // for the join and then once for the project
         for (int i = 0; i < 3; i++) {
@@ -1386,8 +1391,8 @@ public class LoptMetadataTest
         throws Exception
     {
         checkNoSimpleColumnOrigin(
-            "select dname from " +
-            "(select dname from depts union select name from emps)");
+            "select dname from "
+            + "(select dname from depts union select name from emps)");
     }
 }
 

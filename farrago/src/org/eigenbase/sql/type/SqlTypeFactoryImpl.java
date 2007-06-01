@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
 public class SqlTypeFactoryImpl
     extends RelDataTypeFactoryImpl
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlTypeFactoryImpl()
@@ -291,10 +290,12 @@ public class SqlTypeFactoryImpl
                     }
                     if (!type.equals(resultType)) {
                         if (!typeName.allowsPrec()
-                            && !resultTypeName.allowsPrec()) {
+                            && !resultTypeName.allowsPrec())
+                        {
                             // use the bigger primitive
                             if (type.getPrecision()
-                                > resultType.getPrecision()) {
+                                > resultType.getPrecision())
+                            {
                                 resultType = type;
                             }
                         } else {
@@ -309,23 +310,26 @@ public class SqlTypeFactoryImpl
 
                             int dout = Math.max(p1 - s1, p2 - s2);
                             dout =
-                                Math.min(dout,
+                                Math.min(
+                                    dout,
                                     SqlTypeName.MAX_NUMERIC_PRECISION);
 
                             int scale = Math.max(s1, s2);
                             scale =
-                                Math.min(scale,
+                                Math.min(
+                                    scale,
                                     SqlTypeName.MAX_NUMERIC_PRECISION - dout);
                             scale =
                                 Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
 
                             int precision = dout + scale;
                             assert (precision
-                                    <= SqlTypeName.MAX_NUMERIC_PRECISION);
+                                <= SqlTypeName.MAX_NUMERIC_PRECISION);
                             assert (precision > 0);
 
                             resultType =
-                                createSqlType(SqlTypeName.DECIMAL,
+                                createSqlType(
+                                    SqlTypeName.DECIMAL,
                                     precision,
                                     scale);
                         }
@@ -371,10 +375,12 @@ public class SqlTypeFactoryImpl
                     Object type1 = resultType;
                     resultType =
                         ((IntervalSqlType) resultType).combine(
-                            this, (IntervalSqlType) type);
+                            this,
+                            (IntervalSqlType) type);
                     resultType =
                         ((IntervalSqlType) resultType).combine(
-                            this, (IntervalSqlType) type1);
+                            this,
+                            (IntervalSqlType) type1);
                 }
             } else if (SqlTypeUtil.isDatetime(type)) {
                 // TODO: come up with a cleaner way to support
@@ -382,7 +388,8 @@ public class SqlTypeFactoryImpl
                 if (types.length > (i + 1)) {
                     RelDataType type1 = types[i + 1];
                     if (SqlTypeUtil.isInterval(type1)
-                        || SqlTypeUtil.isIntType(type1)) {
+                        || SqlTypeUtil.isIntType(type1))
+                    {
                         resultType = type;
                         return resultType;
                     }
@@ -404,8 +411,8 @@ public class SqlTypeFactoryImpl
      * Controls behavior discussed <a
      * href="http://sf.net/mailarchive/message.php?msg_id=13337379">here</a>.
      *
-     * @return false (the default) to provide strict SQL:2003 behavior;
-     * true to provide pragmatic behavior
+     * @return false (the default) to provide strict SQL:2003 behavior; true to
+     * provide pragmatic behavior
      *
      * @sql.2003 Part 2 Section 9.3 Syntax Rule 3.a.iii.3
      */
@@ -431,19 +438,18 @@ public class SqlTypeFactoryImpl
     private RelDataType copyIntervalType(RelDataType type, boolean nullable)
     {
         return new IntervalSqlType(
-                type.getIntervalQualifier(),
-                nullable);
+            type.getIntervalQualifier(),
+            nullable);
     }
 
     private RelDataType copyObjectType(RelDataType type, boolean nullable)
     {
-        return
-            new ObjectSqlType(
-                type.getSqlTypeName(),
-                type.getSqlIdentifier(),
-                nullable,
-                type.getFields(),
-                type.getComparability());
+        return new ObjectSqlType(
+            type.getSqlTypeName(),
+            type.getSqlIdentifier(),
+            nullable,
+            type.getFields(),
+            type.getComparability());
     }
 
     // override RelDataTypeFactoryImpl

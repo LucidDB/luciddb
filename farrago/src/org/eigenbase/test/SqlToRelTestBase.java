@@ -57,7 +57,6 @@ import org.eigenbase.util.*;
 public class SqlToRelTestBase
     extends TestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final String NL = System.getProperty("line.separator");
@@ -166,9 +165,12 @@ public class SqlToRelTestBase
                 }
             }
             if (names.length < 3) {
-                String[] newNames = {"CATALOG", "SALES", ""};
+                String [] newNames = { "CATALOG", "SALES", "" };
                 System.arraycopy(
-                    names, 0, newNames, newNames.length - names.length,
+                    names,
+                    0,
+                    newNames,
+                    newNames.length - names.length,
                     names.length);
                 names = newNames;
             }
@@ -176,9 +178,9 @@ public class SqlToRelTestBase
         }
 
         public RelOptTable getTableForMember(
-            String[] names,
+            String [] names,
             final String datasetName,
-            boolean[] usedDataset)
+            boolean [] usedDataset)
         {
             final RelOptTable table = getTableForMember(names);
 
@@ -264,7 +266,8 @@ public class SqlToRelTestBase
                 return MockRelOptSchema.this;
             }
 
-            public RelNode toRel(RelOptCluster cluster,
+            public RelNode toRel(
+                RelOptCluster cluster,
                 RelOptConnection connection)
             {
                 return new TableAccessRel(cluster, this, connection);
@@ -388,7 +391,8 @@ public class SqlToRelTestBase
                     relOptConnection,
                     typeFactory);
             final SqlNode validatedQuery = validator.validate(sqlQuery);
-            final RelNode rel = converter.convertQuery(validatedQuery, false, true);
+            final RelNode rel =
+                converter.convertQuery(validatedQuery, false, true);
             Util.post(rel != null, "return != null");
             return rel;
         }
@@ -447,12 +451,11 @@ public class SqlToRelTestBase
             SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory)
         {
-            return
-                new FarragoTestValidator(
-                    getOperatorTable(),
-                    new MockCatalogReader(typeFactory),
-                    typeFactory,
-                    getCompatible());
+            return new FarragoTestValidator(
+                getOperatorTable(),
+                new MockCatalogReader(typeFactory),
+                typeFactory,
+                getCompatible());
         }
 
         public final SqlOperatorTable getOperatorTable()

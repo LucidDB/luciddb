@@ -31,25 +31,23 @@ import junit.framework.*;
 
 import net.sf.farrago.*;
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.core.CwmModelElement;
-import net.sf.farrago.cwm.core.CwmTaggedValue;
-import net.sf.farrago.cwm.relational.CwmCatalog;
-import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.config.FemFarragoConfig;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor;
-import net.sf.farrago.query.FennelRelUtil;
-import net.sf.farrago.type.FarragoTypeFactoryImpl;
+import net.sf.farrago.fennel.tuple.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.type.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.jmi.mem.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
-import org.netbeans.api.mdr.MDRepository;
+import org.netbeans.api.mdr.*;
 import org.netbeans.api.xmi.*;
 
 
@@ -67,7 +65,6 @@ import org.netbeans.api.xmi.*;
 public class JmiMemTest
     extends FarragoTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String TABLE_NAME = "Chips Ahoy";
@@ -118,7 +115,8 @@ public class JmiMemTest
         cmd.getStreamDefs().addAll(
             Collections.singleton(inserterDef));
 
-        String xmi = JmiObjUtil.exportToXmiString(
+        String xmi =
+            JmiObjUtil.exportToXmiString(
                 Collections.singleton(cmd));
 
         Collection c =
@@ -168,15 +166,16 @@ public class JmiMemTest
     {
         RelDataTypeFactory typeFactory = new FarragoTypeFactoryImpl(factory);
 
-        RelDataType[] types = new RelDataType[] {
-            typeFactory.createSqlType(SqlTypeName.INTEGER),
-            typeFactory.createSqlType(SqlTypeName.VARCHAR, 128),
-        };
+        RelDataType [] types =
+            new RelDataType[] {
+                typeFactory.createSqlType(SqlTypeName.INTEGER),
+                typeFactory.createSqlType(SqlTypeName.VARCHAR, 128),
+            };
 
-        String[] names = new String[] {
-            COLUMN_NAME,
-            COLUMN_NAME_2,
-        };
+        String [] names = new String[] {
+                COLUMN_NAME,
+                COLUMN_NAME_2,
+            };
 
         RelDataType rowType = typeFactory.createStructType(types, names);
 
@@ -257,7 +256,8 @@ public class JmiMemTest
         column.setName(COLUMN_NAME);
         table.getFeature().add(column);
 
-        String xmi = JmiObjUtil.exportToXmiString(
+        String xmi =
+            JmiObjUtil.exportToXmiString(
                 Collections.singleton(table));
 
         Collection c =
@@ -433,7 +433,7 @@ public class JmiMemTest
 
         public FarragoPackage getTransientFarragoPackage()
         {
-            return (FarragoPackage)getImpl().getRootPackage();
+            return (FarragoPackage) getImpl().getRootPackage();
         }
 
         public CwmCatalog getSelfAsCatalog()
@@ -476,12 +476,17 @@ public class JmiMemTest
             throw new UnsupportedOperationException();
         }
 
-        public String getLocalizedObjectName(CwmModelElement modelElement, RefClass refClass)
+        public String getLocalizedObjectName(
+            CwmModelElement modelElement,
+            RefClass refClass)
         {
             throw new UnsupportedOperationException();
         }
 
-        public String getLocalizedObjectName(String qualifierName, String objectName, RefClass refClass)
+        public String getLocalizedObjectName(
+            String qualifierName,
+            String objectName,
+            RefClass refClass)
         {
             throw new UnsupportedOperationException();
         }
@@ -501,7 +506,10 @@ public class JmiMemTest
             throw new UnsupportedOperationException();
         }
 
-        public void setTagValue(CwmModelElement element, String tagName, String tagValue)
+        public void setTagValue(
+            CwmModelElement element,
+            String tagName,
+            String tagValue)
         {
             throw new UnsupportedOperationException();
         }
@@ -511,17 +519,24 @@ public class JmiMemTest
             throw new UnsupportedOperationException();
         }
 
-        public FemTagAnnotation getTagAnnotation(FemAnnotatedElement element, String tagName)
+        public FemTagAnnotation getTagAnnotation(
+            FemAnnotatedElement element,
+            String tagName)
         {
             throw new UnsupportedOperationException();
         }
 
-        public void setTagAnnotationValue(FemAnnotatedElement element, String tagName, String tagValue)
+        public void setTagAnnotationValue(
+            FemAnnotatedElement element,
+            String tagName,
+            String tagValue)
         {
             throw new UnsupportedOperationException();
         }
 
-        public String getTagAnnotationValue(FemAnnotatedElement element, String tagName)
+        public String getTagAnnotationValue(
+            FemAnnotatedElement element,
+            String tagName)
         {
             throw new UnsupportedOperationException();
         }

@@ -39,7 +39,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlProcedureCallOperator
     extends SqlPrefixOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlProcedureCallOperator()
@@ -56,24 +55,23 @@ public class SqlProcedureCallOperator
         // TODO jvs 18-Jan-2005:  rewrite to SELECT * FROM TABLE f(x)
         // once we support function calls as tables
         SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
-        return
-            SqlStdOperatorTable.selectOperator.createCall(
-                null,
-                new SqlNodeList(
-                    Collections.singletonList(
-                        call.getOperands()[0]),
-                    SqlParserPos.ZERO),
-                SqlStdOperatorTable.valuesOperator.createCall(
+        return SqlStdOperatorTable.selectOperator.createCall(
+            null,
+            new SqlNodeList(
+                Collections.singletonList(
+                    call.getOperands()[0]),
+                SqlParserPos.ZERO),
+            SqlStdOperatorTable.valuesOperator.createCall(
+                SqlParserPos.ZERO,
+                SqlStdOperatorTable.rowConstructor.createCall(
                     SqlParserPos.ZERO,
-                    SqlStdOperatorTable.rowConstructor.createCall(
-                        SqlParserPos.ZERO,
-                        SqlLiteral.createExactNumeric("0", SqlParserPos.ZERO))),
-                null,
-                null,
-                null,
-                null,
-                null,
-                SqlParserPos.ZERO);
+                    SqlLiteral.createExactNumeric("0", SqlParserPos.ZERO))),
+            null,
+            null,
+            null,
+            null,
+            null,
+            SqlParserPos.ZERO);
     }
 }
 

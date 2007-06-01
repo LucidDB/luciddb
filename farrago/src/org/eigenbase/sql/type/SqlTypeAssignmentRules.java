@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
  */
 public class SqlTypeAssignmentRules
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static SqlTypeAssignmentRules instance = null;
@@ -238,13 +237,17 @@ public class SqlTypeAssignmentRules
         rule.add(SqlTypeName.INTERVAL_YEAR_MONTH);
 
         // intervals is castable from Bigint and Integer
-        rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.INTERVAL_DAY_TIME);
+        rule =
+            (HashSet<SqlTypeName>) coerceRules.get(
+                SqlTypeName.INTERVAL_DAY_TIME);
         rule.add(SqlTypeName.BIGINT);
         rule.add(SqlTypeName.INTEGER);
         rule.add(SqlTypeName.VARCHAR);
 
         // intervals is castable from Bigint and Integer
-        rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.INTERVAL_YEAR_MONTH);
+        rule =
+            (HashSet<SqlTypeName>) coerceRules.get(
+                SqlTypeName.INTERVAL_YEAR_MONTH);
         rule.add(SqlTypeName.BIGINT);
         rule.add(SqlTypeName.INTEGER);
         rule.add(SqlTypeName.VARCHAR);

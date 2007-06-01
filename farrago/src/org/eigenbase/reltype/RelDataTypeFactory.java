@@ -33,8 +33,8 @@ import org.eigenbase.sql.type.*;
 /**
  * RelDataTypeFactory is a factory for datatype descriptors. It defines methods
  * for instantiating and combining SQL, Java, and collection types. The factory
- * also provides methods for return type inference for arithmetic in cases 
- * where SQL 2003 is implementation defined or impractical.
+ * also provides methods for return type inference for arithmetic in cases where
+ * SQL 2003 is implementation defined or impractical.
  *
  * <p>This interface is an example of the {@link
  * org.eigenbase.util.Glossary#AbstractFactoryPattern abstract factory pattern}.
@@ -49,7 +49,6 @@ import org.eigenbase.sql.type.*;
  */
 public interface RelDataTypeFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -99,7 +98,8 @@ public interface RelDataTypeFactory
      * @pre typeList.size() == fieldNameList.size()
      * @post return != null
      */
-    public RelDataType createStructType(List<RelDataType> typeList,
+    public RelDataType createStructType(
+        List<RelDataType> typeList,
         List<String> fieldNameList);
 
     /**
@@ -216,9 +216,9 @@ public interface RelDataTypeFactory
      * @param typeName Name of the type, for example {@link
      * org.eigenbase.sql.type.SqlTypeName#VARCHAR}.
      * @param precision maximum length of the value (non-numeric types) or the
-     * precision of the value (numeric/datetime types)
-     *requires 
-     * both operands to have exact numeric types.
+     * precision of the value (numeric/datetime types) requires both operands to
+     * have exact numeric types.
+     *
      * @return canonical type descriptor
      *
      * @pre typeName != null
@@ -263,41 +263,44 @@ public interface RelDataTypeFactory
         SqlIntervalQualifier intervalQualifier);
 
     /**
-     * Infers the return type of a decimal multiplication. Decimal 
-     * multiplication involves at least one decimal operand and requires 
-     * both operands to have exact numeric types. 
-     * 
+     * Infers the return type of a decimal multiplication. Decimal
+     * multiplication involves at least one decimal operand and requires both
+     * operands to have exact numeric types.
+     *
      * @param type1 type of the first operand
      * @param type2 type of the second operand
-     * 
-     * @return the result type for a decimal multiplication, or null if 
-     *   decimal multiplication should not be applied to the operands.
+     *
+     * @return the result type for a decimal multiplication, or null if decimal
+     * multiplication should not be applied to the operands.
      */
     public RelDataType createDecimalProduct(
-        RelDataType type1, RelDataType type2);
+        RelDataType type1,
+        RelDataType type2);
 
     /**
-     * @return whether a decimal multiplication should be implemented by 
-     * casting arguments to double values.
-     * 
+     * @return whether a decimal multiplication should be implemented by casting
+     * arguments to double values.
+     *
      * @pre createDecimalProduct(type1, type2) != null
      */
     public boolean useDoubleMultiplication(
-        RelDataType type1, RelDataType type2);
+        RelDataType type1,
+        RelDataType type2);
 
     /**
-     * Infers the return type of a decimal division. Decimal 
-     * division involves at least one decimal operand and requires 
-     * both operands to have exact numeric types. 
-     * 
+     * Infers the return type of a decimal division. Decimal division involves
+     * at least one decimal operand and requires both operands to have exact
+     * numeric types.
+     *
      * @param type1 type of the first operand
      * @param type2 type of the second operand
-     * 
-     * @return the result type for a decimal division, or null if 
-     *   decimal division should not be applied to the operands.
+     *
+     * @return the result type for a decimal division, or null if decimal
+     * division should not be applied to the operands.
      */
     public RelDataType createDecimalQuotient(
-        RelDataType type1, RelDataType type2);
+        RelDataType type1,
+        RelDataType type2);
 
     //~ Inner Interfaces -------------------------------------------------------
 

@@ -28,7 +28,8 @@ package org.eigenbase.jmi;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum JmiValidationAction {
+public enum JmiValidationAction
+{
     CREATION, MODIFICATION, DELETION
 }
 

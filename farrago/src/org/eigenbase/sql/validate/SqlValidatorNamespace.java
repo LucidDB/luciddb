@@ -47,7 +47,6 @@ import org.eigenbase.sql.parser.*;
  */
 public interface SqlValidatorNamespace
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -57,8 +56,8 @@ public interface SqlValidatorNamespace
 
     /**
      * Returns the row type of this namespace, which comprises a list of names
-     * and types of the output columns. If the scope's type has not
-     * yet been derived, derives it. Never returns null.
+     * and types of the output columns. If the scope's type has not yet been
+     * derived, derives it. Never returns null.
      *
      * @post return != null
      */
@@ -93,7 +92,8 @@ public interface SqlValidatorNamespace
 
     SqlNode getNode();
 
-    SqlValidatorNamespace lookupChild(String name,
+    SqlValidatorNamespace lookupChild(
+        String name,
         SqlValidatorScope [] ancestorOut,
         int [] offsetOut);
 

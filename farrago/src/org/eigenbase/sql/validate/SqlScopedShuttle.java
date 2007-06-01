@@ -40,7 +40,6 @@ import org.eigenbase.sql.util.*;
 public abstract class SqlScopedShuttle
     extends SqlShuttle
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Stack<SqlValidatorScope> scopes =

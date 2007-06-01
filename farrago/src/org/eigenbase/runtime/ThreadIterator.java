@@ -73,7 +73,6 @@ public abstract class ThreadIterator
         Runnable,
         Iterable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Thread thread;

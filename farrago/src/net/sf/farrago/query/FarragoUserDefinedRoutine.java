@@ -60,7 +60,6 @@ public class FarragoUserDefinedRoutine
     extends SqlFunction
     implements OJRexImplementor
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String RETURN_PREFIX = "RETURN ";
@@ -100,17 +99,18 @@ public class FarragoUserDefinedRoutine
             paramTypes,
             (routine.getType() == ProcedureTypeEnum.PROCEDURE)
             ? SqlFunctionCategory.UserDefinedProcedure
-            : (
-                FarragoCatalogUtil.isRoutineConstructor(routine)
+            : (FarragoCatalogUtil.isRoutineConstructor(routine)
                 ? SqlFunctionCategory.UserDefinedConstructor
-                : SqlFunctionCategory.UserDefinedSpecificFunction
-              ));
+                : SqlFunctionCategory.UserDefinedSpecificFunction));
         this.stmtValidator = stmtValidator;
         this.preparingStmt = preparingStmt;
         this.routine = routine;
         this.returnType = returnType;
 
-        if (preparingStmt != null && routine != null && isDynamicFunction()) {
+        if ((preparingStmt != null)
+            && (routine != null)
+            && isDynamicFunction())
+        {
             this.preparingStmt.disableStatementCaching();
         }
     }
@@ -120,8 +120,9 @@ public class FarragoUserDefinedRoutine
     private static List<String> getRoutineParamNames(FemRoutine femRoutine)
     {
         List<String> list = new ArrayList<String>();
-        for (FemRoutineParameter param :
-            Util.cast(femRoutine.getParameter(), FemRoutineParameter.class))
+        for (
+            FemRoutineParameter param
+            : Util.cast(femRoutine.getParameter(), FemRoutineParameter.class))
         {
             if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
                 continue;
@@ -130,7 +131,7 @@ public class FarragoUserDefinedRoutine
         }
         return list;
     }
-    
+
     public FarragoPreparingStmt getPreparingStmt()
     {
         return preparingStmt;
@@ -195,7 +196,8 @@ public class FarragoUserDefinedRoutine
         String jarName = null;
         String fullMethodName;
         if (!FarragoPluginClassLoader.isLibraryClass(
-                externalName)) {
+                externalName))
+        {
             int iColon = externalName.indexOf(':');
             if (iColon == -1) {
                 // force error below
@@ -269,7 +271,8 @@ public class FarragoUserDefinedRoutine
                     }
                     last = true;
                 }
-                String typeName = fullMethodName.substring(
+                String typeName =
+                    fullMethodName.substring(
                         iNameStart,
                         iComma);
                 Class paramClass;
@@ -333,7 +336,7 @@ public class FarragoUserDefinedRoutine
             throw FarragoResource.instance().PluginInitFailed.ex(
                 javaClassName,
                 ex);
-        }      
+        }
 
         int modifiers = javaMethod.getModifiers();
         if (!Modifier.isStatic(modifiers) || !Modifier.isPublic(modifiers)) {
@@ -350,7 +353,8 @@ public class FarragoUserDefinedRoutine
 
         Class javaReturnClass = javaMethod.getReturnType();
         if ((routine.getType() == ProcedureTypeEnum.FUNCTION)
-            && (!isTableFunction())) {
+            && (!isTableFunction()))
+        {
             SqlTypeName actualReturnSqlType = rules.lookup(javaReturnClass);
             SqlTypeName declReturnSqlType = returnType.getSqlTypeName();
             if (!checkCompatibility(actualReturnSqlType, declReturnSqlType)) {
@@ -398,13 +402,13 @@ public class FarragoUserDefinedRoutine
                 }
             }
         }
-        
+
         // verify that List parameters corresponding to COLUMN_LIST parameters
         // are declared as List<String>
         if (hasListParam) {
             if (!validateListParams(javaMethod, javaParamClasses)) {
-                throw FarragoResource.instance()
-                .ValidatorInvalidColumnListParam.ex(
+                throw FarragoResource.instance().ValidatorInvalidColumnListParam
+                .ex(
                     repos.getLocalizedObjectName(routine),
                     repos.getLocalizedObjectName(
                         javaUnmangledMethodName));
@@ -421,14 +425,14 @@ public class FarragoUserDefinedRoutine
         }
         return t1.getFamily() == t2.getFamily();
     }
-    
+
     /**
      * Examines parameters corresponding to List parameters and ensures that
      * they are List&lt;String&gt; types
-     * 
+     *
      * @param javaMethod the java method containing the parameters
      * @param javaParamClasses classes of the parameter
-     * 
+     *
      * @return true if List parameters are List&lt;String&gt; parameters
      */
     private boolean validateListParams(
@@ -443,7 +447,7 @@ public class FarragoUserDefinedRoutine
                 }
                 ParameterizedType pType = (ParameterizedType) genericTypes[i];
                 Type [] typeArgs = pType.getActualTypeArguments();
-                if (typeArgs.length != 1 || !(typeArgs[0] instanceof Class)) {
+                if ((typeArgs.length != 1) || !(typeArgs[0] instanceof Class)) {
                     return false;
                 }
                 Class typeClass = (Class) typeArgs[0];
@@ -452,7 +456,7 @@ public class FarragoUserDefinedRoutine
                 }
             }
         }
-        
+
         return true;
     }
 
@@ -523,13 +527,12 @@ public class FarragoUserDefinedRoutine
                 stmtValidator.getTypeFactory().createJavaType(
                     method.getReturnType());
         }
-        return
-            farragoTranslator.convertCastOrAssignment(
-                call.toString(),
-                returnType,
-                actualReturnType,
-                null,
-                varResult);
+        return farragoTranslator.convertCastOrAssignment(
+            call.toString(),
+            returnType,
+            actualReturnType,
+            null,
+            varResult);
     }
 
     // implement OJRexImplementor
@@ -550,16 +553,15 @@ public class FarragoUserDefinedRoutine
             // case of NULL argument detection; also optimize
             // away NULL detection when the routine is declared as
             // RETURNS NULL ON NULL INPUT
-            return
-                farragoTranslator.convertCastOrAssignment(
-                    preparingStmt.getRepos().getLocalizedObjectName(
-                        param.getName()),
-                    stmtValidator.getTypeFactory().createTypeWithNullability(
-                        paramType,
-                        false),
+            return farragoTranslator.convertCastOrAssignment(
+                preparingStmt.getRepos().getLocalizedObjectName(
+                    param.getName()),
+                stmtValidator.getTypeFactory().createTypeWithNullability(
                     paramType,
-                    null,
-                    argExpr);
+                    false),
+                paramType,
+                null,
+                argExpr);
         } else {
             return argExpr;
         }
@@ -567,7 +569,9 @@ public class FarragoUserDefinedRoutine
 
     public boolean hasDefinition()
     {
-        if (routine.getLanguage().equals(ExtensionLanguageEnum.SQL.toString())) {
+        if (routine.getLanguage().equals(
+                ExtensionLanguageEnum.SQL.toString()))
+        {
             return !routine.getBody().getBody().equals(";");
         } else {
             return routine.getExternalName() != null;
@@ -606,7 +610,7 @@ public class FarragoUserDefinedRoutine
     {
         return getFemRoutine().isDeterministic();
     }
-    
+
     // override SqlOperator
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)
@@ -614,7 +618,6 @@ public class FarragoUserDefinedRoutine
         returnType = super.inferReturnType(opBinding);
         return returnType;
     }
-    
 }
 
 // End FarragoUserDefinedRoutine.java

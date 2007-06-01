@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 public class SqlTypeTransformCascade
     implements SqlReturnTypeInference
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlReturnTypeInference rule;

@@ -42,7 +42,6 @@ package org.eigenbase.relopt;
  */
 public interface RelTrait
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

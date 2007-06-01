@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 public class HepRelVertex
     extends AbstractRelNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

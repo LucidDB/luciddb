@@ -35,7 +35,6 @@ import java.sql.*;
 public class FarragoStatementAllocation
     implements FarragoAllocation
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Statement stmt;

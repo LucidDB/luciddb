@@ -49,7 +49,6 @@ import org.eigenbase.reltype.*;
 public class FennelPullUncollectRel
     extends FennelSingleRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FennelPullUncollectRel(RelOptCluster cluster, RelNode child)

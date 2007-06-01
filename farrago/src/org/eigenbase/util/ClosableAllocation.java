@@ -31,7 +31,6 @@ package org.eigenbase.util;
  */
 public interface ClosableAllocation
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

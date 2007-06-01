@@ -37,7 +37,6 @@ import org.eigenbase.util.*;
 public abstract class EncodedCharPointer
     extends BytePointer
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // TODO:  preallocate a CharsetDecoder
@@ -48,10 +47,10 @@ public abstract class EncodedCharPointer
         }
         try {
             return new String(
-                    buf,
-                    pos,
-                    count - pos,
-                    getCharsetName());
+                buf,
+                pos,
+                count - pos,
+                getCharsetName());
         } catch (UnsupportedEncodingException ex) {
             throw Util.newInternal(ex);
         }

@@ -39,7 +39,6 @@ import org.eigenbase.reltype.*;
 public class RexCorrelVariable
     extends RexVariable
 {
-
     //~ Constructors -----------------------------------------------------------
 
     RexCorrelVariable(

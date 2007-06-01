@@ -29,7 +29,6 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
-import net.sf.farrago.runtime.FarragoUdrRuntime;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
@@ -50,7 +49,6 @@ public abstract class MedAbstractColumnSet
     extends RelOptAbstractTable
     implements FarragoQueryColumnSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String [] localName;
@@ -183,8 +181,8 @@ public abstract class MedAbstractColumnSet
      * not specified); this can be a qualified name, possibly with quoted
      * identifiers, e.g. x.y.z or x."y".z
      * @param serverMofId if not null, the invoked UDX can access the data
-     * server with the given MOFID at runtime via
-     * {@link FarragoUdrRuntime#getDataServerRuntimeSupport}
+     * server with the given MOFID at runtime via {@link
+     * net.sf.farrago.runtime.FarragoUdrRuntime#getDataServerRuntimeSupport}
      * @param args arguments to UDX invocation
      *
      * @return generated relational expression producing the UDX results
@@ -197,8 +195,8 @@ public abstract class MedAbstractColumnSet
         RexNode [] args)
     {
         // TODO jvs 13-Oct-2006:  phase out these vestigial parameters
-        assert(cluster == getPreparingStmt().getRelOptCluster());
-        assert(connection == getPreparingStmt());
+        assert (cluster == getPreparingStmt().getRelOptCluster());
+        assert (connection == getPreparingStmt());
 
         return FarragoJavaUdxRel.newUdxRel(
             getPreparingStmt(),
@@ -210,8 +208,8 @@ public abstract class MedAbstractColumnSet
     }
 
     /**
-     * Converts one RelNode to another RelNode with specified RowType.
-     * New columns are filled with nulls.
+     * Converts one RelNode to another RelNode with specified RowType. New
+     * columns are filled with nulls.
      *
      * @param cluster same as for toRel
      * @param child original RelNode
@@ -228,7 +226,7 @@ public abstract class MedAbstractColumnSet
         RexBuilder rexBuilder = cluster.getRexBuilder();
         FarragoWarningQueue warningQueue =
             getPreparingStmt().getStmtValidator().getWarningQueue();
-        String objectName = this.localName[this.localName.length-1];
+        String objectName = this.localName[this.localName.length - 1];
 
         HashMap<String, RelDataType> srcMap = new HashMap();
         for (RelDataTypeField srcField : srcRowType.getFieldList()) {
@@ -240,15 +238,21 @@ public abstract class MedAbstractColumnSet
         for (RelDataTypeField targetField : targetRowType.getFieldList()) {
             allTargetFields.add(targetField.getName());
             RelDataType type;
+
             // target field is in child
             if ((index = child.getRowType().getFieldOrdinal(
-                     targetField.getName())) != -1) {
-                if ((type = srcMap.get(targetField.getName())) !=
-                    targetField.getType()) {
+                        targetField.getName()))
+                != -1)
+            {
+                if ((type = srcMap.get(targetField.getName()))
+                    != targetField.getType())
+                {
                     // field type has been cast
                     warningQueue.postWarning(
                         FarragoResource.instance().TypeChangeWarning.ex(
-                            objectName, targetField.getName(), type.toString(),
+                            objectName,
+                            targetField.getName(),
+                            type.toString(),
                             targetField.getType().toString()));
                 }
                 rexNodeList.add(new RexInputRef(index, targetField.getType()));
@@ -257,17 +261,22 @@ public abstract class MedAbstractColumnSet
                     rexBuilder.makeCast(
                         targetField.getType(),
                         rexBuilder.constantNull()));
+
                 // check if type-incompatibility between source and target
                 if ((type = srcMap.get(targetField.getName())) != null) {
-                    warningQueue.postWarning(FarragoResource.instance().
-                        IncompatibleTypeChangeWarning.ex(
-                            objectName, targetField.getName(), type.toString(),
+                    warningQueue.postWarning(
+                        FarragoResource.instance().IncompatibleTypeChangeWarning
+                        .ex(
+                            objectName,
+                            targetField.getName(),
+                            type.toString(),
                             targetField.getType().toString()));
                 } else {
                     // field in target has been deleted in source
                     warningQueue.postWarning(
                         FarragoResource.instance().DeletedFieldWarning.ex(
-                            objectName, targetField.getName()));
+                            objectName,
+                            targetField.getName()));
                 }
             }
         }
@@ -277,15 +286,17 @@ public abstract class MedAbstractColumnSet
             if (!allTargetFields.contains(srcField)) {
                 warningQueue.postWarning(
                     FarragoResource.instance().AddedFieldWarning.ex(
-                        objectName, srcField));
+                        objectName,
+                        srcField));
             }
         }
 
         // create a new RelNode.
-        RelNode calcRel = CalcRel.createProject(
-            child,
-            rexNodeList,
-            null);
+        RelNode calcRel =
+            CalcRel.createProject(
+                child,
+                rexNodeList,
+                null);
 
         return RelOptUtil.createCastRel(
             calcRel,

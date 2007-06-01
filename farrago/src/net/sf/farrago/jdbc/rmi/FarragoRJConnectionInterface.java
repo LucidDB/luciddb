@@ -41,7 +41,6 @@ import org.objectweb.rmijdbc.*;
 public interface FarragoRJConnectionInterface
     extends RJConnectionInterface
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

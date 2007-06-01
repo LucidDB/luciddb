@@ -57,7 +57,6 @@ class MedMdrClassExtentRel
     extends TableAccessRelBase
     implements JavaRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -152,12 +151,11 @@ class MedMdrClassExtentRel
             nameList.add(Literal.makeLiteral(runtimeName[i]));
         }
 
-        return
-            mdrClassExtent.directory.server.generateRuntimeSupportCall(
-                new ArrayAllocationExpression(
-                    TypeName.forOJClass(OJSystem.STRING),
-                    new ExpressionList(null),
-                    new ArrayInitializer(nameList)));
+        return mdrClassExtent.directory.server.generateRuntimeSupportCall(
+            new ArrayAllocationExpression(
+                TypeName.forOJClass(OJSystem.STRING),
+                new ExpressionList(null),
+                new ArrayInitializer(nameList)));
     }
 
     public Expression getCollectionExpression()
@@ -199,16 +197,15 @@ class MedMdrClassExtentRel
                 OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
                 new ExpressionList(
                     collectionExpression));
-        return
-            IterCalcRel.implementAbstractTupleIter(
-                implementor,
-                this,
-                adapterExp,
-                varInputRow,
-                inputRowType,
-                outputRowType,
-                program,
-                null);
+        return IterCalcRel.implementAbstractTupleIter(
+            implementor,
+            this,
+            adapterExp,
+            varInputRow,
+            inputRowType,
+            outputRowType,
+            program,
+            null);
     }
 
     RexNode [] implementProjection(Expression inputRow)

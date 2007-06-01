@@ -42,7 +42,6 @@ import net.sf.farrago.namespace.impl.*;
 public class MedMdrForeignDataWrapper
     extends MedAbstractDataWrapper
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

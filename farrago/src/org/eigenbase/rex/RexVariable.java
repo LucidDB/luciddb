@@ -35,7 +35,6 @@ import org.eigenbase.reltype.*;
 public abstract class RexVariable
     extends RexNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final String name;

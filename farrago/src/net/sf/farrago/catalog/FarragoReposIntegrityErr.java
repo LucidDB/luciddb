@@ -23,6 +23,7 @@ package net.sf.farrago.catalog;
 
 import javax.jmi.reflect.*;
 
+
 /**
  * FarragoReposIntegrityErr records one integrity error detected by {@link
  * FarragoRepos#verifyIntegrity}.
@@ -32,19 +33,27 @@ import javax.jmi.reflect.*;
  */
 public class FarragoReposIntegrityErr
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final String description;
 
     private final JmiException exception;
 
     private final RefObject refObj;
 
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoReposIntegrityErr(
-        String description, JmiException exception, RefObject refObj)
+        String description,
+        JmiException exception,
+        RefObject refObj)
     {
         this.description = description;
         this.exception = exception;
         this.refObj = refObj;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return description of the error
@@ -53,10 +62,10 @@ public class FarragoReposIntegrityErr
     {
         return description;
     }
-    
+
     /**
-     * @return underlying exception reported by JMI, or null
-     * if failed integrity rule was specific to Farrago
+     * @return underlying exception reported by JMI, or null if failed integrity
+     * rule was specific to Farrago
      */
     public JmiException getJmiException()
     {

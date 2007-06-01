@@ -28,6 +28,7 @@ import java.lang.reflect.*;
 
 import java.util.*;
 
+
 // TODO jvs 28-April-2004: move this to a repos-independent codegen utility
 // package and add a main method so it can be used from ant; this is just a
 // temporary parking space
@@ -41,7 +42,6 @@ import java.util.*;
  */
 public class CppEnumGen
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private PrintWriter pw;

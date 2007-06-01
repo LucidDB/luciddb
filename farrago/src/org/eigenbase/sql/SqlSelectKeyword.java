@@ -27,14 +27,13 @@ import org.eigenbase.util.*;
 /**
  * Defines the keywords which can occur immediately after the "SELECT" keyword.
  *
- * @version $Id$
  * @author jhyde
+ * @version $Id$
  */
 public class SqlSelectKeyword
     extends EnumeratedValues.BasicValue
     implements SqlLiteral.SqlSymbol
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final int Distinct_ordinal = 0;
@@ -52,6 +51,8 @@ public class SqlSelectKeyword
     {
         super(name, ordinal, null);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public String name()
     {

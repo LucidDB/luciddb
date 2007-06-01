@@ -38,7 +38,6 @@ import org.eigenbase.rex.*;
 public class ValuesRel
     extends ValuesRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

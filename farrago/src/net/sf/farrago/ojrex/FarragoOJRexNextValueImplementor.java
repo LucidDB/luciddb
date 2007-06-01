@@ -40,7 +40,6 @@ import org.eigenbase.rex.*;
 class FarragoOJRexNextValueImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static String GET_SEQUENCE_METHOD_NAME = "getSequenceAccessor";

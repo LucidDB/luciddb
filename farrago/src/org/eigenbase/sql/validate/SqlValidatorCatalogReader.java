@@ -40,7 +40,6 @@ import org.eigenbase.sql.*;
  */
 public interface SqlValidatorCatalogReader
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

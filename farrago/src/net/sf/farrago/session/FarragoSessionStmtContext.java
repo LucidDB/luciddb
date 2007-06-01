@@ -50,7 +50,6 @@ import org.eigenbase.sql.*;
 public interface FarragoSessionStmtContext
     extends FarragoAllocation
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -190,7 +189,7 @@ public interface FarragoSessionStmtContext
      * @return warning queue
      */
     public FarragoWarningQueue getWarningQueue();
-    
+
     public void setQueryTimeout(int milliseconds);
 
     public int getQueryTimeout();

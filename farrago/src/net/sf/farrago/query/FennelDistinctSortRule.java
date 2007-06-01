@@ -44,7 +44,6 @@ import org.eigenbase.util.*;
 public class FennelDistinctSortRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

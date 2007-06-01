@@ -42,7 +42,6 @@ import org.eigenbase.sql.*;
 public class PushProjectPastJoinRule
     extends RelOptRule
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -97,7 +96,7 @@ public class PushProjectPastJoinRule
         if (pushProject.locateAllRefs()) {
             return;
         }
-        
+
         // create left and right projections, projecting only those
         // fields referenced on each side
         RelNode leftProjRel =
@@ -121,7 +120,7 @@ public class PushProjectPastJoinRule
                 rightProjRel.getRowType().getFields();
             RelDataTypeField [] projJoinFields =
                 new RelDataTypeField[projLeftFields.length
-                + projRightFields.length];
+                    + projRightFields.length];
             System.arraycopy(
                 leftProjRel.getRowType().getFields(),
                 0,

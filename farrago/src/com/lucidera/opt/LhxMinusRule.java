@@ -39,7 +39,6 @@ import org.eigenbase.relopt.*;
 public class LhxMinusRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -88,8 +87,11 @@ public class LhxMinusRule
             rightKeys.add(i);
         }
 
-        for (int inputNo = 1; inputNo < minusRel.getInputs().length;
-            inputNo++) {
+        for (
+            int inputNo = 1;
+            inputNo < minusRel.getInputs().length;
+            inputNo++)
+        {
             // perform pair-wise minus
             RelNode rightRel = minusRel.getInputs()[inputNo];
 

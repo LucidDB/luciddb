@@ -48,7 +48,6 @@ import org.eigenbase.util.*;
  */
 public abstract class FarragoManagementUDR
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static final String STORAGEFACTORY_PROP_NAME =
@@ -82,11 +81,9 @@ public abstract class FarragoManagementUDR
                 if (stmtInfo != null) {
                     int i = 0;
                     resultInserter.setLong(++i, id);
-                    resultInserter.setLong(
-                        ++i,
+                    resultInserter.setLong(++i,
                         info.getId());
-                    resultInserter.setString(
-                        ++i,
+                    resultInserter.setString(++i,
                         stmtInfo.getSql());
                     resultInserter.setTimestamp(
                         ++i,
@@ -123,8 +120,7 @@ public abstract class FarragoManagementUDR
                     List<String> mofIds = stmtInfo.getObjectsInUse();
                     for (String mofId : mofIds) {
                         int i = 0;
-                        resultInserter.setLong(
-                            ++i,
+                        resultInserter.setLong(++i,
                             info.getId());
                         resultInserter.setLong(++i, id);
                         resultInserter.setString(++i, mofId);
@@ -152,11 +148,9 @@ public abstract class FarragoManagementUDR
             int i = 0;
             FarragoSessionVariables v = s.getSessionVariables();
             FarragoSessionInfo info = s.getSessionInfo();
-            resultInserter.setLong(
-                ++i,
+            resultInserter.setLong(++i,
                 info.getId());
-            resultInserter.setString(
-                ++i,
+            resultInserter.setString(++i,
                 s.getUrl());
             resultInserter.setString(++i, v.currentUserName);
             resultInserter.setString(++i, v.currentRoleName);
@@ -168,14 +162,11 @@ public abstract class FarragoManagementUDR
             resultInserter.setLong(++i, v.processId);
             resultInserter.setString(++i, v.catalogName);
             resultInserter.setString(++i, v.schemaName);
-            resultInserter.setBoolean(
-                ++i,
+            resultInserter.setBoolean(++i,
                 s.isClosed());
-            resultInserter.setBoolean(
-                ++i,
+            resultInserter.setBoolean(++i,
                 s.isAutoCommit());
-            resultInserter.setBoolean(
-                ++i,
+            resultInserter.setBoolean(++i,
                 s.isTxnInProgress());
             resultInserter.executeUpdate();
         }
@@ -187,7 +178,7 @@ public abstract class FarragoManagementUDR
     public static void sessionParameters(PreparedStatement resultInserter)
         throws SQLException
     {
-        FarragoSessionVariables variables = 
+        FarragoSessionVariables variables =
             FarragoUdrRuntime.getSession().getSessionVariables();
         Map<String, String> readMap = variables.getMap();
         for (String paramName : readMap.keySet()) {
@@ -232,11 +223,12 @@ public abstract class FarragoManagementUDR
             DriverManager.getConnection(
                 "jdbc:default:connection");
         Statement stmt = conn.createStatement();
-        
+
         // First, retrieve current setting.
-        ResultSet rs = stmt.executeQuery(
-            "select \"codeCacheMaxBytes\" from "
-            + "sys_fem.\"Config\".\"FarragoConfig\"");
+        ResultSet rs =
+            stmt.executeQuery(
+                "select \"codeCacheMaxBytes\" from "
+                + "sys_fem.\"Config\".\"FarragoConfig\"");
         rs.next();
         long savedSetting = rs.getLong(1);
         rs.close();
@@ -276,10 +268,9 @@ public abstract class FarragoManagementUDR
     }
 
     /**
-     * Retrieves a list of repository integrity violations.  The
-     * result has two string columns; the first is the error description,
-     * the second is the MOFID of the object on which the error was
-     * detected, or null if unknown.
+     * Retrieves a list of repository integrity violations. The result has two
+     * string columns; the first is the error description, the second is the
+     * MOFID of the object on which the error was detected, or null if unknown.
      */
     public static void repositoryIntegrityViolations(
         PreparedStatement resultInserter)
@@ -314,16 +305,14 @@ public abstract class FarragoManagementUDR
             Properties props = loader.getStorageProperties();
             int i = 0;
             resultInserter.setString(++i, STORAGEFACTORY_PROP_NAME);
-            resultInserter.setString(
-                ++i,
+            resultInserter.setString(++i,
                 loader.getStorageFactoryClassName());
             resultInserter.executeUpdate();
 
             for (String propName : STORAGE_PROP_NAMES) {
                 i = 0;
                 resultInserter.setString(++i, propName);
-                resultInserter.setString(
-                    ++i,
+                resultInserter.setString(++i,
                     props.getProperty(propName));
                 resultInserter.executeUpdate();
             }
@@ -343,12 +332,13 @@ public abstract class FarragoManagementUDR
         // TODO jvs 17-Sept-2006:  Inside of Fennel, require all threads
         // to register with the JVM so that we can get a complete
         // picture here.
-        
+
         Map<Thread, StackTraceElement[]> stackTraces =
             Thread.getAllStackTraces();
 
-        for (Map.Entry<Thread, StackTraceElement[]> entry
-                 : stackTraces.entrySet())
+        for (
+            Map.Entry<Thread, StackTraceElement[]> entry
+            : stackTraces.entrySet())
         {
             Thread thread = entry.getKey();
 
@@ -358,7 +348,7 @@ public abstract class FarragoManagementUDR
             final ThreadGroup threadGroup = thread.getThreadGroup();
             resultInserter.setString(
                 ++i,
-                threadGroup == null ? "null" : threadGroup.getName());
+                (threadGroup == null) ? "null" : threadGroup.getName());
             resultInserter.setString(++i, thread.getName());
             resultInserter.setInt(++i, thread.getPriority());
             resultInserter.setString(++i, thread.getState().toString());
@@ -368,7 +358,7 @@ public abstract class FarragoManagementUDR
             resultInserter.executeUpdate();
         }
     }
-    
+
     /**
      * Populates a table of stack entries for all threads running in the JVM.
      *
@@ -382,8 +372,9 @@ public abstract class FarragoManagementUDR
         Map<Thread, StackTraceElement[]> stackTraces =
             Thread.getAllStackTraces();
 
-        for (Map.Entry<Thread, StackTraceElement[]> entry
-                 : stackTraces.entrySet())
+        for (
+            Map.Entry<Thread, StackTraceElement[]> entry
+            : stackTraces.entrySet())
         {
             Thread thread = entry.getKey();
             StackTraceElement [] stackArray = entry.getValue();
@@ -391,7 +382,6 @@ public abstract class FarragoManagementUDR
             int j = 0;
 
             for (StackTraceElement element : stackArray) {
-
                 int i = 0;
 
                 resultInserter.setLong(++i, thread.getId());
@@ -417,7 +407,7 @@ public abstract class FarragoManagementUDR
     {
         String JVM_SRC = "JVM";
         Runtime runtime = Runtime.getRuntime();
-        
+
         // Read values from System and Runtime
         addSysInfo(
             resultInserter,
@@ -443,7 +433,7 @@ public abstract class FarragoManagementUDR
             "JvmNanoTime",
             Long.toString(System.nanoTime()),
             "ns");
-        
+
         // Read values from Fennel
         Map<String, String> perfCounters =
             NativeTrace.instance().getPerfCounters();
@@ -495,8 +485,9 @@ public abstract class FarragoManagementUDR
         }
 
         // Read system properties
-        for (Map.Entry<Object, Object> entry
-                 : System.getProperties().entrySet())
+        for (
+            Map.Entry<Object, Object> entry
+            : System.getProperties().entrySet())
         {
             addSysInfo(
                 resultInserter,

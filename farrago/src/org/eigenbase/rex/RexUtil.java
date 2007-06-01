@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
  */
 public class RexUtil
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final RexNode [] emptyExpressionArray = new RexNode[0];
@@ -209,12 +208,9 @@ public class RexUtil
     public static boolean isNull(RexNode node)
     {
         /* Checks to see if the RexNode is null */
-        return
-            RexLiteral.isNullLiteral(node)
-            || (
-                (node.getKind() == RexKind.Cast)
-                && isNull(((RexCall) node).operands[0])
-               );
+        return RexLiteral.isNullLiteral(node)
+            || ((node.getKind() == RexKind.Cast)
+                && isNull(((RexCall) node).operands[0]));
     }
 
     /**
@@ -223,7 +219,8 @@ public class RexUtil
      * @param operator to look for
      * @param node a RexNode tree
      */
-    public static RexCall findOperatorCall(final SqlOperator operator,
+    public static RexCall findOperatorCall(
+        final SqlOperator operator,
         RexNode node)
     {
         try {
@@ -256,11 +253,11 @@ public class RexUtil
         try {
             RexVisitor<Void> visitor =
                 new RexVisitorImpl<Void>(true) {
-                public Void visitInputRef(RexInputRef inputRef)
-                {
-                    throw new Util.FoundOne(inputRef);
-                }
-            };
+                    public Void visitInputRef(RexInputRef inputRef)
+                    {
+                        throw new Util.FoundOne(inputRef);
+                    }
+                };
             node.accept(visitor);
             return false;
         } catch (Util.FoundOne e) {
@@ -270,8 +267,8 @@ public class RexUtil
     }
 
     /**
-     * Returns whether a given tree contains any
-     * {@link org.eigenbase.rex.RexFieldAccess} nodes.
+     * Returns whether a given tree contains any {@link
+     * org.eigenbase.rex.RexFieldAccess} nodes.
      *
      * @param node a RexNode tree
      */
@@ -280,8 +277,7 @@ public class RexUtil
     {
         try {
             RexVisitor<Void> visitor =
-                new RexVisitorImpl<Void>(true)
-                {
+                new RexVisitorImpl<Void>(true) {
                     public Void visitFieldAccess(RexFieldAccess fieldAccess)
                     {
                         throw new Util.FoundOne(fieldAccess);
@@ -304,7 +300,8 @@ public class RexUtil
         final RelDataTypeField [] fields = rowType.getFields();
         final RexInputRef [] rexNodes = new RexInputRef[fields.length];
         for (int i = 0; i < rexNodes.length; i++) {
-            rexNodes[i] = new RexInputRef(
+            rexNodes[i] =
+                new RexInputRef(
                     i,
                     fields[i].getType());
         }
@@ -320,7 +317,8 @@ public class RexUtil
         final RelDataTypeField [] fields = rowType.getFields();
         final RexLocalRef [] refs = new RexLocalRef[fields.length];
         for (int i = 0; i < refs.length; i++) {
-            refs[i] = new RexLocalRef(
+            refs[i] =
+                new RexLocalRef(
                     i,
                     fields[i].getType());
         }
@@ -421,10 +419,12 @@ public class RexUtil
                 return false;
             }
             if (SqlTypeUtil.inCharFamily(lhsType)
-                || SqlTypeUtil.inCharFamily(rhsType)) {
+                || SqlTypeUtil.inCharFamily(rhsType))
+            {
                 localCheck = false;
             } else if (SqlTypeUtil.isDecimal(lhsType)
-                && (lhsType != rhsType)) {
+                && (lhsType != rhsType))
+            {
                 return true;
             }
             break;
@@ -501,7 +501,8 @@ public class RexUtil
     {
         final RexInputRef [] refs = new RexInputRef[exprs.length];
         for (int i = 0; i < refs.length; i++) {
-            refs[i] = new RexInputRef(
+            refs[i] =
+                new RexInputRef(
                     i,
                     exprs[i].getType());
         }
@@ -624,9 +625,9 @@ public class RexUtil
             assert (oldType.toString().equals(newType.toString()));
         }
         return new RexCall(
-                call.getType(),
-                call.getOperator(),
-                operands);
+            call.getType(),
+            call.getOperator(),
+            operands);
     }
 
     public static boolean isAtomic(RexNode expr)
@@ -640,8 +641,8 @@ public class RexUtil
      */
     public static boolean isCallTo(RexNode expr, SqlOperator op)
     {
-        return
-            (expr instanceof RexCall) && (((RexCall) expr).getOperator() == op);
+        return (expr instanceof RexCall)
+            && (((RexCall) expr).getOperator() == op);
     }
 
     /**
@@ -651,23 +652,23 @@ public class RexUtil
         RelDataTypeFactory typeFactory,
         final RexNode [] exprs)
     {
-        return
-            typeFactory.createStructType(new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return exprs.length;
-                    }
+        return typeFactory.createStructType(
+            new RelDataTypeFactory.FieldInfo() {
+                public int getFieldCount()
+                {
+                    return exprs.length;
+                }
 
-                    public String getFieldName(int index)
-                    {
-                        return "$" + index;
-                    }
+                public String getFieldName(int index)
+                {
+                    return "$" + index;
+                }
 
-                    public RelDataType getFieldType(int index)
-                    {
-                        return exprs[index].getType();
-                    }
-                });
+                public RelDataType getFieldType(int index)
+                {
+                    return exprs[index].getType();
+                }
+            });
     }
 
     /**
@@ -681,28 +682,28 @@ public class RexUtil
         final RexNode [] exprs,
         final String [] names)
     {
-        return
-            typeFactory.createStructType(new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return exprs.length;
-                    }
+        return typeFactory.createStructType(
+            new RelDataTypeFactory.FieldInfo() {
+                public int getFieldCount()
+                {
+                    return exprs.length;
+                }
 
-                    public String getFieldName(int index)
-                    {
-                        if (names == null) {
-                            return "$f" + index;
-                        }
-                        final String name = names[index];
-                        assert name != null;
-                        return name;
+                public String getFieldName(int index)
+                {
+                    if (names == null) {
+                        return "$f" + index;
                     }
+                    final String name = names[index];
+                    assert name != null;
+                    return name;
+                }
 
-                    public RelDataType getFieldType(int index)
-                    {
-                        return exprs[index].getType();
-                    }
-                });
+                public RelDataType getFieldType(int index)
+                {
+                    return exprs[index].getType();
+                }
+            });
     }
 
     /**
@@ -787,7 +788,8 @@ public class RexUtil
                     exprs[i].getType(),
                     "type2",
                     fields[i].getType(),
-                    fail)) {
+                    fail))
+            {
                 return false;
             }
         }
@@ -911,7 +913,8 @@ public class RexUtil
                 }
             }
             if (diffCount > 0) {
-                call = call.clone(
+                call =
+                    call.clone(
                         call.getType(),
                         normalizedOperands);
             }
@@ -1013,7 +1016,7 @@ public class RexUtil
         public FieldAccessFinder()
         {
             super(true);
-            fieldAccessList = new ArrayList<RexFieldAccess> ();
+            fieldAccessList = new ArrayList<RexFieldAccess>();
         }
 
         public Void visitFieldAccess(RexFieldAccess fieldAccess)

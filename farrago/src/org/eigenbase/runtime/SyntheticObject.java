@@ -51,7 +51,6 @@ import java.lang.reflect.*;
  */
 public abstract class SyntheticObject
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

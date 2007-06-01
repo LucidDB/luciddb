@@ -38,8 +38,7 @@ import org.eigenbase.util.*;
 
 
 /**
- * DdlExtendCatalogStmt represents an ALTER SYSTEM ADD CATALOG JAR
- * statement.
+ * DdlExtendCatalogStmt represents an ALTER SYSTEM ADD CATALOG JAR statement.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -47,7 +46,6 @@ import org.eigenbase.util.*;
 public class DdlExtendCatalogStmt
     extends DdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlIdentifier jarName;

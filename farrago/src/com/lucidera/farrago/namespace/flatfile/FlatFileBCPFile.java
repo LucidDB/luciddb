@@ -22,8 +22,8 @@ package com.lucidera.farrago.namespace.flatfile;
 
 import java.io.*;
 
+import java.util.*;
 import java.util.regex.*;
-import java.util.Vector;
 
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
  */
 class FlatFileBCPFile
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String NEWLINE = "\n";
@@ -55,7 +54,8 @@ class FlatFileBCPFile
 
     //~ Enums ------------------------------------------------------------------
 
-    public enum BcpType {
+    public enum BcpType
+    {
         SQLCHAR, SQLNCHAR, SQLVARCHAR, SQLNVARCHAR, SQLBINARY, SQLVARBINARY,
         SQLDATE, SQLTIME, SQLDATETIME, SQLDATETIM4, SQLTIMESTAMP, SQLDECIMAL,
         SQLNUMERIC, SQLMONEY, SQLMONEY4, SQLTINYINT, SQLSMALLINT, SQLINT,
@@ -202,7 +202,8 @@ class FlatFileBCPFile
             return true;
         }
         if ((origType.equals("SQLBIGINT"))
-            && (!newType.equals("SQLINT"))) {
+            && (!newType.equals("SQLINT")))
+        {
             return true;
         }
         if (origType.equals("SQLVARCHAR")) {
@@ -223,7 +224,8 @@ class FlatFileBCPFile
             return true;
         }
         if ((Integer.valueOf(origVal).compareTo(
-                    Integer.valueOf(newVal))) < 0) {
+                    Integer.valueOf(newVal))) < 0)
+        {
             return true;
         }
         return false;
@@ -254,7 +256,8 @@ class FlatFileBCPFile
             if (this.colDataType[i].equals("SQLVARCHAR")) {
                 int varcharPrec =
                     ((((Integer.valueOf(
-                            this.colDataLength[i]) + 128) / 256) + 1) * 256);
+                                        this.colDataLength[i]) + 128) / 256)
+                            + 1) * 256);
                 this.colDataLength[i] = Integer.toString(varcharPrec);
             }
             int colNo = i + 1;
@@ -455,13 +458,15 @@ class FlatFileBCPFile
                         }
                         types[index] =
                             typeFactory.createTypeWithNullability(
-                                typeFactory.createSqlType(typeName,
+                                typeFactory.createSqlType(
+                                    typeName,
                                     typeLen,
                                     typeScale),
                                 true);
                     } else {
                         if ((typeName.equals(SqlTypeName.TIMESTAMP))
-                            || (typeName.equals(SqlTypeName.TIME))) {
+                            || (typeName.equals(SqlTypeName.TIME)))
+                        {
                             typeLen = typeName.getDefaultPrecision();
                         }
                         types[index] =
@@ -504,10 +509,9 @@ class FlatFileBCPFile
 
     private EigenbaseException newParseError(int line)
     {
-        return
-            FarragoResource.instance().InvalidControlFileOnRow.ex(
-                fileName,
-                Integer.toString(line));
+        return FarragoResource.instance().InvalidControlFileOnRow.ex(
+            fileName,
+            Integer.toString(line));
     }
 
     /**

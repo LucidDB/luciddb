@@ -43,7 +43,6 @@ import org.eigenbase.rex.*;
  */
 public class RelOptCluster
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Environment env;

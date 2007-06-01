@@ -35,7 +35,6 @@ import javax.jmi.reflect.*;
  */
 public class JmiDependencyVertex
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Set<RefObject> elementSet;

@@ -21,12 +21,13 @@
 */
 package net.sf.farrago.runtime;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.type.*;
+import java.sql.*;
 
 import net.sf.farrago.jdbc.param.*;
 
-import java.sql.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
  * Provides runtime support for implementing JDBC interfaces.
@@ -36,6 +37,8 @@ import java.sql.*;
  */
 public abstract class FarragoRuntimeJdbcUtil
 {
+    //~ Methods ----------------------------------------------------------------
+
     public static FarragoParamFieldMetaData newParamFieldMetaData(
         RelDataType type,
         int mode)

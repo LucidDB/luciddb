@@ -30,7 +30,6 @@ package net.sf.farrago.fennel;
  */
 public class FennelSvptHandle
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final long svptHandle;

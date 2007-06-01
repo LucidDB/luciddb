@@ -34,7 +34,6 @@ import org.eigenbase.util.*;
  */
 public class SqlOperandCountRange
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // common usage instances
@@ -100,7 +99,7 @@ public class SqlOperandCountRange
         int count2,
         int count3)
     {
-        this(new Integer[] {count1, count2, count3});
+        this(new Integer[] { count1, count2, count3 });
     }
 
     //~ Methods ----------------------------------------------------------------

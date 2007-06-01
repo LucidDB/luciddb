@@ -23,6 +23,7 @@ package net.sf.farrago.catalog;
 
 import net.sf.farrago.*;
 
+
 /**
  * Mock implementation of {@link FarragoMetadataFactory}.
  *
@@ -32,9 +33,6 @@ import net.sf.farrago.*;
 public class MockFarragoMetadataFactory
     extends FarragoMetadataFactoryImpl
 {
-
-    //~ Instance fields --------------------------------------------------------
-
     //~ Constructors -----------------------------------------------------------
 
     public MockFarragoMetadataFactory()

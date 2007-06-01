@@ -36,7 +36,6 @@ import org.eigenbase.sql.*;
 public class ExplicitOperandTypeInference
     implements SqlOperandTypeInference
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType [] paramTypes;

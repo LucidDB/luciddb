@@ -23,7 +23,6 @@
 package org.eigenbase.sql;
 
 import java.util.*;
-import java.sql.DatabaseMetaData;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
@@ -364,7 +363,6 @@ import org.eigenbase.util.*;
 public class SqlJdbcFunctionCall
     extends SqlFunction
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String numericFunctions;
@@ -376,41 +374,41 @@ public class SqlJdbcFunctionCall
      * List of all numeric function names defined by JDBC.
      */
     private static final String [] allNumericFunctions =
-        {
-            "ABS", "ACOS", "ASIN", "ATAN", "ATAN2", "CEILING", "COS", "COT",
-            "DEGREES", "EXP", "FLOOR", "LOG", "LOG10", "MOD", "PI",
-            "POWER", "RADIANS", "RAND", "ROUND", "SIGN", "SIN", "SQRT",
-            "TAN", "TRUNCATE"
-        };
+    {
+        "ABS", "ACOS", "ASIN", "ATAN", "ATAN2", "CEILING", "COS", "COT",
+        "DEGREES", "EXP", "FLOOR", "LOG", "LOG10", "MOD", "PI",
+        "POWER", "RADIANS", "RAND", "ROUND", "SIGN", "SIN", "SQRT",
+        "TAN", "TRUNCATE"
+    };
 
     /**
      * List of all string function names defined by JDBC.
      */
     private static final String [] allStringFunctions =
-        {
-            "ASCII", "CHAR", "CONCAT", "DIFFERENCE", "INSERT", "LCASE",
-            "LEFT", "LENGTH", "LOCATE", "LTRIM", "REPEAT", "REPLACE",
-            "RIGHT", "RTRIM", "SOUNDEX", "SPACE", "SUBSTRING", "UCASE"
-        };
+    {
+        "ASCII", "CHAR", "CONCAT", "DIFFERENCE", "INSERT", "LCASE",
+        "LEFT", "LENGTH", "LOCATE", "LTRIM", "REPEAT", "REPLACE",
+        "RIGHT", "RTRIM", "SOUNDEX", "SPACE", "SUBSTRING", "UCASE"
+    };
 
     /**
      * List of all time/date function names defined by JDBC.
      */
     private static final String [] allTimeDateFunctions =
-        {
-            "CURDATE", "CURTIME", "DAYNAME", "DAYOFMONTH", "DAYOFWEEK",
-            "DAYOFYEAR", "HOUR", "MINUTE", "MONTH", "MONTHNAME", "NOW",
-            "QUARTER", "SECOND", "TIMESTAMPADD", "TIMESTAMPDIFF",
-            "WEEK", "YEAR"
-        };
+    {
+        "CURDATE", "CURTIME", "DAYNAME", "DAYOFMONTH", "DAYOFWEEK",
+        "DAYOFYEAR", "HOUR", "MINUTE", "MONTH", "MONTHNAME", "NOW",
+        "QUARTER", "SECOND", "TIMESTAMPADD", "TIMESTAMPDIFF",
+        "WEEK", "YEAR"
+    };
 
     /**
      * List of all system function names defined by JDBC.
      */
     private static final String [] allSystemFunctions =
-        {
-            "DATABASE", "IFNULL", "USER"
-        };
+    {
+        "DATABASE", "IFNULL", "USER"
+    };
 
     static {
         numericFunctions = constructFuncList(allNumericFunctions);
@@ -466,7 +464,9 @@ public class SqlJdbcFunctionCall
     }
 
     public SqlCall createCall(
-        SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands)
+        SqlLiteral functionQualifier,
+        SqlParserPos pos,
+        SqlNode ... operands)
     {
         thisOperands = operands;
         return super.createCall(functionQualifier, pos, operands);
@@ -518,7 +518,8 @@ public class SqlJdbcFunctionCall
         }
 
         if (!lookupMakeCallObj.checkNumberOfArg(
-                opBinding.getOperandCount())) {
+                opBinding.getOperandCount()))
+        {
             throw callBinding.newValidationError(
                 EigenbaseResource.instance().WrongNumberOfParam.ex(
                     getName(),
@@ -531,14 +532,14 @@ public class SqlJdbcFunctionCall
                     callBinding.getValidator(),
                     callBinding.getScope(),
                     getLookupCall()),
-                false)) {
+                false))
+        {
             throw callBinding.newValidationSignatureError();
         }
-        return
-            lookupMakeCallObj.operator.validateOperands(
-                callBinding.getValidator(),
-                callBinding.getScope(),
-                getLookupCall());
+        return lookupMakeCallObj.operator.validateOperands(
+            callBinding.getValidator(),
+            callBinding.getScope(),
+            getLookupCall());
     }
 
     private String getArgCountMismatchMsg()
@@ -573,7 +574,7 @@ public class SqlJdbcFunctionCall
     }
 
     /**
-     * @see DatabaseMetaData#getNumericFunctions
+     * @see java.sql.DatabaseMetaData#getNumericFunctions
      */
     public static String getNumericFunctions()
     {
@@ -581,7 +582,7 @@ public class SqlJdbcFunctionCall
     }
 
     /**
-     * @see DatabaseMetaData#getStringFunctions
+     * @see java.sql.DatabaseMetaData#getStringFunctions
      */
     public static String getStringFunctions()
     {
@@ -589,7 +590,7 @@ public class SqlJdbcFunctionCall
     }
 
     /**
-     * @see DatabaseMetaData#getTimeDateFunctions
+     * @see java.sql.DatabaseMetaData#getTimeDateFunctions
      */
     public static String getTimeDateFunctions()
     {
@@ -597,7 +598,7 @@ public class SqlJdbcFunctionCall
     }
 
     /**
-     * @see DatabaseMetaData#getSystemFunctions
+     * @see java.sql.DatabaseMetaData#getSystemFunctions
      */
     public static String getSystemFunctions()
     {
@@ -733,7 +734,8 @@ public class SqlJdbcFunctionCall
          */
         static final JdbcToInternalLookupTable instance =
             new JdbcToInternalLookupTable();
-        private final Map<String,MakeCall> map = new HashMap<String, MakeCall>();
+        private final Map<String, MakeCall> map =
+            new HashMap<String, MakeCall>();
 
         private JdbcToInternalLookupTable()
         {

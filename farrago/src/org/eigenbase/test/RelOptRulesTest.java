@@ -28,15 +28,14 @@ import org.eigenbase.rel.rules.*;
 /**
  * Unit test for rules in {@link org.eigenbase.rel} and subpackages.
  *
- * <p>As input,
- * the test supplies a SQL statement and a single rule; the SQL is translated
- * into relational algebra and then fed into a
- * {@link org.eigenbase.relopt.hep.HepPlanner}. The planner
- * fires the rule on every pattern match in a depth-first left-to-right preorder
- * traversal of the tree for as long as the rule continues to succeed in
- * applying its transform. (For rules which call transformTo more than once,
- * only the last result is used.) The plan before and after "optimization" is
- * diffed against a .ref file using {@link DiffRepository}.
+ * <p>As input, the test supplies a SQL statement and a single rule; the SQL is
+ * translated into relational algebra and then fed into a {@link
+ * org.eigenbase.relopt.hep.HepPlanner}. The planner fires the rule on every
+ * pattern match in a depth-first left-to-right preorder traversal of the tree
+ * for as long as the rule continues to succeed in applying its transform. (For
+ * rules which call transformTo more than once, only the last result is used.)
+ * The plan before and after "optimization" is diffed against a .ref file using
+ * {@link DiffRepository}.
  *
  * <p>Procedure for adding a new test case:
  *
@@ -62,7 +61,6 @@ import org.eigenbase.rel.rules.*;
 public class RelOptRulesTest
     extends RelOptTestBase
 {
-
     //~ Methods ----------------------------------------------------------------
 
     protected DiffRepository getDiffRepos()

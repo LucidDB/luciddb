@@ -37,7 +37,6 @@ import org.eigenbase.relopt.*;
 public class TraitMatchingRule
     extends RelOptRule
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final ConverterRule converter;

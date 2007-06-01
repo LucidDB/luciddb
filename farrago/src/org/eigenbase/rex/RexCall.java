@@ -49,7 +49,6 @@ import org.eigenbase.sql.*;
 public class RexCall
     extends RexNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlOperator op;
@@ -165,7 +164,8 @@ public class RexCall
     {
         StringBuilder sb = new StringBuilder(op.getName());
         if ((operands.length == 0)
-            && (op.getSyntax() == SqlSyntax.FunctionId)) {
+            && (op.getSyntax() == SqlSyntax.FunctionId))
+        {
             // Don't print params for empty arg list. For example, we want
             // "SYSTEM_USER", not "SYSTEM_USER()".
         } else {
@@ -194,9 +194,8 @@ public class RexCall
         // REVIEW jvs 16-Jan-2005: For CAST and NEW, the type is really an
         // operand and needs to be printed out.  But special-casing it here is
         // ugly.
-        return
-            computeDigest(
-                isA(RexKind.Cast) || isA(RexKind.NewSpecification));
+        return computeDigest(
+            isA(RexKind.Cast) || isA(RexKind.NewSpecification));
     }
 
     public <R> R accept(RexVisitor<R> visitor)
@@ -212,9 +211,9 @@ public class RexCall
     public RexCall clone()
     {
         return new RexCall(
-                type,
-                op,
-                RexUtil.clone(operands));
+            type,
+            op,
+            RexUtil.clone(operands));
     }
 
     public RexKind getKind()

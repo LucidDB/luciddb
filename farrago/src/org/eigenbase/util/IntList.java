@@ -35,7 +35,6 @@ import java.util.*;
 public class IntList
     extends ArrayList<Integer>
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public int [] toIntArray()

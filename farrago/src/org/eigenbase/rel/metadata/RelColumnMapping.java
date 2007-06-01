@@ -22,19 +22,21 @@
 package org.eigenbase.rel.metadata;
 
 /**
- * RelColumnMapping records a mapping from an input column of
- * a RelNode to one of its output columns.
+ * RelColumnMapping records a mapping from an input column of a RelNode to one
+ * of its output columns.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class RelColumnMapping
 {
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * 0-based ordinal of mapped output column.
      */
     public int iOutputColumn;
-    
+
     /**
      * 0-based ordinal of mapped input rel.
      */
@@ -44,7 +46,7 @@ public class RelColumnMapping
      * 0-based ordinal of mapped column within input rel.
      */
     public int iInputColumn;
-    
+
     /**
      * Whether the column mapping transforms the input.
      */

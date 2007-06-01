@@ -35,7 +35,6 @@ import java.util.*;
 public class BooleanProperty
     extends Property
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -91,7 +90,8 @@ public class BooleanProperty
      */
     public boolean get(boolean defaultValue)
     {
-        final String value = getInternal(
+        final String value =
+            getInternal(
                 Boolean.toString(defaultValue),
                 false);
         if (value == null) {

@@ -33,7 +33,6 @@ import net.sf.farrago.util.*;
 public class FarragoPropertiesTest
     extends TestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoPropertiesTest(String name)

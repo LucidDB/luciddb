@@ -36,7 +36,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlMonotonicUnaryFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected SqlMonotonicUnaryFunction(

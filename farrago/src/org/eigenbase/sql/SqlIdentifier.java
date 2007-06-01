@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
 public class SqlIdentifier
     extends SqlNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -101,8 +100,7 @@ public class SqlIdentifier
         SqlCollation collation,
         SqlParserPos pos)
     {
-        this(
-            new String[] { name },
+        this(new String[] { name },
             collation,
             pos,
             null);
@@ -115,8 +113,7 @@ public class SqlIdentifier
         String name,
         SqlParserPos pos)
     {
-        this(
-            new String[] { name },
+        this(new String[] { name },
             null,
             pos,
             null);
@@ -131,12 +128,11 @@ public class SqlIdentifier
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return
-            new SqlIdentifier(
-                Util.clone(names),
-                collation,
-                pos,
-                componentPositions);
+        return new SqlIdentifier(
+            Util.clone(names),
+            collation,
+            pos,
+            componentPositions);
     }
 
     public String toString()
@@ -174,14 +170,13 @@ public class SqlIdentifier
     public SqlParserPos getComponentParserPosition(int i)
     {
         assert (i >= 0) && (i < names.length);
-        return
-            (componentPositions == null) ? getParserPosition()
+        return (componentPositions == null) ? getParserPosition()
             : componentPositions[i];
     }
 
     /**
-     * Copies names and components from another identifier.  Does
-     * not modify the cross-component parser position.
+     * Copies names and components from another identifier. Does not modify the
+     * cross-component parser position.
      *
      * @param other identifer from which to copy
      */
@@ -197,10 +192,9 @@ public class SqlIdentifier
      */
     public SqlIdentifier getComponent(int ordinal)
     {
-        return
-            new SqlIdentifier(
-                names[ordinal],
-                getComponentParserPosition(ordinal));
+        return new SqlIdentifier(
+            names[ordinal],
+            getComponentParserPosition(ordinal));
     }
 
     public void unparse(
@@ -304,7 +298,8 @@ public class SqlIdentifier
                         SqlMonikerType.Function));
             } else {
                 if ((op.getSyntax() == SqlSyntax.Function)
-                    || (op.getSyntax() == SqlSyntax.Prefix)) {
+                    || (op.getSyntax() == SqlSyntax.Prefix))
+                {
                     if (op.getOperandTypeChecker() != null) {
                         String sig = op.getAllowedSignatures();
                         sig = sig.replaceAll("'", "");
@@ -327,7 +322,8 @@ public class SqlIdentifier
     {
         // First check for builtin functions which don't have parentheses,
         // like "LOCALTIME".
-        SqlCall call = SqlUtil.makeCall(
+        SqlCall call =
+            SqlUtil.makeCall(
                 validator.getOperatorTable(),
                 this);
         if (call != null) {
@@ -396,7 +392,8 @@ public class SqlIdentifier
         // First check for builtin functions which don't have parentheses,
         // like "LOCALTIME".
         final SqlValidator validator = scope.getValidator();
-        SqlCall call = SqlUtil.makeCall(
+        SqlCall call =
+            SqlUtil.makeCall(
                 validator.getOperatorTable(),
                 this);
         if (call != null) {

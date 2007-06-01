@@ -37,7 +37,6 @@ import org.eigenbase.reltype.*;
 public abstract class TableAccessRelBase
     extends AbstractRelNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

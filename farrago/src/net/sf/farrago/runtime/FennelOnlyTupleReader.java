@@ -26,6 +26,7 @@ import java.nio.*;
 
 import net.sf.farrago.fennel.tuple.*;
 
+
 /**
  * FennelOnlyTupleReader implements the FennelTupleReader interface for reading
  * tuples from a query plan that can be executed exclusively in Fennel.
@@ -33,13 +34,16 @@ import net.sf.farrago.fennel.tuple.*;
  * @author Zelaine Fong
  * @version $Id$
  */
-public class FennelOnlyTupleReader implements FennelTupleReader
+public class FennelOnlyTupleReader
+    implements FennelTupleReader
 {
     //~ Instance fields --------------------------------------------------------
+
     private final FennelTupleAccessor tupleAccessor;
     private final FennelTupleData tupleData;
-    
-    //~ Constructor ------------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * @param tupleDesc tuple descriptor of the tuples to be read
      * @param tupleData tuple data that the tuples read will be unmarshalled
@@ -53,7 +57,7 @@ public class FennelOnlyTupleReader implements FennelTupleReader
         tupleAccessor.compute(tupleDesc);
         this.tupleData = tupleData;
     }
-        
+
     //~ Methods ----------------------------------------------------------------
 
     // implement FennelTupleReader

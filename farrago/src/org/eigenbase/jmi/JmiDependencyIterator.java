@@ -36,7 +36,6 @@ import org.jgrapht.traverse.*;
 public class JmiDependencyIterator
     extends TopologicalOrderIterator<JmiDependencyVertex, DefaultEdge>
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public JmiDependencyIterator(JmiDependencyGraph graph)

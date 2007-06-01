@@ -34,7 +34,6 @@ import java.sql.*;
  */
 public interface FarragoSessionConnectionSource
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

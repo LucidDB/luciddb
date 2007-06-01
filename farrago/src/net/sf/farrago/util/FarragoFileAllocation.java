@@ -40,7 +40,6 @@ import net.sf.farrago.trace.*;
 public class FarragoFileAllocation
     implements FarragoAllocation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = FarragoTrace.getFileAllocationTracer();

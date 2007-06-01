@@ -36,7 +36,6 @@ import org.eigenbase.sql.*;
 class ParameterNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType type;

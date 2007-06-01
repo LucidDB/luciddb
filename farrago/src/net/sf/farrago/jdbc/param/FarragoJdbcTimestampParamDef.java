@@ -40,7 +40,6 @@ import org.eigenbase.util14.*;
 class FarragoJdbcTimestampParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Constructors -----------------------------------------------------------
 
     FarragoJdbcTimestampParamDef(
@@ -56,8 +55,8 @@ class FarragoJdbcTimestampParamDef
     public Object scrubValue(Object x)
     {
         return scrubValue(
-                x,
-                Calendar.getInstance());
+            x,
+            Calendar.getInstance());
     }
 
     // implement FarragoSessionStmtParamDef
@@ -81,7 +80,7 @@ class FarragoJdbcTimestampParamDef
         // Of the subtypes of java.util.Date,
         // only java.sql.Date and java.sql.Timestamp are OK.
         // java.sql.Time is not okay (no date information).
-        if (x instanceof Timestamp || x instanceof java.sql.Date) {
+        if ((x instanceof Timestamp) || (x instanceof java.sql.Date)) {
             java.util.Date timestamp = (java.util.Date) x;
             ZonelessTimestamp zt = new ZonelessTimestamp();
             zt.setZonedTime(timestamp.getTime(), DateTimeUtil.getTimeZone(cal));
@@ -92,7 +91,7 @@ class FarragoJdbcTimestampParamDef
         // it is a convenient format to serialize values over RMI.
         // We disallow ZonelessTime for the same reasons we disallow
         // java.sql.Time above.
-        if (x instanceof ZonelessTimestamp || x instanceof ZonelessDate) {
+        if ((x instanceof ZonelessTimestamp) || (x instanceof ZonelessDate)) {
             long time = ((ZonelessDatetime) x).getTime();
             ZonelessTimestamp zt = new ZonelessTimestamp();
             zt.setZonedTime(time, DateTimeUtil.getTimeZone(cal));

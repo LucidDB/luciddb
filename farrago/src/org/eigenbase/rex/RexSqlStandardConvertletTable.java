@@ -26,13 +26,13 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
 
+
 /**
  * Standard implementation of {@link RexSqlConvertletTable}.
  */
 public class RexSqlStandardConvertletTable
     extends RexSqlReflectiveConvertletTable
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public RexSqlStandardConvertletTable()
@@ -236,7 +236,6 @@ public class RexSqlStandardConvertletTable
                         (RexCall) call);
                 }
             });
-
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -284,15 +283,15 @@ public class RexSqlStandardConvertletTable
         RexNode expr)
     {
         if (expr instanceof RexLiteral) {
-            return converter.convertLiteral((RexLiteral)expr);
+            return converter.convertLiteral((RexLiteral) expr);
         }
 
         if (expr instanceof RexInputRef) {
-            return converter.convertInputRef((RexInputRef)expr);
+            return converter.convertInputRef((RexInputRef) expr);
         }
 
         if (expr instanceof RexCall) {
-            return convertCall(converter, (RexCall)expr);
+            return convertCall(converter, (RexCall) expr);
         }
 
         throw Util.needToImplement(expr);
@@ -319,7 +318,7 @@ public class RexSqlStandardConvertletTable
         SqlNode op1 = convertExpression(converter, call.operands[1]);
         return new SqlCall(
             operator,
-            new SqlNode[] {op0, op1},
+            new SqlNode[] { op0, op1 },
             SqlParserPos.ZERO);
     }
 
@@ -331,7 +330,7 @@ public class RexSqlStandardConvertletTable
         SqlNode op0 = convertExpression(converter, call.operands[0]);
         return new SqlCall(
             operator,
-            new SqlNode[] {op0},
+            new SqlNode[] { op0 },
             SqlParserPos.ZERO);
     }
 
@@ -343,7 +342,7 @@ public class RexSqlStandardConvertletTable
         SqlNode op0 = convertExpression(converter, call.operands[0]);
         return new SqlCall(
             operator,
-            new SqlNode[] {op0},
+            new SqlNode[] { op0 },
             SqlParserPos.ZERO);
     }
 }

@@ -40,7 +40,6 @@ public class IterConcatenateRel
     extends UnionRelBase
     implements JavaRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public IterConcatenateRel(
@@ -59,7 +58,8 @@ public class IterConcatenateRel
     public IterConcatenateRel clone()
     {
         // REVIEW jvs 13-Nov-2005:  shouldn't we be cloning the inputs too?
-        IterConcatenateRel clone = new IterConcatenateRel(
+        IterConcatenateRel clone =
+            new IterConcatenateRel(
                 getCluster(),
                 inputs);
         clone.inheritTraitsFrom(this);
@@ -69,7 +69,8 @@ public class IterConcatenateRel
     public IterConcatenateRel clone(RelNode [] inputs, boolean all)
     {
         assert all;
-        IterConcatenateRel clone = new IterConcatenateRel(
+        IterConcatenateRel clone =
+            new IterConcatenateRel(
                 getCluster(),
                 inputs);
         clone.inheritTraitsFrom(this);
@@ -90,7 +91,7 @@ public class IterConcatenateRel
     protected OJClass getCompoundIteratorClass()
     {
         return OJClass.forClass(
-                org.eigenbase.runtime.CompoundTupleIter.class);
+            org.eigenbase.runtime.CompoundTupleIter.class);
     }
 
     public ParseTree implement(JavaRelImplementor implementor)
@@ -110,14 +111,13 @@ public class IterConcatenateRel
                 implementor.visitJavaChild(this, i, (JavaRel) inputs[i]);
             exps.add(exp);
         }
-        return
-            new AllocationExpression(
-                getCompoundIteratorClass(),
-                new ExpressionList(
-                    new ArrayAllocationExpression(
-                        OJUtil.clazzTupleIter,
-                        new ExpressionList(null),
-                        new ArrayInitializer(exps))));
+        return new AllocationExpression(
+            getCompoundIteratorClass(),
+            new ExpressionList(
+                new ArrayAllocationExpression(
+                    OJUtil.clazzTupleIter,
+                    new ExpressionList(null),
+                    new ArrayInitializer(exps))));
     }
 }
 

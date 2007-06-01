@@ -54,7 +54,6 @@ import org.eigenbase.util.*;
 public class FennelCalcRel
     extends FennelSingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RexProgram program;
@@ -86,18 +85,18 @@ public class FennelCalcRel
         this.rowType = rowType;
         assert program.isValid(true);
         assert RelOptUtil.equal(
-                "program's input type",
-                program.getInputRowType(),
-                "child's output type",
-                child.getRowType(),
-                true);
+            "program's input type",
+            program.getInputRowType(),
+            "child's output type",
+            child.getRowType(),
+            true);
         assert RelOptUtil.equal( // TODO: use stronger 'eq'
 
             "program's output type",
-                program.getOutputRowType(),
-                "fennelCalcRel's output rowtype",
-                rowType,
-                true);
+            program.getOutputRowType(),
+            "fennelCalcRel's output rowtype",
+            rowType,
+            true);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -130,10 +129,9 @@ public class FennelCalcRel
 
     public double getRows()
     {
-        return
-            FilterRel.estimateFilteredRows(
-                getChild(),
-                program);
+        return FilterRel.estimateFilteredRows(
+            getChild(),
+            program);
     }
 
     // implement RelNode
@@ -146,11 +144,10 @@ public class FennelCalcRel
         // we have proper costing, and giving preference to Java since it's
         // currently more reliable)
         int exprCount = program.getExprCount();
-        return
-            planner.makeCost(
-                RelMetadataQuery.getRowCount(this),
-                RelMetadataQuery.getRowCount(getChild()) * exprCount * 2,
-                0);
+        return planner.makeCost(
+            RelMetadataQuery.getRowCount(this),
+            RelMetadataQuery.getRowCount(getChild()) * exprCount * 2,
+            0);
     }
 
     public boolean isDistinct()
@@ -185,14 +182,14 @@ public class FennelCalcRel
             }
             int projIdx = projList.get(i).getIndex();
             if ((projIdx >= nChildFields)
-                || (projIdx != childCollation[i].getFieldIndex())) {
+                || (projIdx != childCollation[i].getFieldIndex()))
+            {
                 break;
             }
             retList.add(new RelFieldCollation(i));
         }
-        return
-            (RelFieldCollation []) retList.toArray(
-                new RelFieldCollation[retList.size()]);
+        return (RelFieldCollation []) retList.toArray(
+            new RelFieldCollation[retList.size()]);
     }
 
     // implement FennelRel

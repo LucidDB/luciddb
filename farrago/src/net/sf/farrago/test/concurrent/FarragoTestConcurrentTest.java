@@ -39,7 +39,6 @@ import net.sf.farrago.util.*;
 public class FarragoTestConcurrentTest
     extends FarragoTestConcurrentScriptedTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoTestConcurrentTest(String name)
@@ -53,17 +52,16 @@ public class FarragoTestConcurrentTest
     public static Test suite()
         throws Exception
     {
-        return
-            gatherSuite(
-                FarragoProperties.instance().testFilesetConcurrent.get(true),
-                new FarragoConcurrentSqlTestFactory() {
-                    public FarragoTestConcurrentTestCase createSqlTest(
-                        String testName)
-                        throws Exception
-                    {
-                        return new FarragoTestConcurrentTest(testName);
-                    }
-                });
+        return gatherSuite(
+            FarragoProperties.instance().testFilesetConcurrent.get(true),
+            new FarragoConcurrentSqlTestFactory() {
+                public FarragoTestConcurrentTestCase createSqlTest(
+                    String testName)
+                    throws Exception
+                {
+                    return new FarragoTestConcurrentTest(testName);
+                }
+            });
     }
 
     // REVIEW: SZ: 10/21/2004: Copied this from FarragoSqlTest.  If
@@ -124,7 +122,6 @@ public class FarragoTestConcurrentTest
 
         runScript(getName(), newJdbcEngineDriver().getUrlPrefix());
     }
-
 
     //~ Inner Interfaces -------------------------------------------------------
 

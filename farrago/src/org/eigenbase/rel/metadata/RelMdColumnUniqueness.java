@@ -39,7 +39,6 @@ import org.eigenbase.rex.*;
 public class RelMdColumnUniqueness
     extends ReflectiveRelMetadataProvider
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public RelMdColumnUniqueness()
@@ -81,10 +80,12 @@ public class RelMdColumnUniqueness
         //
         // Also need to map the input column set to the corresponding child
         // references
-        
-        RexNode[] projExprs = rel.getProjectExps();
+
+        RexNode [] projExprs = rel.getProjectExps();
         BitSet childColumns = new BitSet();
-        for (int bit = columns.nextSetBit(0); bit >= 0;
+        for (
+            int bit = columns.nextSetBit(0);
+            bit >= 0;
             bit = columns.nextSetBit(bit + 1))
         {
             RexNode projExpr = projExprs[bit];
@@ -94,7 +95,7 @@ public class RelMdColumnUniqueness
                 return null;
             }
         }
-        
+
         return RelMetadataQuery.areColumnsUnique(rel.getChild(), childColumns);
     }
 
@@ -103,16 +104,18 @@ public class RelMdColumnUniqueness
         if (columns.cardinality() == 0) {
             return false;
         }
-        
+
         RelNode left = rel.getLeft();
         RelNode right = rel.getRight();
-        
+
         // Divide up the input column mask into column masks for the left and
         // right sides of the join
         BitSet leftColumns = new BitSet();
         BitSet rightColumns = new BitSet();
         int nLeftColumns = left.getRowType().getFieldCount();
-        for (int bit = columns.nextSetBit(0); bit >= 0;
+        for (
+            int bit = columns.nextSetBit(0);
+            bit >= 0;
             bit = columns.nextSetBit(bit + 1))
         {
             if (bit < nLeftColumns) {
@@ -121,7 +124,7 @@ public class RelMdColumnUniqueness
                 rightColumns.set(bit - nLeftColumns);
             }
         }
-        
+
         // If the original column mask contains columns from both the left and
         // right hand side, then the columns are unique if and only if they're
         // unique for their respective join inputs
@@ -129,14 +132,16 @@ public class RelMdColumnUniqueness
             RelMetadataQuery.areColumnsUnique(left, leftColumns);
         Boolean rightUnique =
             RelMetadataQuery.areColumnsUnique(right, rightColumns);
-        if (leftColumns.cardinality() > 0 && rightColumns.cardinality() > 0) {            
-            if (leftUnique == null || rightUnique == null) {
+        if ((leftColumns.cardinality() > 0)
+            && (rightColumns.cardinality() > 0))
+        {
+            if ((leftUnique == null) || (rightUnique == null)) {
                 return null;
             } else {
                 return (leftUnique && rightUnique);
             }
         }
-        
+
         // If we're only trying to determine uniqueness for columns that
         // originate from one join input, then determine if the equijoin
         // columns from the other join input are unique.  If they are, then
@@ -151,31 +156,30 @@ public class RelMdColumnUniqueness
             rel.getCondition(),
             leftJoinCols,
             rightJoinCols);
-        
+
         if (leftColumns.cardinality() > 0) {
             if (rel.getJoinType().generatesNullsOnLeft()) {
                 return false;
             }
             Boolean rightJoinColsUnique =
                 RelMetadataQuery.areColumnsUnique(right, rightJoinCols);
-            if (rightJoinColsUnique == null || leftUnique == null) {
+            if ((rightJoinColsUnique == null) || (leftUnique == null)) {
                 return null;
             }
             return (rightJoinColsUnique && leftUnique);
-            
         } else if (rightColumns.cardinality() > 0) {
             if (rel.getJoinType().generatesNullsOnRight()) {
                 return false;
             }
             Boolean leftJoinColsUnique =
                 RelMetadataQuery.areColumnsUnique(left, leftJoinCols);
-            if (leftJoinColsUnique == null || rightUnique == null) {
+            if ((leftJoinColsUnique == null) || (rightUnique == null)) {
                 return null;
             }
             return (leftJoinColsUnique && rightUnique);
         }
-        
-        assert(false);
+
+        assert (false);
         return null;
     }
 

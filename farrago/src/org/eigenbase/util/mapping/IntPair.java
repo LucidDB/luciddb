@@ -31,7 +31,6 @@ package org.eigenbase.util.mapping;
  */
 public class IntPair
 {
-
     //~ Instance fields --------------------------------------------------------
 
     public final int source;

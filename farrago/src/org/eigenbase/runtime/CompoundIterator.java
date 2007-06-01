@@ -42,7 +42,6 @@ import org.eigenbase.util.*;
 public class CompoundIterator
     implements RestartableIterator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =
@@ -137,7 +136,7 @@ public class CompoundIterator
                 new CompoundIterator(
                     new Iterator[] {
                         makeIterator(new String[] { "a", "b" }),
-                    makeIterator(new String[] { "c" })
+                        makeIterator(new String[] { "c" })
                     });
             assertEquals(
                 iterator,
@@ -158,11 +157,11 @@ public class CompoundIterator
                 new CompoundIterator(
                     new Iterator[] {
                         makeIterator(new String[] {}),
-                    makeIterator(new String[] { "a", null }),
-                    makeIterator(new String[] {}),
-                    makeIterator(new String[] {}),
-                    makeIterator(new String[] { "b", "c" }),
-                    makeIterator(new String[] {})
+                        makeIterator(new String[] { "a", null }),
+                        makeIterator(new String[] {}),
+                        makeIterator(new String[] {}),
+                        makeIterator(new String[] { "b", "c" }),
+                        makeIterator(new String[] {})
                     });
             assertEquals(
                 iterator,
@@ -195,10 +194,10 @@ public class CompoundIterator
                         new BoxIterator(
                             makeIterator(
                                 new String[] { "400", "401", "402", "403" })),
-                    new BoxIterator(
+                        new BoxIterator(
                             makeIterator(
                                 new String[] { "500", "501", "502", "503" })),
-                    new BoxIterator(
+                        new BoxIterator(
                             makeIterator(
                                 new String[] { "600", "601", "602", "603" }))
                     });
@@ -206,8 +205,8 @@ public class CompoundIterator
                 iterator,
                 new String[] {
                     "400", "401", "402", "403",
-                "500", "501", "502", "503",
-                "600", "601", "602", "603"
+                    "500", "501", "502", "503",
+                    "600", "601", "602", "603"
                 });
         }
 

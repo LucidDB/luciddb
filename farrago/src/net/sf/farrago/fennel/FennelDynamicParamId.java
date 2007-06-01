@@ -37,7 +37,6 @@ package net.sf.farrago.fennel;
  */
 public class FennelDynamicParamId
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int id;
@@ -62,11 +61,8 @@ public class FennelDynamicParamId
     // implement Object
     public boolean equals(Object other)
     {
-        return
-            (
-                (other instanceof FennelDynamicParamId)
-                && (((FennelDynamicParamId) other).intValue() == id)
-            );
+        return ((other instanceof FennelDynamicParamId)
+            && (((FennelDynamicParamId) other).intValue() == id));
     }
 
     // implement Object

@@ -58,7 +58,6 @@ import org.eigenbase.reltype.*;
 public class RexFieldAccess
     extends RexNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private RexNode expr;

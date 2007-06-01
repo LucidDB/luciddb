@@ -32,44 +32,64 @@ import org.eigenbase.util.*;
 
 
 /**
- * FlatFileProgramWriter builds calculator programs for converting
- * text from flat files into typed data. It assumes the text has already
- * been processed for quoting and escape characters. The programs mainly
- * consist of simple casts. However, custom date formats may be specified
- * when using LucidDb. They are implemented with calls to LucidDb user
- * defined routines. Only one set of formats can be active for a writer.
+ * FlatFileProgramWriter builds calculator programs for converting text from
+ * flat files into typed data. It assumes the text has already been processed
+ * for quoting and escape characters. The programs mainly consist of simple
+ * casts. However, custom date formats may be specified when using LucidDb. They
+ * are implemented with calls to LucidDb user defined routines. Only one set of
+ * formats can be active for a writer.
  *
- * <p>
- *
- * When using custom date conversions, the program can be split into
- * Fennel and Java-only sections. If splitting the program, data must
- * flow through the Fennel section first, which handles basic casts.
- * Then the Java-only section handles custom date conversions.
+ * <p>When using custom date conversions, the program can be split into Fennel
+ * and Java-only sections. If splitting the program, data must flow through the
+ * Fennel section first, which handles basic casts. Then the Java-only section
+ * handles custom date conversions.
  *
  * @author jpham
  * @version $Id$
  */
 public class FlatFileProgramWriter
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final int FLAT_FILE_MAX_NON_CHAR_VALUE_LEN = 255;
 
     private static final SqlIdentifier toDateFuncName =
         new SqlIdentifier(
-            new String[] {"SYS_BOOT","MGMT","CHAR_TO_DATE"},
-            new SqlParserPos(0,0));
+            new String[] { "SYS_BOOT", "MGMT", "CHAR_TO_DATE" },
+            new SqlParserPos(0, 0));
     private static final SqlIdentifier toTimeFuncName =
         new SqlIdentifier(
-            new String[] {"SYS_BOOT","MGMT","CHAR_TO_TIME"},
-            new SqlParserPos(0,0));
+            new String[] { "SYS_BOOT", "MGMT", "CHAR_TO_TIME" },
+            new SqlParserPos(0, 0));
     private static final SqlIdentifier toTimestampFuncName =
         new SqlIdentifier(
-            new String[] {"SYS_BOOT","MGMT","CHAR_TO_TIMESTAMP"},
-            new SqlParserPos(0,0));
+            new String[] { "SYS_BOOT", "MGMT", "CHAR_TO_TIMESTAMP" },
+            new SqlParserPos(0, 0));
 
     private static final int DATETIME_FORMAT_ARG_LENGTH = 50;
+
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Identifies a section of a flat file program
+     */
+    private enum Section
+    {
+        /**
+         * Fennel compatible program section, may include the entire program,
+         * but does not include custom datetime conversions.
+         */
+        FENNEL,
+        /**
+         * Fennel incompatible program section. Includes custom datetime
+         * conversions, but not ISO datetime conversions. May be empty.
+         */
+        JAVA_ONLY,
+        /**
+         * Includes the entire program
+         */
+        ALL
+    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -79,7 +99,7 @@ public class FlatFileProgramWriter
     private final String dateFormat;
     private final String timeFormat;
     private final String timestampFormat;
-    private final RelDataType[] datetimeArgs;
+    private final RelDataType [] datetimeArgs;
     private final RelDataType rowType;
 
     //~ Constructors -----------------------------------------------------------
@@ -89,11 +109,10 @@ public class FlatFileProgramWriter
      *
      * @param rexBuilder a rex node builder
      * @param stmt the statement being prepared
-     * @param params a set of flat file server parameters. These parameters
-     *   may include custom date formats
-     * @param rowType the desired data type for data read from a flat file.
-     *   The row type is also used to infer the size of text fields in the
-     *   file.
+     * @param params a set of flat file server parameters. These parameters may
+     * include custom date formats
+     * @param rowType the desired data type for data read from a flat file. The
+     * row type is also used to infer the size of text fields in the file.
      */
     public FlatFileProgramWriter(
         RexBuilder rexBuilder,
@@ -131,6 +150,7 @@ public class FlatFileProgramWriter
 
     /**
      * Gets the Java only portion of the data conversion program
+     *
      * @return the program, or null if it is empty
      */
     public RexProgram getJavaOnlySection()
@@ -139,39 +159,20 @@ public class FlatFileProgramWriter
     }
 
     /**
-     * Identifies a section of a flat file program
-     */
-    private enum Section {
-        /**
-         * Fennel compatible program section, may include the entire program,
-         * but does not include custom datetime conversions.
-         */
-        FENNEL,
-        /**
-         * Fennel incompatible program section. Includes custom datetime
-         * conversions, but not ISO datetime conversions. May be empty.
-         */
-        JAVA_ONLY,
-        /**
-         * Includes the entire program
-         */
-        ALL
-    }
-
-    /**
      * Builds a section of the data conversion program as follows.
      *
      * <ul>
-     *   <li>FENNEL: all inputs are text columns. Most inputs are casted to
-     *     target types, except custom date fields, which are projected
-     *   <li>JAVA_ONLY: most inputs are typed data, except custom date fields,
-     *     which are text columns. The typed fields are projected, while the
-     *     date fields are converted with user defined routines.
-     *   <li>ALL: all inputs are text columns and all are converted to target
-     *     types, either by casting or by UDRs.
+     * <li>FENNEL: all inputs are text columns. Most inputs are casted to target
+     * types, except custom date fields, which are projected
+     * <li>JAVA_ONLY: most inputs are typed data, except custom date fields,
+     * which are text columns. The typed fields are projected, while the date
+     * fields are converted with user defined routines.
+     * <li>ALL: all inputs are text columns and all are converted to target
+     * types, either by casting or by UDRs.
      * </ul>
      *
      * @param section section of the program to build
+     *
      * @return the program section
      */
     private RexProgram getSection(
@@ -189,7 +190,7 @@ public class FlatFileProgramWriter
                     break;
                 }
             }
-            if (! hasCustom) {
+            if (!hasCustom) {
                 return null;
             }
         }
@@ -199,7 +200,7 @@ public class FlatFileProgramWriter
         String [] sourceNames = new String[targetTypes.length];
         for (int i = 0; i < targetTypes.length; i++) {
             RelDataType targetType = targetTypes[i].getType();
-            if (section == Section.JAVA_ONLY
+            if ((section == Section.JAVA_ONLY)
                 && (!isCustom(targetType)))
             {
                 sourceTypes[i] = targetType;
@@ -287,6 +288,7 @@ public class FlatFileProgramWriter
         case SYMBOL:
         case VARBINARY:
         default:
+
             // unsupported for flat files
             assert (false) : "Type is unsupported for flat files: "
                 + sqlType.getSqlTypeName();
@@ -323,20 +325,19 @@ public class FlatFileProgramWriter
     }
 
     /**
-     * Gets a function that converts a string to another type,
-     * according to a format string. Throws an exception if the
-     * function was not found.
+     * Gets a function that converts a string to another type, according to a
+     * format string. Throws an exception if the function was not found.
      *
      * @param type the target type
      * @param charType the type of the string
+     *
      * @return a matching conversion function
      */
     private SqlFunction getUdr(
         RelDataType type,
         RelDataType charType)
     {
-        SqlOperatorTable opTable =
-            stmt.getSqlOperatorTable();
+        SqlOperatorTable opTable = stmt.getSqlOperatorTable();
 
         SqlIdentifier funcName;
         switch (type.getSqlTypeName()) {
@@ -355,8 +356,10 @@ public class FlatFileProgramWriter
         }
 
         if (datetimeArgs[0] == null) {
-            datetimeArgs[0] = typeFactory.createSqlType(
-                SqlTypeName.VARCHAR, DATETIME_FORMAT_ARG_LENGTH);
+            datetimeArgs[0] =
+                typeFactory.createSqlType(
+                    SqlTypeName.VARCHAR,
+                    DATETIME_FORMAT_ARG_LENGTH);
         }
         datetimeArgs[1] = charType;
 

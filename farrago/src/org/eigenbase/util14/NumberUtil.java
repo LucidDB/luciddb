@@ -28,9 +28,7 @@ import java.text.*;
 
 
 /**
- * Utility functions for working with numbers
- *
- * This class is JDK 1.4 compatible.
+ * Utility functions for working with numbers This class is JDK 1.4 compatible.
  *
  * @author angel
  * @version $Id$
@@ -38,14 +36,13 @@ import java.text.*;
  */
 public class NumberUtil
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final DecimalFormat floatFormatter;
     private static final DecimalFormat doubleFormatter;
-    private static final BigInteger bigIntTenPow[];
-    private static final BigInteger bigIntMinUnscaled[];
-    private static final BigInteger bigIntMaxUnscaled[];
+    private static final BigInteger [] bigIntTenPow;
+    private static final BigInteger [] bigIntMinUnscaled;
+    private static final BigInteger [] bigIntMaxUnscaled;
 
     // For JDK 1.4 compatibility
     private static final BigInteger bigIntTen = BigInteger.valueOf(10);
@@ -96,7 +93,7 @@ public class NumberUtil
 
     public static final BigInteger powTen(int exponent)
     {
-        if (exponent >= 0 && exponent < bigIntTenPow.length) {
+        if ((exponent >= 0) && (exponent < bigIntTenPow.length)) {
             return bigIntTenPow[exponent];
         } else {
             return bigIntTen.pow(exponent);
@@ -135,10 +132,11 @@ public class NumberUtil
         if (number instanceof BigDecimal) {
             return (BigDecimal) number;
         } else if ((number instanceof Double)
-            || (number instanceof Float)) {
+            || (number instanceof Float))
+        {
             // For JDK 1.4 compatibility
             return new BigDecimal(((Number) number).doubleValue());
-            //return BigDecimal.valueOf(((Number) number).doubleValue());
+                //return BigDecimal.valueOf(((Number) number).doubleValue());
         } else if (number instanceof BigInteger) {
             return new BigDecimal((BigInteger) number);
         } else {
@@ -147,9 +145,9 @@ public class NumberUtil
     }
 
     /**
-     * @return whether a BigDecimal is a valid Farrago decimal.
-     *   If a BigDecimal's unscaled value overflows a long, then 
-     *   it is not a valid Farrago decimal.
+     * @return whether a BigDecimal is a valid Farrago decimal. If a
+     * BigDecimal's unscaled value overflows a long, then it is not a valid
+     * Farrago decimal.
      */
     public static boolean isValidDecimal(BigDecimal bd)
     {
@@ -177,9 +175,10 @@ public class NumberUtil
         if ((a == null) || (b == null)) {
             return null;
         }
+
         // For JDK 1.4 compatibility
         return new Double(a.doubleValue() + b.doubleValue());
-        //return Double.valueOf(a.doubleValue() + b.doubleValue());
+            //return Double.valueOf(a.doubleValue() + b.doubleValue());
     }
 
     public static Double divide(Double a, Double b)
@@ -187,9 +186,10 @@ public class NumberUtil
         if ((a == null) || (b == null) || (b.doubleValue() == 0.0)) {
             return null;
         }
+
         // For JDK 1.4 compatibility
         return new Double(a.doubleValue() / b.doubleValue());
-        // return Double.valueOf(a.doubleValue() / b.doubleValue());
+            // return Double.valueOf(a.doubleValue() / b.doubleValue());
     }
 
     public static Double multiply(Double a, Double b)
@@ -197,9 +197,10 @@ public class NumberUtil
         if ((a == null) || (b == null)) {
             return null;
         }
+
         // For JDK 1.4 compatibility
         return new Double(a.doubleValue() * b.doubleValue());
-        //return Double.valueOf(a.doubleValue() * b.doubleValue());
+            //return Double.valueOf(a.doubleValue() * b.doubleValue());
     }
 }
 

@@ -44,7 +44,6 @@ import net.sf.farrago.util.*;
 public abstract class FarragoPluginCache
     extends FarragoCompoundAllocation
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Map<String, Object> mapMofIdToPlugin;
@@ -127,8 +126,7 @@ public abstract class FarragoPluginCache
         addAllocation(entry);
 
         Object obj = entry.getValue();
-        mapMofIdToPlugin.put(
-            (String) entry.getKey(),
+        mapMofIdToPlugin.put((String) entry.getKey(),
             obj);
         return obj;
     }

@@ -57,7 +57,6 @@ import java.util.*;
  */
 public interface FarragoMedMetadataQuery
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String OTN_TABLE = "Table";
@@ -80,7 +79,7 @@ public interface FarragoMedMetadataQuery
      *
      * @return map
      */
-    public Map<String,FarragoMedMetadataFilter> getFilterMap();
+    public Map<String, FarragoMedMetadataFilter> getFilterMap();
 
     /**
      * Retrieves a set of result object types to be returned by the query,

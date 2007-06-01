@@ -39,7 +39,6 @@ import org.eigenbase.sql.*;
  */
 public interface SqlTypeTransform
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

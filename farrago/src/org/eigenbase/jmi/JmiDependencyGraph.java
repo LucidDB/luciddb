@@ -46,7 +46,6 @@ import org.jgrapht.graph.*;
 public class JmiDependencyGraph
     extends UnmodifiableDirectedGraph<JmiDependencyVertex, DefaultEdge>
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -70,7 +69,8 @@ public class JmiDependencyGraph
      * determined
      * @param transform rules for finding dependencies and grouping elements
      */
-    public JmiDependencyGraph(Collection<RefObject> elements,
+    public JmiDependencyGraph(
+        Collection<RefObject> elements,
         JmiDependencyTransform transform)
     {
         // don't allow multiple edges, but do allow loops
@@ -82,7 +82,8 @@ public class JmiDependencyGraph
                 DefaultEdge.class));
     }
 
-    private JmiDependencyGraph(Collection<RefObject> elements,
+    private JmiDependencyGraph(
+        Collection<RefObject> elements,
         JmiDependencyTransform transform,
         DirectedGraph<JmiDependencyVertex, DefaultEdge> mutableGraph)
     {
@@ -102,8 +103,8 @@ public class JmiDependencyGraph
         for (JmiDependencyVertex vertex : vertexMap.values()) {
             vertex.makeImmutable();
         }
-        hierarchyGraph = new
-            UnmodifiableDirectedGraph<JmiDependencyVertex, DefaultEdge>(
+        hierarchyGraph =
+            new UnmodifiableDirectedGraph<JmiDependencyVertex, DefaultEdge>(
                 hierarchyGraph);
     }
 
@@ -119,8 +120,7 @@ public class JmiDependencyGraph
     }
 
     /**
-     * @return immutable graph of hierarchy relationships imposed
-     * on vertices
+     * @return immutable graph of hierarchy relationships imposed on vertices
      */
     public DirectedGraph<JmiDependencyVertex, DefaultEdge> getHierarchyGraph()
     {
@@ -214,8 +214,7 @@ public class JmiDependencyGraph
         }
     }
 
-    private void addHierarchyEdges(
-        Collection<RefObject> elements)
+    private void addHierarchyEdges(Collection<RefObject> elements)
     {
         for (RefObject target : elements) {
             JmiDependencyVertex targetVertex = vertexMap.get(target);
