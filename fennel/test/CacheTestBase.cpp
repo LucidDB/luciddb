@@ -32,6 +32,10 @@
 #include <boost/test/test_tools.hpp>
 #include <strstream>
 
+#ifdef __MINGW32__
+#include <process.h>
+#endif
+
 using namespace fennel;
 
 Cache &CacheTestBase::getCache()
@@ -78,13 +82,7 @@ void CacheTestBase::openStorage(DeviceMode openMode)
 {
     // make a test.dat filename unique to each process
     std::ostrstream testDataFile;
-#ifdef __MINGW32__
-    // FIXME jvs 31-May-2007:  use the equivalent of getpid
-    // on Windows
-    testDataFile << "test.dat" << ends;
-#else
     testDataFile << "test-" << getpid() << ".dat" << ends;
-#endif
 
     pCache = newCache();
 
