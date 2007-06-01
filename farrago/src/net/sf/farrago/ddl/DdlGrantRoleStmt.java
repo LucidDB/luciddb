@@ -39,7 +39,6 @@ import org.eigenbase.sql.*;
 public class DdlGrantRoleStmt
     extends DdlGrantStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected List<SqlIdentifier> roleList;

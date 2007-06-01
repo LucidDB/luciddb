@@ -33,7 +33,6 @@ import net.sf.farrago.cwm.core.*;
  */
 public interface FarragoSessionDdlStmt
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -66,6 +65,7 @@ public interface FarragoSessionDdlStmt
 
     /**
      * Called after execution, after committing the repository transaction.
+     *
      * @param ddlValidator the object validating this stmt
      */
     public void postCommit(FarragoSessionDdlValidator ddlValidator);
@@ -74,7 +74,7 @@ public interface FarragoSessionDdlStmt
      * @return true if this statement implies an auto-commit before and after
      */
     public boolean requiresCommit();
-    
+
     /**
      * @return true if this DDL statement should be treated like a DML statement
      * with respect to locking

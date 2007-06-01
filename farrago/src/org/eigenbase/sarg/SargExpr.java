@@ -36,7 +36,6 @@ import org.eigenbase.rex.*;
  */
 public interface SargExpr
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

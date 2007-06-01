@@ -39,6 +39,15 @@ import org.eigenbase.sql.type.*;
 public abstract class TableModificationRelBase
     extends SingleRel
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Enumeration of supported modification operations.
+     */
+    public enum Operation
+    {
+        INSERT, UPDATE, DELETE, MERGE;
+    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -146,7 +155,7 @@ public abstract class TableModificationRelBase
                 getCluster().getTypeFactory().createJoinType(
                     new RelDataType[] {
                         table.getRowType(),
-                    RelOptUtil.createTypeFromProjection(
+                        RelOptUtil.createTypeFromProjection(
                             table.getRowType(),
                             getCluster().getTypeFactory(),
                             updateColumnList)
@@ -158,9 +167,9 @@ public abstract class TableModificationRelBase
                         getCluster().getTypeFactory().createJoinType(
                             new RelDataType[] {
                                 table.getRowType(),
-                        table.getRowType()
+                                table.getRowType()
                             }),
-                    RelOptUtil.createTypeFromProjection(
+                        RelOptUtil.createTypeFromProjection(
                             table.getRowType(),
                             getCluster().getTypeFactory(),
                             updateColumnList)
@@ -191,7 +200,7 @@ public abstract class TableModificationRelBase
             new Object[] {
                 Arrays.asList(table.getQualifiedName()), getOperation(),
                 (updateColumnList == null) ? Collections.EMPTY_LIST
-                    : updateColumnList,
+                : updateColumnList,
                 flattened
             });
     }
@@ -202,16 +211,6 @@ public abstract class TableModificationRelBase
         // REVIEW jvs 21-Apr-2006:  Just for now...
         double rowCount = RelMetadataQuery.getRowCount(this);
         return planner.makeCost(rowCount, 0, 0);
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Enumeration of supported modification operations.
-     */
-    public enum Operation
-    {
-        INSERT, UPDATE, DELETE, MERGE;
     }
 }
 

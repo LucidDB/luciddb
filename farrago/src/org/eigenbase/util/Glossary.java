@@ -34,7 +34,6 @@ package org.eigenbase.util;
  */
 public class Glossary
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

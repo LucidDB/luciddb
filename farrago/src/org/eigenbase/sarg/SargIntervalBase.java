@@ -24,6 +24,7 @@ package org.eigenbase.sarg;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
+
 /**
  * SargIntervalBase is a common base for {@link SargInterval} and {@link
  * SargIntervalExpr}.
@@ -33,7 +34,6 @@ import org.eigenbase.rex.*;
  */
 public abstract class SargIntervalBase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final SargFactory factory;
@@ -83,8 +83,7 @@ public abstract class SargIntervalBase
      */
     public boolean isPoint()
     {
-        return
-            lowerBound.isClosed() && upperBound.isClosed()
+        return lowerBound.isClosed() && upperBound.isClosed()
             && lowerBound.isTouching(upperBound);
     }
 
@@ -93,8 +92,7 @@ public abstract class SargIntervalBase
      */
     public boolean isEmpty()
     {
-        return
-            !lowerBound.isClosed() && !upperBound.isClosed()
+        return !lowerBound.isClosed() && !upperBound.isClosed()
             && lowerBound.isNull() && upperBound.isNull();
     }
 

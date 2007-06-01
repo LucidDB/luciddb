@@ -29,6 +29,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 
+
 /**
  * PushProjectPastFilterRule implements the rule for pushing a projection past a
  * filter.
@@ -48,13 +49,14 @@ import org.eigenbase.sql.*;
 public class PushProjectPastFilterRule
     extends RelOptRule
 {
-    
     //~ Instance fields --------------------------------------------------------
 
     /**
      * Expressions that should be preserved in the projection
      */
     private final Set<SqlOperator> preserveExprs;
+
+    //~ Constructors -----------------------------------------------------------
 
     // ~ Constructors ----------------------------------------------------------
 
@@ -100,7 +102,8 @@ public class PushProjectPastFilterRule
         if ((origProj != null)
             && RexOver.containsOver(
                 origProj.getProjectExps(),
-                null)) {
+                null))
+        {
             // Cannot push project through filter if project contains a windowed
             // aggregate -- it will affect row counts. Abort this rule
             // invocation; pushdown will be considered after the windowed

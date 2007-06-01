@@ -40,7 +40,6 @@ import org.eigenbase.rex.*;
 public class FarragoOJRexContextVariableImplementor
     implements OJRexImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String name;
@@ -61,11 +60,10 @@ public class FarragoOJRexContextVariableImplementor
     {
         FarragoRexToOJTranslator farragoTranslator =
             (FarragoRexToOJTranslator) translator;
-        return
-            farragoTranslator.convertVariable(
-                call.getType(),
-                "getContextVariable_" + name,
-                new ExpressionList());
+        return farragoTranslator.convertVariable(
+            call.getType(),
+            "getContextVariable_" + name,
+            new ExpressionList());
     }
 
     public boolean canImplement(RexCall call)

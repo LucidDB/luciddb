@@ -42,7 +42,6 @@ import org.eigenbase.util.*;
  */
 public abstract class FarragoReentrantStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoSessionPreparingStmt preparingStmt;
@@ -86,7 +85,7 @@ public abstract class FarragoReentrantStmt
             preparingStmt =
                 session.getPersonality().newPreparingStmt(
                     stmtContext,
-                     stmtValidator);
+                    stmtValidator);
             preparingStmt.preImplement();
             executeImpl();
         } catch (Throwable ex) {

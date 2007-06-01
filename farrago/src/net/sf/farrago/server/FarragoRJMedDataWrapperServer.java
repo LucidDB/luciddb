@@ -34,8 +34,8 @@ import net.sf.farrago.jdbc.rmi.*;
 
 
 /**
- * RMI server-side implementation of
- * {@link net.sf.farrago.jdbc.FarragoMedDataWrapperInfo}.
+ * RMI server-side implementation of {@link
+ * net.sf.farrago.jdbc.FarragoMedDataWrapperInfo}.
  *
  * <p>This object is constructed with a factory for creating a data wrapper.
  * Each method grabs a data wrapper from the factory, and releases it at the end
@@ -50,7 +50,6 @@ class FarragoRJMedDataWrapperServer
     implements FarragoRJMedDataWrapperInterface,
         Unreferenced
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoConnection farragoConnection;
@@ -67,7 +66,8 @@ class FarragoRJMedDataWrapperServer
         Properties options)
         throws RemoteException
     {
-        super(FarragoRJJdbcServer.rmiJdbcListenerPort,
+        super(
+            FarragoRJJdbcServer.rmiJdbcListenerPort,
             FarragoRJJdbcServer.rmiClientSocketFactory,
             FarragoRJJdbcServer.rmiServerSocketFactory);
         this.farragoConnection = farragoConnection;
@@ -88,11 +88,10 @@ class FarragoRJMedDataWrapperServer
         Properties wrapperProps)
         throws RemoteException
     {
-        return
-            makeSerializable(
-                getWrapper().getPluginPropertyInfo(
-                    locale,
-                    wrapperProps));
+        return makeSerializable(
+            getWrapper().getPluginPropertyInfo(
+                locale,
+                wrapperProps));
     }
 
     public FarragoRJDriverPropertyInfo [] getServerPropertyInfo(
@@ -101,12 +100,11 @@ class FarragoRJMedDataWrapperServer
         Properties serverProps)
         throws RemoteException
     {
-        return
-            makeSerializable(
-                getWrapper().getServerPropertyInfo(
-                    locale,
-                    wrapperProps,
-                    serverProps));
+        return makeSerializable(
+            getWrapper().getServerPropertyInfo(
+                locale,
+                wrapperProps,
+                serverProps));
     }
 
     public FarragoRJDriverPropertyInfo [] getColumnSetPropertyInfo(
@@ -116,13 +114,12 @@ class FarragoRJMedDataWrapperServer
         Properties tableProps)
         throws RemoteException
     {
-        return
-            makeSerializable(
-                getWrapper().getColumnSetPropertyInfo(
-                    locale,
-                    wrapperProps,
-                    serverProps,
-                    tableProps));
+        return makeSerializable(
+            getWrapper().getColumnSetPropertyInfo(
+                locale,
+                wrapperProps,
+                serverProps,
+                tableProps));
     }
 
     public FarragoRJDriverPropertyInfo [] getColumnPropertyInfo(
@@ -133,14 +130,13 @@ class FarragoRJMedDataWrapperServer
         Properties columnProps)
         throws RemoteException
     {
-        return
-            makeSerializable(
-                getWrapper().getColumnPropertyInfo(
-                    locale,
-                    wrapperProps,
-                    serverProps,
-                    tableProps,
-                    columnProps));
+        return makeSerializable(
+            getWrapper().getColumnPropertyInfo(
+                locale,
+                wrapperProps,
+                serverProps,
+                tableProps,
+                columnProps));
     }
 
     public boolean isForeign()

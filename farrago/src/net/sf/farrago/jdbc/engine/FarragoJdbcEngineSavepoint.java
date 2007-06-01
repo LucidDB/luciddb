@@ -38,7 +38,6 @@ import net.sf.farrago.session.*;
 public class FarragoJdbcEngineSavepoint
     implements Savepoint
 {
-
     //~ Instance fields --------------------------------------------------------
 
     FarragoSessionSavepoint farragoSavepoint;

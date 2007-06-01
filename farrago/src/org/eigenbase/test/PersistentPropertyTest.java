@@ -39,7 +39,6 @@ import org.eigenbase.util.property.*;
 public class PersistentPropertyTest
     extends EigenbaseTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public PersistentPropertyTest(String name)
@@ -90,13 +89,15 @@ public class PersistentPropertyTest
                 tempPropFile.getAbsolutePath());
 
         PersistentStringProperty persistentProperty =
-            new PersistentStringProperty(props,
+            new PersistentStringProperty(
+                props,
                 PROP_NAME,
                 DEFAULT_VALUE,
                 propertyFileLocation);
 
         PersistentStringProperty persistentExistingProperty =
-            new PersistentStringProperty(props,
+            new PersistentStringProperty(
+                props,
                 EXISTING_PROP_NAME2,
                 EXISTING_DEFAULT_VALUE,
                 propertyFileLocation);
@@ -148,7 +149,8 @@ public class PersistentPropertyTest
                 tempPropFile.getAbsolutePath());
 
         persistentProperty =
-            new PersistentStringProperty(props,
+            new PersistentStringProperty(
+                props,
                 PROP_NAME,
                 DEFAULT_VALUE,
                 propertyFileLocation);

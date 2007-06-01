@@ -32,7 +32,6 @@ package org.eigenbase.rex;
  */
 public interface RexPattern
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

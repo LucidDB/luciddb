@@ -37,7 +37,6 @@ package org.eigenbase.oj.rel;
 public interface JavaLoopRel
     extends JavaRel
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

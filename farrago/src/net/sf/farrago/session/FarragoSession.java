@@ -27,14 +27,13 @@ import java.sql.*;
 import java.util.*;
 import java.util.regex.*;
 
+import javax.jmi.reflect.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.plugin.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.relopt.RelOptPlanner;
-
-import javax.jmi.reflect.RefObject;
 
 
 /**
@@ -48,7 +47,6 @@ import javax.jmi.reflect.RefObject;
 public interface FarragoSession
     extends FarragoAllocation
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -138,10 +136,10 @@ public interface FarragoSession
      * return true.
      */
     public void kill();
-    
+
     /**
-     * Cancels execution of any statements on this session (but does
-     * not kill it or them).
+     * Cancels execution of any statements on this session (but does not kill it
+     * or them).
      */
     public void cancel();
 
@@ -208,7 +206,7 @@ public interface FarragoSession
 
     /**
      * Overrides the index map associated with this session
-     * 
+     *
      * @param sessionIndexMap index map to set
      */
     public void setSessionIndexMap(FarragoSessionIndexMap sessionIndexMap);
@@ -304,7 +302,7 @@ public interface FarragoSession
      */
     public Collection<RefObject> executeLurqlQuery(
         String lurql,
-        Map<String,?> argMap);
+        Map<String, ?> argMap);
 
     /**
      * Returns a FarragoSessionInfo object which contains information on the
@@ -316,7 +314,9 @@ public interface FarragoSession
 
     /**
      * Sets the exclusion filter to use for planners created by this session.
-     * See {@link RelOptPlanner#setRuleDescExclusionFilter} for details.
+     * See {@link
+     * org.eigenbase.relopt.RelOptPlanner#setRuleDescExclusionFilter} for
+     * details.
      *
      * @param exclusionFilter pattern to match for exclusion; null to disable
      * filtering

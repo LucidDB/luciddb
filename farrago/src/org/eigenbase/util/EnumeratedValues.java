@@ -42,7 +42,6 @@ import org.eigenbase.util14.*;
 public class EnumeratedValues
     extends Enum14
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

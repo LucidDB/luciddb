@@ -30,7 +30,6 @@ package com.disruptivetech.farrago.calc;
  */
 public class ExtInstructionDefTable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final CalcProgramBuilder.ExtInstrDef abs =

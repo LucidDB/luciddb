@@ -40,7 +40,6 @@ import org.jgrapht.traverse.*;
  */
 public class JmiResourceMap
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final JmiModelView modelView;

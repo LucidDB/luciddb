@@ -36,7 +36,6 @@ import java.util.*;
 public class CompoundClosableAllocation
     implements ClosableAllocationOwner
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -62,7 +61,7 @@ public class CompoundClosableAllocation
     // implement ClosableAllocation
     public void closeAllocation()
     {
-//        try {
+        //        try {
         // traverse in reverse order
         ListIterator<ClosableAllocation> iter =
             allocations.listIterator(allocations.size());
@@ -76,9 +75,8 @@ public class CompoundClosableAllocation
             allocation.closeAllocation();
         }
         allocations.clear();
-//        } catch (ConcurrentModificationException e) {
-//            throw Util.newInternal(e, "in " + getClass());
-//        }
+        // } catch (ConcurrentModificationException e) { throw
+        // Util.newInternal(e, "in " + getClass()); }
     }
 
     /**

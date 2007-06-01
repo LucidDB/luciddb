@@ -102,7 +102,6 @@ import java.util.*;
  */
 public class OptionsList
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final ArrayList<Group> optionGroups = new ArrayList<Group>();
@@ -222,7 +221,8 @@ public class OptionsList
         for (int i = 0; i < options.length; i++) {
             Option option = options[i];
             if (!usedOptions.contains(option)
-                && (option.defaultValue != null)) {
+                && (option.defaultValue != null))
+            {
                 option.set(option.defaultValue, false);
             }
         }
@@ -378,8 +378,10 @@ public class OptionsList
             int i)
         {
             final String arg = args[i];
-            if (arg.startsWith("-") && (flag != null)
-                && arg.equals("-" + flag)) {
+            if (arg.startsWith("-")
+                && (flag != null)
+                && arg.equals("-" + flag))
+            {
                 // e.g. "-nolog"
                 // e.g. "-threads 5"
                 readArg(args[i + 1]);
@@ -495,7 +497,8 @@ public class OptionsList
             EnumeratedValues enumeration,
             OptionHandler handler)
         {
-            super(flag,
+            super(
+                flag,
                 option,
                 description,
                 required,
@@ -528,7 +531,8 @@ public class OptionsList
             Number defaultValue,
             OptionHandler handler)
         {
-            super(flag,
+            super(
+                flag,
                 option,
                 description,
                 required,
@@ -551,14 +555,12 @@ public class OptionsList
         {
             try {
                 final long value = Long.parseLong(arg);
-                set(
-                    new Long(value),
+                set(new Long(value),
                     true);
             } catch (NumberFormatException e) {
                 try {
                     final double doubleValue = Double.parseDouble(arg);
-                    set(
-                        new Double(doubleValue),
+                    set(new Double(doubleValue),
                         true);
                 } catch (NumberFormatException e1) {
                     valueError(arg);
@@ -579,7 +581,8 @@ public class OptionsList
             String defaultValue,
             OptionHandler handler)
         {
-            super(flag,
+            super(
+                flag,
                 option,
                 description,
                 required,

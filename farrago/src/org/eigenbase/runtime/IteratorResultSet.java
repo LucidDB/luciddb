@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 public class IteratorResultSet
     extends AbstractIterResultSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Iterator iterator;

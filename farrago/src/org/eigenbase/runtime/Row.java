@@ -33,7 +33,6 @@ import java.sql.*;
  */
 public class Row
 {
-
     //~ Instance fields --------------------------------------------------------
 
     ResultSet resultSet;

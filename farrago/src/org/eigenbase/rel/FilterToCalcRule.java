@@ -43,7 +43,6 @@ import org.eigenbase.rex.*;
 public class FilterToCalcRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final FilterToCalcRule instance = new FilterToCalcRule();

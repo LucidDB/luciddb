@@ -47,6 +47,8 @@ import org.eigenbase.util.*;
 class LucidDbTxnMgr
     extends FarragoDbNullTxnMgr
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     // TODO jvs 15-Mar-2006:  start a new LucidDbTrace.java file?
     private static final Logger tracer =
         Logger.getLogger(LucidDbTxnMgr.class.getName());
@@ -112,8 +114,8 @@ class LucidDbTxnMgr
         int lockLevel)
     {
         tracer.fine(
-            "Transaction " + txnId + " attempting to acquire " +
-            ((lockLevel == 1) ? "shared" : "exclusive")
+            "Transaction " + txnId + " attempting to acquire "
+            + ((lockLevel == 1) ? "shared" : "exclusive")
             + " lock on "
             + renderedName);
         if (lockMgr.tryLock(txnId, resourceId, lockLevel, true)) {

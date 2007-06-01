@@ -43,12 +43,11 @@ import net.sf.farrago.session.*;
 public class FarragoDbSessionPrivilegeChecker
     implements FarragoSessionPrivilegeChecker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoSession session;
 
-    private final Map<List<FemAuthId>,Set<FemAuthId>> authMap;
+    private final Map<List<FemAuthId>, Set<FemAuthId>> authMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -136,8 +135,7 @@ public class FarragoDbSessionPrivilegeChecker
     {
         SecurityPackage sp = session.getRepos().getSecurityPackage();
         boolean sawCreationGrant = false;
-        for (Object o : sp.getPrivilegeIsGrantedOnElement().getPrivilege(obj))
-        {
+        for (Object o : sp.getPrivilegeIsGrantedOnElement().getPrivilege(obj)) {
             FemGrant grant = (FemGrant) o;
             boolean isCreation =
                 grant.getAction().equals(
@@ -147,7 +145,8 @@ public class FarragoDbSessionPrivilegeChecker
                 sawCreationGrant = true;
             }
             if (authSet.contains(grant.getGrantee())
-                && (grant.getAction().equals(action) || isCreation)) {
+                && (grant.getAction().equals(action) || isCreation))
+            {
                 return true;
             }
         }

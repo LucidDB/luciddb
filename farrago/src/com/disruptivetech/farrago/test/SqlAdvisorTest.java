@@ -44,7 +44,6 @@ import org.eigenbase.test.*;
 public class SqlAdvisorTest
     extends SqlValidatorTestCase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     public final Logger logger = Logger.getLogger(getClass().getName());
@@ -479,7 +478,8 @@ public class SqlAdvisorTest
 
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
 
-        SqlMoniker [] results = advisor.getCompletionHints(
+        SqlMoniker [] results =
+            advisor.getCompletionHints(
                 sap.sql,
                 sap.pos);
         assertEquals(
@@ -536,10 +536,9 @@ public class SqlAdvisorTest
         for (int i = 0; i < actualResults.length; i++) {
             uniqueResults.put(actualResults[i], actualResults[i]);
         }
-        if (!(
-                expectedResults.containsAll(uniqueResults.values())
-                && (expectedResults.size() == uniqueResults.values().size())
-             )) {
+        if (!(expectedResults.containsAll(uniqueResults.values())
+                && (expectedResults.size() == uniqueResults.values().size())))
+        {
             fail(
                 "SqlAdvisorTest: completion hints results not as expected:\n"
                 + uniqueResults.values() + "\nExpected:\n" + expectedResults);
@@ -579,12 +578,11 @@ public class SqlAdvisorTest
         public SqlValidator getValidator()
         {
             final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-            return
-                new SqlAdvisorValidator(
-                    SqlStdOperatorTable.instance(),
-                    new MockCatalogReader(typeFactory),
-                    typeFactory,
-                    getCompatible());
+            return new SqlAdvisorValidator(
+                SqlStdOperatorTable.instance(),
+                new MockCatalogReader(typeFactory),
+                typeFactory,
+                getCompatible());
         }
     }
 }

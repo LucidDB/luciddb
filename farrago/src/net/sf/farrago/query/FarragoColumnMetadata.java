@@ -38,7 +38,6 @@ import org.eigenbase.rel.*;
 public class FarragoColumnMetadata
     extends MedAbstractColumnMetadata
 {
-
     //~ Methods ----------------------------------------------------------------
 
     protected int mapColumnToField(
@@ -66,16 +65,14 @@ public class FarragoColumnMetadata
         if ((colno == -1) || (colno >= numColumns(rel))) {
             return null;
         } else {
-            return
-                (FemAbstractColumn) ((MedAbstractColumnSet) rel.getTable())
+            return (FemAbstractColumn) ((MedAbstractColumnSet) rel.getTable())
                 .getCwmColumnSet().getFeature().get(colno);
         }
     }
 
     private int numColumns(RelNode rel)
     {
-        return
-            ((MedAbstractColumnSet) rel.getTable()).getCwmColumnSet()
+        return ((MedAbstractColumnSet) rel.getTable()).getCwmColumnSet()
             .getFeature().size();
     }
 }

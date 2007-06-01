@@ -39,6 +39,8 @@ import org.eigenbase.rex.*;
 public class RemoveTrivialProjectRule
     extends RelOptRule
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final RemoveTrivialProjectRule instance =
         new RemoveTrivialProjectRule();
 
@@ -65,11 +67,13 @@ public class RemoveTrivialProjectRule
         if (!isIdentity(
                 project.exps,
                 project.getRowType(),
-                childRowType)) {
+                childRowType))
+        {
             return;
         }
         child = call.getPlanner().register(child, project);
-        child = convert(
+        child =
+            convert(
                 child,
                 project.getTraits());
         if (child != null) {

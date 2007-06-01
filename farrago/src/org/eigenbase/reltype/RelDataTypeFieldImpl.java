@@ -31,7 +31,6 @@ package org.eigenbase.reltype;
 public class RelDataTypeFieldImpl
     implements RelDataTypeField
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType type;

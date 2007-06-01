@@ -38,7 +38,6 @@ public abstract class SqlAggFunction
     extends SqlFunction
     implements Aggregation
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlAggFunction(

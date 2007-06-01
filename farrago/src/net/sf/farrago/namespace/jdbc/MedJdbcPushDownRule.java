@@ -19,10 +19,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.namespace.jdbc;
 
 import java.sql.*;
+
 import java.util.*;
 
 import org.eigenbase.rel.*;
@@ -33,19 +33,25 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 
+
 /**
  * MedJdbcPushDownRule is a rule to push filters down to Jdbc source
  *
  * @author Sunny Choi
  * @version $Id$
  */
-class MedJdbcPushDownRule extends RelOptRule
+class MedJdbcPushDownRule
+    extends RelOptRule
 {
+    //~ Instance fields --------------------------------------------------------
+
     boolean projOnFilter = false;
     boolean filterOnProj = false;
     boolean filterOnly = false;
 
     // ~ Constructors ---------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new MedJdbcPushDownRule object.
@@ -64,6 +70,8 @@ class MedJdbcPushDownRule extends RelOptRule
             filterOnly = true;
         }
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // ~ Methods --------------------------------------------------------------
 
@@ -89,16 +97,16 @@ class MedJdbcPushDownRule extends RelOptRule
         }
 
         final FilterRel filterRel = filter;
+
         // push down filter
         RexCall filterCall = (RexCall) filter.getCondition();
 
         // convert the RexCall to SqlNode
         // using RexToSqlNodeConverter
         RexToSqlNodeConverter exprConverter =
-            new RexToSqlNodeConverterImpl(
-                new RexSqlStandardConvertletTable())
-            {
-                public SqlIdentifier convertInputRef(RexInputRef ref) {
+            new RexToSqlNodeConverterImpl(new RexSqlStandardConvertletTable()) {
+                public SqlIdentifier convertInputRef(RexInputRef ref)
+                {
                     RelDataType fields = filterRel.getRowType();
                     String fieldName =
                         fields.getFieldList().get(ref.getIndex()).getName();
@@ -154,18 +162,18 @@ class MedJdbcPushDownRule extends RelOptRule
             if (dialect.isOracle()) {
                 String quotedSql = dialect.quoteStringLiteral(sql);
                 String sqlTest =
-                    " DECLARE" +
-                    "   test_cursor integer;" +
-                    " BEGIN" +
-                    "   test_cursor := dbms_sql.open_cursor;" +
-                    "   dbms_sql.parse(test_cursor, " + quotedSql + ", " +
-                    "   dbms_sql.native);" +
-                    "   dbms_sql.close_cursor(test_cursor);" +
-                    " EXCEPTION" +
-                    " WHEN OTHERS THEN" +
-                    "   dbms_sql.close_cursor(test_cursor);" +
-                    "   RAISE;" +
-                    " END;";
+                    " DECLARE"
+                    + "   test_cursor integer;"
+                    + " BEGIN"
+                    + "   test_cursor := dbms_sql.open_cursor;"
+                    + "   dbms_sql.parse(test_cursor, " + quotedSql + ", "
+                    + "   dbms_sql.native);"
+                    + "   dbms_sql.close_cursor(test_cursor);"
+                    + " EXCEPTION"
+                    + " WHEN OTHERS THEN"
+                    + "   dbms_sql.close_cursor(test_cursor);"
+                    + "   RAISE;"
+                    + " END;";
                 testStatement = server.getConnection().createStatement();
                 rs = testStatement.executeQuery(sqlTest);
             } else {
@@ -189,7 +197,8 @@ class MedJdbcPushDownRule extends RelOptRule
                 if (ps != null) {
                     ps.close();
                 }
-            } catch (SQLException sqe) {}
+            } catch (SQLException sqe) {
+            }
         }
 
         RelNode rel =
@@ -202,27 +211,28 @@ class MedJdbcPushDownRule extends RelOptRule
                 selectWithFilter);
 
         if (bottomProj != null) {
-            rel = new ProjectRel(
-                bottomProj.getCluster(),
-                rel,
-                bottomProj.getProjectExps(),
-                bottomProj.getRowType(),
-                bottomProj.getFlags(),
-                bottomProj.getCollationList());
+            rel =
+                new ProjectRel(
+                    bottomProj.getCluster(),
+                    rel,
+                    bottomProj.getProjectExps(),
+                    bottomProj.getRowType(),
+                    bottomProj.getFlags(),
+                    bottomProj.getCollationList());
         }
 
         if (topProj != null) {
-            rel = new ProjectRel(
-                topProj.getCluster(),
-                rel,
-                topProj.getProjectExps(),
-                topProj.getRowType(),
-                topProj.getFlags(),
-                topProj.getCollationList());
+            rel =
+                new ProjectRel(
+                    topProj.getCluster(),
+                    rel,
+                    topProj.getProjectExps(),
+                    topProj.getRowType(),
+                    topProj.getFlags(),
+                    topProj.getCollationList());
         }
 
         call.transformTo(rel);
     }
-
 }
 //End MedJdbcPushDownRule.java

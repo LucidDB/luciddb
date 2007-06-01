@@ -33,7 +33,6 @@ package org.eigenbase.rel.metadata;
 public class DefaultRelMetadataProvider
     extends ChainedRelMetadataProvider
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -50,7 +49,7 @@ public class DefaultRelMetadataProvider
         addProvider(new RelMdRowCount());
 
         addProvider(new RelMdUniqueKeys());
-        
+
         addProvider(new RelMdColumnUniqueness());
 
         addProvider(new RelMdPopulationSize());

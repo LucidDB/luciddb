@@ -35,7 +35,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlMerge
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
@@ -178,7 +177,10 @@ public class SqlMerge
             writer.newlineAndIndent();
             writer.keyword("WHEN MATCHED THEN UPDATE");
             final SqlWriter.Frame setFrame =
-                writer.startList(SqlWriter.FrameTypeEnum.UpdateSetList, "SET", "");
+                writer.startList(
+                    SqlWriter.FrameTypeEnum.UpdateSetList,
+                    "SET",
+                    "");
 
             Iterator targetColumnIter =
                 updateCall.getTargetColumnList().getList().iterator();

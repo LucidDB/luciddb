@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
 class FarragoView
     extends FarragoQueryNamedColumnSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String datasetName;
@@ -83,11 +82,9 @@ class FarragoView
         String queryString = getFemView().getQueryExpression().getBody();
         if (datasetName != null) {
             queryString =
-                (
-                    (modality == ModalityTypeEnum.MODALITYTYPE_STREAM)
+                ((modality == ModalityTypeEnum.MODALITYTYPE_STREAM)
                     ? "SELECT STREAM"
-                    : "SELECT"
-                )
+                    : "SELECT")
                 + " * FROM ("
                 + queryString
                 + ") TABLESAMPLE SUBSTITUTE ("
@@ -115,12 +112,13 @@ class FarragoView
             // explicit CREATE FOREIGN TABLE or IMPORT FOREIGN SCHEMA,
             // since there the external system can change at
             // any time.
-            
+
             rel = RelOptUtil.createCastRel(rel, rowType, true);
             rel = getPreparingStmt().flattenTypes(rel, false);
             return rel;
         } catch (Throwable e) {
-            throw Util.newInternal(e,
+            throw Util.newInternal(
+                e,
                 "Error while parsing view definition:  " + queryString);
         }
     }

@@ -26,8 +26,8 @@ import org.eigenbase.sql.type.*;
 
 
 /**
- * SqlColumnListConstructor defines the non-standard constructor used to
- * pass a COLUMN_LIST parameter to a UDX.
+ * SqlColumnListConstructor defines the non-standard constructor used to pass a
+ * COLUMN_LIST parameter to a UDX.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -35,12 +35,12 @@ import org.eigenbase.sql.type.*;
 public class SqlColumnListConstructor
     extends SqlSpecialOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlColumnListConstructor()
     {
-        super("COLUMN_LIST",
+        super(
+            "COLUMN_LIST",
             SqlKind.ColumnListConstructor,
             MaxPrec,
             false,

@@ -46,7 +46,6 @@ import org.eigenbase.util.*;
 public class PreparedExplanation
     implements PreparedResult
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType rowType;
@@ -83,7 +82,7 @@ public class PreparedExplanation
     {
         return false;
     }
-    
+
     public TableModificationRel.Operation getTableModOp()
     {
         return null;
@@ -136,10 +135,9 @@ public class PreparedExplanation
                     throw new UnsupportedOperationException();
                 }
             };
-        return
-            new IteratorResultSet(
-                iter,
-                new IteratorResultSet.SingletonColumnGetter());
+        return new IteratorResultSet(
+            iter,
+            new IteratorResultSet.SingletonColumnGetter());
     }
 }
 

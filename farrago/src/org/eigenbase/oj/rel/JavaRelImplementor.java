@@ -55,7 +55,6 @@ import org.eigenbase.util.*;
 public class JavaRelImplementor
     implements RelImplementor
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =
@@ -165,6 +164,7 @@ public class JavaRelImplementor
                     return initializer;
                 }
             };
+
         Variable variable = newVariable();
         LazyBind bind =
             new LazyBind(
@@ -214,8 +214,8 @@ public class JavaRelImplementor
             // should have at least a comment!
             if ((rel instanceof JoinRelBase) && false) {
                 return (JavaRel) findInputRel(
-                        rel,
-                        variable.getIndex());
+                    rel,
+                    variable.getIndex());
             } else {
                 return (JavaRel) rel.getInput(variable.getIndex());
             }
@@ -325,13 +325,15 @@ public class JavaRelImplementor
                     new VariableInitializerThunk() {
                         public VariableInitializer getInitializer()
                         {
-                            return
-                                selfRel.implementSelf(JavaRelImplementor.this);
+                            return selfRel.implementSelf(
+                                JavaRelImplementor.this);
                         }
                     });
             bind(rel, lazyBind);
-        } else if ((frame.bind instanceof LazyBind)
-            && (((LazyBind) frame.bind).statementList != statementList)) {
+        } else if (
+            (frame.bind instanceof LazyBind)
+            && (((LazyBind) frame.bind).statementList != statementList))
+        {
             // Frame is already bound, but to a variable declared in a different
             // scope. Re-bind it.
             final LazyBind lazyBind = (LazyBind) frame.bind;
@@ -428,8 +430,8 @@ public class JavaRelImplementor
         Frame frame = (Frame) mapCorrel2Frame.get(correlName);
         assert (frame != null);
         assert (Util.equal(
-                    frame.rel.getCorrelVariable(),
-                    correlName));
+            frame.rel.getCorrelVariable(),
+            correlName));
         assert (frame.hasVariable());
         return frame.getVariable();
     }
@@ -633,10 +635,9 @@ public class JavaRelImplementor
     {
         final RelDataType rowType = rel.getRowType();
         int fieldOffset = computeFieldOffset(rel, ordinal);
-        return
-            translate(
-                rel,
-                rexBuilder.makeRangeReference(rowType, fieldOffset, false));
+        return translate(
+            rel,
+            rexBuilder.makeRangeReference(rowType, fieldOffset, false));
     }
 
     /**
@@ -717,9 +718,9 @@ public class JavaRelImplementor
         int offset)
     {
         return findInputRel(
-                rel,
-                offset,
-                new int[] { 0 });
+            rel,
+            offset,
+            new int[] { 0 });
     }
 
     private RelNode findInputRel(
@@ -817,7 +818,8 @@ public class JavaRelImplementor
     {
         final List<RelNode> ancestorList = new ArrayList<RelNode>();
         Frame frame = mapRel2Frame.get(rel);
-        Util.pre(frame != null,
+        Util.pre(
+            frame != null,
             "rel must be on the current implementation stack");
         while (true) {
             ancestorList.add(frame.rel);
@@ -903,7 +905,8 @@ public class JavaRelImplementor
             while (true) {
                 Frame frame = mapRel2Frame.get(previous);
                 if (frame.bind != null) {
-                    tracer.log(Level.FINE,
+                    tracer.log(
+                        Level.FINE,
                         "Bind " + rel.toString() + " to "
                         + previous.toString() + "(" + frame.bind + ")");
                     return frame;
@@ -1003,8 +1006,7 @@ public class JavaRelImplementor
 
         public String toString()
         {
-            return
-                super.toString() + "(variable=" + variable.toString()
+            return super.toString() + "(variable=" + variable.toString()
                 + ", thunk=" + thunk.toString() + ")";
         }
 

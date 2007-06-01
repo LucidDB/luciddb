@@ -28,9 +28,8 @@ import java.sql.*;
 
 
 /**
- * FarragoJdbcEngineApproxParamDef defines a approximate numeric parameter.
- *
- * This class is JDK 1.4 compatible.
+ * FarragoJdbcEngineApproxParamDef defines a approximate numeric parameter. This
+ * class is JDK 1.4 compatible.
  *
  * @author Angel Chang
  * @version $Id$
@@ -38,7 +37,6 @@ import java.sql.*;
 class FarragoJdbcApproxParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final double min;
@@ -81,11 +79,8 @@ class FarragoJdbcApproxParamDef
                 max);
             return new Double(n.doubleValue());
         } else if (value instanceof Boolean) {
-            return
-                (
-                    ((Boolean) value).booleanValue() ? new Double(1)
-                    : new Double(0)
-                );
+            return (((Boolean) value).booleanValue() ? new Double(1)
+                : new Double(0));
         } else if (value instanceof String) {
             try {
                 BigDecimal bd = new BigDecimal(value.toString().trim());

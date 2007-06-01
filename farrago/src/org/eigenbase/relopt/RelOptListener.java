@@ -37,7 +37,6 @@ import org.eigenbase.rel.*;
 public interface RelOptListener
     extends EventListener
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

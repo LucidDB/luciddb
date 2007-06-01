@@ -36,7 +36,6 @@ import org.eigenbase.relopt.*;
  */
 abstract class HepInstruction
 {
-
     //~ Methods ----------------------------------------------------------------
 
     void initialize(boolean clearCache)

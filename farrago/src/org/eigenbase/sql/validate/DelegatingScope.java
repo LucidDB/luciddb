@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
 public abstract class DelegatingScope
     implements SqlValidatorScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -190,7 +189,7 @@ public abstract class DelegatingScope
                     pos,
                     new SqlParserPos[] {
                         SqlParserPos.ZERO,
-                    pos
+                        pos
                     });
             validator.setOriginal(expanded, identifier);
             return expanded;

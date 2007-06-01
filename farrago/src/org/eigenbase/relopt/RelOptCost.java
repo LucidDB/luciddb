@@ -34,13 +34,12 @@ package org.eigenbase.relopt;
  */
 public interface RelOptCost
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
      * @return number of rows processed; this should not be confused with the
-     * row count produced by a relational expression
-     * ({@link org.eigenbase.rel.RelNode#getRows})
+     * row count produced by a relational expression ({@link
+     * org.eigenbase.rel.RelNode#getRows})
      */
     public double getRows();
 

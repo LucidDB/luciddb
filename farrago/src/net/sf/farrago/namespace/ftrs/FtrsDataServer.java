@@ -53,7 +53,6 @@ import org.eigenbase.rex.*;
 class FtrsDataServer
     extends MedAbstractFennelDataServer
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoTypeFactory indexTypeFactory;
@@ -77,7 +76,7 @@ class FtrsDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map<String,Properties> columnPropMap)
+        Map<String, Properties> columnPropMap)
         throws SQLException
     {
         return new FtrsTable(localName, rowType, tableProps, columnPropMap);
@@ -103,8 +102,9 @@ class FtrsDataServer
     {
         // Validate that there's at most one clustered index.
         int nClustered = 0;
-        for (FemLocalIndex index :
-            FarragoCatalogUtil.getTableIndexes(repos, table))
+        for (
+            FemLocalIndex index
+            : FarragoCatalogUtil.getTableIndexes(repos, table))
         {
             if (index.isClustered()) {
                 nClustered++;
@@ -137,8 +137,9 @@ class FtrsDataServer
                 repos,
                 table);
         assert (clusteredIndex != null);
-        for (CwmIndexedFeature indexedFeature :
-            clusteredIndex.getIndexedFeature())
+        for (
+            CwmIndexedFeature indexedFeature
+            : clusteredIndex.getIndexedFeature())
         {
             FemStoredColumn col = (FemStoredColumn) indexedFeature.getFeature();
             col.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
@@ -177,7 +178,8 @@ class FtrsDataServer
 
         RelNode project = CalcRel.createProject(tableScan, projExps, null);
 
-        SortRel sort = new SortRel(
+        SortRel sort =
+            new SortRel(
                 cluster,
                 project,
                 collations);

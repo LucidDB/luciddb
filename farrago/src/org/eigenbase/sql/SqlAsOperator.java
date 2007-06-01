@@ -37,7 +37,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlAsOperator
     extends SqlBinaryOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlAsOperator()
@@ -74,7 +73,8 @@ public class SqlAsOperator
         }
     }
 
-    public <R> void acceptCall(SqlVisitor<R> visitor,
+    public <R> void acceptCall(
+        SqlVisitor<R> visitor,
         SqlCall call,
         boolean onlyExpressions,
         SqlBasicVisitor.ArgHandler<R> argHandler)

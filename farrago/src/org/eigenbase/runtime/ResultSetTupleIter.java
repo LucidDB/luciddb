@@ -32,7 +32,6 @@ import java.sql.*;
 public class ResultSetTupleIter
     implements TupleIter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected ResultSet resultSet;

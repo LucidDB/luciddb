@@ -49,7 +49,6 @@ import org.eigenbase.util.*;
 public class FennelDbHandle
     implements FarragoAllocation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = FarragoTrace.getFennelDbHandleTracer();
@@ -201,7 +200,8 @@ public class FennelDbHandle
             AssociationEnd assocEnd = (AssociationEnd) assocIter.next();
             if (!cmd.refIsInstanceOf(
                     assocEnd.getType(),
-                    true)) {
+                    true))
+            {
                 continue;
             }
             if (assocEnd.otherEnd().getName().equals("ResultHandle")) {
@@ -302,7 +302,7 @@ public class FennelDbHandle
         if (dbHandle == 0) {
             return;
         }
-        
+
         FemCmdCloseDatabase cmd = metadataFactory.newFemCmdCloseDatabase();
         cmd.setDbHandle(getFemDbHandle(metadataFactory));
         dbHandle = 0;
@@ -311,9 +311,8 @@ public class FennelDbHandle
 
     public EigenbaseException handleNativeException(SQLException ex)
     {
-        return
-            FarragoResource.instance().FennelUntranslated.ex(
-                ex.getMessage());
+        return FarragoResource.instance().FennelUntranslated.ex(
+            ex.getMessage());
     }
 }
 

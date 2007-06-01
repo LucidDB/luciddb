@@ -40,7 +40,6 @@ import net.sf.farrago.catalog.*;
 public class FarragoTestConcurrentCommandExecutor
     extends Thread
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -154,10 +153,9 @@ public class FarragoTestConcurrentCommandExecutor
             FarragoTestConcurrentCommand command =
                 (FarragoTestConcurrentCommand) commands.next();
 
-            if (!(
-                    command
-                    instanceof FarragoTestConcurrentCommandGenerator.AutoSynchronizationCommand
-                 )) {
+            if (!(command
+                    instanceof FarragoTestConcurrentCommandGenerator.AutoSynchronizationCommand))
+            {
                 stepNumber++;
             }
 
@@ -175,11 +173,10 @@ public class FarragoTestConcurrentCommandExecutor
                 instanceof FarragoTestConcurrentCommandGenerator.SynchronizationCommand;
 
             if (isSync
-                || (
-                    (connection != null)
+                || ((connection != null)
                     && (command != null)
-                    && (error == null)
-                   )) {
+                    && (error == null)))
+            {
                 try {
                     command.execute(this);
                 } catch (Throwable t) {

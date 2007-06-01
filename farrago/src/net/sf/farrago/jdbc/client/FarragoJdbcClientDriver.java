@@ -42,7 +42,6 @@ import org.objectweb.rmijdbc.RJConnectionInterface;
 public class FarragoJdbcClientDriver
     extends FarragoAbstractJdbcDriver
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static {

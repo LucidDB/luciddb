@@ -26,14 +26,14 @@ import java.util.*;
 
 import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
-import net.sf.farrago.cwm.keysindexes.CwmIndexedFeature;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -204,11 +204,15 @@ public class FarragoDdlGenerator
                 CwmParameter p = pi.next();
                 if (p.getKind().equals(ParameterDirectionKindEnum.PDK_IN)) {
                     sb.append("  IN ");
-                } else if (p.getKind().equals(
-                        ParameterDirectionKindEnum.PDK_INOUT)) {
+                } else if (
+                    p.getKind().equals(
+                        ParameterDirectionKindEnum.PDK_INOUT))
+                {
                     sb.append("  INOUT ");
-                } else if (p.getKind().equals(
-                        ParameterDirectionKindEnum.PDK_OUT)) {
+                } else if (
+                    p.getKind().equals(
+                        ParameterDirectionKindEnum.PDK_OUT))
+                {
                     sb.append("  OUT ");
                 }
 
@@ -246,8 +250,10 @@ public class FarragoDdlGenerator
                     CwmSqldataType type = (CwmSqldataType) p.getType();
                     SqlTypeName stn = getSqlTypeName(type);
                     sb.append(type.getName());
-                } else if (p.getKind().equals(
-                        ParameterDirectionKindEnum.PDK_RETURN)) {
+                } else if (
+                    p.getKind().equals(
+                        ParameterDirectionKindEnum.PDK_RETURN))
+                {
                     returns.add(p);
                 }
             }
@@ -279,16 +285,23 @@ public class FarragoDdlGenerator
         sb.append(NL);
 
         if (routine.getDataAccess().equals(
-                RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA)) {
+                RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA))
+        {
             sb.append(" MODIFIES SQL DATA");
-        } else if (routine.getDataAccess().equals(
-                RoutineDataAccessEnum.RDA_CONTAINS_SQL)) {
+        } else if (
+            routine.getDataAccess().equals(
+                RoutineDataAccessEnum.RDA_CONTAINS_SQL))
+        {
             sb.append(" CONTAINS SQL");
-        } else if (routine.getDataAccess().equals(
-                RoutineDataAccessEnum.RDA_NO_SQL)) {
+        } else if (
+            routine.getDataAccess().equals(
+                RoutineDataAccessEnum.RDA_NO_SQL))
+        {
             sb.append(" NO SQL");
-        } else if (routine.getDataAccess().equals(
-                RoutineDataAccessEnum.RDA_READS_SQL_DATA)) {
+        } else if (
+            routine.getDataAccess().equals(
+                RoutineDataAccessEnum.RDA_READS_SQL_DATA))
+        {
             sb.append(" READS SQL DATA");
         }
         sb.append(NL);
@@ -378,7 +391,10 @@ public class FarragoDdlGenerator
             stmt.setTopLevel(false);
         }
         StringBuilder sb = new StringBuilder();
-        createHeader(sb, index.isClustered() ? "CLUSTERED INDEX" : "INDEX", stmt);
+        createHeader(
+            sb,
+            index.isClustered() ? "CLUSTERED INDEX" : "INDEX",
+            stmt);
         sb.append(quote(index.getName()));
         sb.append(" ON ");
         sb.append(quote(index.getSpannedClass().getName()));
@@ -444,10 +460,10 @@ public class FarragoDdlGenerator
                 sb.append(" ").append(type.getName());
 
                 Integer precision = col.getPrecision();
-                if (precision != null && stn.allowsPrec()) {
+                if ((precision != null) && stn.allowsPrec()) {
                     sb.append("(").append(precision);
                     Integer scale = col.getScale();
-                    if (scale != null && stn.allowsScale()) {
+                    if ((scale != null) && stn.allowsScale()) {
                         sb.append(",").append(scale);
                     }
                     sb.append(")");
@@ -455,7 +471,7 @@ public class FarragoDdlGenerator
                     Integer length = col.getLength();
                     if (length != null) {
                         sb.append("(").append(length).append(")");
-	            }
+                    }
                 }
 
                 if (!skipDefaults) {
@@ -475,7 +491,8 @@ public class FarragoDdlGenerator
 
                 if (!skipNullable) {
                     if (NullableTypeEnum.COLUMN_NO_NULLS.toString().equals(
-                            col.getIsNullable().toString())) {
+                            col.getIsNullable().toString()))
+                    {
                         sb.append(" NOT NULL");
                     }
                 }

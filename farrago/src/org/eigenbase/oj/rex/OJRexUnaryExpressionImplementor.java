@@ -38,7 +38,6 @@ import org.eigenbase.rex.*;
 public class OJRexUnaryExpressionImplementor
     implements OJRexImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int ojUnaryExpressionOrdinal;

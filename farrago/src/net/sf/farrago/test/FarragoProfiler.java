@@ -36,7 +36,6 @@ import net.sf.farrago.jdbc.engine.*;
  */
 public class FarragoProfiler
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -59,7 +58,8 @@ public class FarragoProfiler
         FarragoJdbcEngineDriver driver = new FarragoJdbcEngineDriver();
         Properties info = new Properties();
         info.put("user", "sa");
-        Connection connection = driver.connect(
+        Connection connection =
+            driver.connect(
                 "jdbc:farrago:",
                 info);
 

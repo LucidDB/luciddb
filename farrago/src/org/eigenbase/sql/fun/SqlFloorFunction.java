@@ -37,12 +37,12 @@ import org.eigenbase.sql.validate.*;
 public class SqlFloorFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlFloorFunction()
     {
-        super("FLOOR",
+        super(
+            "FLOOR",
             SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgType,
             null,

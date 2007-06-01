@@ -48,7 +48,6 @@ public abstract class FarragoJdbcEnginePreparedStatement
     extends FarragoJdbcEngineStatement
     implements PreparedStatement
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final String ERRMSG_ALREADY_PREPARED =

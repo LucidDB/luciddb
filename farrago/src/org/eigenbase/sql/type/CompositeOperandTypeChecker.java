@@ -80,6 +80,12 @@ import org.eigenbase.util.*;
 public class CompositeOperandTypeChecker
     implements SqlSingleOperandTypeChecker
 {
+    //~ Enums ------------------------------------------------------------------
+
+    public enum Composition
+    {
+        AND, OR, SEQUENCE;
+    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -90,7 +96,7 @@ public class CompositeOperandTypeChecker
 
     public CompositeOperandTypeChecker(
         Composition composition,
-        SqlOperandTypeChecker... allowedRules)
+        SqlOperandTypeChecker ... allowedRules)
     {
         Util.pre(null != allowedRules, "null != allowedRules");
         Util.pre(allowedRules.length > 1, "Not a composite type");
@@ -155,12 +161,11 @@ public class CompositeOperandTypeChecker
         if (composition == Composition.SEQUENCE) {
             SqlSingleOperandTypeChecker singleRule =
                 (SqlSingleOperandTypeChecker) allowedRules[iFormalOperand];
-            return
-                singleRule.checkSingleOperandType(
-                    callBinding,
-                    node,
-                    0,
-                    throwOnFailure);
+            return singleRule.checkSingleOperandType(
+                callBinding,
+                node,
+                0,
+                throwOnFailure);
         }
 
         int typeErrorCount = 0;
@@ -172,10 +177,12 @@ public class CompositeOperandTypeChecker
         for (int i = 0; i < allowedRules.length; i++) {
             SqlSingleOperandTypeChecker rule =
                 (SqlSingleOperandTypeChecker) allowedRules[i];
-            if (!rule.checkSingleOperandType(callBinding,
+            if (!rule.checkSingleOperandType(
+                    callBinding,
                     node,
                     iFormalOperand,
-                    throwOnAndFailure)) {
+                    throwOnAndFailure))
+            {
                 typeErrorCount++;
             }
         }
@@ -189,6 +196,7 @@ public class CompositeOperandTypeChecker
             ret = (typeErrorCount < allowedRules.length);
             break;
         default:
+
             //should never come here
             throw Util.unexpected(composition);
         }
@@ -200,7 +208,8 @@ public class CompositeOperandTypeChecker
             for (int i = 0; i < allowedRules.length; i++) {
                 SqlSingleOperandTypeChecker rule =
                     (SqlSingleOperandTypeChecker) allowedRules[i];
-                rule.checkSingleOperandType(callBinding,
+                rule.checkSingleOperandType(
+                    callBinding,
                     node,
                     iFormalOperand,
                     true);
@@ -233,7 +242,8 @@ public class CompositeOperandTypeChecker
                         callBinding,
                         callBinding.getCall().operands[i],
                         0,
-                        false)) {
+                        false))
+                {
                     typeErrorCount++;
                 }
             } else {
@@ -272,13 +282,6 @@ public class CompositeOperandTypeChecker
             return false;
         }
         return true;
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    public enum Composition
-    {
-        AND, OR, SEQUENCE;
     }
 }
 

@@ -55,7 +55,6 @@ import org.eigenbase.util.*;
 class LcsDataServer
     extends MedAbstractFennelDataServer
 {
-
     //~ Constructors -----------------------------------------------------------
 
     LcsDataServer(
@@ -74,7 +73,7 @@ class LcsDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map<String,Properties> columnPropMap)
+        Map<String, Properties> columnPropMap)
         throws SQLException
     {
         return new LcsTable(localName, rowType, tableProps, columnPropMap);
@@ -96,7 +95,7 @@ class LcsDataServer
         // because we need to distinguish the cases where there are
         // children below the rowscan; note that the rule is very
         // specific to speed up matching
-        
+
         // IndexSemiJoin rules
         planner.addRule(
             new LcsIndexSemiJoinRule(
@@ -128,7 +127,8 @@ class LcsDataServer
                         new RelOptRuleOperand(
                             LcsRowScanRel.class,
                             new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(LcsIndexSearchRel.class,
+                                new RelOptRuleOperand(
+                                    LcsIndexSearchRel.class,
                                     null)
                             })
                     }),
@@ -183,7 +183,8 @@ class LcsDataServer
                         new RelOptRuleOperand(
                             LcsRowScanRel.class,
                             new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(LcsIndexSearchRel.class,
+                                new RelOptRuleOperand(
+                                    LcsIndexSearchRel.class,
                                     null)
                             })
                     }),
@@ -228,7 +229,10 @@ class LcsDataServer
         }
 
         // Verify that clustered indexes do not overlap
-        for (FemLocalIndex index : FarragoCatalogUtil.getTableIndexes(repos, table)) {
+        for (
+            FemLocalIndex index
+            : FarragoCatalogUtil.getTableIndexes(repos, table))
+        {
             if (!index.isClustered()) {
                 continue;
             }
@@ -268,7 +272,7 @@ class LcsDataServer
                 true,
                 true);
         }
-        
+
         // initialize rowcounts
         if (creation) {
             FarragoCatalogUtil.resetRowCounts((FemAbstractColumnSet) table);
@@ -349,12 +353,11 @@ class LcsDataServer
                 ProjectRel.Flags.Boxed,
                 RelCollation.emptyList);
 
-        return
-            new FarragoIndexBuilderRel(
-                cluster,
-                table,
-                generatorInputs,
-                index);
+        return new FarragoIndexBuilderRel(
+            cluster,
+            table,
+            generatorInputs,
+            index);
     }
 
     protected void prepareIndexCmd(

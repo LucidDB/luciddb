@@ -56,7 +56,6 @@ class ResultSetToFarragoIteratorConverter
     extends ConverterRel
     implements JavaRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -160,16 +159,17 @@ class ResultSetToFarragoIteratorConverter
                     new MethodCall(castResultSet, methodName, colPosExpList);
             }
 
-            // cast to target type, or perhaps narrow the external data if  
+            // cast to target type, or perhaps narrow the external data if
             // it is of greater precision that Farrago supports
             boolean narrow = false;
-            if (type.getSqlTypeName() == SqlTypeName.DECIMAL
-                && type.getPrecision() >= SqlTypeName.MAX_NUMERIC_PRECISION) 
+            if ((type.getSqlTypeName() == SqlTypeName.DECIMAL)
+                && (type.getPrecision() >= SqlTypeName.MAX_NUMERIC_PRECISION))
             {
-                FarragoPreparingStmt stmt = 
+                FarragoPreparingStmt stmt =
                     FarragoRelUtil.getPreparingStmt(this);
-                narrow = stmt.getSession().getSessionVariables().getBoolean(
-                    FarragoDefaultSessionPersonality.SQUEEZE_JDBC_NUMERIC);
+                narrow =
+                    stmt.getSession().getSessionVariables().getBoolean(
+                        FarragoDefaultSessionPersonality.SQUEEZE_JDBC_NUMERIC);
             }
             if (narrow) {
                 // allocate a high precision object as class data member
@@ -184,7 +184,7 @@ class ResultSetToFarragoIteratorConverter
                         new AllocationExpression(
                             highPrecisionClazz,
                             new ExpressionList())));
-                
+
                 methodBody.add(
                     new ExpressionStatement(
                         new MethodCall(
@@ -193,16 +193,18 @@ class ResultSetToFarragoIteratorConverter
                             new ExpressionList(rhsExp))));
                 rhsExp = varNarrow;
                 getCluster().getEnv().bindVariable(
-                    rhsExp.toString(), highPrecisionClazz);
+                    rhsExp.toString(),
+                    highPrecisionClazz);
             }
             RexNode rhs =
                 javaRexBuilder.makeJava(
                     getCluster().getEnv(),
                     rhsExp);
-            if (!narrow){
-                rhs = javaRexBuilder.makeAbstractCast(
-                    field.getType(),
-                    rhs);
+            if (!narrow) {
+                rhs =
+                    javaRexBuilder.makeAbstractCast(
+                        field.getType(),
+                        rhs);
             }
 
             final RexToOJTranslator translator =
@@ -244,15 +246,14 @@ class ResultSetToFarragoIteratorConverter
                 },
                 methodBody));
 
-        return
-            new AllocationExpression(
-                TypeName.forOJClass(
-                    OJClass.forClass(ResultSetTupleIter.class)),
-                new ExpressionList(
-                    new CastExpression(
-                        TypeName.forOJClass(OJUtil.clazzResultSet),
-                        childObj)),
-                memberList);
+        return new AllocationExpression(
+            TypeName.forOJClass(
+                OJClass.forClass(ResultSetTupleIter.class)),
+            new ExpressionList(
+                new CastExpression(
+                    TypeName.forOJClass(OJUtil.clazzResultSet),
+                    childObj)),
+            memberList);
     }
 }
 

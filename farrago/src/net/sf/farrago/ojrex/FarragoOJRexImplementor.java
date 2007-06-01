@@ -38,7 +38,6 @@ import org.eigenbase.rex.*;
 public abstract class FarragoOJRexImplementor
     implements OJRexImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement OJRexImplementor
@@ -47,10 +46,10 @@ public abstract class FarragoOJRexImplementor
         RexCall call,
         Expression [] operands)
     {
-        return
-            implementFarrago((FarragoRexToOJTranslator) translator,
-                call,
-                operands);
+        return implementFarrago(
+            (FarragoRexToOJTranslator) translator,
+            call,
+            operands);
     }
 
     /**

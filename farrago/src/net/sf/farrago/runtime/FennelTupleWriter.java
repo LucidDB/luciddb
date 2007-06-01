@@ -26,6 +26,7 @@ import java.nio.*;
 
 import net.sf.farrago.fennel.tuple.*;
 
+
 /**
  * FennelTupleWriter defines an interface for marshalling tuples to be sent to
  * Fennel. Implementations are responsible for marshalling specific tuple
@@ -36,7 +37,6 @@ import net.sf.farrago.fennel.tuple.*;
  */
 public abstract class FennelTupleWriter
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -47,8 +47,7 @@ public abstract class FennelTupleWriter
     /**
      * Singleton helper for aligning tuple buffers correctly.
      */
-    private static FennelTupleAccessor tupleAligner
-        = new FennelTupleAccessor();
+    private static FennelTupleAccessor tupleAligner = new FennelTupleAccessor();
 
     //~ Methods ----------------------------------------------------------------
 
@@ -97,7 +96,7 @@ public abstract class FennelTupleWriter
 
             // add final alignment padding
             newPosition = tupleAligner.alignRoundUp(newPosition);
-            
+
             byteBuffer.position(newPosition);
         } catch (BufferOverflowException ex) {
             return false;

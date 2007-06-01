@@ -37,7 +37,6 @@ import org.eigenbase.util.*;
 public class LurqlRoot
     extends LurqlPathBranch
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String className;

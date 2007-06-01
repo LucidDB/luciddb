@@ -26,9 +26,9 @@ import java.util.*;
 
 import javax.jmi.model.*;
 
-import org.jgrapht.*;
-
 import org.eigenbase.jmi.*;
+
+import org.jgrapht.*;
 
 
 /**
@@ -41,7 +41,6 @@ import org.eigenbase.jmi.*;
 public class LurqlPlanExistsEdge
     extends LurqlPlanEdge
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final LurqlPlanExistsEdge [] EMPTY_ARRAY =

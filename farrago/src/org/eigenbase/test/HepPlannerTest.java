@@ -38,7 +38,6 @@ import org.eigenbase.relopt.hep.*;
 public class HepPlannerTest
     extends RelOptTestBase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String unionTree =
@@ -60,7 +59,8 @@ public class HepPlannerTest
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleClass(CoerceInputsRule.class);
 
-        HepPlanner planner = new HepPlanner(
+        HepPlanner planner =
+            new HepPlanner(
                 programBuilder.createProgram());
 
         planner.addRule(new CoerceInputsRule(UnionRel.class, false));
@@ -80,7 +80,8 @@ public class HepPlannerTest
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleByDescription("FilterToCalcRule");
 
-        HepPlanner planner = new HepPlanner(
+        HepPlanner planner =
+            new HepPlanner(
                 programBuilder.createProgram());
 
         planner.addRule(FilterToCalcRule.instance);

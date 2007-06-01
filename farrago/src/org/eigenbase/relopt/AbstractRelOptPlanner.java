@@ -40,7 +40,6 @@ import org.eigenbase.rel.metadata.*;
 public abstract class AbstractRelOptPlanner
     implements RelOptPlanner
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -120,6 +119,7 @@ public abstract class AbstractRelOptPlanner
      * Returns the rule with a given description
      *
      * @param description Description
+     *
      * @return Rule with given description, or null if not found
      */
     protected RelOptRule getRuleByDescription(String description)

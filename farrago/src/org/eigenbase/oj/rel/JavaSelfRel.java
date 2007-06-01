@@ -36,7 +36,6 @@ import openjava.ptree.*;
 public interface JavaSelfRel
     extends JavaRel
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

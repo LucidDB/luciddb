@@ -64,7 +64,6 @@ public class FarragoStmtValidator
     extends FarragoCompoundAllocation
     implements FarragoSessionStmtValidator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoRepos repos;
@@ -127,8 +126,8 @@ public class FarragoStmtValidator
         // clone session variables so that any context changes we make during
         // validation are transient
         sessionVariables = session.getSessionVariables().cloneVariables();
-        typeFactory = (FarragoTypeFactory)
-            session.getPersonality().newTypeFactory(repos);
+        typeFactory =
+            (FarragoTypeFactory) session.getPersonality().newTypeFactory(repos);
         dataWrapperCache =
             new FarragoDataWrapperCache(
                 this,
@@ -248,8 +247,8 @@ public class FarragoStmtValidator
         CwmNamedColumnSet namedColumnSet,
         String columnName)
     {
-        CwmColumn column = (CwmColumn)
-            FarragoCatalogUtil.getModelElementByName(
+        CwmColumn column =
+            (CwmColumn) FarragoCatalogUtil.getModelElementByName(
                 namedColumnSet.getFeature(),
                 columnName);
         if (column == null) {
@@ -456,9 +455,8 @@ public class FarragoStmtValidator
         String dataServerName =
             session.getPersonality().getDefaultLocalDataServerName(
                 this);
-        return
-            findDataServer(
-                new SqlIdentifier(dataServerName, SqlParserPos.ZERO));
+        return findDataServer(
+            new SqlIdentifier(dataServerName, SqlParserPos.ZERO));
     }
 
     // implement FarragoSessionStmtValidator
@@ -652,8 +650,8 @@ public class FarragoStmtValidator
                 repos.getLocalizedObjectName(jarName));
         }
         return findSchemaObject(
-                qualifiedJarName,
-                FemJar.class);
+            qualifiedJarName,
+            FemJar.class);
     }
 
     private void checkValidated(CwmModelElement element)
@@ -732,9 +730,11 @@ public class FarragoStmtValidator
         String datasetName)
     {
         if (columnSet instanceof FemAbstractColumnSet) {
-            for (FemSampleDataset dataset
+            for (
+                FemSampleDataset dataset
                 : (Collection<FemSampleDataset>)
-                ((FemAbstractColumnSet) columnSet).getSampleDataset()) {
+                ((FemAbstractColumnSet) columnSet).getSampleDataset())
+            {
                 if (dataset.getName().equals(datasetName)) {
                     return (CwmNamedColumnSet) dataset.getUsedColumnSet();
                 }
@@ -758,10 +758,9 @@ public class FarragoStmtValidator
             return parser.newPositionalError(ex);
         } else {
             String msg = parserPos.toString();
-            return
-                FarragoResource.instance().ValidatorPositionContext.ex(
-                    msg,
-                    ex);
+            return FarragoResource.instance().ValidatorPositionContext.ex(
+                msg,
+                ex);
         }
     }
 
@@ -903,7 +902,8 @@ public class FarragoStmtValidator
 
             if (precision != null) {
                 if ((typeFamily == SqlTypeFamily.BINARY)
-                    || (typeFamily == SqlTypeFamily.CHARACTER)) {
+                    || (typeFamily == SqlTypeFamily.CHARACTER))
+                {
                     Integer maximum = simpleType.getCharacterMaximumLength();
                     assert (maximum != null);
                     if (precision.intValue() > maximum.intValue()) {
@@ -948,8 +948,9 @@ public class FarragoStmtValidator
             // creation
         } else if (type instanceof FemSqlrowType) {
             FemSqlrowType rowType = (FemSqlrowType) type;
-            for (FemAbstractAttribute column :
-                Util.cast(rowType.getFeature(), FemAbstractAttribute.class))
+            for (
+                FemAbstractAttribute column
+                : Util.cast(rowType.getFeature(), FemAbstractAttribute.class))
             {
                 // TODO: Validate
             }

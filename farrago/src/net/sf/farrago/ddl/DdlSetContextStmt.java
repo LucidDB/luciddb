@@ -46,7 +46,6 @@ import org.eigenbase.sql.type.*;
 public abstract class DdlSetContextStmt
     extends DdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlNode valueExpr;

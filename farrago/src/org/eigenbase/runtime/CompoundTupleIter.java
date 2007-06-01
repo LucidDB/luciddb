@@ -36,13 +36,12 @@ import org.eigenbase.trace.*;
  * Iterator, then all those of its second input, etc. When all inputs are
  * exhausted, it is done. (Cf {@link CompoundParallelTupleIter}.)
  *
- * @version $Id$
  * @author Stephan Zuercher
+ * @version $Id$
  */
 public class CompoundTupleIter
     implements TupleIter
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =
@@ -135,7 +134,7 @@ public class CompoundTupleIter
                 new CompoundTupleIter(
                     new TupleIter[] {
                         makeTupleIter(new String[] { "a", "b" }),
-                    makeTupleIter(new String[] { "c" })
+                        makeTupleIter(new String[] { "c" })
                     });
             assertEquals(
                 iterator,
@@ -156,11 +155,11 @@ public class CompoundTupleIter
                 new CompoundTupleIter(
                     new TupleIter[] {
                         makeTupleIter(new String[] {}),
-                    makeTupleIter(new String[] { "a", null }),
-                    makeTupleIter(new String[] {}),
-                    makeTupleIter(new String[] {}),
-                    makeTupleIter(new String[] { "b", "c" }),
-                    makeTupleIter(new String[] {})
+                        makeTupleIter(new String[] { "a", null }),
+                        makeTupleIter(new String[] {}),
+                        makeTupleIter(new String[] {}),
+                        makeTupleIter(new String[] { "b", "c" }),
+                        makeTupleIter(new String[] {})
                     });
             assertEquals(
                 iterator,
@@ -171,11 +170,11 @@ public class CompoundTupleIter
         private static CalcTupleIter makeCalcTupleIter(final TupleIter base)
         {
             return new CalcTupleIter(base) {
-                    public Object fetchNext()
-                    {
-                        return base.fetchNext();
-                    }
-                };
+                public Object fetchNext()
+                {
+                    return base.fetchNext();
+                }
+            };
         }
 
         public void testCompoundCalcIter()
@@ -185,7 +184,7 @@ public class CompoundTupleIter
                     new TupleIter[] {
                         makeCalcTupleIter(
                             makeTupleIter(new String[] { "a", "b" })),
-                    makeCalcTupleIter(makeTupleIter(new String[] { "c" }))
+                        makeCalcTupleIter(makeTupleIter(new String[] { "c" }))
                     });
             assertEquals(
                 iterator,
@@ -198,12 +197,12 @@ public class CompoundTupleIter
                 new CompoundTupleIter(
                     new TupleIter[] {
                         makeCalcTupleIter(makeTupleIter(new String[] {})),
-                    makeCalcTupleIter(makeTupleIter(new String[] { "a" })),
-                    makeCalcTupleIter(makeTupleIter(new String[] {})),
-                    makeCalcTupleIter(makeTupleIter(new String[] {})),
-                    makeCalcTupleIter(
+                        makeCalcTupleIter(makeTupleIter(new String[] { "a" })),
+                        makeCalcTupleIter(makeTupleIter(new String[] {})),
+                        makeCalcTupleIter(makeTupleIter(new String[] {})),
+                        makeCalcTupleIter(
                             makeTupleIter(new String[] { "b", "c" })),
-                    makeCalcTupleIter(makeTupleIter(new String[] {}))
+                        makeCalcTupleIter(makeTupleIter(new String[] {}))
                     });
             assertEquals(
                 iterator,
@@ -238,10 +237,10 @@ public class CompoundTupleIter
                         new BoxTupleIter(
                             makeTupleIter(
                                 new String[] { "400", "401", "402", "403" })),
-                    new BoxTupleIter(
+                        new BoxTupleIter(
                             makeTupleIter(
                                 new String[] { "500", "501", "502", "503" })),
-                    new BoxTupleIter(
+                        new BoxTupleIter(
                             makeTupleIter(
                                 new String[] { "600", "601", "602", "603" }))
                     });
@@ -249,8 +248,8 @@ public class CompoundTupleIter
                 iterator,
                 new String[] {
                     "400", "401", "402", "403",
-                "500", "501", "502", "503",
-                "600", "601", "602", "603"
+                    "500", "501", "502", "503",
+                    "600", "601", "602", "603"
                 });
         }
 
@@ -263,11 +262,11 @@ public class CompoundTupleIter
                             makeCalcTupleIter(
                                 makeTupleIter(
                                     new String[] { "400", "401", "402", "403" }))),
-                    new BoxTupleIter(
+                        new BoxTupleIter(
                             makeCalcTupleIter(
                                 makeTupleIter(
                                     new String[] { "500", "501", "502", "503" }))),
-                    new BoxTupleIter(
+                        new BoxTupleIter(
                             makeCalcTupleIter(
                                 makeTupleIter(
                                     new String[] { "600", "601", "602", "603" })))
@@ -276,8 +275,8 @@ public class CompoundTupleIter
                 iterator,
                 new String[] {
                     "400", "401", "402", "403",
-                "500", "501", "502", "503",
-                "600", "601", "602", "603"
+                    "500", "501", "502", "503",
+                    "600", "601", "602", "603"
                 });
         }
 

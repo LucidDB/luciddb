@@ -38,7 +38,6 @@ import net.sf.farrago.jdbc.engine.*;
 public class FarragoServer
     extends FarragoRmiJdbcServer
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

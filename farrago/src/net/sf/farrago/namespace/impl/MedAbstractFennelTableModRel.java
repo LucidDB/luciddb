@@ -48,7 +48,6 @@ public abstract class MedAbstractFennelTableModRel
     extends TableModificationRelBase
     implements FennelRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public MedAbstractFennelTableModRel(
@@ -84,9 +83,9 @@ public abstract class MedAbstractFennelTableModRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
         return implementor.visitChild(
-                this,
-                0,
-                getChild());
+            this,
+            0,
+            getChild());
     }
 
     // implement FennelRel
@@ -142,26 +141,25 @@ public abstract class MedAbstractFennelTableModRel
     }
 
     /**
-     * @return for a table modification that is self referencing (i.e. same 
-     *   table is accessed for both input and output), determines whether  
-     *   any index roots will be accessed for both input and output. In the 
-     *   case of insertions, the deletion index is not taken into account, 
-     *   because insertions produce no deleted entries.
+     * @return for a table modification that is self referencing (i.e. same
+     * table is accessed for both input and output), determines whether any
+     * index roots will be accessed for both input and output. In the case of
+     * insertions, the deletion index is not taken into account, because
+     * insertions produce no deleted entries.
      */
     private boolean isIndexRootSelfReferencing(CwmTable cwmTable)
     {
-        FarragoPreparingStmt stmt =
-            FennelRelUtil.getPreparingStmt(this);
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
         FarragoRepos repos = stmt.getRepos();
-        FarragoSessionIndexMap indexMap = 
+        FarragoSessionIndexMap indexMap =
             stmt.getSession().getSessionIndexMap();
 
         boolean selfReferencing = false;
         Collection<FemLocalIndex> indexes =
             FarragoCatalogUtil.getTableIndexes(repos, cwmTable);
-        for (FemLocalIndex index: indexes) {
+        for (FemLocalIndex index : indexes) {
             if (getOperation().equals(TableModificationRel.Operation.INSERT)
-                && FarragoCatalogUtil.isDeletionIndex(index)) 
+                && FarragoCatalogUtil.isDeletionIndex(index))
             {
                 continue;
             }

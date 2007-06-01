@@ -42,7 +42,6 @@ public class IterOneRowRel
     extends OneRowRelBase
     implements JavaRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public IterOneRowRel(RelOptCluster cluster)

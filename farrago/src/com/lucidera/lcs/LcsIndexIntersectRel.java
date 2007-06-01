@@ -38,7 +38,6 @@ import org.eigenbase.relopt.*;
 class LcsIndexIntersectRel
     extends LcsIndexBitOpRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -59,13 +58,12 @@ class LcsIndexIntersectRel
     // implement Cloneable
     public LcsIndexIntersectRel clone()
     {
-        return
-            new LcsIndexIntersectRel(
-                getCluster(),
-                RelOptUtil.clone(getInputs()),
-                lcsTable,
-                startRidParamId,
-                rowLimitParamId);
+        return new LcsIndexIntersectRel(
+            getCluster(),
+            RelOptUtil.clone(getInputs()),
+            lcsTable,
+            startRidParamId,
+            rowLimitParamId);
     }
 
     // implement RelNode

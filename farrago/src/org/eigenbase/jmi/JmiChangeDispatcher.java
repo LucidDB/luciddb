@@ -36,7 +36,6 @@ import org.netbeans.api.mdr.*;
  */
 public interface JmiChangeDispatcher
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

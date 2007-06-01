@@ -39,7 +39,6 @@ import org.eigenbase.test.*;
 public class DiffSanityTest
     extends DiffTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public DiffSanityTest(String testName)

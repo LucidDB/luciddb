@@ -44,7 +44,6 @@ import org.eigenbase.util.*;
 public class FarragoOJRexReinterpretImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

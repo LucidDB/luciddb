@@ -47,7 +47,6 @@ import org.eigenbase.runtime.*;
 public class FarragoTupleIterResultSet
     extends TupleIterResultSet
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final Logger tracer =
@@ -164,6 +163,7 @@ public class FarragoTupleIterResultSet
             // NOTE:  this may be called reentrantly for daemon stmts,
             // so need special handling
             runtimeContext = null;
+
             // Lock session before sessionCtxt, to be consistent with global
             // locking strategy. In particular, FarragoDbStmtContext.close()
             // locks the session before it calls

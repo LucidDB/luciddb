@@ -20,20 +20,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.test;
 
 import java.util.*;
 
+
 /**
  * Mock JAAS credential class.
+ *
  * @author Oscar Gothberg
  * @version $Id$
  */
 public class FarragoMockCredential
     extends Properties
 {
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoMockCredential()
     {
     }
 }
+
+// End FarragoMockCredential.java

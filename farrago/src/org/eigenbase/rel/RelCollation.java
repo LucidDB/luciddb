@@ -36,7 +36,6 @@ import java.util.*;
  */
 public interface RelCollation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final List<RelCollation> emptyList = Collections.emptyList();

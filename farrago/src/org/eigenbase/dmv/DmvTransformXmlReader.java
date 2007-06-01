@@ -21,46 +21,46 @@
 */
 package org.eigenbase.dmv;
 
-import org.eigenbase.jmi.*;
-
-import javax.xml.parsers.*;
-import javax.jmi.reflect.*;
-import javax.jmi.model.*;
-
 import java.io.*;
 
+import javax.jmi.model.*;
+import javax.jmi.reflect.*;
+
+import javax.xml.parsers.*;
+
+import org.eigenbase.jmi.*;
+
 import org.w3c.dom.*;
+
 
 /**
  * DmvTransformXmlReader reads a definition of a DMV transformation from an XML
  * file and applies it to a {@link JmiDependencyMappedTransform}.
  *
- *<p>
- *
- * The XML file must be valid according to
- * <code>farrago/examples/dmv/DmvTransformationRuleSet.dtd</code>.
+ * <p>The XML file must be valid according to <code>
+ * farrago/examples/dmv/DmvTransformationRuleSet.dtd</code>.
  *
  * @author John Sichi
  * @version $Id$
  */
 public class DmvTransformXmlReader
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final String ELEMENT_SET_ALL_BY_AGGREGATION =
         "SetAllByAggregation";
-    private static final String ELEMENT_SET_BY_REF_ASSOC =
-        "SetByAssoc";
-    private static final String ATTRIBUTE_REQUESTED_KIND =
-        "requestedKind";
-    private static final String ATTRIBUTE_MAPPING =
-        "mapping";
-    private static final String ATTRIBUTE_ASSOC =
-        "assoc";
-    private static final String ATTRIBUTE_SOURCE_CLASS =
-        "sourceClass";
-    private static final String ATTRIBUTE_TARGET_CLASS =
-        "targetClass";
+    private static final String ELEMENT_SET_BY_REF_ASSOC = "SetByAssoc";
+    private static final String ATTRIBUTE_REQUESTED_KIND = "requestedKind";
+    private static final String ATTRIBUTE_MAPPING = "mapping";
+    private static final String ATTRIBUTE_ASSOC = "assoc";
+    private static final String ATTRIBUTE_SOURCE_CLASS = "sourceClass";
+    private static final String ATTRIBUTE_TARGET_CLASS = "targetClass";
+
+    //~ Instance fields --------------------------------------------------------
 
     private final JmiModelGraph modelGraph;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new DmvTransformXmlReader.
@@ -72,12 +72,13 @@ public class DmvTransformXmlReader
         this.modelGraph = modelGraph;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Converts the XML representation of a DMV transformation into
-     * a {@link JmiDependencyMappedTransform}.
+     * Converts the XML representation of a DMV transformation into a {@link
+     * JmiDependencyMappedTransform}.
      *
      * @param filename name of XML file to read
-     *
      * @param transform transform to initialize
      */
     public void readTransformationRules(
@@ -96,12 +97,10 @@ public class DmvTransformXmlReader
                 Node node = nodeList.item(i);
                 String nodeName = node.getNodeName();
                 if (nodeName.equals(ELEMENT_SET_ALL_BY_AGGREGATION)) {
-                    setAllByAggregation(
-                        (Element) node,
+                    setAllByAggregation((Element) node,
                         transform);
                 } else if (nodeName.equals(ELEMENT_SET_BY_REF_ASSOC)) {
-                    setByRefAssoc(
-                        (Element) node,
+                    setByRefAssoc((Element) node,
                         transform);
                 }
             }
@@ -126,15 +125,14 @@ public class DmvTransformXmlReader
         JmiDependencyMappedTransform transform)
     {
         String assocName = rule.getAttribute(ATTRIBUTE_ASSOC);
-        JmiAssocEdge assocEdge =
-            modelGraph.getEdgeForAssocName(assocName);
+        JmiAssocEdge assocEdge = modelGraph.getEdgeForAssocName(assocName);
         if (assocEdge == null) {
             throw new IllegalArgumentException(assocName);
         }
         String mappingName = rule.getAttribute(ATTRIBUTE_MAPPING);
         String sourceClassName = rule.getAttribute(ATTRIBUTE_SOURCE_CLASS);
         String targetClassName = rule.getAttribute(ATTRIBUTE_TARGET_CLASS);
-        JmiAssocMapping mapping = 
+        JmiAssocMapping mapping =
             Enum.valueOf(JmiAssocMapping.class, mappingName);
         if ((sourceClassName.equals("")) && (targetClassName.equals(""))) {
             transform.setByRefAssoc(

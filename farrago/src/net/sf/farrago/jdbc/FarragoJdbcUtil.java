@@ -39,7 +39,6 @@ import org.eigenbase.util14.*;
  */
 public class FarragoJdbcUtil
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

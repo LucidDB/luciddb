@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
 public abstract class AbstractSqlTester
     implements SqlTester
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // ~ Constants ------------------------------------------------------------
@@ -60,7 +59,6 @@ public abstract class AbstractSqlTester
             {
             }
         };
-
 
     //~ Instance fields --------------------------------------------------------
 

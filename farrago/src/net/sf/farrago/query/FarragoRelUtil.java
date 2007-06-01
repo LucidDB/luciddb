@@ -36,7 +36,6 @@ import org.eigenbase.relopt.*;
  */
 public abstract class FarragoRelUtil
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

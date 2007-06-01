@@ -43,7 +43,6 @@ import net.sf.farrago.util.*;
 public class FarragoDbSessionFactory
     implements FarragoSessionFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionFactory
@@ -121,11 +120,10 @@ public class FarragoDbSessionFactory
         FarragoAllocationOwner owner,
         boolean userRepos)
     {
-        return
-            new FarragoMdrReposImpl(
-                owner,
-                new FarragoModelLoader(),
-                userRepos);
+        return new FarragoMdrReposImpl(
+            owner,
+            new FarragoModelLoader(),
+            userRepos);
     }
 
     // implement FarragoSessionFactory
@@ -164,8 +162,7 @@ public class FarragoDbSessionFactory
     }
 
     // implement FarragoSessionFactory
-    public void defineResourceBundles(
-        List<ResourceBundle> bundleList)
+    public void defineResourceBundles(List<ResourceBundle> bundleList)
     {
         bundleList.add(FarragoResource.instance());
     }

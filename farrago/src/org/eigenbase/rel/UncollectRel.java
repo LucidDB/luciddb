@@ -40,7 +40,6 @@ import org.eigenbase.reltype.*;
 public final class UncollectRel
     extends SingleRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

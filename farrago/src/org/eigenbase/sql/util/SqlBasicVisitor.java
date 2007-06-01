@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
 public class SqlBasicVisitor<R>
     implements SqlVisitor<R>
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public R visit(SqlLiteral literal)
@@ -90,7 +89,8 @@ public class SqlBasicVisitor<R>
     {
         R result();
 
-        R visitChild(SqlVisitor<R> visitor,
+        R visitChild(
+            SqlVisitor<R> visitor,
             SqlNode expr,
             int i,
             SqlNode operand);
@@ -115,7 +115,8 @@ public class SqlBasicVisitor<R>
             return null;
         }
 
-        public R visitChild(SqlVisitor<R> visitor,
+        public R visitChild(
+            SqlVisitor<R> visitor,
             SqlNode expr,
             int i,
             SqlNode operand)

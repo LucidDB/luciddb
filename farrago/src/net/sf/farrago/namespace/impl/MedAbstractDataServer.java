@@ -45,7 +45,6 @@ public abstract class MedAbstractDataServer
     extends MedAbstractBase
     implements FarragoMedDataServer
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private String serverMofId;

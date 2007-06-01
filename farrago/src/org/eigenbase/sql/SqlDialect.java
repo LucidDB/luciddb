@@ -23,6 +23,7 @@
 package org.eigenbase.sql;
 
 import java.sql.*;
+
 import java.util.regex.*;
 
 import org.eigenbase.util.*;
@@ -34,12 +35,12 @@ import org.eigenbase.util.*;
  */
 public class SqlDialect
 {
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     String databaseProductName;
     String identifierQuoteString;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>SqlDialect</code>
@@ -65,7 +66,7 @@ public class SqlDialect
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public boolean isAccess()
     {
@@ -101,7 +102,8 @@ public class SqlDialect
             return val; // quoting is not supported
         }
         String val2 =
-            val.replaceAll(identifierQuoteString,
+            val.replaceAll(
+                identifierQuoteString,
                 identifierQuoteString + identifierQuoteString);
         return identifierQuoteString + val2 + identifierQuoteString;
     }
@@ -128,7 +130,8 @@ public class SqlDialect
             return buf;
         }
         String val2 =
-            val.replaceAll(identifierQuoteString,
+            val.replaceAll(
+                identifierQuoteString,
                 identifierQuoteString + identifierQuoteString);
         buf.append(identifierQuoteString);
         buf.append(val2);
@@ -160,8 +163,10 @@ public class SqlDialect
      */
     public String unquoteStringLiteral(String val)
     {
-        if ((val != null) && (val.charAt(0) == '\'')
-                && (val.charAt(val.length() - 1) == '\'')) {
+        if ((val != null)
+            && (val.charAt(0) == '\'')
+            && (val.charAt(val.length() - 1) == '\''))
+        {
             if (val.length() > 2) {
                 val = Util.replace(val, "''", "'");
                 return val.substring(1, val.length() - 1);

@@ -49,12 +49,12 @@ import org.eigenbase.util.*;
 public class SqlLiteralChainOperator
     extends SqlInternalOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     SqlLiteralChainOperator()
     {
-        super("$LiteralChain",
+        super(
+            "$LiteralChain",
             SqlKind.LiteralChain,
             80,
             true,

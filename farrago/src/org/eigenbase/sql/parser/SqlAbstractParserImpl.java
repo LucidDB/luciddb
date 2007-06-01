@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
  */
 public abstract class SqlAbstractParserImpl
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -536,7 +535,8 @@ public abstract class SqlAbstractParserImpl
                 final int [][] expectedTokenSequences =
                     parseException.getExpectedTokenSequences();
                 for (int i = 0; i
-                    < expectedTokenSequences.length; i++) {
+                    < expectedTokenSequences.length; i++)
+                {
                     final int [] expectedTokenSequence =
                         expectedTokenSequences[i];
                     assert expectedTokenSequence.length == 1;
@@ -593,8 +593,10 @@ public abstract class SqlAbstractParserImpl
             jdbcReservedSet.removeAll(sql92ReservedWordSet);
             jdbcReservedSet.removeAll(nonReservedKeyWordSet);
             int j = 0;
-            for (Iterator<String> jdbcReservedIter = jdbcReservedSet.iterator();
-                jdbcReservedIter.hasNext();) {
+            for (
+                Iterator<String> jdbcReservedIter = jdbcReservedSet.iterator();
+                jdbcReservedIter.hasNext();)
+            {
                 String jdbcReserved = jdbcReservedIter.next();
                 if (j++ > 0) {
                     sb.append(",");
@@ -621,8 +623,7 @@ public abstract class SqlAbstractParserImpl
 
         public boolean isKeyword(String token)
         {
-            return
-                isNonReservedKeyword(token)
+            return isNonReservedKeyword(token)
                 || isReservedFunctionName(token)
                 || isContextVariableName(token)
                 || isReservedWord(token);

@@ -39,7 +39,6 @@ public class AggregatingSelectScope
     extends DelegatingScope
     implements AggregatingScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlNodeList groupExprs;

@@ -31,8 +31,8 @@ import org.eigenbase.rex.*;
 
 
 /**
- * PushSemiJoinPastProjectRule implements the rule for pushing semijoins down
- * in a tree past a project in order to trigger other rules that will convert
+ * PushSemiJoinPastProjectRule implements the rule for pushing semijoins down in
+ * a tree past a project in order to trigger other rules that will convert
  * semijoins.
  *
  * <p>SemiJoinRel(ProjectRel(X), Y) --> ProjectRel(SemiJoinRel(X, Y))
@@ -62,7 +62,7 @@ public class PushSemiJoinPastProjectRule
     {
         SemiJoinRel semiJoin = (SemiJoinRel) call.rels[0];
         ProjectRel project = (ProjectRel) call.rels[1];
-        
+
         // convert the LHS semijoin keys to reference the child projection
         // expression; all projection expressions must be RexInputRefs,
         // otherwise, we wouldn't have created this semijoin
@@ -75,9 +75,9 @@ public class PushSemiJoinPastProjectRule
         }
 
         // convert the semijoin condition to reflect the LHS with the project
-        // pulled up       
+        // pulled up
         RexNode newCondition = adjustCondition(project, semiJoin);
-            
+
         SemiJoinRel newSemiJoin =
             new SemiJoinRel(
                 semiJoin.getCluster(),
@@ -98,13 +98,13 @@ public class PushSemiJoinPastProjectRule
 
         call.transformTo(newProject);
     }
-    
+
     /**
-     * Pulls the project above the semijoin and returns the resulting
-     * semijoin condition.  As a result, the semijoin condition should be
-     * modified such that references to the LHS of a semijoin should now
-     * reference the children of the project that's on the LHS.
-     * 
+     * Pulls the project above the semijoin and returns the resulting semijoin
+     * condition. As a result, the semijoin condition should be modified such
+     * that references to the LHS of a semijoin should now reference the
+     * children of the project that's on the LHS.
+     *
      * @param project ProjectRel on the LHS of the semijoin
      * @param semiJoin the semijoin
      *
@@ -130,6 +130,7 @@ public class PushSemiJoinPastProjectRule
                 });
         RexProgramBuilder bottomProgramBuilder =
             new RexProgramBuilder(bottomInputRowType, rexBuilder);
+
         // add the project expressions, then add input references for the RHS
         // of the semijoin
         RexNode [] projExprs = project.getProjectExps();
@@ -176,9 +177,8 @@ public class PushSemiJoinPastProjectRule
                 bottomProgram,
                 rexBuilder);
 
-        return
-            mergedProgram.expandLocalRef(
-                mergedProgram.getCondition());
+        return mergedProgram.expandLocalRef(
+            mergedProgram.getCondition());
     }
 }
 

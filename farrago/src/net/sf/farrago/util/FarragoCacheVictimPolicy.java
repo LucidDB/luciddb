@@ -24,6 +24,7 @@ package net.sf.farrago.util;
 
 import java.util.*;
 
+
 /**
  * FarragoCacheVictimPolicy defines the interface for different implementations
  * of a cache victimization policy for the FarragoObjectCache.

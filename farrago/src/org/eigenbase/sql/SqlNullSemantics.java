@@ -29,7 +29,8 @@ package org.eigenbase.sql;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum SqlNullSemantics {
+public enum SqlNullSemantics
+{
     /**
      * Predicate semantics:  e.g. in the expression (WHERE X=5),
      * if X is NULL, the comparison result is unknown, and so

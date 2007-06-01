@@ -35,7 +35,6 @@ import net.sf.farrago.session.*;
  */
 class FarragoUdrInvocationFrame
 {
-
     //~ Instance fields --------------------------------------------------------
 
     FarragoRuntimeContext context;

@@ -44,7 +44,6 @@ import org.eigenbase.sql.*;
 public class DdlSetSystemParamStmt
     extends DdlSetParamStmt
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

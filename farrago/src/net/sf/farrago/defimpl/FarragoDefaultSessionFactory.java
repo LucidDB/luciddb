@@ -38,7 +38,6 @@ import net.sf.farrago.session.*;
 public class FarragoDefaultSessionFactory
     extends FarragoDbSessionFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionFactory
@@ -47,9 +46,9 @@ public class FarragoDefaultSessionFactory
         Properties info)
     {
         return new FarragoDbSession(
-                url,
-                info,
-                this);
+            url,
+            info,
+            this);
     }
 
     // implement FarragoSessionPersonalityFactory

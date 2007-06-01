@@ -42,9 +42,8 @@ import org.eigenbase.util.*;
  * <li><code>EXISTS (path-spec)</code>
  * </ul>
  *
- * or negations, e.g. NOT ATTRIBUTE = 'VALUE'
- *
- * TODO jvs 6-July-2006: refactor into LurqlExistsFilter, LurqlComparisonFilter
+ * or negations, e.g. NOT ATTRIBUTE = 'VALUE' TODO jvs 6-July-2006: refactor
+ * into LurqlExistsFilter, LurqlComparisonFilter
  *
  * @author John V. Sichi
  * @version $Id$
@@ -52,7 +51,6 @@ import org.eigenbase.util.*;
 public class LurqlFilter
     extends LurqlQueryNode
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final LurqlFilter [] EMPTY_ARRAY = new LurqlFilter[0];
@@ -88,9 +86,11 @@ public class LurqlFilter
     {
         this(attributeName, values, false);
     }
-    
+
     public LurqlFilter(
-        String attributeName, Set<Object> values, boolean isPattern)
+        String attributeName,
+        Set<Object> values,
+        boolean isPattern)
     {
         this.attributeName = attributeName;
         this.values = Collections.unmodifiableSet(values);
@@ -99,7 +99,7 @@ public class LurqlFilter
         this.exists = null;
         this.isPattern = isPattern;
         if (isPattern) {
-            assert(values.size() == 1);
+            assert (values.size() == 1);
         }
         for (Object obj : values) {
             if (obj instanceof LurqlDynamicParam) {
@@ -209,7 +209,7 @@ public class LurqlFilter
         if (isNegated) {
             pw.print("not ");
         }
-        
+
         if (exists != null) {
             exists.unparse(pw);
             return;

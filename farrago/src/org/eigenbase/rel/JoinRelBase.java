@@ -40,7 +40,6 @@ import org.eigenbase.util.*;
 public abstract class JoinRelBase
     extends AbstractRelNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected RexNode condition;
@@ -49,8 +48,8 @@ public abstract class JoinRelBase
     protected Set<String> variablesStopped = Collections.emptySet();
 
     /**
-     * Values must be of enumeration {@link JoinRelType}, except that
-     * {@link JoinRelType#RIGHT} is disallowed.
+     * Values must be of enumeration {@link JoinRelType}, except that {@link
+     * JoinRelType#RIGHT} is disallowed.
      */
     protected JoinRelType joinType;
 
@@ -65,8 +64,8 @@ public abstract class JoinRelBase
      * @param condition Join condition
      * @param joinType Join type
      * @param variablesStopped Set of names of variables which are set by the
-     * LHS and used by the RHS and are not available to nodes above this
-     * JoinRel in the tree
+     * LHS and used by the RHS and are not available to nodes above this JoinRel
+     * in the tree
      */
     protected JoinRelBase(
         RelOptCluster cluster,
@@ -195,13 +194,12 @@ public abstract class JoinRelBase
 
     protected RelDataType deriveRowType()
     {
-        return
-            deriveJoinRowType(
-                left.getRowType(),
-                right.getRowType(),
-                joinType,
-                getCluster().getTypeFactory(),
-                null);
+        return deriveJoinRowType(
+            left.getRowType(),
+            right.getRowType(),
+            joinType,
+            getCluster().getTypeFactory(),
+            null);
     }
 
     public static RelDataType deriveJoinRowType(
@@ -231,9 +229,9 @@ public abstract class JoinRelBase
     /**
      * Returns the type the row which results when two relations are joined.
      *
-     * <p>The resulting row type consists of
-     * the fields of the left type plus the fields of the right type. The field
-     * name list, if present, overrides the original names of the fields.
+     * <p>The resulting row type consists of the fields of the left type plus
+     * the fields of the right type. The field name list, if present, overrides
+     * the original names of the fields.
      *
      * @param typeFactory Type factory
      * @param leftType Type of left input to join
@@ -253,13 +251,12 @@ public abstract class JoinRelBase
         List<String> fieldNameList)
     {
         assert (fieldNameList == null)
-            || (
-                fieldNameList.size()
+            || (fieldNameList.size()
                 == (leftType.getFields().length
-                    + rightType.getFields().length)
-               );
+                    + rightType.getFields().length));
         List<String> nameList = new ArrayList<String>();
         List<RelDataType> typeList = new ArrayList<RelDataType>();
+
         // use a hashset to keep track of the field names; this is needed
         // to ensure that the contains() call to check for name uniqueness
         // runs in constant time; otherwise, if the number of fields is large,

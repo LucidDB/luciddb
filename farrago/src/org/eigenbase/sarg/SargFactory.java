@@ -34,7 +34,6 @@ import org.eigenbase.sql.*;
  */
 public class SargFactory
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RexBuilder rexBuilder;
@@ -81,8 +80,8 @@ public class SargFactory
     public SargIntervalExpr newIntervalExpr(RelDataType dataType)
     {
         return newIntervalExpr(
-                dataType,
-                SqlNullSemantics.NULL_MATCHES_NOTHING);
+            dataType,
+            SqlNullSemantics.NULL_MATCHES_NOTHING);
     }
 
     /**
@@ -97,9 +96,9 @@ public class SargFactory
         SqlNullSemantics nullSemantics)
     {
         return new SargIntervalExpr(
-                this,
-                dataType,
-                nullSemantics);
+            this,
+            dataType,
+            nullSemantics);
     }
 
     /**
@@ -120,12 +119,12 @@ public class SargFactory
     {
         return new SargRexAnalyzer(this, false);
     }
-    
+
     /**
      * @param simpleMode if true, the analyzer restrictes the types of
-     * predicates it allows; only one predicate is allowed per RexInputRef,
-     * and only one range predicate is allowed
-     * 
+     * predicates it allows; only one predicate is allowed per RexInputRef, and
+     * only one range predicate is allowed
+     *
      * @return new analyzer for rex expressions
      */
     public SargRexAnalyzer newRexAnalyzer(boolean simpleMode)

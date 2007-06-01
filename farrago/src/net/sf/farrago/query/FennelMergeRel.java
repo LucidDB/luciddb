@@ -66,9 +66,9 @@ class FennelMergeRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         return planner.makeCost(
-                RelMetadataQuery.getRowCount(this),
-                0.0,
-                0.0);
+            RelMetadataQuery.getRowCount(this),
+            0.0,
+            0.0);
     }
 
     // implement RelNode

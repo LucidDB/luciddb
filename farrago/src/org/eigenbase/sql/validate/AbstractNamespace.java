@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
 abstract class AbstractNamespace
     implements SqlValidatorNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final SqlValidatorImpl validator;
@@ -83,10 +82,12 @@ abstract class AbstractNamespace
         case Unvalidated:
             try {
                 status = SqlValidatorImpl.Status.InProgress;
-                Util.permAssert(rowType == null,
+                Util.permAssert(
+                    rowType == null,
                     "Namespace.rowType must be null before validate has been called");
                 rowType = validateImpl();
-                Util.permAssert(rowType != null,
+                Util.permAssert(
+                    rowType != null,
                     "validateImpl() returned null");
                 if (forceNullable) {
                     // REVIEW jvs 10-Oct-2005: This may not be quite right
@@ -150,12 +151,11 @@ abstract class AbstractNamespace
         SqlValidatorScope [] ancestorOut,
         int [] offsetOut)
     {
-        return
-            validator.lookupFieldNamespace(
-                getRowType(),
-                name,
-                ancestorOut,
-                offsetOut);
+        return validator.lookupFieldNamespace(
+            getRowType(),
+            name,
+            ancestorOut,
+            offsetOut);
     }
 
     public boolean fieldExists(String name)

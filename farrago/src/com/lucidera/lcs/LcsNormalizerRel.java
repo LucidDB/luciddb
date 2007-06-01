@@ -42,7 +42,6 @@ import org.eigenbase.reltype.*;
 public class LcsNormalizerRel
     extends FennelSingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoRepos repos;
@@ -62,7 +61,8 @@ public class LcsNormalizerRel
     // implement AbstractRelNode
     public LcsNormalizerRel clone()
     {
-        LcsNormalizerRel clone = new LcsNormalizerRel(
+        LcsNormalizerRel clone =
+            new LcsNormalizerRel(
                 getCluster(),
                 getChild());
         clone.inheritTraitsFrom(this);
@@ -77,24 +77,23 @@ public class LcsNormalizerRel
         final int nKeys = childFields.size() - 3;
         final List<RelDataTypeField> keyFields = childFields.subList(0, nKeys);
 
-        return
-            getCluster().getTypeFactory().createStructType(
-                new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return nKeys;
-                    }
+        return getCluster().getTypeFactory().createStructType(
+            new RelDataTypeFactory.FieldInfo() {
+                public int getFieldCount()
+                {
+                    return nKeys;
+                }
 
-                    public String getFieldName(int index)
-                    {
-                        return keyFields.get(index).getName();
-                    }
+                public String getFieldName(int index)
+                {
+                    return keyFields.get(index).getName();
+                }
 
-                    public RelDataType getFieldType(int index)
-                    {
-                        return keyFields.get(index).getType();
-                    }
-                });
+                public RelDataType getFieldType(int index)
+                {
+                    return keyFields.get(index).getType();
+                }
+            });
     }
 
     // implement FennelRel

@@ -28,6 +28,7 @@ import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.util.*;
 
+
 /**
  * FennelStorage is the JNI interface for calling Fennel from Farrago. Most
  * methods have package access only; other classes in this package expose public

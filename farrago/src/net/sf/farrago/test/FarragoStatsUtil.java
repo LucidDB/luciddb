@@ -41,7 +41,6 @@ import org.eigenbase.sql.validate.*;
  */
 public class FarragoStatsUtil
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final int DEFAULT_HISTOGRAM_BAR_COUNT = 100;
@@ -61,7 +60,7 @@ public class FarragoStatsUtil
         FarragoReposTxnContext txn = repos.newTxnContext();
         try {
             txn.beginWriteTxn();
-            
+
             FemAbstractColumnSet columnSet =
                 lookupColumnSet(
                     session,
@@ -76,7 +75,7 @@ public class FarragoStatsUtil
             txn.rollback();
         }
     }
-    
+
     public static CwmCatalog lookupCatalog(
         FarragoSession session,
         FarragoRepos repos,
@@ -131,19 +130,19 @@ public class FarragoStatsUtil
         }
         return columnSet;
     }
-    
+
     /**
      * Maps a table, given its name components, to its corresponding
      * FemAbstractColumnSet
-     * 
+     *
      * @param session currrent session
      * @param repos repository associated with the session
      * @param catalogName catalog name for the table
      * @param schemaName schema name for the table
      * @param tableName table name
-     * 
+     *
      * @return FemAbstractColumnSet corresponding to the desired table
-     * 
+     *
      * @throws SqlValidatorException
      */
     public static FemAbstractColumnSet lookupColumnSet(
@@ -281,7 +280,7 @@ public class FarragoStatsUtil
             origBarCount = origHistogram.getBarCount();
             origBars = origHistogram.getBar();
         }
-        
+
         List<FemColumnHistogramBar> bars =
             new LinkedList<FemColumnHistogramBar>();
         List<Long> valueCounts =
@@ -292,7 +291,7 @@ public class FarragoStatsUtil
             FemColumnHistogramBar bar;
             if (i < origBarCount) {
                 bar = origBars.get(i);
-                assert(bar.getOrdinal() == i);
+                assert (bar.getOrdinal() == i);
             } else {
                 bar = repos.newFemColumnHistogramBar();
                 bar.setOrdinal(i);
@@ -323,7 +322,7 @@ public class FarragoStatsUtil
             }
             for (int j = 0; j < currentIterations; j++) {
                 char [] chars =
-                    { valueDigits.charAt(i), valueDigits.charAt(j) };
+                { valueDigits.charAt(i), valueDigits.charAt(j) };
                 String next = new String(chars);
                 if (distributionType > 0) {
                     next += valueDigits.charAt(0);

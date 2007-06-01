@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
 public class DdlSetSchemaStmt
     extends DdlSetContextStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private SqlIdentifier schemaName;

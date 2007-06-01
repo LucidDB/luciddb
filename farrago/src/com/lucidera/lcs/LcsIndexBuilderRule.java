@@ -42,7 +42,6 @@ import org.eigenbase.util.*;
 class LcsIndexBuilderRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

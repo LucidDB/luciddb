@@ -34,7 +34,6 @@ package net.sf.farrago.test.concurrent;
  */
 public interface FarragoTestConcurrentCommand
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -54,15 +53,15 @@ public interface FarragoTestConcurrentCommand
     /**
      * Marks a command to show that it is expected to fail, and indicates how.
      * Used for negative tests. Normally when a command fails the embracing test
-     * fails (see
-     * {@link net.sf.farrago.test.concurrent.FarragoTestConcurrentTestCase#executeTest}).
-     * But when a marked command fails, the error is caught and
-     * inspected: if it matches the expected error, the test continues. However
-     * if it does not match, if another kind of exception is thrown, or if no
-     * exception is caught, then the test fails. Assumes the error is indicated
-     * by a java.sql.SQLException. Optionally checks for the expected error
-     * condition by matching the error message against a regular expression.
-     * (Scans the list of chained SQLExceptions).
+     * fails (see {@link
+     * net.sf.farrago.test.concurrent.FarragoTestConcurrentTestCase#executeTest}).
+     * But when a marked command fails, the error is caught and inspected: if it
+     * matches the expected error, the test continues. However if it does not
+     * match, if another kind of exception is thrown, or if no exception is
+     * caught, then the test fails. Assumes the error is indicated by a
+     * java.sql.SQLException. Optionally checks for the expected error condition
+     * by matching the error message against a regular expression. (Scans the
+     * list of chained SQLExceptions).
      *
      * @param comment a brief description of the expected error
      * @param pattern null, or a regular expression that matches the expected

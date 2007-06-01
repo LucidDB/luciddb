@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
 public class SameOperandTypeChecker
     implements SqlOperandTypeChecker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final int nOperands;
@@ -60,9 +59,9 @@ public class SameOperandTypeChecker
         boolean throwOnFailure)
     {
         return checkOperandTypesImpl(
-                callBinding,
-                throwOnFailure,
-                callBinding);
+            callBinding,
+            throwOnFailure,
+            callBinding);
     }
 
     private boolean checkOperandTypesImpl(
@@ -109,7 +108,7 @@ public class SameOperandTypeChecker
         if (type1.isStruct() != type2.isStruct()) {
             return false;
         }
-        
+
         if (type1.isStruct()) {
             int n = type1.getFieldCount();
             if (n != type2.getFieldCount()) {
@@ -122,7 +121,8 @@ public class SameOperandTypeChecker
                     (RelDataTypeField) type2.getFieldList().get(i);
                 if (!checkTypePair(
                         field1.getType(),
-                        field2.getType())) {
+                        field2.getType()))
+                {
                     return false;
                 }
             }
@@ -184,9 +184,9 @@ public class SameOperandTypeChecker
             array[2] = "...";
         }
         return SqlUtil.getAliasedSignature(
-                op,
-                opName,
-                Arrays.asList(array));
+            op,
+            opName,
+            Arrays.asList(array));
     }
 }
 

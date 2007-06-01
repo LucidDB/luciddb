@@ -34,7 +34,6 @@ import org.eigenbase.reltype.*;
  */
 public interface FarragoSessionStmtParamDefFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

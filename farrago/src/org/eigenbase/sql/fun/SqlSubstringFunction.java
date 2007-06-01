@@ -40,12 +40,12 @@ import org.eigenbase.sql.validate.*;
 public class SqlSubstringFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     SqlSubstringFunction()
     {
-        super("SUBSTRING",
+        super(
+            "SUBSTRING",
             SqlKind.Function,
             SqlTypeStrategies.rtiNullableVaryingFirstArgType,
             null,
@@ -99,7 +99,8 @@ public class SqlSubstringFunction
                 callBinding,
                 call.operands[0],
                 0,
-                throwOnFailure)) {
+                throwOnFailure))
+        {
             return false;
         }
         if (2 == n) {
@@ -107,7 +108,8 @@ public class SqlSubstringFunction
                     callBinding,
                     call.operands[1],
                     0,
-                    throwOnFailure)) {
+                    throwOnFailure))
+            {
                 return false;
             }
         } else {
@@ -119,14 +121,16 @@ public class SqlSubstringFunction
                         callBinding,
                         call.operands[1],
                         0,
-                        throwOnFailure)) {
+                        throwOnFailure))
+                {
                     return false;
                 }
                 if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                         callBinding,
                         call.operands[2],
                         0,
-                        throwOnFailure)) {
+                        throwOnFailure))
+                {
                     return false;
                 }
 
@@ -134,7 +138,8 @@ public class SqlSubstringFunction
                         validator,
                         scope,
                         call.operands,
-                        throwOnFailure)) {
+                        throwOnFailure))
+                {
                     return false;
                 }
             } else {
@@ -142,14 +147,16 @@ public class SqlSubstringFunction
                         callBinding,
                         call.operands[1],
                         0,
-                        throwOnFailure)) {
+                        throwOnFailure))
+                {
                     return false;
                 }
                 if (!SqlTypeStrategies.otcNumeric.checkSingleOperandType(
                         callBinding,
                         call.operands[2],
                         0,
-                        throwOnFailure)) {
+                        throwOnFailure))
+                {
                     return false;
                 }
             }

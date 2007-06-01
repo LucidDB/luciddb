@@ -37,13 +37,12 @@ import org.eigenbase.rex.*;
 public class TableFunctionRel
     extends TableFunctionRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>TableFunctionRel</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param rexCall function invocation expression
      * @param rowType row type produced by function

@@ -42,7 +42,6 @@ import org.eigenbase.reltype.*;
 public interface FennelRelImplementor
     extends RelImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -69,7 +68,7 @@ public interface FennelRelImplementor
 
     /**
      * Adds a new explicit dataflow edge between two existing stream
-     * definitions.  See the three-arg version for details.
+     * definitions. See the three-arg version for details.
      *
      * <p>NOTE jvs 14-Nov-2005: I gave this method a long name so that it
      * wouldn't be necessary to guess the direction when reading code that uses
@@ -90,9 +89,9 @@ public interface FennelRelImplementor
      *
      * @param producer the upstream node of the dataflow
      * @param consumer the downstream node of the dataflow
-     * @param implicit false if this is an explicit dataflow
-     * edge between two ExecStreams; true if it represents implicit
-     * dataflow via a UDX reading from a cursor
+     * @param implicit false if this is an explicit dataflow edge between two
+     * ExecStreams; true if it represents implicit dataflow via a UDX reading
+     * from a cursor
      */
     public void addDataFlowFromProducerToConsumer(
         FemExecutionStreamDef producer,

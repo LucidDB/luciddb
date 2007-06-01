@@ -34,7 +34,6 @@ import org.eigenbase.relopt.*;
 public interface FarragoSessionPlanner
     extends RelOptPlanner
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

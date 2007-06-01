@@ -41,7 +41,6 @@ public class FarragoCompoundAllocation
     extends CompoundClosableAllocation
     implements FarragoAllocationOwner
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoCompoundAllocation()

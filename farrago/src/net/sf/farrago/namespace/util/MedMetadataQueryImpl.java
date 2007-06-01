@@ -36,7 +36,6 @@ import net.sf.farrago.namespace.*;
 public class MedMetadataQueryImpl
     implements FarragoMedMetadataQuery
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Map<String, FarragoMedMetadataFilter> filterMap;
@@ -54,7 +53,7 @@ public class MedMetadataQueryImpl
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedMetadataQuery
-    public Map<String,FarragoMedMetadataFilter> getFilterMap()
+    public Map<String, FarragoMedMetadataFilter> getFilterMap()
     {
         return filterMap;
     }

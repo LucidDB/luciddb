@@ -45,6 +45,10 @@ abstract class FarragoExecutableStmtImpl
     extends FarragoCompoundAllocation
     implements FarragoSessionExecutableStmt
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    protected static final Logger tracer =
+        FarragoTrace.getClassTracer(FarragoExecutableStmtImpl.class);
 
     //~ Instance fields --------------------------------------------------------
 
@@ -52,8 +56,6 @@ abstract class FarragoExecutableStmtImpl
     private final TableModificationRel.Operation tableModOp;
     private final RelDataType dynamicParamRowType;
     private final TableAccessMap tableAccessMap;
-    protected static final Logger tracer =
-        FarragoTrace.getClassTracer(FarragoExecutableStmtImpl.class);
 
     //~ Constructors -----------------------------------------------------------
 
@@ -76,7 +78,7 @@ abstract class FarragoExecutableStmtImpl
     {
         return isDml;
     }
-    
+
     // implement FarragoSessionExecutableStmt
     public TableModificationRel.Operation getTableModOp()
     {

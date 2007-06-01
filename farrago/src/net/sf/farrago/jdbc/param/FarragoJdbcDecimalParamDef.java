@@ -28,9 +28,8 @@ import org.eigenbase.util14.*;
 
 
 /**
- * FarragoJdbcEngineDecimalParamDef defines a Decimal parameter.
- *
- * This class is JDK 1.4 compatible.
+ * FarragoJdbcEngineDecimalParamDef defines a Decimal parameter. This class is
+ * JDK 1.4 compatible.
  *
  * @author Angel Chang
  * @version $Id$
@@ -38,7 +37,6 @@ import org.eigenbase.util14.*;
 class FarragoJdbcDecimalParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final BigInteger maxUnscaled;

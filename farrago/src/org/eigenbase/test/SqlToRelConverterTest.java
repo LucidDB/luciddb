@@ -27,14 +27,11 @@ import java.io.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.SqlCaseOperator;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.*;
-import org.eigenbase.sql2rel.SqlToRelConverter;
 
 
 /**
- * Unit test for {@link SqlToRelConverter}.
+ * Unit test for {@link org.eigenbase.sql2rel.SqlToRelConverter}.
  *
  * @author jhyde
  * @version $Id$
@@ -42,7 +39,6 @@ import org.eigenbase.sql2rel.SqlToRelConverter;
 public class SqlToRelConverterTest
     extends SqlToRelTestBase
 {
-
     //~ Methods ----------------------------------------------------------------
 
     protected DiffRepository getDiffRepos()
@@ -107,7 +103,8 @@ public class SqlToRelConverterTest
         // Dtbug 281 gives:
         //   Internal error:
         //   Type 'RecordType(VARCHAR(128) $f0)' has no field 'NAME'
-        check("select name from (select name from dept group by name)",
+        check(
+            "select name from (select name from dept group by name)",
             "${plan}");
     }
 
@@ -155,12 +152,14 @@ public class SqlToRelConverterTest
         if (!tester.getCompatible().isSortByOrdinal()) {
             return;
         }
-        check("select empno + 1, deptno, empno from emp order by 2 desc",
+        check(
+            "select empno + 1, deptno, empno from emp order by 2 desc",
             "${plan}");
 
         // ordinals rounded down, so 2.5 should have same effect as 2, and
         // generate identical plan
-        check("select empno + 1, deptno, empno from emp order by 2.5 desc",
+        check(
+            "select empno + 1, deptno, empno from emp order by 2.5 desc",
             "${plan}");
     }
 
@@ -177,7 +176,8 @@ public class SqlToRelConverterTest
     {
         // Regardless of whether sort-by-ordinals is enabled, negative ordinals
         // are treated like ordinary numbers.
-        check("select empno + 1, deptno, empno from emp order by -1 desc",
+        check(
+            "select empno + 1, deptno, empno from emp order by -1 desc",
             "${plan}");
     }
 
@@ -185,7 +185,8 @@ public class SqlToRelConverterTest
     {
         // Regardless of whether sort-by-ordinals is enabled, ordinals
         // inside expressions are treated like integers.
-        check("select empno + 1, deptno, empno from emp order by 1 + 2 desc",
+        check(
+            "select empno + 1, deptno, empno from emp order by 1 + 2 desc",
             "${plan}");
     }
 
@@ -193,19 +194,22 @@ public class SqlToRelConverterTest
     {
         // Expression in ORDER BY clause is identical to expression in SELECT
         // clause, so plan should not need an extra project.
-        check("select empno + 1 from emp order by deptno asc, empno + 1 desc",
+        check(
+            "select empno + 1 from emp order by deptno asc, empno + 1 desc",
             "${plan}");
     }
 
     public void testOrderByAlias()
     {
-        check("select empno + 1 as x, empno - 2 as y from emp order by y",
+        check(
+            "select empno + 1 as x, empno - 2 as y from emp order by y",
             "${plan}");
     }
 
     public void testOrderByAliasInExpr()
     {
-        check("select empno + 1 as x, empno - 2 as y from emp order by y + 3",
+        check(
+            "select empno + 1 as x, empno - 2 as y from emp order by y + 3",
             "${plan}");
     }
 
@@ -336,7 +340,8 @@ public class SqlToRelConverterTest
 
     public void testMultisetSubquery()
     {
-        check("select multiset(select deptno from dept) from (values(true))",
+        check(
+            "select multiset(select deptno from dept) from (values(true))",
             "${plan}");
     }
 
@@ -402,7 +407,8 @@ public class SqlToRelConverterTest
 
     public void testUnnestSelect()
     {
-        check("select*from unnest(select multiset[deptno] from dept)",
+        check(
+            "select*from unnest(select multiset[deptno] from dept)",
             "${plan}");
     }
 
@@ -428,7 +434,8 @@ public class SqlToRelConverterTest
     public void testUnionAll()
     {
         // union all
-        check("select empno from emp union all select deptno from dept",
+        check(
+            "select empno from emp union all select deptno from dept",
             "${plan}");
     }
 
@@ -496,7 +503,8 @@ public class SqlToRelConverterTest
 
     /**
      * Test one of the custom conversions which is recognized by the class of
-     * the operator (in this case, {@link SqlCaseOperator}).
+     * the operator (in this case, {@link
+     * org.eigenbase.sql.fun.SqlCaseOperator}).
      */
     public void testCase()
     {
@@ -506,8 +514,8 @@ public class SqlToRelConverterTest
 
     /**
      * Tests one of the custom conversions which is recognized by the identity
-     * of the operator (in this case, 
-     * {@link SqlStdOperatorTable#characterLengthFunc}).
+     * of the operator (in this case, {@link
+     * org.eigenbase.sql.fun.SqlStdOperatorTable#characterLengthFunc}).
      */
     public void testCharLength()
     {
@@ -518,8 +526,8 @@ public class SqlToRelConverterTest
 
     public void testOverAvg()
     {
-        // AVG(x) gets translated to SUM(x)/COUNT(x).  Because COUNT controls the
-        // return type there usually needs to be a final CAST to get the
+        // AVG(x) gets translated to SUM(x)/COUNT(x).  Because COUNT controls
+        // the return type there usually needs to be a final CAST to get the
         // result back to match the type of x.
         check(
             "select sum(sal) over w1,\n"
@@ -591,14 +599,16 @@ public class SqlToRelConverterTest
             "${plan}");
     }
 
-    public void testInterval()      // temporarily disabled per DTbug 1212
+    public void testInterval() // temporarily disabled per DTbug 1212
+
     {
         if (Bug.Dt785Fixed) {
-            check("values(cast(interval '1' hour as interval hour to second))",
+            check(
+                "values(cast(interval '1' hour as interval hour to second))",
                 "${plan}");
         }
     }
-    
+
     public void testExplainAsXml()
     {
         String sql = "select 1 + 2, 3 from (values (true))";
@@ -610,27 +620,29 @@ public class SqlToRelConverterTest
         rel.explain(planWriter);
         pw.flush();
         TestUtil.assertEqualsVerbose(
-            TestUtil.fold(new String[] {
-                "<RelNode type=\"ProjectRel\">",
-                "\t<Property name=\"EXPR$0\">",
-                "\t\t+(1, 2)\t</Property>",
-                "\t<Property name=\"EXPR$1\">",
-                "\t\t3\t</Property>",
-                "\t<Inputs>",
-                "\t\t<RelNode type=\"ProjectRel\">",
-                "\t\t\t<Property name=\"EXPR$0\">",
-                "\t\t\t\t$0\t\t\t</Property>",
-                "\t\t\t<Inputs>",
-                "\t\t\t\t<RelNode type=\"ValuesRel\">",
-                "\t\t\t\t\t<Property name=\"tuples\">",
-                "\t\t\t\t\t\t[{ true }]\t\t\t\t\t</Property>",
-                "\t\t\t\t\t<Inputs/>",
-                "\t\t\t\t</RelNode>",
-                "\t\t\t</Inputs>",
-                "\t\t</RelNode>",
-                "\t</Inputs>",
-                "</RelNode>",
-                ""}),
+            TestUtil.fold(
+                new String[] {
+                    "<RelNode type=\"ProjectRel\">",
+                    "\t<Property name=\"EXPR$0\">",
+                    "\t\t+(1, 2)\t</Property>",
+                    "\t<Property name=\"EXPR$1\">",
+                    "\t\t3\t</Property>",
+                    "\t<Inputs>",
+                    "\t\t<RelNode type=\"ProjectRel\">",
+                    "\t\t\t<Property name=\"EXPR$0\">",
+                    "\t\t\t\t$0\t\t\t</Property>",
+                    "\t\t\t<Inputs>",
+                    "\t\t\t\t<RelNode type=\"ValuesRel\">",
+                    "\t\t\t\t\t<Property name=\"tuples\">",
+                    "\t\t\t\t\t\t[{ true }]\t\t\t\t\t</Property>",
+                    "\t\t\t\t\t<Inputs/>",
+                    "\t\t\t\t</RelNode>",
+                    "\t\t\t</Inputs>",
+                    "\t\t</RelNode>",
+                    "\t</Inputs>",
+                    "</RelNode>",
+                    ""
+                }),
             sw.toString());
     }
 }

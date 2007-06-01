@@ -42,7 +42,6 @@ import net.sf.farrago.util.*;
 public abstract class MedAbstractFennelDataServer
     extends MedAbstractLocalDataServer
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected FarragoRepos repos;
@@ -155,7 +154,7 @@ public abstract class MedAbstractFennelDataServer
             if (implicitTxn) {
                 txnContext.rollback();
             }
-        }   
+        }
     }
 
     private void initIndexCmd(
@@ -204,7 +203,7 @@ public abstract class MedAbstractFennelDataServer
             return 1;
         }
     }
-    
+
     //  implement FarragoMedLocalDataServer
     public void versionIndexRoot(
         Long oldRoot,

@@ -44,7 +44,6 @@ import org.eigenbase.util.*;
 public class MedJdbcForeignDataWrapper
     extends MedAbstractDataWrapper
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String PROP_DRIVER_CLASS_NAME = "DRIVER_CLASS";
@@ -143,7 +142,8 @@ public class MedJdbcForeignDataWrapper
             DriverPropertyInfo [] result =
                 new DriverPropertyInfo[mapArray.length + driverArray.length];
             System.arraycopy(mapArray, 0, result, 0, mapArray.length);
-            System.arraycopy(driverArray,
+            System.arraycopy(
+                driverArray,
                 0,
                 result,
                 mapArray.length,
@@ -190,7 +190,8 @@ public class MedJdbcForeignDataWrapper
         }
         Properties chainedProps = new Properties(getProperties());
         chainedProps.putAll(props);
-        MedJdbcDataServer server = new MedJdbcDataServer(serverMofId, chainedProps);
+        MedJdbcDataServer server =
+            new MedJdbcDataServer(serverMofId, chainedProps);
         boolean success = false;
         try {
             server.initialize();

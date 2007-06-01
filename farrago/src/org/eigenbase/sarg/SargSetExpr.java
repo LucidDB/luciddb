@@ -29,9 +29,8 @@ import org.eigenbase.util.*;
 
 
 /**
- * SargSetExpr represents the application of a
- * {@link SargSetOperator set operator} to
- * zero or more child {@link SargExpr sarg expressions}.
+ * SargSetExpr represents the application of a {@link SargSetOperator set
+ * operator} to zero or more child {@link SargExpr sarg expressions}.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -39,7 +38,6 @@ import org.eigenbase.util.*;
 public class SargSetExpr
     implements SargExpr
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SargFactory factory;
@@ -158,8 +156,7 @@ public class SargSetExpr
         }
     }
 
-    private SargIntervalSequence evaluateUnion(
-        List<SargIntervalSequence> list)
+    private SargIntervalSequence evaluateUnion(List<SargIntervalSequence> list)
     {
         SargIntervalSequence seq = new SargIntervalSequence();
 
@@ -176,18 +173,18 @@ public class SargSetExpr
         // example, [4, 6] and [5, 7) are combined to form [4, 7).  (7, 8] is
         // not merged with the new range because neither range contains the
         // value 7.
-	//
-	// Input:
-	//          1  2  3  4  5  6  7  8  9
-	// 1 [1, 3] [-----]
-	// 2 [4, 6]          [-----]
-	// 3 [5, 7)             [-----)
-	// 4 (7, 8]                   (--]
-	//
-	// Output:
-	// 1 [1, 3] [-----]
-	// 2 [4, 7)          [--------)
-	// 3 (7, 8]                   (--]
+        //
+        // Input:
+        //          1  2  3  4  5  6  7  8  9
+        // 1 [1, 3] [-----]
+        // 2 [4, 6]          [-----]
+        // 3 [5, 7)             [-----)
+        // 4 (7, 8]                   (--]
+        //
+        // Output:
+        // 1 [1, 3] [-----]
+        // 2 [4, 7)          [--------)
+        // 3 (7, 8]                   (--]
         SargInterval accumulator = null;
         for (SargInterval interval : intervals) {
             // Empty intervals should have been previously filtered out.
@@ -195,7 +192,8 @@ public class SargSetExpr
 
             if (accumulator == null) {
                 // The very first interval:  start accumulating.
-                accumulator = new SargInterval(
+                accumulator =
+                    new SargInterval(
                         factory,
                         getDataType());
                 accumulator.copyFrom(interval);
@@ -217,7 +215,8 @@ public class SargSetExpr
             // If no overlap, test for touching instead.
             if (c > 0) {
                 if (interval.getLowerBound().isTouching(
-                        accumulator.getUpperBound())) {
+                        accumulator.getUpperBound()))
+                {
                     // Force test below to pass.
                     c = -1;
                 }
@@ -228,7 +227,8 @@ public class SargSetExpr
                 accumulator.upperBound.copyFrom(interval.getUpperBound());
             } else {
                 // Disjoint:  start accumulating a new interval
-                accumulator = new SargInterval(
+                accumulator =
+                    new SargInterval(
                         factory,
                         getDataType());
                 accumulator.copyFrom(interval);
@@ -335,7 +335,8 @@ public class SargSetExpr
                 // The source ends before the target ends, so split the target
                 // into two parts.  The first part will be kept for sure; the
                 // second part will be compared against further source ranges.
-                SargInterval newTarget = new SargInterval(
+                SargInterval newTarget =
+                    new SargInterval(
                         factory,
                         dataType);
                 newTarget.setLower(

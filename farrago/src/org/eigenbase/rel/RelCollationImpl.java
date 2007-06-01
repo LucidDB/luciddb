@@ -36,7 +36,6 @@ import org.eigenbase.reltype.*;
 public class RelCollationImpl
     implements RelCollation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -86,13 +85,12 @@ public class RelCollationImpl
      */
     public static List<RelCollation> createSingleton(int fieldIndex)
     {
-        return
-            Collections.singletonList(
-                (RelCollation) new RelCollationImpl(
-                    Collections.singletonList(
-                        new RelFieldCollation(
-                            fieldIndex,
-                            RelFieldCollation.Direction.Ascending))));
+        return Collections.singletonList(
+            (RelCollation) new RelCollationImpl(
+                Collections.singletonList(
+                    new RelFieldCollation(
+                        fieldIndex,
+                        RelFieldCollation.Direction.Ascending))));
     }
 
     /**
@@ -111,8 +109,10 @@ public class RelCollationImpl
     {
         final int fieldCount = rowType.getFieldCount();
         for (RelCollation collation : collationList) {
-            for (RelFieldCollation fieldCollation
-                : collation.getFieldCollations()) {
+            for (
+                RelFieldCollation fieldCollation
+                : collation.getFieldCollations())
+            {
                 final int index = fieldCollation.getFieldIndex();
                 if ((index < 0) || (index >= fieldCount)) {
                     assert !fail;
@@ -123,7 +123,8 @@ public class RelCollationImpl
         return true;
     }
 
-    public static boolean equal(List<RelCollation> collationList1,
+    public static boolean equal(
+        List<RelCollation> collationList1,
         List<RelCollation> collationList2)
     {
         return collationList1.equals(collationList2);

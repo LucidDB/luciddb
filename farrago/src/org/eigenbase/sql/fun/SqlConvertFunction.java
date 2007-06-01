@@ -43,12 +43,12 @@ import org.eigenbase.util.*;
 public class SqlConvertFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected SqlConvertFunction(String name)
     {
-        super(name,
+        super(
+            name,
             SqlKind.Function,
             null,
             null,

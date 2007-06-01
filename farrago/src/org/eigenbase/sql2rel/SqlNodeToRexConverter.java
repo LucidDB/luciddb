@@ -31,7 +31,6 @@ import org.eigenbase.sql.*;
  */
 public interface SqlNodeToRexConverter
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

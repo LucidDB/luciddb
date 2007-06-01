@@ -34,7 +34,7 @@ import net.sf.farrago.session.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -46,7 +46,6 @@ import org.eigenbase.util.Util;
 public class DdlImportForeignSchemaStmt
     extends DdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FemLocalSchema localSchema;
@@ -145,7 +144,8 @@ public class DdlImportForeignSchemaStmt
             }
 
             // Create a sink to receive query results
-            ImportSink sink = new ImportSink(
+            ImportSink sink =
+                new ImportSink(
                     ddlValidator,
                     query,
                     schemaDir);
@@ -252,13 +252,15 @@ public class DdlImportForeignSchemaStmt
             if (!shouldInclude(
                     tableName,
                     FarragoMedMetadataQuery.OTN_TABLE,
-                    true)) {
+                    true))
+            {
                 return false;
             }
             if (!shouldInclude(
                     columnName,
                     FarragoMedMetadataQuery.OTN_COLUMN,
-                    false)) {
+                    false))
+            {
                 return false;
             }
 

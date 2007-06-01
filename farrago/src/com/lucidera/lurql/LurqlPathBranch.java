@@ -35,7 +35,6 @@ import org.eigenbase.util.*;
 public abstract class LurqlPathBranch
     extends LurqlQueryNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String aliasName;

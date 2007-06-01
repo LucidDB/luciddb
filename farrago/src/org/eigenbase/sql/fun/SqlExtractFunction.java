@@ -38,14 +38,14 @@ import org.eigenbase.util.*;
 public class SqlExtractFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     // SQL2003, Part 2, Section 4.4.3 - extract returns a exact numeric
     // TODO: Return type should be decimal for seconds
     public SqlExtractFunction()
     {
-        super("EXTRACT",
+        super(
+            "EXTRACT",
             SqlKind.Function,
             SqlTypeStrategies.rtiNullableBigint,
             null,

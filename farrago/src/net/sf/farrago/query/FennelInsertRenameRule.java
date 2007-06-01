@@ -25,6 +25,7 @@ package net.sf.farrago.query;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
  * FennelInsertRenameRule is a rule for converting a rename-only Project
  * underneath an insert TableModificationRel into FennelRename.
@@ -35,7 +36,6 @@ import org.eigenbase.relopt.*;
 public class FennelInsertRenameRule
     extends FennelRenameRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -46,7 +46,7 @@ public class FennelInsertRenameRule
         super(
             new RelOptRuleOperand(
                 TableModificationRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(ProjectRel.class, null)
                 }));
     }
@@ -57,8 +57,8 @@ public class FennelInsertRenameRule
     public void onMatch(RelOptRuleCall call)
     {
         TableModificationRel origTableMod = (TableModificationRel) call.rels[0];
-        if (origTableMod.getOperation() !=
-            TableModificationRel.Operation.INSERT)
+        if (origTableMod.getOperation()
+            != TableModificationRel.Operation.INSERT)
         {
             return;
         }

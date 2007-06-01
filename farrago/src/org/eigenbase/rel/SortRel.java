@@ -22,8 +22,8 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
@@ -35,7 +35,6 @@ import org.eigenbase.rex.*;
 public final class SortRel
     extends SingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final RelFieldCollation [] collations;
@@ -47,7 +46,7 @@ public final class SortRel
     /**
      * Creates a sorter.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param child input relational expression
      * @param collations array of sort specifications
@@ -72,6 +71,7 @@ public final class SortRel
                     fields[iField].getType(),
                     iField);
         }
+
         // save the input row count while we still have logical RelNodes
         estimatedNumRows = RelMetadataQuery.getRowCount(child);
     }
@@ -102,7 +102,7 @@ public final class SortRel
     {
         return collations;
     }
-    
+
     /**
      * @return estimated number of rows in the sort input
      */

@@ -36,7 +36,6 @@ import net.sf.farrago.namespace.*;
 public class MedMetadataFilterImpl
     implements FarragoMedMetadataFilter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final boolean exclude;

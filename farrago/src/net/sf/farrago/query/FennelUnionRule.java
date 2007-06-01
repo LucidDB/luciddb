@@ -36,7 +36,6 @@ import org.eigenbase.relopt.*;
 public class FennelUnionRule
     extends ConverterRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -84,8 +83,8 @@ public class FennelUnionRule
             }
         }
         return new FennelMergeRel(
-                unionRel.getCluster(),
-                newInputs);
+            unionRel.getCluster(),
+            newInputs);
     }
 }
 

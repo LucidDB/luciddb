@@ -32,7 +32,8 @@ import java.math.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum FennelSearchEndpoint {
+public enum FennelSearchEndpoint
+{
     /**
      * Defines the beginning of an interval which is unbounded below.  The
      * associated key value should be all null.

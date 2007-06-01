@@ -22,12 +22,13 @@
 */
 package org.eigenbase.rel.rules;
 
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
-import java.util.*;
 
 /**
  * A MultiJoinRel represents a join of N inputs, whereas other join relnodes
@@ -48,7 +49,7 @@ public final class MultiJoinRel
     private RexNode [] outerJoinConditions;
     private JoinRelType [] joinTypes;
     private BitSet [] projFields;
-    private Map<Integer, int []> joinFieldRefCountsMap;
+    private Map<Integer, int[]> joinFieldRefCountsMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -60,12 +61,12 @@ public final class MultiJoinRel
      * @param joinFilter join filter applicable to this join node
      * @param rowType row type of the join result of this node
      * @param isFullOuterJoin true if the join is a full outer join
-     * @param outerJoinConditions outer join condition associated with each
-     * join input, if the input is null-generating in a left or right outer
-     * join; null otherwise
+     * @param outerJoinConditions outer join condition associated with each join
+     * input, if the input is null-generating in a left or right outer join;
+     * null otherwise
      * @param joinTypes the join type corresponding to each input; if an input
-     * is null-generating in a left or right outer join, the entry indicates
-     * the type of outer join; otherwise, the entry is set to INNER
+     * is null-generating in a left or right outer join, the entry indicates the
+     * type of outer join; otherwise, the entry is set to INNER
      * @param projFields fields that will be projected from each input; if null,
      * projection information is not available yet so it's assumed that all
      * fields from the input are projected
@@ -81,7 +82,7 @@ public final class MultiJoinRel
         RexNode [] outerJoinConditions,
         JoinRelType [] joinTypes,
         BitSet [] projFields,
-        Map<Integer, int []> joinFieldRefCountsMap)
+        Map<Integer, int[]> joinFieldRefCountsMap)
     {
         super(
             cluster,
@@ -118,9 +119,9 @@ public final class MultiJoinRel
     /**
      * Returns a deep copy of {@link #joinFieldRefCountsMap}.
      */
-    private Map<Integer, int []> cloneJoinFieldRefCountsMap()
+    private Map<Integer, int[]> cloneJoinFieldRefCountsMap()
     {
-        Map<Integer, int []> clonedMap = new HashMap<Integer, int []>();
+        Map<Integer, int[]> clonedMap = new HashMap<Integer, int[]>();
         for (int i = 0; i < inputs.length; i++) {
             clonedMap.put(i, joinFieldRefCountsMap.get(i).clone());
         }
@@ -155,6 +156,7 @@ public final class MultiJoinRel
                 projFieldObjects.add(projFields[i].toString());
             }
         }
+
         // Note that we don't need to include the join field reference counts
         // in the digest because that field does not change for a given set
         // of inputs
@@ -236,7 +238,7 @@ public final class MultiJoinRel
      * @return the map of reference counts for each input, representing the
      * fields accessed in join conditions
      */
-    public Map<Integer, int []> getJoinFieldRefCountsMap()
+    public Map<Integer, int[]> getJoinFieldRefCountsMap()
     {
         return joinFieldRefCountsMap;
     }
@@ -245,7 +247,7 @@ public final class MultiJoinRel
      * @return a copy of the map of reference counts for each input,
      * representing the fields accessed in join conditions
      */
-    public Map<Integer, int []> getCopyJoinFieldRefCountsMap()
+    public Map<Integer, int[]> getCopyJoinFieldRefCountsMap()
     {
         return cloneJoinFieldRefCountsMap();
     }

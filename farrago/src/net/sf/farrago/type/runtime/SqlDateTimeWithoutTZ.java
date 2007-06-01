@@ -31,17 +31,17 @@ import java.util.TimeZone;
 import net.sf.farrago.resource.*;
 
 import org.eigenbase.resource.*;
-import org.eigenbase.sql.SqlIntervalQualifier;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
 
 /**
  * Runtime type for basic date/time/timestamp values without time zone
- * information. All of these types are represented by subclasses of
- * {@link ZonelessDatetime} and have a similar internal representation.
- * This class interoperates with java.sql (Jdbc) types since they are
- * commonly used for external data.
+ * information. All of these types are represented by subclasses of {@link
+ * ZonelessDatetime} and have a similar internal representation. This class
+ * interoperates with java.sql (Jdbc) types since they are commonly used for
+ * external data.
  *
  * <p>TODO: we can probably be smarter about how we allocate Java objects
  *
@@ -52,8 +52,10 @@ import org.eigenbase.util14.*;
  * @since May 5, 2004
  */
 public abstract class SqlDateTimeWithoutTZ
-    implements AssignableValue, SpecialDataValue
+    implements AssignableValue,
+        SpecialDataValue
 {
+    //~ Static fields/initializers ---------------------------------------------
 
     // ~ Static fields --------------------------------------------------------
     // Use same format as supported by parser (should be ISO format)
@@ -86,14 +88,14 @@ public abstract class SqlDateTimeWithoutTZ
     //~ Instance fields --------------------------------------------------------
 
     /**
-     * Calendar, which holds the client time zone. It defaults to null,
-     * which implies that no explicit time zone has been set.
+     * Calendar, which holds the client time zone. It defaults to null, which
+     * implies that no explicit time zone has been set.
      */
     private Calendar cal;
 
     /**
-     *  The calendar to use as a temporary variable. This calendar's time
-     *  zone is set to the value time zone.
+     * The calendar to use as a temporary variable. This calendar's time zone is
+     * set to the value time zone.
      */
     private Calendar tempCal;
 
@@ -149,9 +151,9 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Per the {@link NullableValue} contract, returns either null or
-     * the value of this object as a Jdbc compatible value. The Jdbc value
-     * is constructed relative to the server default time zone.
+     * Per the {@link NullableValue} contract, returns either null or the value
+     * of this object as a Jdbc compatible value. The Jdbc value is constructed
+     * relative to the server default time zone.
      */
     public Object getNullableData()
     {
@@ -162,8 +164,8 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Return data to result sets as ZonelessDatetime so that it may be
-     * properly localized by a Jdbc driver or client application.
+     * Return data to result sets as ZonelessDatetime so that it may be properly
+     * localized by a Jdbc driver or client application.
      */
     public Object getSpecialData()
     {
@@ -185,12 +187,11 @@ public abstract class SqlDateTimeWithoutTZ
      * Assigns a value from another object.
      *
      * <p>The Object may be a {@link Long} or <code>long</code> if it is being
-     * intialized from a
-     * constant, or being translated from a Fennel value. If so, then the
-     * Fennel type must match the Farrago type. It is legal to assign a
-     * {@link ZonelessDate} to a {@link ZonelessDate} and a
-     * {@link ZonelessTime} to a {@link ZonelessTime}, but it is not valid
-     * to assign a Timestamp to either, or vice versa.
+     * intialized from a constant, or being translated from a Fennel value. If
+     * so, then the Fennel type must match the Farrago type. It is legal to
+     * assign a {@link ZonelessDate} to a {@link ZonelessDate} and a {@link
+     * ZonelessTime} to a {@link ZonelessTime}, but it is not valid to assign a
+     * Timestamp to either, or vice versa.
      *
      * @param date value to assign, or null to set null
      */
@@ -207,7 +208,8 @@ public abstract class SqlDateTimeWithoutTZ
             value.setZonelessTime(((ZonelessDatetime) date).getTime());
         } else if (date instanceof java.util.Date) {
             value.setZonedTime(
-                ((java.util.Date) date).getTime(), defaultZone);
+                ((java.util.Date) date).getTime(),
+                defaultZone);
         } else if (date instanceof SqlDateTimeWithoutTZ) {
             SqlDateTimeWithoutTZ sqlDate = (SqlDateTimeWithoutTZ) date;
             isNull = sqlDate.isNull;
@@ -235,19 +237,20 @@ public abstract class SqlDateTimeWithoutTZ
      * Assigns a value from a formatted string, optionally performing timezone
      * translation.
      *
-     * <p>If <code>format</code> is null, uses the default format string of
-     * this type, as per {@link #getFormat()}.
+     * <p>If <code>format</code> is null, uses the default format string of this
+     * type, as per {@link #getFormat()}.
      *
      * <p>If <code>timeZone</code> is not null, performs translation assuming
-     * that the input string is in that time zone. For example,
-     * <code>assignFrom('06:00', 'HH:mm', TimeZone.PST)</code> returns the
-     * Time value '14:00', because '06:00 PST' equals '14:00 GMT'.
+     * that the input string is in that time zone. For example, <code>
+     * assignFrom('06:00', 'HH:mm', TimeZone.PST)</code> returns the Time value
+     * '14:00', because '06:00 PST' equals '14:00 GMT'.
      *
      * <p><code>timeZone</code> is ignored for date values.
      *
      * @param date string
      * @param format format string, as per {@link SimpleDateFormat}, or null
      * @param timeZone target timezone
+     *
      * @see #assignFrom(Object)
      */
     public void assignFrom(String date, String format, TimeZone timeZone)
@@ -272,16 +275,16 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Attempts to parse the string, throwing an understandable exception
-     * if an error was detected.
+     * Attempts to parse the string, throwing an understandable exception if an
+     * error was detected.
      */
-    private void attemptParse(String s, String format, TimeZone timeZone) {
+    private void attemptParse(String s, String format, TimeZone timeZone)
+    {
         try {
             assert format != null;
             assignFromString(s.trim(), format, timeZone);
         } catch (IllegalArgumentException ex) {
-            String reason =
-                EigenbaseResource.instance().BadFormat.str(format);
+            String reason = EigenbaseResource.instance().BadFormat.str(format);
 
             throw FarragoResource.instance().AssignFromFailed.ex(
                 s,
@@ -303,12 +306,10 @@ public abstract class SqlDateTimeWithoutTZ
         TimeZone timeZone);
 
     /**
-     * Gets a calendar with the time and time zone of this value.
-     * The calendar returned is not the internal calendar of this
-     * SqlDateTimeWithoutTZ.
-     *
-     * TODO: does anyone use this? Currently it returns a copy of a
-     *   Calendar with the value time zone and the milliseconds.
+     * Gets a calendar with the time and time zone of this value. The calendar
+     * returned is not the internal calendar of this SqlDateTimeWithoutTZ. TODO:
+     * does anyone use this? Currently it returns a copy of a Calendar with the
+     * value time zone and the milliseconds.
      *
      * @deprecated please review this code
      */
@@ -320,13 +321,11 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Assigns the time and time zone from a Calendar value.
-     *
-     * TODO: Does anyone use this? If so, we want to be careful about the
-     *   meaning of this.cal. Elsewhere we use it for "client time zone"
-     *   but here we seem to be using it to mean "value time zone". Or if we
-     *   indeed mean "client time zone", then we should not be setting the
-     *   milliseconds time value.
+     * Assigns the time and time zone from a Calendar value. TODO: Does anyone
+     * use this? If so, we want to be careful about the meaning of this.cal.
+     * Elsewhere we use it for "client time zone" but here we seem to be using
+     * it to mean "value time zone". Or if we indeed mean "client time zone",
+     * then we should not be setting the milliseconds time value.
      *
      * @param cal calendar value to assign from
      *
@@ -349,8 +348,8 @@ public abstract class SqlDateTimeWithoutTZ
     // DecimalFormat for the fractional part.
 
     /**
-     * Returns a string in the specified datetime format
-     * TODO: does anyone use this?
+     * Returns a string in the specified datetime format TODO: does anyone use
+     * this?
      *
      * @deprecated please review this code
      */
@@ -402,12 +401,12 @@ public abstract class SqlDateTimeWithoutTZ
     protected abstract String getTypeName();
 
     /**
-     * Rounds this datetime value down to a unit of time. All smaller units
-     * of time are zeroed also.
+     * Rounds this datetime value down to a unit of time. All smaller units of
+     * time are zeroed also.
      *
-     * <p>For example, <code>floor(MINUTE)</code> applied to
-     * <code>TIMESTAMP '2006-07-03 12:34:56.7'</code> returns
-     * <code>TIMESTAMP '2006-07-03 12:00:00.0'</code>.
+     * <p>For example, <code>floor(MINUTE)</code> applied to <code>TIMESTAMP
+     * '2006-07-03 12:34:56.7'</code> returns <code>TIMESTAMP '2006-07-03
+     * 12:00:00.0'</code>.
      *
      * @param timeUnit Time unit
      */
@@ -439,8 +438,8 @@ public abstract class SqlDateTimeWithoutTZ
      * Rounds this datetime value down to a unit of time expressed using its
      * ordinal. Called by generated code.
      *
-     * @param timeUnitOrdinal Ordinal of
-     * {@link org.eigenbase.sql.SqlIntervalQualifier.TimeUnit} value
+     * @param timeUnitOrdinal Ordinal of {@link
+     * org.eigenbase.sql.SqlIntervalQualifier.TimeUnit} value
      */
     public void floor(int timeUnitOrdinal)
     {
@@ -448,12 +447,12 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Rounds this datetime value up to a unit of time. All smaller units
-     * of time are zeroed.
+     * Rounds this datetime value up to a unit of time. All smaller units of
+     * time are zeroed.
      *
-     * <p>For example, <code>ceil(MINUTE)</code> applied to
-     * <code>TIMESTAMP '2006-07-03 12:34:56.7'</code> returns
-     * <code>TIMESTAMP '2006-07-03 13:00:00.0'</code>.
+     * <p>For example, <code>ceil(MINUTE)</code> applied to <code>TIMESTAMP
+     * '2006-07-03 12:34:56.7'</code> returns <code>TIMESTAMP '2006-07-03
+     * 13:00:00.0'</code>.
      *
      * @param timeUnit Time unit
      */
@@ -529,8 +528,8 @@ public abstract class SqlDateTimeWithoutTZ
      * Rounds this datetime value up to a unit of time expressed using its
      * ordinal. Called by generated code.
      *
-     * @param timeUnitOrdinal Ordinal of
-     * {@link org.eigenbase.sql.SqlIntervalQualifier.TimeUnit} value
+     * @param timeUnitOrdinal Ordinal of {@link
+     * org.eigenbase.sql.SqlIntervalQualifier.TimeUnit} value
      */
     public void ceil(int timeUnitOrdinal)
     {
@@ -541,29 +540,33 @@ public abstract class SqlDateTimeWithoutTZ
      * Adjusts the precision of the value.
      *
      * <p>For example, <code>adjustPrecision(2)</code> applied to the value
-     * <code>TIME '12:34:56.789'</code> rounds to 10 milliseconds, and
-     * returns <code>TIME '12:34:56.79'</code>.
+     * <code>TIME '12:34:56.789'</code> rounds to 10 milliseconds, and returns
+     * <code>TIME '12:34:56.79'</code>.
      *
-     * @param precision Number of digits to keep the right of the decimal
-     * point in the seconds value
+     * @param precision Number of digits to keep the right of the decimal point
+     * in the seconds value
      */
     public void adjustPrecision(int precision)
     {
         int quantum;
         switch (precision) {
         case 0:
+
             // Precision 0 rounds to the second.
             quantum = 1000;
             break;
         case 1:
+
             // Precision 1 rounds to the 1/10th second.
             quantum = 100;
             break;
         case 2:
+
             // Precision 2 rounds to the 1/100th second.
             quantum = 10;
             break;
         default:
+
             // Precision 3 or more rounds to the 1/1000th second - do not
             // adjust the value.
             return;
@@ -575,7 +578,7 @@ public abstract class SqlDateTimeWithoutTZ
 
         // If we are in the upper half of the quantum, round up, and handle
         // possible overflow into the seconds.
-        if (remainder > quantum / 2) {
+        if (remainder > (quantum / 2)) {
             millis += quantum;
             if (millis >= 1000) {
                 cal.add(Calendar.SECOND, millis / 1000);
@@ -602,8 +605,8 @@ public abstract class SqlDateTimeWithoutTZ
     //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * SQL date value. The value field of this object represents milliseconds
-     * of a FarragoDate.
+     * SQL date value. The value field of this object represents milliseconds of
+     * a FarragoDate.
      */
     public static class SqlDate
         extends SqlDateTimeWithoutTZ
@@ -621,7 +624,7 @@ public abstract class SqlDateTimeWithoutTZ
         {
             return new Date(value.getJdbcDate(defaultZone));
         }
-        
+
         // implement SqlDateTimeWithoutTZ
         protected void assignFromString(
             String s,
@@ -634,7 +637,7 @@ public abstract class SqlDateTimeWithoutTZ
                 throw new IllegalArgumentException();
             }
             value = date;
-            }
+        }
 
         // implement SqlDateTimeWithoutTZ
         protected String getFormat()
@@ -671,7 +674,9 @@ public abstract class SqlDateTimeWithoutTZ
 
         // implement SqlDateTimeWithoutTZ
         protected void assignFromString(
-            String s, String format, TimeZone timeZone)
+            String s,
+            String format,
+            TimeZone timeZone)
         {
             assert format != null : "precondition failed";
             ZonelessTime time = ZonelessTime.parse(s, format);
@@ -725,8 +730,8 @@ public abstract class SqlDateTimeWithoutTZ
          */
         public void setCurrentDate(SqlDateTimeWithoutTZ date)
         {
-            if (currentDate != null
-                && date.value.getTime() == currentDate.getTime())
+            if ((currentDate != null)
+                && (date.value.getTime() == currentDate.getTime()))
             {
                 return;
             }
@@ -760,7 +765,9 @@ public abstract class SqlDateTimeWithoutTZ
 
         // implement SqlDateTimeWithoutTZ
         protected void assignFromString(
-            String s, String format, TimeZone timeZone)
+            String s,
+            String format,
+            TimeZone timeZone)
         {
             assert format != null : "precondition failed";
             ZonelessTimestamp timestamp = ZonelessTimestamp.parse(s, format);
@@ -773,7 +780,7 @@ public abstract class SqlDateTimeWithoutTZ
                 timestamp.setZonelessTime(t);
             }
             value = timestamp;
-            }
+        }
 
         // implement SqlDateTimeWithoutTZ
         protected String getFormat()

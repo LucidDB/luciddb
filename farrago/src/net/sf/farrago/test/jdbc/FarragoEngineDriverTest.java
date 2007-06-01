@@ -27,10 +27,9 @@ import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.jdbc.FarragoAbstractJdbcDriver;
 import net.sf.farrago.test.*;
-import org.eigenbase.util.Util;
 
 
 /**
@@ -43,7 +42,6 @@ import org.eigenbase.util.Util;
 public class FarragoEngineDriverTest
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoEngineDriverTest(String testname)
@@ -63,7 +61,7 @@ public class FarragoEngineDriverTest
         FarragoAbstractJdbcDriver driver =
             FarragoTestCase.newJdbcEngineDriver();
 
-        assert(driver instanceof FarragoUnregisteredJdbcEngineDriver);
+        assert (driver instanceof FarragoUnregisteredJdbcEngineDriver);
         String uri = null;
         assertFalse(
             "driver accepts " + uri,
@@ -136,7 +134,7 @@ public class FarragoEngineDriverTest
         // create a sample connect string with various complications.
         // note that the parser itself is tested in eigenbase.
         final int maxParams = 6;
-        HashMap<String,String> ref = new HashMap<String, String>();
+        HashMap<String, String> ref = new HashMap<String, String>();
         StringBuilder params = new StringBuilder();
         for (int i = 0; i < maxParams; ++i) {
             String key = "name" + i;
@@ -166,7 +164,7 @@ public class FarragoEngineDriverTest
         FarragoAbstractJdbcDriver driver =
             FarragoTestCase.newJdbcEngineDriver();
 
-        assert(driver instanceof FarragoUnregisteredJdbcEngineDriver);
+        assert (driver instanceof FarragoUnregisteredJdbcEngineDriver);
         Properties parsedProps = new Properties();
         String strippedUri = driver.parseConnectionParams(uri, parsedProps);
 
@@ -189,7 +187,8 @@ public class FarragoEngineDriverTest
         Properties props = newProperties();
         Connection conn = driver.connect(uri, props);
         assertNotNull("null connection", conn);
-        assertTrue("FarragoJdbcEngineConnection",
+        assertTrue(
+            "FarragoJdbcEngineConnection",
             conn instanceof FarragoJdbcEngineConnection);
         assertEquals(
             "user's props changed,",
@@ -208,7 +207,8 @@ public class FarragoEngineDriverTest
         String loginUri = uri + ";user=" + FarragoCatalogInit.SA_USER_NAME;
         conn = driver.connect(loginUri, empty);
         assertNotNull("null connection", conn);
-        assertTrue("FarragoJdbcEngineConnection",
+        assertTrue(
+            "FarragoJdbcEngineConnection",
             conn instanceof FarragoJdbcEngineConnection);
         assertEquals(
             "empty props changed",
@@ -247,7 +247,7 @@ public class FarragoEngineDriverTest
         FarragoAbstractJdbcDriver driver =
             FarragoTestCase.newJdbcEngineDriver();
 
-        assert(driver instanceof FarragoUnregisteredJdbcEngineDriver);
+        assert (driver instanceof FarragoUnregisteredJdbcEngineDriver);
 
         Properties sessionProps = new Properties(newProperties());
         sessionProps.setProperty("sessionName", sessionName);
@@ -283,10 +283,13 @@ public class FarragoEngineDriverTest
 
     /**
      * Tests special connection initialization based on connection properties.
-     * @see FarragoJdbcEngineConnection#initConnection(Properties)
+     *
      * @throws Exception
+     *
+     * @see FarragoJdbcEngineConnection#initConnection(Properties)
      */
-    public void testConnectionInit() throws Exception
+    public void testConnectionInit()
+        throws Exception
     {
         final String driverURI = "jdbc:farrago:";
         final String initialSchema = "sales";
@@ -355,13 +358,15 @@ public class FarragoEngineDriverTest
         return buf.toString();
     }
 
-    /** asserts that exception message matches the specified pattern. */
+    /**
+     * asserts that exception message matches the specified pattern.
+     */
     private static void assertExceptionMatches(Throwable e, String match)
         throws Exception
     {
         String msg = e.getMessage();
         assertTrue(
-            "Got exception \"" +msg + "\" but expected \"" + match + "\"",
+            "Got exception \"" + msg + "\" but expected \"" + match + "\"",
             msg.matches(match));
     }
 }

@@ -44,7 +44,6 @@ public class FarragoIndexBuilderRel
     extends SingleRel
     implements RelStructuredTypeFlattener.SelfFlatteningRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -102,7 +101,7 @@ public class FarragoIndexBuilderRel
     public RelDataType deriveRowType()
     {
         return RelOptUtil.createDmlRowType(
-                getCluster().getTypeFactory());
+            getCluster().getTypeFactory());
     }
 
     // implement RelNode

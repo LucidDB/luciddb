@@ -38,7 +38,6 @@ public class SqlParseException
     extends Exception
     implements EigenbaseParserException
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlParserPos pos;

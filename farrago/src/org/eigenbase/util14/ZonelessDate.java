@@ -22,9 +22,12 @@
 package org.eigenbase.util14;
 
 import java.sql.Date;
+
 import java.text.*;
+
 import java.util.Calendar;
 import java.util.TimeZone;
+
 
 /**
  * ZonelessDate is a date value without a time zone.
@@ -32,17 +35,21 @@ import java.util.TimeZone;
  * @author John Pham
  * @version $Id$
  */
-public class ZonelessDate extends ZonelessDatetime
+public class ZonelessDate
+    extends ZonelessDatetime
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * SerialVersionUID created with JDK 1.5 serialver tool.
+     */
+    private static final long serialVersionUID = -6385775986251759394L;
 
     //~ Instance fields --------------------------------------------------------
 
     protected transient Date tempDate;
 
-     /** SerialVersionUID created with JDK 1.5 serialver tool. */
-    private static final long serialVersionUID = -6385775986251759394L;
-
-    //~ Methods ----------------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a ZonelessDate.
@@ -50,6 +57,8 @@ public class ZonelessDate extends ZonelessDatetime
     public ZonelessDate()
     {
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // override ZonelessDatetime
     public void setZonelessTime(long value)
@@ -87,6 +96,7 @@ public class ZonelessDate extends ZonelessDatetime
      * Formats this ZonelessDate via a SimpleDateFormat
      *
      * @param format format string, as required by {@link SimpleDateFormat}
+     *
      * @return the formatted date string
      */
     public String toString(String format)
@@ -99,8 +109,9 @@ public class ZonelessDate extends ZonelessDatetime
     /**
      * Parses a string as a ZonelessDate.
      *
-     * @param s a string representing a date in ISO format, i.e. according
-     *   to the SimpleDateFormat string "yyyy-MM-dd"
+     * @param s a string representing a date in ISO format, i.e. according to
+     * the SimpleDateFormat string "yyyy-MM-dd"
+     *
      * @return the parsed date, or null if parsing failed
      */
     public static ZonelessDate parse(String s)
@@ -111,17 +122,19 @@ public class ZonelessDate extends ZonelessDatetime
     /**
      * Parses a string as a ZonelessDate with a given format string.
      *
-     * @param s a string representing a date in ISO format, i.e. according
-     *   to the SimpleDateFormat string "yyyy-MM-dd"
+     * @param s a string representing a date in ISO format, i.e. according to
+     * the SimpleDateFormat string "yyyy-MM-dd"
      * @param format format string as per {@link SimpleDateFormat}
+     *
      * @return the parsed date, or null if parsing failed
      */
     public static ZonelessDate parse(String s, String format)
     {
-        Calendar cal = DateTimeUtil.parseDateFormat(
-            s,
-            format,
-            DateTimeUtil.gmtZone);
+        Calendar cal =
+            DateTimeUtil.parseDateFormat(
+                s,
+                format,
+                DateTimeUtil.gmtZone);
         if (cal == null) {
             return null;
         }

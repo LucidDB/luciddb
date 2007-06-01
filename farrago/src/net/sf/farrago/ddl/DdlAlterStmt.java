@@ -40,10 +40,10 @@ import net.sf.farrago.session.*;
 public abstract class DdlAlterStmt
     extends DdlStmt
 {
-
     //~ Enums ------------------------------------------------------------------
 
-    private enum ActionType {
+    private enum ActionType
+    {
         ALTER_IDENTITY
     }
 
@@ -114,7 +114,7 @@ public abstract class DdlAlterStmt
 
     /**
      * Execute the alter statement
-     * 
+     *
      * @param ddlValidator the session validator
      * @param session a reentrant session
      */

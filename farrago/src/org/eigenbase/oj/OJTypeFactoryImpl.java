@@ -47,10 +47,10 @@ public class OJTypeFactoryImpl
     extends SqlTypeFactoryImpl
     implements OJTypeFactory
 {
-
     //~ Instance fields --------------------------------------------------------
 
-    protected final HashMap<OJClass,RelDataType> mapOJClassToType = new HashMap<OJClass, RelDataType>();
+    protected final HashMap<OJClass, RelDataType> mapOJClassToType =
+        new HashMap<OJClass, RelDataType>();
 
     private final OJClassMap ojClassMap;
 
@@ -96,14 +96,15 @@ public class OJTypeFactoryImpl
         final OJClass [] fieldClasses = new OJClass[fields.length];
         for (int i = 0; i < fields.length; i++) {
             RelDataTypeField field = fields[i];
-            fieldNames[i] = Util.toJavaId(
+            fieldNames[i] =
+                Util.toJavaId(
                     field.getName(),
                     i);
             final RelDataType fieldType = field.getType();
             fieldClasses[i] = OJUtil.typeToOJClass(declarer, fieldType, this);
         }
         return ojClassMap.createProject(declarer, fieldClasses,
-                fieldNames);
+            fieldNames);
     }
 
     public OJClass toOJClass(
@@ -175,9 +176,9 @@ public class OJTypeFactoryImpl
      * <ul>
      * <li>If the {@link OJClass} is based upon a Java class, call {@link
      * #createJavaType} instead.</li>
-     * <li>If the {@link OJClass} is synthetic, call
-     * {@link OJTypeFactoryImpl#createStructType}
-     * or {@link OJTypeFactoryImpl#createJoinType} instead.</li>
+     * <li>If the {@link OJClass} is synthetic, call {@link
+     * OJTypeFactoryImpl#createStructType} or {@link
+     * OJTypeFactoryImpl#createJoinType} instead.</li>
      * </ul>
      * </p>
      */

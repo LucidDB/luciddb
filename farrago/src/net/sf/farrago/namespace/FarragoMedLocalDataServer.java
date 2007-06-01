@@ -42,7 +42,6 @@ import org.eigenbase.relopt.*;
 public interface FarragoMedLocalDataServer
     extends FarragoMedDataServer
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -84,7 +83,6 @@ public interface FarragoMedLocalDataServer
      * Creates an index.
      *
      * @param index definition of the index to create
-     *
      * @param txnContext Fennel txn context
      *
      * @return root PageId of index

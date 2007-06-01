@@ -36,7 +36,6 @@ import org.eigenbase.relopt.hep.*;
 abstract class RelOptTestBase
     extends SqlToRelTestBase
 {
-
     //~ Methods ----------------------------------------------------------------
 
     protected abstract DiffRepository getDiffRepos();
@@ -57,8 +56,7 @@ abstract class RelOptTestBase
         HepProgram program,
         String sql)
     {
-        checkPlanning(
-            new HepPlanner(program),
+        checkPlanning(new HepPlanner(program),
             sql);
     }
 

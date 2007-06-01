@@ -47,7 +47,6 @@ import net.sf.farrago.util.*;
 public class FarragoSorterTest
     extends FarragoTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static File testdataDir;
@@ -222,7 +221,8 @@ public class FarragoSorterTest
         throws Exception
     {
         testDistribution(
-            new UniformDistributionGenerator(IN_MEM_COUNT,
+            new UniformDistributionGenerator(
+                IN_MEM_COUNT,
                 IN_MEM_COUNT * SPARSE_FACTOR));
     }
 
@@ -233,7 +233,8 @@ public class FarragoSorterTest
         throws Exception
     {
         testDistribution(
-            new UniformDistributionGenerator(IN_MEM_COUNT,
+            new UniformDistributionGenerator(
+                IN_MEM_COUNT,
                 IN_MEM_COUNT / DUP_FACTOR));
     }
 
@@ -297,7 +298,8 @@ public class FarragoSorterTest
         throws Exception
     {
         testDistribution(
-            new UniformDistributionGenerator(externalCount,
+            new UniformDistributionGenerator(
+                externalCount,
                 externalCount * SPARSE_FACTOR));
     }
 

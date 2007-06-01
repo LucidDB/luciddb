@@ -35,7 +35,6 @@ import org.eigenbase.util.*;
 public class ExplicitReturnTypeInference
     implements SqlReturnTypeInference
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int argCount;
@@ -53,8 +52,8 @@ public class ExplicitReturnTypeInference
      * type object made using {@link RelDataTypeFactory#copyType(RelDataType)}
      * within the requesting type factory.
      *
-     * <p>REVIEW jvs 6-Aug-2006:  Under what circumstances is a copy of
-     * the type required?
+     * <p>REVIEW jvs 6-Aug-2006: Under what circumstances is a copy of the type
+     * required?
      *
      * @param type Type object
      */

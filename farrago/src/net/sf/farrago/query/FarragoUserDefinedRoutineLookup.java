@@ -47,7 +47,6 @@ import org.eigenbase.util.*;
 public class FarragoUserDefinedRoutineLookup
     implements SqlOperatorTable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoSessionStmtValidator stmtValidator;
@@ -201,13 +200,12 @@ public class FarragoUserDefinedRoutineLookup
                     false);
         }
 
-        return
-            new FarragoUserDefinedRoutine(
-                stmtValidator,
-                preparingStmt,
-                femRoutine,
-                returnType,
-                paramTypes);
+        return new FarragoUserDefinedRoutine(
+            stmtValidator,
+            preparingStmt,
+            femRoutine,
+            returnType,
+            paramTypes);
     }
 }
 

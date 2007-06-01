@@ -35,8 +35,8 @@ import org.eigenbase.reltype.*;
 /**
  * LcsIndexSearchRel is a relation for reading from an unclustered index. It has
  * two major modes. In the "full scan" mode, it has no input and it scans the
- * entire index. In the "key search" mode, it has one input and only searches for
- * keys produced by its child.
+ * entire index. In the "key search" mode, it has one input and only searches
+ * for keys produced by its child.
  *
  * <p>Key search relations, have two formats for input. A single key set may be
  * specified, in which case, exact matches for keys are returned. The double key
@@ -54,7 +54,6 @@ import org.eigenbase.reltype.*;
 class LcsIndexSearchRel
     extends FennelOptionalRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -110,8 +109,8 @@ class LcsIndexSearchRel
      * be added to the output
      * @param inputDirectiveProj for a double key search, the projection of
      * input fields describing search endpoints, such as OPEN or CLOSED
-     * @param startRidParamId parameter ID for searching using start Rid as
-     * part of the key
+     * @param startRidParamId parameter ID for searching using start Rid as part
+     * of the key
      * @param rowLimitParamId parameter ID to limit the number of rows fetched
      * in one execute
      */
@@ -185,10 +184,12 @@ class LcsIndexSearchRel
     /**
      * Create a new index search rel based on the existing one but with new
      * dynamic parameters.
-     * @param startRidParamId parameter ID for searching using start Rid as
-     * part of the key
+     *
+     * @param startRidParamId parameter ID for searching using start Rid as part
+     * of the key
      * @param rowLimitParamId parameter ID to limit the number of rows fetched
      * in one execute
+     *
      * @return the newly created index search rel.
      */
     public LcsIndexSearchRel cloneWithNewParams(
@@ -219,8 +220,8 @@ class LcsIndexSearchRel
     {
         // TODO:  refined costing
         return computeCost(
-                planner,
-                RelMetadataQuery.getRowCount(this));
+            planner,
+            RelMetadataQuery.getRowCount(this));
     }
 
     // implement RelNode
@@ -246,7 +247,8 @@ class LcsIndexSearchRel
     protected RelDataType deriveRowType()
     {
         RelDataType rowType =
-            lcsTable.getIndexGuide().createUnclusteredRowType(index,
+            lcsTable.getIndexGuide().createUnclusteredRowType(
+                index,
                 projectedColumns);
 
         if (inputJoinProj != null) {
@@ -279,13 +281,13 @@ class LcsIndexSearchRel
             // for outer join, have to make left side nullable
             if (isOuter) {
                 rightType =
-                    getFarragoTypeFactory().createTypeWithNullability(rightType,
+                    getFarragoTypeFactory().createTypeWithNullability(
+                        rightType,
                         true);
             }
 
-            return
-                getCluster().getTypeFactory().createJoinType(
-                    new RelDataType[] { leftType, rightType });
+            return getCluster().getTypeFactory().createJoinType(
+                new RelDataType[] { leftType, rightType });
         } else {
             return rowType;
         }
@@ -320,13 +322,13 @@ class LcsIndexSearchRel
             this,
             new String[] {
                 "child", "table", "index", "projection", "inputKeyProj",
-            "inputDirectiveProj", "startRidParamId", "rowLimitParamId"
+                "inputDirectiveProj", "startRidParamId", "rowLimitParamId"
             },
             new Object[] {
                 Arrays.asList(lcsTable.getQualifiedName()), index.getName(),
-            projection, inputKeyProjObj, inputDirectiveProjObj,
-            (startRidParamId == null) ? (Integer) 0 : startRidParamId,
-            (rowLimitParamId == null) ? (Integer) 0 : rowLimitParamId
+                projection, inputKeyProjObj, inputDirectiveProjObj,
+                (startRidParamId == null) ? (Integer) 0 : startRidParamId,
+                (rowLimitParamId == null) ? (Integer) 0 : rowLimitParamId
             });
     }
 
@@ -357,7 +359,8 @@ class LcsIndexSearchRel
         } else {
             // pure scan
             newStream =
-                lcsTable.getIndexGuide().newIndexScan(this,
+                lcsTable.getIndexGuide().newIndexScan(
+                    this,
                     index,
                     projectedColumns);
         }

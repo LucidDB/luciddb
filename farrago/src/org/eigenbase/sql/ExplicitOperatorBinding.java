@@ -34,7 +34,6 @@ import org.eigenbase.reltype.*;
 public class ExplicitOperatorBinding
     extends SqlOperatorBinding
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType [] types;

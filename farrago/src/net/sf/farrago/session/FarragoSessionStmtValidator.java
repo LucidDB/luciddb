@@ -41,6 +41,7 @@ import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.trace.*;
 
+
 /**
  * FarragoSessionStmtValidator defines a generic interface for statement
  * validation services. It is not as specific as the other validator-related
@@ -53,7 +54,6 @@ import org.eigenbase.trace.*;
 public interface FarragoSessionStmtValidator
     extends FarragoAllocationOwner
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -123,22 +123,22 @@ public interface FarragoSessionStmtValidator
      * @return warning queue
      */
     public FarragoWarningQueue getWarningQueue();
-    
+
     /**
      * Sets the warning queue to be used by this validator
      *
      * @param warningQueue target queue to use
      */
     public void setWarningQueue(FarragoWarningQueue warningQueue);
-    
+
     /**
      * Submits a request for access from the current user and/or role to a
      * catalog object via this validator's privilege checker. Actual checking of
      * the request may be deferred.
      *
      * @param obj object to be accessed
-     * @param action the action to be performed on obj (see
-     *  {@link net.sf.farrago.fem.security.PrivilegedActionEnum} for base set)
+     * @param action the action to be performed on obj (see {@link
+     * net.sf.farrago.fem.security.PrivilegedActionEnum} for base set)
      */
     public void requestPrivilege(
         CwmModelElement obj,
@@ -360,7 +360,7 @@ public interface FarragoSessionStmtValidator
 
     /**
      * @return the repository transaction context associated with this
-     *         statement.
+     * statement.
      */
     public FarragoReposTxnContext getReposTxnContext();
 }

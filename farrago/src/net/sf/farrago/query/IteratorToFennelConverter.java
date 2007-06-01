@@ -62,7 +62,6 @@ public class IteratorToFennelConverter
     extends ConverterRel
     implements FennelRel
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // REVIEW: SWZ: 3/8/2006: These really belong elsewhere.  Perhaps
@@ -107,8 +106,7 @@ public class IteratorToFennelConverter
         farragoTransformClassNameMap = new HashMap<Integer, String>();
         javaImplInvocationCount = 0;
         fennelImplInvocationCount = 0;
-        childStreamDefsMap =
-            new HashMap<Integer, List<ChildStream>>();
+        childStreamDefsMap = new HashMap<Integer, List<ChildStream>>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -176,8 +174,8 @@ public class IteratorToFennelConverter
         assert (fields.length == tupleAccessor.getAttrAccessor().size());
         boolean variableWidth = false;
         int i = -1;
-        for (FemTupleAttrAccessor attrAccessor :
-            tupleAccessor.getAttrAccessor())
+        for (
+            FemTupleAttrAccessor attrAccessor : tupleAccessor.getAttrAccessor())
         {
             ++i;
             if (attrAccessor.getBitValueIndex() != -1) {
@@ -309,11 +307,10 @@ public class IteratorToFennelConverter
                 methodBody);
 
         // generate code to allocate instance of anonymous class defined above
-        return
-            new AllocationExpression(
-                OJUtil.typeNameForClass(FennelTupleWriter.class),
-                new ExpressionList(),
-                new MemberDeclarationList(methodDecl));
+        return new AllocationExpression(
+            OJUtil.typeNameForClass(FennelTupleWriter.class),
+            new ExpressionList(),
+            new MemberDeclarationList(methodDecl));
     }
 
     private static ClassDeclaration generateTransformer(
@@ -415,7 +412,8 @@ public class IteratorToFennelConverter
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
         if (getInputConvention().getOrdinal()
-            != CallingConvention.ITERATOR_ORDINAL) {
+            != CallingConvention.ITERATOR_ORDINAL)
+        {
             throw cannotImplement();
         }
 
@@ -468,15 +466,13 @@ public class IteratorToFennelConverter
     }
 
     /**
-     * Registers the FemExecutionStreamDef(s) that provide input to
-     * this converter's FemExecutionStreamDef (either explicitly
-     * or implicitly).
+     * Registers the FemExecutionStreamDef(s) that provide input to this
+     * converter's FemExecutionStreamDef (either explicitly or implicitly).
      *
      * @param childStreamDef child stream def to register
-     *
      * @param implicit true if dataflow is implicit via a UDX reading from a
-     * cursor; false if explicit as an input into this
-     * converter's FemExecutionStreamDef
+     * cursor; false if explicit as an input into this converter's
+     * FemExecutionStreamDef
      */
     void registerChildStreamDef(
         FemExecutionStreamDef childStreamDef,
@@ -492,7 +488,7 @@ public class IteratorToFennelConverter
     protected void setFarragoTransformClassName(String className)
     {
         assert (!farragoTransformClassNameMap.containsKey(
-                    javaImplInvocationCount));
+            javaImplInvocationCount));
 
         farragoTransformClassNameMap.put(javaImplInvocationCount, className);
     }
@@ -503,7 +499,7 @@ public class IteratorToFennelConverter
         initFennelInvocation();
 
         assert (farragoTransformClassNameMap.containsKey(
-                    fennelImplInvocationCount));
+            fennelImplInvocationCount));
         assert (childStreamDefsMap.containsKey(fennelImplInvocationCount));
 
         // A single instance of this class may appear in multiple
@@ -517,7 +513,7 @@ public class IteratorToFennelConverter
         List<ChildStream> childStreams =
             childStreamDefsMap.get(fennelImplInvocationCount);
 
-        FemJavaTransformStreamDef streamDef = 
+        FemJavaTransformStreamDef streamDef =
             newJavaTransformStreamDef(implementor);
 
         for (ChildStream childStream : childStreams) {
@@ -534,11 +530,11 @@ public class IteratorToFennelConverter
 
         return streamDef;
     }
-    
+
     protected FemJavaTransformStreamDef newJavaTransformStreamDef(
         FennelRelImplementor implementor)
     {
-        return implementor.getRepos().newFemJavaTransformStreamDef();        
+        return implementor.getRepos().newFemJavaTransformStreamDef();
     }
 
     // implement FennelRel
@@ -582,8 +578,8 @@ public class IteratorToFennelConverter
         public RelNode convert(RelNode rel)
         {
             return new IteratorToFennelConverter(
-                    rel.getCluster(),
-                    rel);
+                rel.getCluster(),
+                rel);
         }
 
         public boolean isGuaranteed()

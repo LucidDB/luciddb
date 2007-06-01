@@ -75,12 +75,13 @@ public class LhxSemiJoinRule
             // This rule only applies to inner joins.
             return;
         }
-        
-        if (!(leftRel instanceof AggregateRel) &&
-            !(rightRel instanceof AggregateRel)) {
+
+        if (!(leftRel instanceof AggregateRel)
+            && !(rightRel instanceof AggregateRel))
+        {
             return;
         }
-            
+
         RexNode residualCondition = null;
 
         // determine if we have a valid join condition
@@ -97,13 +98,16 @@ public class LhxSemiJoinRule
                 rightJoinKeys,
                 null);
 
-        // valid join keys should only reference input fields directly, i.e. no residualCondition
-        if ((leftJoinKeys.size() == 0) || (rightJoinKeys.size() == 0) ||
-            (residualCondition != null)) {
+        // valid join keys should only reference input fields directly, i.e.
+        // no residualCondition
+        if ((leftJoinKeys.size() == 0)
+            || (rightJoinKeys.size() == 0)
+            || (residualCondition != null))
+        {
             return;
         }
 
-        // First determine which side is producing the distinct 
+        // First determine which side is producing the distinct
         // with the other side projected after the join
         RexNode [] projExprs = projRel.getProjectExps();
         int leftFieldCount = leftRel.getRowType().getFieldCount();
@@ -118,12 +122,15 @@ public class LhxSemiJoinRule
 
         int leftRefCount = 0;
         int rightRefCount = 0;
-        for (int bit = projRefs.nextSetBit(0); bit >= 0;
-            bit = projRefs.nextSetBit(bit + 1)) {
+        for (
+            int bit = projRefs.nextSetBit(0);
+            bit >= 0;
+            bit = projRefs.nextSetBit(bit + 1))
+        {
             if (bit >= leftFieldCount) {
-                rightRefCount ++;
+                rightRefCount++;
             } else {
-                leftRefCount ++;
+                leftRefCount++;
             }
         }
 
@@ -146,7 +153,7 @@ public class LhxSemiJoinRule
         } else {
             return;
         }
-        
+
         if (aggRel.getAggCalls().length != 0) {
             // not guaranteed to be distinct
             return;
@@ -154,7 +161,7 @@ public class LhxSemiJoinRule
 
         // then check if aggregate(distinct) keys are covered by the join keys
         int numGroupByKeys = aggRel.getGroupCount();
-        List<RexNode> aggJoinKeys = null;        
+        List<RexNode> aggJoinKeys = null;
 
         if (outputLeft) {
             aggJoinKeys = rightJoinKeys;
@@ -167,12 +174,12 @@ public class LhxSemiJoinRule
 
         RelOptUtil.InputFinder aggJoinInputFinder =
             new RelOptUtil.InputFinder(inputRefBitset);
-        
+
         for (RexNode expr : aggJoinKeys) {
             expr.accept(aggJoinInputFinder);
         }
-                    
-        // group by key positions are 0 ...numGroupByKeys -1      
+
+        // group by key positions are 0 ...numGroupByKeys -1
         for (int i = 0; i < numGroupByKeys; i++) {
             if (inputRefBitset.nextSetBit(i) != i) {
                 return;
@@ -184,18 +191,19 @@ public class LhxSemiJoinRule
         List<Integer> outputProj = new ArrayList<Integer>();
 
         RelNode [] inputRels;
-        
+
         if (outputLeft) {
-            inputRels = new RelNode[] { leftRel, aggRel.getChild()};
+            inputRels = new RelNode[] { leftRel, aggRel.getChild() };
         } else {
-            inputRels = new RelNode[] { aggRel.getChild(), rightRel};            
+            inputRels = new RelNode[] { aggRel.getChild(), rightRel };
         }
-        
+
         List<Integer> newLeftJoinKeyPos = new ArrayList<Integer>();
         List<Integer> newRightJoinKeyPos = new ArrayList<Integer>();
         List<Integer> filterNulls = new ArrayList<Integer>();
 
-        RelOptUtil.projectJoinInputs(inputRels,
+        RelOptUtil.projectJoinInputs(
+            inputRels,
             leftJoinKeys,
             rightJoinKeys,
             newLeftJoinKeyPos,
@@ -232,9 +240,9 @@ public class LhxSemiJoinRule
         Double cndBuildKey;
         BitSet joinKeyMap = new BitSet();
 
-        
         for (int i = 0; i < newRightJoinKeyPos.size(); i++) {
             joinKeyMap.set(newRightJoinKeyPos.get(i));
+
             // null values will not match for any join key pos
             filterNulls.add(i);
         }
@@ -251,17 +259,17 @@ public class LhxSemiJoinRule
         boolean isSetop = false;
         List<String> newJoinOutputNames;
         LhxJoinRelType joinType;
-        
+
         if (outputLeft) {
             newJoinOutputNames =
                 RelOptUtil.getFieldNameList(leftRel.getRowType());
-                joinType = LhxJoinRelType.LEFTSEMI;
+            joinType = LhxJoinRelType.LEFTSEMI;
         } else {
             newJoinOutputNames =
-                RelOptUtil.getFieldNameList(rightRel.getRowType());            
+                RelOptUtil.getFieldNameList(rightRel.getRowType());
             joinType = LhxJoinRelType.RIGHTSEMI;
         }
-        
+
         RelNode rel =
             new LhxJoinRel(
                 joinRel.getCluster(),
@@ -277,27 +285,30 @@ public class LhxSemiJoinRule
                 cndBuildKey.longValue());
 
         RexNode [] newProjExprs;
-        
-        if (!outputLeft) {
-            // right semi join. need to convert input to the project to reference 
-            // the output of the new join
 
-            RelDataTypeField [] projInputFields = joinRel.getRowType().getFields();
-            RelDataTypeField [] newProjInputFields = rel.getRowType().getFields();
+        if (!outputLeft) {
+            // right semi join. need to convert input to the project to
+            // reference the output of the new join
+
+            RelDataTypeField [] projInputFields =
+                joinRel.getRowType().getFields();
+            RelDataTypeField [] newProjInputFields =
+                rel.getRowType().getFields();
             int [] adjustments = new int[projInputFields.length];
-            assert (projInputFields.length == leftFieldCount + rightFieldCount);
-            
+            assert (projInputFields.length
+                == (leftFieldCount + rightFieldCount));
+
             int i;
-            for (i = 0; i < leftFieldCount; i ++) {
+            for (i = 0; i < leftFieldCount; i++) {
                 adjustments[i] = 0;
             }
-            
-            for (; i < projInputFields.length; i ++) {
+
+            for (; i < projInputFields.length; i++) {
                 adjustments[i] = -leftFieldCount;
             }
-            
-            // right semi join. need to convert input to the project to reference 
-            // the output of the join
+
+            // right semi join. need to convert input to the project to
+            // reference the output of the join
             int projLength = projExprs.length;
             newProjExprs = new RexNode[projLength];
             for (int j = 0; j < projLength; j++) {
@@ -310,13 +321,13 @@ public class LhxSemiJoinRule
                             adjustments));
             }
         } else {
-            // This is a left semi join, so only fields from the left
-            // side is projected. There is no need to project the new output
-            // (left+key+right+key) to the original join output(left+right) before
-            // applying the original project.
+            // This is a left semi join, so only fields from the left side is
+            // projected. There is no need to project the new output
+            // (left+key+right+key) to the original join output(left+right)
+            // before applying the original project.
             newProjExprs = projExprs;
         }
-        
+
         rel =
             CalcRel.createProject(
                 rel,

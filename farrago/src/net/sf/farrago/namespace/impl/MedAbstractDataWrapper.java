@@ -41,7 +41,6 @@ public abstract class MedAbstractDataWrapper
     extends MedAbstractBase
     implements FarragoMedDataWrapper
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoRepos repos;

@@ -58,7 +58,6 @@ import org.eigenbase.util.property.*;
  */
 public abstract class EigenbaseTrace
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

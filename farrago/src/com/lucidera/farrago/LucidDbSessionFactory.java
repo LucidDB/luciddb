@@ -37,7 +37,6 @@ import net.sf.farrago.session.*;
 public class LucidDbSessionFactory
     extends FarragoDefaultSessionFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionPersonalityFactory

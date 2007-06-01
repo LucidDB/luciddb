@@ -21,8 +21,7 @@
 */
 package org.eigenbase.sql;
 
-import java.util.Calendar;
-import java.util.TimeZone;
+import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.parser.*;
@@ -44,7 +43,6 @@ import org.eigenbase.util14.*;
 abstract class SqlAbstractDateTimeLiteral
     extends SqlLiteral
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final boolean hasTimeZone;
@@ -54,11 +52,11 @@ abstract class SqlAbstractDateTimeLiteral
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Constructs a datetime literal based on a Calendar. If the literal
-     * is to represent a Timestamp, the Calendar is expected to follow
-     * java.sql semantics. If the Calendar is to represent a Time or Date,
-     * the Calendar is expected to follow {@link ZonelessTime} and 
-     * {@link ZonelessDate} semantics.
+     * Constructs a datetime literal based on a Calendar. If the literal is to
+     * represent a Timestamp, the Calendar is expected to follow java.sql
+     * semantics. If the Calendar is to represent a Time or Date, the Calendar
+     * is expected to follow {@link ZonelessTime} and {@link ZonelessDate}
+     * semantics.
      */
     protected SqlAbstractDateTimeLiteral(
         Calendar d,
@@ -118,8 +116,8 @@ abstract class SqlAbstractDateTimeLiteral
     public RelDataType createSqlType(RelDataTypeFactory typeFactory)
     {
         return typeFactory.createSqlType(
-                getTypeName(),
-                getPrec());
+            getTypeName(),
+            getPrec());
     }
 
     public void unparse(

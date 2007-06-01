@@ -42,7 +42,6 @@ import org.eigenbase.reltype.*;
 public class FennelRenameRel
     extends FennelSingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private String [] fieldNames;
@@ -78,12 +77,11 @@ public class FennelRenameRel
     // implement Cloneable
     public FennelRenameRel clone()
     {
-        return
-            new FennelRenameRel(
-                getCluster(),
-                getChild().clone(),
-                fieldNames,
-                cloneTraits());
+        return new FennelRenameRel(
+            getCluster(),
+            getChild().clone(),
+            fieldNames,
+            cloneTraits());
     }
 
     // implement RelNode
@@ -96,24 +94,23 @@ public class FennelRenameRel
     public RelDataType deriveRowType()
     {
         final RelDataTypeField [] fields = getChild().getRowType().getFields();
-        return
-            getCluster().getTypeFactory().createStructType(
-                new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return fields.length;
-                    }
+        return getCluster().getTypeFactory().createStructType(
+            new RelDataTypeFactory.FieldInfo() {
+                public int getFieldCount()
+                {
+                    return fields.length;
+                }
 
-                    public String getFieldName(int index)
-                    {
-                        return fieldNames[index];
-                    }
+                public String getFieldName(int index)
+                {
+                    return fieldNames[index];
+                }
 
-                    public RelDataType getFieldType(int index)
-                    {
-                        return fields[index].getType();
-                    }
-                });
+                public RelDataType getFieldType(int index)
+                {
+                    return fields[index].getType();
+                }
+            });
     }
 
     // override Rel

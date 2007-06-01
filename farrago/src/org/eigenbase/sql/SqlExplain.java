@@ -32,7 +32,6 @@ import org.eigenbase.sql.parser.*;
 public class SqlExplain
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
@@ -47,7 +46,9 @@ public class SqlExplain
     /**
      * The level of abstraction with which to display the plan.
      */
-    public static enum Depth implements SqlLiteral.SqlSymbol {
+    public static enum Depth
+        implements SqlLiteral.SqlSymbol
+    {
         Type, Logical, Physical,
     }
 
@@ -86,9 +87,8 @@ public class SqlExplain
      */
     public SqlExplainLevel getDetailLevel()
     {
-        return
-            (SqlExplainLevel) SqlLiteral.symbolValue(
-                operands[DETAIL_LEVEL_OPERAND]);
+        return (SqlExplainLevel) SqlLiteral.symbolValue(
+            operands[DETAIL_LEVEL_OPERAND]);
     }
 
     /**

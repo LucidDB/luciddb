@@ -36,12 +36,12 @@ import org.eigenbase.sql.validate.*;
 public class SqlPositionFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlPositionFunction()
     {
-        super("POSITION",
+        super(
+            "POSITION",
             SqlKind.Function,
             SqlTypeStrategies.rtiNullableInteger,
             null,
@@ -91,10 +91,9 @@ public class SqlPositionFunction
             return false;
         }
 
-        return
-            getOperandTypeChecker().checkOperandTypes(
-                callBinding,
-                throwOnFailure);
+        return getOperandTypeChecker().checkOperandTypes(
+            callBinding,
+            throwOnFailure);
     }
 }
 

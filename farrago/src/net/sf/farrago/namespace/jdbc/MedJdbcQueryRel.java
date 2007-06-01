@@ -46,7 +46,6 @@ import org.eigenbase.util.*;
 class MedJdbcQueryRel
     extends JdbcQuery
 {
-
     //~ Instance fields --------------------------------------------------------
 
     MedJdbcColumnSet columnSet;
@@ -95,11 +94,10 @@ class MedJdbcQueryRel
                         Literal.makeLiteral(
                             columnSet.directory.server.getServerMofId()),
                         Literal.makeLiteral(sql))));
-        return
-            new MethodCall(
-                allocExpression,
-                "getResultSet",
-                new ExpressionList());
+        return new MethodCall(
+            allocExpression,
+            "getResultSet",
+            new ExpressionList());
     }
 }
 

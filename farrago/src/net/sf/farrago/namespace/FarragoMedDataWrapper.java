@@ -48,7 +48,6 @@ public interface FarragoMedDataWrapper
     extends FarragoPlugin,
         FarragoMedDataWrapperInfo
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

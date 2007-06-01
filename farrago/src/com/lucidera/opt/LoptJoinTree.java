@@ -38,7 +38,6 @@ import org.eigenbase.rel.*;
  */
 public class LoptJoinTree
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private BinaryTree factorTree;
@@ -48,7 +47,7 @@ public class LoptJoinTree
 
     /**
      * Creates a jointree consisting of a single node
-     * 
+     *
      * @param joinTree RelNode corresponding to the single node
      * @param factorId factor id of the node
      */
@@ -60,7 +59,7 @@ public class LoptJoinTree
 
     /**
      * Associates the factor ids with a jointree
-     * 
+     *
      * @param joinTree RelNodes corresponding to the join tree
      * @param factorTree tree of the factor ids
      */
@@ -73,7 +72,7 @@ public class LoptJoinTree
     /**
      * Associates the factor ids with a jointree given the factors corresponding
      * to the left and right subtrees of the join
-     * 
+     *
      * @param joinTree RelNodes corresponding to the join tree
      * @param leftFactorTree tree of the factor ids for left subtree
      * @param rightFactorTree tree of the factor ids for the right subtree
@@ -96,18 +95,16 @@ public class LoptJoinTree
 
     public LoptJoinTree getLeft()
     {
-        return
-            new LoptJoinTree(
-                ((JoinRel) joinTree).getLeft(),
-                factorTree.getLeft());
+        return new LoptJoinTree(
+            ((JoinRel) joinTree).getLeft(),
+            factorTree.getLeft());
     }
 
     public LoptJoinTree getRight()
     {
-        return
-            new LoptJoinTree(
-                ((JoinRel) joinTree).getRight(),
-                factorTree.getRight());
+        return new LoptJoinTree(
+            ((JoinRel) joinTree).getRight(),
+            factorTree.getRight());
     }
 
     public BinaryTree getFactorTree()

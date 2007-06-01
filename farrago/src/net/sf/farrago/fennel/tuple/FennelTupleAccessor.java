@@ -34,13 +34,10 @@ import java.util.*;
  * FennelTupleAccessor defines how to efficiently marshall and unmarshall values
  * in a stored tuple. The same logical tuple definition can have multiple
  * storage formats. See <a href="structTupleDesign.html#FennelTupleAccessor">the
- * design docs</a> for more details.
- *
- * This class is JDK 1.4 compatible.
+ * design docs</a> for more details. This class is JDK 1.4 compatible.
  */
 public final class FennelTupleAccessor
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -65,17 +62,15 @@ public final class FennelTupleAccessor
     public static final int TUPLE_ALIGN8 = 8;
 
     /**
-     * Specifies alignment matching the data model of this JVM;
-     * fallback is to assume 4-byte if relevant system property is
-     * undefined.  TODO jvs 26-May-2007: we really ought to be calling
-     * Fennel to get this instead, since e.g. on Sun CPU
-     * architectures, 64-bit alignment is required even for a 32-bit
-     * JVM.  Plus this System property is undocumented, although it's
-     * also available on JRockit.
+     * Specifies alignment matching the data model of this JVM; fallback is to
+     * assume 4-byte if relevant system property is undefined. TODO jvs
+     * 26-May-2007: we really ought to be calling Fennel to get this instead,
+     * since e.g. on Sun CPU architectures, 64-bit alignment is required even
+     * for a 32-bit JVM. Plus this System property is undocumented, although
+     * it's also available on JRockit.
      */
     public static final int TUPLE_ALIGN_JVM =
-        "64".equals(System.getProperty("sun.arch.data.model"))
-        ? TUPLE_ALIGN8
+        "64".equals(System.getProperty("sun.arch.data.model")) ? TUPLE_ALIGN8
         : TUPLE_ALIGN4;
 
     //~ Instance fields --------------------------------------------------------
@@ -342,7 +337,8 @@ public final class FennelTupleAccessor
             FennelTupleAttributeDescriptor attr = tuple.getAttr(iAttr);
 
             int fixedSize = attr.typeDescriptor.getFixedByteCount();
-            int minSize = attr.typeDescriptor.getMinByteCount(
+            int minSize =
+                attr.typeDescriptor.getMinByteCount(
                     attr.storageSize);
 
             if (fixedSize > 0) {

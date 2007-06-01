@@ -45,7 +45,6 @@ public class BufferedIterator
         Iterable,
         Enumeration
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Clonerator clonerator;

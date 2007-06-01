@@ -27,11 +27,11 @@ import java.util.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import org.jgrapht.*;
-import org.jgrapht.traverse.*;
-
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
+
+import org.jgrapht.*;
+import org.jgrapht.traverse.*;
 
 import org.netbeans.api.mdr.*;
 
@@ -45,7 +45,6 @@ import org.netbeans.api.mdr.*;
  */
 public class LurqlReflectiveExecutor
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final RefObject [] EMPTY_REFOBJ_ARRAY = new RefObject[0];
@@ -62,7 +61,7 @@ public class LurqlReflectiveExecutor
 
     private Map<LurqlPlanVertex, Set<RefObject>> vertexToStashMap;
 
-    private Map<LurqlFilter,Set<Object>> filterMap;
+    private Map<LurqlFilter, Set<Object>> filterMap;
 
     private Map<String, ?> args;
 
@@ -83,7 +82,7 @@ public class LurqlReflectiveExecutor
         MDRepository repos,
         LurqlPlan plan,
         Connection sqlConnection,
-        Map<String,?> args)
+        Map<String, ?> args)
     {
         this.repos = repos;
         this.plan = plan;
@@ -122,10 +121,8 @@ public class LurqlReflectiveExecutor
         DirectedGraph<LurqlPlanVertex, LurqlPlanEdge> graph)
         throws JmiQueryException
     {
-        Iterator<LurqlPlanVertex> vertexIter = 
-            new TopologicalOrderIterator<
-                LurqlPlanVertex,
-                LurqlPlanEdge>(graph);
+        Iterator<LurqlPlanVertex> vertexIter =
+            new TopologicalOrderIterator<LurqlPlanVertex, LurqlPlanEdge>(graph);
         while (vertexIter.hasNext()) {
             LurqlPlanVertex planVertex = vertexIter.next();
             Set<RefObject> result = getResultSet(planVertex);
@@ -157,10 +154,8 @@ public class LurqlReflectiveExecutor
         // materialize execution order
         List<LurqlPlanVertex> vertexList =
             Util.toList(
-                new TopologicalOrderIterator<
-                    LurqlPlanVertex,
-                    LurqlPlanEdge>(
-                        rootVertex.getRecursionSubgraph()));
+                new TopologicalOrderIterator<LurqlPlanVertex, LurqlPlanEdge>(
+                    rootVertex.getRecursionSubgraph()));
 
         Set<RefObject> recursionResult = getResultSet(rootVertex);
         Set stashResult = getResultSet(vertexToStashMap, rootVertex);
@@ -265,9 +260,8 @@ public class LurqlReflectiveExecutor
 
     private LurqlFilter [] getFilters(LurqlPlanVertex planVertex)
     {
-        return
-            (LurqlFilter []) planVertex.getFilters().toArray(
-                LurqlFilter.EMPTY_ARRAY);
+        return (LurqlFilter []) planVertex.getFilters().toArray(
+            LurqlFilter.EMPTY_ARRAY);
     }
 
     private LurqlPlanExistsEdge [] getExistsEdges(
@@ -281,9 +275,8 @@ public class LurqlReflectiveExecutor
             }
             list.add(obj);
         }
-        return
-            (LurqlPlanExistsEdge []) list.toArray(
-                LurqlPlanExistsEdge.EMPTY_ARRAY);
+        return (LurqlPlanExistsEdge []) list.toArray(
+            LurqlPlanExistsEdge.EMPTY_ARRAY);
     }
 
     private void executeOutgoingEdges(
@@ -298,8 +291,7 @@ public class LurqlReflectiveExecutor
         RefObject [] objArray =
             (RefObject []) input.toArray(EMPTY_REFOBJ_ARRAY);
 
-        for (LurqlPlanEdge edgeObj : graph.outgoingEdgesOf(planVertex))
-        {
+        for (LurqlPlanEdge edgeObj : graph.outgoingEdgesOf(planVertex)) {
             if (!(edgeObj instanceof LurqlPlanFollowEdge)) {
                 // dummy edge for exists
                 continue;
@@ -343,8 +335,10 @@ public class LurqlReflectiveExecutor
         JmiClassVertex typeFilter)
         throws JmiQueryException
     {
-        if ((filters.length == 0) && (existsEdges.length == 0)
-            && (typeFilter == null)) {
+        if ((filters.length == 0)
+            && (existsEdges.length == 0)
+            && (typeFilter == null))
+        {
             output.addAll(input);
             return;
         }
@@ -356,7 +350,8 @@ outer:
             if (typeFilter != null) {
                 if (!refObj.refIsInstanceOf(
                         typeFilter.getMofClass(),
-                        true)) {
+                        true))
+                {
                     continue outer;
                 }
             }
@@ -379,10 +374,11 @@ outer:
                 Set filterValues = getFilterValues(filters[i]);
                 boolean negated = filters[i].isNegated();
                 if (filters[i].isPattern()) {
-                    assert(filterValues.size() == 1);
-                    boolean match = filters[i].patternMatch(
-                        (String) filterValues.iterator().next(),
-                        (String) value);
+                    assert (filterValues.size() == 1);
+                    boolean match =
+                        filters[i].patternMatch(
+                            (String) filterValues.iterator().next(),
+                            (String) value);
                     if (match == negated) {
                         continue outer;
                     }

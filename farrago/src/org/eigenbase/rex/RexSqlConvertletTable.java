@@ -29,7 +29,6 @@ package org.eigenbase.rex;
  */
 public interface RexSqlConvertletTable
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

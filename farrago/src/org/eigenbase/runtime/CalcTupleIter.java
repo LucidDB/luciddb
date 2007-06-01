@@ -31,7 +31,6 @@ import org.eigenbase.util.*;
 public abstract class CalcTupleIter
     implements TupleIter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected TupleIter inputIterator;

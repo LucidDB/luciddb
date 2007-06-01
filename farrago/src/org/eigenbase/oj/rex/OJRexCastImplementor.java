@@ -40,7 +40,6 @@ import org.eigenbase.rex.*;
 public class OJRexCastImplementor
     implements OJRexImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public Expression implement(
@@ -49,7 +48,8 @@ public class OJRexCastImplementor
         Expression [] operands)
     {
         OJTypeFactory typeFactory = (OJTypeFactory) translator.getTypeFactory();
-        OJClass type = typeFactory.toOJClass(
+        OJClass type =
+            typeFactory.toOJClass(
                 null,
                 call.getType());
         return new CastExpression(type, operands[0]);

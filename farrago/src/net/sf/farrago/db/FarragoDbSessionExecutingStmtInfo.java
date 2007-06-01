@@ -37,7 +37,6 @@ import net.sf.farrago.session.*;
 public class FarragoDbSessionExecutingStmtInfo
     implements FarragoSessionExecutingStmtInfo
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private long id;

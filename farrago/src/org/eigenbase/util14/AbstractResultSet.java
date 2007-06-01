@@ -25,14 +25,14 @@ package org.eigenbase.util14;
 import java.math.*;
 
 import java.sql.*;
+
 import java.util.TimeZone;
 
 
 /**
  * <code>AbstractResultSet</code> provides a abstract implementation for a
- * TYPE_FORWARD_ONLY, CONCUR_READ_ONLY ResultSet.
- *
- * This class is JDK 1.4 compatible.
+ * TYPE_FORWARD_ONLY, CONCUR_READ_ONLY ResultSet. This class is JDK 1.4
+ * compatible.
  *
  * @author angel
  * @version $Id$
@@ -41,7 +41,6 @@ import java.util.TimeZone;
 abstract public class AbstractResultSet
     implements ResultSet
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static final TimeZone gmtZone = DateTimeUtil.gmtZone;
@@ -486,8 +485,8 @@ abstract public class AbstractResultSet
     {
         // THIS IS DEPRECATED in the current JDBC spec (use of 'scale')
         return getBigDecimal(
-                findColumn(columnName),
-                scale);
+            findColumn(columnName),
+            scale);
     }
 
     /**
@@ -544,8 +543,8 @@ abstract public class AbstractResultSet
         throws SQLException
     {
         return getDate(
-                findColumn(columnName),
-                cal);
+            findColumn(columnName),
+            cal);
     }
 
     /**
@@ -586,7 +585,7 @@ abstract public class AbstractResultSet
     public Time getTime(int columnIndex, java.util.Calendar cal)
         throws SQLException
     {
-            return toTime(getRaw(columnIndex), cal.getTimeZone());
+        return toTime(getRaw(columnIndex), cal.getTimeZone());
     }
 
     /**
@@ -602,8 +601,8 @@ abstract public class AbstractResultSet
         throws SQLException
     {
         return getTime(
-                findColumn(columnName),
-                cal);
+            findColumn(columnName),
+            cal);
     }
 
     public java.sql.Timestamp getTimestamp(int columnIndex)
@@ -659,8 +658,8 @@ abstract public class AbstractResultSet
         throws SQLException
     {
         return getTimestamp(
-                findColumn(columnName),
-                cal);
+            findColumn(columnName),
+            cal);
     }
 
     /**
@@ -896,8 +895,8 @@ abstract public class AbstractResultSet
         throws SQLException
     {
         return getObject(
-                findColumn(columnName),
-                map);
+            findColumn(columnName),
+            map);
     }
 
     /**
@@ -1337,7 +1336,8 @@ abstract public class AbstractResultSet
             x);
     }
 
-    public void updateAsciiStream(int columnIndex,
+    public void updateAsciiStream(
+        int columnIndex,
         java.io.InputStream x,
         int length)
         throws SQLException
@@ -1345,7 +1345,8 @@ abstract public class AbstractResultSet
         throw newUpdatabilityError();
     }
 
-    public void updateAsciiStream(String columnName,
+    public void updateAsciiStream(
+        String columnName,
         java.io.InputStream x,
         int length)
         throws SQLException
@@ -1356,7 +1357,8 @@ abstract public class AbstractResultSet
             length);
     }
 
-    public void updateBinaryStream(int columnIndex,
+    public void updateBinaryStream(
+        int columnIndex,
         java.io.InputStream x,
         int length)
         throws SQLException
@@ -1364,7 +1366,8 @@ abstract public class AbstractResultSet
         throw newUpdatabilityError();
     }
 
-    public void updateBinaryStream(String columnName,
+    public void updateBinaryStream(
+        String columnName,
         java.io.InputStream x,
         int length)
         throws SQLException
@@ -1375,7 +1378,8 @@ abstract public class AbstractResultSet
             length);
     }
 
-    public void updateCharacterStream(int columnIndex,
+    public void updateCharacterStream(
+        int columnIndex,
         java.io.Reader x,
         int length)
         throws SQLException
@@ -1383,7 +1387,8 @@ abstract public class AbstractResultSet
         throw newUpdatabilityError();
     }
 
-    public void updateCharacterStream(String columnName,
+    public void updateCharacterStream(
+        String columnName,
         java.io.Reader x,
         int length)
         throws SQLException
@@ -1617,20 +1622,18 @@ abstract public class AbstractResultSet
         Object o,
         String className)
     {
-        return
-            new SQLException(
-                "cannot convert " + o.getClass() + "(" + o
-                + ") to " + className);
+        return new SQLException(
+            "cannot convert " + o.getClass() + "(" + o
+            + ") to " + className);
     }
 
     protected SQLException newConversionError(
         Object o,
         Class clazz)
     {
-        return
-            new SQLException(
-                "cannot convert " + o.getClass() + "(" + o
-                + ") to " + clazz);
+        return new SQLException(
+            "cannot convert " + o.getClass() + "(" + o
+            + ") to " + clazz);
     }
 
     protected SQLException newDirectionError()
@@ -1690,13 +1693,11 @@ abstract public class AbstractResultSet
                 return false;
             } else {
                 // Try numeric
-                return
-                    (toDouble(o) != 0);
+                return (toDouble(o) != 0);
                     //throw newConversionError(o,boolean.class);
             }
         } else {
-            return
-                (toDouble(o) != 0);
+            return (toDouble(o) != 0);
                 //throw newConversionError(o,boolean.class);
         }
     }
@@ -1729,7 +1730,7 @@ abstract public class AbstractResultSet
         if (zone == null) {
             zone = defaultZone;
         }
-        if (o instanceof ZonelessDate || o instanceof ZonelessTimestamp) {
+        if ((o instanceof ZonelessDate) || (o instanceof ZonelessTimestamp)) {
             ZonelessDatetime zd = (ZonelessDatetime) o;
             return new Date(zd.getJdbcDate(zone));
         } else if (o instanceof String) {
@@ -1812,11 +1813,11 @@ abstract public class AbstractResultSet
         } else if (o instanceof Double) {
             // For JDK 1.4 compatibility
             return new BigDecimal(((Double) o).doubleValue());
-            // return BigDecimal.valueOf(((Double) o).doubleValue());
+                // return BigDecimal.valueOf(((Double) o).doubleValue());
         } else if (o instanceof Float) {
             // For JDK 1.4 compatibility
             return new BigDecimal(((Float) o).doubleValue());
-            // return BigDecimal.valueOf(((Float) o).doubleValue());
+                // return BigDecimal.valueOf(((Float) o).doubleValue());
         } else if (o instanceof String) {
             return new BigDecimal(((String) o).trim());
         } else {
@@ -1948,7 +1949,7 @@ abstract public class AbstractResultSet
         if (zone == null) {
             zone = defaultZone;
         }
-        if (o instanceof ZonelessTime || o instanceof ZonelessTimestamp) {
+        if ((o instanceof ZonelessTime) || (o instanceof ZonelessTimestamp)) {
             ZonelessDatetime zd = (ZonelessDatetime) o;
             return new Time(zd.getJdbcTime(zone));
         } else if (o instanceof String) {
@@ -1978,6 +1979,7 @@ abstract public class AbstractResultSet
         if (zone == null) {
             zone = defaultZone;
         }
+
         // Note that dates returned as Jdbc objects already use the
         // apropriate conventions
         if (o instanceof ZonelessDatetime) {

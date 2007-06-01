@@ -48,7 +48,6 @@ public abstract class FennelMultipleRel
     extends AbstractRelNode
     implements FennelRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected RelNode [] inputs;
@@ -111,15 +110,14 @@ public abstract class FennelMultipleRel
 
         FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
 
-        return
-            new MethodCall(
-                stmt.getConnectionVariable(),
-                "dummyArray",
-                new ExpressionList(
-                    new ArrayAllocationExpression(
-                        OJClass.forClass(Object.class),
-                        new ExpressionList(null),
-                        new ArrayInitializer(expressionList))));
+        return new MethodCall(
+            stmt.getConnectionVariable(),
+            "dummyArray",
+            new ExpressionList(
+                new ArrayAllocationExpression(
+                    OJClass.forClass(Object.class),
+                    new ExpressionList(null),
+                    new ArrayInitializer(expressionList))));
     }
 
     // implement RelNode

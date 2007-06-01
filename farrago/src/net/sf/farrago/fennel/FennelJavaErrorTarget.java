@@ -24,32 +24,32 @@ package net.sf.farrago.fennel;
 
 import java.nio.*;
 
+
 /**
- * FennelJavaErrorTarget represents a class of java objects that can 
- * handle row errors arising from Fennel streams.
+ * FennelJavaErrorTarget represents a class of java objects that can handle row
+ * errors arising from Fennel streams.
  *
  * @author John Pham
  * @version $Id$
  */
 public interface FennelJavaErrorTarget
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
      * Handles a Fennel row exception
-     * 
+     *
      * @param source the unique Fennel stream name
      * @param isWarning true if the exception is only a warning
      * @param msg the exception string
-     * @param byteBuffer the Fennel format byte buffer containing an error 
-     *   record for the row that failed. The error record must conform to 
-     *   the row type specified for the source with 
-     *   {@link net.sf.farrago.query.FennelRelImplementor#setErrorRecordType}
-     * @param index position of the column whose processing caused the 
-     *   exception to occur. -1 indicates that no column was culpable. 
-     *   0 indicates that a filter condition was being processed. Otherwise 
-     *   this parameter should be a 1-indexed column position.
+     * @param byteBuffer the Fennel format byte buffer containing an error
+     * record for the row that failed. The error record must conform to the row
+     * type specified for the source with {@link
+     * net.sf.farrago.query.FennelRelImplementor#setErrorRecordType}
+     * @param index position of the column whose processing caused the exception
+     * to occur. -1 indicates that no column was culpable. 0 indicates that a
+     * filter condition was being processed. Otherwise this parameter should be
+     * a 1-indexed column position.
      */
     public Object handleRowError(
         String source,

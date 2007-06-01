@@ -23,18 +23,18 @@ package net.sf.farrago.test;
 
 import java.util.*;
 
-import junit.framework.*;
-
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.fem.sql2003.*;
-
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
+import junit.framework.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.core.VisibilityKindEnum;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.fem.sql2003.*;
+
 
 /**
  * FarragoRepositoryTest contains unit tests for the repository.
@@ -45,7 +45,6 @@ import net.sf.farrago.cwm.core.VisibilityKindEnum;
 public class FarragoRepositoryTest
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -103,17 +102,16 @@ public class FarragoRepositoryTest
     {
         // Verify an existing object
         CwmCatalog catalog = repos.getSelfAsCatalog();
-        CwmSchema schema = (CwmSchema)
-            FarragoCatalogUtil.getModelElementByName(
+        CwmSchema schema =
+            (CwmSchema) FarragoCatalogUtil.getModelElementByName(
                 catalog.getOwnedElement(),
                 "SALES");
-        CwmTable tbl = (CwmTable)
-            FarragoCatalogUtil.getModelElementByName(
+        CwmTable tbl =
+            (CwmTable) FarragoCatalogUtil.getModelElementByName(
                 schema.getOwnedElement(),
                 "DEPTS");
-        
-        List<FarragoReposIntegrityErr> errs =
-            repos.verifyIntegrity(tbl);
+
+        List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(tbl);
         assertEquals(0, errs.size());
     }
 
@@ -122,7 +120,7 @@ public class FarragoRepositoryTest
         FarragoReposTxnContext txn = repos.newTxnContext();
         try {
             txn.beginWriteTxn();
-            
+
             CwmTable tbl = repos.newCwmTable();
             tbl.setName("BOOFAR");
 
@@ -131,7 +129,7 @@ public class FarragoRepositoryTest
             tbl.setTemporary(false);
             tbl.setSystem(false);
             tbl.setAbstract(false);
-        
+
             CwmColumn col = repos.newCwmColumn();
             tbl.getFeature().add(col);
 
@@ -149,8 +147,7 @@ public class FarragoRepositoryTest
             col.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
 
             // Now run verification on table
-            List<FarragoReposIntegrityErr> errs =
-                repos.verifyIntegrity(tbl);
+            List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(tbl);
             assertEquals(1, errs.size());
 
             FarragoReposIntegrityErr err = errs.get(0);

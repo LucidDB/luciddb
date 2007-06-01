@@ -35,7 +35,6 @@ import org.eigenbase.sql.*;
 public class ProcedureNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlValidatorScope scope;

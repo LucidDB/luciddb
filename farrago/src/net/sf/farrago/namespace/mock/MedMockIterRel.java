@@ -46,7 +46,6 @@ class MedMockIterRel
     implements JavaRel,
         RelStructuredTypeFlattener.SelfFlatteningRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private MedMockColumnSet columnSet;

@@ -34,7 +34,6 @@ import org.eigenbase.rel.metadata.*;
 public class VolcanoRelMetadataProvider
     implements RelMetadataProvider
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement RelMetadataProvider

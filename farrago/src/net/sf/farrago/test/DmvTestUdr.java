@@ -21,35 +21,39 @@
 */
 package net.sf.farrago.test;
 
+import com.lucidera.lurql.*;
+
+import java.io.*;
+
+import java.util.*;
+
+import javax.jmi.model.*;
+import javax.jmi.reflect.*;
+
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
+
 import org.eigenbase.dmv.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.util.*;
-
-import java.io.*;
-import java.util.*;
-
-import javax.jmi.reflect.*;
-import javax.jmi.model.*;
-
-import com.lucidera.lurql.*;
 
 /**
  * DmvTestUdr is a SQL-invocable entry point for package {@link
  * org.eigenbase.dmv}.
  *
- * <p>NOTE: this lives here rather than under org.eigenbase because it
- * currently depends on MDR for a JMI implementation.
+ * <p>NOTE: this lives here rather than under org.eigenbase because it currently
+ * depends on MDR for a JMI implementation.
  *
  * @author John Sichi
  * @version $Id$
  */
 public abstract class DmvTestUdr
 {
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Executes a visualization transform via a procedure called from SQL,
      * producing a .dot file which can be used as input to Graphviz.
@@ -57,8 +61,8 @@ public abstract class DmvTestUdr
      * @param foreignServerName name of predefined foreign server to use as
      * source; must be defined using the MDR foreign data wrapper
      * @param lurqlFilename name of file containing LURQL to execute
-     * @param transformationFilename name of file containing rules
-     * for transforming LURQL results into visualization input
+     * @param transformationFilename name of file containing rules for
+     * transforming LURQL results into visualization input
      * @param dotFilename name of .dot file to create
      */
     public static void renderGraphviz(
@@ -107,14 +111,16 @@ public abstract class DmvTestUdr
                 queryProcessor.prepare(
                     context.getModelView(),
                     lurql);
+
             // TODO jvs 11-June-2006:  Configure loopback connection
             Collection<RefObject> searchResult = query.execute(null, null);
             JmiDependencyMappedTransform transform =
                 new JmiDependencyMappedTransform(
                     context.getModelView(),
                     false);
-            DmvTransformXmlReader xmlReader = new DmvTransformXmlReader(
-                context.getModelGraph());
+            DmvTransformXmlReader xmlReader =
+                new DmvTransformXmlReader(
+                    context.getModelGraph());
             xmlReader.readTransformationRules(
                 transformationFilename,
                 transform);

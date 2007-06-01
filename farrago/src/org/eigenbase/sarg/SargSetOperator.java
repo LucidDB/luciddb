@@ -28,7 +28,8 @@ package org.eigenbase.sarg;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum SargSetOperator {
+public enum SargSetOperator
+{
     /**
      * Set intersection over any number of children
      * (no children => universal set).

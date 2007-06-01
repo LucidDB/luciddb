@@ -39,10 +39,10 @@ import org.eigenbase.util.*;
  */
 public class FarragoSequenceOptions
 {
-
     //~ Enums ------------------------------------------------------------------
 
-    private enum OptionType {
+    private enum OptionType
+    {
         START, INCREMENT, MINVALUE, MAXVALUE, CYCLE;
     }
 
@@ -268,7 +268,8 @@ public class FarragoSequenceOptions
                 name);
         }
         if (min > max) {
-            throw FarragoResource.instance().ValidatorInvalidSequenceMin.ex(min,
+            throw FarragoResource.instance().ValidatorInvalidSequenceMin.ex(
+                min,
                 max);
         }
         if ((min > start) || (start > max)) {

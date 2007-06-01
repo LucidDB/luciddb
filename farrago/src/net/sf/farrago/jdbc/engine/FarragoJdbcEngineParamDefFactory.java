@@ -40,7 +40,6 @@ import org.eigenbase.reltype.*;
 public class FarragoJdbcEngineParamDefFactory
     implements FarragoSessionStmtParamDefFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // Implement FarragoSessionStmtParamDefFactory
@@ -54,7 +53,8 @@ public class FarragoJdbcEngineParamDefFactory
                 ParameterMetaData.parameterModeIn);
 
         FarragoJdbcParamDef param =
-            FarragoJdbcParamDefFactory.newParamDef(paramName,
+            FarragoJdbcParamDefFactory.newParamDef(
+                paramName,
                 paramMetaData,
                 false);
         return new FarragoJdbcEngineParamDef(param, type);

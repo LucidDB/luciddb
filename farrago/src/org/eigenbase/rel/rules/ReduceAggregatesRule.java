@@ -41,7 +41,6 @@ import org.eigenbase.sql.fun.*;
 public class ReduceAggregatesRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -175,7 +174,8 @@ public class ReduceAggregatesRule
                 nGroups,
                 newCalls);
 
-        RelNode projectRel = CalcRel.createProject(
+        RelNode projectRel =
+            CalcRel.createProject(
                 newAggRel,
                 projList,
                 null);

@@ -40,7 +40,6 @@ import org.eigenbase.rex.*;
 public final class WindowedAggregateRel
     extends SingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     public final RexProgram program;
@@ -118,13 +117,12 @@ public final class WindowedAggregateRel
 
     public WindowedAggregateRel clone()
     {
-        return
-            new WindowedAggregateRel(
-                getCluster(),
-                traits,
-                getChild(),
-                program,
-                rowType);
+        return new WindowedAggregateRel(
+            getCluster(),
+            traits,
+            getChild(),
+            program,
+            rowType);
     }
 }
 

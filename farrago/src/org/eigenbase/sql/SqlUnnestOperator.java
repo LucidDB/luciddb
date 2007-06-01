@@ -34,7 +34,6 @@ import org.eigenbase.sql.type.*;
 public class SqlUnnestOperator
     extends SqlFunctionalOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlUnnestOperator()

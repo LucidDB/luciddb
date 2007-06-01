@@ -35,7 +35,6 @@ import org.eigenbase.util.*;
 public class MultisetSqlType
     extends AbstractSqlType
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private RelDataType elementType;

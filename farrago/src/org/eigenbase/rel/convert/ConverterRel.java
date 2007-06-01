@@ -43,7 +43,6 @@ import org.eigenbase.util.*;
 public abstract class ConverterRel
     extends SingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected RelTraitSet inTraits;
@@ -81,10 +80,9 @@ public abstract class ConverterRel
 
     protected Error cannotImplement()
     {
-        return
-            Util.newInternal(
-                getClass() + " cannot convert from "
-                + inTraits + " traits");
+        return Util.newInternal(
+            getClass() + " cannot convert from "
+            + inTraits + " traits");
     }
 
     public boolean isDistinct()
@@ -94,9 +92,8 @@ public abstract class ConverterRel
 
     protected CallingConvention getInputConvention()
     {
-        return
-            (CallingConvention) inTraits.getTrait(
-                CallingConventionTraitDef.instance);
+        return (CallingConvention) inTraits.getTrait(
+            CallingConventionTraitDef.instance);
     }
 
     public RelTraitSet getInputTraits()

@@ -42,7 +42,6 @@ import org.eigenbase.sql.*;
 class EmptyScope
     implements SqlValidatorScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final SqlValidatorImpl validator;
@@ -71,7 +70,8 @@ class EmptyScope
         throw new UnsupportedOperationException();
     }
 
-    public SqlValidatorNamespace resolve(String name,
+    public SqlValidatorNamespace resolve(
+        String name,
         SqlValidatorScope [] ancestorOut,
         int [] offsetOut)
     {
@@ -126,8 +126,7 @@ class EmptyScope
 
     public boolean isMonotonic(SqlNode expr)
     {
-        return
-            (expr instanceof SqlLiteral) || (expr instanceof SqlDynamicParam)
+        return (expr instanceof SqlLiteral) || (expr instanceof SqlDynamicParam)
             || (expr instanceof SqlDataTypeSpec);
     }
 

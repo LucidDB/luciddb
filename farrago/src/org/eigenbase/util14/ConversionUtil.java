@@ -23,9 +23,8 @@
 package org.eigenbase.util14;
 
 import java.sql.*;
+
 import java.text.*;
-import java.util.Calendar;
-import java.util.TimeZone;
 
 import org.eigenbase.resource.*;
 
@@ -39,7 +38,6 @@ import org.eigenbase.resource.*;
  */
 public class ConversionUtil
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -81,10 +79,12 @@ public class ConversionUtil
 
         byte [] ret = new byte[value.length() / 2];
         for (int i = 0; i < ret.length; i++) {
-            int digit1 = Character.digit(
+            int digit1 =
+                Character.digit(
                     value.charAt(i * 2),
                     radix);
-            int digit2 = Character.digit(
+            int digit2 =
+                Character.digit(
                     value.charAt((i * 2) + 1),
                     radix);
             assert ((digit1 != -1) && (digit2 != -1)) : "String could not be converted to byte array";

@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
  */
 public abstract class RelOptRule
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -85,9 +84,10 @@ public abstract class RelOptRule
      * order.
      *
      * @param rootOperand Root operand
+     *
      * @return Flattened list of operands
      */
-    private RelOptRuleOperand[] flattenOperands(
+    private RelOptRuleOperand [] flattenOperands(
         RelOptRuleOperand rootOperand)
     {
         List<RelOptRuleOperand> operandList =
@@ -128,9 +128,8 @@ public abstract class RelOptRule
     }
 
     /**
-     * Builds each operand's solve-order.  Start with itself, then its
-     * parent, up to the root, then the remaining operands in prefix
-     * order.
+     * Builds each operand's solve-order. Start with itself, then its parent, up
+     * to the root, then the remaining operands in prefix order.
      */
     private void assignSolveOrder()
     {
@@ -188,7 +187,7 @@ public abstract class RelOptRule
 
     public boolean equals(Object obj)
     {
-        return obj instanceof RelOptRule
+        return (obj instanceof RelOptRule)
             && equals((RelOptRule) obj);
     }
 
@@ -202,8 +201,7 @@ public abstract class RelOptRule
     {
         // Include operands and class in the equality criteria just in case
         // they have chosen a poor description.
-        return
-            this.description.equals(that.description)
+        return this.description.equals(that.description)
             && (this.getClass() == that.getClass())
             && this.operand.equals(that.operand);
     }

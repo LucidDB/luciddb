@@ -35,7 +35,6 @@ import org.eigenbase.relopt.*;
 class VolcanoRuleMatch
     extends VolcanoRuleCall
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelSet targetSet;
@@ -43,7 +42,7 @@ class VolcanoRuleMatch
     private String digest;
     private final VolcanoPlanner volcanoPlanner;
     private double cachedImportance = Double.NaN;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -84,16 +83,16 @@ class VolcanoRuleMatch
     {
         cachedImportance = Double.NaN;
     }
-    
+
     double getImportance()
     {
         if (Double.isNaN(cachedImportance)) {
             cachedImportance = computeImportance();
         }
-        
+
         return cachedImportance;
     }
-    
+
     double computeImportance()
     {
         assert rels[0] != null;
@@ -116,7 +115,8 @@ class VolcanoRuleMatch
 
     private String computeDigest()
     {
-        StringBuilder buf = new StringBuilder("rule [" + getRule() + "] rels [");
+        StringBuilder buf =
+            new StringBuilder("rule [" + getRule() + "] rels [");
         for (int i = 0; i < rels.length; i++) {
             if (i > 0) {
                 buf.append(", ");
@@ -128,8 +128,8 @@ class VolcanoRuleMatch
     }
 
     /**
-     * Recomputes the digest of this VolcanoRuleMatch. It is necessary when
-     * sets have merged since the match was created.
+     * Recomputes the digest of this VolcanoRuleMatch. It is necessary when sets
+     * have merged since the match was created.
      */
     public void recomputeDigest()
     {

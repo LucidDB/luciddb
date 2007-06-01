@@ -38,7 +38,6 @@ import org.eigenbase.rel.*;
  */
 public interface RelMetadataProvider
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

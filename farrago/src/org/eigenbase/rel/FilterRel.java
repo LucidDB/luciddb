@@ -34,13 +34,12 @@ import org.eigenbase.rex.*;
 public final class FilterRel
     extends FilterRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a filter.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param child input relational expression
      * @param condition boolean expression which determines whether a row is

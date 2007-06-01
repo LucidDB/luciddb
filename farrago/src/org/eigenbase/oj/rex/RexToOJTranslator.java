@@ -23,10 +23,13 @@
 package org.eigenbase.oj.rex;
 
 import java.math.*;
+
 import java.nio.*;
+
 import java.util.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
@@ -34,9 +37,9 @@ import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.util.*;
 
 
@@ -49,7 +52,6 @@ import org.eigenbase.util.*;
 public class RexToOJTranslator
     implements RexVisitor<Expression>
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final JavaRelImplementor implementor;
@@ -73,10 +75,9 @@ public class RexToOJTranslator
     private RexProgram program;
 
     /**
-     * Statement lists being built up for ROW or CASE expression.
-     * For CASE expressions, each WHEN, THEN or ELSE has one
-     * statementList.  For ROW expressions, each value in a row
-     * has one statementList.
+     * Statement lists being built up for ROW or CASE expression. For CASE
+     * expressions, each WHEN, THEN or ELSE has one statementList. For ROW
+     * expressions, each value in a row has one statementList.
      */
     private StatementList [] stmtLists;
 
@@ -110,8 +111,8 @@ public class RexToOJTranslator
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Returns the StatementList corresponding to a subexpression
-     * of a CASE or ROW expression.
+     * Returns the StatementList corresponding to a subexpression of a CASE or
+     * ROW expression.
      */
     public StatementList getSubStmtList(int i)
     {
@@ -197,8 +198,8 @@ public class RexToOJTranslator
      *
      * @param localRef reference to test
      *
-     * @return true if an input reference; false if a reference
-     * to a common subexpression
+     * @return true if an input reference; false if a reference to a common
+     * subexpression
      */
     protected boolean isInputRef(RexLocalRef localRef)
     {
@@ -330,6 +331,7 @@ public class RexToOJTranslator
         RexNode [] operands = call.getOperands();
         Expression [] exprs = new Expression[operands.length];
         StatementList [] savedStmtLists = stmtLists;
+
         // TODO jvs 16-Oct-2006:  make this properly extensible
         boolean needSub =
             (call.getOperator() instanceof SqlCaseOperator)
@@ -424,13 +426,12 @@ public class RexToOJTranslator
             final String javaFieldName = Util.toJavaId(fieldName, i);
             args.add(new FieldAccess(inputExpr, javaFieldName));
         }
-        return
-            setTranslation(
-                new AllocationExpression(
-                    OJUtil.typeToOJClass(
-                        rangeType,
-                        getTypeFactory()),
-                    args));
+        return setTranslation(
+            new AllocationExpression(
+                OJUtil.typeToOJClass(
+                    rangeType,
+                    getTypeFactory()),
+                args));
     }
 
     // implement RexVisitor
@@ -440,11 +441,10 @@ public class RexToOJTranslator
             Util.toJavaId(
                 fieldAccess.getName(),
                 fieldAccess.getField().getIndex());
-        return
-            setTranslation(
-                new FieldAccess(
-                    translateRexNode(fieldAccess.getReferenceExpr()),
-                    javaFieldName));
+        return setTranslation(
+            new FieldAccess(
+                translateRexNode(fieldAccess.getReferenceExpr()),
+                javaFieldName));
     }
 
     /**
@@ -500,11 +500,10 @@ public class RexToOJTranslator
 
     protected Expression convertByteArrayLiteral(byte [] bytes)
     {
-        return
-            new ArrayAllocationExpression(
-                TypeName.forOJClass(OJSystem.BYTE),
-                new ExpressionList(null),
-                convertByteArrayLiteralToInitializer(bytes));
+        return new ArrayAllocationExpression(
+            TypeName.forOJClass(OJSystem.BYTE),
+            new ExpressionList(null),
+            convertByteArrayLiteralToInitializer(bytes));
     }
 
     public boolean canConvertCall(RexCall call)
@@ -536,8 +535,11 @@ public class RexToOJTranslator
     {
         assert fieldIndex >= 0;
         final RelNode [] inputs = rel.getInputs();
-        for (int inputIndex = 0, firstFieldIndex = 0;
-            inputIndex < inputs.length; inputIndex++) {
+        for (
+            int inputIndex = 0, firstFieldIndex = 0;
+            inputIndex < inputs.length;
+            inputIndex++)
+        {
             RelNode input = inputs[inputIndex];
 
             // Index of first field in next input. Special case if this
@@ -546,7 +548,8 @@ public class RexToOJTranslator
             final int fieldCount = input.getRowType().getFieldList().size();
             final int lastFieldIndex = firstFieldIndex + fieldCount;
             if ((lastFieldIndex > fieldIndex)
-                || ((fieldCount == 0) && (lastFieldIndex == fieldIndex))) {
+                || ((fieldCount == 0) && (lastFieldIndex == fieldIndex)))
+            {
                 final int fieldIndex2 = fieldIndex - firstFieldIndex;
                 return new WhichInputResult(input, inputIndex, fieldIndex2);
             }
@@ -566,7 +569,8 @@ public class RexToOJTranslator
      * @param lhs target field as OpenJava
      * @param rhs the source expression (as RexNode)
      */
-    public void translateAssignment(RelDataTypeField lhsField,
+    public void translateAssignment(
+        RelDataTypeField lhsField,
         Expression lhs,
         RexNode rhs)
     {

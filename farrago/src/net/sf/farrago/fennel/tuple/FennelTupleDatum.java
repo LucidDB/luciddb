@@ -24,6 +24,7 @@ package net.sf.farrago.fennel.tuple;
 
 import java.io.*;
 
+
 /**
  * A FennelTupleDatum is a component of FennelTupleData; see the fennel tuple <a
  * href="http://fennel.sourceforge.net/doxygen/html/structTupleDesign.html">
@@ -35,9 +36,8 @@ import java.io.*;
  *
  * <p>Internally, this object attempts to bypass object creation during normal
  * use. It does this by wrangling all numeric primitive types into a 64-bit
- * (long) value and all array data into a byte array.
- *
- * This class is JDK 1.4 compatible.
+ * (long) value and all array data into a byte array. This class is JDK 1.4
+ * compatible.
  */
 // NOTE: things incomplete at this time: (11jan05)
 //  - numerics and byte arrays are tracked independently; we should
@@ -49,7 +49,6 @@ import java.io.*;
 //
 public class FennelTupleDatum
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -466,11 +465,11 @@ public class FennelTupleDatum
     {
         rawBytes = str.getBytes();
         setLength(rawBytes.length);
-        rawBytesSet = true;        
+        rawBytesSet = true;
     }
-    
+
     public void setString(String str, String charsetName)
-    throws UnsupportedEncodingException    
+        throws UnsupportedEncodingException
     {
         if (charsetName != null) {
             // Before adding multi-byte support,
@@ -482,7 +481,6 @@ public class FennelTupleDatum
         setLength(rawBytes.length);
         rawBytesSet = true;
     }
-    
 }
 ;
 

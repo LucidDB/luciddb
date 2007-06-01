@@ -29,6 +29,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 
+
 /**
  * FennelBufferRel represents the Fennel implementation of a buffering stream.
  * product.
@@ -40,6 +41,7 @@ class FennelBufferRel
     extends FennelSingleRel
 {
     //~ Instance fields --------------------------------------------------------
+
     boolean inMemory;
     boolean multiPass;
 
@@ -62,7 +64,6 @@ class FennelBufferRel
         super(cluster, child);
         this.inMemory = inMemory;
         this.multiPass = multiPass;
-        
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -84,14 +85,14 @@ class FennelBufferRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double rowCount = RelMetadataQuery.getRowCount(getChild());
+
         // NOTE zfong 9/6/06 - For now, I've arbitrarily set the I/O factor
         // to 1/10 the rowcount, which means that there are 10 rows per
         // page
-        return
-            planner.makeCost(
-                rowCount,
-                rowCount,
-                rowCount / 10);
+        return planner.makeCost(
+            rowCount,
+            rowCount,
+            rowCount / 10);
     }
 
     // implement RelNode

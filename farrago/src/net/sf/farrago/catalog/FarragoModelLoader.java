@@ -50,7 +50,6 @@ import org.netbeans.mdr.persistence.jdbcimpl.*;
  */
 public class FarragoModelLoader
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // NOTE jvs 15-Dec-2005:  Do it this way to avoid dependency on
@@ -153,9 +152,11 @@ public class FarragoModelLoader
         setStorageProperty(JdbcStorageFactory.STORAGE_URL, "jdbc:farrago:");
         setStorageProperty(JdbcStorageFactory.STORAGE_USER_NAME, "MDR");
         setStorageProperty(JdbcStorageFactory.STORAGE_SCHEMA_NAME, "MDR");
-        setStorageProperty(JdbcStorageFactory.STORAGE_DRIVER_CLASS_NAME,
+        setStorageProperty(
+            JdbcStorageFactory.STORAGE_DRIVER_CLASS_NAME,
             "net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver");
-        setStorageProperty(JdbcStorageFactory.STORAGE_DATATYPE_STREAMABLE,
+        setStorageProperty(
+            JdbcStorageFactory.STORAGE_DATATYPE_STREAMABLE,
             "VARBINARY(10000)");
     }
 

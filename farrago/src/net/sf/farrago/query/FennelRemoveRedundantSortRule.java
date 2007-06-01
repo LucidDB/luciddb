@@ -38,7 +38,6 @@ import org.eigenbase.relopt.*;
 public class FennelRemoveRedundantSortRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FennelRemoveRedundantSortRule()

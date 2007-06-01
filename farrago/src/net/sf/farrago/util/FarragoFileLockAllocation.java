@@ -40,7 +40,6 @@ import net.sf.farrago.trace.*;
 public class FarragoFileLockAllocation
     implements FarragoAllocation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

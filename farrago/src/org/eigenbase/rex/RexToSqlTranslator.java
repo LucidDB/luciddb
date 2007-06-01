@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
  */
 public class RexToSqlTranslator
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -51,8 +50,8 @@ public class RexToSqlTranslator
         } else if (expression instanceof RexDynamicParam) {
             RexDynamicParam dynamicParam = (RexDynamicParam) expression;
             return new SqlDynamicParam(
-                    dynamicParam.getIndex(),
-                    null);
+                dynamicParam.getIndex(),
+                null);
         } else /* if (expression instanceof Variable) {
                Variable variable = (Variable) expression; String name =
                 variable.toString(); int ordinal =

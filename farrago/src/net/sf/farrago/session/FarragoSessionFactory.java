@@ -42,7 +42,6 @@ import net.sf.farrago.util.*;
 public interface FarragoSessionFactory
     extends FarragoSessionPersonalityFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -150,8 +149,7 @@ public interface FarragoSessionFactory
      *
      * @param bundleList receives instances of ResourceBundle
      */
-    public void defineResourceBundles(
-        List<ResourceBundle> bundleList);
+    public void defineResourceBundles(List<ResourceBundle> bundleList);
 }
 
 // End FarragoSessionFactory.java

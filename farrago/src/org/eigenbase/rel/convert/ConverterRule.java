@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 public abstract class ConverterRule
     extends RelOptRule
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelTraitSet inTraits;
@@ -185,7 +184,8 @@ public abstract class ConverterRule
             // an n^2 effect.
             if (rel instanceof ConverterRel) {
                 if (((ConverterRule) getRule()).getTraitDef()
-                    == ((ConverterRel) rel).getTraitDef()) {
+                    == ((ConverterRel) rel).getTraitDef())
+                {
                     return false;
                 }
             }

@@ -20,13 +20,13 @@
 */
 package com.lucidera.farrago;
 
-import org.eigenbase.sql.validate.*;
-
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.sql2003.*;
-
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
+
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * LucidDbPreparingStmt refines {@link FarragoPreparingStmt} with
@@ -35,14 +35,19 @@ import net.sf.farrago.session.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class LucidDbPreparingStmt extends FarragoPreparingStmt
+public class LucidDbPreparingStmt
+    extends FarragoPreparingStmt
 {
+    //~ Constructors -----------------------------------------------------------
+
     public LucidDbPreparingStmt(
         FarragoSessionStmtValidator stmtValidator,
         String sql)
     {
         super(stmtValidator, sql);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionPreparingStmt
     public SqlValidator getSqlValidator()

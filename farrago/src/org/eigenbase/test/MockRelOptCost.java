@@ -34,7 +34,6 @@ import org.eigenbase.relopt.*;
 public class MockRelOptCost
     implements RelOptCost
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public double getCpu()

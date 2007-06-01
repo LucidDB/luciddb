@@ -49,7 +49,6 @@ import org.eigenbase.util.*;
  */
 public abstract class SqlUtil
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -87,10 +86,9 @@ public abstract class SqlUtil
         } else {
             list.add(node2);
         }
-        return
-            SqlStdOperatorTable.andOperator.createCall(
-                SqlParserPos.ZERO,
-                list);
+        return SqlStdOperatorTable.andOperator.createCall(
+            SqlParserPos.ZERO,
+            list);
     }
 
     static ArrayList<SqlNode> flatten(SqlNode node)
@@ -196,12 +194,9 @@ public abstract class SqlUtil
      */
     public static boolean isNull(SqlNode node)
     {
-        return
-            isNullLiteral(node, false)
-            || (
-                (node.getKind() == SqlKind.Cast)
-                && isNull(((SqlCall) node).operands[0])
-               );
+        return isNullLiteral(node, false)
+            || ((node.getKind() == SqlKind.Cast)
+                && isNull(((SqlCall) node).operands[0]));
     }
 
     /**
@@ -264,7 +259,8 @@ public abstract class SqlUtil
             SqlFunction function = (SqlFunction) operator;
 
             if (function.getFunctionType()
-                == SqlFunctionCategory.UserDefinedSpecificFunction) {
+                == SqlFunctionCategory.UserDefinedSpecificFunction)
+            {
                 writer.keyword("SPECIFIC");
             }
             SqlIdentifier id = function.getSqlIdentifier();
@@ -305,7 +301,8 @@ public abstract class SqlUtil
         assert operands.length == 2;
         final SqlWriter.Frame frame =
             writer.startList(
-                (binop instanceof SqlSetOperator) ? SqlWriter.FrameTypeEnum.Setop
+                (binop instanceof SqlSetOperator)
+                ? SqlWriter.FrameTypeEnum.Setop
                 : SqlWriter.FrameTypeEnum.Simple);
         operands[0].unparse(
             writer,
@@ -333,13 +330,12 @@ public abstract class SqlUtil
         String databaseProductName,
         String identifierQuoteString)
     {
-        return
-            (DatabaseMetaData) Proxy.newProxyInstance(
-                null,
-                new Class[] { DatabaseMetaData.class },
-                new DatabaseMetaDataInvocationHandler(
-                    databaseProductName,
-                    identifierQuoteString));
+        return (DatabaseMetaData) Proxy.newProxyInstance(
+            null,
+            new Class[] { DatabaseMetaData.class },
+            new DatabaseMetaDataInvocationHandler(
+                databaseProductName,
+                identifierQuoteString));
     }
 
     /**
@@ -505,7 +501,9 @@ public abstract class SqlUtil
             SqlFunction function = (SqlFunction) iter.next();
             SqlOperandCountRange od = function.getOperandCountRange();
             if (!od.isVariadic()
-                && !od.getAllowedList().contains(new Integer(argTypes.length))) {
+                && !od.getAllowedList().contains(
+                    new Integer(argTypes.length)))
+            {
                 iter.remove();
             }
         }
@@ -579,10 +577,9 @@ public abstract class SqlUtil
                     if (paramTypes == null) {
                         c = -1;
                     } else {
-                        c =
-                            precList.compareTypePrecedence(
-                                paramTypes[i],
-                                bestMatch);
+                        c = precList.compareTypePrecedence(
+                            paramTypes[i],
+                            bestMatch);
                     }
                     if (c < 0) {
                         iter.remove();
@@ -620,10 +617,12 @@ public abstract class SqlUtil
             return fields.get(i);
         } else if (query.isA(SqlKind.Values)) {
             SqlCall call = (SqlCall) query;
-            Util.permAssert(call.operands.length > 0,
+            Util.permAssert(
+                call.operands.length > 0,
                 "VALUES must have at least one operand");
             final SqlCall row = (SqlCall) call.operands[0];
-            Util.permAssert(row.operands.length > i,
+            Util.permAssert(
+                row.operands.length > i,
                 "VALUES has too few columns");
             return row.operands[i];
         } else {
@@ -653,13 +652,12 @@ public abstract class SqlUtil
                     // actually a call to a function. Construct a fake
                     // call to this function, so we can use the regular
                     // operator validation.
-                    return
-                        new SqlCall(
-                            operator,
-                            SqlNode.emptyArray,
-                            id.getParserPosition(),
-                            true,
-                            null);
+                    return new SqlCall(
+                        operator,
+                        SqlNode.emptyArray,
+                        id.getParserPosition(),
+                        true,
+                        null);
                 }
             }
         }
@@ -688,9 +686,9 @@ public abstract class SqlUtil
         List<? extends Object> typeList)
     {
         return getAliasedSignature(
-                op,
-                op.getName(),
-                typeList);
+            op,
+            op.getName(),
+            typeList);
     }
 
     /**
@@ -786,8 +784,7 @@ public abstract class SqlUtil
      */
     public static boolean isCallTo(SqlNode node, SqlOperator operator)
     {
-        return
-            (node instanceof SqlCall)
+        return (node instanceof SqlCall)
             && (((SqlCall) node).getOperator() == operator);
     }
 

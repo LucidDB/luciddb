@@ -42,7 +42,6 @@ import org.eigenbase.sql.type.*;
 public class RexTransformerTest
     extends TestCase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     RexBuilder rexBuilder = null;
@@ -63,18 +62,15 @@ public class RexTransformerTest
         rexBuilder = new JavaRexBuilder(typeFactory);
         boolRelDataType = typeFactory.createSqlType(SqlTypeName.BOOLEAN);
 
-        x =
-            new RexInputRef(
-                0,
-                typeFactory.createTypeWithNullability(boolRelDataType, true));
-        y =
-            new RexInputRef(
-                1,
-                typeFactory.createTypeWithNullability(boolRelDataType, true));
-        z =
-            new RexInputRef(
-                2,
-                typeFactory.createTypeWithNullability(boolRelDataType, true));
+        x = new RexInputRef(
+            0,
+            typeFactory.createTypeWithNullability(boolRelDataType, true));
+        y = new RexInputRef(
+            1,
+            typeFactory.createTypeWithNullability(boolRelDataType, true));
+        z = new RexInputRef(
+            2,
+            typeFactory.createTypeWithNullability(boolRelDataType, true));
         trueRex = rexBuilder.makeLiteral(true);
         falseRex = rexBuilder.makeLiteral(false);
     }
@@ -169,7 +165,8 @@ public class RexTransformerTest
                 SqlStdOperatorTable.andOperator,
                 x,
                 y);
-        check(Boolean.FALSE,
+        check(
+            Boolean.FALSE,
             node,
             "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), AND($0, $1))");
     }
@@ -181,7 +178,8 @@ public class RexTransformerTest
                 SqlStdOperatorTable.equalsOperator,
                 x,
                 y);
-        check(Boolean.TRUE,
+        check(
+            Boolean.TRUE,
             node,
             "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), =($0, $1))");
     }
@@ -193,7 +191,8 @@ public class RexTransformerTest
                 SqlStdOperatorTable.notEqualsOperator,
                 x,
                 y);
-        check(Boolean.FALSE,
+        check(
+            Boolean.FALSE,
             node,
             "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), <>($0, $1))");
     }
@@ -205,7 +204,8 @@ public class RexTransformerTest
                 SqlStdOperatorTable.greaterThanOperator,
                 x,
                 y);
-        check(Boolean.TRUE,
+        check(
+            Boolean.TRUE,
             node,
             "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), >($0, $1))");
     }
@@ -217,7 +217,8 @@ public class RexTransformerTest
                 SqlStdOperatorTable.greaterThanOrEqualOperator,
                 x,
                 y);
-        check(Boolean.FALSE,
+        check(
+            Boolean.FALSE,
             node,
             "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), >=($0, $1))");
     }
@@ -229,7 +230,8 @@ public class RexTransformerTest
                 SqlStdOperatorTable.lessThanOperator,
                 x,
                 y);
-        check(Boolean.TRUE,
+        check(
+            Boolean.TRUE,
             node,
             "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), <($0, $1))");
     }
@@ -241,7 +243,8 @@ public class RexTransformerTest
                 SqlStdOperatorTable.lessThanOrEqualOperator,
                 x,
                 y);
-        check(Boolean.FALSE,
+        check(
+            Boolean.FALSE,
             node,
             "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), <=($0, $1))");
     }
@@ -281,7 +284,8 @@ public class RexTransformerTest
                 SqlStdOperatorTable.andOperator,
                 op1,
                 y);
-        check(Boolean.FALSE,
+        check(
+            Boolean.FALSE,
             and,
             "AND(IS NOT NULL($1), AND(AND(IS NOT NULL($0), =($0, true)), $1))");
     }
@@ -304,7 +308,8 @@ public class RexTransformerTest
                 SqlStdOperatorTable.andOperator,
                 op1,
                 op2);
-        check(Boolean.FALSE,
+        check(
+            Boolean.FALSE,
             and,
             "AND(AND(IS NOT NULL($0), <>($0, true)), AND(AND(IS NOT NULL($1), IS NOT NULL($2)), >($1, $2)))");
     }
@@ -327,7 +332,8 @@ public class RexTransformerTest
                 SqlStdOperatorTable.andOperator,
                 op1,
                 op2);
-        check(Boolean.TRUE,
+        check(
+            Boolean.TRUE,
             and,
             "AND(AND(AND(IS NOT NULL($0), IS NOT NULL($1)), =($0, $1)), AND(IS NOT NULL($2), >(false, $2)))");
     }

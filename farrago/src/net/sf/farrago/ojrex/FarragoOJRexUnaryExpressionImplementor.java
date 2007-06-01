@@ -45,7 +45,6 @@ import org.eigenbase.sql.type.*;
 public class FarragoOJRexUnaryExpressionImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int ojUnaryExpressionOrdinal;
@@ -73,7 +72,8 @@ public class FarragoOJRexUnaryExpressionImplementor
 
         for (int i = 0; i < 1; ++i) {
             valueOperands[i] =
-                translator.convertPrimitiveAccess(operands[i],
+                translator.convertPrimitiveAccess(
+                    operands[i],
                     call.operands[i]);
         }
 
@@ -93,7 +93,8 @@ public class FarragoOJRexUnaryExpressionImplementor
         Statement assignmentStmt =
             new ExpressionStatement(
                 new AssignmentExpression(
-                    new FieldAccess(varResult,
+                    new FieldAccess(
+                        varResult,
                         NullablePrimitive.VALUE_FIELD_NAME),
                     AssignmentExpression.EQUALS,
                     implementNotNull(translator, call, valueOperands)));
@@ -128,12 +129,12 @@ public class FarragoOJRexUnaryExpressionImplementor
             new UnaryExpression(operands[0],
                 ojUnaryExpressionOrdinal);
         if ((returnType.getSqlTypeName() != SqlTypeName.BOOLEAN)
-            && (factory.getClassForPrimitive(returnType) != null)) {
+            && (factory.getClassForPrimitive(returnType) != null))
+        {
             // Cast to correct primitive return type so compiler is happy
-            return
-                new CastExpression(
-                    OJClass.forClass(factory.getClassForPrimitive(returnType)),
-                    expr);
+            return new CastExpression(
+                OJClass.forClass(factory.getClassForPrimitive(returnType)),
+                expr);
         } else {
             return expr;
         }

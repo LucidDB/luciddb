@@ -22,23 +22,24 @@
 package net.sf.farrago.session;
 
 import java.sql.*;
+
 import java.util.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.ddl.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.namespace.util.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.resource.EigenbaseResource;
-
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.namespace.util.*;
-import net.sf.farrago.ddl.DdlHandler;
 
 
 /**
@@ -51,7 +52,6 @@ import net.sf.farrago.ddl.DdlHandler;
 public interface FarragoSessionPersonality
     extends FarragoStreamFactoryProvider
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -111,9 +111,8 @@ public interface FarragoSessionPersonality
         FarragoSession session);
 
     /**
-     * Creates a new preparing statement tied to this session and its
-     * underlying database. Used to construct and implement an internal query
-     * plan.
+     * Creates a new preparing statement tied to this session and its underlying
+     * database. Used to construct and implement an internal query plan.
      *
      * @param stmtContext embracing stmt context, if any; otherwise, null.
      * @param stmtValidator generic stmt validator
@@ -125,8 +124,8 @@ public interface FarragoSessionPersonality
         FarragoSessionStmtValidator stmtValidator);
 
     /**
-     * @deprecated Use the two-arg version instead, passing null
-     * for stmtContext.
+     * @deprecated Use the two-arg version instead, passing null for
+     * stmtContext.
      */
     public FarragoSessionPreparingStmt newPreparingStmt(
         FarragoSessionStmtValidator stmtValidator);
@@ -217,18 +216,15 @@ public interface FarragoSessionPersonality
 
     /**
      * Loads variables from the session personality into a session variables
-     * object. Each personality uses on its own variables. This method
-     * allows the personality to declare its variables and set default
-     * values for them. If any variables already have values, then they
-     * will not be overwritten.
+     * object. Each personality uses on its own variables. This method allows
+     * the personality to declare its variables and set default values for them.
+     * If any variables already have values, then they will not be overwritten.
      *
-     * <p>
-     *
-     * This method should be called when initializing a new session or when
+     * <p>This method should be called when initializing a new session or when
      * loading a new session personality for an existing session. This method
      * "leaves a mark", as it has the side effect of permanently updating the
-     * session variables. Even if the session personality is swapped out,
-     * the changes will remain.
+     * session variables. Even if the session personality is swapped out, the
+     * changes will remain.
      *
      * @param variables the session variables object
      */
@@ -236,10 +232,10 @@ public interface FarragoSessionPersonality
         FarragoSessionVariables variables);
 
     /**
-     * Creates a set of session variables for use in a cloned session.
-     * Default implementation is to just return variables.cloneVariables(),
-     * but personalities may override, e.g. to reset some variables
-     * which should never be inherited.
+     * Creates a set of session variables for use in a cloned session. Default
+     * implementation is to just return variables.cloneVariables(), but
+     * personalities may override, e.g. to reset some variables which should
+     * never be inherited.
      *
      * @param variables set of variables to be inherited
      *
@@ -249,13 +245,13 @@ public interface FarragoSessionPersonality
         FarragoSessionVariables variables);
 
     /**
-     * Checks whether a parameter value is appropriate for a session
-     * variable and, if the value is appropriate, sets the session variable.
-     * If an error is encountered, then the method throws an
-     * {@link org.eigenbase.util.EigenbaseException}. Possible errors
-     * include when no session variable has the specified name, when a
-     * non-numeric value was specified for a numeric variable, when a
-     * directory does not exist, or other errors.
+     * Checks whether a parameter value is appropriate for a session variable
+     * and, if the value is appropriate, sets the session variable. If an error
+     * is encountered, then the method throws an {@link
+     * org.eigenbase.util.EigenbaseException}. Possible errors include when no
+     * session variable has the specified name, when a non-numeric value was
+     * specified for a numeric variable, when a directory does not exist, or
+     * other errors.
      *
      * @param ddlValidator a ddl statement validator
      * @param variables a session variables object
@@ -291,8 +287,8 @@ public interface FarragoSessionPersonality
     /**
      * Tests whether a feature is supported in this personality.
      *
-     * @param feature {@link EigenbaseResource} resource definition representing
-     * the feature to be tested
+     * @param feature {@link EigenbaseResource}  resource definition
+     * representing the feature to be tested
      *
      * @return true iff feature is supported
      */
@@ -315,8 +311,8 @@ public interface FarragoSessionPersonality
      *
      * @param resultSet result set returned by DML operation
      * @param rowCounts list of rowcounts returned by the DML operation
-     * @param tableModOp table modification operation that caused the
-     * rowcounts to be modified
+     * @param tableModOp table modification operation that caused the rowcounts
+     * to be modified
      */
     public void getRowCounts(
         ResultSet resultSet,
@@ -326,15 +322,15 @@ public interface FarragoSessionPersonality
 
     /**
      * Gives this personality the opportunity to update rowcount information in
-     * the catalog tables for a specified table as a result of a particular
-     * DML operation.
+     * the catalog tables for a specified table as a result of a particular DML
+     * operation.
      *
      * @param session session that needs to update rowcounts
      * @param tableName fully qualified table name for which rowcounts will be
      * updated
      * @param rowCounts list of row counts returned by the DML statement
-     * @param tableModOp table modification operation that caused the
-     * rowcounts to be modified
+     * @param tableModOp table modification operation that caused the rowcounts
+     * to be modified
      *
      * @return number of rows affected by the DML operation
      */
@@ -353,8 +349,8 @@ public interface FarragoSessionPersonality
     public void resetRowCounts(FemAbstractColumnSet table);
 
     /**
-     * Gives the personality the opportunity to update an index root page
-     * when the index is rebuilt
+     * Gives the personality the opportunity to update an index root page when
+     * the index is rebuilt
      *
      * @param index index whose root is being updated
      * @param wrapperCache cache for looking up data wrappers

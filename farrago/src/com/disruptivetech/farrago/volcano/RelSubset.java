@@ -45,7 +45,6 @@ import org.eigenbase.util.*;
 public class RelSubset
     extends AbstractRelNode
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
@@ -87,12 +86,12 @@ public class RelSubset
      */
     long timestamp;
 
-    /** 
+    /**
      * Flag indicating whether this RelSubset's importance was artificially
      * boosted.
      */
     boolean boosted;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     RelSubset(
@@ -199,7 +198,7 @@ public class RelSubset
     Collection<RelSubset> getParentSubsets()
     {
         List<RelSubset> list = new ArrayList<RelSubset>(parents.size());
-                
+
         for (RelNode rel : parents) {
             final RelSubset subset =
                 ((VolcanoPlanner) getCluster().getPlanner()).getSubset(rel);
@@ -294,7 +293,7 @@ public class RelSubset
                     "Subset cost improved: subset [" + this
                     + "] cost was " + bestCost + " now " + cost);
             }
-            
+
             bestCost = cost;
             best = rel;
 
@@ -312,17 +311,17 @@ public class RelSubset
     public void propagateBoostRemoval(VolcanoPlanner planner)
     {
         planner.ruleQueue.recompute(this);
-        
+
         if (boosted) {
             boosted = false;
 
-            for(RelNode parent: parents) {
+            for (RelNode parent : parents) {
                 final RelSubset parentSubset = planner.getSubset(parent);
                 parentSubset.propagateBoostRemoval(planner);
             }
         }
     }
-    
+
     public void collectVariablesUsed(Set<String> variableSet)
     {
         variableSet.addAll(getVariablesUsed());
@@ -332,7 +331,7 @@ public class RelSubset
     {
         variableSet.addAll(getVariablesSet());
     }
-    
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**

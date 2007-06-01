@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
  */
 public abstract class SqlOperatorBinding
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final RelDataTypeFactory typeFactory;

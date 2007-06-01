@@ -39,7 +39,6 @@ import java.util.*;
  */
 public class JavaToSqlTypeConversionRules
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final JavaToSqlTypeConversionRules instance =

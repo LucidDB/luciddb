@@ -43,14 +43,12 @@ import org.eigenbase.test.*;
  *
  * <ul>
  * <li>items Are now synthetic {@link Object}s.</li>
- *
  * <li>Items would have to become things that expose a {@link Comparable} <i>
  * key</i> value.</li>
- *
- * <li>Even if one input lags behind the other provding a
- * {@link Iterator#next()} value,
- * that missing value might sort before its available counterparts from the
- * other inputs. There is no basis to decide to wait for it or not.</li>
+ * <li>Even if one input lags behind the other provding a {@link
+ * Iterator#next()} value, that missing value might sort before its available
+ * counterparts from the other inputs. There is no basis to decide to wait for
+ * it or not.</li>
  * </ul>
  *
  * @author Marc Berkowitz
@@ -59,7 +57,6 @@ import org.eigenbase.test.*;
 public class CompoundParallelTupleIter
     implements TupleIter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final private TupleIter [] in;
@@ -159,7 +156,7 @@ public class CompoundParallelTupleIter
                 new CompoundParallelTupleIter(
                     new TupleIter[] {
                         makeTupleIter(new String[] { "a", "b" }),
-                    makeTupleIter(new String[] { "c" })
+                        makeTupleIter(new String[] { "c" })
                     });
             assertEquals(
                 tupleIter,
@@ -184,8 +181,8 @@ public class CompoundParallelTupleIter
                 new CompoundParallelTupleIter(
                     new TupleIter[] {
                         makeTupleIter(new String[] { "a", "b", "c" }),
-                    makeTupleIter(new String[] { "d", "e" }),
-                    makeTupleIter(new String[] { "f" }),
+                        makeTupleIter(new String[] { "d", "e" }),
+                        makeTupleIter(new String[] { "f" }),
                     });
             assertEquals(
                 tupleIter,
@@ -207,7 +204,7 @@ public class CompoundParallelTupleIter
                 new CompoundParallelTupleIter(
                     new TupleIter[] {
                         makeTupleIter(new String[] {}),
-                    makeTupleIter(new String[] { "a", "b" })
+                        makeTupleIter(new String[] { "a", "b" })
                     });
             assertEquals(
                 tupleIter,

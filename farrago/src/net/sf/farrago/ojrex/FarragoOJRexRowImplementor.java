@@ -22,17 +22,18 @@
 */
 package net.sf.farrago.ojrex;
 
-import openjava.ptree.*;
 import openjava.mop.*;
+
+import openjava.ptree.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
 
 /**
- * FarragoOJRexRowImplementor implements Farrago specifics of
- * {@link org.eigenbase.oj.rex.OJRexImplementor } for <code>ROW</code> and
- * UDT constructors.
+ * FarragoOJRexRowImplementor implements Farrago specifics of {@link
+ * org.eigenbase.oj.rex.OJRexImplementor} for <code>ROW</code> and UDT
+ * constructors.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -40,7 +41,6 @@ import org.eigenbase.rex.*;
 public class FarragoOJRexRowImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoOJRexImplementor
@@ -69,8 +69,7 @@ public class FarragoOJRexRowImplementor
                 translator.convertFieldAccess(variable, field),
                 operands[i]);
 
-            String methodName =
-                "calc_" + variable.toString() + "_f_" + i;
+            String methodName = "calc_" + variable.toString() + "_f_" + i;
             MemberDeclaration methodDecl =
                 new MethodDeclaration(
                     new ModifierList(

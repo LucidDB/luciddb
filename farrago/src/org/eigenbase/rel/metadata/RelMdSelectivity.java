@@ -40,7 +40,6 @@ import org.eigenbase.sql.fun.*;
 public class RelMdSelectivity
     extends ReflectiveRelMetadataProvider
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public RelMdSelectivity()
@@ -73,8 +72,9 @@ public class RelMdSelectivity
             if (nRows == null) {
                 return null;
             }
+
             // convert the predicate to reference the types of the union child
-            RexNode modifiedPred = 
+            RexNode modifiedPred =
                 predicate.accept(
                     new RelOptUtil.RexInputConverter(
                         rexBuilder,
@@ -96,8 +96,8 @@ public class RelMdSelectivity
     public Double getSelectivity(SortRel rel, RexNode predicate)
     {
         return RelMetadataQuery.getSelectivity(
-                rel.getChild(),
-                predicate);
+            rel.getChild(),
+            predicate);
     }
 
     public Double getSelectivity(FilterRelBase rel, RexNode predicate)
@@ -107,18 +107,16 @@ public class RelMdSelectivity
         // selectivity of the filter twice.  If no predicate is passed in,
         // use the filter's condition.
         if (predicate != null) {
-            return
-                RelMetadataQuery.getSelectivity(
-                    rel.getChild(),
-                    RelMdUtil.minusPreds(
-                        rel.getCluster().getRexBuilder(),
-                        predicate,
-                        rel.getCondition()));
+            return RelMetadataQuery.getSelectivity(
+                rel.getChild(),
+                RelMdUtil.minusPreds(
+                    rel.getCluster().getRexBuilder(),
+                    predicate,
+                    rel.getCondition()));
         } else {
-            return
-                RelMetadataQuery.getSelectivity(
-                    rel.getChild(),
-                    rel.getCondition());
+            return RelMetadataQuery.getSelectivity(
+                rel.getChild(),
+                rel.getCondition());
         }
     }
 
@@ -137,8 +135,8 @@ public class RelMdSelectivity
         }
 
         return RelMetadataQuery.getSelectivity(
-                rel.getLeft(),
-                newPred);
+            rel.getLeft(),
+            newPred);
     }
 
     public Double getSelectivity(AggregateRelBase rel, RexNode predicate)

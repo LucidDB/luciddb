@@ -35,7 +35,6 @@ import org.eigenbase.sql.*;
 class JoinNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlJoin join;

@@ -54,7 +54,6 @@ import org.eigenbase.util.*;
 public class SqlLikeOperator
     extends SqlSpecialOperator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final boolean negated;
@@ -69,7 +68,8 @@ public class SqlLikeOperator
         // LIKE is right-associative, because that makes it easier to capture
         // dangling ESCAPE clauses: "a like b like c escape d" becomes
         // "a like (b like c escape d)".
-        super(name,
+        super(
+            name,
             kind,
             30,
             false,
@@ -99,14 +99,16 @@ public class SqlLikeOperator
         case 2:
             if (!SqlTypeStrategies.otcStringSameX2.checkOperandTypes(
                     callBinding,
-                    throwOnFailure)) {
+                    throwOnFailure))
+            {
                 return false;
             }
             break;
         case 3:
             if (!SqlTypeStrategies.otcStringSameX3.checkOperandTypes(
                     callBinding,
-                    throwOnFailure)) {
+                    throwOnFailure))
+            {
                 return false;
             }
 
@@ -122,7 +124,8 @@ public class SqlLikeOperator
                 callBinding.getValidator(),
                 callBinding.getScope(),
                 callBinding.getCall().operands,
-                throwOnFailure)) {
+                throwOnFailure))
+        {
             return false;
         }
         return true;

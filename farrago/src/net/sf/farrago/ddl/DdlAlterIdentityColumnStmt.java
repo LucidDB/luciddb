@@ -42,7 +42,6 @@ import org.eigenbase.reltype.*;
 public class DdlAlterIdentityColumnStmt
     extends DdlAlterStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoSequenceOptions options;

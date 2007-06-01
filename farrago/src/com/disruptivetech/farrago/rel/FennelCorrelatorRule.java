@@ -39,7 +39,6 @@ import org.eigenbase.relopt.*;
 public class FennelCorrelatorRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FennelCorrelatorRule()

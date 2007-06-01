@@ -37,7 +37,6 @@ import net.sf.farrago.fem.fennel.*;
 public class FennelCmdExecutorImpl
     implements FennelCmdExecutor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement FennelCmdExecutor

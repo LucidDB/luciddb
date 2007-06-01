@@ -44,7 +44,6 @@ import org.eigenbase.util.*;
 public class SqlMonotonicBinaryOperator
     extends SqlBinaryOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlMonotonicBinaryOperator(

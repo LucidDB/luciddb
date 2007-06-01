@@ -25,18 +25,21 @@ import net.sf.farrago.fennel.tuple.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
+
 
 /**
- * Static utility methods related to Fennel storage. Historically, these
- * methods were refactored from FennelRelUtil to remove their dependency
- * on the Farrago query package.
+ * Static utility methods related to Fennel storage. Historically, these methods
+ * were refactored from FennelRelUtil to remove their dependency on the Farrago
+ * query package.
  *
  * @author John Pham
  * @version $Id$
  */
 public abstract class FennelUtil
 {
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Creates a FennelTupleDescriptor for a RelDataType which is a row.
      *

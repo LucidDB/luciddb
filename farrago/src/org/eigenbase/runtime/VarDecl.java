@@ -29,7 +29,6 @@ package org.eigenbase.runtime;
  */
 public class VarDecl
 {
-
     //~ Instance fields --------------------------------------------------------
 
     public Class clazz;

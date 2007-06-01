@@ -42,7 +42,6 @@ import org.eigenbase.util.*;
 public class LhxJoinRel
     extends FennelDoubleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -64,7 +63,7 @@ public class LhxJoinRel
      * Whether the join key at a given position matches null values
      */
     List<Integer> filterNulls;
-    
+
     /**
      * row count on the build side
      */
@@ -124,16 +123,18 @@ public class LhxJoinRel
             // position, which means null values are considered matching for
             // all join key positions.
             this.filterNulls = new ArrayList<Integer>();
-            for (int i = 0; i < leftKeys.size(); i ++) {
+            for (int i = 0; i < leftKeys.size(); i++) {
                 this.filterNulls.add(i);
             }
         }
-        
+
         if (joinType == LhxJoinRelType.LEFTSEMI) {
             // intersect is implemented using left semi join
             this.rowType = left.getRowType();
-        } else if (joinType == LhxJoinRelType.RIGHTANTI ||
-            joinType == LhxJoinRelType.RIGHTSEMI) {
+        } else if (
+            (joinType == LhxJoinRelType.RIGHTANTI)
+            || (joinType == LhxJoinRelType.RIGHTSEMI))
+        {
             // except is implemented using right anti or right semi join
             this.rowType = right.getRowType();
         } else {
@@ -178,11 +179,11 @@ public class LhxJoinRel
         // TODO:  account for buffering I/O and CPU
         double rowCount = RelMetadataQuery.getRowCount(this);
         double joinSelectivity = 0.1;
-        return
-            planner.makeCost(rowCount * joinSelectivity,
-                0,
-                rowCount * getRowType().getFieldList().size()
-                * joinSelectivity);
+        return planner.makeCost(
+            rowCount * joinSelectivity,
+            0,
+            rowCount * getRowType().getFieldList().size()
+            * joinSelectivity);
     }
 
     // implement RelNode
@@ -203,19 +204,22 @@ public class LhxJoinRel
                     },
                     new Object[] { leftKeys, rightKeys, joinType });
             } else {
-                // only print out filterNulls if not all key positions are included
+                // only print out filterNulls if not all key positions are
+                // included
                 pw.explain(
                     this,
                     new String[] {
-                        "left", "right", "leftKeys", "rightKeys", "filterNulls", "joinType"
+                        "left", "right", "leftKeys", "rightKeys", "filterNulls",
+                        "joinType"
                     },
-                    new Object[] { leftKeys, rightKeys, filterNulls, joinType });            
+                    new Object[] { leftKeys, rightKeys, filterNulls, joinType });
             }
         } else {
             pw.explain(
                 this,
                 new String[] {
-                    "left", "right", "leftKeys", "rightKeys", "joinType", "setop"
+                    "left", "right", "leftKeys", "rightKeys", "joinType",
+                    "setop"
                 },
                 new Object[] { leftKeys, rightKeys, joinType, isSetop });
         }
@@ -259,22 +263,25 @@ public class LhxJoinRel
         // LeftOuter: non-matching tuples from the left
         // RightInner: matching tuples from the right
         // RightOuter: non-matching tuples from the right
-        if (joinType == LhxJoinRelType.RIGHTANTI ||
-            joinType == LhxJoinRelType.RIGHTSEMI) {
+        if ((joinType == LhxJoinRelType.RIGHTANTI)
+            || (joinType == LhxJoinRelType.RIGHTSEMI))
+        {
             streamDef.setLeftInner(false);
         } else {
             streamDef.setLeftInner(true);
         }
-        
+
         if ((joinType == LhxJoinRelType.LEFT)
-            || (joinType == LhxJoinRelType.FULL)) {
+            || (joinType == LhxJoinRelType.FULL))
+        {
             streamDef.setLeftOuter(true);
         } else {
             streamDef.setLeftOuter(false);
         }
 
         if ((joinType == LhxJoinRelType.LEFTSEMI)
-            || (joinType == LhxJoinRelType.RIGHTANTI)) {
+            || (joinType == LhxJoinRelType.RIGHTANTI))
+        {
             streamDef.setRightInner(false);
         } else {
             streamDef.setRightInner(true);
@@ -282,7 +289,8 @@ public class LhxJoinRel
 
         if ((joinType == LhxJoinRelType.RIGHT)
             || (joinType == LhxJoinRelType.FULL)
-            || (joinType == LhxJoinRelType.RIGHTANTI)) {
+            || (joinType == LhxJoinRelType.RIGHTANTI))
+        {
             streamDef.setRightOuter(true);
         } else {
             streamDef.setRightOuter(false);
@@ -312,30 +320,30 @@ public class LhxJoinRel
             FennelRelUtil.createTupleProjection(
                 repos,
                 filterNulls));
-        
+
         return streamDef;
     }
-    
+
     public LhxJoinRelType getJoinType()
     {
         return joinType;
     }
-    
+
     public RelNode getLeft()
     {
         return left;
     }
-    
+
     public RelNode getRight()
     {
         return right;
     }
-    
+
     public List<Integer> getLeftKeys()
     {
         return leftKeys;
     }
-    
+
     public List<Integer> getRightKeys()
     {
         return rightKeys;

@@ -22,6 +22,7 @@ package com.lucidera.lurql;
 
 import org.jgrapht.graph.*;
 
+
 /**
  * LurqlPlanEdge is a follow edge in a LURQL plan graph. (TODO: factor out
  * subclass.)
@@ -32,7 +33,6 @@ import org.jgrapht.graph.*;
 public class LurqlPlanEdge
     extends DefaultEdge
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -41,7 +41,7 @@ public class LurqlPlanEdge
     protected String stringRep;
 
     private final LurqlPlanVertex source;
-    
+
     private final LurqlPlanVertex target;
 
     //~ Constructors -----------------------------------------------------------

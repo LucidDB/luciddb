@@ -35,7 +35,6 @@ import org.eigenbase.util.*;
 public class TimeoutIteratorTest
     extends TestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -66,7 +65,7 @@ public class TimeoutIteratorTest
     public void testDummy()
     {
     }
-    
+
     // NOTE jvs 21-Oct-2006:  I'm disabling this test because
     // it fails sporadically, and we're planning to eliminate
     // usage of this class anyway (http://issues.eigenbase.org/browse/FRG-168).

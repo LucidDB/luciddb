@@ -31,7 +31,6 @@ package net.sf.farrago.session;
  */
 public interface FarragoSessionSavepoint
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public int getId();

@@ -45,10 +45,10 @@ import org.eigenbase.sql.type.*;
 public class SargTest
     extends TestCase
 {
-
     //~ Enums ------------------------------------------------------------------
 
-    enum Zodiac {
+    enum Zodiac
+    {
         AQUARIUS, ARIES, CANCER, CAPRICORN, GEMINI, LEO, LIBRA, PISCES,
         SAGITTARIUS, SCORPIO, TAURUS, VIRGO
     }
@@ -98,16 +98,13 @@ public class SargTest
         stringType = typeFactory.createTypeWithNullability(stringType, true);
 
         rexBuilder = new RexBuilder(typeFactory);
-        intLiteral7 = rexBuilder.makeExactLiteral(
-                new BigDecimal(7),
-                intType);
+        intLiteral7 = rexBuilder.makeExactLiteral(new BigDecimal(7),
+            intType);
         intLiteral490 =
-            rexBuilder.makeExactLiteral(
-                new BigDecimal(490),
+            rexBuilder.makeExactLiteral(new BigDecimal(490),
                 intType);
         intLiteral8point5 =
-            rexBuilder.makeExactLiteral(
-                new BigDecimal("8.5"),
+            rexBuilder.makeExactLiteral(new BigDecimal("8.5"),
                 intType);
 
         sargFactory = new SargFactory(rexBuilder);
@@ -797,7 +794,8 @@ public class SargTest
         int i3,
         String expected)
     {
-        SargSetExpr setExpr = sargFactory.newSetExpr(
+        SargSetExpr setExpr =
+            sargFactory.newSetExpr(
                 stringType,
                 setOp);
         setExpr.addChild(exprs[i1]);
@@ -871,7 +869,8 @@ public class SargTest
             binding.getExpr().toString());
 
         // test NOT
-        pred3 = rexBuilder.makeCall(
+        pred3 =
+            rexBuilder.makeCall(
                 SqlStdOperatorTable.notOperator,
                 pred1);
         binding = rexAnalyzer.analyze(pred3);

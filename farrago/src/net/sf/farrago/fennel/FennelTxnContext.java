@@ -36,7 +36,6 @@ import net.sf.farrago.util.*;
  */
 public class FennelTxnContext
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoMetadataFactory metadataFactory;
@@ -182,7 +181,7 @@ public class FennelTxnContext
         if (fennelDbHandle == null) {
             return null;
         }
-        
+
         FemCmdSavepoint cmd = metadataFactory.newFemCmdSavepoint();
         cmd.setTxnHandle(getTxnHandle());
         fennelDbHandle.executeCmd(cmd);

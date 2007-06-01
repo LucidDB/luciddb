@@ -35,7 +35,6 @@ import org.eigenbase.sql.*;
 public class ObjectSqlType
     extends AbstractSqlType
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlIdentifier sqlIdentifier;

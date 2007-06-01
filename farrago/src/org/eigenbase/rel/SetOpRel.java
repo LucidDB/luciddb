@@ -35,7 +35,6 @@ import org.eigenbase.reltype.*;
 public abstract class SetOpRel
     extends AbstractRelNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected RelNode [] inputs;
@@ -100,9 +99,9 @@ public abstract class SetOpRel
     /**
      * Returns whether all the inputs of this set operator have the same row
      * type as its output row.
-     * 
+     *
      * @param compareNames whether or not column names are important in the
-     *                     homogeneity comparison
+     * homogeneity comparison
      */
     public boolean isHomogeneous(boolean compareNames)
     {
@@ -111,17 +110,20 @@ public abstract class SetOpRel
         for (int i = 0; i < inputs.length; ++i) {
             RelDataType inputType = inputs[i].getRowType();
             if (!RelOptUtil.areRowTypesEqual(
-                    inputType, unionType, compareNames)) {
+                    inputType,
+                    unionType,
+                    compareNames))
+            {
                 return false;
             }
         }
         return true;
     }
-    
+
     /**
      * Returns whether all the inputs of this set operator have the same row
-     * type as its output row.  Equivalent to 
-     * {@link #isHomogeneous(boolean) isHomogeneous(true)}.
+     * type as its output row. Equivalent to {@link #isHomogeneous(boolean)
+     * isHomogeneous(true)}.
      */
     public boolean isHomogeneous()
     {

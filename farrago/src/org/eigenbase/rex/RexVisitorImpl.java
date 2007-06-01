@@ -28,7 +28,6 @@ package org.eigenbase.rex;
 public class RexVisitorImpl<R>
     implements RexVisitor<R>
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final boolean deep;
@@ -122,7 +121,8 @@ public class RexVisitorImpl<R>
      * @see #visitArrayOr
      * @see RexShuttle#visitArray
      */
-    public static boolean visitArrayAnd(RexVisitor<Boolean> visitor,
+    public static boolean visitArrayAnd(
+        RexVisitor<Boolean> visitor,
         RexNode [] exprs)
     {
         for (int i = 0; i < exprs.length; i++) {
@@ -145,7 +145,8 @@ public class RexVisitorImpl<R>
      * @see #visitArrayAnd
      * @see RexShuttle#visitArray
      */
-    public static boolean visitArrayOr(RexVisitor<Boolean> visitor,
+    public static boolean visitArrayOr(
+        RexVisitor<Boolean> visitor,
         RexNode [] exprs)
     {
         for (int i = 0; i < exprs.length; i++) {

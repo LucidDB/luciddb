@@ -36,9 +36,9 @@ import org.eigenbase.util.*;
 
 
 /**
- * FarragoOJRexSimilarLikeImplementor implements Farrago specifics of
- * {@link org.eigenbase.oj.rex.OJRexImplementor} for builtin functions
- * <code>SIMILAR</code> and <code>LIKE</code>.
+ * FarragoOJRexSimilarLikeImplementor implements Farrago specifics of {@link
+ * org.eigenbase.oj.rex.OJRexImplementor} for builtin functions <code>
+ * SIMILAR</code> and <code>LIKE</code>.
  *
  * @author Xiaoyang Luo
  * @version $Id$
@@ -46,7 +46,6 @@ import org.eigenbase.util.*;
 public class FarragoOJRexSimilarLikeImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     boolean isSimilar;
@@ -54,7 +53,8 @@ public class FarragoOJRexSimilarLikeImplementor
 
     //~ Constructors -----------------------------------------------------------
 
-    public FarragoOJRexSimilarLikeImplementor(boolean bIsSimilar,
+    public FarragoOJRexSimilarLikeImplementor(
+        boolean bIsSimilar,
         boolean bIsNot)
     {
         isSimilar = bIsSimilar;
@@ -111,10 +111,9 @@ public class FarragoOJRexSimilarLikeImplementor
             hasEscape = true;
         }
         if ((call.operands[1] instanceof RexLiteral)
-            && (
-                !hasEscape
-                || (hasEscape && (call.operands[2] instanceof RexLiteral))
-               )) {
+            && (!hasEscape
+                || (hasEscape && (call.operands[2] instanceof RexLiteral))))
+        {
             atRuntime = false;
         }
 
@@ -290,7 +289,8 @@ public class FarragoOJRexSimilarLikeImplementor
             Expression value = varResult;
             if (retType.isNullable()) {
                 value =
-                    new FieldAccess(varResult,
+                    new FieldAccess(
+                        varResult,
                         NullablePrimitive.VALUE_FIELD_NAME);
             } else {
                 value = varResult;

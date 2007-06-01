@@ -38,7 +38,6 @@ import net.sf.farrago.util.*;
 public class FennelJavaHandle
     implements FarragoAllocation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =

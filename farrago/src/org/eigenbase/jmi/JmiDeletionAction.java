@@ -28,7 +28,8 @@ package org.eigenbase.jmi;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum JmiDeletionAction {
+public enum JmiDeletionAction
+{
     /**
      * Prevent the original modification from taking place.
      */

@@ -27,7 +27,7 @@ import java.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.Permutation;
+import org.eigenbase.util.*;
 
 
 /**
@@ -41,13 +41,12 @@ import org.eigenbase.util.Permutation;
 public final class ProjectRel
     extends ProjectRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a ProjectRel.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param child input relational expression
      * @param exps set of expressions for the input columns
@@ -76,7 +75,7 @@ public final class ProjectRel
     /**
      * Creates a ProjectRel.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param child input relational expression
      * @param exps set of expressions for the input columns

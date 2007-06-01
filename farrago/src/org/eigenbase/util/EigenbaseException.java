@@ -38,7 +38,6 @@ import java.util.logging.*;
 public class EigenbaseException
     extends RuntimeException
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

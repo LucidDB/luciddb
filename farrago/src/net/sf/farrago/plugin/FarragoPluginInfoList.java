@@ -36,7 +36,6 @@ import java.util.*;
  */
 public class FarragoPluginInfoList
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Properties defaultProps;
@@ -111,9 +110,8 @@ public class FarragoPluginInfoList
      */
     public DriverPropertyInfo [] toArray()
     {
-        return
-            propertyInfoList.toArray(
-                FarragoAbstractPluginBase.EMPTY_DRIVER_PROPERTIES);
+        return propertyInfoList.toArray(
+            FarragoAbstractPluginBase.EMPTY_DRIVER_PROPERTIES);
     }
 }
 

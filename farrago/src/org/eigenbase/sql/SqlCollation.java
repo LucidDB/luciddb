@@ -41,6 +41,25 @@ import org.eigenbase.util.*;
  */
 public class SqlCollation
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * <blockquote>A &lt;character value expression&gt; consisting of a column
+     * reference has the coercibility characteristic Implicit, with collating
+     * sequence as defined when the column was created. A &lt;character value
+     * expression&gt; consisting of a value other than a column (e.g., a host
+     * variable or a literal) has the coercibility characteristic Coercible,
+     * with the default collation for its character repertoire. A &lt;character
+     * value expression&gt; simply containing a &lt;collate clause&gt; has the
+     * coercibility characteristic Explicit, with the collating sequence
+     * specified in the &lt;collate clause&gt;.</blockquote>
+     *
+     * @sql.99 Part 2 Section 4.2.3
+     */
+    public enum Coercibility
+    {
+        Explicit, /* strongest */ Implicit, Coercible, None; /* weakest */
+    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -92,8 +111,7 @@ public class SqlCollation
 
     public boolean equals(Object o)
     {
-        return
-            (o instanceof SqlCollation)
+        return (o instanceof SqlCollation)
             && ((SqlCollation) o).getCollationName().equals(
                 this.getCollationName());
     }
@@ -179,41 +197,41 @@ public class SqlCollation
         case Coercible:
             switch (coercibility2) {
             case Coercible:
-                return
-                    new SqlCollation(col2.collationName,
-                        Coercibility.Coercible);
+                return new SqlCollation(
+                    col2.collationName,
+                    Coercibility.Coercible);
             case Implicit:
-                return
-                    new SqlCollation(col2.collationName,
-                        Coercibility.Implicit);
+                return new SqlCollation(
+                    col2.collationName,
+                    Coercibility.Implicit);
             case None:
                 return null;
             case Explicit:
-                return
-                    new SqlCollation(col2.collationName,
-                        Coercibility.Explicit);
+                return new SqlCollation(
+                    col2.collationName,
+                    Coercibility.Explicit);
             default:
                 throw Util.unexpected(coercibility2);
             }
         case Implicit:
             switch (coercibility2) {
             case Coercible:
-                return
-                    new SqlCollation(col1.collationName,
-                        Coercibility.Implicit);
+                return new SqlCollation(
+                    col1.collationName,
+                    Coercibility.Implicit);
             case Implicit:
                 if (col1.collationName.equals(col2.collationName)) {
-                    return
-                        new SqlCollation(col2.collationName,
-                            Coercibility.Implicit);
+                    return new SqlCollation(
+                        col2.collationName,
+                        Coercibility.Implicit);
                 }
                 return null;
             case None:
                 return null;
             case Explicit:
-                return
-                    new SqlCollation(col2.collationName,
-                        Coercibility.Explicit);
+                return new SqlCollation(
+                    col2.collationName,
+                    Coercibility.Explicit);
             default:
                 throw Util.unexpected(coercibility2);
             }
@@ -224,9 +242,9 @@ public class SqlCollation
             case None:
                 return null;
             case Explicit:
-                return
-                    new SqlCollation(col2.collationName,
-                        Coercibility.Explicit);
+                return new SqlCollation(
+                    col2.collationName,
+                    Coercibility.Explicit);
             default:
                 throw Util.unexpected(coercibility2);
             }
@@ -235,14 +253,14 @@ public class SqlCollation
             case Coercible:
             case Implicit:
             case None:
-                return
-                    new SqlCollation(col1.collationName,
-                        Coercibility.Explicit);
+                return new SqlCollation(
+                    col1.collationName,
+                    Coercibility.Explicit);
             case Explicit:
                 if (col1.collationName.equals(col2.collationName)) {
-                    return
-                        new SqlCollation(col2.collationName,
-                            Coercibility.Explicit);
+                    return new SqlCollation(
+                        col2.collationName,
+                        Coercibility.Explicit);
                 }
                 throw EigenbaseResource.instance().DifferentCollations.ex(
                     col1.collationName,
@@ -282,29 +300,6 @@ public class SqlCollation
     public final SqlCollation.Coercibility getCoercibility()
     {
         return coercibility;
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * <blockquote>A &lt;character value expression&gt; consisting of a column
-     * reference has the coercibility characteristic Implicit, with collating
-     * sequence as defined when the column was created. A &lt;character value
-     * expression&gt; consisting of a value other than a column (e.g., a host
-     * variable or a literal) has the coercibility characteristic Coercible,
-     * with the default collation for its character repertoire. A &lt;character
-     * value expression&gt; simply containing a &lt;collate clause&gt; has the
-     * coercibility characteristic Explicit, with the collating sequence
-     * specified in the &lt;collate clause&gt;.</blockquote>
-     *
-     * @sql.99 Part 2 Section 4.2.3
-     */
-    public enum Coercibility
-    {
-        Explicit, /* strongest */
-        Implicit,
-        Coercible,
-        None; /* weakest */
     }
 }
 

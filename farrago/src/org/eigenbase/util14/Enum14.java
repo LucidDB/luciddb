@@ -40,7 +40,6 @@ import java.util.*;
 public class Enum14
     implements Cloneable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String [] emptyStringArray = new String[0];
@@ -299,12 +298,11 @@ public class Enum14
      */
     public Error badValue(int ordinal)
     {
-        return
-            new AssertionError(
-                "bad value " + ordinal + "("
-                + getName(ordinal) + ") for enumeration '"
-                + getClass().getName()
-                + "'");
+        return new AssertionError(
+            "bad value " + ordinal + "("
+            + getName(ordinal) + ") for enumeration '"
+            + getClass().getName()
+            + "'");
     }
 
     /**
@@ -313,8 +311,10 @@ public class Enum14
     public void makeImmutable()
     {
         ordinalToValueMap = new Value[(1 + max) - min];
-        for (Iterator values = valuesByName.values().iterator();
-            values.hasNext();) {
+        for (
+            Iterator values = valuesByName.values().iterator();
+            values.hasNext();)
+        {
             Value value = (Value) values.next();
             final int index = value.getOrdinal() - min;
             if (ordinalToValueMap[index] != null) {
@@ -358,11 +358,10 @@ public class Enum14
      */
     public Error unexpected(Value value)
     {
-        return
-            new AssertionError(
-                "Was not expecting value '" + value
-                + "' for enumeration '" + getClass().getName()
-                + "' in this context");
+        return new AssertionError(
+            "Was not expecting value '" + value
+            + "' for enumeration '" + getClass().getName()
+            + "' in this context");
     }
 
     protected Object clone()
@@ -487,10 +486,9 @@ public class Enum14
 
         public Error unexpected()
         {
-            return
-                new AssertionError(
-                    "Value " + name + " of class "
-                    + getClass() + " unexpected here");
+            return new AssertionError(
+                "Value " + name + " of class "
+                + getClass() + " unexpected here");
         }
     }
 

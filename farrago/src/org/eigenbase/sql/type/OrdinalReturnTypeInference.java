@@ -35,7 +35,6 @@ import org.eigenbase.sql.validate.*;
 public class OrdinalReturnTypeInference
     implements SqlReturnTypeInference
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int ordinal;

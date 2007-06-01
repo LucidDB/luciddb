@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
 public class ChainedSqlOperatorTable
     implements SqlOperatorTable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final List<SqlOperatorTable> tableList;

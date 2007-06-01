@@ -36,13 +36,12 @@ import org.eigenbase.sql.type.*;
 public abstract class OneRowRelBase
     extends AbstractRelNode
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>OneRowRelBase</code> with specific traits.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param traits for this rel
      */
@@ -70,13 +69,12 @@ public abstract class OneRowRelBase
 
     public static RelDataType deriveOneRowType(RelDataTypeFactory typeFactory)
     {
-        return
-            typeFactory.createStructType(
-                new RelDataType[] {
-                    typeFactory.createSqlType(
-                        SqlTypeName.INTEGER)
-                },
-                new String[] { "ZERO" });
+        return typeFactory.createStructType(
+            new RelDataType[] {
+                typeFactory.createSqlType(
+                    SqlTypeName.INTEGER)
+            },
+            new String[] { "ZERO" });
     }
 }
 

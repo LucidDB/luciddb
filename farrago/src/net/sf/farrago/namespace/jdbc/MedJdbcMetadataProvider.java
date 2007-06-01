@@ -23,15 +23,19 @@ package net.sf.farrago.namespace.jdbc;
 
 import org.eigenbase.rel.metadata.*;
 
+
 /**
- * MedJdbcMetadataProvider supplies metadata to the optimizer about
- * JDBC relational expressions.
+ * MedJdbcMetadataProvider supplies metadata to the optimizer about JDBC
+ * relational expressions.
  *
  * @author John Sichi
  * @version $Id$
  */
-public class MedJdbcMetadataProvider extends ReflectiveRelMetadataProvider
+public class MedJdbcMetadataProvider
+    extends ReflectiveRelMetadataProvider
 {
+    //~ Methods ----------------------------------------------------------------
+
     public Boolean canRestart(MedJdbcQueryRel rel)
     {
         // We don't support restarting a JDBC query.  We could do it via scroll

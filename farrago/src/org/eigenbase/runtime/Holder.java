@@ -31,7 +31,6 @@ package org.eigenbase.runtime;
  */
 public class Holder
 {
-
     //~ Inner Classes ----------------------------------------------------------
 
     public static final class int_Holder

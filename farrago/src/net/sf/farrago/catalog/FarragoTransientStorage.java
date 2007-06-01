@@ -41,7 +41,6 @@ import org.netbeans.mdr.util.*;
 class FarragoTransientStorage
     extends StorageImpl
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // NOTE jvs 6-May-2004: Another hack.  This is what actually implements the

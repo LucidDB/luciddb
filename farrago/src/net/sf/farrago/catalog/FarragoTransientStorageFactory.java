@@ -38,7 +38,6 @@ import org.netbeans.mdr.persistence.memoryimpl.*;
 public class FarragoTransientStorageFactory
     implements StorageFactory
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // distinguish this from normal memory storage

@@ -23,10 +23,11 @@ package net.sf.farrago.ojrex;
 
 import net.sf.farrago.type.*;
 
-import org.eigenbase.reltype.*;
-
 import openjava.mop.*;
+
 import openjava.ptree.*;
+
+import org.eigenbase.reltype.*;
 
 
 /**
@@ -37,6 +38,8 @@ import openjava.ptree.*;
  */
 public class FarragoOJRexUtil
 {
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Creates a field access, as in expr.[value] for a primitive
      */
@@ -45,7 +48,7 @@ public class FarragoOJRexUtil
         RelDataType type,
         Expression expr)
     {
-        FarragoTypeFactory factory = 
+        FarragoTypeFactory factory =
             (FarragoTypeFactory) translator.getTypeFactory();
         return factory.getValueAccessExpression(type, expr);
     }

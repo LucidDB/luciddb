@@ -39,7 +39,6 @@ import org.eigenbase.reltype.*;
 public class LcsIndexAggRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -55,7 +54,8 @@ public class LcsIndexAggRule
                     new RelOptRuleOperand(
                         FennelRenameRel.class,
                         new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(LcsRowScanRel.class,
+                            new RelOptRuleOperand(
+                                LcsRowScanRel.class,
                                 RelOptRuleOperand.noOperands)
                         })
                 }),
@@ -123,15 +123,16 @@ public class LcsIndexAggRule
             Integer [] proj = indexOnlyScan.getOutputProj();
             if (!projectionSatisfiesGroupBy(
                     proj,
-                    aggRel.getGroupCount())) {
+                    aggRel.getGroupCount()))
+            {
                 return;
             }
         }
 
         if (indexOnlyScan == null) {
             // Try to convert a row scan into an index only scan. Find the
-            // thinnest index that satisfies the row scan projection and
-            // the aggregate's required sort order
+            // thinnest index that satisfies the row scan projection and the
+            // aggregate's required sort order
 
             // first sort the indexes in key length
             TreeSet<FemLocalIndex> indexSet =
@@ -144,11 +145,13 @@ public class LcsIndexAggRule
             Integer [] bestProj = null;
 
             for (FemLocalIndex index : indexSet) {
-
                 Integer [] proj =
                     LcsIndexOptimizer.findIndexOnlyProjection(rowScan, index);
-                if (proj != null &&
-                    projectionSatisfiesGroupBy(proj, aggRel.getGroupCount())) {
+                if ((proj != null)
+                    && projectionSatisfiesGroupBy(
+                        proj,
+                        aggRel.getGroupCount()))
+                {
                     bestIndex = index;
                     bestProj = proj;
                     break;

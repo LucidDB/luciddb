@@ -44,7 +44,6 @@ import org.eigenbase.relopt.*;
 public class LcsTableDeleteRel
     extends MedAbstractFennelTableModRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /* Refinement for TableModificationRelBase.table. */

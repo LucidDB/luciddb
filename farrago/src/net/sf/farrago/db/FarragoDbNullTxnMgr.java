@@ -41,7 +41,6 @@ import org.eigenbase.relopt.*;
 public class FarragoDbNullTxnMgr
     implements FarragoSessionTxnMgr
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final AtomicLong nextId;

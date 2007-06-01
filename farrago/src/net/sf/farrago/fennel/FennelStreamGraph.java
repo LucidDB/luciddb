@@ -41,7 +41,6 @@ import net.sf.farrago.util.*;
 public class FennelStreamGraph
     implements FarragoAllocation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =
@@ -73,7 +72,8 @@ public class FennelStreamGraph
      *
      * @return handle to stream
      */
-    public FennelStreamHandle findStream(FarragoMetadataFactory metadataFactory,
+    public FennelStreamHandle findStream(
+        FarragoMetadataFactory metadataFactory,
         String streamName,
         boolean isInput)
     {
@@ -180,10 +180,9 @@ public class FennelStreamGraph
     {
         traceStreamHandle("fetch", streamHandle);
         try {
-            return
-                FennelStorage.tupleStreamFetch(
-                    streamHandle.getLongHandle(),
-                    byteArray);
+            return FennelStorage.tupleStreamFetch(
+                streamHandle.getLongHandle(),
+                byteArray);
         } catch (SQLException ex) {
             throw fennelDbHandle.handleNativeException(ex);
         }
@@ -210,11 +209,10 @@ public class FennelStreamGraph
             streamHandle,
             execStreamInputOrdinal);
         try {
-            return
-                FennelStorage.tupleStreamTransformFetch(
-                    streamHandle.getLongHandle(),
-                    execStreamInputOrdinal,
-                    byteArray);
+            return FennelStorage.tupleStreamTransformFetch(
+                streamHandle.getLongHandle(),
+                execStreamInputOrdinal,
+                byteArray);
         } catch (SQLException ex) {
             throw fennelDbHandle.handleNativeException(ex);
         }

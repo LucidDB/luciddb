@@ -34,7 +34,6 @@ import java.util.*;
 public class RestartableIteratorTupleIter
     implements TupleIter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RestartableIterator iterator;

@@ -38,7 +38,6 @@ import net.sf.farrago.session.*;
 public class FarragoDbSessionInfo
     implements FarragoSessionInfo
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private long id;

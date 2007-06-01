@@ -48,7 +48,6 @@ public class FarragoDefaultPlanner
     extends VolcanoPlanner
     implements FarragoSessionPlanner
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoPreparingStmt stmt;
@@ -106,7 +105,9 @@ public class FarragoDefaultPlanner
         CalcVirtualMachine calcVM)
     {
         FarragoStandardPlannerRules.addDefaultRules(
-            planner, fennelEnabled, calcVM);
+            planner,
+            fennelEnabled,
+            calcVM);
         planner.addRule(new FarragoMultisetSplitterRule());
         if (fennelEnabled) {
             planner.addRule(new FennelCollectRule());

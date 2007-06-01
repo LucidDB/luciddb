@@ -23,7 +23,8 @@ package net.sf.farrago.session;
 
 import java.util.*;
 
-import net.sf.farrago.ddl.DdlHandler;
+import net.sf.farrago.ddl.*;
+
 
 /**
  * FarragoSessionModelExtension defines the SPI for plugging in custom behavior
@@ -36,7 +37,6 @@ import net.sf.farrago.ddl.DdlHandler;
  */
 public interface FarragoSessionModelExtension
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -59,8 +59,7 @@ public interface FarragoSessionModelExtension
      *
      * @param bundleList receives instances of ResourceBundle
      */
-    public void defineResourceBundles(
-        List<ResourceBundle> bundleList);
+    public void defineResourceBundles(List<ResourceBundle> bundleList);
 
     /**
      * Defines privileges allowed on various object types.

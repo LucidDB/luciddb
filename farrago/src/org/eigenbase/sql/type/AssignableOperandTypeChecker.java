@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
 public class AssignableOperandTypeChecker
     implements SqlOperandTypeChecker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType [] paramTypes;

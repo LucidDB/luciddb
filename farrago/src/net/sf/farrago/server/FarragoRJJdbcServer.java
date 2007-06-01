@@ -36,7 +36,6 @@ import org.objectweb.rmijdbc.*;
 public class FarragoRJJdbcServer
     extends RJJdbcServer
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

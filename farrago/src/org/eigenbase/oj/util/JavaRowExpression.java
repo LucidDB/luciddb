@@ -44,7 +44,6 @@ import org.eigenbase.rex.*;
 public class JavaRowExpression
     extends RexNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final Environment env;

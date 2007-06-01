@@ -26,6 +26,7 @@ import java.util.*;
 
 import junit.framework.*;
 
+
 /**
  * A <code>Graph</code> is a collection of directed arcs between nodes, and
  * supports various graph-theoretic operations.
@@ -36,7 +37,6 @@ import junit.framework.*;
  */
 public class Graph<T>
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final Arc [] noArcs = new Arc[0];
@@ -46,7 +46,8 @@ public class Graph<T>
     /**
      * Maps {@link Arc} to {@link Arc}[].
      */
-    private Map<Arc<T>,Arc<T>[]> shortestPath = new HashMap<Arc<T>, Arc<T>[]>();
+    private Map<Arc<T>, Arc<T>[]> shortestPath =
+        new HashMap<Arc<T>, Arc<T>[]>();
     private Set<Arc<T>> arcs = new HashSet<Arc<T>>();
     private boolean mutable = true;
 
@@ -174,12 +175,13 @@ public class Graph<T>
             for (Arc<T> arc : arcs) {
                 shortestPath.put(
                     arc,
-                    new Arc[]{arc});
+                    new Arc[] { arc });
             }
             while (true) {
                 // Take a copy of the map's keys to avoid
                 // ConcurrentModificationExceptions.
-                ArrayList<Arc> previous = new ArrayList<Arc>(shortestPath.keySet());
+                ArrayList<Arc> previous =
+                    new ArrayList<Arc>(shortestPath.keySet());
                 int changeCount = 0;
                 for (Arc<T> arc : arcs) {
                     for (Arc<T> arc2 : previous) {
@@ -188,10 +190,13 @@ public class Graph<T>
                             Arc [] bestPath = shortestPath.get(newArc);
                             Arc [] arc2Path = shortestPath.get(arc2);
                             if ((bestPath == null)
-                                || (bestPath.length > (arc2Path.length + 1))) {
-                                Arc<T> [] newPath = new Arc[arc2Path.length + 1];
+                                || (bestPath.length > (arc2Path.length + 1)))
+                            {
+                                Arc<T> [] newPath =
+                                    new Arc[arc2Path.length + 1];
                                 newPath[0] = arc;
-                                System.arraycopy(arc2Path,
+                                System.arraycopy(
+                                    arc2Path,
                                     0,
                                     newPath,
                                     1,

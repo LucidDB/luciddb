@@ -48,7 +48,6 @@ import org.eigenbase.reltype.*;
 class FarragoJdbcEngineParamDef
     implements FarragoSessionStmtParamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final FarragoJdbcParamDef param;

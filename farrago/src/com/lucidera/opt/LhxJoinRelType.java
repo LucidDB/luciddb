@@ -29,7 +29,8 @@ import org.eigenbase.rel.*;
  * @author Rushan Chen
  * @version $Id$
  */
-public enum LhxJoinRelType {
+public enum LhxJoinRelType
+{
     INNER(JoinRelType.INNER), LEFT(JoinRelType.LEFT), RIGHT(JoinRelType.RIGHT),
     FULL(JoinRelType.FULL), LEFTSEMI(null), RIGHTSEMI(null), RIGHTANTI(null);
 

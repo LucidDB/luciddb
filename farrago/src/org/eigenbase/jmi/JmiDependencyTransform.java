@@ -35,7 +35,6 @@ import javax.jmi.reflect.*;
  */
 public interface JmiDependencyTransform
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -37,7 +37,6 @@ import org.eigenbase.util.*;
 public class RelOptPlanWriter
     extends java.io.PrintWriter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private boolean withIdPrefix = true;
@@ -160,11 +159,11 @@ public class RelOptPlanWriter
         List<String> termList,
         List<Object> valueList)
     {
-        String[] terms = termList.toArray(new String[termList.size()]);
-        Object[] values = valueList.toArray(new Object[valueList.size()]);
+        String [] terms = termList.toArray(new String[termList.size()]);
+        Object [] values = valueList.toArray(new Object[valueList.size()]);
         explain(rel, terms, values);
     }
-    
+
     /**
      * Special form used by {@link
      * com.disruptivetech.farrago.volcano.RelSubset}.

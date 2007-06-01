@@ -23,7 +23,7 @@ package net.sf.farrago.catalog;
 
 import java.util.*;
 
-import net.sf.farrago.cwm.core.CwmFeature;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.sarg.*;
@@ -40,7 +40,6 @@ import org.eigenbase.stat.*;
 public class FarragoTableStatistics
     implements RelStatSource
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoRepos repos;

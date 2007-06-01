@@ -26,7 +26,8 @@ import javax.jmi.reflect.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
-import org.jgrapht.graph.DefaultEdge;
+
+import org.jgrapht.graph.*;
 
 
 /**
@@ -39,7 +40,6 @@ import org.jgrapht.graph.DefaultEdge;
 public abstract class JmiModeledMemFactory
     extends JmiMemFactory
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final JmiModelGraph modelGraph;

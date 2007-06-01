@@ -29,7 +29,6 @@ package net.sf.farrago.type.runtime;
  */
 public interface DataValue
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

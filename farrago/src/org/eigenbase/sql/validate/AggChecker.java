@@ -39,7 +39,6 @@ import org.eigenbase.sql.util.*;
 class AggChecker
     extends SqlBasicVisitor<Void>
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Stack<SqlValidatorScope> scopes =
@@ -86,7 +85,8 @@ class AggChecker
         }
 
         // Is it a call to a parentheses-free function?
-        SqlCall call = SqlUtil.makeCall(
+        SqlCall call =
+            SqlUtil.makeCall(
                 validator.getOperatorTable(),
                 id);
         if (call != null) {
@@ -131,7 +131,8 @@ class AggChecker
         scopes.push(newScope);
 
         // Visit the operands (only expressions).
-        call.getOperator().acceptCall(this,
+        call.getOperator().acceptCall(
+            this,
             call,
             true,
             ArgHandlerImpl.instance);

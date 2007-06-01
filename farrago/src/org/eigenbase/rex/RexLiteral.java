@@ -56,58 +56,49 @@ import org.eigenbase.util14.*;
  * <p>The allowable types and combinations are:
  *
  * <table>
- *
  * <tr>
  * <th>TypeName</th>
  * <th>Meaing</th>
  * <th>Value type</th>
  * </tr>
- *
  * <tr>
  * <td>{@link SqlTypeName#NULL}</td>
  * <td>The null value. It has its own special type.</td>
  * <td>null</td>
  * </tr>
- *
  * <tr>
  * <td>{@link SqlTypeName#BOOLEAN}</td>
  * <td>Boolean, namely <code>TRUE</code>, <code>FALSE</code> or <code>
  * UNKNOWN</code>.</td>
  * <td>{@link Boolean}, or null represents the UNKNOWN value</td>
  * </tr>
- *
  * <tr>
  * <td>{@link SqlTypeName#DECIMAL}</td>
  * <td>Exact number, for example <code>0</code>, <code>-.5</code>, <code>
  * 12345</code>.</td>
  * <td>{@link BigDecimal}</td>
  * </tr>
- *
  * <tr>
  * <td>{@link SqlTypeName#DOUBLE}</td>
  * <td>Approximate number, for example <code>6.023E-23</code>.</td>
  * <td>{@link BigDecimal}</td>
  * </tr>
- *
  * <tr>
  * <td>{@link SqlTypeName#DATE}</td>
  * <td>Date, for example <code>DATE '1969-04'29'</code></td>
  * <td>{@link Calendar}</td>
  * </tr>
- *
  * <tr>
  * <td>{@link SqlTypeName#TIME}</td>
  * <td>Time, for example <code>TIME '18:37:42.567'</code></td>
  * <td>{@link Calendar}</td>
  * </tr>
- *
  * <tr>
  * <td>{@link SqlTypeName#TIMESTAMP}</td>
  * <td>Timestamp, for example <code>TIMESTAMP '1969-04-29
  * 18:37:42.567'</code></td>
  * <td>{@link Calendar}</td>
  * </tr>
- *
  * <tr>
  * <td>{@link SqlTypeName#CHAR}</td>
  * <td>Character constant, for example <code>'Hello, world!'</code>, <code>
@@ -115,7 +106,6 @@ import org.eigenbase.util14.*;
  * COLLATE SHIFT_JIS$ja_JP$2</code>. These are always CHAR, never VARCHAR.</td>
  * <td>{@link NlsString}</td>
  * </tr>
- *
  * <tr>
  * <td>{@link SqlTypeName#BINARY}</td>
  * <td>Binary constant, for example <code>X'7F34'</code>. (The number of hexits
@@ -123,7 +113,6 @@ import org.eigenbase.util14.*;
  * VARBINARY.</td>
  * <td>{@link ByteBuffer}</td>
  * </tr>
- *
  * <tr>
  * <td>{@link SqlTypeName#SYMBOL}</td>
  * <td>A symbol is a special type used to make parsing easier; it is not part of
@@ -131,9 +120,8 @@ import org.eigenbase.util14.*;
  * such as the LEADING flag in a call to the function <code>
  * TRIM([LEADING|TRAILING|BOTH] chars FROM string)</code>.</td>
  * <td>A class which implements the {@link org.eigenbase.util14.Enum14.Value}
- *     interface</td>
+ * interface</td>
  * </tr>
- *
  * </table>
  *
  * @author jhyde
@@ -143,7 +131,6 @@ import org.eigenbase.util14.*;
 public class RexLiteral
     extends RexNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -190,7 +177,8 @@ public class RexLiteral
         Util.pre(
             valueMatchesType(value, typeName),
             "valueMatchesType(value,typeName)");
-        Util.pre((value == null) == type.isNullable(),
+        Util.pre(
+            (value == null) == type.isNullable(),
             "(value == null) == type.isNullable()");
         this.value = value;
         this.type = type;
@@ -210,6 +198,7 @@ public class RexLiteral
     {
         switch (typeName) {
         case BOOLEAN:
+
             // Unlike SqlLiteral, we do not allow boolean null.
             return value instanceof Boolean;
         case NULL:
@@ -224,21 +213,21 @@ public class RexLiteral
             return value instanceof Calendar;
         case INTERVAL_DAY_TIME:
         case INTERVAL_YEAR_MONTH:
+
             // REVIEW: angel 2006-08-27 - why is interval sometimes null?
-            return value instanceof BigDecimal || value == null;
+            return (value instanceof BigDecimal) || (value == null);
         case BINARY:
             return value instanceof ByteBuffer;
         case CHAR:
 
             // A SqlLiteral's charset and collation are optional; not so a
             // RexLiteral.
-            return
-                (value instanceof NlsString)
+            return (value instanceof NlsString)
                 && (((NlsString) value).getCharset() != null)
                 && (((NlsString) value).getCollation() != null);
         case SYMBOL:
-            return value instanceof EnumeratedValues.Value ||
-                value instanceof Enum;
+            return (value instanceof EnumeratedValues.Value)
+                || (value instanceof Enum);
         case INTEGER: // not allowed -- use Decimal
         case VARCHAR: // not allowed -- use Char
         case VARBINARY: // not allowed -- use Binary
@@ -349,11 +338,10 @@ public class RexLiteral
         case INTERVAL_DAY_TIME:
         case INTERVAL_YEAR_MONTH:
             if (value instanceof BigDecimal) {
-            pw.print(value.toString());
-
+                pw.print(value.toString());
             } else {
-            assert value == null;
-            pw.print("null");
+                assert value == null;
+                pw.print("null");
             }
             break;
         default:
@@ -365,7 +353,9 @@ public class RexLiteral
     }
 
     private static void printDatetime(
-        PrintWriter pw, ZonelessDatetime datetime, Comparable value)
+        PrintWriter pw,
+        ZonelessDatetime datetime,
+        Comparable value)
     {
         assert (value instanceof Calendar);
         datetime.setZonelessTime(
@@ -401,7 +391,8 @@ public class RexLiteral
         case CHAR:
             Charset charset = type.getCharset();
             SqlCollation collation = type.getCollation();
-            NlsString str = new NlsString(
+            NlsString str =
+                new NlsString(
                     literal,
                     charset.name(),
                     collation);
@@ -420,12 +411,16 @@ public class RexLiteral
         case NULL:
             return new RexLiteral(null, type, typeName);
         case INTERVAL_DAY_TIME:
-            long millis = SqlParserUtil.intervalToMillis(
-                literal, type.getIntervalQualifier());
+            long millis =
+                SqlParserUtil.intervalToMillis(
+                    literal,
+                    type.getIntervalQualifier());
             return new RexLiteral(BigDecimal.valueOf(millis), type, typeName);
         case INTERVAL_YEAR_MONTH:
-            long months = SqlParserUtil.intervalToMonths(
-                literal, type.getIntervalQualifier());
+            long months =
+                SqlParserUtil.intervalToMonths(
+                    literal,
+                    type.getIntervalQualifier());
             return new RexLiteral(BigDecimal.valueOf(months), type, typeName);
         case DATE:
         case TIME:
@@ -434,10 +429,11 @@ public class RexLiteral
             TimeZone tz = DateTimeUtil.gmtZone;
             Calendar cal = null;
             if (typeName == SqlTypeName.DATE) {
-                cal = DateTimeUtil.parseDateFormat(
-                    literal,
-                    format,
-                    tz);
+                cal =
+                    DateTimeUtil.parseDateFormat(
+                        literal,
+                        format,
+                        tz);
             } else {
                 // Allow fractional seconds for times and timestamps
                 DateTimeUtil.PrecisionTime ts =
@@ -532,15 +528,15 @@ public class RexLiteral
 
     public boolean isAlwaysTrue()
     {
-        Util.pre(typeName == SqlTypeName.BOOLEAN,
+        Util.pre(
+            typeName == SqlTypeName.BOOLEAN,
             "typeName.getOrdinal() == SqlTypeName.Boolean_ordinal");
         return booleanValue(this);
     }
 
     public boolean equals(Object obj)
     {
-        return
-            (obj instanceof RexLiteral)
+        return (obj instanceof RexLiteral)
             && equals(((RexLiteral) obj).value, value);
     }
 
@@ -583,8 +579,7 @@ public class RexLiteral
 
     public static boolean isNullLiteral(RexNode node)
     {
-        return
-            (node instanceof RexLiteral)
+        return (node instanceof RexLiteral)
             && (((RexLiteral) node).value == null);
     }
 

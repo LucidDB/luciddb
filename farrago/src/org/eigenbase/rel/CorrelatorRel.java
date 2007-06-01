@@ -44,7 +44,6 @@ import org.eigenbase.rex.*;
 public final class CorrelatorRel
     extends JoinRelBase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final List<Correlation> correlations;
@@ -54,7 +53,7 @@ public final class CorrelatorRel
     /**
      * Creates a Correlator.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param left left input relational expression
      * @param right right input relational expression
@@ -98,7 +97,7 @@ public final class CorrelatorRel
             correlations,
             joinType);
     }
-    
+
     //~ Methods ----------------------------------------------------------------
 
     public CorrelatorRel clone()
@@ -128,7 +127,7 @@ public final class CorrelatorRel
             },
             new Object[] {
                 joinType.name().toLowerCase(),
-            correlations
+                correlations
             });
     }
 
@@ -149,7 +148,8 @@ public final class CorrelatorRel
      * identify and set dynamic variables
      */
     public static class Correlation
-        implements Cloneable, Comparable<Correlation>
+        implements Cloneable,
+            Comparable<Correlation>
     {
         private final int id;
         private final int offset;
@@ -174,12 +174,11 @@ public final class CorrelatorRel
         {
             return "var" + id + "=offset" + offset;
         }
-        
+
         public int compareTo(Correlation other)
         {
             return (id - other.id);
         }
-        
     }
 }
 

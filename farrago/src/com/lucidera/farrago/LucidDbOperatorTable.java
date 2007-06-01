@@ -39,7 +39,6 @@ import org.eigenbase.sql.type.*;
 public class LucidDbOperatorTable
     extends SqlStdOperatorTable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static LucidDbOperatorTable instance;
@@ -47,7 +46,8 @@ public class LucidDbOperatorTable
     private static LucidDbSpecialOperators specialOperators;
 
     public static final SqlFunction lcsRidFunc =
-        new SqlFunction("LCS_RID",
+        new SqlFunction(
+            "LCS_RID",
             SqlKind.Function,
             SqlTypeStrategies.rtiAlwaysNullableBigint,
             null,

@@ -56,7 +56,6 @@ import org.netbeans.api.mdr.*;
 public class MedMdrDataServer
     extends MedAbstractDataServer
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String PROP_STORAGE_FACTORY_CLASS =
@@ -128,7 +127,8 @@ public class MedMdrDataServer
         schemaName = getNonStorageProperty(props, PROP_SCHEMA_NAME);
 
         if (extentName != null) {
-            initAsForeignServer(storageFactoryClassName,
+            initAsForeignServer(
+                storageFactoryClassName,
                 extentName,
                 storageProps);
         } else {
@@ -210,7 +210,7 @@ public class MedMdrDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map<String,Properties> columnPropMap)
+        Map<String, Properties> columnPropMap)
         throws SQLException
     {
         assert (repository != null);
@@ -218,12 +218,11 @@ public class MedMdrDataServer
         assert (className != null);
 
         MedMdrNameDirectory directory = getMdrNameDirectory();
-        return
-            directory.lookupColumnSetAndImposeType(
-                typeFactory,
-                className.split("\\."),
-                localName,
-                rowType);
+        return directory.lookupColumnSetAndImposeType(
+            typeFactory,
+            className.split("\\."),
+            localName,
+            rowType);
     }
 
     // implement FarragoMedDataServer
@@ -259,13 +258,12 @@ public class MedMdrDataServer
     {
         Variable connectionVariable =
             new Variable(OJPreparingStmt.connectionVariable);
-        return
-            new MethodCall(
-                connectionVariable,
-                "getDataServerRuntimeSupport",
-                new ExpressionList(
-                    Literal.makeLiteral(getServerMofId()),
-                    arg));
+        return new MethodCall(
+            connectionVariable,
+            "getDataServerRuntimeSupport",
+            new ExpressionList(
+                Literal.makeLiteral(getServerMofId()),
+                arg));
     }
 }
 

@@ -27,11 +27,9 @@ package net.sf.farrago.catalog;
  * transaction. A context may be inactive, meaning it has no current
  * transaction.
  *
- *<p>
+ * <p>Always use the following exception-safe transaction pattern:
  *
- * Always use the following exception-safe transaction pattern:
- *
- *<pre><code>
+ * <pre><code>
  *   FarragoReposTxnContext txn = repos.newTxnContext();
  *   try {
  *       txn.beginWriteTxn();
@@ -48,10 +46,7 @@ package net.sf.farrago.catalog;
  */
 public class FarragoReposTxnContext
 {
-
-    //~ Instance fields --------------------------------------------------------
-
-    private FarragoRepos repos;
+    //~ Enums ------------------------------------------------------------------
 
     private enum State
     {
@@ -60,11 +55,14 @@ public class FarragoReposTxnContext
         READ_TXN,
 
         WRITE_TXN
-    };
+    }
+
+    //~ Instance fields --------------------------------------------------------
+
+    private FarragoRepos repos;
 
     private State state;
     private int lockLevel;
-
 
     //~ Constructors -----------------------------------------------------------
 
@@ -97,7 +95,7 @@ public class FarragoReposTxnContext
     {
         return state == State.READ_TXN;
     }
-    
+
     /**
      * Begins a new read-only transaction.
      */
@@ -118,7 +116,7 @@ public class FarragoReposTxnContext
         // NOTE jvs 12-Jan-2007:  don't change state until AFTER successfully
         // beginning a transaction; if beginReposTxn throws an excn,
         // we want to stay in State.NO_TXN
-        
+
         repos.beginReposTxn(true);
         state = State.WRITE_TXN;
     }
@@ -131,13 +129,13 @@ public class FarragoReposTxnContext
         if (!isTxnInProgress()) {
             return;
         }
-        
+
         // NOTE jvs 12-Jan-2007:  change state BEFORE attempting
         // to end transaction; if endReposTxn throws an excn,
         // we're in an unknown state, but further calls could just
         // mask the original excn, so pretend we're back to
         // State.NO_TXN regardless.
-        
+
         state = State.NO_TXN;
         repos.endReposTxn(false);
     }
@@ -152,19 +150,19 @@ public class FarragoReposTxnContext
         }
 
         // NOTE jvs 12-Jan-2007:  see comment in commit() for ordering rationale
-        
+
         state = State.NO_TXN;
         repos.endReposTxn(true);
     }
-    
+
     /**
      * Acquires a repository lock and begins a matching MDR transaction (shared
-     * lock for read, or exclusive lock for write).  Typical usage is start of
-     * SQL statement preparation (e.g.  readOnly=true for DML or query, false
-     * for DDL).
-     * 
-     * @param readOnly if true, a shared lock is acquired on the
-     * catalog; otherwise, an exclusive lock is acquired
+     * lock for read, or exclusive lock for write). Typical usage is start of
+     * SQL statement preparation (e.g. readOnly=true for DML or query, false for
+     * DDL).
+     *
+     * @param readOnly if true, a shared lock is acquired on the catalog;
+     * otherwise, an exclusive lock is acquired
      */
     public void beginLockedTxn(boolean readOnly)
     {
@@ -173,26 +171,26 @@ public class FarragoReposTxnContext
         // TODO jvs 24-Jan-2007:  Get rid of downcast here and below by
         // making all creation of FarragoReposTxnContext go through
         // factory method interface on FarragoRepos.
-        
+
         ((FarragoReposImpl) repos).lockRepos(lockLevel);
-        
+
         if (readOnly) {
             beginReadTxn();
         } else {
             beginWriteTxn();
         }
     }
-    
+
     /**
-     * Releases lock acquired by beginLockedTxn.  Caller should
-     * already have ended transaction with either commit or rollback.
+     * Releases lock acquired by beginLockedTxn. Caller should already have
+     * ended transaction with either commit or rollback.
      */
     public void unlockAfterTxn()
     {
         if (lockLevel != 0) {
             ((FarragoReposImpl) repos).unlockRepos(lockLevel);
             lockLevel = 0;
-        }       
+        }
     }
 }
 

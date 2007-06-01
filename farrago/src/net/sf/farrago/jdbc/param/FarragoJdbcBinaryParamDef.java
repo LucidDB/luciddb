@@ -27,9 +27,7 @@ import org.eigenbase.util14.*;
 
 /**
  * FarragoJdbcEngineBinaryParamDef defines a binary parameter. Only accepts
- * byte-array values.
- *
- * This class is JDK 1.4 compatible.
+ * byte-array values. This class is JDK 1.4 compatible.
  *
  * @author Julian Hyde
  * @version $Id$
@@ -37,7 +35,6 @@ import org.eigenbase.util14.*;
 class FarragoJdbcBinaryParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int maxByteCount;

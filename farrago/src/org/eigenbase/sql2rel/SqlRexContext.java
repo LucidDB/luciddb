@@ -38,7 +38,6 @@ import org.eigenbase.sql.validate.*;
  */
 public interface SqlRexContext
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

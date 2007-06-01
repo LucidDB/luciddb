@@ -32,7 +32,6 @@ package org.eigenbase.rex;
  */
 public interface RexAction
 {
-
     //~ Methods ----------------------------------------------------------------
 
     void onMatch(RexNode [] tokens);

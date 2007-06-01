@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 public class SqlBinaryStringLiteral
     extends SqlAbstractStringLiteral
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected SqlBinaryStringLiteral(
@@ -78,10 +77,9 @@ public class SqlBinaryStringLiteral
         for (int i = 0; i < lits.length; i++) {
             args[i] = ((SqlBinaryStringLiteral) lits[i]).getBitString();
         }
-        return
-            new SqlBinaryStringLiteral(
-                BitString.concat(args),
-                lits[0].getParserPosition());
+        return new SqlBinaryStringLiteral(
+            BitString.concat(args),
+            lits[0].getParserPosition());
     }
 }
 

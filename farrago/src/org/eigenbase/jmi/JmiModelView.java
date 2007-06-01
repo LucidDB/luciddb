@@ -38,7 +38,6 @@ import org.jgrapht.traverse.*;
  */
 public class JmiModelView
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -109,7 +108,8 @@ public class JmiModelView
      *
      * @return Set of JmiAssocEdge
      */
-    public Set<JmiAssocEdge> getInheritedOutgoingAssocEdges(JmiClassVertex vertex)
+    public Set<JmiAssocEdge> getInheritedOutgoingAssocEdges(
+        JmiClassVertex vertex)
     {
         return getClassAttributes(vertex).inheritedOutgoingAssocEdges;
     }
@@ -122,7 +122,8 @@ public class JmiModelView
      *
      * @return Set of JmiAssocEdge
      */
-    public Set<JmiAssocEdge> getInheritedIncomingAssocEdges(JmiClassVertex vertex)
+    public Set<JmiAssocEdge> getInheritedIncomingAssocEdges(
+        JmiClassVertex vertex)
     {
         return getClassAttributes(vertex).inheritedIncomingAssocEdges;
     }
@@ -178,11 +179,9 @@ public class JmiModelView
 
             // Collect association edges at this level
             attrs.inheritedOutgoingAssocEdges.addAll(
-                (Set)
-                modelGraph.getAssocGraph().outgoingEdgesOf(vertex));
+                (Set) modelGraph.getAssocGraph().outgoingEdgesOf(vertex));
             attrs.inheritedIncomingAssocEdges.addAll(
-                (Set)
-                modelGraph.getAssocGraph().incomingEdgesOf(vertex));
+                (Set) modelGraph.getAssocGraph().incomingEdgesOf(vertex));
 
             // Agglomerate superclasses and their edges
             final List<JmiClassVertex> superVertices =

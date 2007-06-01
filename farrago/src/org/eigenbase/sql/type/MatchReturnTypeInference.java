@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
 public class MatchReturnTypeInference
     implements SqlReturnTypeInference
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int start;

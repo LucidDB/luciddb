@@ -47,7 +47,6 @@ import org.eigenbase.rex.*;
 public final class JoinRel
     extends JoinRelBase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     // NOTE jvs 14-Mar-2006:  Normally we don't use state like this
@@ -72,8 +71,8 @@ public final class JoinRel
      * @param condition Join condition
      * @param joinType Join type
      * @param variablesStopped Set of names of variables which are set by the
-     * LHS and used by the RHS and are not available to nodes above this
-     * JoinRel in the tree
+     * LHS and used by the RHS and are not available to nodes above this JoinRel
+     * in the tree
      */
     public JoinRel(
         RelOptCluster cluster,
@@ -95,11 +94,8 @@ public final class JoinRel
     }
 
     /**
-     * Creates a JoinRel, flagged with whether it has been translated to
-     * a semi-join or multi-join.
-     *
-     * @see #isSemiJoinDone()
-     * @see #isMultiJoinDone()
+     * Creates a JoinRel, flagged with whether it has been translated to a
+     * semi-join or multi-join.
      *
      * @param cluster Cluster
      * @param left Left input
@@ -107,11 +103,14 @@ public final class JoinRel
      * @param condition Join condition
      * @param joinType Join type
      * @param variablesStopped Set of names of variables which are set by the
-     * LHS and used by the RHS and are not available to nodes above this
-     * JoinRel in the tree
+     * LHS and used by the RHS and are not available to nodes above this JoinRel
+     * in the tree
      * @param semiJoinDone Whether this join has been translated to a semi-join
      * @param multiJoinDone Whether this join has been translated to a
      * multi-join
+     *
+     * @see #isSemiJoinDone()
+     * @see #isMultiJoinDone()
      */
     public JoinRel(
         RelOptCluster cluster,
@@ -166,7 +165,7 @@ public final class JoinRel
             this,
             new String[] {
                 "left", "right", "condition", "joinType", "semiJoinDone",
-            "multiJoinDone"
+                "multiJoinDone"
             },
             new Object[] {
                 joinType.name().toLowerCase(), semiJoinDone, multiJoinDone
@@ -174,9 +173,9 @@ public final class JoinRel
     }
 
     /**
-     * Returns whether this JoinRel has already spawned a
-     * {@link org.eigenbase.rel.rules.SemiJoinRel} via
-     * {@link org.eigenbase.rel.rules.AddRedundantSemiJoinRule}.
+     * Returns whether this JoinRel has already spawned a {@link
+     * org.eigenbase.rel.rules.SemiJoinRel} via {@link
+     * org.eigenbase.rel.rules.AddRedundantSemiJoinRule}.
      */
     public boolean isSemiJoinDone()
     {
@@ -184,8 +183,8 @@ public final class JoinRel
     }
 
     /**
-     * Returns whether this JoinRel has already been converted to a
-     * {@link org.eigenbase.rel.rules.MultiJoinRel}.
+     * Returns whether this JoinRel has already been converted to a {@link
+     * org.eigenbase.rel.rules.MultiJoinRel}.
      */
     public boolean isMultiJoinDone()
     {

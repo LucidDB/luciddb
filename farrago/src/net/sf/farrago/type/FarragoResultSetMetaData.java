@@ -38,7 +38,6 @@ public class FarragoResultSetMetaData
     extends FarragoJdbcMetaDataImpl
     implements ResultSetMetaData
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

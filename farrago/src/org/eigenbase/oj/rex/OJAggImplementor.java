@@ -39,7 +39,6 @@ import org.eigenbase.rel.*;
  */
 public interface OJAggImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

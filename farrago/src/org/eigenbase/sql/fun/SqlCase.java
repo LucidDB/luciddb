@@ -38,7 +38,6 @@ import org.eigenbase.sql.parser.*;
 public class SqlCase
     extends SqlCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

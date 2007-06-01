@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
 
-
 /**
  * Utility methods relating to parsing SQL.
  *
@@ -48,7 +47,6 @@ import org.eigenbase.util14.*;
  */
 public final class SqlParserUtil
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static final Logger tracer = EigenbaseTrace.getParserTracer();
@@ -108,7 +106,7 @@ public final class SqlParserUtil
         return new BigDecimal(s);
     }
 
-   /**
+    /**
      * @deprecated this method is not localized for Farrago standards
      */
     public static java.sql.Date parseDate(String s)
@@ -135,7 +133,7 @@ public final class SqlParserUtil
     /**
      * Checks if the date/time format is valid
      *
-     * @param pattern {@link SimpleDateFormat} pattern
+     * @param pattern {@link SimpleDateFormat}  pattern
      */
     public static void checkDateFormat(String pattern)
     {
@@ -163,9 +161,13 @@ public final class SqlParserUtil
         String literal,
         SqlIntervalQualifier intervalQualifier)
     {
-        Util.permAssert(!intervalQualifier.isYearMonth(), "interval must be day time");
+        Util.permAssert(
+            !intervalQualifier.isYearMonth(),
+            "interval must be day time");
         int [] ret = intervalQualifier.evaluateIntervalLiteral(literal);
-        Util.permAssert(ret != null, "error parsing day month interval " + literal);
+        Util.permAssert(
+            ret != null,
+            "error parsing day month interval " + literal);
 
         long l = 0;
         long [] conv = new long[5];
@@ -178,15 +180,15 @@ public final class SqlParserUtil
             l += conv[i - 1] * ret[i];
         }
         return ret[0] * l;
-
     }
+
     /**
      * Converts the interval value into a months representation.
      *
      * @param interval Interval
      *
-     * @return a long value that represents months equivalent of the
-     * interval value.
+     * @return a long value that represents months equivalent of the interval
+     * value.
      */
     public static long intervalToMonths(
         SqlIntervalLiteral.IntervalValue interval)
@@ -200,9 +202,13 @@ public final class SqlParserUtil
         String literal,
         SqlIntervalQualifier intervalQualifier)
     {
-        Util.permAssert(intervalQualifier.isYearMonth(), "interval must be year month");
+        Util.permAssert(
+            intervalQualifier.isYearMonth(),
+            "interval must be year month");
         int [] ret = intervalQualifier.evaluateIntervalLiteral(literal);
-        Util.permAssert(ret != null, "error parsing year month interval " + literal);
+        Util.permAssert(
+            ret != null,
+            "error parsing year month interval " + literal);
 
         long l = 0;
         long [] conv = new long[2];
@@ -403,8 +409,7 @@ public final class SqlParserUtil
         --column;
         int i = 0;
         while (line-- > 0) {
-            i =
-                sql.indexOf(Util.lineSeparator, i)
+            i = sql.indexOf(Util.lineSeparator, i)
                 + Util.lineSeparator.length();
         }
         return i + column;
@@ -529,8 +534,7 @@ public final class SqlParserUtil
      * example, if list contains <code>{A, B, C, D, E}</code> then <code>
      * replaceSublist(list, X, 1, 4)</code> returns <code>{A, X, E}</code>.
      */
-    public static <T> void replaceSublist(
-        List<T> list,
+    public static <T> void replaceSublist(List<T> list,
         int start,
         int end,
         T o)
@@ -597,7 +601,8 @@ outer:
                 SqlOperator current = ((ToTreeListItem) list.get(i)).op;
                 SqlParserPos currentPos = ((ToTreeListItem) list.get(i)).pos;
                 if ((stopperKind != SqlKind.Other)
-                    && (current.getKind() == stopperKind)) {
+                    && (current.getKind() == stopperKind))
+                {
                     break outer;
                 }
                 SqlOperator next;
@@ -623,7 +628,8 @@ outer:
                         next = ((ToTreeListItem) list.get(i + 2)).op;
                         nextLeft = next.getLeftPrec();
                         if ((next.getKind() == stopperKind)
-                            && (stopperKind != SqlKind.Other)) {
+                            && (stopperKind != SqlKind.Other))
+                        {
                             // Suppose we're looking at 'AND' in
                             //    a BETWEEN b OR c AND d
                             //
@@ -731,7 +737,8 @@ outer:
                                 next = ((ToTreeListItem) listItem).op;
                                 nextLeft = next.getLeftPrec();
                                 if ((stopperKind != SqlKind.Other)
-                                    && (next.getKind() == stopperKind)) {
+                                    && (next.getKind() == stopperKind))
+                                {
                                     break outer;
                                 } else {
                                     break;
@@ -799,8 +806,8 @@ outer:
 
     /**
      * Class that holds a {@link SqlOperator} and a {@link SqlParserPos}. Used
-     * by {@link SqlSpecialOperator#reduceExpr} and the parser to
-     * associate a parsed operator with a parser position.
+     * by {@link SqlSpecialOperator#reduceExpr} and the parser to associate a
+     * parsed operator with a parser position.
      */
     public static class ToTreeListItem
     {

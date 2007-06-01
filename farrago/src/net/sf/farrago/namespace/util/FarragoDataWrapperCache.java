@@ -36,7 +36,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -50,7 +50,6 @@ import org.eigenbase.util.Util;
 public class FarragoDataWrapperCache
     extends FarragoPluginCache
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FennelDbHandle fennelDbHandle;
@@ -112,7 +111,8 @@ public class FarragoDataWrapperCache
             // verify if the private cache entry is valid (with matching
             // library name and options)
             if (options.equals(wrapper.getProperties())
-                && libraryName.equals(wrapper.getLibraryName())) {
+                && libraryName.equals(wrapper.getLibraryName()))
+            {
                 // already privately cached
                 return wrapper;
             }
@@ -135,7 +135,8 @@ public class FarragoDataWrapperCache
         // fail. We should make libraryName and options part of the key, so
         // that cache entries are always valid.
         if (!options.equals(wrapper.getProperties())
-            || !libraryName.equals(wrapper.getLibraryName())) {
+            || !libraryName.equals(wrapper.getLibraryName()))
+        {
             getSharedCache().unpin(entry);
             getSharedCache().discard(mofId);
             entry = getSharedCache().pin(mofId, factory, true);
@@ -194,11 +195,10 @@ public class FarragoDataWrapperCache
         FemDataWrapper femWrapper)
     {
         Properties props = getStorageOptionsAsProperties(femWrapper);
-        return
-            loadWrapper(
-                femWrapper.refMofId(),
-                femWrapper.getLibraryFile(),
-                props);
+        return loadWrapper(
+            femWrapper.refMofId(),
+            femWrapper.getLibraryFile(),
+            props);
     }
 
     /**
@@ -232,9 +232,9 @@ public class FarragoDataWrapperCache
             loadWrapperFromCatalog(femDataWrapper);
 
         return loadServer(
-                femServer.refMofId(),
-                dataWrapper,
-                props);
+            femServer.refMofId(),
+            dataWrapper,
+            props);
     }
 
     /**
@@ -260,13 +260,16 @@ public class FarragoDataWrapperCache
 
         Properties props = getStorageOptionsAsProperties(baseColumnSet);
 
-        Map<String,Properties> columnPropMap = new HashMap<String, Properties>();
+        Map<String, Properties> columnPropMap =
+            new HashMap<String, Properties>();
 
         RelDataType rowType =
             typeFactory.createStructTypeFromClassifier(baseColumnSet);
 
-        for (FemStoredColumn column :
-            Util.cast(baseColumnSet.getFeature(), FemStoredColumn.class)) {
+        for (
+            FemStoredColumn column
+            : Util.cast(baseColumnSet.getFeature(), FemStoredColumn.class))
+        {
             columnPropMap.put(
                 column.getName(),
                 getStorageOptionsAsProperties(column));
@@ -277,7 +280,8 @@ public class FarragoDataWrapperCache
         FarragoMedColumnSet loadedColumnSet;
         try {
             loadedColumnSet =
-                medServer.newColumnSet(qualifiedName,
+                medServer.newColumnSet(
+                    qualifiedName,
                     props,
                     typeFactory,
                     rowType,
@@ -331,7 +335,7 @@ public class FarragoDataWrapperCache
         Map<String, Object> mapMofIdToPlugin = getMapMofIdToPlugin();
         for (Object plugin : mapMofIdToPlugin.values()) {
             if (plugin instanceof FarragoMedDataServer) {
-                ((FarragoMedDataServer)plugin).releaseResources();
+                ((FarragoMedDataServer) plugin).releaseResources();
             }
         }
     }
@@ -363,7 +367,8 @@ public class FarragoDataWrapperCache
             assert (mofId == key);
 
             FarragoMedDataWrapper wrapper =
-                (FarragoMedDataWrapper) initializePlugin(libraryName,
+                (FarragoMedDataWrapper) initializePlugin(
+                    libraryName,
                     "DataWrapperClassName",
                     options);
 

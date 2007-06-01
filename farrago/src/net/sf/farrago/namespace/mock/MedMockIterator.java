@@ -36,7 +36,6 @@ import org.eigenbase.runtime.*;
 public class MedMockIterator
     implements RestartableIterator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Object obj;

@@ -44,7 +44,6 @@ import org.eigenbase.util.*;
 public class FarragoObjectCache
     implements FarragoAllocation
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = FarragoTrace.getObjectCacheTracer();
@@ -256,7 +255,8 @@ public class FarragoObjectCache
 
             // get an ordered list of potential cache victims and search
             // for unused entries
-            Iterator<FarragoCacheEntry> lruList = victimPolicy.getVictimIterator();
+            Iterator<FarragoCacheEntry> lruList =
+                victimPolicy.getVictimIterator();
             while ((overdraft > 0) && lruList.hasNext()) {
                 FarragoCacheEntry entry = lruList.next();
                 if (entry.pinCount > 0) {
@@ -374,6 +374,7 @@ public class FarragoObjectCache
                 victimPolicy.unregisterEntry(entry);
             }
         }
+
         // release the synch lock before discarding the actual entries,
         // as that may take a while
         for (FarragoCacheEntry entry : list) {
@@ -409,8 +410,8 @@ public class FarragoObjectCache
                     + ", size " + entry.memoryUsage);
             }
 
-            assert (entry.pinCount == 0) :
-                "expected pin-count=0 for entry " + entry;
+            assert (entry.pinCount == 0) : "expected pin-count=0 for entry "
+                + entry;
             assert (entry.constructionThread == null) : entry;
 
             if (entry.value instanceof FarragoAllocation) {

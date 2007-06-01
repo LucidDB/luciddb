@@ -38,13 +38,12 @@ import org.eigenbase.sql.type.*;
 public final class OneRowRel
     extends OneRowRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>OneRowRel</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      */
     public OneRowRel(RelOptCluster cluster)

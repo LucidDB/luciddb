@@ -24,8 +24,8 @@ package net.sf.farrago.jdbc.engine;
 
 import java.util.*;
 
-import net.sf.farrago.runtime.*;
 import net.sf.farrago.jdbc.param.*;
+import net.sf.farrago.runtime.*;
 
 import org.eigenbase.reltype.*;
 
@@ -40,7 +40,6 @@ import org.eigenbase.reltype.*;
  */
 public class FarragoParamFieldMetaDataFactory
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

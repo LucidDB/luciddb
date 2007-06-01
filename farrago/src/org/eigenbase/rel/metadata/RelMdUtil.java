@@ -43,7 +43,6 @@ import org.eigenbase.util14.*;
  */
 public class RelMdUtil
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final SqlFunction artificialSelectivityFunc =
@@ -97,22 +96,24 @@ public class RelMdUtil
         return bd.doubleValue();
     }
 
-    
     /**
      * Computes the selectivity of a semijoin filter if it is applied on a fact
      * table. The computation is based on the selectivity of the dimension
      * table/columns and the number of distinct values in the fact table
      * columns.
-     * 
+     *
      * @param rel semijoin rel
-     * @return calculated selectivity 
+     *
+     * @return calculated selectivity
      */
     public static double computeSemiJoinSelectivity(
         SemiJoinRel rel)
     {
         return computeSemiJoinSelectivity(
-            rel.getLeft(), rel.getRight(),
-            rel.getLeftKeys(), rel.getRightKeys());
+            rel.getLeft(),
+            rel.getRight(),
+            rel.getLeftKeys(),
+            rel.getRightKeys());
     }
 
     /**
@@ -120,11 +121,12 @@ public class RelMdUtil
      * table. The computation is based on the selectivity of the dimension
      * table/columns and the number of distinct values in the fact table
      * columns.
-     * 
+     *
      * @param factRel fact table participating in the semijoin
      * @param dimRel dimension table participating in the semijoin
      * @param rel semijoin rel
-     * @return calculated selectivity 
+     *
+     * @return calculated selectivity
      */
     public static double computeSemiJoinSelectivity(
         RelNode factRel,
@@ -132,8 +134,10 @@ public class RelMdUtil
         SemiJoinRel rel)
     {
         return computeSemiJoinSelectivity(
-            factRel, dimRel,
-            rel.getLeftKeys(), rel.getRightKeys());
+            factRel,
+            dimRel,
+            rel.getLeftKeys(),
+            rel.getRightKeys());
     }
 
     /**
@@ -141,12 +145,13 @@ public class RelMdUtil
      * table. The computation is based on the selectivity of the dimension
      * table/columns and the number of distinct values in the fact table
      * columns.
-     * 
+     *
      * @param factRel fact table participating in the semijoin
      * @param dimRel dimension table participating in the semijoin
      * @param factKeyList LHS keys used in the filter
      * @param dimKeyList RHS keys used in the filter
-     * @return calculated selectivity 
+     *
+     * @return calculated selectivity
      */
     public static double computeSemiJoinSelectivity(
         RelNode factRel,
@@ -195,7 +200,8 @@ public class RelMdUtil
 
         if (selectivity == null) {
             // set a default selectivity based on the number of semijoin keys
-            selectivity = Math.pow(
+            selectivity =
+                Math.pow(
                     0.1,
                     dimKeys.cardinality());
         } else if (selectivity > 1.0) {
@@ -209,14 +215,15 @@ public class RelMdUtil
      * known to form a unique column set.
      *
      * @param rel the relnode that the column mask correponds to
-     * @param colMask bit mask containing columns that will be tested
-     * for uniqueness
+     * @param colMask bit mask containing columns that will be tested for
+     * uniqueness
      *
-     * @return true if bit mask represents a unique column set; false
-     * if not (or if no metadata is available)
+     * @return true if bit mask represents a unique column set; false if not (or
+     * if no metadata is available)
      */
     public static boolean areColumnsDefinitelyUnique(
-        RelNode rel, BitSet colMask)
+        RelNode rel,
+        BitSet colMask)
     {
         Boolean b = RelMetadataQuery.areColumnsUnique(rel, colMask);
         if (b == null) {
@@ -226,19 +233,21 @@ public class RelMdUtil
     }
 
     public static Boolean areColumnsUnique(
-        RelNode rel, List<RexInputRef> columnRefs)
+        RelNode rel,
+        List<RexInputRef> columnRefs)
     {
         BitSet colMask = new BitSet();
-        
+
         for (int i = 0; i < columnRefs.size(); i++) {
             colMask.set(columnRefs.get(i).getIndex());
         }
-        
+
         return RelMetadataQuery.areColumnsUnique(rel, colMask);
     }
 
     public static boolean areColumnsDefinitelyUnique(
-        RelNode rel, List<RexInputRef> columnRefs)
+        RelNode rel,
+        List<RexInputRef> columnRefs)
     {
         Boolean b = areColumnsUnique(rel, columnRefs);
         if (b == null) {
@@ -262,8 +271,11 @@ public class RelMdUtil
         BitSet rightMask,
         int nFieldsOnLeft)
     {
-        for (int bit = groupKey.nextSetBit(0); bit >= 0;
-            bit = groupKey.nextSetBit(bit + 1)) {
+        for (
+            int bit = groupKey.nextSetBit(0);
+            bit >= 0;
+            bit = groupKey.nextSetBit(bit + 1))
+        {
             if (bit < nFieldsOnLeft) {
                 leftMask.set(bit);
             } else {
@@ -329,8 +341,8 @@ public class RelMdUtil
     /**
      * Returns default estimates for selectivities, in the absence of stats.
      *
-     * @param predicate predicate for which selectivity will be computed;
-     *   null means true, so gives selectity of 1.0
+     * @param predicate predicate for which selectivity will be computed; null
+     * means true, so gives selectity of 1.0
      *
      * @return estimated selectivity
      */
@@ -342,8 +354,8 @@ public class RelMdUtil
     /**
      * Returns default estimates for selectivities, in the absence of stats.
      *
-     * @param predicate predicate for which selectivity will be computed;
-     *   null means true, so gives selectity of 1.0
+     * @param predicate predicate for which selectivity will be computed; null
+     * means true, so gives selectity of 1.0
      * @param artificialOnly return only the selectivity contribution from
      * artificial nodes
      *
@@ -365,16 +377,15 @@ public class RelMdUtil
 
         for (RexNode pred : predList) {
             if ((pred instanceof RexCall)
-                && (
-                    ((RexCall) pred).getOperator()
-                    == SqlStdOperatorTable.isNotNullOperator
-                   )) {
+                && (((RexCall) pred).getOperator()
+                    == SqlStdOperatorTable.isNotNullOperator))
+            {
                 sel *= .9;
-            } else if ((pred instanceof RexCall)
-                && (
-                    ((RexCall) pred).getOperator()
-                    == RelMdUtil.artificialSelectivityFunc
-                   )) {
+            } else if (
+                (pred instanceof RexCall)
+                && (((RexCall) pred).getOperator()
+                    == RelMdUtil.artificialSelectivityFunc))
+            {
                 artificialSel *= RelMdUtil.getSelectivityValue(pred);
             } else if (pred.isA(RexKind.Equals)) {
                 sel *= .15;
@@ -403,8 +414,8 @@ public class RelMdUtil
      * @param rightJoinCols bitmap that will be set with the columns on the RHS
      * of the join that participate in equijoins
      *
-     * @return remaining join filters that are not equijoins; may return
-     *   a {@link RexLiteral} true, but never null
+     * @return remaining join filters that are not equijoins; may return a
+     * {@link RexLiteral} true, but never null
      */
     public static RexNode findEquiJoinCols(
         RelNode leftChild,
@@ -528,8 +539,11 @@ public class RelMdUtil
         BitSet childKey)
     {
         AggregateRelBase.Call [] aggCalls = aggRel.getAggCalls();
-        for (int bit = groupKey.nextSetBit(0); bit >= 0;
-            bit = groupKey.nextSetBit(bit + 1)) {
+        for (
+            int bit = groupKey.nextSetBit(0);
+            bit >= 0;
+            bit = groupKey.nextSetBit(bit + 1))
+        {
             if (bit < aggRel.getGroupCount()) {
                 // group by column
                 childKey.set(bit);
@@ -560,8 +574,11 @@ public class RelMdUtil
         BitSet baseCols,
         BitSet projCols)
     {
-        for (int bit = groupKey.nextSetBit(0); bit >= 0;
-            bit = groupKey.nextSetBit(bit + 1)) {
+        for (
+            int bit = groupKey.nextSetBit(0);
+            bit >= 0;
+            bit = groupKey.nextSetBit(bit + 1))
+        {
             if (projExprs[bit] instanceof RexInputRef) {
                 baseCols.set(((RexInputRef) projExprs[bit]).getIndex());
             } else {
@@ -584,93 +601,12 @@ public class RelMdUtil
         return expr.accept(new CardOfProjExpr(rel));
     }
 
-    //~ Inner Classes ----------------------------------------------------------
-
-    private static class CardOfProjExpr
-        extends RexVisitorImpl<Double>
-    {
-        private ProjectRelBase rel;
-
-        public CardOfProjExpr(ProjectRelBase rel)
-        {
-            super(true);
-            this.rel = rel;
-        }
-
-        public Double visitInputRef(RexInputRef var)
-        {
-            int index = var.getIndex();
-            BitSet col = new BitSet(index);
-            col.set(index);
-            Double distinctRowCount =
-                RelMetadataQuery.getDistinctRowCount(
-                    rel.getChild(),
-                    col,
-                    null);
-            if (distinctRowCount == null) {
-                return null;
-            } else {
-                return
-                    RelMdUtil.numDistinctVals(
-                        distinctRowCount,
-                        RelMetadataQuery.getRowCount(rel));
-            }
-        }
-
-        public Double visitLiteral(RexLiteral literal)
-        {
-            return
-                RelMdUtil.numDistinctVals(
-                    1.0,
-                    RelMetadataQuery.getRowCount(rel));
-        }
-
-        public Double visitCall(RexCall call)
-        {
-            Double distinctRowCount;
-            Double rowCount = RelMetadataQuery.getRowCount(rel);
-            if (call.isA(RexKind.MinusPrefix)) {
-                distinctRowCount = cardOfProjExpr(rel, call.getOperands()[0]);
-            } else if (call.isA(RexKind.Plus) || call.isA(RexKind.Minus)) {
-                Double card0 = cardOfProjExpr(rel, call.getOperands()[0]);
-                if (card0 == null) {
-                    return null;
-                }
-                Double card1 = cardOfProjExpr(rel, call.getOperands()[1]);
-                if (card1 == null) {
-                    return null;
-                }
-                distinctRowCount = Math.max(card0, card1);
-            } else if (call.isA(RexKind.Times) || call.isA(RexKind.Divide)) {
-                distinctRowCount =
-                    NumberUtil.multiply(
-                        cardOfProjExpr(rel, call.getOperands()[0]),
-                        cardOfProjExpr(rel, call.getOperands()[1]));
-
-                // TODO zfong 6/21/06 - Broadbase has code to handle date
-                // functions like year, month, day; E.g., cardinality of Month()
-                // is 12
-            } else {
-                if (call.getOperands().length == 1) {
-                    distinctRowCount =
-                        cardOfProjExpr(
-                            rel,
-                            call.getOperands()[0]);
-                } else {
-                    distinctRowCount = rowCount / 10;
-                }
-            }
-
-            return numDistinctVals(distinctRowCount, rowCount);
-        }
-    }
-    
     /**
      * Computes the population size for a set of keys returned from a join
-     * 
+     *
      * @param joinRel the join rel
      * @param groupKey keys to compute the population for
-     * 
+     *
      * @return computed population size
      */
     public static Double getJoinPopulationSize(
@@ -698,21 +634,20 @@ public class RelMdUtil
                     right,
                     rightMask));
 
-        return
-            RelMdUtil.numDistinctVals(
-                population,
-                RelMetadataQuery.getRowCount(joinRel));
+        return RelMdUtil.numDistinctVals(
+            population,
+            RelMetadataQuery.getRowCount(joinRel));
     }
-    
+
     /**
-     * Computes the number of distinct rows for a set of keys returned from
-     * a join
-     * 
+     * Computes the number of distinct rows for a set of keys returned from a
+     * join
+     *
      * @param joinRel RelNode representing the join
      * @param joinType type of join
      * @param groupKey keys that the distinct row count will be computed for
      * @param predicate join predicate
-     * 
+     *
      * @return number of distinct rows
      */
     public static Double getJoinDistinctRowCount(
@@ -769,10 +704,88 @@ public class RelMdUtil
                     rightMask,
                     rightPred));
 
-        return
-            RelMdUtil.numDistinctVals(
-                distRowCount,
-                RelMetadataQuery.getRowCount(joinRel));
+        return RelMdUtil.numDistinctVals(
+            distRowCount,
+            RelMetadataQuery.getRowCount(joinRel));
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class CardOfProjExpr
+        extends RexVisitorImpl<Double>
+    {
+        private ProjectRelBase rel;
+
+        public CardOfProjExpr(ProjectRelBase rel)
+        {
+            super(true);
+            this.rel = rel;
+        }
+
+        public Double visitInputRef(RexInputRef var)
+        {
+            int index = var.getIndex();
+            BitSet col = new BitSet(index);
+            col.set(index);
+            Double distinctRowCount =
+                RelMetadataQuery.getDistinctRowCount(
+                    rel.getChild(),
+                    col,
+                    null);
+            if (distinctRowCount == null) {
+                return null;
+            } else {
+                return RelMdUtil.numDistinctVals(
+                    distinctRowCount,
+                    RelMetadataQuery.getRowCount(rel));
+            }
+        }
+
+        public Double visitLiteral(RexLiteral literal)
+        {
+            return RelMdUtil.numDistinctVals(
+                1.0,
+                RelMetadataQuery.getRowCount(rel));
+        }
+
+        public Double visitCall(RexCall call)
+        {
+            Double distinctRowCount;
+            Double rowCount = RelMetadataQuery.getRowCount(rel);
+            if (call.isA(RexKind.MinusPrefix)) {
+                distinctRowCount = cardOfProjExpr(rel, call.getOperands()[0]);
+            } else if (call.isA(RexKind.Plus) || call.isA(RexKind.Minus)) {
+                Double card0 = cardOfProjExpr(rel, call.getOperands()[0]);
+                if (card0 == null) {
+                    return null;
+                }
+                Double card1 = cardOfProjExpr(rel, call.getOperands()[1]);
+                if (card1 == null) {
+                    return null;
+                }
+                distinctRowCount = Math.max(card0, card1);
+            } else if (call.isA(RexKind.Times) || call.isA(RexKind.Divide)) {
+                distinctRowCount =
+                    NumberUtil.multiply(
+                        cardOfProjExpr(rel, call.getOperands()[0]),
+                        cardOfProjExpr(rel, call.getOperands()[1]));
+
+                // TODO zfong 6/21/06 - Broadbase has code to handle date
+                // functions like year, month, day; E.g., cardinality of Month()
+                // is 12
+            } else {
+                if (call.getOperands().length == 1) {
+                    distinctRowCount =
+                        cardOfProjExpr(
+                            rel,
+                            call.getOperands()[0]);
+                } else {
+                    distinctRowCount = rowCount / 10;
+                }
+            }
+
+            return numDistinctVals(distinctRowCount, rowCount);
+        }
     }
 }
 

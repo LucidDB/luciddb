@@ -35,7 +35,6 @@ import net.sf.farrago.cwm.relational.*;
  */
 public class FarragoSessionResolvedObject<T extends CwmModelElement>
 {
-
     //~ Instance fields --------------------------------------------------------
 
     public CwmCatalog catalog;

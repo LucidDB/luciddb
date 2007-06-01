@@ -46,7 +46,6 @@ import org.eigenbase.util.*;
 public abstract class DdlGrantStmt
     extends DdlStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected boolean grantOption;

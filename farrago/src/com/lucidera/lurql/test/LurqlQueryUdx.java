@@ -44,7 +44,6 @@ import org.eigenbase.jmi.*;
  */
 public abstract class LurqlQueryUdx
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -77,7 +76,8 @@ public abstract class LurqlQueryUdx
             JmiQueryProcessor queryProcessor =
                 new LurqlQueryProcessor(
                     context.getMdrRepos());
-            JmiPreparedQuery query = queryProcessor.prepare(
+            JmiPreparedQuery query =
+                queryProcessor.prepare(
                     context.getModelView(),
                     lurql);
 

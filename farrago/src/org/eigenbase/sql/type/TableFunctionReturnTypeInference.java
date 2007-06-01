@@ -21,16 +21,16 @@
 */
 package org.eigenbase.sql.type;
 
+import java.util.*;
+
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 
-import java.util.*;
 
 /**
- * TableFunctionReturnTypeInference implements rules for deriving
- * table function output row types by expanding references to cursor
- * parameters.
+ * TableFunctionReturnTypeInference implements rules for deriving table function
+ * output row types by expanding references to cursor parameters.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -38,9 +38,13 @@ import java.util.*;
 public class TableFunctionReturnTypeInference
     extends ExplicitReturnTypeInference
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final List<String> paramNames;
 
     private Set<RelColumnMapping> columnMappings;
+
+    //~ Constructors -----------------------------------------------------------
 
     public TableFunctionReturnTypeInference(
         RelDataType unexpandedOutputType,
@@ -49,6 +53,8 @@ public class TableFunctionReturnTypeInference
         super(unexpandedOutputType);
         this.paramNames = paramNames;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public Set<RelColumnMapping> getColumnMappings()
     {
@@ -70,6 +76,7 @@ public class TableFunctionReturnTypeInference
                 expandedFieldNames.add(fieldName);
                 continue;
             }
+
             // Look up position of cursor parameter with same name as output
             // field, also counting how many cursors appear before it
             // (need this for correspondence with RelNode child position).
@@ -85,9 +92,11 @@ public class TableFunctionReturnTypeInference
                     ++iCursor;
                 }
             }
-            assert(paramOrdinal != -1);
+            assert (paramOrdinal != -1);
+
             // Translate to actual argument type.
             RelDataType cursorType = opBinding.getCursorOperand(paramOrdinal);
+
             // And expand (function output is always nullable).
             int iInputColumn = -1;
             for (RelDataTypeField cursorField : cursorType.getFieldList()) {
@@ -96,6 +105,7 @@ public class TableFunctionReturnTypeInference
                 columnMapping.iOutputColumn = expandedFieldNames.size();
                 columnMapping.iInputColumn = iInputColumn;
                 columnMapping.iInputRel = iCursor;
+
                 // we don't have any metadata on transformation effect,
                 // so assume the worst
                 columnMapping.isDerived = true;

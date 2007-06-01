@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
 public abstract class DiffTestCase
     extends TestCase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -94,7 +93,8 @@ public abstract class DiffTestCase
         compiledDiffMatcher = null;
         gcInterval = 0;
         if (System.getProperty(DiffTestCase.class.getName() + ".verbose", "")
-            != null) {
+            != null)
+        {
             verbose = true;
         }
     }
@@ -149,7 +149,8 @@ public abstract class DiffTestCase
                 getTestlogRoot(),
                 ReflectUtil.getUnqualifiedClassName(getClass()));
         testClassDir.mkdirs();
-        File testLogFile = new File(
+        File testLogFile =
+            new File(
                 testClassDir,
                 getName());
         return new OutputStreamWriter(openTestLogOutputStream(testLogFile));
@@ -399,7 +400,6 @@ public abstract class DiffTestCase
         // mask out different-length sqlline continuation prompts
         addDiffMask("^(\\.\\s?)+>");
     }
-
 }
 
 // End DiffTestCase.java

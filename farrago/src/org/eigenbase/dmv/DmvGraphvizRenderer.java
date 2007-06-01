@@ -21,35 +21,41 @@
 */
 package org.eigenbase.dmv;
 
-import org.eigenbase.util.*;
+import java.io.*;
+
+import java.util.*;
+
+import javax.jmi.model.*;
+import javax.jmi.reflect.*;
+
 import org.eigenbase.jmi.*;
+import org.eigenbase.util.*;
 
 import org.jgrapht.*;
 import org.jgrapht.graph.*;
 
-import java.util.*;
-import java.io.*;
-
-import javax.jmi.reflect.*;
-import javax.jmi.model.*;
 
 /**
- * DmvGraphvizRenderer renders a {@link DmvResponse} as a <code>.dot</code>
- * file suitable for input to <a href="http://www.graphviz.org">Graphviz</a>.
+ * DmvGraphvizRenderer renders a {@link DmvResponse} as a <code>.dot</code> file
+ * suitable for input to <a href="http://www.graphviz.org">Graphviz</a>.
  *
  * @author John Sichi
  * @version $Id$
  */
 public class DmvGraphvizRenderer
 {
+    //~ Instance fields --------------------------------------------------------
+
     private PrintWriter pw;
     private DmvResponse response;
     private JmiDependencyGraph dependencyGraph;
     private DirectedGraph<JmiDependencyVertex, DefaultEdge> hierarchyGraph;
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Renders a {@link DmvResponse} in .dot format and writes the result
-     * to a {@link Writer}.
+     * Renders a {@link DmvResponse} in .dot format and writes the result to a
+     * {@link Writer}.
      */
     public void renderDmv(
         DmvResponse response,
@@ -102,6 +108,7 @@ public class DmvGraphvizRenderer
             pw.write(StackWriter.INDENT);
             pw.println("bgcolor=white;");
             pw.print("label=\"");
+
             // FIXME escaping
             pw.print(getVertexName(vertex));
             pw.println("\";");
@@ -115,6 +122,7 @@ public class DmvGraphvizRenderer
         } else {
             pw.print(getVertexId(vertex));
             pw.print("[label=\"");
+
             // FIXME escaping
             pw.print(getVertexName(vertex));
             pw.println("\"];");
@@ -126,7 +134,7 @@ public class DmvGraphvizRenderer
         // TODO:  deal with edges between clusters by using lhead and ltail
         // and picking a representative child arbitrarily via
         // getHierarchyRep
-        
+
         for (DefaultEdge edge : dependencyGraph.edgeSet()) {
             pw.print(getVertexId(dependencyGraph.getEdgeSource(edge)));
             pw.print("->");
@@ -134,7 +142,7 @@ public class DmvGraphvizRenderer
             pw.println("[];");
         }
     }
-    
+
     private String getVertexId(JmiDependencyVertex vertex)
     {
         return Long.toString(System.identityHashCode(vertex));

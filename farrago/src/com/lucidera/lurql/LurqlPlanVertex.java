@@ -24,13 +24,13 @@ import java.util.*;
 
 import javax.jmi.model.*;
 
+import org.eigenbase.jmi.*;
+import org.eigenbase.util.*;
+
 import org.jgrapht.*;
 import org.jgrapht.event.*;
 import org.jgrapht.graph.*;
 import org.jgrapht.traverse.*;
-
-import org.eigenbase.jmi.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
  */
 public class LurqlPlanVertex
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -139,7 +138,7 @@ public class LurqlPlanVertex
         return var;
     }
 
-    public DirectedGraph<LurqlPlanVertex,LurqlPlanEdge> getRecursionSubgraph()
+    public DirectedGraph<LurqlPlanVertex, LurqlPlanEdge> getRecursionSubgraph()
     {
         return recursionSubgraph;
     }
@@ -169,7 +168,8 @@ public class LurqlPlanVertex
         stringRep = computeStringRep();
     }
 
-    DirectedGraph<LurqlPlanVertex, LurqlPlanEdge> createReachableSubgraph(final boolean setRecursive)
+    DirectedGraph<LurqlPlanVertex, LurqlPlanEdge> createReachableSubgraph(
+        final boolean setRecursive)
     {
         final DirectedGraph<LurqlPlanVertex, LurqlPlanEdge> subgraph =
             new DirectedMultigraph<LurqlPlanVertex, LurqlPlanEdge>(
@@ -180,8 +180,10 @@ public class LurqlPlanVertex
             new DepthFirstIterator<LurqlPlanVertex, LurqlPlanEdge>(
                 plan.getGraph(),
                 this);
-        iter.addTraversalListener(new TraversalListenerAdapter<LurqlPlanVertex, LurqlPlanEdge>() {
-                public void edgeTraversed(EdgeTraversalEvent<LurqlPlanVertex, LurqlPlanEdge> e)
+        iter.addTraversalListener(
+            new TraversalListenerAdapter<LurqlPlanVertex, LurqlPlanEdge>() {
+                public void edgeTraversed(
+                    EdgeTraversalEvent<LurqlPlanVertex, LurqlPlanEdge> e)
                 {
                     Graphs.addEdgeWithVertices(
                         subgraph,
@@ -189,7 +191,8 @@ public class LurqlPlanVertex
                         e.getEdge());
                 }
 
-                public void vertexTraversed(VertexTraversalEvent<LurqlPlanVertex> e)
+                public void vertexTraversed(
+                    VertexTraversalEvent<LurqlPlanVertex> e)
                 {
                     subgraph.addVertex(e.getVertex());
                     if (setRecursive) {
@@ -287,7 +290,7 @@ public class LurqlPlanVertex
 
         // then, find classes to which all filters apply
         Set<JmiClassVertex> filterSet = new HashSet<JmiClassVertex>();
-        outer:
+outer:
         for (JmiClassVertex vertex : expandedSet) {
             for (LurqlFilter filter : filters) {
                 if (filter.isMofId()) {

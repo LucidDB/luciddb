@@ -23,10 +23,11 @@
 package net.sf.farrago.query;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+
 
 /**
  * FennelCartesianJoinRule is a rule for converting an INNER JoinRel with no
@@ -38,7 +39,6 @@ import org.eigenbase.rex.*;
 public class FennelCartesianJoinRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FennelCartesianJoinRule()
@@ -65,8 +65,8 @@ public class FennelCartesianJoinRule
         RelNode rightRel = joinRel.getRight();
 
         /*
-         * Joins that can use CartesianProduct will have only TRUE condition 
-         * in JoinRel. Any other join conditions have to be extracted out 
+         * Joins that can use CartesianProduct will have only TRUE condition
+         * in JoinRel. Any other join conditions have to be extracted out
          * already. This implies that only ON TRUE condition is suported for
          * LeftOuterJoins or RightOuterJoins.
          */
@@ -80,7 +80,7 @@ public class FennelCartesianJoinRule
             rightRel = tmp;
             joinType = JoinRelType.LEFT;
         }
-        
+
         /*
          * CartesianProduct relies on a post filter to do the join filtering.
          * If the join condition is not extracted to a post filter(and is still
@@ -89,7 +89,7 @@ public class FennelCartesianJoinRule
         boolean joinConditionFeasible =
             joinRel.getCondition().equals(
                 joinRel.getCluster().getRexBuilder().makeLiteral(true));
-                
+
         if (!joinTypeFeasible || !joinConditionFeasible) {
             return;
         }
@@ -131,8 +131,8 @@ public class FennelCartesianJoinRule
                 rightRel);
         if (fennelRight == null) {
             return;
-        }      
-        
+        }
+
         RelDataType joinRowType;
         if (swapped) {
             joinRowType =
@@ -152,13 +152,13 @@ public class FennelCartesianJoinRule
                 fennelRight,
                 joinType,
                 RelOptUtil.getFieldNameList(joinRowType));
-        
+
         RelNode newRel;
         if (swapped) {
             // if the join inputs were swapped, create a CalcRel on top of
             // the new cartesian join that reflects the original join
             // projection
-            final RexNode [] exps = 
+            final RexNode [] exps =
                 RelOptUtil.createSwappedJoinExprs(
                     productRel,
                     joinRel,
@@ -183,16 +183,16 @@ public class FennelCartesianJoinRule
         }
         call.transformTo(newRel);
     }
-    
+
     /**
-     * Returns a FennelBufferRel in the case where it makes sense to buffer
-     * the RHS into the cartesian product join.  This is done by comparing
-     * the cost between the buffered and non-buffered cases.
-     * 
+     * Returns a FennelBufferRel in the case where it makes sense to buffer the
+     * RHS into the cartesian product join. This is done by comparing the cost
+     * between the buffered and non-buffered cases.
+     *
      * @param left left hand input into the cartesian join
      * @param right right hand input into the cartesian join
      * @param traits traits of the original join
-     * 
+     *
      * @return created FennelBufferRel if it makes sense to buffer the RHS
      */
     private FennelBufferRel bufferRight(
@@ -200,7 +200,7 @@ public class FennelCartesianJoinRule
         RelNode right,
         RelTraitSet traits)
     {
-        RelNode fennelInput = 
+        RelNode fennelInput =
             mergeTraitsAndConvert(
                 traits,
                 FennelRel.FENNEL_EXEC_CONVENTION,
@@ -220,7 +220,7 @@ public class FennelCartesianJoinRule
         if (!FarragoRelMetadataQuery.canRestart(right)) {
             return bufRel;
         }
-        
+
         // Cost without buffering is:
         // getCumulativeCost(LHS) +
         //     getRowCount(LHS) * getCumulativeCost(RHS)
@@ -234,20 +234,19 @@ public class FennelCartesianJoinRule
         //
         // To decide if buffering makes sense, take the difference between the
         // two costs described above.
-        RelOptCost rightCost =
-            RelMetadataQuery.getCumulativeCost(right);
+        RelOptCost rightCost = RelMetadataQuery.getCumulativeCost(right);
         RelOptCost noBufferPlanCost = rightCost.multiplyBy(nRowsLeft);
-        
+
         RelOptCost bufferCost = RelMetadataQuery.getNonCumulativeCost(bufRel);
         bufferCost = bufferCost.multiplyBy(3);
         RelOptCost bufferPlanCost = bufferCost.multiplyBy(nRowsLeft);
         bufferPlanCost = bufferPlanCost.plus(rightCost);
-        
+
         if (bufferPlanCost.isLt(noBufferPlanCost)) {
             return bufRel;
         } else {
             return null;
-        }      
+        }
     }
 }
 

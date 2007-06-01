@@ -29,13 +29,10 @@ import java.util.*;
  * FennelTupleData is an in-memory collection of independent data values, as
  * explained in the fennel tuple <a
  * href="http://fennel.sourceforge.net/doxygen/html/structTupleDesign.html">
- * design document</a>.
- *
- * This class is JDK 1.4 compatible.
+ * design document</a>. This class is JDK 1.4 compatible.
  */
 public class FennelTupleData
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

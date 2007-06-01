@@ -20,11 +20,12 @@
 */
 package com.lucidera.type;
 
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.type.*;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.type.*;
 
 /**
  * LucidDbTypeFactory overrides {@link FarragoTypeFactoryImpl} with
@@ -33,9 +34,9 @@ import net.sf.farrago.type.*;
  * @author John Pham
  * @version $Id$
  */
-public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
+public class LucidDbTypeFactory
+    extends FarragoTypeFactoryImpl
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -49,9 +50,6 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
      */
     public static final int DECIMAL_QUOTIENT_SCALE_CAP = 6;
 
-    //~ Instance fields --------------------------------------------------------
-
-
     //~ Constructors -----------------------------------------------------------
 
     public LucidDbTypeFactory(FarragoRepos repos)
@@ -62,16 +60,19 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Similar to {@link RelDataTypeFactoryImpl#createDecimalProduct} but
-     * caps the maximum scale at {@link #DECIMAL_PRODUCT_SCALE_CAP}.
+     * Similar to {@link RelDataTypeFactoryImpl#createDecimalProduct} but caps
+     * the maximum scale at {@link #DECIMAL_PRODUCT_SCALE_CAP}.
      */
     public RelDataType createDecimalProduct(
-        RelDataType type1, RelDataType type2)
+        RelDataType type1,
+        RelDataType type2)
     {
         if (SqlTypeUtil.isExactNumeric(type1)
-            && SqlTypeUtil.isExactNumeric(type2)) {
+            && SqlTypeUtil.isExactNumeric(type2))
+        {
             if (SqlTypeUtil.isDecimal(type1)
-                || SqlTypeUtil.isDecimal(type2)) {
+                || SqlTypeUtil.isDecimal(type2))
+            {
                 int p1 = type1.getPrecision();
                 int p2 = type2.getPrecision();
                 int s1 = type1.getScale();
@@ -84,8 +85,8 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
                 // if precision is too great and we have to make a choice
                 // between integer digits and scale, then favor integer
                 // digits once certain scale is reached
-                if (precision > SqlTypeName.MAX_NUMERIC_PRECISION
-                    && scale > DECIMAL_PRODUCT_SCALE_CAP)
+                if ((precision > SqlTypeName.MAX_NUMERIC_PRECISION)
+                    && (scale > DECIMAL_PRODUCT_SCALE_CAP))
                 {
                     int pDiff = precision - SqlTypeName.MAX_NUMERIC_PRECISION;
                     int sDiff = scale - DECIMAL_PRODUCT_SCALE_CAP;
@@ -111,24 +112,28 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
 
     // implement RelDataTypeFactory
     public boolean useDoubleMultiplication(
-        RelDataType type1, RelDataType type2)
+        RelDataType type1,
+        RelDataType type2)
     {
-        assert(createDecimalProduct(type1, type2) != null);
+        assert (createDecimalProduct(type1, type2) != null);
         int p1 = type1.getPrecision();
         int p2 = type2.getPrecision();
+
         // use double multiplication whenever the result might overflow
-        return p1 + p2 >= SqlTypeName.MAX_NUMERIC_PRECISION;
+        return (p1 + p2) >= SqlTypeName.MAX_NUMERIC_PRECISION;
     }
 
     /**
-     * Similar to {@link RelDataTypeFactoryImpl#createDecimalQuotient} but
-     * caps the maximum scale at {@link #DECIMAL_QUOTIENT_SCALE_CAP}.
+     * Similar to {@link RelDataTypeFactoryImpl#createDecimalQuotient} but caps
+     * the maximum scale at {@link #DECIMAL_QUOTIENT_SCALE_CAP}.
      */
     public RelDataType createDecimalQuotient(
-        RelDataType type1, RelDataType type2)
+        RelDataType type1,
+        RelDataType type2)
     {
         if (SqlTypeUtil.isExactNumeric(type1)
-            && SqlTypeUtil.isExactNumeric(type2)) {
+            && SqlTypeUtil.isExactNumeric(type2))
+        {
             int p1 = type1.getPrecision();
             int p2 = type2.getPrecision();
             int s1 = type1.getScale();
@@ -143,9 +148,8 @@ public class LucidDbTypeFactory extends FarragoTypeFactoryImpl
             // LucidDb preserves the scale, but caps it, in order to
             // preserve the integral part of the result.
             scale = Math.min(scale, DECIMAL_QUOTIENT_SCALE_CAP);
-            dout =
-                Math.min(dout,
-                    SqlTypeName.MAX_NUMERIC_PRECISION - scale);
+            dout = Math.min(dout,
+                SqlTypeName.MAX_NUMERIC_PRECISION - scale);
 
             int precision = dout + scale;
             assert (precision <= SqlTypeName.MAX_NUMERIC_PRECISION);

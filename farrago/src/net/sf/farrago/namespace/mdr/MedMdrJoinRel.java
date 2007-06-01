@@ -46,7 +46,6 @@ class MedMdrJoinRel
     extends JoinRelBase
     implements JavaRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private int leftOrdinal;
@@ -71,9 +70,8 @@ class MedMdrJoinRel
             condition,
             joinType,
             Collections.EMPTY_SET);
-        assert ((joinType == JoinRelType.INNER) || (
-                    joinType == JoinRelType.LEFT
-                                                   ));
+        assert ((joinType == JoinRelType.INNER)
+            || (joinType == JoinRelType.LEFT));
 
         this.leftOrdinal = leftOrdinal;
         this.rightReference = rightReference;
@@ -111,10 +109,10 @@ class MedMdrJoinRel
     {
         // TODO:  refine
         double rowCount = RelMetadataQuery.getRowCount(this);
-        return
-            planner.makeCost(rowCount,
-                0,
-                rowCount * getRowType().getFieldList().size());
+        return planner.makeCost(
+            rowCount,
+            0,
+            rowCount * getRowType().getFieldList().size());
     }
 
     // implement RelNode
@@ -127,10 +125,9 @@ class MedMdrJoinRel
         } else {
             // one-to-many:  assume a fanout of five, capped by the
             // total number of rows on the right
-            return
-                Math.min(
-                    5 * RelMetadataQuery.getRowCount(left),
-                    RelMetadataQuery.getRowCount(right));
+            return Math.min(
+                5 * RelMetadataQuery.getRowCount(left),
+                RelMetadataQuery.getRowCount(right));
         }
     }
 

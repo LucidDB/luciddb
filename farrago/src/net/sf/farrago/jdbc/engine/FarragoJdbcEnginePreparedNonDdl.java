@@ -43,7 +43,6 @@ import net.sf.farrago.type.*;
 public class FarragoJdbcEnginePreparedNonDdl
     extends FarragoJdbcEnginePreparedStatement
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -120,9 +119,8 @@ public class FarragoJdbcEnginePreparedNonDdl
             throw new SQLException(ERRMSG_NOT_A_QUERY + sql);
         }
         try {
-            return
-                new FarragoResultSetMetaData(
-                    stmtContext.getPreparedRowType());
+            return new FarragoResultSetMetaData(
+                stmtContext.getPreparedRowType());
         } catch (Throwable ex) {
             throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
@@ -133,9 +131,8 @@ public class FarragoJdbcEnginePreparedNonDdl
         throws SQLException
     {
         try {
-            return
-                new FarragoParameterMetaData(
-                    stmtContext.getPreparedParamType());
+            return new FarragoParameterMetaData(
+                stmtContext.getPreparedParamType());
         } catch (Throwable ex) {
             throw FarragoJdbcEngineDriver.newSqlException(ex);
         }

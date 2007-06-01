@@ -39,7 +39,6 @@ import org.eigenbase.sql.type.*;
 public class SqlInfixOperator
     extends SqlSpecialOperator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String [] names;
@@ -54,7 +53,8 @@ public class SqlInfixOperator
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(names[0],
+        super(
+            names[0],
             kind,
             precedence,
             true,

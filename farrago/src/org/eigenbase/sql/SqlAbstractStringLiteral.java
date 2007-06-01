@@ -34,7 +34,6 @@ import org.eigenbase.sql.type.*;
 abstract class SqlAbstractStringLiteral
     extends SqlLiteral
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected SqlAbstractStringLiteral(

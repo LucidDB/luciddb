@@ -43,7 +43,6 @@ import org.eigenbase.util.*;
  */
 public class SqlValidatorUtil
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -56,23 +55,25 @@ public class SqlValidatorUtil
      * @param datasetName Name of sample dataset to substitute, or null to use
      * the regular table
      * @param usedDataset Output parameter which is set to true if a sample
-     *   dataset is found; may be null
+     * dataset is found; may be null
      */
     public static RelOptTable getRelOptTable(
         SqlValidatorNamespace namespace,
         RelOptSchema schema,
         String datasetName,
-        boolean[] usedDataset)
+        boolean [] usedDataset)
     {
         if (namespace instanceof IdentifierNamespace) {
             IdentifierNamespace identifierNamespace =
                 (IdentifierNamespace) namespace;
             final String [] names = identifierNamespace.getId().names;
             if ((datasetName != null)
-                && (schema instanceof RelOptSchemaWithSampling)) {
-                return
-                    ((RelOptSchemaWithSampling) schema).getTableForMember(
-                        names, datasetName, usedDataset);
+                && (schema instanceof RelOptSchemaWithSampling))
+            {
+                return ((RelOptSchemaWithSampling) schema).getTableForMember(
+                    names,
+                    datasetName,
+                    usedDataset);
             } else {
                 // Schema does not support substitution. Ignore the dataset,
                 // if any.
@@ -257,12 +258,11 @@ public class SqlValidatorUtil
         SqlValidatorCatalogReader catalogReader,
         RelDataTypeFactory typeFactory)
     {
-        return
-            new SqlValidatorImpl(
-                opTab,
-                catalogReader,
-                typeFactory,
-                SqlValidator.Compatible.Default);
+        return new SqlValidatorImpl(
+            opTab,
+            catalogReader,
+            typeFactory,
+            SqlValidator.Compatible.Default);
     }
 
     /**

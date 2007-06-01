@@ -37,7 +37,6 @@ import org.eigenbase.util.*;
 public class SetopNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlCall call;
@@ -81,9 +80,9 @@ public class SetopNamespace
             }
             final SqlValidatorScope scope = validator.scopes.get(call);
             return call.getOperator().validateOperands(
-                    validator,
-                    scope,
-                    call);
+                validator,
+                scope,
+                call);
         default:
             throw Util.newInternal("Not a query: " + call.getKind());
         }

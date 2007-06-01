@@ -42,7 +42,6 @@ import org.eigenbase.trace.*;
  */
 class RelSet
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
@@ -131,7 +130,8 @@ class RelSet
     public RelSubset add(RelNode rel)
     {
         assert equivalentSet == null : "adding to a dead set";
-        RelSubset subset = getOrCreateSubset(
+        RelSubset subset =
+            getOrCreateSubset(
                 rel.getCluster(),
                 rel.getTraits());
         subset.add(rel);

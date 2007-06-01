@@ -40,7 +40,6 @@ import net.sf.farrago.resource.*;
  */
 public class FarragoAbstractPluginBase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -50,16 +49,16 @@ public class FarragoAbstractPluginBase
         new DriverPropertyInfo[0];
 
     public static final String [] BOOLEAN_CHOICES_DEFAULT_FALSE =
-        {
-            "FALSE",
-            "TRUE"
-        };
+    {
+        "FALSE",
+        "TRUE"
+    };
 
     public static final String [] BOOLEAN_CHOICES_DEFAULT_TRUE =
-        {
-            "TRUE",
-            "FALSE"
-        };
+    {
+        "TRUE",
+        "FALSE"
+    };
 
     //~ Methods ----------------------------------------------------------------
 
@@ -103,7 +102,8 @@ public class FarragoAbstractPluginBase
             try {
                 return Long.parseLong(s);
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().PluginInvalidLongProp.ex(s,
+                throw FarragoResource.instance().PluginInvalidLongProp.ex(
+                    s,
                     propName);
             }
         }
@@ -132,7 +132,8 @@ public class FarragoAbstractPluginBase
             try {
                 return Integer.parseInt(s);
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().PluginInvalidIntProp.ex(s,
+                throw FarragoResource.instance().PluginInvalidIntProp.ex(
+                    s,
                     propName);
             }
         }
@@ -161,7 +162,8 @@ public class FarragoAbstractPluginBase
             try {
                 return Short.parseShort(s);
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().PluginInvalidShortProp.ex(s,
+                throw FarragoResource.instance().PluginInvalidShortProp.ex(
+                    s,
                     propName);
             }
         }
@@ -190,7 +192,8 @@ public class FarragoAbstractPluginBase
             try {
                 return Byte.parseByte(s);
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().PluginInvalidByteProp.ex(s,
+                throw FarragoResource.instance().PluginInvalidByteProp.ex(
+                    s,
                     propName);
             }
         }
@@ -219,7 +222,8 @@ public class FarragoAbstractPluginBase
             try {
                 return Float.parseFloat(s);
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().PluginInvalidFloatProp.ex(s,
+                throw FarragoResource.instance().PluginInvalidFloatProp.ex(
+                    s,
                     propName);
             }
         }
@@ -248,7 +252,8 @@ public class FarragoAbstractPluginBase
             try {
                 return Double.parseDouble(s);
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().PluginInvalidDoubleProp.ex(s,
+                throw FarragoResource.instance().PluginInvalidDoubleProp.ex(
+                    s,
                     propName);
             }
         }
@@ -276,8 +281,7 @@ public class FarragoAbstractPluginBase
         if (s == null) {
             return defaultValue;
         }
-        return
-            s.equalsIgnoreCase("1") || s.equalsIgnoreCase("t")
+        return s.equalsIgnoreCase("1") || s.equalsIgnoreCase("t")
             || s.equalsIgnoreCase("true") || s.equalsIgnoreCase("yes")
             || s.equalsIgnoreCase("on");
     }

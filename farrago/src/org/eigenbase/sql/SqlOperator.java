@@ -22,6 +22,8 @@
  */
 package org.eigenbase.sql;
 
+import java.util.*;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.parser.*;
@@ -30,7 +32,6 @@ import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * A <code>SqlOperator</code> is a type of node in a SQL parse tree (it is NOT a
@@ -57,7 +58,6 @@ import java.util.*;
  */
 public abstract class SqlOperator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String NL = System.getProperty("line.separator");
@@ -246,7 +246,7 @@ public abstract class SqlOperator
     public SqlCall createCall(
         SqlLiteral functionQualifier,
         SqlParserPos pos,
-        SqlNode... operands)
+        SqlNode ... operands)
     {
         pos = pos.plusAll(operands);
         return new SqlCall(this, operands, pos, false, functionQualifier);
@@ -260,7 +260,7 @@ public abstract class SqlOperator
      */
     public final SqlCall createCall(
         SqlParserPos pos,
-        SqlNode... operands)
+        SqlNode ... operands)
     {
         return createCall(null, pos, operands);
     }
@@ -324,7 +324,10 @@ public abstract class SqlOperator
         unparseListClause(writer, clause, null);
     }
 
-    protected void unparseListClause(SqlWriter writer, SqlNode clause, SqlKind sepKind)
+    protected void unparseListClause(
+        SqlWriter writer,
+        SqlNode clause,
+        SqlKind sepKind)
     {
         if (clause instanceof SqlNodeList) {
             if (sepKind != null) {
@@ -524,8 +527,7 @@ public abstract class SqlOperator
         RelDataTypeFactory typeFactory,
         RelDataType [] operandTypes)
     {
-        return
-        inferReturnType(
+        return inferReturnType(
             new ExplicitOperatorBinding(
                 typeFactory,
                 this,
@@ -554,8 +556,7 @@ public abstract class SqlOperator
             throw Util.needToImplement(this);
         }
 
-        return
-        operandTypeChecker.checkOperandTypes(
+        return operandTypeChecker.checkOperandTypes(
             callBinding,
             throwOnFailure);
     }
@@ -618,8 +619,8 @@ public abstract class SqlOperator
     {
         assert (operandTypeChecker != null) : "If you see this, assign operandTypeChecker a value "
             + "or override this function";
-        return
-        operandTypeChecker.getAllowedSignatures(this, opNameToUse).trim();
+        return operandTypeChecker.getAllowedSignatures(this, opNameToUse)
+            .trim();
     }
 
     public SqlOperandTypeInference getOperandTypeInference()
@@ -660,11 +661,10 @@ public abstract class SqlOperator
     }
 
     /**
-     * Accepts a {@link SqlVisitor}, directing an
-     * {@link org.eigenbase.sql.util.SqlBasicVisitor.ArgHandler} 
-     * to visit operand of a call. The argument
-     * handler allows fine control about how the operands are visited, and how
-     * the results are combined.
+     * Accepts a {@link SqlVisitor}, directing an {@link
+     * org.eigenbase.sql.util.SqlBasicVisitor.ArgHandler} to visit operand of a
+     * call. The argument handler allows fine control about how the operands are
+     * visited, and how the results are combined.
      *
      * @param visitor Visitor
      * @param call Call to visit
@@ -672,7 +672,8 @@ public abstract class SqlOperator
      * expressions. For example, in the call to the <code>AS</code> operator
      * @param argHandler Called for each operand
      */
-    public <R> void acceptCall(SqlVisitor<R> visitor,
+    public <R> void acceptCall(
+        SqlVisitor<R> visitor,
         SqlCall call,
         boolean onlyExpressions,
         SqlBasicVisitor.ArgHandler<R> argHandler)
@@ -684,8 +685,8 @@ public abstract class SqlOperator
     }
 
     /**
-     * @return the return type inference strategy for this operator, or
-     * null if return type inference is implemented by a subclass override
+     * @return the return type inference strategy for this operator, or null if
+     * return type inference is implemented by a subclass override
      */
     public SqlReturnTypeInference getReturnTypeInference()
     {
@@ -729,15 +730,15 @@ public abstract class SqlOperator
     }
 
     /**
-     * Returns whether the <code>ordinal</code>th argument to this operator
-     * must be scalar (as opposed to a query).
+     * Returns whether the <code>ordinal</code>th argument to this operator must
+     * be scalar (as opposed to a query).
      *
-     * <p>If true (the default), the validator will attempt to
-     * convert the argument into a scalar subquery, which must have one column
-     * and return at most one row.
+     * <p>If true (the default), the validator will attempt to convert the
+     * argument into a scalar subquery, which must have one column and return at
+     * most one row.
      *
-     * <p>Operators such as <code>SELECT</code> and <code>EXISTS</code>
-     * override this method.
+     * <p>Operators such as <code>SELECT</code> and <code>EXISTS</code> override
+     * this method.
      */
     public boolean argumentMustBeScalar(int ordinal)
     {

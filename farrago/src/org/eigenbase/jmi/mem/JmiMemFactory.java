@@ -34,6 +34,7 @@ import org.eigenbase.util.*;
 
 import org.jgrapht.DirectedGraph;
 
+
 /**
  * JmiMemFactory creates objects for use in an in-memory repository
  * implementation.
@@ -44,6 +45,109 @@ import org.jgrapht.DirectedGraph;
  */
 public abstract class JmiMemFactory
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final Float FloatZero = Float.valueOf(0);
+    private static final Double DoubleZero = Double.valueOf(0);
+
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Enumeration of common method names to be handled by the proxy.
+     */
+    private static enum MethodId
+    {
+        /** Method {@link Object#toString()}. */
+        toString,
+
+        /** Method {@link Object#hashCode()}. */
+        hashCode,
+
+        /** Method {@link Object#equals(Object)}. */
+        equals,
+
+        /** Method {@link Comparable#compareTo(Object)}. */
+        compareTo,
+
+        /** Method {@link RefBaseObject#refMofId()}. */
+        refMofId,
+
+        /** Method {@link Element#impl()}. */
+        impl,
+
+        /** Method {@link RefObject#refClass()}. */
+        refClass,
+
+        /** Method {@link RefPackage#refAllPackages()}. */
+        refImmediateComposite,
+
+        /** Method {@link RefObject#refImmediateComposite()}. */
+        refOutermostPackage,
+
+        /** Method {@link RefObject#refOutermostPackage()}. */
+        refImmediatePackage,
+
+        /** Method {@link RefObject#refImmediatePackage()}. */
+        refAllPackages,
+
+        /** Method {@link RefPackage#refAllClasses()}. */
+        refAllClasses,
+
+        /** Method {@link RefPackage#refAllAssociations()}. */
+        refAllAssociations,
+
+        /** Method {@link RefBaseObject#refMetaObject()}. */
+        refMetaObject,
+
+        /** Methods {@link RefClass#refGetEnum(RefObject, String)},
+         * {@link RefClass#refGetEnum(String, String)},
+         * {@link RefPackage#refGetEnum(RefObject, String)} and
+         * {@link RefPackage#refGetEnum(String, String)}. */
+        refGetEnum,
+
+        /** Methods {@link RefFeatured#refGetValue(RefObject)} and
+         * {@link RefFeatured#refGetValue(String)}. */
+        refGetValue,
+
+        /** Methods {@link RefFeatured#refSetValue(RefObject, Object)} and
+         * {@link RefFeatured#refSetValue(String, Object)}. */
+        refSetValue,
+
+        /** Methods {@link RefPackage#refPackage(RefObject)} and
+         * {@link RefPackage#refPackage(String)}. */
+        refPackage,
+
+        /** Methods {@link RefPackage#refAssociation(RefObject)} and
+         * {@link RefPackage#refAssociation(String)}. */
+        refAssociation,
+
+        /** Method {@link RefPackage#refDelete()}. */
+        refDelete,
+
+        /** Method {@link RefAssociation#refAllLinks()}. */
+        refAllLinks,
+
+        /** Methods {@link RefAssociation#refQuery(RefObject, RefObject)} and
+         * {@link RefAssociation#refQuery(String, RefObject)}. */
+        refQuery,
+
+        /** Method
+         * {@link RefAssociation#refLinkExists(RefObject, RefObject)}. */
+        refLinkExists,
+
+        /** Method {@link RefAssociation#refAddLink(RefObject, RefObject)}. */
+        refAddLink,
+
+        /** Method
+         * {@link RefAssociation#refRemoveLink(RefObject, RefObject)}. */
+        refRemoveLink,
+
+        /** Method {@link RefClass#refCreateInstance(List)}. */
+        refCreateInstance,
+
+        /** Method {@link RefObject#refIsInstanceOf(RefObject, boolean)}. */
+        refIsInstanceOf;
+    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -53,8 +157,6 @@ public abstract class JmiMemFactory
     private final HashMap<Class<? extends RefBaseObject>, RefObject> metaMap;
     private final Map<RefObject, RefPackage> pluginPackageMap;
     private final Map<Class, RefClass> classMap;
-    private static final Float FloatZero = Float.valueOf(0);
-    private static final Double DoubleZero = Double.valueOf(0);
 
     //~ Constructors -----------------------------------------------------------
 
@@ -155,13 +257,16 @@ public abstract class JmiMemFactory
     {
         if (RefClass.class.isAssignableFrom(clazz)) {
             return new RefClassImpl(
-                (Class<? extends RefClass>) clazz, immediatePkg);
+                (Class<? extends RefClass>) clazz,
+                immediatePkg);
         } else if (RefPackage.class.isAssignableFrom(clazz)) {
             return new RefPackageImpl(
-                (Class<? extends RefPackage>) clazz, immediatePkg);
+                (Class<? extends RefPackage>) clazz,
+                immediatePkg);
         } else if (RefAssociation.class.isAssignableFrom(clazz)) {
             return new RefAssociationImpl(
-                (Class<? extends RefAssociation>) clazz, immediatePkg);
+                (Class<? extends RefAssociation>) clazz,
+                immediatePkg);
         } else {
             if (preemptive) {
                 return null;
@@ -195,7 +300,8 @@ public abstract class JmiMemFactory
      * @return Name of backward relationship, or null if not found
      */
     private Relationship lookupRelationship(
-        Class<? extends RefBaseObject> fromClass, String fromName)
+        Class<? extends RefBaseObject> fromClass,
+        String fromName)
     {
         Relationship relationship =
             relationshipMap.get(fromClass.getName() + ":" + fromName);
@@ -240,8 +346,8 @@ public abstract class JmiMemFactory
      * Defines a meta-object.
      *
      * @param iface Java interface to associate with meta-object
-     * @param metaObject meta-object to return for
-     * {@link RefBaseObject#refMetaObject} from instances of iface
+     * @param metaObject meta-object to return for {@link
+     * RefBaseObject#refMetaObject} from instances of iface
      */
     public void defineMetaObject(
         Class<? extends RefBaseObject> iface,
@@ -316,103 +422,6 @@ public abstract class JmiMemFactory
     //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * Enumeration of common method names to be handled by the proxy.
-     */
-    private static enum MethodId
-    {
-        /** Method {@link Object#toString()}. */
-        toString,
-
-        /** Method {@link Object#hashCode()}. */
-        hashCode,
-
-        /** Method {@link Object#equals(Object)}. */
-        equals,
-
-        /** Method {@link Comparable#compareTo(Object)}. */
-        compareTo,
-
-        /** Method {@link RefBaseObject#refMofId()}. */
-        refMofId,
-
-        /** Method {@link Element#impl()}. */
-        impl,
-
-        /** Method {@link RefObject#refClass()}. */
-        refClass,
-
-        /** Method {@link RefPackage#refAllPackages()}. */
-        refImmediateComposite,
-
-        /** Method {@link RefObject#refImmediateComposite()}. */
-        refOutermostPackage,
-
-        /** Method {@link RefObject#refOutermostPackage()}. */
-        refImmediatePackage,
-
-        /** Method {@link RefObject#refImmediatePackage()}. */
-        refAllPackages,
-
-        /** Method {@link RefPackage#refAllClasses()}. */
-        refAllClasses,
-
-        /** Method {@link RefPackage#refAllAssociations()}. */
-        refAllAssociations,
-
-        /** Method {@link RefBaseObject#refMetaObject()}. */
-        refMetaObject,
-
-        /** Methods {@link RefClass#refGetEnum(RefObject, String)},
-         * {@link RefClass#refGetEnum(String, String)},
-         * {@link RefPackage#refGetEnum(RefObject, String)} and
-         * {@link RefPackage#refGetEnum(String, String)}. */
-        refGetEnum,
-
-        /** Methods {@link RefFeatured#refGetValue(RefObject)} and
-         * {@link RefFeatured#refGetValue(String)}. */
-        refGetValue,
-
-        /** Methods {@link RefFeatured#refSetValue(RefObject, Object)} and
-         * {@link RefFeatured#refSetValue(String, Object)}. */
-        refSetValue,
-
-        /** Methods {@link RefPackage#refPackage(RefObject)} and
-         * {@link RefPackage#refPackage(String)}. */
-        refPackage,
-
-        /** Methods {@link RefPackage#refAssociation(RefObject)} and
-         * {@link RefPackage#refAssociation(String)}. */
-        refAssociation,
-
-        /** Method {@link RefPackage#refDelete()}. */
-        refDelete,
-
-        /** Method {@link RefAssociation#refAllLinks()}. */
-        refAllLinks,
-
-        /** Methods {@link RefAssociation#refQuery(RefObject, RefObject)} and
-         * {@link RefAssociation#refQuery(String, RefObject)}. */
-        refQuery,
-
-        /** Method
-         * {@link RefAssociation#refLinkExists(RefObject, RefObject)}. */
-        refLinkExists,
-
-        /** Method {@link RefAssociation#refAddLink(RefObject, RefObject)}. */
-        refAddLink,
-
-        /** Method
-         * {@link RefAssociation#refRemoveLink(RefObject, RefObject)}. */
-        refRemoveLink,
-
-        /** Method {@link RefClass#refCreateInstance(List)}. */
-        refCreateInstance,
-
-        /** Method {@link RefObject#refIsInstanceOf(RefObject, boolean)}. */
-        refIsInstanceOf;
-    }
-
-    /**
      * Implementation of a {@link RefBaseObject} via an {@link
      * InvocationHandler} interface.
      *
@@ -449,7 +458,8 @@ public abstract class JmiMemFactory
                 // FarragoConfiguresFennel.  There's no collection
                 // involved, but a bidirectional link is still required.
                 if ((attrName != null)
-                    && (method.getParameterTypes().length == 0)) {
+                    && (method.getParameterTypes().length == 0))
+                {
                     if (Collection.class.isAssignableFrom(methodReturn)) {
                         initCollection(attrName);
                     }
@@ -460,8 +470,7 @@ public abstract class JmiMemFactory
                     getClass().getClassLoader(),
                     new Class[] { clazz, Element.class },
                     this);
-            mapMofId(
-                (RefBaseObject) proxy,
+            mapMofId((RefBaseObject) proxy,
                 proxyRefMofId());
         }
 
@@ -498,102 +507,110 @@ public abstract class JmiMemFactory
                 MethodId methodId = MethodId.valueOf(MethodId.class, name);
                 switch (methodId) {
                 case toString:
-                // Intercept methods on Object. Otherwise we loop.
+
+                    // Intercept methods on Object. Otherwise we loop.
                     assert method.getDeclaringClass() == Object.class;
                     return clazz + ":" + System.identityHashCode(proxy);
                 case hashCode:
+
                     // Intercept methods on Object. Otherwise we loop.
                     assert method.getDeclaringClass() == Object.class;
                     return new Integer(System.identityHashCode(proxy));
                 case equals:
+
                     // Intercept methods on Object. Otherwise we loop.
                     assert method.getDeclaringClass() == Object.class;
                     return Boolean.valueOf(proxy == args[0]);
                 case compareTo:
                     if (method.getDeclaringClass() == Comparable.class) {
                         assert name.equals("compareTo");
-                assert args == null;
-                RefBaseObject that = (RefBaseObject) args[0];
-                String thisMofId = this.proxyRefMofId();
-                String thatMofId = that.refMofId();
-                return new Integer(thisMofId.compareTo(thatMofId));
+                        assert args == null;
+                        RefBaseObject that = (RefBaseObject) args[0];
+                        String thisMofId = this.proxyRefMofId();
+                        String thatMofId = that.refMofId();
+                        return new Integer(thisMofId.compareTo(thatMofId));
                     }
                     break;
                 case refMofId:
-                assert method.getDeclaringClass() == RefBaseObject.class;
-                assert args == null;
-                return proxyRefMofId();
+                    assert method.getDeclaringClass() == RefBaseObject.class;
+                    assert args == null;
+                    return proxyRefMofId();
                 case impl:
-                assert method.getDeclaringClass() == Element.class;
-                assert args == null;
-                return proxyImpl();
+                    assert method.getDeclaringClass() == Element.class;
+                    assert args == null;
+                    return proxyImpl();
                 case refClass:
                     if (args == null) {
-                return classMap.get(clazz);
+                        return classMap.get(clazz);
                     } else {
                         return proxyRefByMoniker(args[0]);
                     }
                 case refImmediateComposite:
-                return proxyImmediateComposite();
+                    return proxyImmediateComposite();
                 case refOutermostPackage:
-                return rootPackageImpl.wrap();
+                    return rootPackageImpl.wrap();
                 case refImmediatePackage:
-                return proxyRefImmediatePackage();
+                    return proxyRefImmediatePackage();
                 case refAllPackages:
-                return proxyRefAllPackages();
+                    return proxyRefAllPackages();
                 case refAllClasses:
-                return filterChildren(RefClass.class);
+                    return filterChildren(RefClass.class);
                 case refAllAssociations:
-                return filterChildren(RefAssociation.class);
+                    return filterChildren(RefAssociation.class);
                 case refMetaObject:
                     RefObject obj = metaMap.get(clazz);
                     if (obj != null) {
-                return obj;
+                        return obj;
                     }
                     return createImpl(MofPackage.class, null, false).wrap();
                 case refGetEnum:
-                return proxyRefGetEnum(args[0], (String) args[1]);
+                    return proxyRefGetEnum(args[0], (String) args[1]);
                 case refGetValue:
-                return proxyRefByMoniker(args[0]);
+                    return proxyRefByMoniker(args[0]);
                 case refSetValue:
-                return proxyRefSetValue(args[0], args[1]);
+                    return proxyRefSetValue(args[0], args[1]);
                 case refPackage:
-                return proxyRefPackage(args[0]);
+                    return proxyRefPackage(args[0]);
                 case refAssociation:
-                return proxyRefByMoniker(args[0]);
+                    return proxyRefByMoniker(args[0]);
                 case refDelete:
-                // REVIEW jvs 9-Mar-2006: this is to allow code to be reusable
-                // across persistent and mem repositories, but the behavior
-                // will be different!
-                return null;
+
+                    // REVIEW jvs 9-Mar-2006: this is to allow code to be
+                    // reusable across persistent and mem repositories, but the
+                    // behavior will be different!
+                    return null;
                 case refAllLinks:
-                // REVIEW jvs 30-Jan-2006:  To implement this, we
-                // would have to keep track of extents, which we don't
-                // want to do.  Instead of failing, return empty set
-                // so that XMI export can work (assuming the model
-                // does not contain an association without a corresponding
-                // reference on at least one side).
-                return Collections.EMPTY_SET;
+
+                    // REVIEW jvs 30-Jan-2006:  To implement this, we
+                    // would have to keep track of extents, which we don't
+                    // want to do.  Instead of failing, return empty set
+                    // so that XMI export can work (assuming the model
+                    // does not contain an association without a corresponding
+                    // reference on at least one side).
+                    return Collections.EMPTY_SET;
                 case refQuery:
-                // REVIEW: swz 20-Nov-2006: Same problem as refAllLinks:
-                // no extents, so we just return an empty collection.
-                return Collections.EMPTY_SET;
+
+                    // REVIEW: swz 20-Nov-2006: Same problem as refAllLinks:
+                    // no extents, so we just return an empty collection.
+                    return Collections.EMPTY_SET;
                 case refLinkExists:
-                return
-                    proxyRefLinkExists((RefObject) args[0],
+                    return proxyRefLinkExists(
+                        (RefObject) args[0],
                         (RefObject) args[1]);
                 case refAddLink:
-                return
-                    proxyRefAddLink((RefObject) args[0], (RefObject) args[1]);
+                    return proxyRefAddLink(
+                        (RefObject) args[0],
+                        (RefObject) args[1]);
                 case refRemoveLink:
-                return
-                    proxyRefRemoveLink((RefObject) args[0],
+                    return proxyRefRemoveLink(
+                        (RefObject) args[0],
                         (RefObject) args[1]);
                 case refCreateInstance:
-                return proxyRefCreateInstance((List) args[0]);
+                    return proxyRefCreateInstance((List) args[0]);
                 case refIsInstanceOf:
-                return proxyRefIsInstanceOf(
-                    (RefObject)args[0], (Boolean)args[1]);
+                    return proxyRefIsInstanceOf(
+                        (RefObject) args[0],
+                        (Boolean) args[1]);
                 }
             } catch (IllegalArgumentException e) {
                 // Method name is not one of the standard ones -- that's OK.
@@ -617,8 +634,8 @@ public abstract class JmiMemFactory
                     args,
                     method.getReturnType());
             }
-                throw new UnsupportedOperationException(method.toString());
-            }
+            throw new UnsupportedOperationException(method.toString());
+        }
 
         protected String proxyRefMofId()
         {
@@ -645,11 +662,10 @@ public abstract class JmiMemFactory
             assert args.length == 1;
             Class attrClass = method.getParameterTypes()[0];
             final Object o = args[0];
-            return
-                proxySet(
-                    attrName,
-                    o,
-                    RefBaseObject.class.isAssignableFrom(attrClass));
+            return proxySet(
+                attrName,
+                o,
+                RefBaseObject.class.isAssignableFrom(attrClass));
         }
 
         protected Object proxySet(
@@ -659,6 +675,7 @@ public abstract class JmiMemFactory
         {
             if (value instanceof Collection) {
                 Collection oldVal = (Collection) get(attrName);
+
                 // REVIEW jvs 30-Nov-2006:  need to break existing links?
                 oldVal.clear();
                 for (Object o : (Collection) value) {
@@ -785,7 +802,7 @@ public abstract class JmiMemFactory
 
             // Have to cast RefPackageImpl to ElementImpl to get at the
             // proxy field.  (Eclipse, at least, doesn't allow this otherwise.)
-            return (RefPackage)((ElementImpl)immediatePkg).proxy;
+            return (RefPackage) ((ElementImpl) immediatePkg).proxy;
         }
 
         protected Object proxyRefByMoniker(Object moniker)
@@ -798,7 +815,8 @@ public abstract class JmiMemFactory
         protected Object proxyRefSetValue(Object moniker, Object value)
         {
             String accessorName = getAccessorName(moniker);
-            Object result = proxySet(
+            Object result =
+                proxySet(
                     parseGetter(accessorName),
                     value,
                     true);
@@ -808,10 +826,10 @@ public abstract class JmiMemFactory
         protected String getAccessorName(Object moniker)
         {
             if (moniker instanceof String) {
-                String name = (String)moniker;
+                String name = (String) moniker;
 
-                return "get" + Character.toUpperCase(name.charAt(0)) +
-                    name.substring(1);
+                return "get" + Character.toUpperCase(name.charAt(0))
+                    + name.substring(1);
             } else {
                 ModelElement modelElement = (ModelElement) moniker;
                 return JmiObjUtil.getAccessorName(modelElement);
@@ -933,11 +951,13 @@ public abstract class JmiMemFactory
             ResolvedReference rr,
             AssociationEnd referencedEnd)
         {
-            for (Reference featureRef
+            for (
+                Reference featureRef
                 : JmiObjUtil.getFeatures(
                     rr.referencingEnd.refClass(),
                     Reference.class,
-                    rr.multiValued)) {
+                    rr.multiValued))
+            {
                 if (featureRef.getReferencedEnd() == referencedEnd) {
                     rr.ref = featureRef;
                     return true;
@@ -977,7 +997,8 @@ public abstract class JmiMemFactory
         }
 
         protected Boolean proxyRefIsInstanceOf(
-            RefObject refObject, boolean considerSubTypes)
+            RefObject refObject,
+            boolean considerSubTypes)
         {
             RefObject thisMofClass = classMap.get(clazz).refMetaObject();
 
@@ -985,7 +1006,9 @@ public abstract class JmiMemFactory
         }
 
         private boolean isInstanceOf(
-            RefObject mofClass, RefObject refObject, boolean considerSubTypes)
+            RefObject mofClass,
+            RefObject refObject,
+            boolean considerSubTypes)
         {
             if (refObject.equals(mofClass)) {
                 return true;
@@ -1003,15 +1026,15 @@ public abstract class JmiMemFactory
             // don't require it.  If you hit this assertion, you've added
             // a test that needs this method and will have to rewrite your
             // test case to use JmiModeledMemFactory (see JmiMemTest).
-            assert(modelGraph != null);
+            assert (modelGraph != null);
 
             JmiClassVertex mofClassVertex =
-                modelGraph.getVertexForMofClass((MofClass)refObject);
+                modelGraph.getVertexForMofClass((MofClass) refObject);
 
             // Traverse up refObject's inheritance chain and see if we find
             // a match.
-            DirectedGraph<JmiClassVertex, JmiInheritanceEdge>
-                inheritanceGraph = modelGraph.getInheritanceGraph();
+            DirectedGraph<JmiClassVertex, JmiInheritanceEdge> inheritanceGraph =
+                modelGraph.getInheritanceGraph();
 
             Set<JmiInheritanceEdge> edges =
                 inheritanceGraph.outgoingEdgesOf(mofClassVertex);
@@ -1080,7 +1103,8 @@ public abstract class JmiMemFactory
                 Method method = methods[i];
                 String methodName = method.getName();
                 if (methodName.startsWith("create")
-                    && (method.getParameterTypes().length == 0)) {
+                    && (method.getParameterTypes().length == 0))
+                {
                     Class instanceClass = method.getReturnType();
                     classMap.put(instanceClass, (RefClass) wrap());
                 }
@@ -1137,7 +1161,8 @@ public abstract class JmiMemFactory
                 String methodName = method.getName();
                 String attrName = parseGetter(methodName);
                 if ((attrName != null)
-                    && (method.getParameterTypes().length == 0)) {
+                    && (method.getParameterTypes().length == 0))
+                {
                     Class attributeClass = method.getReturnType();
 
                     // Attribute is class, package, or association.
@@ -1177,7 +1202,9 @@ public abstract class JmiMemFactory
         boolean compositeChild;
 
         Relationship(
-            Class<? extends RefBaseObject> clazz, String name, boolean many)
+            Class<? extends RefBaseObject> clazz,
+            String name,
+            boolean many)
         {
             super();
             this.clazz = clazz;
@@ -1219,7 +1246,7 @@ public abstract class JmiMemFactory
 
         public boolean addAll(Collection<? extends Object> c)
         {
-            for(Object o: c) {
+            for (Object o : c) {
                 this.add(o);
             }
 
@@ -1230,10 +1257,10 @@ public abstract class JmiMemFactory
     /**
      * List which holds instances of a bi-directional relationship.
      *
-     * <p>When an instance of the relationship is created, by calling
-     * {@link #add(Object)} to the collection at one end, this collection
-     * automatically finds the corresponding collection at the other end and
-     * calls its <code>addInternal</code> method.
+     * <p>When an instance of the relationship is created, by calling {@link
+     * #add(Object)} to the collection at one end, this collection automatically
+     * finds the corresponding collection at the other end and calls its <code>
+     * addInternal</code> method.
      */
     private static class ManyList
         extends ArrayList<Object>
@@ -1265,7 +1292,7 @@ public abstract class JmiMemFactory
 
         public boolean addAll(Collection<? extends Object> c)
         {
-            for(Object o: c) {
+            for (Object o : c) {
                 this.add(o);
             }
 

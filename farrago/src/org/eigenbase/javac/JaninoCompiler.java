@@ -22,10 +22,13 @@
 */
 package org.eigenbase.javac;
 
-import java.util.*;
 import java.io.*;
+
 import java.nio.*;
+
 import java.security.*;
+
+import java.util.*;
 
 import org.codehaus.janino.*;
 import org.codehaus.janino.util.*;
@@ -45,7 +48,6 @@ import org.eigenbase.util.*;
 public class JaninoCompiler
     implements JavaCompiler
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private JaninoCompilerArgs args = new JaninoCompilerArgs();
@@ -73,7 +75,7 @@ public class JaninoCompiler
             compileImpl();
         }
     }
-    
+
     private void compileImpl()
     {
         // REVIEW: SWZ: 3/12/2006: When this method is invoked multiple times,
@@ -94,12 +96,12 @@ public class JaninoCompiler
             parentClassLoader = classLoader;
         }
 
-        Map<String, byte []> sourceMap = new HashMap<String, byte []>();
+        Map<String, byte[]> sourceMap = new HashMap<String, byte[]>();
         sourceMap.put(
             ClassFile.getSourceResourceName(args.fullClassName),
             args.source.getBytes());
         MapResourceFinder sourceFinder = new MapResourceFinder(sourceMap);
-        
+
         classLoader =
             new AccountingClassLoader(
                 parentClassLoader,
@@ -148,13 +150,13 @@ public class JaninoCompiler
         {
             return true;
         }
-        
+
         public void setDestdir(String destdir)
         {
             super.setDestdir(destdir);
             this.destdir = destdir;
         }
-        
+
         public void setSource(String source, String fileName)
         {
             this.source = source;
@@ -168,14 +170,14 @@ public class JaninoCompiler
     }
 
     /**
-     * Refinement of JavaSourceClassLoader which keeps track of the
-     * total bytecode length of the classes it has compiled.
+     * Refinement of JavaSourceClassLoader which keeps track of the total
+     * bytecode length of the classes it has compiled.
      */
     private static class AccountingClassLoader
         extends JavaSourceClassLoader
     {
         private int nBytes;
-        
+
         public AccountingClassLoader(
             ClassLoader parentClassLoader,
             ResourceFinder sourceFinder,
@@ -183,8 +185,10 @@ public class JaninoCompiler
             EnumeratorSet debuggingInformation)
         {
             super(
-                parentClassLoader, sourceFinder,
-                optionalCharacterEncoding, debuggingInformation);
+                parentClassLoader,
+                sourceFinder,
+                optionalCharacterEncoding,
+                debuggingInformation);
         }
 
         int getTotalByteCodeSize()
@@ -200,6 +204,7 @@ public class JaninoCompiler
             if (map == null) {
                 return map;
             }
+
             // NOTE jvs 18-Oct-2006:  Janino has actually compiled everything
             // to bytecode even before all of the classes have actually
             // been loaded.  So we intercept their sizes here just

@@ -53,7 +53,6 @@ import org.eigenbase.util.*;
 public interface FarragoSessionDdlValidator
     extends FarragoAllocation
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -294,7 +293,8 @@ public interface FarragoSessionDdlValidator
      * @param element object impacted by replacement
      * @param ex exception to be handled, may be null
      */
-    public void setRevalidationResult(CwmModelElement element,
+    public void setRevalidationResult(
+        CwmModelElement element,
         EigenbaseException ex);
 
     /**

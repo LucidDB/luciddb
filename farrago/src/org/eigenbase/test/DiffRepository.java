@@ -113,7 +113,6 @@ import org.xml.sax.*;
  */
 public class DiffRepository
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /*
@@ -277,7 +276,8 @@ public class DiffRepository
         if (text == null) {
             return null;
         } else if (text.startsWith("${")
-            && text.endsWith("}")) {
+            && text.endsWith("}"))
+        {
             final String testCaseName = getCurrentTestCaseName(true);
             final String token = text.substring(2, text.length() - 1);
             if (tag == null) {
@@ -299,7 +299,8 @@ public class DiffRepository
             // resource file.
             final String testCaseName = getCurrentTestCaseName(true);
             if ((baseRepos != null)
-                && (baseRepos.get(testCaseName, tag) != null)) {
+                && (baseRepos.get(testCaseName, tag) != null))
+            {
                 // set in base repos; don't override
             } else {
                 set(tag, text);
@@ -324,7 +325,8 @@ public class DiffRepository
     public void amend(String expected, String actual)
     {
         if (expected.startsWith("${")
-            && expected.endsWith("}")) {
+            && expected.endsWith("}"))
+        {
             String token = expected.substring(2, expected.length() - 1);
             set(token, actual);
         } else {
@@ -392,8 +394,9 @@ public class DiffRepository
      * case.
      *
      * @param testCaseName Name of test case
-     * @param checkOverride Make sure that if an element overrides an element
-     *   in a base repository, it has overrides="true"
+     * @param checkOverride Make sure that if an element overrides an element in
+     * a base repository, it has overrides="true"
+     *
      * @return TestCase element, or null if not found
      */
     private Element getTestCaseElement(
@@ -406,17 +409,20 @@ public class DiffRepository
             if (child.getNodeName().equals(TestCaseTag)) {
                 Element testCase = (Element) child;
                 if (testCaseName.equals(
-                        testCase.getAttribute(TestCaseNameAttr))) {
-                    if (checkOverride &&
-                        baseRepos != null &&
-                        baseRepos.getTestCaseElement(
-                            testCaseName, false) != null &&
-                        !"true".equals(
-                            testCase.getAttribute(TestCaseOverridesAttr))) {
+                        testCase.getAttribute(TestCaseNameAttr)))
+                {
+                    if (checkOverride
+                        && (baseRepos != null)
+                        && (baseRepos.getTestCaseElement(
+                                testCaseName,
+                                false) != null)
+                        && !"true".equals(
+                            testCase.getAttribute(TestCaseOverridesAttr)))
+                    {
                         throw new RuntimeException(
-                            "TestCase  '" + testCaseName + "' overrides a " +
-                                "testcase in the base repository, but does " +
-                                "not specify 'overrides=true'");
+                            "TestCase  '" + testCaseName + "' overrides a "
+                            + "testcase in the base repository, but does "
+                            + "not specify 'overrides=true'");
                     }
                     return testCase;
                 }
@@ -497,20 +503,20 @@ public class DiffRepository
      * values in parallel.
      *
      * <p>If any of the values do not match, throws an {@link AssertFailure},
-     * but still updates the other values. This is convenient, because if a
-     * unit test needs to check N values, you can correct the logfile in 1
-     * pass through the test rather than N.
+     * but still updates the other values. This is convenient, because if a unit
+     * test needs to check N values, you can correct the logfile in 1 pass
+     * through the test rather than N.
      *
      * @param tags Array of tags
      * @param expecteds Array of expected values
      * @param actuals Array of actual values
      * @param ignoreNulls Whether to ignore entries for which expected[i] ==
-     *            null
+     * null
      */
     public void assertEqualsMulti(
-        String[] tags,
-        String[] expecteds,
-        String[] actuals,
+        String [] tags,
+        String [] expecteds,
+        String [] actuals,
         boolean ignoreNulls)
     {
         final int count = tags.length;
@@ -532,8 +538,9 @@ public class DiffRepository
             String expected2 = expand(tag, expected);
             if (expected2 == null) {
                 update(testCaseName, expected, actual);
-                AssertionFailedError e = new AssertionFailedError(
-                    "reference file does not contain resource '" + expected
+                AssertionFailedError e =
+                    new AssertionFailedError(
+                        "reference file does not contain resource '" + expected
                         + "' for testcase '" + testCaseName
                         + "'");
                 if (e0 == null) {
@@ -646,7 +653,8 @@ public class DiffRepository
             Node child = childNodes.item(i);
             if (child.getNodeName().equals(ResourceTag)
                 && resourceName.equals(
-                    ((Element) child).getAttribute(ResourceNameAttr))) {
+                    ((Element) child).getAttribute(ResourceNameAttr)))
+            {
                 return (Element) child;
             }
         }

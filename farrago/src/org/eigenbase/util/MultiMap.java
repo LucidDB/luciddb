@@ -28,9 +28,9 @@ import java.util.*;
 /**
  * Map which contains more than one value per key.
  *
- * <p>You can either use a <code>MultiMap</code> as a regular map, or you can use
- * the additional methods {@link #putMulti} and {@link #getMulti}. Values are
- * returned in the order in which they were added.</p>
+ * <p>You can either use a <code>MultiMap</code> as a regular map, or you can
+ * use the additional methods {@link #putMulti} and {@link #getMulti}. Values
+ * are returned in the order in which they were added.</p>
  *
  * @author jhyde
  * @version $Id$
@@ -38,7 +38,6 @@ import java.util.*;
  */
 public class MultiMap<K, V>
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Map<K, Object> map = new HashMap<K, Object>();
@@ -227,31 +226,31 @@ public class MultiMap<K, V>
             final K savedKey = key;
             final V value = valueIter.next();
             return new Map.Entry<K, V>() {
-                    public K getKey()
-                    {
-                        return savedKey;
-                    }
+                public K getKey()
+                {
+                    return savedKey;
+                }
 
-                    public V getValue()
-                    {
-                        return value;
-                    }
+                public V getValue()
+                {
+                    return value;
+                }
 
-                    public boolean equals(Object o)
-                    {
-                        throw new UnsupportedOperationException();
-                    }
+                public boolean equals(Object o)
+                {
+                    throw new UnsupportedOperationException();
+                }
 
-                    public int hashCode()
-                    {
-                        throw new UnsupportedOperationException();
-                    }
+                public int hashCode()
+                {
+                    throw new UnsupportedOperationException();
+                }
 
-                    public V setValue(V value)
-                    {
-                        throw new UnsupportedOperationException();
-                    }
-                };
+                public V setValue(V value)
+                {
+                    throw new UnsupportedOperationException();
+                }
+            };
         }
 
         public void remove()

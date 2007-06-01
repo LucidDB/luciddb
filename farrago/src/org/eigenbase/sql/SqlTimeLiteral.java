@@ -36,7 +36,6 @@ import org.eigenbase.sql.type.*;
 public class SqlTimeLiteral
     extends SqlAbstractDateTimeLiteral
 {
-
     //~ Constructors -----------------------------------------------------------
 
     SqlTimeLiteral(
@@ -45,7 +44,8 @@ public class SqlTimeLiteral
         boolean hasTZ,
         SqlParserPos pos)
     {
-        super(t,
+        super(
+            t,
             hasTZ,
             SqlTypeName.TIME,
             precision,
@@ -67,12 +67,12 @@ public class SqlTimeLiteral
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return
-            new SqlTimeLiteral((Calendar) value,
-                precision,
-                hasTimeZone,
-                formatString,
-                pos);
+        return new SqlTimeLiteral(
+            (Calendar) value,
+            precision,
+            hasTimeZone,
+            formatString,
+            pos);
     }
 
     public String toString()
@@ -94,7 +94,8 @@ public class SqlTimeLiteral
             String digits = Long.toString(cal.getTimeInMillis());
             result =
                 result + "."
-                + digits.substring(digits.length() - 3,
+                + digits.substring(
+                    digits.length() - 3,
                     digits.length() - 3 + precision);
         } else {
             assert (0 == cal.get(Calendar.MILLISECOND));

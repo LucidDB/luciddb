@@ -43,7 +43,6 @@ import org.eigenbase.util14.*;
 public abstract class AbstractIterResultSet
     extends AbstractResultSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final ColumnGetter columnGetter;
@@ -198,10 +197,12 @@ public abstract class AbstractIterResultSet
             try {
                 return fields[columnIndex - 1].get(o);
             } catch (IllegalArgumentException e) {
-                throw Util.newInternal(e,
+                throw Util.newInternal(
+                    e,
                     "Error while retrieving field " + fields[columnIndex - 1]);
             } catch (IllegalAccessException e) {
-                throw Util.newInternal(e,
+                throw Util.newInternal(
+                    e,
                     "Error while retrieving field " + fields[columnIndex - 1]);
             }
         }
@@ -213,7 +214,8 @@ public abstract class AbstractIterResultSet
             for (int i = 0; i < fields.length; i++) {
                 Field field = fields[i];
                 if (Modifier.isPublic(field.getModifiers())
-                    && !Modifier.isStatic(field.getModifiers())) {
+                    && !Modifier.isStatic(field.getModifiers()))
+                {
                     list.add(field);
                 }
             }

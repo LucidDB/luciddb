@@ -46,7 +46,6 @@ import org.eigenbase.sql.parser.*;
 public abstract class FarragoSqlToRelTestBase
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected FarragoSqlToRelTestBase(String testName)

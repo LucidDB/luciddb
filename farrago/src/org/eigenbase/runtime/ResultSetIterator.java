@@ -37,7 +37,6 @@ import java.util.*;
 public class ResultSetIterator
     implements RestartableIterator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected ResultSet resultSet;

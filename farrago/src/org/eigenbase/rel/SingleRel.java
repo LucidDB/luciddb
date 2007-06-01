@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 public abstract class SingleRel
     extends AbstractRelNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private RelNode child;
@@ -48,7 +47,7 @@ public abstract class SingleRel
     /**
      * Creates a <code>SingleRel</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param child input relational expression
      */

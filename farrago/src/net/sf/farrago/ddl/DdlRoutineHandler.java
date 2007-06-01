@@ -60,7 +60,6 @@ import org.eigenbase.util.*;
 public class DdlRoutineHandler
     extends DdlHandler
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public DdlRoutineHandler(FarragoSessionDdlValidator validator)
@@ -75,15 +74,17 @@ public class DdlRoutineHandler
     {
         int iOrdinal = 0;
         FemRoutineParameter returnParam = null;
-        for (FemRoutineParameter param :
-            Util.cast(routine.getParameter(), FemRoutineParameter.class))
+        for (
+            FemRoutineParameter param
+            : Util.cast(routine.getParameter(), FemRoutineParameter.class))
         {
             if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
                 returnParam = param;
             } else {
                 if (routine.getType().equals(ProcedureTypeEnum.FUNCTION)) {
                     if ((param.getKind() != null)
-                        && (param.getType() == null)) {
+                        && (param.getType() == null))
+                    {
                         throw validator.newPositionalError(
                             param,
                             res.ValidatorFunctionOutputParam.ex(
@@ -104,7 +105,7 @@ public class DdlRoutineHandler
                 ++iOrdinal;
             }
             validateRoutineParam(param);
-            
+
             if (param.getType().getName().equals("CURSOR")) {
                 if (!(FarragoCatalogUtil.isTableFunction(routine))) {
                     throw validator.newPositionalError(
@@ -115,11 +116,11 @@ public class DdlRoutineHandler
                 }
             }
         }
-        
+
         // validate column list parameters, now that we've set the types of
         // the source cursor parameters
         validateColumnListParams(routine);
-        
+
         if (FarragoCatalogUtil.isTableFunction(routine)) {
             routine.setUdx(true);
             validateAttributeSet(routine);
@@ -136,7 +137,8 @@ public class DdlRoutineHandler
                 ExtensionLanguageEnum.SQL.toString());
         }
         if (routine.getLanguage().equals(
-                ExtensionLanguageEnum.SQL.toString())) {
+                ExtensionLanguageEnum.SQL.toString()))
+        {
             validateSqlRoutine(routine, returnParam);
         } else {
             validateJavaRoutine(routine, returnParam);
@@ -181,7 +183,8 @@ public class DdlRoutineHandler
                         repos.getLocalizedObjectName(classifier)));
             }
             if (!routine.getLanguage().equals(
-                    ExtensionLanguageEnum.SQL.toString())) {
+                    ExtensionLanguageEnum.SQL.toString()))
+            {
                 throw Util.needToImplement(
                     "constructor methods with language "
                     + routine.getLanguage());
@@ -263,7 +266,8 @@ public class DdlRoutineHandler
         if (routine.getBody() != null) {
             if ((routine.getBody().getLanguage() != null)
                 && !routine.getBody().getLanguage().equals(
-                    ExtensionLanguageEnum.JAVA.toString())) {
+                    ExtensionLanguageEnum.JAVA.toString()))
+            {
                 throw validator.newPositionalError(
                     routine,
                     res.ValidatorRoutineExternalNoBody.ex(
@@ -278,7 +282,8 @@ public class DdlRoutineHandler
         }
 
         if (!routine.getLanguage().equals(
-                ExtensionLanguageEnum.JAVA.toString())) {
+                ExtensionLanguageEnum.JAVA.toString()))
+        {
             throw validator.newPositionalError(
                 routine,
                 res.ValidatorRoutineExternalJavaOnly.ex(
@@ -288,11 +293,11 @@ public class DdlRoutineHandler
             routine.setParameterStyle(
                 RoutineParameterStyleEnum.RPS_JAVA.toString());
         }
-        if (
-            !routine.getParameterStyle().equals(
+        if (!routine.getParameterStyle().equals(
                 RoutineParameterStyleEnum.RPS_JAVA.toString())
             && !routine.getParameterStyle().equals(
-                RoutineParameterStyleEnum.RPS_JAVA_FARRAGO.toString())) {
+                RoutineParameterStyleEnum.RPS_JAVA_FARRAGO.toString()))
+        {
             throw validator.newPositionalError(
                 routine,
                 res.ValidatorRoutineJavaParamStyleOnly.ex(
@@ -301,7 +306,8 @@ public class DdlRoutineHandler
 
         if (FarragoCatalogUtil.isTableFunction(routine)) {
             if (!routine.getParameterStyle().equals(
-                    RoutineParameterStyleEnum.RPS_JAVA_FARRAGO.toString())) {
+                    RoutineParameterStyleEnum.RPS_JAVA_FARRAGO.toString()))
+            {
                 throw validator.newPositionalError(
                     routine,
                     res.ValidatorRoutineReturnTableUnsupported.ex(
@@ -330,11 +336,13 @@ public class DdlRoutineHandler
             // Fully expand reference to jar in string
             SqlIdentifier jarId =
                 FarragoCatalogUtil.getQualifiedName(sqlRoutine.getJar());
-            SqlPrettyWriter pw = new SqlPrettyWriter(
-                new SqlDialect(
-                    validator.getStmtValidator().
-                    getSession().getDatabaseMetaData()));
+            SqlPrettyWriter pw =
+                new SqlPrettyWriter(
+                    new SqlDialect(
+                        validator.getStmtValidator().getSession()
+                                 .getDatabaseMetaData()));
             String fqjn = pw.format(jarId);
+
             // replace 'jar_name:method_spec' with
             // 'fully.qualified.jar_name:method_spec'
             String expandedExternalName = routine.getExternalName();
@@ -360,7 +368,8 @@ public class DdlRoutineHandler
             Util.cast(routine.getParameter(), FemRoutineParameter.class);
 
         RelDataType paramRowType =
-            typeFactory.createStructType(new RelDataTypeFactory.FieldInfo() {
+            typeFactory.createStructType(
+                new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount()
                     {
                         return FarragoCatalogUtil.getRoutineParamCount(routine);
@@ -382,7 +391,8 @@ public class DdlRoutineHandler
         tracer.fine(routine.getBody().getBody());
 
         if (FarragoUserDefinedRoutine.hasReturnPrefix(
-                routine.getBody().getBody())) {
+                routine.getBody().getBody()))
+        {
             validateReturnBody(
                 routine,
                 session,
@@ -509,8 +519,6 @@ public class DdlRoutineHandler
             dependencies);
     }
 
-    
-
     public void validateRoutineParam(FemRoutineParameter param)
     {
         validateTypedElement(param, (FemRoutine) param.getBehavioralFeature());
@@ -518,8 +526,9 @@ public class DdlRoutineHandler
 
     private void validateColumnListParams(FemRoutine routine)
     {
-        for (FemRoutineParameter param :
-            Util.cast(routine.getParameter(), FemRoutineParameter.class))
+        for (
+            FemRoutineParameter param
+            : Util.cast(routine.getParameter(), FemRoutineParameter.class))
         {
             if (param.getType().getName().equals("COLUMN_LIST")) {
                 // for COLUMN_LIST parameters, make sure the routine contains
@@ -529,9 +538,11 @@ public class DdlRoutineHandler
                     (FemColumnListRoutineParameter) param;
                 String sourceCursor = colListParam.getSourceCursorName();
                 boolean found = false;
-                for (FemRoutineParameter p :
-                    Util.cast(
-                        routine.getParameter(), FemRoutineParameter.class))
+                for (
+                    FemRoutineParameter p
+                    : Util.cast(
+                        routine.getParameter(),
+                        FemRoutineParameter.class))
                 {
                     if (p.getName().equals(sourceCursor)) {
                         if (p.getType().getName().equals("CURSOR")) {
@@ -550,7 +561,7 @@ public class DdlRoutineHandler
             }
         }
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemJar jar)
     {
@@ -660,7 +671,8 @@ public class DdlRoutineHandler
                         repos.getLocalizedObjectName(orderingDef.getType())));
             }
             if (routine.getDataAccess()
-                == RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA) {
+                == RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA)
+            {
                 throw validator.newPositionalError(
                     orderingDef,
                     res.ValidatorOrderingReadOnly.ex(
@@ -684,7 +696,8 @@ public class DdlRoutineHandler
             }
         }
         if (orderingDef.getCategory()
-            == UserDefinedOrderingCategoryEnum.UDOC_RELATIVE) {
+            == UserDefinedOrderingCategoryEnum.UDOC_RELATIVE)
+        {
             if (FarragoCatalogUtil.getRoutineParamCount(routine) != 2) {
                 throw validator.newPositionalError(
                     orderingDef,
@@ -701,8 +714,10 @@ public class DdlRoutineHandler
                         repos.getLocalizedObjectName(routine),
                         repos.getLocalizedObjectName(orderingDef.getType())));
             }
-        } else if (orderingDef.getCategory()
-            == UserDefinedOrderingCategoryEnum.UDOC_MAP) {
+        } else if (
+            orderingDef.getCategory()
+            == UserDefinedOrderingCategoryEnum.UDOC_MAP)
+        {
             if (FarragoCatalogUtil.getRoutineParamCount(routine) != 1) {
                 throw validator.newPositionalError(
                     orderingDef,

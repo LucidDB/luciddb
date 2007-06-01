@@ -47,7 +47,6 @@ import org.eigenbase.reltype.*;
 class FtrsIndexBuilderRel
     extends FennelSingleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

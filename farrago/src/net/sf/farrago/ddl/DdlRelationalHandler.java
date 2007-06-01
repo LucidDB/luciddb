@@ -53,7 +53,6 @@ import org.eigenbase.util.*;
 public class DdlRelationalHandler
     extends DdlHandler
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final DdlMedHandler medHandler;
@@ -99,7 +98,7 @@ public class DdlRelationalHandler
                 elements.addAll(((CwmTable) element).getOwnedElement());
             }
         }
-        
+
         validator.validateUniqueNames(
             schema,
             elements,
@@ -210,8 +209,9 @@ public class DdlRelationalHandler
         // Validate unique constraints
         FemLocalIndex generatedPrimaryKeyIndex = null;
         FemPrimaryKeyConstraint primaryKey = null;
-        for (FemAbstractUniqueConstraint constraint :
-            Util.filter(
+        for (
+            FemAbstractUniqueConstraint constraint
+            : Util.filter(
                 table.getOwnedElement(),
                 FemAbstractUniqueConstraint.class))
         {
@@ -364,7 +364,8 @@ public class DdlRelationalHandler
         // TODO:  make index SYSTEM-owned so that it can't be
         // dropped explicitly
         FemLocalIndex index = repos.newFemLocalIndex();
-        FarragoCatalogUtil.generateConstraintIndexName(repos,
+        FarragoCatalogUtil.generateConstraintIndexName(
+            repos,
             constraint,
             index);
         index.setSpannedClass(table);
@@ -388,8 +389,9 @@ public class DdlRelationalHandler
         FemAbstractUniqueConstraint constraint)
     {
         int iOrdinal = 0;
-        for (FemAbstractAttribute column :
-            Util.cast(constraint.getFeature(), FemAbstractAttribute.class))
+        for (
+            FemAbstractAttribute column
+            : Util.cast(constraint.getFeature(), FemAbstractAttribute.class))
         {
             FemKeyComponent component = repos.newFemKeyComponent();
             component.setName(column.getName());

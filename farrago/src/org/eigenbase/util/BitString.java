@@ -51,14 +51,18 @@ import org.eigenbase.util14.*;
  */
 public class BitString
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final char [] Hexits =
+    {
+        '0', '1', '2', '3', '4', '5', '6', '7',
+        '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+    };
 
     //~ Instance fields --------------------------------------------------------
 
     private String bits;
     private int bitCount;
-    private static final char[] Hexits = {
-        '0', '1', '2', '3', '4', '5', '6', '7',
-        '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     //~ Constructors -----------------------------------------------------------
 
@@ -183,7 +187,8 @@ public class BitString
         // that ret is already initialized to 0s, and just copy into the
         // RHS of it.
         int bytesToCopy = Math.min(byteCount, srcBytes.length);
-        System.arraycopy(srcBytes,
+        System.arraycopy(
+            srcBytes,
             srcBytes.length - bytesToCopy,
             dest,
             dest.length - bytesToCopy,
@@ -211,30 +216,30 @@ public class BitString
             sb.append(arg1.bits);
         }
         return new BitString(
-                sb.toString(),
-                length);
+            sb.toString(),
+            length);
     }
 
     /**
      * Creates a BitString from an array of bytes.
      *
      * @param bytes Bytes
+     *
      * @return BitString
      */
-    public static BitString createFromBytes(byte[] bytes)
+    public static BitString createFromBytes(byte [] bytes)
     {
         assert bytes != null;
         int bitCount = bytes.length * 8;
         StringBuilder sb = new StringBuilder(bitCount);
         for (byte b : bytes) {
             for (int i = 7; i >= 0; --i) {
-                sb.append((b & 1) == 0 ? '0' : '1');
+                sb.append(((b & 1) == 0) ? '0' : '1');
                 b >>= 1;
             }
         }
         return new BitString(sb.toString(), bitCount);
     }
-
 }
 
 // End BitString.java

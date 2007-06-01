@@ -29,7 +29,6 @@ import org.eigenbase.sql.*;
  */
 public interface RexToSqlNodeConverter
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -41,7 +41,6 @@ import org.eigenbase.util.*;
  */
 public interface FarragoSessionStmtParamDef
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

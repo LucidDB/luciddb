@@ -68,8 +68,9 @@ class FarragoDbSessionPrivilegeMap
         if (includeSubclasses) {
             JmiClassVertex classVertex =
                 modelView.getModelGraph().getVertexForRefClass(refClass);
-            for (JmiClassVertex jmiClassVertex :
-                modelView.getAllSubclassVertices(classVertex))
+            for (
+                JmiClassVertex jmiClassVertex
+                : modelView.getAllSubclassVertices(classVertex))
             {
                 classVertex = (JmiClassVertex) jmiClassVertex;
                 mapPrivilegeForType(
@@ -110,10 +111,10 @@ class FarragoDbSessionPrivilegeMap
 
     void makeImmutable()
     {
-        Iterator<Map.Entry<RefClass,Set<String>>> iter =
+        Iterator<Map.Entry<RefClass, Set<String>>> iter =
             mapTypeToSet.entrySet().iterator();
         while (iter.hasNext()) {
-            Map.Entry<RefClass,Set<String>> entry = iter.next();
+            Map.Entry<RefClass, Set<String>> entry = iter.next();
             Set<String> set = entry.getValue();
             if (set.isEmpty()) {
                 iter.remove();

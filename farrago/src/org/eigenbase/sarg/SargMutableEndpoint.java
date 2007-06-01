@@ -34,7 +34,6 @@ import org.eigenbase.rex.*;
 public class SargMutableEndpoint
     extends SargEndpoint
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

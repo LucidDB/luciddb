@@ -40,7 +40,6 @@ import org.eigenbase.oj.util.*;
 public class RelCrossType
     extends RelDataTypeImpl
 {
-
     //~ Instance fields --------------------------------------------------------
 
     public final RelDataType [] types;

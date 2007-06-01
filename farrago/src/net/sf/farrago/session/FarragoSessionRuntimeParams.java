@@ -40,7 +40,6 @@ import org.eigenbase.reltype.*;
  */
 public class FarragoSessionRuntimeParams
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -106,21 +105,21 @@ public class FarragoSessionRuntimeParams
 
     /**
      * Map from IterCalcRel tag to row type. If a mapping is available, it
-     * associates the tag with the type of a table being modified. It would
-     * be possible to infer, for example, that result column 1 was being
-     * used to insert into a column called "EMPNO".
+     * associates the tag with the type of a table being modified. It would be
+     * possible to infer, for example, that result column 1 was being used to
+     * insert into a column called "EMPNO".
      */
     public Map<String, RelDataType> iterCalcTypeMap;
 
     /**
-     * An identifier for the executable statement id. This parameter
-     * assumes there will be a one to one mapping from statement to context.
+     * An identifier for the executable statement id. This parameter assumes
+     * there will be a one to one mapping from statement to context.
      */
     public long stmtId;
 
     /**
-     * Queue on which warnings should be posted, or null if runtime
-     * context should create a private queue.
+     * Queue on which warnings should be posted, or null if runtime context
+     * should create a private queue.
      */
     public FarragoWarningQueue warningQueue;
 }

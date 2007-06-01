@@ -38,7 +38,6 @@ public class FennelAggRel
     extends AggregateRelBase
     implements FennelRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final FarragoRepos repos;
@@ -87,9 +86,9 @@ public class FennelAggRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
         return implementor.visitChild(
-                this,
-                0,
-                getChild());
+            this,
+            0,
+            getChild());
     }
 
     // implement FennelRel
@@ -129,9 +128,8 @@ public class FennelAggRel
     public static AggFunction lookupAggFunction(
         AggregateRel.Call call)
     {
-        return
-            AggFunctionEnum.forName(
-                "AGG_FUNC_" + call.getAggregation().getName());
+        return AggFunctionEnum.forName(
+            "AGG_FUNC_" + call.getAggregation().getName());
     }
 }
 

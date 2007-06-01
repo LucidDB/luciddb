@@ -38,7 +38,6 @@ import org.eigenbase.jmi.*;
 public class LurqlPlanFollowEdge
     extends LurqlPlanEdge
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

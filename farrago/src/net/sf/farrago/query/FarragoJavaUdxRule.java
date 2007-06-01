@@ -40,7 +40,6 @@ import org.eigenbase.util.*;
 public class FarragoJavaUdxRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

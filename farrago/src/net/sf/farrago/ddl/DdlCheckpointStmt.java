@@ -31,7 +31,6 @@ package net.sf.farrago.ddl;
 public class DdlCheckpointStmt
     extends DdlStmt
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

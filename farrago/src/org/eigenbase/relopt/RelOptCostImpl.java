@@ -33,7 +33,6 @@ package org.eigenbase.relopt;
 public class RelOptCostImpl
     implements RelOptCost
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final double value;

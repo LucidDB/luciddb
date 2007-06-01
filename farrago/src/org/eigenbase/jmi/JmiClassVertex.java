@@ -33,7 +33,6 @@ import javax.jmi.reflect.*;
  */
 public class JmiClassVertex
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final MofClass mofClass;

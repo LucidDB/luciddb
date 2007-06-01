@@ -42,6 +42,8 @@ import org.eigenbase.sql.validate.*;
 public class SqlInOperator
     extends SqlBinaryOperator
 {
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * If true the call represents 'NOT IN'.
      */
@@ -51,7 +53,8 @@ public class SqlInOperator
 
     SqlInOperator(boolean isNotIn)
     {
-        super(isNotIn ? "NOT IN" : "IN",
+        super(
+            isNotIn ? "NOT IN" : "IN",
             SqlKind.In,
             30,
             true,
@@ -135,7 +138,8 @@ public class SqlInOperator
                 new ExplicitOperatorBinding(
                     typeFactory,
                     this,
-                    new RelDataType[] { leftRowType, rightRowType }))) {
+                    new RelDataType[] { leftRowType, rightRowType })))
+        {
             throw validator.newValidationError(
                 call,
                 EigenbaseResource.instance().IncompatibleValueType.ex(

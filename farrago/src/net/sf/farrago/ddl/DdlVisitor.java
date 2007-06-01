@@ -30,7 +30,6 @@ package net.sf.farrago.ddl;
  */
 public class DdlVisitor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // visitor dispatch

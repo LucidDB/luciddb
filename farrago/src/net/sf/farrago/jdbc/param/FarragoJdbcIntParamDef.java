@@ -30,17 +30,15 @@ import org.eigenbase.util14.*;
 
 
 /**
- * FarragoJdbcEngineIntParamDef defines a integer parameter.
+ * FarragoJdbcEngineIntParamDef defines a integer parameter. This class is JDK
+ * 1.4 compatible.
  *
- * This class is JDK 1.4 compatible.
- * 
  * @author Angel Chang
  * @version $Id$
  */
 class FarragoJdbcIntParamDef
     extends FarragoJdbcParamDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final long min;
@@ -84,6 +82,7 @@ class FarragoJdbcIntParamDef
     {
         if (value instanceof Number) {
             Number n = (Number) value;
+
             // REVIEW jvs 13-Oct-2006:  going through double could lose
             // precision for a very big long, right?
             return NumberUtil.round(n.doubleValue());

@@ -41,7 +41,6 @@ public class FarragoRJDriverServer
     extends RJDriverServer
     implements RJDriverInterface
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoRJDriverServer(String admpasswd)

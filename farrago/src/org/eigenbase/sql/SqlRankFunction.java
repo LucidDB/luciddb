@@ -35,7 +35,6 @@ import org.eigenbase.sql.type.*;
 public class SqlRankFunction
     extends SqlAggFunction
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType type = null;
@@ -44,7 +43,8 @@ public class SqlRankFunction
 
     public SqlRankFunction(String name)
     {
-        super(name,
+        super(
+            name,
             SqlKind.Function,
             SqlTypeStrategies.rtiInteger,
             null,

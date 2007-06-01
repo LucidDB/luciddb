@@ -41,7 +41,6 @@ import org.eigenbase.util14.*;
 public abstract class FarragoAbstractJdbcDriver
     implements Driver
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement Driver
@@ -151,7 +150,8 @@ public abstract class FarragoAbstractJdbcDriver
     public Properties applyDefaultConnectionProps(final Properties info)
     {
         // copy default properties to new properties
-        Properties props = copyProperties(
+        Properties props =
+            copyProperties(
                 getDefaultConnectionProps(),
                 null);
 

@@ -38,7 +38,6 @@ import org.eigenbase.util.*;
 public class SqlCallBinding
     extends SqlOperatorBinding
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlValidator validator;
@@ -162,13 +161,12 @@ public class SqlCallBinding
      */
     public EigenbaseException newValidationSignatureError()
     {
-        return
-            validator.newValidationError(
-                call,
-                EigenbaseResource.instance().CanNotApplyOp2Type.ex(
-                    getOperator().getName(),
-                    call.getCallSignature(validator, scope),
-                    getOperator().getAllowedSignatures()));
+        return validator.newValidationError(
+            call,
+            EigenbaseResource.instance().CanNotApplyOp2Type.ex(
+                getOperator().getName(),
+                call.getCallSignature(validator, scope),
+                getOperator().getAllowedSignatures()));
     }
 
     /**

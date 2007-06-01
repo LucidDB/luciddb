@@ -39,7 +39,6 @@ import org.eigenbase.util14.*;
 public class RelMdRowCount
     extends ReflectiveRelMetadataProvider
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public Double getRowCount(UnionRelBase rel)
@@ -58,12 +57,11 @@ public class RelMdRowCount
 
     public Double getRowCount(FilterRelBase rel)
     {
-        return
-            NumberUtil.multiply(
-                RelMetadataQuery.getSelectivity(
-                    rel.getChild(),
-                    rel.getCondition()),
-                RelMetadataQuery.getRowCount(rel.getChild()));
+        return NumberUtil.multiply(
+            RelMetadataQuery.getSelectivity(
+                rel.getChild(),
+                rel.getCondition()),
+            RelMetadataQuery.getRowCount(rel.getChild()));
     }
 
     public Double getRowCount(ProjectRelBase rel)
@@ -83,12 +81,11 @@ public class RelMdRowCount
         RexNode semiJoinSelectivity =
             RelMdUtil.makeSemiJoinSelectivityRexNode(rel);
 
-        return
-            NumberUtil.multiply(
-                RelMetadataQuery.getSelectivity(
-                    rel.getLeft(),
-                    semiJoinSelectivity),
-                RelMetadataQuery.getRowCount(rel.getLeft()));
+        return NumberUtil.multiply(
+            RelMetadataQuery.getSelectivity(
+                rel.getLeft(),
+                semiJoinSelectivity),
+            RelMetadataQuery.getRowCount(rel.getLeft()));
     }
 
     public Double getRowCount(AggregateRelBase rel)

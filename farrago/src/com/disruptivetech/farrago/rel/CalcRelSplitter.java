@@ -53,7 +53,6 @@ import org.eigenbase.util.*;
  */
 public abstract class CalcRelSplitter
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger ruleTracer =
@@ -164,7 +163,8 @@ public abstract class CalcRelSplitter
                 IntList projectExprOrdinalList = new IntList();
                 for (int i = 0; i < exprs.length; i++) {
                     if ((exprLevels[i] <= level)
-                        && (exprMaxUsingLevelOrdinals[i] > level)) {
+                        && (exprMaxUsingLevelOrdinals[i] > level))
+                    {
                         projectExprOrdinalList.add(i);
                     }
                 }
@@ -178,7 +178,8 @@ public abstract class CalcRelSplitter
             if ((conditionRef != null) && !doneCondition) {
                 conditionExprOrdinal = conditionRef.getIndex();
                 if ((exprLevels[conditionExprOrdinal] > level)
-                    || !relType.supportsCondition()) {
+                    || !relType.supportsCondition())
+                {
                     // stand down -- we're not ready to do the condition yet
                     conditionExprOrdinal = -1;
                 } else {
@@ -255,23 +256,25 @@ levelLoop:
             for (;; ++level) {
                 if (level >= levelCount) {
                     // This is a new level. We can use any reltype we like.
-                    for (int relTypeOrdinal = 0;
-                        relTypeOrdinal < relTypes.length; relTypeOrdinal++) {
+                    for (
+                        int relTypeOrdinal = 0;
+                        relTypeOrdinal < relTypes.length;
+                        relTypeOrdinal++)
+                    {
                         if (!relTypesPossibleForTopLevel[relTypeOrdinal]) {
                             continue;
                         }
                         if (relTypes[relTypeOrdinal].canImplement(
                                 expr,
-                                condition)) {
+                                condition))
+                        {
                             // Success. We have found a reltype where we can
                             // implement this expression.
                             exprLevels[i] = level;
                             levelTypeOrdinals[level] = relTypeOrdinal;
                             assert (level == 0)
-                                || (
-                                    levelTypeOrdinals[level - 1]
-                                    != levelTypeOrdinals[level]
-                                   ) : "successive levels of same type";
+                                || (levelTypeOrdinals[level - 1]
+                                    != levelTypeOrdinals[level]) : "successive levels of same type";
 
                             // Figure out which of the other reltypes are
                             // still possible for this level.
@@ -281,8 +284,11 @@ levelLoop:
                             }
 
                             // Successive reltypes may be possible.
-                            for (int j = relTypeOrdinal + 1;
-                                j < relTypes.length; ++j) {
+                            for (
+                                int j = relTypeOrdinal + 1;
+                                j < relTypes.length;
+                                ++j)
+                            {
                                 if (relTypesPossibleForTopLevel[j]) {
                                     relTypesPossibleForTopLevel[j] =
                                         relTypes[j].canImplement(
@@ -317,7 +323,8 @@ levelLoop:
                 } else {
                     final int levelTypeOrdinal = levelTypeOrdinals[level];
                     if (!relTypes[levelTypeOrdinal].canImplement(
-                        expr, condition))
+                            expr,
+                            condition))
                     {
                         // Cannot implement this expression in this reltype;
                         // continue to next level.
@@ -399,7 +406,8 @@ levelLoop:
         // and are used here.
         for (int i = 0; i < inputExprOrdinals.length; i++) {
             final int inputExprOrdinal = inputExprOrdinals[i];
-            exprs[j] = new RexInputRef(
+            exprs[j] =
+                new RexInputRef(
                     i,
                     allExprs[inputExprOrdinal].getType());
             exprOrdinals[j] = inputExprOrdinal;
@@ -432,7 +440,7 @@ levelLoop:
         // exprs.
         final RexLocalRef [] projectRefs =
             new RexLocalRef[projectExprOrdinals.length];
-        final String[] fieldNames = new String[projectExprOrdinals.length];
+        final String [] fieldNames = new String[projectExprOrdinals.length];
         for (int i = 0; i < projectRefs.length; i++) {
             final int projectExprOrdinal = projectExprOrdinals[i];
             final int index = exprInverseOrdinals[projectExprOrdinal];
@@ -479,13 +487,12 @@ levelLoop:
                         }
                     });
         }
-        return
-            new RexProgram(
-                inputRowType,
-                exprs,
-                projectRefs,
-                conditionRef,
-                outputRowType);
+        return new RexProgram(
+            inputRowType,
+            exprs,
+            projectRefs,
+            conditionRef,
+            outputRowType);
     }
 
     /**
@@ -571,11 +578,12 @@ levelLoop:
     }
 
     /**
-     * Returns whether a relational expression can be implemented
-     * solely in a given {@link RelType}.
+     * Returns whether a relational expression can be implemented solely in a
+     * given {@link RelType}.
      *
      * @param rel Calculation relational expression
      * @param relTypeName Name of a {@link RelType}
+     *
      * @return Whether relational expression can be implemented
      */
     protected boolean canImplement(CalcRel rel, String relTypeName)
@@ -625,24 +633,24 @@ levelLoop:
             RelNode child,
             RexProgram program)
         {
-            return
-                new CalcRel(
-                    cluster,
-                    traits,
-                    child,
-                    rowType,
-                    program,
-                    RelCollation.emptyList);
+            return new CalcRel(
+                cluster,
+                traits,
+                child,
+                rowType,
+                program,
+                RelCollation.emptyList);
         }
 
         /**
-         * Returns whether this <code>RelType</code> can implement a
-         * given expression.
+         * Returns whether this <code>RelType</code> can implement a given
+         * expression.
          *
          * @param expr Expression
          * @param condition Whether expression is a condition
-         * @return Whether this <code>RelType</code> can implement a
-         *   given expression.
+         *
+         * @return Whether this <code>RelType</code> can implement a given
+         * expression.
          */
         public boolean canImplement(RexNode expr, boolean condition)
         {
@@ -663,13 +671,15 @@ levelLoop:
          * given program.
          *
          * @param program Program
+         *
          * @return Whether this tester's <code>RelType</code> can implement a
-         *   given program.
+         * given program.
          */
         public boolean canImplement(RexProgram program)
         {
-            if (program.getCondition() != null &&
-                !canImplement(program.getCondition(), true)) {
+            if ((program.getCondition() != null)
+                && !canImplement(program.getCondition(), true))
+            {
                 return false;
             }
             for (RexNode expr : program.getExprList()) {
@@ -767,8 +777,8 @@ levelLoop:
             final int index = exprInverseOrdinals[input.getIndex()];
             assert index >= 0;
             return new RexLocalRef(
-                    index,
-                    input.getType());
+                index,
+                input.getType());
         }
 
         public RexNode visitLocalRef(RexLocalRef local)
@@ -780,15 +790,15 @@ levelLoop:
                 int inputIndex = indexOf(localIndex, inputExprOrdinals);
                 assert inputIndex >= 0;
                 return new RexLocalRef(
-                        inputIndex,
-                        local.getType());
+                    inputIndex,
+                    local.getType());
             } else {
                 // It's a reference to what was a local expression at the
                 // previous level, and was then projected.
                 final int exprIndex = exprInverseOrdinals[localIndex];
                 return new RexLocalRef(
-                        exprIndex,
-                        local.getType());
+                    exprIndex,
+                    local.getType());
             }
         }
     }

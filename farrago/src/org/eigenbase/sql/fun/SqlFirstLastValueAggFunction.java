@@ -30,14 +30,13 @@ import org.eigenbase.sql.type.*;
 
 
 /**
- * <code>FIRST_VALUE</code> and <code>LAST_VALUE</code> aggregate functions 
- * return the first or the last value in a list of values that are input to
- * the function.
+ * <code>FIRST_VALUE</code> and <code>LAST_VALUE</code> aggregate functions
+ * return the first or the last value in a list of values that are input to the
+ * function.
  */
 public class SqlFirstLastValueAggFunction
     extends SqlAggFunction
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final RelDataType type = null; // TODO:

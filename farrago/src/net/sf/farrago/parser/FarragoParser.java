@@ -37,7 +37,6 @@ import net.sf.farrago.parser.impl.*;
 public class FarragoParser
     extends FarragoAbstractParser
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

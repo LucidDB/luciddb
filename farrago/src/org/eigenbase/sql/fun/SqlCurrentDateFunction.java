@@ -35,7 +35,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlCurrentDateFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlCurrentDateFunction()

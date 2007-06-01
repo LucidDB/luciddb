@@ -33,9 +33,8 @@ import org.eigenbase.sql.type.*;
 
 
 /**
- * FarragoOJRexCaseImplementor implements Farrago specifics of
- * {@link org.eigenbase.oj.rex.OJRexImplementor} for <code>CASE</code>
- * expressions.
+ * FarragoOJRexCaseImplementor implements Farrago specifics of {@link
+ * org.eigenbase.oj.rex.OJRexImplementor} for <code>CASE</code> expressions.
  *
  * @author Xiaoyang Luo
  * @version $Id$
@@ -43,7 +42,6 @@ import org.eigenbase.sql.type.*;
 public class FarragoOJRexCaseImplementor
     extends FarragoOJRexImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoOJRexImplementor

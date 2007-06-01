@@ -36,7 +36,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlNullifFunction
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlNullifFunction()
@@ -46,7 +45,8 @@ public class SqlNullifFunction
         // rewriteCall to convert NULLIF into CASE early.  However,
         // validator rewrite can optionally be disabled, in which case these
         // strategies are used.
-        super("NULLIF",
+        super(
+            "NULLIF",
             SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
@@ -66,19 +66,18 @@ public class SqlNullifFunction
             validator,
             getOperandTypeChecker(),
             call);
-        assert(operands.length == 2);
+        assert (operands.length == 2);
 
         SqlNodeList whenList = new SqlNodeList(pos);
         SqlNodeList thenList = new SqlNodeList(pos);
         whenList.add(operands[1]);
         thenList.add(SqlLiteral.createNull(SqlParserPos.ZERO));
-        return
-            SqlStdOperatorTable.caseOperator.createSwitchedCall(
-                pos, operands[0],
-                whenList,
-                thenList,
-                operands[0].clone(operands[0].getParserPosition())
-            );
+        return SqlStdOperatorTable.caseOperator.createSwitchedCall(
+            pos,
+            operands[0],
+            whenList,
+            thenList,
+            operands[0].clone(operands[0].getParserPosition()));
     }
 }
 

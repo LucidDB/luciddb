@@ -40,7 +40,6 @@ import org.eigenbase.test.*;
 public abstract class ResultSetTestCase
     extends DiffTestCase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

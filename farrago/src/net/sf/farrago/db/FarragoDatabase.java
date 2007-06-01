@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.db;
 
+import com.sun.security.auth.login.*;
+
 import java.io.*;
 
 import java.net.*;
@@ -31,6 +33,8 @@ import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 
 import javax.jmi.reflect.*;
+
+import javax.security.auth.login.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.ddl.*;
@@ -57,8 +61,6 @@ import org.eigenbase.util.property.*;
 
 import org.netbeans.mdr.handlers.*;
 
-import javax.security.auth.login.Configuration;
-import com.sun.security.auth.login.ConfigFile;
 
 /**
  * FarragoDatabase is a top-level singleton representing an instance of a
@@ -74,7 +76,6 @@ import com.sun.security.auth.login.ConfigFile;
 public class FarragoDatabase
     extends FarragoDbSingleton
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private FarragoRepos systemRepos;
@@ -227,8 +228,7 @@ public class FarragoDatabase
             // activity.
             Timer timer = new Timer("Farrago Watchdog Timer");
             new FarragoTimerAllocation(this, timer);
-            timer.schedule(
-                new WatchdogTask(),
+            timer.schedule(new WatchdogTask(),
                 1000,
                 1000);
 
@@ -241,17 +241,21 @@ public class FarragoDatabase
                     checkpointIntervalMillis,
                     checkpointIntervalMillis);
             }
-            
+
             ddlLockManager = new FarragoDdlLockManager();
             txnMgr = sessionFactory.newTxnMgr();
             sessionFactory.specializedInitialization(this);
 
-            File jaasConfigFile = new File(FarragoProperties.instance().homeDir.get(), "plugin/jaas.config");
+            File jaasConfigFile =
+                new File(
+                    FarragoProperties.instance().homeDir.get(),
+                    "plugin/jaas.config");
             if (jaasConfigFile.exists()) {
-                System.setProperty("java.security.auth.login.config", jaasConfigFile.getPath());
+                System.setProperty(
+                    "java.security.auth.login.config",
+                    jaasConfigFile.getPath());
                 authenticationConfig = new ConfigFile();
             }
-
         } catch (Throwable ex) {
             tracer.throwing("FarragoDatabase", "<init>", ex);
             close(true);
@@ -304,10 +308,9 @@ public class FarragoDatabase
 
     private File getBootUrlFile()
     {
-        return
-            new File(
-                FarragoProperties.instance().getCatalogDir(),
-                "FarragoBootUrls.lst");
+        return new File(
+            FarragoProperties.instance().getCatalogDir(),
+            "FarragoBootUrls.lst");
     }
 
     private void loadBootUrls()
@@ -342,7 +345,8 @@ public class FarragoDatabase
         // append
         FileWriter fileWriter = null;
         try {
-            fileWriter = new FileWriter(
+            fileWriter =
+                new FileWriter(
                     getBootUrlFile(),
                     true);
             PrintWriter pw = new PrintWriter(fileWriter);
@@ -454,7 +458,9 @@ public class FarragoDatabase
 
         // The applyFennelExtensionParameters method may have modified the
         // properties, so copy them back.
-        for (Map.Entry<String, String> entry : Util.toMap(properties).entrySet()) {
+        for (
+            Map.Entry<String, String> entry : Util.toMap(properties).entrySet())
+        {
             configMap.put(entry.getKey(), entry.getValue());
         }
 
@@ -481,7 +487,7 @@ public class FarragoDatabase
             // REVIEW:  use Fennel tracer instead?
             tracer.config(
                 "Fennel parameter " + param.getName() + "="
-                    + param.getValue());
+                + param.getValue());
         }
 
         cmd.setCreateDatabase(init);
@@ -520,9 +526,10 @@ public class FarragoDatabase
     {
         return userRepos;
     }
-    
+
     /**
-     * @return true if there is a JAAS configuration entry for application "Farrago".
+     * @return true if there is a JAAS configuration entry for application
+     * "Farrago".
      */
     public boolean isAuthenticationEnabled()
     {
@@ -612,7 +619,6 @@ public class FarragoDatabase
      * Kills a session.
      *
      * @param id session identifier
-     *
      * @param cancelOnly if true, just cancel current execution; if false,
      * destroy session
      */
@@ -663,7 +669,6 @@ public class FarragoDatabase
      * Kill an executing statement: cancel it and deallocate it.
      *
      * @param id statement id
-     *
      * @param cancelOnly if true, just cancel current execution; if false,
      * destroy statement
      */
@@ -691,7 +696,9 @@ public class FarragoDatabase
      * @return count of killed statements.
      */
     public int killExecutingStmtMatching(
-        String match, String nomatch, boolean cancelOnly)
+        String match,
+        String nomatch,
+        boolean cancelOnly)
         throws Throwable
     {
         int ct = 0;
@@ -724,7 +731,6 @@ public class FarragoDatabase
      * otherwise caches the one generated here.
      *
      * @param stmtContext embracing stmt context
-     *
      * @param stmtValidator generic stmt validator
      * @param sqlNode the parsed form of the statement
      * @param owner the FarragoAllocationOwner which will be responsible for the
@@ -742,7 +748,8 @@ public class FarragoDatabase
     {
         final FarragoSessionPreparingStmt stmt =
             stmtValidator.getSession().getPersonality().newPreparingStmt(
-                stmtContext, stmtValidator);
+                stmtContext,
+                stmtValidator);
         return prepareStmtImpl(stmt, sqlNode, owner, analyzedSql);
     }
 
@@ -795,7 +802,7 @@ public class FarragoDatabase
         boolean cacheStatements =
             stmt.getSession().getSessionVariables().getBoolean(
                 FarragoDefaultSessionPersonality.CACHE_STATEMENTS);
-        if (sqlNode.isA(SqlKind.Explain) || cacheStatements == false) {
+        if (sqlNode.isA(SqlKind.Explain) || (cacheStatements == false)) {
             FarragoSessionExecutableStmt executableStmt =
                 stmt.prepare(sqlNode, sqlNode);
             owner.addAllocation(executableStmt);
@@ -807,10 +814,12 @@ public class FarragoDatabase
         SqlValidator sqlValidator = stmt.getSqlValidator();
         final SqlNode validatedSqlNode;
         if ((analyzedSql != null) && (analyzedSql.paramRowType != null)) {
-            Map<String,RelDataType> nameToTypeMap =
+            Map<String, RelDataType> nameToTypeMap =
                 new HashMap<String, RelDataType>();
-            for (RelDataTypeField field
-                : analyzedSql.paramRowType.getFieldList()) {
+            for (
+                RelDataTypeField field
+                : analyzedSql.paramRowType.getFieldList())
+            {
                 nameToTypeMap.put(
                     field.getName(),
                     field.getType());
@@ -893,7 +902,8 @@ public class FarragoDatabase
                 cacheEntry = null;
             } else if (isStale(
                     stmt.getRepos(),
-                    executableStmt)) {
+                    executableStmt))
+            {
                 cacheEntry.closeAllocation();
                 codeCache.discard(sql); // closes the
                                         // FarragoSessionExecutableStmt
@@ -927,8 +937,7 @@ public class FarragoDatabase
                 }
                 FemAnnotatedElement annotated = (FemAnnotatedElement) obj;
                 String lastModTime = annotated.getModificationTimestamp();
-                if (!cachedModTime.equals(lastModTime))
-                {
+                if (!cachedModTime.equals(lastModTime)) {
                     // the object was modified
                     return true;
                 }
@@ -973,9 +982,10 @@ public class FarragoDatabase
                 getCodeCacheMaxBytes(systemRepos.getCurrentConfig()));
         }
 
-        if (paramName.equals("cachePagesInit") ||
-            paramName.equals("expectedConcurrentStatements") ||
-            paramName.equals("cacheReservePercentage")) {
+        if (paramName.equals("cachePagesInit")
+            || paramName.equals("expectedConcurrentStatements")
+            || paramName.equals("cacheReservePercentage"))
+        {
             executeFennelSetParam(paramName, ddlStmt.getParamValue());
         }
     }
@@ -1018,7 +1028,7 @@ public class FarragoDatabase
         cmd.setAsync(async);
         fennelDbHandle.executeCmd(cmd);
     }
-    
+
     public void deallocateOld()
     {
         if (!systemRepos.isFennelEnabled()) {
@@ -1029,7 +1039,7 @@ public class FarragoDatabase
         cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
         fennelDbHandle.executeCmd(cmd);
     }
-    
+
     public static FarragoSessionFactory newSessionFactory()
     {
         String libraryName =
@@ -1061,6 +1071,24 @@ public class FarragoDatabase
                 FarragoDatabase.newSessionFactory(),
                 true);
         database.close(false);
+    }
+
+    public boolean isAuthenticateLocalConnections()
+    {
+        return authenticateLocalConnections;
+    }
+
+    /**
+     * Turns on/off authentication for in-process jdbc sessions. NOTE: If set to
+     * off, the origin of the jdbc connection is determined by the
+     * remoteProtocol attribute of the jdbc URL.
+     *
+     * @param authenticateLocalConnections
+     */
+    public void setAuthenticateLocalConnections(
+        boolean authenticateLocalConnections)
+    {
+        this.authenticateLocalConnections = authenticateLocalConnections;
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -1120,22 +1148,6 @@ public class FarragoDatabase
         {
             userRepos = systemRepos;
         }
-    }
-
-    public boolean isAuthenticateLocalConnections()
-    {
-        return authenticateLocalConnections;
-    }
-
-    /**
-     * Turns on/off authentication for in-process jdbc sessions.
-     * NOTE: If set to off, the origin of the jdbc connection is determined
-     * by the remoteProtocol attribute of the jdbc URL.
-     * @param authenticateLocalConnections
-     */
-    public void setAuthenticateLocalConnections(boolean authenticateLocalConnections)
-    {
-        this.authenticateLocalConnections = authenticateLocalConnections;
     }
 }
 

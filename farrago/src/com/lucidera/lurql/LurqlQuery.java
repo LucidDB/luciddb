@@ -36,7 +36,6 @@ import org.eigenbase.util.*;
 public class LurqlQuery
     extends LurqlQueryNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final List<String> selectList;

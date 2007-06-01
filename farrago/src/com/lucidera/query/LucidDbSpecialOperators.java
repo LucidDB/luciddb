@@ -39,7 +39,6 @@ import org.eigenbase.sql.type.*;
  */
 public class LucidDbSpecialOperators
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

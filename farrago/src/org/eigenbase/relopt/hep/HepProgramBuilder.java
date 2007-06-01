@@ -35,7 +35,6 @@ import org.eigenbase.relopt.*;
  */
 public class HepProgramBuilder
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private List<HepInstruction> instructions;

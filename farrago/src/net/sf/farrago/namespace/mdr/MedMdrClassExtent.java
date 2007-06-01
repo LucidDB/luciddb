@@ -49,7 +49,6 @@ import org.eigenbase.util.*;
 class MedMdrClassExtent
     extends MedAbstractColumnSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final MedMdrNameDirectory directory;

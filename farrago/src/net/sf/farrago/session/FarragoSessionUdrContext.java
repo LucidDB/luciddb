@@ -31,7 +31,6 @@ package net.sf.farrago.session;
  */
 public class FarragoSessionUdrContext
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String invocationId;

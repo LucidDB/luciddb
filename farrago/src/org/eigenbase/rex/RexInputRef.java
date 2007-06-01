@@ -56,7 +56,6 @@ import org.eigenbase.reltype.*;
 public class RexInputRef
     extends RexSlot
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // array of common names, to reduce memory allocations

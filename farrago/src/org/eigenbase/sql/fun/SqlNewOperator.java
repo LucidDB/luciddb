@@ -39,7 +39,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlNewOperator
     extends SqlPrefixOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlNewOperator()

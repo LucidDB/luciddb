@@ -40,10 +40,10 @@ import org.eigenbase.rel.*;
  */
 public class TableAccessMap
 {
-
     //~ Enums ------------------------------------------------------------------
 
-    public static enum Mode {
+    public static enum Mode
+    {
         /**
          * Table is not accessed at all.
          */
@@ -92,14 +92,13 @@ public class TableAccessMap
         // want to retain any rel references after preparation completes.
 
         accessMap = new HashMap<List<String>, Mode>();
-        RelOptUtil.go(
-            new TableRelVisitor(),
+        RelOptUtil.go(new TableRelVisitor(),
             rel);
     }
-    
+
     /**
      * Constructs a TableAccessMap for a single table
-     * 
+     *
      * @param table fully qualified name of the table, represented as a list
      * @param mode access mode for the table
      */

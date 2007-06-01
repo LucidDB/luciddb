@@ -42,7 +42,6 @@ import java.util.*;
 public class FarragoTestConcurrentTimedCommandGenerator
     extends FarragoTestConcurrentCommandGenerator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private int runTimeSeconds;
@@ -89,8 +88,8 @@ public class FarragoTestConcurrentTimedCommandGenerator
         }
 
         return new TimedIterator(
-                getCommands(threadId),
-                endTimeMillis);
+            getCommands(threadId),
+            endTimeMillis);
     }
 
     /**

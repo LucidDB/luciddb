@@ -35,7 +35,6 @@ import org.eigenbase.sql.*;
 public class TableConstructorNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlCall values;

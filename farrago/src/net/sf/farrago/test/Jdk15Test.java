@@ -39,7 +39,6 @@ import org.jgrapht.graph.*;
 public class Jdk15Test
     extends TestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public Jdk15Test(String testName)

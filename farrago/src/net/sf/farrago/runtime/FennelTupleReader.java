@@ -35,7 +35,6 @@ import java.nio.*;
  */
 public interface FennelTupleReader
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -35,7 +35,6 @@ import java.util.*;
 public class IntegerProperty
     extends Property
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final int minValue;
@@ -184,7 +183,8 @@ public class IntegerProperty
      */
     public int get(int defaultValue)
     {
-        final String value = getInternal(
+        final String value =
+            getInternal(
                 Integer.toString(defaultValue),
                 false);
         if (value == null) {
@@ -229,8 +229,8 @@ public class IntegerProperty
     private int limit(int value)
     {
         return Math.min(
-                Math.max(value, minValue),
-                maxValue);
+            Math.max(value, minValue),
+            maxValue);
     }
 
     /**

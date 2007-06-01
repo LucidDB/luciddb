@@ -68,9 +68,9 @@ import org.eigenbase.rex.*;
  * @version $Id$
  * @since May 24, 2004
  */
-public interface RelNode extends Cloneable
+public interface RelNode
+    extends Cloneable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     AbstractRelNode [] emptyArray = new AbstractRelNode[0];
@@ -127,8 +127,8 @@ public interface RelNode extends Cloneable
 
     /**
      * Returns the name of the variable which is to be implicitly set at runtime
-     * each time a row is returned from this relational expression; or null
-     * if there is no variable.
+     * each time a row is returned from this relational expression; or null if
+     * there is no variable.
      *
      * @return Name of correlating variable, or null
      */
@@ -152,6 +152,7 @@ public interface RelNode extends Cloneable
      * Returns the <code>i</code><sup>th</sup> input relational expression.
      *
      * @param i Ordinal of input
+     *
      * @return <code>i</code><sup>th</sup> input
      */
     public RelNode getInput(int i);
@@ -165,8 +166,8 @@ public interface RelNode extends Cloneable
 
     /**
      * Returns the sub-query this relational expression belongs to. A sub-query
-     * determines the scope for correlating variables (see
-     * {@link #setCorrelVariable(String)}).
+     * determines the scope for correlating variables (see {@link
+     * #setCorrelVariable(String)}).
      *
      * @return Sub-query
      */
@@ -346,10 +347,9 @@ public interface RelNode extends Cloneable
     /**
      * Clones this RelNode.
      *
-     * <p>Traits of the RelNode must be explicitly cloned, using
-     * {@link AbstractRelNode#inheritTraitsFrom(AbstractRelNode)}, as
-     * the RelNode may have traits of which it has no knowledge. Example
-     * implementation:
+     * <p>Traits of the RelNode must be explicitly cloned, using {@link
+     * AbstractRelNode#inheritTraitsFrom(AbstractRelNode)}, as the RelNode may
+     * have traits of which it has no knowledge. Example implementation:
      *
      * <pre>
      *     public MyRelNode clone()

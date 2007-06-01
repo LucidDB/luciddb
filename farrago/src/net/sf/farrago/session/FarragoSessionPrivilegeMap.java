@@ -38,7 +38,6 @@ import net.sf.farrago.fem.security.*;
  */
 public interface FarragoSessionPrivilegeMap
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

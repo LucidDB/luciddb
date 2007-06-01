@@ -34,7 +34,6 @@ import java.util.*;
  */
 public interface FarragoMedMetadataFilter
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

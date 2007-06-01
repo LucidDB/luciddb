@@ -22,6 +22,7 @@
 package net.sf.farrago.catalog;
 
 import java.sql.*;
+
 import java.util.*;
 import java.util.logging.*;
 
@@ -35,8 +36,9 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 
-import org.eigenbase.sql.type.*;
 import org.eigenbase.jmi.*;
+import org.eigenbase.sql.type.*;
+
 import org.netbeans.api.mdr.events.*;
 
 
@@ -50,6 +52,7 @@ import org.netbeans.api.mdr.events.*;
 public abstract class FarragoAbstractCatalogInit
     implements MDRPreChangeListener
 {
+    //~ Static fields/initializers ---------------------------------------------
 
     //  ~ Static fields/initializers -------------------------------------------
 
@@ -134,8 +137,8 @@ public abstract class FarragoAbstractCatalogInit
                     (FemAnnotatedElement) obj;
                 if (annotatedElement.getDescription() == null) {
                     annotatedElement.setDescription(
-                        FarragoResource.instance().
-                            CatalogBootstrapObjDescription.str());
+                        FarragoResource.instance()
+                        .CatalogBootstrapObjDescription.str());
                 }
                 FarragoCatalogUtil.updateAnnotatedElement(
                     annotatedElement,
@@ -159,16 +162,14 @@ public abstract class FarragoAbstractCatalogInit
             repos.allOfClass(CwmSqlsimpleType.class);
         CwmSqlsimpleType simpleType;
 
-        simpleType =
-            FarragoCatalogUtil.getModelElementByName(types, "BOOLEAN");
+        simpleType = FarragoCatalogUtil.getModelElementByName(types, "BOOLEAN");
         if (simpleType == null) {
             simpleType = repos.newCwmSqlsimpleType();
             simpleType.setName("BOOLEAN");
             simpleType.setTypeNumber(Types.BOOLEAN);
         }
 
-        simpleType =
-            FarragoCatalogUtil.getModelElementByName(types, "TINYINT");
+        simpleType = FarragoCatalogUtil.getModelElementByName(types, "TINYINT");
         if (simpleType == null) {
             simpleType = repos.newCwmSqlsimpleType();
             simpleType.setName("TINYINT");
@@ -189,8 +190,7 @@ public abstract class FarragoAbstractCatalogInit
             simpleType.setNumericScale(0);
         }
 
-        simpleType =
-            FarragoCatalogUtil.getModelElementByName(types, "INTEGER");
+        simpleType = FarragoCatalogUtil.getModelElementByName(types, "INTEGER");
         if (simpleType == null) {
             simpleType = repos.newCwmSqlsimpleType();
             simpleType.setName("INTEGER");
@@ -201,8 +201,7 @@ public abstract class FarragoAbstractCatalogInit
             defineTypeAlias("INT", simpleType);
         }
 
-        simpleType =
-            FarragoCatalogUtil.getModelElementByName(types, "BIGINT");
+        simpleType = FarragoCatalogUtil.getModelElementByName(types, "BIGINT");
         if (simpleType == null) {
             simpleType = repos.newCwmSqlsimpleType();
             simpleType.setName("BIGINT");
@@ -212,8 +211,7 @@ public abstract class FarragoAbstractCatalogInit
             simpleType.setNumericScale(0);
         }
 
-        simpleType =
-            FarragoCatalogUtil.getModelElementByName(types, "REAL");
+        simpleType = FarragoCatalogUtil.getModelElementByName(types, "REAL");
         if (simpleType == null) {
             simpleType = repos.newCwmSqlsimpleType();
             simpleType.setName("REAL");
@@ -222,8 +220,7 @@ public abstract class FarragoAbstractCatalogInit
             simpleType.setNumericPrecisionRadix(2);
         }
 
-        simpleType =
-            FarragoCatalogUtil.getModelElementByName(types, "DOUBLE");
+        simpleType = FarragoCatalogUtil.getModelElementByName(types, "DOUBLE");
         if (simpleType == null) {
             simpleType = repos.newCwmSqlsimpleType();
             simpleType.setName("DOUBLE");
@@ -234,12 +231,12 @@ public abstract class FarragoAbstractCatalogInit
             defineTypeAlias("FLOAT", simpleType);
         }
 
-        simpleType =
-            FarragoCatalogUtil.getModelElementByName(types, "VARCHAR");
+        simpleType = FarragoCatalogUtil.getModelElementByName(types, "VARCHAR");
         if (simpleType == null) {
             simpleType = repos.newCwmSqlsimpleType();
             simpleType.setName("VARCHAR");
             simpleType.setTypeNumber(Types.VARCHAR);
+
             // NOTE: this is an upper bound based on usage of 2-byte length
             // indicators in stored tuples; there are further limits based on
             // page size (imposed during table creation)
@@ -256,8 +253,7 @@ public abstract class FarragoAbstractCatalogInit
             simpleType.setCharacterMaximumLength(65535);
         }
 
-        simpleType =
-            FarragoCatalogUtil.getModelElementByName(types, "CHAR");
+        simpleType = FarragoCatalogUtil.getModelElementByName(types, "CHAR");
         if (simpleType == null) {
             simpleType = repos.newCwmSqlsimpleType();
             simpleType.setName("CHAR");
@@ -266,8 +262,7 @@ public abstract class FarragoAbstractCatalogInit
             defineTypeAlias("CHARACTER", simpleType);
         }
 
-        simpleType =
-            FarragoCatalogUtil.getModelElementByName(types, "BINARY");
+        simpleType = FarragoCatalogUtil.getModelElementByName(types, "BINARY");
         if (simpleType == null) {
             simpleType = repos.newCwmSqlsimpleType();
             simpleType.setName("BINARY");
@@ -275,8 +270,7 @@ public abstract class FarragoAbstractCatalogInit
             simpleType.setCharacterMaximumLength(65535);
         }
 
-        simpleType =
-            FarragoCatalogUtil.getModelElementByName(types, "DATE");
+        simpleType = FarragoCatalogUtil.getModelElementByName(types, "DATE");
         if (simpleType == null) {
             simpleType = repos.newCwmSqlsimpleType();
             simpleType.setName("DATE");
@@ -284,8 +278,7 @@ public abstract class FarragoAbstractCatalogInit
             simpleType.setDateTimePrecision(0);
         }
 
-        simpleType =
-            FarragoCatalogUtil.getModelElementByName(types, "TIME");
+        simpleType = FarragoCatalogUtil.getModelElementByName(types, "TIME");
         if (simpleType == null) {
             // TODO jvs 26-July-2004: Support fractional precision for TIME and
             // TIMESTAMP.  Currently, most of the support is there for up to
@@ -309,8 +302,7 @@ public abstract class FarragoAbstractCatalogInit
             simpleType.setDateTimePrecision(0);
         }
 
-        simpleType =
-            FarragoCatalogUtil.getModelElementByName(types, "DECIMAL");
+        simpleType = FarragoCatalogUtil.getModelElementByName(types, "DECIMAL");
         if (simpleType == null) {
             simpleType = repos.newCwmSqlsimpleType();
             simpleType.setName("DECIMAL");
@@ -365,8 +357,8 @@ public abstract class FarragoAbstractCatalogInit
             FarragoCatalogUtil.getModelElementByName(multisetTypes, "MULTISET");
         if (multisetType == null) {
             // REVIEW jvs 11-Aug-2005:  This isn't a real type descriptor, since
-            // collection types are constructed anonymously rather than
-            // defined as named instances.  Do we need it?
+            // collection types are constructed anonymously rather than defined
+            // as named instances.  Do we need it?
             FemSqlcollectionType collectType;
             collectType = repos.newFemSqlmultisetType();
             collectType.setName("MULTISET");

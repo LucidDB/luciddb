@@ -42,7 +42,6 @@ import org.eigenbase.rex.*;
 public class ProjectToCalcRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final ProjectToCalcRule instance = new ProjectToCalcRule();

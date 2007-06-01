@@ -41,7 +41,6 @@ public class FarragoTestPlanner
     extends HepPlanner
     implements FarragoSessionPlanner
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoPreparingStmt stmt;
@@ -80,7 +79,7 @@ public class FarragoTestPlanner
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
         return stmt.getRelImplementor(
-                rel.getCluster().getRexBuilder());
+            rel.getCluster().getRexBuilder());
     }
 }
 

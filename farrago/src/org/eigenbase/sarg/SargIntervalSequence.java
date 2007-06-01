@@ -35,7 +35,6 @@ import java.util.*;
  */
 public class SargIntervalSequence
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final List<SargInterval> list;
@@ -70,11 +69,8 @@ public class SargIntervalSequence
      */
     public boolean isRange()
     {
-        return
-            (
-                (list.size() > 1)
-                || ((list.size() == 1) && list.get(0).isRange())
-            );
+        return ((list.size() > 1)
+            || ((list.size() == 1) && list.get(0).isRange()));
     }
 
     /**

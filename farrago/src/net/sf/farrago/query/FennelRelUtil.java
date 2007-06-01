@@ -56,7 +56,6 @@ import org.eigenbase.util.*;
  */
 public abstract class FennelRelUtil
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -134,7 +133,8 @@ public abstract class FennelRelUtil
         RelDataTypeFactory typeFactory,
         RelDataType rowType)
     {
-        rowType = SqlTypeUtil.flattenRecordType(
+        rowType =
+            SqlTypeUtil.flattenRecordType(
                 typeFactory,
                 rowType,
                 null);
@@ -184,8 +184,8 @@ public abstract class FennelRelUtil
         Integer [] projection)
     {
         return createTupleProjection(
-                repos,
-                Arrays.asList(projection));
+            repos,
+            Arrays.asList(projection));
     }
 
     /**
@@ -277,8 +277,8 @@ public abstract class FennelRelUtil
     /**
      * Converts a SQL type to a Fennel type.
      *
-     * <p>See {@link FennelUtil#convertSqlTypeNameToFennelType(SqlTypeName)}
-     * for a detailed conversion table.
+     * <p>See {@link FennelUtil#convertSqlTypeNameToFennelType(SqlTypeName)} for
+     * a detailed conversion table.
      */
     public static FennelStandardTypeDescriptor convertSqlTypeNameToFennelType(
         SqlTypeName sqlType)
@@ -427,7 +427,8 @@ public abstract class FennelRelUtil
         // Add interval from the last IntervalSequence which is the only
         // Sequence that may be range sequence.
         for (SargInterval interval
-            : sargSeqList.get(columnCount - 1).getList()) {
+            : sargSeqList.get(columnCount - 1).getList())
+        {
             List<SargInterval> completeList = new ArrayList<SargInterval>();
 
             completeList.addAll(prefixList);
@@ -481,9 +482,9 @@ public abstract class FennelRelUtil
             // Since all tuple values are literals, we can optimize
             // to use the FennelValuesRel representation.
             return new FennelValuesRel(
-                    cluster,
-                    keyRowType,
-                    (List) inputTuples);
+                cluster,
+                keyRowType,
+                (List) inputTuples);
         }
 
         // Otherwise, we have to convert to UnionAll ({PROJECT(ONEROW)}*)
@@ -663,7 +664,8 @@ public abstract class FennelRelUtil
         }
 
         // Generate code to cast the keys to the index column type.
-        RelNode castRel = RelOptUtil.createCastRel(
+        RelNode castRel =
+            RelOptUtil.createCastRel(
                 keyRel,
                 keyRowType,
                 false);
@@ -727,14 +729,13 @@ public abstract class FennelRelUtil
 
     public static FennelRelImplementor getRelImplementor(FennelRel rel)
     {
-        return
-            (FennelRelImplementor) getPreparingStmt(rel).getRelImplementor(
-                rel.getCluster().getRexBuilder());
+        return (FennelRelImplementor) getPreparingStmt(rel).getRelImplementor(
+            rel.getCluster().getRexBuilder());
     }
 
     /**
-     * Converts a list of a list of {@link RexLiteral}s representing tuples
-     * into a base-64 encoded string.
+     * Converts a list of a list of {@link RexLiteral}s representing tuples into
+     * a base-64 encoded string.
      *
      * @param rowType the row type of the tuples
      * @param tuples the tuples
@@ -798,7 +799,8 @@ public abstract class FennelRelUtil
                 } else if (value instanceof NlsString) {
                     NlsString nlsString = (NlsString) value;
                     try {
-                        datum.setString(nlsString.getValue(),
+                        datum.setString(
+                            nlsString.getValue(),
                             nlsString.getCharsetName());
                     } catch (UnsupportedEncodingException ex) {
                         throw Util.newInternal(ex);

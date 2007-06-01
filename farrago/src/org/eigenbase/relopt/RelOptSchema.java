@@ -32,7 +32,6 @@ import org.eigenbase.reltype.*;
  */
 public interface RelOptSchema
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -41,7 +41,6 @@ import org.eigenbase.sql.type.*;
 public abstract class ValuesRelBase
     extends AbstractRelNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final List<List<RexLiteral>> tuples;
@@ -98,8 +97,8 @@ public abstract class ValuesRelBase
                 // been dealt with.
                 if (!RexLiteral.isNullLiteral(literal)) {
                     assert (SqlTypeUtil.canAssignFrom(
-                                fieldType,
-                                literal.getType()));
+                        fieldType,
+                        literal.getType()));
                 }
             }
         }

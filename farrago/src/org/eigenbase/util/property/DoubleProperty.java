@@ -35,7 +35,6 @@ import java.util.*;
 public class DoubleProperty
     extends Property
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final double minValue;
@@ -174,7 +173,8 @@ public class DoubleProperty
      */
     public double get(double defaultValue)
     {
-        final String value = getInternal(
+        final String value =
+            getInternal(
                 Double.toString(defaultValue),
                 false);
         if (value == null) {
@@ -221,8 +221,8 @@ public class DoubleProperty
     private double limit(double value)
     {
         return Math.min(
-                Math.max(value, minValue),
-                maxValue);
+            Math.max(value, minValue),
+            maxValue);
     }
 
     /**

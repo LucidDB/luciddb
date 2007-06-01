@@ -47,7 +47,6 @@ import net.sf.farrago.cwm.core.*;
  */
 public interface FarragoSessionDdlHandler
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

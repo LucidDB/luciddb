@@ -43,7 +43,6 @@ class MedMockFennelRel
     extends TableAccessRelBase
     implements FennelRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private MedMockColumnSet columnSet;

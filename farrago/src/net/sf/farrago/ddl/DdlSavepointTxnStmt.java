@@ -32,7 +32,6 @@ package net.sf.farrago.ddl;
 public abstract class DdlSavepointTxnStmt
     extends DdlTxnStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final String savepointName;

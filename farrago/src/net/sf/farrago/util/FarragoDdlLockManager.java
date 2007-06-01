@@ -28,7 +28,6 @@ import java.util.concurrent.*;
 
 public class FarragoDdlLockManager
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final ConcurrentHashMap<Object, Set<String>> objectsInUse =

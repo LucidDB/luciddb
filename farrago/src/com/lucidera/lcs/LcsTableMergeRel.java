@@ -46,9 +46,10 @@ import org.eigenbase.sql.type.*;
 public class LcsTableMergeRel
     extends MedAbstractFennelTableModRel
 {
-    //~ Static fields/initializers ---------------------------------------------
-    
-    enum ReshapeProjectionType {
+    //~ Enums ------------------------------------------------------------------
+
+    enum ReshapeProjectionType
+    {
         PROJECT_RID, PROJECT_NONRIDS, PROJECT_ALL
     }
 
@@ -218,7 +219,7 @@ public class LcsTableMergeRel
         //            \        /
         //          InsertBarrier
         //                |
-        //          Bitmap Appends              
+        //          Bitmap Appends
         //
         // 1) SourceBuffer is used to buffer the source rows so reading of the
         //    target rows doesn't conflict with writing the target table.
@@ -237,7 +238,7 @@ public class LcsTableMergeRel
         // 4) If this is an INSERT-only or UPDATE-only merge, then the
         //    substream described in #2 above is omitted.
         // 5) If this is an INSERT-only merge, then the substream described in
-        //    #3 above omits the deletion substream. 
+        //    #3 above omits the deletion substream.
 
         FemBufferingTupleStreamDef sourceBuffer = newInputBuffer(repos);
         implementor.addDataFlowFromProducerToConsumer(childInput, sourceBuffer);
@@ -269,7 +270,7 @@ public class LcsTableMergeRel
                 insertDeleteSplitter);
             insertDeleteProducer = insertDeleteSplitter;
         }
-        
+
         // create the cluster append substream
         FemExecutionStreamDef appendProducer;
         if (insertOnly) {
@@ -287,7 +288,7 @@ public class LcsTableMergeRel
             appendProducer = insertReshape;
         }
         estimatedNumRows = RelMetadataQuery.getRowCount(getChild());
-        if (estimatedNumRows != null && !updateOnly) {
+        if ((estimatedNumRows != null) && !updateOnly) {
             // TODO zfong 9/7/06 - In the case of a non-update only
             // merge, arbitrarily assume that half the source rows are
             // to be updated and half are inserted.  We can get a
@@ -323,7 +324,7 @@ public class LcsTableMergeRel
                     insertDeleteSplitter,
                     writeRowCountParamId);
         }
-       
+
         // create the barrier that reconnects the cluster appends and the
         // delete; if there are no indexes, then this is the final barrier,
         // in which case the barrier needs to be setup to receive the
@@ -347,7 +348,7 @@ public class LcsTableMergeRel
                 indexGuide.newBarrier(
                     barrierOutputType,
                     BarrierReturnModeEnum.BARRIER_RET_FIRST_INPUT,
-                    dynParam);         
+                    dynParam);
             implementor.addDataFlowFromProducerToConsumer(
                 clusterAppends,
                 insertBarrier);
@@ -355,27 +356,26 @@ public class LcsTableMergeRel
                 deleter,
                 insertBarrier);
         }
-        
+
         // finally, create the bitmap append streams
-        return
-            appendStreamDef.createBitmapAppendStreams(
-                implementor,
-                insertBarrier,
-                writeRowCountParamId);
+        return appendStreamDef.createBitmapAppendStreams(
+            implementor,
+            insertBarrier,
+            writeRowCountParamId);
     }
-    
+
     /**
-     * Creates a substream that takes a input containing rid values.  Rearranges
+     * Creates a substream that takes a input containing rid values. Rearranges
      * the input such that non-null rids are written to the output of the
      * substream before the null rids.
-     * 
+     *
      * @param implementor FennelRel implementor
      * @param indexGuide index guide
      * @param childFennelRel FennelRel corresponding to the source input for the
      * MERGE
      * @param sourceBuffer the stream def corresponding to the input into the
      * substream to be created
-     * 
+     *
      * @return a MergeStreamDef that outputs the rows with rows containing
      * non-null rids appearing before rows with null rids
      */
@@ -390,7 +390,7 @@ public class LcsTableMergeRel
         implementor.addDataFlowFromProducerToConsumer(
             sourceBuffer,
             ridSplitter);
-        
+
         FemReshapeStreamDef notNullReshape =
             createMergeReshape(
                 true,
@@ -400,7 +400,7 @@ public class LcsTableMergeRel
         implementor.addDataFlowFromProducerToConsumer(
             ridSplitter,
             notNullReshape);
-        
+
         FemReshapeStreamDef nullReshape =
             createMergeReshape(
                 true,
@@ -415,7 +415,7 @@ public class LcsTableMergeRel
         implementor.addDataFlowFromProducerToConsumer(
             nullReshape,
             nullRidBuffer);
-        
+
         FemMergeStreamDef mergeStream = repos.newFemMergeStreamDef();
         mergeStream.setSequential(true);
         mergeStream.setPrePullInputs(false);
@@ -430,14 +430,14 @@ public class LcsTableMergeRel
         implementor.addDataFlowFromProducerToConsumer(
             nullRidBuffer,
             mergeStream);
-        
-        return mergeStream;     
+
+        return mergeStream;
     }
 
     /**
      * Creates a Reshape execution stream used within the MERGE execution stream
      * that optionally compares the rid column in its input to either null or
-     * non-null.  Also projects the input based on a specified parameter.
+     * non-null. Also projects the input based on a specified parameter.
      *
      * @param compareRid true if the stream will be doing rid comparison
      * @param compOp the operator to use in the rid comparison
@@ -494,7 +494,7 @@ public class LcsTableMergeRel
         Integer [] outputProj;
         RelDataType outputRowType;
         if (projType == ReshapeProjectionType.PROJECT_RID) {
-            outputProj = new Integer [] { 0 };
+            outputProj = new Integer[] { 0 };
 
             // rid needs to not be nullable in the output since the delete
             // (i.e., splicer) expects non-null rid values
@@ -516,7 +516,8 @@ public class LcsTableMergeRel
                 for (int i = 0; i < nFieldsProjected; i++) {
                     projFieldTypes[i] =
                         inputFields[i + nFieldsNotProjected].getType();
-                    fieldNames[i] = inputFields[i + nFieldsNotProjected].getName();
+                    fieldNames[i] =
+                        inputFields[i + nFieldsNotProjected].getName();
                 }
                 outputRowType =
                     typeFactory.createStructType(projFieldTypes, fieldNames);
@@ -536,7 +537,7 @@ public class LcsTableMergeRel
 
     /**
      * Creates a rowtype corresponding to a single rid column
-     * 
+     *
      * @param nullableRid if true, create the rid type column as nullable
      *
      * @return created rowtype
@@ -560,22 +561,22 @@ public class LcsTableMergeRel
 
         return rowType;
     }
-    
+
     /**
      * Creates the substream for deleting rows for the MERGE statement
-     * 
+     *
      * @param repos repository
      * @param implementor FennelRel implementor
      * @param indexGuide index guide
      * @param appendStreamDef the append stream that this delete stream is
      * associated with
-     * @param childFennelRel FennelRel corresponding to the source input for
-     * the MERGE
+     * @param childFennelRel FennelRel corresponding to the source input for the
+     * MERGE
      * @param splitter the splitter producer that passes rows to the delete
      * substream
-     * @param writeRowCountParamId parameter id that the splicer stream will
-     * use to write out its rowcount to be read by a downstream barrier
-     * 
+     * @param writeRowCountParamId parameter id that the splicer stream will use
+     * to write out its rowcount to be read by a downstream barrier
+     *
      * @return stream def for the deletion substream
      */
     private FemLbmSplicerStreamDef createDeleteStream(
@@ -585,7 +586,7 @@ public class LcsTableMergeRel
         LcsAppendStreamDef appendStreamDef,
         FennelRel childFennelRel,
         FemSplitterStreamDef splitter,
-        int writeRowCountParamId)        
+        int writeRowCountParamId)
     {
         // if we only have an UPDATE substatement, null rids have already
         // been filtered out, so the delete reshape stream only needs to
@@ -608,14 +609,13 @@ public class LcsTableMergeRel
         implementor.addDataFlowFromProducerToConsumer(
             splitter,
             deleteReshape);
-        
-        return
-            appendStreamDef.createDeleteRidStream(
-                implementor,
-                deleteReshape,
-                estimatedNumRows,
-                writeRowCountParamId,
-                true);
+
+        return appendStreamDef.createDeleteRidStream(
+            implementor,
+            deleteReshape,
+            estimatedNumRows,
+            writeRowCountParamId,
+            true);
     }
 }
 

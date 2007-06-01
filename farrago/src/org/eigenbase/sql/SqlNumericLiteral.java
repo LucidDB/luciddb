@@ -39,7 +39,6 @@ import org.eigenbase.util.*;
 public class SqlNumericLiteral
     extends SqlLiteral
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private Integer prec;
@@ -81,13 +80,12 @@ public class SqlNumericLiteral
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return
-            new SqlNumericLiteral(
-                (BigDecimal) value,
-                getPrec(),
-                getScale(),
-                isExact,
-                pos);
+        return new SqlNumericLiteral(
+            (BigDecimal) value,
+            getPrec(),
+            getScale(),
+            isExact,
+            pos);
     }
 
     public void unparse(
@@ -124,11 +122,10 @@ public class SqlNumericLiteral
             }
 
             //else we have a decimal
-            return
-                typeFactory.createSqlType(
-                    SqlTypeName.DECIMAL,
-                    prec.intValue(),
-                    scaleValue);
+            return typeFactory.createSqlType(
+                SqlTypeName.DECIMAL,
+                prec.intValue(),
+                scaleValue);
         }
 
         // else we have a a float, real or double.  make them all double for

@@ -27,7 +27,6 @@ import java.util.*;
 
 public interface FarragoSessionInfo
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -31,7 +31,6 @@ import org.eigenbase.util.*;
  */
 public abstract class LucidEraJni
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static {

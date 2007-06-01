@@ -40,7 +40,6 @@ public abstract class FennelSingleRel
     extends SingleRel
     implements FennelRel
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -107,9 +106,9 @@ public abstract class FennelSingleRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
         return implementor.visitChild(
-                this,
-                0,
-                getChild());
+            this,
+            0,
+            getChild());
     }
 }
 

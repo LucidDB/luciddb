@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
 public class ComparableOperandTypeChecker
     extends SameOperandTypeChecker
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataTypeComparability requiredComparability;
@@ -80,7 +79,8 @@ public class ComparableOperandTypeChecker
         RelDataType type)
     {
         if (type.getComparability().ordinal()
-            < requiredComparability.ordinal()) {
+            < requiredComparability.ordinal())
+        {
             if (throwOnFailure) {
                 throw callBinding.newValidationSignatureError();
             } else {
@@ -103,7 +103,8 @@ public class ComparableOperandTypeChecker
             RelDataType type = callBinding.getOperandType(i);
             boolean result;
             if (type.getComparability().ordinal()
-                < requiredComparability.ordinal()) {
+                < requiredComparability.ordinal())
+            {
                 result = false;
             } else {
                 result = true;
@@ -124,9 +125,9 @@ public class ComparableOperandTypeChecker
         String [] array = new String[nOperands];
         Arrays.fill(array, "COMPARABLE_TYPE");
         return SqlUtil.getAliasedSignature(
-                op,
-                opName,
-                Arrays.asList(array));
+            op,
+            opName,
+            Arrays.asList(array));
     }
 }
 

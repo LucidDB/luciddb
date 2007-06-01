@@ -40,7 +40,6 @@ import net.sf.farrago.util.*;
 public class FarragoPluginClassLoader
     extends URLClassLoader
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -125,8 +124,8 @@ public class FarragoPluginClassLoader
                 String className =
                     manifest.getMainAttributes().getValue(jarAttributeName);
                 return loadClassFromJarUrl(
-                        "file:" + libraryName,
-                        className);
+                    "file:" + libraryName,
+                    className);
             }
         } catch (Throwable ex) {
             throw FarragoResource.instance().PluginJarLoadFailed.ex(
@@ -231,8 +230,7 @@ public class FarragoPluginClassLoader
      */
     public static boolean isLibraryClass(String libraryName)
     {
-        return
-            libraryName.startsWith(LIBRARY_CLASS_PREFIX1)
+        return libraryName.startsWith(LIBRARY_CLASS_PREFIX1)
             || libraryName.startsWith(LIBRARY_CLASS_PREFIX2);
     }
 

@@ -34,7 +34,6 @@ import java.util.*;
 public class VarbinaryComparator
     implements Comparator
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public static final int compareVarbinary(

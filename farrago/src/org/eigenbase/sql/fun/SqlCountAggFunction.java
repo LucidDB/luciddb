@@ -44,7 +44,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlCountAggFunction
     extends SqlAggFunction
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final RelDataType type = null; // TODO:
@@ -88,7 +87,7 @@ public class SqlCountAggFunction
         // want to try and derive the "*"
         if (call.isCountStar()) {
             return validator.getTypeFactory().createSqlType(
-                    SqlTypeName.BIGINT);
+                SqlTypeName.BIGINT);
         }
         return super.deriveType(validator, scope, call);
     }

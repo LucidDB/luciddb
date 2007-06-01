@@ -41,7 +41,6 @@ import org.eigenbase.sql.type.*;
 public class SqlSumAggFunction
     extends SqlAggFunction
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RelDataType type;

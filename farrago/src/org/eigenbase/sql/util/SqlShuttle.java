@@ -40,7 +40,6 @@ import org.eigenbase.sql.*;
 public class SqlShuttle
     extends SqlBasicVisitor<SqlNode>
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public SqlNode visit(SqlLiteral literal)
@@ -98,8 +97,8 @@ public class SqlShuttle
         }
         if (update) {
             return new SqlNodeList(
-                    newList,
-                    nodeList.getParserPosition());
+                newList,
+                nodeList.getParserPosition());
         } else {
             return nodeList;
         }
@@ -130,17 +129,17 @@ public class SqlShuttle
         public SqlNode result()
         {
             if (update || alwaysCopy) {
-                return
-                    call.getOperator().createCall(
-                        call.getFunctionQuantifier(),
-                        call.getParserPosition(),
-                        clonedOperands);
+                return call.getOperator().createCall(
+                    call.getFunctionQuantifier(),
+                    call.getParserPosition(),
+                    clonedOperands);
             } else {
                 return call;
             }
         }
 
-        public SqlNode visitChild(SqlVisitor<SqlNode> visitor,
+        public SqlNode visitChild(
+            SqlVisitor<SqlNode> visitor,
             SqlNode expr,
             int i,
             SqlNode operand)

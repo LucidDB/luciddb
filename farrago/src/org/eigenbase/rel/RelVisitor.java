@@ -34,7 +34,6 @@ package org.eigenbase.rel;
  */
 public abstract class RelVisitor
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private RelNode root;

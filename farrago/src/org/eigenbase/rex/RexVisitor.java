@@ -34,7 +34,6 @@ package org.eigenbase.rex;
  */
 public interface RexVisitor<R>
 {
-
     //~ Methods ----------------------------------------------------------------
 
     R visitInputRef(RexInputRef inputRef);

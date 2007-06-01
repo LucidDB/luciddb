@@ -53,7 +53,6 @@ import org.eigenbase.util.*;
  */
 public class ProxyGen
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Comparator<Class> classNameComparator =
@@ -67,7 +66,6 @@ public class ProxyGen
                 return name1.compareTo(name2);
             }
         };
-
 
     //~ Instance fields --------------------------------------------------------
 
@@ -538,7 +536,8 @@ public class ProxyGen
     {
         String [] sourcePackageNames = qualifiedName.split("\\.");
         RefPackage sourcePackage =
-            JmiUtil.getSubPackage(rootPackage,
+            JmiUtil.getSubPackage(
+                rootPackage,
                 sourcePackageNames,
                 sourcePackageNames.length);
         assert (sourcePackage != null);
@@ -562,9 +561,9 @@ public class ProxyGen
             prefix = genPrefix;
         }
 
-        return
-            ReflectUtil.getUnqualifiedClassName(clazz).replaceFirst(prefix,
-                "Proxy");
+        return ReflectUtil.getUnqualifiedClassName(clazz).replaceFirst(
+            prefix,
+            "Proxy");
     }
 
     /**
@@ -596,10 +595,8 @@ public class ProxyGen
                     Reference reference = (Reference) obj;
                     String endName = reference.getReferencedEnd().getName();
                     if (endName.equalsIgnoreCase(attrName)) {
-                        return
-                            "SharedProxy"
-                                + reference.getReferencedEnd().getType()
-                                .getName();
+                        return "SharedProxy"
+                            + reference.getReferencedEnd().getType().getName();
                     }
                 }
                 if (obj instanceof Attribute) {
@@ -630,8 +627,7 @@ public class ProxyGen
     private boolean isGetter(Method method)
     {
         String methodName = method.getName();
-        return
-            (methodName.startsWith("get") || methodName.startsWith("is"))
+        return (methodName.startsWith("get") || methodName.startsWith("is"))
             && (method.getParameterTypes().length == 0);
     }
 

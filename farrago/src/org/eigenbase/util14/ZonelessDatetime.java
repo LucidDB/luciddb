@@ -21,27 +21,36 @@
 */
 package org.eigenbase.util14;
 
+import java.io.*;
+
 import java.text.*;
-import java.util.Calendar;
-import java.util.TimeZone;
-import java.io.Serializable;
+
+import java.util.*;
+
 
 /**
- * ZonelessDatetime is an abstract class for dates, times, or timestamps
- * that contain a zoneless time value.
+ * ZonelessDatetime is an abstract class for dates, times, or timestamps that
+ * contain a zoneless time value.
  *
  * @author John Pham
  * @version $Id$
  */
 public abstract class ZonelessDatetime
-    implements BasicDatetime, Serializable
+    implements BasicDatetime,
+        Serializable
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * SerialVersionUID created with JDK 1.5 serialver tool.
+     */
+    private static final long serialVersionUID = -1274713852537224763L;
 
     //~ Instance fields --------------------------------------------------------
 
     /**
-     * Treat this as a protected field. It is only made public to simplify
-     * Java code generation.
+     * Treat this as a protected field. It is only made public to simplify Java
+     * code generation.
      */
     public long internalTime;
 
@@ -50,9 +59,6 @@ public abstract class ZonelessDatetime
     protected transient Calendar tempCal;
     protected transient DateFormat tempFormatter;
     protected transient String lastFormat;
-
-    /** SerialVersionUID created with JDK 1.5 serialver tool. */
-    private static final long serialVersionUID = -1274713852537224763L;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -114,8 +120,8 @@ public abstract class ZonelessDatetime
     }
 
     /**
-     * Gets the value of this datetime as a milliseconds value for
-     * {@link java.sql.Time}.
+     * Gets the value of this datetime as a milliseconds value for {@link
+     * java.sql.Time}.
      *
      * @param zone time zone in which to generate a time value for
      */
@@ -126,8 +132,8 @@ public abstract class ZonelessDatetime
     }
 
     /**
-     * Gets the value of this datetime as a milliseconds value for
-     * {@link java.sql.Date}.
+     * Gets the value of this datetime as a milliseconds value for {@link
+     * java.sql.Date}.
      *
      * @param zone time zone in which to generate a time value for
      */
@@ -147,8 +153,8 @@ public abstract class ZonelessDatetime
     }
 
     /**
-     * Gets the value of this datetime as a milliseconds value for
-     * {@link java.sql.Timestamp}.
+     * Gets the value of this datetime as a milliseconds value for {@link
+     * java.sql.Timestamp}.
      *
      * @param zone time zone in which to generate a time value for
      */
@@ -195,14 +201,14 @@ public abstract class ZonelessDatetime
     }
 
     /**
-     * Gets a temporary formatter for a zoneless date time. The same
-     * formatter is returned on subsequent calls.
+     * Gets a temporary formatter for a zoneless date time. The same formatter
+     * is returned on subsequent calls.
      *
      * @param format a {@link java.text.SimpleDateFormat} format string
      */
     protected DateFormat getFormatter(String format)
     {
-        if (tempFormatter != null && lastFormat.equals(format)) {
+        if ((tempFormatter != null) && lastFormat.equals(format)) {
             return tempFormatter;
         }
         tempFormatter = DateTimeUtil.newDateFormat(format);

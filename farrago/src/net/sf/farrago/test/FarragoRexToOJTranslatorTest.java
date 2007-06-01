@@ -60,7 +60,6 @@ import org.eigenbase.sql2rel.*;
 public class FarragoRexToOJTranslatorTest
     extends FarragoSqlToRelTestBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -507,7 +506,7 @@ public class FarragoRexToOJTranslatorTest
     {
         checkTranslation("cast(cast(null as tinyint) as varchar(30))");
     }
-    
+
     // TODO jvs 22-June-2004:  figure out a way to test codegen for
     // assignment of nullable value to NOT NULL field
 

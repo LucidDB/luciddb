@@ -30,9 +30,8 @@ import java.util.*;
 /**
  * FennelTupleDescriptor provides the metadata describing a tuple. This is used
  * in conjunction with FennelTupleAccessor objects to marshall and unmarshall
- * data into FennelTupleData objects from external formats.
- *
- * This class is JDK 1.4 compatible.
+ * data into FennelTupleData objects from external formats. This class is JDK
+ * 1.4 compatible.
  *
  * @author Mike Bennett
  * @version $Id$
@@ -40,7 +39,6 @@ import java.util.*;
 public class FennelTupleDescriptor
     implements Serializable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

@@ -37,7 +37,6 @@ import org.eigenbase.rex.*;
 public class OJRexIgnoredCallImplementor
     implements OJRexImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public Expression implement(

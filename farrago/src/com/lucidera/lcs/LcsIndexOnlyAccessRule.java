@@ -41,7 +41,6 @@ import org.eigenbase.relopt.*;
 public class LcsIndexOnlyAccessRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -148,8 +147,7 @@ public class LcsIndexOnlyAccessRule
         for (FemLocalIndex index : indexSet) {
             // Starting from the "thinnest" indexes
             if (samePrefix(origIndex, index, nInputKeys)) {
-
-                Integer[] proj =
+                Integer [] proj =
                     LcsIndexOptimizer.findIndexOnlyProjection(rowScan, index);
 
                 if (proj != null) {

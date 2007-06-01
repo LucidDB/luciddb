@@ -41,9 +41,10 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
 
+
 /**
  * FarragoExecutableJavaStmt implements FarragoSessionExecutableStmt via a
- * compiled Java class.  It extends upon FarragoExecutableFennelStmt, which
+ * compiled Java class. It extends upon FarragoExecutableFennelStmt, which
  * implements the Fennel portion of a statement.
  *
  * <p>NOTE: be sure to read superclass warnings before modifying this class.
@@ -54,7 +55,6 @@ import org.eigenbase.util.*;
 class FarragoExecutableJavaStmt
     extends FarragoExecutableFennelStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final File packageDir;
@@ -123,7 +123,7 @@ class FarragoExecutableJavaStmt
             // Fennel tuple streams yet, since some may take Java streams as
             // input, and the Java streams are created by method.invoke below
             // (which calls the generated execute method to obtain an iterator).
-            //  This means that the generated execute must NOT try to prefetch
+            // This means that the generated execute must NOT try to prefetch
             // any data, since the Fennel streams aren't open yet. In
             // particular, Java iterator implementations must not do prefetch in
             // the constructor (always wait for hasNext/next).
@@ -133,7 +133,8 @@ class FarragoExecutableJavaStmt
                     null,
                     new Object[] { runtimeContext });
             resultSet =
-                new FarragoTupleIterResultSet(iter,
+                new FarragoTupleIterResultSet(
+                    iter,
                     rowClass,
                     rowType,
                     runtimeContext);
@@ -159,21 +160,21 @@ class FarragoExecutableJavaStmt
     // implement FarragoSessionExecutableStmt
     public long getMemoryUsage()
     {
-        // The size of the Java portion of the statement is estimated
-        // based on the bytecode size times an additional factor of .75.
-        // That factor was derived from measurements capturing the relative
-        // size of JIT code versus bytecode size.  JIT code size relative to
-        // bytecode size varied from .25 to .5.  So, we use .5 to account
-        // for the JIT code and then add an additional .25 factor for other
-        // class overhead (e.g. constants and reflection info), type descriptor,
-        // and "this" object and fields such as packageDir/referencedObjectIds.        
+        // The size of the Java portion of the statement is estimated based on
+        // the bytecode size times an additional factor of .75. That factor was
+        // derived from measurements capturing the relative size of JIT code
+        // versus bytecode size.  JIT code size relative to bytecode size varied
+        // from .25 to .5.  So, we use .5 to account for the JIT code and then
+        // add an additional .25 factor for other class overhead (e.g. constants
+        // and reflection info), type descriptor, and "this" object and fields
+        // such as packageDir/referencedObjectIds.
         long nBytes = (long) ((double) totalByteCodeSize * 1.75);
 
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine("Java bytecode size = " + totalByteCodeSize + " bytes");
             if (xmiFennelPlan != null) {
                 int xmiSize = FarragoUtil.getStringMemoryUsage(xmiFennelPlan);
-                tracer.fine("XMI Fennel plan size = "+ xmiSize + " bytes");
+                tracer.fine("XMI Fennel plan size = " + xmiSize + " bytes");
             }
         }
 

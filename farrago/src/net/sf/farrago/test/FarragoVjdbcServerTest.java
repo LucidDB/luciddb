@@ -35,7 +35,6 @@ import net.sf.farrago.server.*;
 public class FarragoVjdbcServerTest
     extends FarragoServerTest
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

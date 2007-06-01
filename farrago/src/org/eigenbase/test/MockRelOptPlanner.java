@@ -37,7 +37,6 @@ import org.eigenbase.relopt.*;
 public class MockRelOptPlanner
     extends AbstractRelOptPlanner
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private RelNode root;
@@ -98,7 +97,8 @@ public class MockRelOptPlanner
         List<RelNode> bindings = new ArrayList<RelNode>();
         if (match(rule.getOperand(),
                 rel,
-                bindings)) {
+                bindings))
+        {
             MockRuleCall call =
                 new MockRuleCall(
                     this,
@@ -146,7 +146,8 @@ public class MockRelOptPlanner
         for (int i = 0; i < n; ++i) {
             if (!match(childOperands[i],
                     childRels[i],
-                    bindings)) {
+                    bindings))
+            {
                 return false;
             }
         }

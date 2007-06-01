@@ -44,7 +44,6 @@ import org.eigenbase.util14.*;
 public class CalcRexImplementorTableImpl
     implements CalcRexImplementorTable
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final SqlStdOperatorTable opTab =
@@ -62,14 +61,16 @@ public class CalcRexImplementorTableImpl
     /**
      * Maps {@link SqlOperator} to {@link CalcRexImplementor}.
      */
-    private final Map<SqlOperator,CalcRexImplementor> operatorImplementationMap =
-        new HashMap<SqlOperator, CalcRexImplementor>();
+    private final Map<SqlOperator, CalcRexImplementor>
+        operatorImplementationMap =
+            new HashMap<SqlOperator, CalcRexImplementor>();
 
     /**
      * Maps {@link SqlAggFunction} to {@link CalcRexAggImplementor}.
      */
-    private final Map<SqlAggFunction,CalcRexAggImplementor> aggImplementationMap =
-        new HashMap<SqlAggFunction, CalcRexAggImplementor>();
+    private final Map<SqlAggFunction, CalcRexAggImplementor>
+        aggImplementationMap =
+            new HashMap<SqlAggFunction, CalcRexAggImplementor>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -110,7 +111,8 @@ public class CalcRexImplementorTableImpl
     {
         Util.pre(op != null, "op != null");
         Util.pre(impl != null, "impl != null");
-        Util.pre(!operatorImplementationMap.containsKey(op),
+        Util.pre(
+            !operatorImplementationMap.containsKey(op),
             "!operatorImplementationMap.containsKey(op)");
         operatorImplementationMap.put(op, impl);
     }
@@ -149,7 +151,8 @@ public class CalcRexImplementorTableImpl
     {
         Util.pre(agg != null, "agg != null");
         Util.pre(impl != null, "impl != null");
-        Util.pre(!aggImplementationMap.containsKey(agg),
+        Util.pre(
+            !aggImplementationMap.containsKey(agg),
             "!aggImplementationMap.containsKey(op)");
         aggImplementationMap.put(agg, impl);
     }
@@ -157,8 +160,7 @@ public class CalcRexImplementorTableImpl
     // implement CalcRexImplementorTable
     public CalcRexImplementor get(SqlOperator op)
     {
-        CalcRexImplementor implementor =
-            operatorImplementationMap.get(op);
+        CalcRexImplementor implementor = operatorImplementationMap.get(op);
         if ((implementor == null) && (parent != null)) {
             implementor = parent.get(op);
         }
@@ -167,8 +169,7 @@ public class CalcRexImplementorTableImpl
 
     public CalcRexAggImplementor getAgg(SqlAggFunction op)
     {
-        CalcRexAggImplementor implementor =
-            aggImplementationMap.get(op);
+        CalcRexAggImplementor implementor = aggImplementationMap.get(op);
         if ((implementor == null) && (parent != null)) {
             implementor = parent.getAgg(op);
         }
@@ -275,21 +276,19 @@ public class CalcRexImplementorTableImpl
         CalcProgramBuilder.RegisterDescriptor rd =
             translator.getCalcRegisterDescriptor(typeNode);
         if (rd.getType().isExact()) {
-            return
-                implementFirstOperandWithInt8(
-                    call,
-                    translator,
-                    typeNode,
-                    i,
-                    castBack);
+            return implementFirstOperandWithInt8(
+                call,
+                translator,
+                typeNode,
+                i,
+                castBack);
         } else if (rd.getType().isApprox()) {
-            return
-                implementFirstOperandWithDouble(
-                    call,
-                    translator,
-                    typeNode,
-                    i,
-                    castBack);
+            return implementFirstOperandWithDouble(
+                call,
+                translator,
+                typeNode,
+                i,
+                castBack);
         }
 
         return call;
@@ -314,7 +313,8 @@ public class CalcRexImplementorTableImpl
         CalcProgramBuilder.RegisterDescriptor rd =
             translator.getCalcRegisterDescriptor(typeNode);
         if (rd.getType().isExact()
-            && !rd.getType().equals(CalcProgramBuilder.OpType.Int8)) {
+            && !rd.getType().equals(CalcProgramBuilder.OpType.Int8))
+        {
             RelDataType oldType = typeNode.getType();
             RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
 
@@ -331,7 +331,8 @@ public class CalcRexImplementorTableImpl
                         castCall1);
             } else {
                 RexNode [] args = new RexNode[call.operands.length];
-                System.arraycopy(call.operands,
+                System.arraycopy(
+                    call.operands,
                     0,
                     args,
                     0,
@@ -368,7 +369,8 @@ public class CalcRexImplementorTableImpl
         CalcProgramBuilder.RegisterDescriptor rd =
             translator.getCalcRegisterDescriptor(typeNode);
         if (rd.getType().isApprox()
-            && !rd.getType().equals(CalcProgramBuilder.OpType.Double)) {
+            && !rd.getType().equals(CalcProgramBuilder.OpType.Double))
+        {
             RelDataType oldType = typeNode.getType();
             RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
 
@@ -385,7 +387,8 @@ public class CalcRexImplementorTableImpl
                         castCall1);
             } else {
                 RexNode [] args = new RexNode[call.operands.length];
-                System.arraycopy(call.operands,
+                System.arraycopy(
+                    call.operands,
                     0,
                     args,
                     0,
@@ -418,7 +421,8 @@ public class CalcRexImplementorTableImpl
                     RexToCalcTranslator translator)
                 {
                     RexCall newCall =
-                        implementFirstOperandWithDoubleOrInt8(call,
+                        implementFirstOperandWithDoubleOrInt8(
+                            call,
                             translator,
                             call.operands[0],
                             0,
@@ -690,8 +694,7 @@ public class CalcRexImplementorTableImpl
      * necessary.
      *
      * <p>Rounding is to a multiple of 10 ^ (3 - precision), according to the
-     * {@link RoundingMode} strategy of the <code>roundingMode</code>
-     * parameter.
+     * {@link RoundingMode} strategy of the <code>roundingMode</code> parameter.
      *
      * <p>If the result has the same or more precision, generates no code.
      *
@@ -701,6 +704,7 @@ public class CalcRexImplementorTableImpl
      * @param toType Desired target type
      * @param fromPrecision Precision of the input value
      * @param translator Translator
+     *
      * @return Result register after applying rounding
      */
     private static CalcReg implementRounding(
@@ -739,7 +743,11 @@ public class CalcRexImplementorTableImpl
             alpha = 1;
         }
         return implementRounding(
-            alpha, roundingMode, inReg, toType, translator);
+            alpha,
+            roundingMode,
+            inReg,
+            toType,
+            translator);
     }
 
     /**
@@ -753,6 +761,7 @@ public class CalcRexImplementorTableImpl
      * @param inReg Register holding input value
      * @param toType Type to convert to
      * @param translator Translator
+     *
      * @return Register containing rounded result
      */
     private static CalcReg implementRounding(
@@ -794,9 +803,9 @@ public class CalcRexImplementorTableImpl
             CalcReg yReg = translator.builder.newLocal(resultDesc);
             CalcReg ltReg =
                 translator.builder.newLocal(
-                    CalcProgramBuilder.OpType.Bool, -1);
-            CalcReg zeroReg =
-                translator.builder.newInt8Literal(0);
+                    CalcProgramBuilder.OpType.Bool,
+                    -1);
+            CalcReg zeroReg = translator.builder.newInt8Literal(0);
             CalcProgramBuilder.boolLessThan.add(
                 translator.builder,
                 ltReg,
@@ -885,9 +894,9 @@ public class CalcRexImplementorTableImpl
                 alphaReg);
             CalcReg ltReg =
                 translator.builder.newLocal(
-                    CalcProgramBuilder.OpType.Bool, -1);
-            CalcReg zeroReg =
-                translator.builder.newInt8Literal(0);
+                    CalcProgramBuilder.OpType.Bool,
+                    -1);
+            CalcReg zeroReg = translator.builder.newInt8Literal(0);
             CalcProgramBuilder.boolLessThan.add(
                 translator.builder,
                 ltReg,
@@ -1054,7 +1063,8 @@ public class CalcRexImplementorTableImpl
             if (operand.getType().isNullable()) {
                 RexNode notNullCall =
                     translator.rexBuilder.makeCall(
-                        SqlStdOperatorTable.isNotNullOperator, operand);
+                        SqlStdOperatorTable.isNotNullOperator,
+                        operand);
                 RexNode eqCall =
                     translator.rexBuilder.makeCall(
                         SqlStdOperatorTable.equalsOperator,
@@ -1130,8 +1140,7 @@ public class CalcRexImplementorTableImpl
                 SqlTypeUtil.inCharFamily(call.operands[operand].getType()),
                 "SqlTypeUtil.inCharFamily(call.operands[operand].getType()");
 
-            List<CalcReg> regList =
-                super.makeRegList(translator, call);
+            List<CalcReg> regList = super.makeRegList(translator, call);
             CalcReg charSetName =
                 translator.builder.newVarcharLiteral(
                     call.operands[operand].getType().getCharset().name());
@@ -1185,7 +1194,8 @@ public class CalcRexImplementorTableImpl
             for (int i = 0; i < call.operands.length; i++) {
                 RexNode operand = call.operands[i];
                 if (!operand.getType().getSqlTypeName().equals(
-                        SqlTypeName.DOUBLE)) {
+                        SqlTypeName.DOUBLE))
+                {
                     RelDataType oldType = operand.getType();
                     RelDataTypeFactory fac =
                         translator.rexBuilder.getTypeFactory();
@@ -1198,7 +1208,8 @@ public class CalcRexImplementorTableImpl
                             doubleType,
                             oldType.isNullable());
                     RexNode castCall =
-                        translator.rexBuilder.makeCast(doubleType,
+                        translator.rexBuilder.makeCast(
+                            doubleType,
                             call.operands[i]);
                     call.operands[i] = castCall;
                 }
@@ -1214,10 +1225,11 @@ public class CalcRexImplementorTableImpl
     private static class CastImplementor
         extends AbstractCalcRexImplementor
     {
+        static final CastImplementor instance = new CastImplementor();
         private final Map<Pair<SqlTypeName, SqlTypeName>, CalcRexImplementor>
             doubleKeyMap =
-            new HashMap<Pair<SqlTypeName, SqlTypeName>, CalcRexImplementor>();
-        static final CastImplementor instance = new CastImplementor();
+                new HashMap<Pair<SqlTypeName, SqlTypeName>,
+                    CalcRexImplementor>();
 
         private CastImplementor()
         {
@@ -1234,6 +1246,7 @@ public class CalcRexImplementorTableImpl
                 SqlTypeName.BIGINT,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));
+
             // REVIEW angel 2006-08-31 - allow cast from intervals to bigint?
             // TODO: Replace castDateToMillis with real cast from/to interval
             //  (Okay to use castDateToMillis for now since it just
@@ -1263,7 +1276,8 @@ public class CalcRexImplementorTableImpl
                         RexToCalcTranslator translator)
                     {
                         RexCall newCall =
-                            implementFirstOperandWithInt8(call,
+                            implementFirstOperandWithInt8(
+                                call,
                                 translator,
                                 call.operands[0],
                                 0,
@@ -1380,7 +1394,8 @@ public class CalcRexImplementorTableImpl
                         RexToCalcTranslator translator)
                     {
                         RexCall newCall =
-                            implementFirstOperandWithInt8(call,
+                            implementFirstOperandWithInt8(
+                                call,
                                 translator,
                                 call,
                                 0,
@@ -1400,7 +1415,8 @@ public class CalcRexImplementorTableImpl
                         RexToCalcTranslator translator)
                     {
                         RexCall newCall =
-                            implementFirstOperandWithDouble(call,
+                            implementFirstOperandWithDouble(
+                                call,
                                 translator,
                                 call,
                                 0,
@@ -1435,7 +1451,9 @@ public class CalcRexImplementorTableImpl
         }
 
         private void putMM(
-            SqlTypeName[] t1s, SqlTypeName[] t2s, CalcRexImplementor value)
+            SqlTypeName [] t1s,
+            SqlTypeName [] t2s,
+            CalcRexImplementor value)
         {
             for (int i = 0; i < t1s.length; i++) {
                 putSM(t1s[i], t2s, value);
@@ -1443,7 +1461,9 @@ public class CalcRexImplementorTableImpl
         }
 
         private void putMS(
-            SqlTypeName[] t1s, SqlTypeName t2, CalcRexImplementor value)
+            SqlTypeName [] t1s,
+            SqlTypeName t2,
+            CalcRexImplementor value)
         {
             for (int i = 0; i < t1s.length; i++) {
                 put(t1s[i], t2, value);
@@ -1451,7 +1471,9 @@ public class CalcRexImplementorTableImpl
         }
 
         private void putSM(
-            SqlTypeName t1, SqlTypeName[] t2s, CalcRexImplementor value)
+            SqlTypeName t1,
+            SqlTypeName [] t2s,
+            CalcRexImplementor value)
         {
             for (int i = 0; i < t2s.length; i++) {
                 put(t1, t2s[i], value);
@@ -1459,12 +1481,15 @@ public class CalcRexImplementorTableImpl
         }
 
         private void put(
-            SqlTypeName t1, SqlTypeName t2, CalcRexImplementor value)
+            SqlTypeName t1,
+            SqlTypeName t2,
+            CalcRexImplementor value)
         {
             assert value != null;
-            CalcRexImplementor s = doubleKeyMap.put(
-                new Pair<SqlTypeName, SqlTypeName>(t1, t2),
-                value);
+            CalcRexImplementor s =
+                doubleKeyMap.put(
+                    new Pair<SqlTypeName, SqlTypeName>(t1, t2),
+                    value);
             assert s == null : "key already existed";
         }
 
@@ -1501,15 +1526,21 @@ public class CalcRexImplementorTableImpl
             CalcRexImplementor implementor =
                 doubleKeyMap.get(
                     new Pair<SqlTypeName, SqlTypeName>(
-                        fromTypeName, toTypeName));
+                        fromTypeName,
+                        toTypeName));
             if (null != implementor) {
                 return implementor.implement(call, translator);
             }
 
             if (SqlTypeUtil.sameNamedType(toType, fromType)) {
                 CalcReg reg = translator.implementNode(operand);
-                reg = implementRounding(
-                    reg, RoundingMode.HALF_UP, toType, fromType.getPrecision(), translator);
+                reg =
+                    implementRounding(
+                        reg,
+                        RoundingMode.HALF_UP,
+                        toType,
+                        fromType.getPrecision(),
+                        translator);
                 return reg;
             }
 
@@ -1519,7 +1550,7 @@ public class CalcRexImplementorTableImpl
         }
     }
 
-    static class Pair <T1, T2>
+    static class Pair<T1, T2>
     {
         private final T1 o1;
         private final T2 o2;
@@ -1532,7 +1563,7 @@ public class CalcRexImplementorTableImpl
 
         public boolean equals(Object obj)
         {
-            return obj instanceof Pair
+            return (obj instanceof Pair)
                 && Util.equal(this.o1, ((Pair) obj).o1)
                 && Util.equal(this.o2, ((Pair) obj).o2);
         }
@@ -1547,7 +1578,6 @@ public class CalcRexImplementorTableImpl
     static class DoubleKeyMap
         extends HashMap<Pair<SqlTypeName, SqlTypeName>, CalcRexImplementor>
     {
-
     }
 
     /**
@@ -1569,7 +1599,7 @@ public class CalcRexImplementorTableImpl
             RelDataType decimalType;
             Util.pre(
                 SqlTypeUtil.isDecimal(call.getType())
-                    || SqlTypeUtil.isDecimal(call.operands[0].getType()),
+                || SqlTypeUtil.isDecimal(call.operands[0].getType()),
                 "CastDecimalImplementor can only cast decimal types");
             if (SqlTypeUtil.isDecimal(call.getType())) {
                 Util.pre(
@@ -1589,8 +1619,7 @@ public class CalcRexImplementorTableImpl
                 translator.rexBuilder.makeExactLiteral(
                     BigDecimal.valueOf(decimalType.getScale()));
 
-            List<CalcReg> regList =
-                implementOperands(call, translator);
+            List<CalcReg> regList = implementOperands(call, translator);
             regList.add(translator.implementNode(precision));
             regList.add(translator.implementNode(scale));
             regList.add(
@@ -1606,9 +1635,9 @@ public class CalcRexImplementorTableImpl
     private static class CastTimestampToDateImplementor
         extends AbstractCalcRexImplementor
     {
-
         public CalcReg implement(
-            RexCall call, RexToCalcTranslator translator)
+            RexCall call,
+            RexToCalcTranslator translator)
         {
             RelDataType fromType = call.getOperands()[0].getType();
             SqlTypeName fromTypeName = fromType.getSqlTypeName();
@@ -1639,16 +1668,19 @@ public class CalcRexImplementorTableImpl
             // add a day if negative
             CalcReg negativeReg =
                 translator.builder.newLocal(
-                    CalcProgramBuilder.OpType.Bool, -1);
-            CalcReg zeroReg =
-                translator.builder.newInt8Literal(0);
+                    CalcProgramBuilder.OpType.Bool,
+                    -1);
+            CalcReg zeroReg = translator.builder.newInt8Literal(0);
             CalcProgramBuilder.boolLessThan.add(
                 translator.builder,
                 negativeReg,
                 xReg,
                 zeroReg);
             final String afterCorrectionLabel = translator.newLabel();
-            CalcProgramBuilder.jumpFalseInstruction.add(translator.builder, new CalcProgramBuilder.Line(afterCorrectionLabel), negativeReg);
+            CalcProgramBuilder.jumpFalseInstruction.add(
+                translator.builder,
+                new CalcProgramBuilder.Line(afterCorrectionLabel),
+                negativeReg);
             CalcProgramBuilder.nativeAdd.add(
                 translator.builder,
                 modReg,
@@ -1673,7 +1705,8 @@ public class CalcRexImplementorTableImpl
         extends AbstractCalcRexImplementor
     {
         public CalcReg implement(
-            RexCall call, RexToCalcTranslator translator)
+            RexCall call,
+            RexToCalcTranslator translator)
         {
             RelDataType fromType = call.getOperands()[0].getType();
             SqlTypeName fromTypeName = fromType.getSqlTypeName();
@@ -1706,16 +1739,19 @@ public class CalcRexImplementorTableImpl
             // add a day if negative
             CalcReg negativeReg =
                 translator.builder.newLocal(
-                    CalcProgramBuilder.OpType.Bool, -1);
-            CalcReg zeroReg =
-                translator.builder.newInt8Literal(0);
+                    CalcProgramBuilder.OpType.Bool,
+                    -1);
+            CalcReg zeroReg = translator.builder.newInt8Literal(0);
             CalcProgramBuilder.boolLessThan.add(
                 translator.builder,
                 negativeReg,
                 xReg,
                 zeroReg);
             final String afterCorrectionLabel = translator.newLabel();
-            CalcProgramBuilder.jumpFalseInstruction.add(translator.builder, new CalcProgramBuilder.Line(afterCorrectionLabel), negativeReg);
+            CalcProgramBuilder.jumpFalseInstruction.add(
+                translator.builder,
+                new CalcProgramBuilder.Line(afterCorrectionLabel),
+                negativeReg);
             CalcProgramBuilder.nativeAdd.add(
                 translator.builder,
                 modReg,
@@ -1726,7 +1762,11 @@ public class CalcRexImplementorTableImpl
             // the TIMESTAMP source.
             translator.builder.addLabel(afterCorrectionLabel);
             return implementRounding(
-                modReg, RoundingMode.HALF_UP, toType, fromType.getPrecision(), translator);
+                modReg,
+                RoundingMode.HALF_UP,
+                toType,
+                fromType.getPrecision(),
+                translator);
         }
     }
 
@@ -1737,7 +1777,8 @@ public class CalcRexImplementorTableImpl
         extends AbstractCalcRexImplementor
     {
         public CalcReg implement(
-            RexCall call, RexToCalcTranslator translator)
+            RexCall call,
+            RexToCalcTranslator translator)
         {
             RelDataType fromType = call.getOperands()[0].getType();
             SqlTypeName fromTypeName = fromType.getSqlTypeName();
@@ -1746,13 +1787,11 @@ public class CalcRexImplementorTableImpl
             SqlTypeName toTypeName = toType.getSqlTypeName();
             assert toTypeName == SqlTypeName.TIMESTAMP;
 
-            // Mask all but the milliseconds part of the date, then round to
-            // the required precision (TIME(0) = 1000ms, TIME(1) = 100ms, etc.)
-            //   millisInDay := 86400000
-            //   currentTimestamp := LOCAL_TIMESTAMP
-            //   currentDate := currentTimestamp - (currentTimesamp % millisInDay)
-            //   x := {input}
-            //   y := currentDate + x
+            // Mask all but the milliseconds part of the date, then round to the
+            // required precision (TIME(0) = 1000ms, TIME(1) = 100ms, etc.)
+            // millisInDay := 86400000 currentTimestamp := LOCAL_TIMESTAMP
+            // currentDate := currentTimestamp - (currentTimesamp % millisInDay)
+            // x := {input} y := currentDate + x
 
             CalcReg xReg = translator.implementNode(call.getOperands()[0]);
 
@@ -1784,15 +1823,18 @@ public class CalcRexImplementorTableImpl
             // Now apply rounding, if the TIMESTAMP result has less precision
             // than the TIME source.
             return implementRounding(
-                yReg, RoundingMode.HALF_UP, toType, fromType.getPrecision(),
+                yReg,
+                RoundingMode.HALF_UP,
+                toType,
+                fromType.getPrecision(),
                 translator);
         }
     }
 
     /**
      * Helper to implement CAST to TIMESTAMP or TIME values. The supplied
-     * implementor does the hard part, then this implementor ensures that
-     * the result is rounded to the correct precision.
+     * implementor does the hard part, then this implementor ensures that the
+     * result is rounded to the correct precision.
      */
     private static class DatetimeRoundingImplementor
         extends AbstractCalcRexImplementor
@@ -1805,7 +1847,8 @@ public class CalcRexImplementorTableImpl
         }
 
         public CalcReg implement(
-            RexCall call, RexToCalcTranslator translator)
+            RexCall call,
+            RexToCalcTranslator translator)
         {
             assert call.getOperator() == SqlStdOperatorTable.castFunc;
             assert call.getOperands().length == 1;
@@ -1818,7 +1861,11 @@ public class CalcRexImplementorTableImpl
             // Now apply rounding, if the result has less precision than the
             // source.
             return implementRounding(
-                reg, RoundingMode.HALF_UP, toType, fromType.getPrecision(), translator);
+                reg,
+                RoundingMode.HALF_UP,
+                toType,
+                fromType.getPrecision(),
+                translator);
         }
     }
 
@@ -1878,7 +1925,10 @@ public class CalcRexImplementorTableImpl
                             valueArg),
                         overflowValue);
                 CalcReg overflowed = translator.implementNode(comparison);
-                CalcProgramBuilder.jumpFalseInstruction.add(translator.builder, new CalcProgramBuilder.Line(endCheck), overflowed);
+                CalcProgramBuilder.jumpFalseInstruction.add(
+                    translator.builder,
+                    new CalcProgramBuilder.Line(endCheck),
+                    overflowed);
                 CalcReg errorMsg =
                     translator.builder.newVarcharLiteral(
                         SqlStateCodes.NumericValueOutOfRange.getState());
@@ -1901,9 +1951,9 @@ public class CalcRexImplementorTableImpl
      * with types <code>(DOUBLE) + (INTEGER)</code> which is illegal (in terms
      * of the calculator). Therefore the expression's implementation will
      * logically end looking something like <code>1.0 + CAST(2 AS DOUBLE)</code>
-     * LIMITATION: For now only Binary operators are supported with numeric types
-     * If any operand is of any other type than a numeric one, the base class
-     * {@link InstrDefImplementor#implement implementation} will be called
+     * LIMITATION: For now only Binary operators are supported with numeric
+     * types If any operand is of any other type than a numeric one, the base
+     * class {@link InstrDefImplementor#implement implementation} will be called
      */
     private static class BinaryNumericMakeSametypeImplementor
         extends InstrDefImplementor
@@ -1983,11 +2033,14 @@ public class CalcRexImplementorTableImpl
                     rd = rd1;
                 }
 
-                RelDataType castToType = call.operands[(small + 1) % 2].getType();
+                RelDataType castToType =
+                    call.operands[(small + 1) % 2].getType();
+
                 // REVIEW: angel 2006-08-27 Force operations with
                 // intervals to be treated as bigint operations
                 if (SqlTypeUtil.isInterval(castToType)) {
-                    RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
+                    RelDataTypeFactory fac =
+                        translator.rexBuilder.getTypeFactory();
                     RelDataType int8 = fac.createSqlType(SqlTypeName.BIGINT);
                     castToType = int8;
                 }
@@ -2004,10 +2057,9 @@ public class CalcRexImplementorTableImpl
                 CalcProgramBuilder.RegisterDescriptor rdCall =
                     translator.getCalcRegisterDescriptor(call.getType());
                 if (rdCall.getType().isNumeric()
-                    && (
-                        (getRestrictiveness(rd) - getRestrictiveness(
-                                rdCall)) != 0
-                       )) {
+                    && ((getRestrictiveness(rd) - getRestrictiveness(
+                                rdCall)) != 0))
+                {
                     // Do operation using same type as operands
                     CalcReg tmpRes = translator.builder.newLocal(rd);
                     regs.add(0, tmpRes);
@@ -2058,7 +2110,8 @@ public class CalcRexImplementorTableImpl
          *
          * @param instr Instruction to implement
          * @param iFirst Ordinal of first operand in pair to make the same type
-         * @param iSecond Ordinal of second operand in pair to make the same type
+         * @param iSecond Ordinal of second operand in pair to make the same
+         * type
          */
         public BinaryStringMakeSametypeImplementor(
             CalcProgramBuilder.InstructionDef instr,
@@ -2072,8 +2125,8 @@ public class CalcRexImplementorTableImpl
         }
 
         /**
-         * Creates an implementor which makes the first and second arguments
-         * the same type.
+         * Creates an implementor which makes the first and second arguments the
+         * same type.
          *
          * @param instr Instruction to implement
          */
@@ -2088,7 +2141,7 @@ public class CalcRexImplementorTableImpl
             RexToCalcTranslator translator)
         {
             List<CalcReg> regs = implementOperands(call, translator);
-            CalcReg [] newRegs = {regs.get(iFirst), regs.get(iSecond)};
+            CalcReg [] newRegs = { regs.get(iFirst), regs.get(iSecond) };
 
             translator.implementConversionIfNeeded(
                 call.operands[iFirst],
@@ -2117,7 +2170,8 @@ public class CalcRexImplementorTableImpl
             RexToCalcTranslator translator)
         {
             Util.pre(call.operands.length > 1, "call.operands.length>1");
-            Util.pre((call.operands.length & 1) == 1,
+            Util.pre(
+                (call.operands.length & 1) == 1,
                 "(call.operands.length&1)==1");
             CalcReg resultOfCall = createResultRegister(translator, call);
             String endOfCase = translator.newLabel();
@@ -2128,9 +2182,10 @@ public class CalcRexImplementorTableImpl
                 CalcReg compareResult =
                     translator.implementNode(call.operands[i]);
                 assert (compareResult.getOpType().equals(
-                            CalcProgramBuilder.OpType.Bool));
+                    CalcProgramBuilder.OpType.Bool));
                 if (!compareResult.getRegisterType().equals(
-                        CalcProgramBuilder.RegisterSetType.Literal)) {
+                        CalcProgramBuilder.RegisterSetType.Literal))
+                {
                     translator.builder.addLabelJumpFalse(next, compareResult);
 
                     // todo optimize away null check if type known to be non
@@ -2293,11 +2348,13 @@ public class CalcRexImplementorTableImpl
 
             if ((!(call.operands[0] instanceof RexCall)
                     || !((RexCall) call.operands[0]).getOperator().equals(
-                        SqlStdOperatorTable.concatOperator))) {
+                        SqlStdOperatorTable.concatOperator)))
+            {
                 regList.add(translator.implementNode(call.operands[0]));
             } else {
                 //recursively calling this method again
-                implement((RexCall) call.operands[0],
+                implement(
+                    (RexCall) call.operands[0],
                     translator,
                     resultRegister);
             }
@@ -2306,9 +2363,10 @@ public class CalcRexImplementorTableImpl
             assert (regList.size() > 1);
             boolean castToVarchar = false;
             if (!CalcProgramBuilder.OpType.Char.equals(
-                    resultRegister.getOpType())) {
+                    resultRegister.getOpType()))
+            {
                 assert (CalcProgramBuilder.OpType.Varchar.equals(
-                            resultRegister.getOpType()));
+                    resultRegister.getOpType()));
                 castToVarchar = true;
             }
             for (int i = 1; i < regList.size(); i++) {
@@ -2316,7 +2374,8 @@ public class CalcRexImplementorTableImpl
 
                 if (castToVarchar
                     && !reg.getOpType().equals(
-                        CalcProgramBuilder.OpType.Varchar)) {
+                        CalcProgramBuilder.OpType.Varchar))
+                {
                     // cast to varchar call must be of type varchar.
                     CalcReg newReg =
                         translator.builder.newLocal(
@@ -2408,10 +2467,11 @@ public class CalcRexImplementorTableImpl
                     translator.setNullRegisterOrdinal(
                         translator.builder.registerSets.getSet(
                             CalcProgramBuilder.RegisterSetType.Local).size()
-                            - 1);
+                        - 1);
                 } else {
                     isNullReg =
-                        translator.builder.getRegister(ordinal,
+                        translator.builder.getRegister(
+                            ordinal,
                             CalcProgramBuilder.RegisterSetType.Local);
                 }
 
@@ -2424,10 +2484,14 @@ public class CalcRexImplementorTableImpl
                     input = translator.implementNode(operand);
                 }
 
-                CalcProgramBuilder.boolNativeIsNull.add(translator.builder,
+                CalcProgramBuilder.boolNativeIsNull.add(
+                    translator.builder,
                     isNullReg,
                     input);
-                CalcProgramBuilder.jumpFalseInstruction.add(translator.builder, new CalcProgramBuilder.Line(wasNotNull), isNullReg);
+                CalcProgramBuilder.jumpFalseInstruction.add(
+                    translator.builder,
+                    new CalcProgramBuilder.Line(wasNotNull),
+                    isNullReg);
                 translator.builder.addLabelJump(next);
                 translator.builder.addLabel(wasNotNull);
                 CalcProgramBuilder.nativeAdd.add(
@@ -2480,10 +2544,11 @@ public class CalcRexImplementorTableImpl
                     translator.setNullRegisterOrdinal(
                         translator.builder.registerSets.getSet(
                             CalcProgramBuilder.RegisterSetType.Local).size()
-                            - 1);
+                        - 1);
                 } else {
                     isNullReg =
-                        translator.builder.getRegister(ordinal,
+                        translator.builder.getRegister(
+                            ordinal,
                             CalcProgramBuilder.RegisterSetType.Local);
                 }
 
@@ -2496,10 +2561,14 @@ public class CalcRexImplementorTableImpl
                     input = translator.implementNode(operand);
                 }
 
-                CalcProgramBuilder.boolNativeIsNull.add(translator.builder,
+                CalcProgramBuilder.boolNativeIsNull.add(
+                    translator.builder,
                     isNullReg,
                     input);
-                CalcProgramBuilder.jumpFalseInstruction.add(translator.builder, new CalcProgramBuilder.Line(wasNotNull), isNullReg);
+                CalcProgramBuilder.jumpFalseInstruction.add(
+                    translator.builder,
+                    new CalcProgramBuilder.Line(wasNotNull),
+                    isNullReg);
                 translator.builder.addLabelJump(next);
                 translator.builder.addLabel(wasNotNull);
                 CalcProgramBuilder.nativeMinus.add(
@@ -2536,7 +2605,7 @@ public class CalcRexImplementorTableImpl
             final CalcProgramBuilder.RegisterDescriptor desc =
                 translator.getCalcRegisterDescriptor(call);
             final CalcProgramBuilder.OpType opType = desc.getType();
-            assert(opType.isNumeric());
+            assert (opType.isNumeric());
             final Object initValue;
             if (opType.isExact()) {
                 initValue = 0;
@@ -2598,17 +2667,21 @@ public class CalcRexImplementorTableImpl
                     translator.setNullRegisterOrdinal(
                         translator.builder.registerSets.getSet(
                             CalcProgramBuilder.RegisterSetType.Local).size()
-                            - 1);
+                        - 1);
                 } else {
                     isNullReg =
-                        translator.builder.getRegister(ordinal,
+                        translator.builder.getRegister(
+                            ordinal,
                             CalcProgramBuilder.RegisterSetType.Local);
                 }
                 CalcProgramBuilder.boolNativeIsNull.add(
                     translator.builder,
                     isNullReg,
                     translator.implementNode(operand));
-                CalcProgramBuilder.jumpFalseInstruction.add(translator.builder, new CalcProgramBuilder.Line(wasNotNull), isNullReg);
+                CalcProgramBuilder.jumpFalseInstruction.add(
+                    translator.builder,
+                    new CalcProgramBuilder.Line(wasNotNull),
+                    isNullReg);
                 translator.builder.addLabelJump(next);
                 translator.builder.addLabel(wasNotNull);
                 CalcProgramBuilder.nativeAdd.add(
@@ -2663,17 +2736,21 @@ public class CalcRexImplementorTableImpl
                     translator.setNullRegisterOrdinal(
                         translator.builder.registerSets.getSet(
                             CalcProgramBuilder.RegisterSetType.Local).size()
-                            - 1);
+                        - 1);
                 } else {
                     isNullReg =
-                        translator.builder.getRegister(ordinal,
+                        translator.builder.getRegister(
+                            ordinal,
                             CalcProgramBuilder.RegisterSetType.Local);
                 }
                 CalcProgramBuilder.boolNativeIsNull.add(
                     translator.builder,
                     isNullReg,
                     translator.implementNode(operand));
-                CalcProgramBuilder.jumpFalseInstruction.add(translator.builder, new CalcProgramBuilder.Line(wasNotNull), isNullReg);
+                CalcProgramBuilder.jumpFalseInstruction.add(
+                    translator.builder,
+                    new CalcProgramBuilder.Line(wasNotNull),
+                    isNullReg);
                 translator.builder.addLabelJump(next);
                 translator.builder.addLabel(wasNotNull);
                 CalcProgramBuilder.nativeMinus.add(
@@ -2693,10 +2770,9 @@ public class CalcRexImplementorTableImpl
     }
 
     /**
-     * Implementation of the <code>$HISTOGRAM</code> aggregate function
-     * ({@link SqlStdOperatorTable#histogramAggFunction}, which
-     * helps implement MIN, MAX, FIRST_VALUE, LAST_VALUE in a windowed
-     * aggregation scenario.
+     * Implementation of the <code>$HISTOGRAM</code> aggregate function ({@link
+     * SqlStdOperatorTable#histogramAggFunction}, which helps implement MIN,
+     * MAX, FIRST_VALUE, LAST_VALUE in a windowed aggregation scenario.
      *
      * @see HistogramResultRexImplementor
      */
@@ -2749,11 +2825,14 @@ public class CalcRexImplementorTableImpl
 
     /**
      * Implementation of the operators which extract a result from a histogram:
+     *
      * <ul>
      * <li>{@link SqlStdOperatorTable#histogramMinFunction $HISTOGRAM_MIN},
      * <li>{@link SqlStdOperatorTable#histogramMaxFunction $HISTOGRAM_MAX},
-     * <li>{@link SqlStdOperatorTable#histogramFirstValueFunction $HISTOGRAM_FIRST_VALUE},
-     * <li>{@link SqlStdOperatorTable#histogramLastValueFunction $HISTOGRAM_LAST_VALUE}
+     * <li>{@link SqlStdOperatorTable#histogramFirstValueFunction
+     * $HISTOGRAM_FIRST_VALUE},
+     * <li>{@link SqlStdOperatorTable#histogramLastValueFunction
+     * $HISTOGRAM_LAST_VALUE}
      * </ul>
      *
      * @see HistogramAggRexImplementor

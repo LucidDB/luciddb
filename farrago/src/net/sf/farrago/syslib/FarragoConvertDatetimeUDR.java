@@ -21,36 +21,37 @@
 */
 package net.sf.farrago.syslib;
 
-import net.sf.farrago.runtime.*;
+import java.sql.*;
+
+import java.text.*;
+
 import net.sf.farrago.resource.*;
+import net.sf.farrago.runtime.*;
 
 import org.eigenbase.util14.*;
 
-import java.sql.*;
-import java.text.*;
 
 /**
- * Moved over from luciddb applib datetime package for general use.
- * Date conversion, based on standard Java libraries
+ * Moved over from luciddb applib datetime package for general use. Date
+ * conversion, based on standard Java libraries
  *
  * @author Elizabeth Lin
  * @version $Id$
  */
 public abstract class FarragoConvertDatetimeUDR
 {
-
-    //~ Static fields/initializers -----------------------------------------
+    //~ Enums ------------------------------------------------------------------
 
     protected enum Type
     {
         UDR, DIRECT_DATE, DIRECT_TIME, DIRECT_TIMESTAMP;
     }
 
-    //~ Methods -----------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public static Date char_to_date(String format, String dateString)
     {
-        if (format == null || dateString == null) {
+        if ((format == null) || (dateString == null)) {
             return null;
         }
         return new Date(charToDateHelper(format, dateString));
@@ -58,16 +59,17 @@ public abstract class FarragoConvertDatetimeUDR
 
     public static Time char_to_time(String format, String timeString)
     {
-        if (format == null || timeString == null) {
+        if ((format == null) || (timeString == null)) {
             return null;
         }
         return new Time(charToDateHelper(format, timeString));
     }
 
     public static Timestamp char_to_timestamp(
-        String format, String timestampString)
+        String format,
+        String timestampString)
     {
-        if (format == null || timestampString == null) {
+        if ((format == null) || (timestampString == null)) {
             return null;
         }
         return new Timestamp(charToDateHelper(format, timestampString));
@@ -89,11 +91,13 @@ public abstract class FarragoConvertDatetimeUDR
     }
 
     protected static String date_to_char(
-        String format, Date d, boolean directCall)
+        String format,
+        Date d,
+        boolean directCall)
     {
         DateFormat df;
 
-        if (format == null || d == null) {
+        if ((format == null) || (d == null)) {
             return null;
         }
         if (directCall) {
@@ -105,11 +109,13 @@ public abstract class FarragoConvertDatetimeUDR
     }
 
     protected static String time_to_char(
-        String format, Time t, boolean directCall)
+        String format,
+        Time t,
+        boolean directCall)
     {
         DateFormat df;
 
-        if (format == null || t == null) {
+        if ((format == null) || (t == null)) {
             return null;
         }
         if (directCall) {
@@ -121,11 +127,13 @@ public abstract class FarragoConvertDatetimeUDR
     }
 
     protected static String timestamp_to_char(
-        String format, Timestamp ts, boolean directCall)
+        String format,
+        Timestamp ts,
+        boolean directCall)
     {
         DateFormat df;
 
-        if (format == null || ts == null) {
+        if ((format == null) || (ts == null)) {
             return null;
         }
         if (directCall) {
@@ -147,7 +155,8 @@ public abstract class FarragoConvertDatetimeUDR
             ret = df.parse(s).getTime();
         } catch (ParseException ex) {
             throw FarragoResource.instance().InvalidDateString.ex(
-                format, s);
+                format,
+                s);
         }
         return ret;
     }
@@ -180,7 +189,8 @@ public abstract class FarragoConvertDatetimeUDR
         }
     }
 
-    //~ Inner classes  ---------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
+
     private static class DatetimeFormatHelper
     {
         private SimpleDateFormat datefmt;
@@ -192,7 +202,8 @@ public abstract class FarragoConvertDatetimeUDR
             datefmt = timefmt = timestampfmt = null;
         }
 
-        protected void setFormat(Type type, String format) {
+        protected void setFormat(Type type, String format)
+        {
             switch (type) {
             case DIRECT_DATE:
                 datefmt = DateTimeUtil.newDateFormat(format);
@@ -204,12 +215,13 @@ public abstract class FarragoConvertDatetimeUDR
                 timestampfmt = DateTimeUtil.newDateFormat(format);
                 break;
             default:
-                throw FarragoResource.instance()
-                    .InvalidConvertDatetimeCaller.ex(type.name());
+                throw FarragoResource.instance().InvalidConvertDatetimeCaller
+                .ex(type.name());
             }
         }
 
-        protected SimpleDateFormat getFormat(Type type) {
+        protected SimpleDateFormat getFormat(Type type)
+        {
             switch (type) {
             case DIRECT_DATE:
                 return datefmt;
@@ -218,12 +230,13 @@ public abstract class FarragoConvertDatetimeUDR
             case DIRECT_TIMESTAMP:
                 return timestampfmt;
             default:
-                throw FarragoResource.instance()
-                    .InvalidConvertDatetimeCaller.ex(type.name());
+                throw FarragoResource.instance().InvalidConvertDatetimeCaller
+                .ex(type.name());
             }
         }
 
-        protected boolean isSet(Type type) {
+        protected boolean isSet(Type type)
+        {
             switch (type) {
             case DIRECT_DATE:
                 return (datefmt != null);
@@ -232,8 +245,8 @@ public abstract class FarragoConvertDatetimeUDR
             case DIRECT_TIMESTAMP:
                 return (timestampfmt != null);
             default:
-                throw FarragoResource.instance()
-                    .InvalidConvertDatetimeCaller.ex(type.name());
+                throw FarragoResource.instance().InvalidConvertDatetimeCaller
+                .ex(type.name());
             }
         }
     }

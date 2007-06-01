@@ -56,7 +56,6 @@ import org.eigenbase.sql.type.*;
 class FtrsScanToSearchRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -131,9 +130,12 @@ class FtrsScanToSearchRule
         if (scan.index.isClustered()) {
             // if we're working with a clustered index scan, consider all of
             // the unclustered indexes as well
-            for (FemLocalIndex index : FarragoCatalogUtil.getTableIndexes(
-                repos,
-                scan.ftrsTable.getCwmColumnSet())) {
+            for (
+                FemLocalIndex index
+                : FarragoCatalogUtil.getTableIndexes(
+                    repos,
+                    scan.ftrsTable.getCwmColumnSet()))
+            {
                 considerIndex(
                     index,
                     scan,
@@ -228,15 +230,15 @@ class FtrsScanToSearchRule
             typeFactory.createStructType(
                 new RelDataType[] {
                     directiveType,
-                keyType,
-                directiveType,
-                keyType
+                    keyType,
+                    directiveType,
+                    keyType
                 },
                 new String[] {
                     "lowerBoundDirective",
-                "lowerBoundKey",
-                "upperBoundDirective",
-                "upperBoundKey"
+                    "lowerBoundKey",
+                    "upperBoundDirective",
+                    "upperBoundKey"
                 });
         RelNode sargRel =
             FennelRelUtil.convertSargExpr(
@@ -273,7 +275,8 @@ class FtrsScanToSearchRule
                     origScan.isOrderPreserving);
 
             FtrsIndexSearchRel unclusteredSearch =
-                new FtrsIndexSearchRel(unclusteredScan,
+                new FtrsIndexSearchRel(
+                    unclusteredScan,
                     keyInput,
                     isUnique,
                     false,
@@ -282,7 +285,8 @@ class FtrsScanToSearchRule
                     inputDirectiveProj);
 
             FtrsIndexSearchRel clusteredSearch =
-                new FtrsIndexSearchRel(origScan,
+                new FtrsIndexSearchRel(
+                    origScan,
                     unclusteredSearch,
                     true,
                     false,
@@ -294,7 +298,8 @@ class FtrsScanToSearchRule
         } else {
             // A direct search against an index is easier.
             FtrsIndexSearchRel search =
-                new FtrsIndexSearchRel(origScan,
+                new FtrsIndexSearchRel(
+                    origScan,
                     keyInput,
                     isUnique,
                     false,

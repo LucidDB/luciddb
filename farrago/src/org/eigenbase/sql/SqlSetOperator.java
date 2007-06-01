@@ -38,7 +38,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlSetOperator
     extends SqlBinaryOperator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final boolean all;
@@ -51,7 +50,8 @@ public class SqlSetOperator
         int prec,
         boolean all)
     {
-        super(name,
+        super(
+            name,
             kind,
             prec,
             true,

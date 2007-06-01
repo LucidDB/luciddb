@@ -33,7 +33,6 @@ import org.eigenbase.rex.*;
  */
 public class SargBinding
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SargExpr expr;

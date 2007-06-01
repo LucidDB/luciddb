@@ -27,7 +27,8 @@ package org.eigenbase.rel;
  * @author jhyde
  * @version $Id$
  */
-public enum JoinRelType {
+public enum JoinRelType
+{
     INNER, LEFT, RIGHT, FULL;
 
     /**

@@ -36,7 +36,6 @@ import java.util.*;
 public class EnumerationIterator
     implements Iterator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     Enumeration enumeration;

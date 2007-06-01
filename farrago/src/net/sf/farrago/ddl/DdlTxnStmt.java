@@ -32,7 +32,6 @@ package net.sf.farrago.ddl;
 public abstract class DdlTxnStmt
     extends DdlStmt
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public DdlTxnStmt()

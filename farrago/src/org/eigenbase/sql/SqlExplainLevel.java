@@ -27,7 +27,9 @@ package org.eigenbase.sql;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum SqlExplainLevel implements SqlLiteral.SqlSymbol {
+public enum SqlExplainLevel
+    implements SqlLiteral.SqlSymbol
+{
     /**
      * Suppress all attributes.
      */

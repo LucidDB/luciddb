@@ -40,7 +40,6 @@ import net.sf.farrago.type.*;
  */
 public interface FarragoMedNameDirectory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

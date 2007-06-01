@@ -59,7 +59,6 @@ import org.eigenbase.rel.convert.*;
  */
 public abstract class RelTraitDef
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final WeakHashMap<RelTrait, WeakReference<RelTrait>> canonicalMap;
@@ -68,7 +67,8 @@ public abstract class RelTraitDef
 
     public RelTraitDef()
     {
-        this.canonicalMap = new WeakHashMap<RelTrait, WeakReference<RelTrait>>();
+        this.canonicalMap =
+            new WeakHashMap<RelTrait, WeakReference<RelTrait>>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -104,8 +104,7 @@ public abstract class RelTraitDef
             + trait.getClass().getName();
 
         if (canonicalMap.containsKey(trait)) {
-            WeakReference<RelTrait> canonicalTraitRef =
-                canonicalMap.get(trait);
+            WeakReference<RelTrait> canonicalTraitRef = canonicalMap.get(trait);
             if (canonicalTraitRef != null) {
                 // Make sure the canonical trait didn't disappear between
                 // containsKey and get.

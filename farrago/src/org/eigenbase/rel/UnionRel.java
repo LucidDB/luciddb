@@ -36,7 +36,6 @@ import org.eigenbase.relopt.*;
 public final class UnionRel
     extends UnionRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public UnionRel(
@@ -66,7 +65,8 @@ public final class UnionRel
 
     public UnionRel clone(RelNode [] inputs, boolean all)
     {
-        UnionRel clone = new UnionRel(
+        UnionRel clone =
+            new UnionRel(
                 getCluster(),
                 inputs,
                 all);

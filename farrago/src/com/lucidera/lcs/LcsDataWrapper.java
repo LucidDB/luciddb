@@ -40,7 +40,6 @@ import net.sf.farrago.resource.*;
 public class LcsDataWrapper
     extends MedAbstractDataWrapper
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -73,9 +72,9 @@ public class LcsDataWrapper
         throws SQLException
     {
         return new LcsDataServer(
-                serverMofId,
-                props,
-                getRepos());
+            serverMofId,
+            props,
+            getRepos());
     }
 
     // implement FarragoMedDataWrapper

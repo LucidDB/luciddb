@@ -61,7 +61,6 @@ import java.lang.reflect.*;
 public abstract class DelegatingInvocationHandler
     implements InvocationHandler
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public Object invoke(
@@ -89,8 +88,8 @@ public abstract class DelegatingInvocationHandler
             } else {
                 // Invoke the method on the proxy.
                 return method.invoke(
-                        getTarget(),
-                        args);
+                    getTarget(),
+                    args);
             }
         } catch (InvocationTargetException e) {
             throw e.getTargetException();

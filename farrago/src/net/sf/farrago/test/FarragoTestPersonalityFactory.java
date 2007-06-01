@@ -43,7 +43,6 @@ import org.eigenbase.rel.metadata.*;
 public class FarragoTestPersonalityFactory
     implements FarragoSessionPersonalityFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionPersonalityFactory

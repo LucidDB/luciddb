@@ -46,7 +46,6 @@ import org.eigenbase.sql.parser.*;
  */
 public abstract class FarragoMedUDR
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

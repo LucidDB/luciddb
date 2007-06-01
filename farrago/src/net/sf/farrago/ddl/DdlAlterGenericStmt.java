@@ -36,7 +36,6 @@ import net.sf.farrago.session.*;
 public class DdlAlterGenericStmt
     extends DdlAlterStmt
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

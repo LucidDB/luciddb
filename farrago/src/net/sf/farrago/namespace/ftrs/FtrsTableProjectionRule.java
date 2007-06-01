@@ -43,7 +43,6 @@ import org.eigenbase.relopt.*;
 class FtrsTableProjectionRule
     extends MedAbstractFennelProjectionRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -92,13 +91,14 @@ class FtrsTableProjectionRule
                 Collections.EMPTY_SET,
                 null,
                 newProjList);
+
         // empty list indicates that nothing can be projected
         if (projectedColumnList.size() == 0) {
             return;
         }
         ProjectRel newProject;
         if (newProjList.isEmpty()) {
-            newProject = null;         
+            newProject = null;
         } else {
             newProject = newProjList.get(0);
         }
@@ -108,11 +108,12 @@ class FtrsTableProjectionRule
         // based on cost, since sort order and I/O may be in competition.
         final FarragoRepos repos = FennelRelUtil.getRepos(origScan);
 
-        Integer[] projectedColumns =
+        Integer [] projectedColumns =
             projectedColumnList.toArray(
                 new Integer[projectedColumnList.size()]);
-        for (FemLocalIndex index :
-            FarragoCatalogUtil.getTableIndexes(
+        for (
+            FemLocalIndex index
+            : FarragoCatalogUtil.getTableIndexes(
                 repos,
                 origScan.ftrsTable.getCwmColumnSet()))
         {
@@ -123,9 +124,10 @@ class FtrsTableProjectionRule
             }
 
             if (!testIndexCoverage(
-                origScan.ftrsTable.getIndexGuide(),
-                index,
-                projectedColumns)) {
+                    origScan.ftrsTable.getIndexGuide(),
+                    index,
+                    projectedColumns))
+            {
                 continue;
             }
 
@@ -167,9 +169,8 @@ class FtrsTableProjectionRule
         }
         Integer [] indexProjection =
             indexGuide.getUnclusteredCoverageArray(index);
-        return
-            Arrays.asList(indexProjection).containsAll(
-                Arrays.asList(projection));
+        return Arrays.asList(indexProjection).containsAll(
+            Arrays.asList(projection));
     }
 }
 

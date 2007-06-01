@@ -40,7 +40,6 @@ import net.sf.farrago.type.*;
 public abstract class MedAbstractMetadataSink
     implements FarragoMedMetadataSink
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final FarragoMedMetadataQuery query;
@@ -77,7 +76,8 @@ public abstract class MedAbstractMetadataSink
      *
      * @return true if the inclusion test passes
      */
-    protected boolean shouldInclude(String objectName,
+    protected boolean shouldInclude(
+        String objectName,
         String typeName,
         boolean qualifier)
     {

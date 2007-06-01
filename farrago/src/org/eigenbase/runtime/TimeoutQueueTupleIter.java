@@ -59,7 +59,6 @@ import org.eigenbase.util.*;
  */
 public class TimeoutQueueTupleIter
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -130,7 +129,8 @@ public class TimeoutQueueTupleIter
     public synchronized void start()
     {
         Util.pre(thread == null, "thread == null");
-        thread = new Thread() {
+        thread =
+            new Thread() {
                 public void run()
                 {
                     doWork();

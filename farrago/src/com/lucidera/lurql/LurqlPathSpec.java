@@ -37,7 +37,6 @@ import org.eigenbase.util.*;
 public class LurqlPathSpec
     extends LurqlQueryNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final List<LurqlQueryNode> branches;

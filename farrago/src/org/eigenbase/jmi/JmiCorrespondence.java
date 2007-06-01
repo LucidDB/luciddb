@@ -35,7 +35,6 @@ import javax.jmi.reflect.*;
  */
 public class JmiCorrespondence
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Map<RefObject, RefObject> beforeToAfterMap;

@@ -41,7 +41,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlOverlapsOperator
     extends SqlSpecialOperator
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlWriter.FrameType OverlapsFrameType =
@@ -51,7 +50,8 @@ public class SqlOverlapsOperator
 
     public SqlOverlapsOperator()
     {
-        super("OVERLAPS",
+        super(
+            "OVERLAPS",
             SqlKind.Overlaps,
             30,
             true,
@@ -101,11 +101,11 @@ public class SqlOverlapsOperator
         final String d = "DATETIME";
         final String i = "INTERVAL";
         String [] typeNames = {
-                d, d,
-                d, i,
-                i, d,
-                i, i
-            };
+            d, d,
+            d, i,
+            i, d,
+            i, i
+        };
 
         StringBuilder ret = new StringBuilder();
         for (int y = 0; y < typeNames.length; y += 2) {
@@ -133,14 +133,16 @@ public class SqlOverlapsOperator
                 callBinding,
                 call.operands[0],
                 0,
-                throwOnFailure)) {
+                throwOnFailure))
+        {
             return false;
         }
         if (!SqlTypeStrategies.otcDatetime.checkSingleOperandType(
                 callBinding,
                 call.operands[2],
                 0,
-                throwOnFailure)) {
+                throwOnFailure))
+        {
             return false;
         }
 

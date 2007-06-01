@@ -40,7 +40,6 @@ import org.eigenbase.sql.fun.*;
 public class MergeFilterOntoCalcRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final MergeFilterOntoCalcRule instance =

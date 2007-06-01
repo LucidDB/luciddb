@@ -22,9 +22,10 @@ package com.disruptivetech.farrago.calc;
 
 import java.io.*;
 
+import java.math.*;
+
 import java.util.*;
 import java.util.logging.*;
-import java.math.BigInteger;
 
 import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.resource.*;
@@ -49,7 +50,6 @@ import org.eigenbase.util.*;
  */
 public class CalcProgramBuilder
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /* Constants */
@@ -84,7 +84,7 @@ public class CalcProgramBuilder
         new InstructionDef("ADD", 3) {
             void add(
                 CalcProgramBuilder builder,
-                CalcReg... regs)
+                CalcReg ... regs)
             {
                 builder.assertRegisterNotConstant(regs[0]);
                 builder.assertRegisterIsPointer(regs[0]);
@@ -93,6 +93,7 @@ public class CalcProgramBuilder
                 super.add(builder, regs);
             }
         };
+
     public static final InstructionDef boolAnd =
         new BoolInstructionDef("AND", 3);
     public static final InstructionDef integralNativeAnd =
@@ -102,21 +103,24 @@ public class CalcProgramBuilder
     public static final InstructionDef call =
         new InstructionDef("CALL", 1) {
             void add(
-                CalcProgramBuilder builder, Operand... operands)
+                CalcProgramBuilder builder,
+                Operand ... operands)
             {
                 addInternal(builder, operands);
             }
         };
+
     public static final InstructionDef nativeDiv =
         new NativeInstructionDef("DIV", 3) {
             void add(
                 CalcProgramBuilder builder,
-                CalcReg... regs)
+                CalcReg ... regs)
             {
                 builder.assertNotDivideByZero(regs[2]);
                 super.add(builder, regs);
             }
         };
+
     public static final InstructionDef boolNativeEqual =
         new BoolNativeInstructionDef("EQ", 3);
     public static final InstructionDef boolEqual =
@@ -170,18 +174,19 @@ public class CalcProgramBuilder
         new IntegralNativeInstructionDef("MOD", 3) {
             void add(
                 CalcProgramBuilder builder,
-                CalcReg... regs)
+                CalcReg ... regs)
             {
                 //check if divide by zero if op2 is a constant
                 builder.assertNotDivideByZero(regs[2]);
                 super.add(builder, regs);
             }
         };
+
     public static final InstructionDef move =
         new InstructionDef("MOVE", 2) {
             void add(
                 CalcProgramBuilder builder,
-                CalcReg... regs)
+                CalcReg ... regs)
             {
                 builder.compilationAssert(
                     regs[0].getOpType() == regs[1].getOpType(),
@@ -191,6 +196,7 @@ public class CalcProgramBuilder
                 super.add(builder, regs);
             }
         };
+
     public static final InstructionDef boolMove =
         new BoolInstructionDef("MOVE", 2);
     public static final InstructionDef nativeMove =
@@ -199,7 +205,7 @@ public class CalcProgramBuilder
         new InstructionDef("MOVE", 2) {
             void add(
                 CalcProgramBuilder builder,
-                CalcReg... regs)
+                CalcReg ... regs)
             {
                 builder.assertRegisterNotConstant(regs[0]);
                 builder.assertRegisterIsPointer(regs[0]);
@@ -207,6 +213,7 @@ public class CalcProgramBuilder
                 super.add(builder, regs);
             }
         };
+
     public static final InstructionDef integralNativeMul =
         new IntegralNativeInstructionDef("MUL", 3);
     public static final InstructionDef boolNot =
@@ -217,8 +224,7 @@ public class CalcProgramBuilder
         new ComparisonInstructionDef("NE");
     public static final InstructionDef pointerBoolNotEqual =
         new PointerBoolInstructionDef("NE", 3);
-    public static final InstructionDef boolOr =
-        new BoolInstructionDef("OR", 3);
+    public static final InstructionDef boolOr = new BoolInstructionDef("OR", 3);
     public static final InstructionDef integralNativeOr =
         new IntegralNativeInstructionDef("OR", 3);
     public static final InstructionDef nativeNeg =
@@ -227,7 +233,7 @@ public class CalcProgramBuilder
         new InstructionDef("RAISE", 1) {
             void add(
                 CalcProgramBuilder builder,
-                CalcReg... regs)
+                CalcReg ... regs)
             {
                 builder.assertRegisterLiteral(regs[0]);
                 builder.assertIsVarchar(regs[0]);
@@ -247,7 +253,8 @@ public class CalcProgramBuilder
     public static final InstructionDef integralNativeXor =
         new IntegralNativeInstructionDef("XOR", 3);
 
-    public static final InstructionDef allInstrDefs[] = {
+    public static final InstructionDef [] allInstrDefs =
+    {
         boolAnd,
         boolEqual,
         boolGreaterOrEqualThan,
@@ -303,6 +310,96 @@ public class CalcProgramBuilder
         round,
     };
 
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Enumeration of the types supported by the calculator. These types map
+     * onto the {@link FennelStandardTypeDescriptor} values, and even have the
+     * same names and ordinals.
+     *
+     * @see CalcProgramBuilder#Uint4_MAX
+     * @see CalcProgramBuilder#Uint8_MAX
+     */
+    public enum OpType
+    {
+        Int1(FennelStandardTypeDescriptor.INT_8, "s1"),
+        Uint1(FennelStandardTypeDescriptor.UINT_8, "u1"),
+        Int2(FennelStandardTypeDescriptor.INT_16, "s2"),
+        Uint2(FennelStandardTypeDescriptor.UINT_16, "u2"),
+        Int4(FennelStandardTypeDescriptor.INT_32, "s4"),
+        Uint4(FennelStandardTypeDescriptor.UINT_32, "u4"),
+        Int8(FennelStandardTypeDescriptor.INT_64, "s8"),
+        Uint8(FennelStandardTypeDescriptor.UINT_64, "u8"),
+        Bool(FennelStandardTypeDescriptor.BOOL, "bo"),
+        Real(FennelStandardTypeDescriptor.REAL, "r"),
+        Double(FennelStandardTypeDescriptor.DOUBLE, "d"),
+        Char(FennelStandardTypeDescriptor.CHAR, "c"),
+        Varchar(FennelStandardTypeDescriptor.VARCHAR, "vc"),
+        Binary(FennelStandardTypeDescriptor.BINARY, "b"),
+        Varbinary(FennelStandardTypeDescriptor.VARBINARY, "vb");
+
+        private FennelStandardTypeDescriptor type;
+        private static final int ValueCount = values().length;
+        private final String shortName;
+
+        private OpType(FennelStandardTypeDescriptor type, String shortName)
+        {
+            this.shortName = shortName;
+
+            // Discard the type. It is there for doc reasons, but because of
+            // the class-loading process it may be null.
+            Util.discard(type);
+        }
+
+        public String toString()
+        {
+            return shortName;
+        }
+
+        private FennelStandardTypeDescriptor getType()
+        {
+            if (type == null) {
+                type =
+                    (FennelStandardTypeDescriptor)
+                    FennelStandardTypeDescriptor.enumeration.getValue(
+                        ordinal() + 1);
+                assert type.getName().equals(shortName);
+            }
+            return type;
+        }
+
+        public boolean isExact()
+        {
+            return getType().isExact();
+        }
+
+        public boolean isApprox()
+        {
+            return getType().isNumeric() && !getType().isExact();
+        }
+
+        public boolean isNumeric()
+        {
+            return getType().isNumeric();
+        }
+    }
+
+    /**
+     * Enumeration of register types
+     */
+    public enum RegisterSetType
+    {
+        Output('O'), Input('I'), Literal('C'), Local('L'), Status('S');
+
+        final char prefix;
+        static final int ValueCount = RegisterSetType.values().length;
+
+        RegisterSetType(char prefix)
+        {
+            this.prefix = prefix;
+        }
+    }
+
     //~ Instance fields --------------------------------------------------------
 
     /* Member variables */
@@ -310,9 +407,9 @@ public class CalcProgramBuilder
     protected final List<Instruction> instructions =
         new ArrayList<Instruction>();
     protected RegisterSets registerSets = new RegisterSets();
-    protected final Map<LiteralPair,CalcReg> literals =
+    protected final Map<LiteralPair, CalcReg> literals =
         new HashMap<LiteralPair, CalcReg>();
-    protected final Map<String,Integer> labels =
+    protected final Map<String, Integer> labels =
         new HashMap<String, Integer>();
     private boolean outputComments = false;
 
@@ -349,7 +446,8 @@ public class CalcProgramBuilder
     {
         if (!separator.equals(SEPARATOR_NEWLINE)
             && !separator.equals(SEPARATOR_SEMICOLON)
-            && !separator.equals(SEPARATOR_SEMICOLON_NEWLINE)) {
+            && !separator.equals(SEPARATOR_SEMICOLON_NEWLINE))
+        {
             throw FarragoResource.instance().ProgramCompilationError.ex(
                 "Separator must be ';'[\\n] or '\\n'");
         }
@@ -444,15 +542,16 @@ public class CalcProgramBuilder
                     if (line.getLabel() != null) {
                         // We have a label; update the line number with what's
                         // in the labels map
-                        compilationAssert(null == line.getLine(),
+                        compilationAssert(
+                            null == line.getLine(),
                             "Line has already been bind.");
                         Integer lineNumberFromLabel =
                             labels.get(line.getLabel());
                         if (null == lineNumberFromLabel) {
                             throw FarragoResource.instance()
-                                .ProgramCompilationError.ex(
+                            .ProgramCompilationError.ex(
                                 "Label '"
-                                    + line.getLabel() + "' not defined");
+                                + line.getLabel() + "' not defined");
                         }
                         line.setLine(lineNumberFromLabel.intValue());
                     }
@@ -532,7 +631,8 @@ public class CalcProgramBuilder
             }
 
             if (reg.getValue() != null) {
-                compilationAssert(registerSetType == RegisterSetType.Literal,
+                compilationAssert(
+                    registerSetType == RegisterSetType.Literal,
                     "Only literals have values");
             }
         }
@@ -676,11 +776,11 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return
-            registerSets.newRegister(type,
-                null,
-                RegisterSetType.Output,
-                storageBytes);
+        return registerSets.newRegister(
+            type,
+            null,
+            RegisterSetType.Output,
+            storageBytes);
     }
 
     /**
@@ -689,8 +789,8 @@ public class CalcProgramBuilder
     public CalcReg newOutput(RegisterDescriptor desc)
     {
         return newOutput(
-                desc.getType(),
-                desc.getBytes());
+            desc.getType(),
+            desc.getBytes());
     }
 
     /**
@@ -698,7 +798,7 @@ public class CalcProgramBuilder
      * already has been defined, the existing reference for that value will
      * silently be returned instead of creating a new one
      *
-     * @param type {@link OpType} Type of value
+     * @param type {@link OpType}  Type of value
      * @param value Value
      */
     private CalcReg newLiteral(
@@ -706,14 +806,14 @@ public class CalcProgramBuilder
         Object value,
         int storageBytes)
     {
-
         CalcReg ret;
         LiteralPair key = new LiteralPair(type, value);
         if (literals.containsKey(key)) {
             ret = literals.get(key);
         } else {
             ret =
-                registerSets.newRegister(type,
+                registerSets.newRegister(
+                    type,
                     value,
                     RegisterSetType.Literal,
                     storageBytes);
@@ -727,74 +827,76 @@ public class CalcProgramBuilder
         Object value)
     {
         return newLiteral(
-                desc.getType(),
-                value,
-                desc.getBytes());
+            desc.getType(),
+            value,
+            desc.getBytes());
     }
 
     public CalcReg newBoolLiteral(boolean b)
     {
         return newLiteral(
-                OpType.Bool,
-                Boolean.valueOf(b),
-                -1);
+            OpType.Bool,
+            Boolean.valueOf(b),
+            -1);
     }
 
     public CalcReg newInt4Literal(int i)
     {
         return newLiteral(
-                OpType.Int4,
-                i,
-                -1);
+            OpType.Int4,
+            i,
+            -1);
     }
 
     public CalcReg newInt8Literal(long i)
     {
         return newLiteral(
-                OpType.Int8,
-                i,
-                -1);
+            OpType.Int8,
+            i,
+            -1);
     }
 
     // arg is a BigInteger because large unsigned ints won't fit into an int
     public CalcReg newUint4Literal(BigInteger i)
     {
-        compilationAssert(i.compareTo(BigInteger.ZERO) >= 0,
+        compilationAssert(
+            i.compareTo(BigInteger.ZERO) >= 0,
             "Unsigned value was found to be negative. Value=" + i);
         assert i.compareTo(Uint4_MAX) < 0;
         return newLiteral(
-                OpType.Uint4,
-                i,
-                -1);
+            OpType.Uint4,
+            i,
+            -1);
     }
 
     // arg is a BigInteger because a large unsigned long value won't fit into a
     // long
     public CalcReg newUint8Literal(BigInteger i)
     {
-        compilationAssert(i.compareTo(BigInteger.ZERO) >= 0,
+        compilationAssert(
+            i.compareTo(BigInteger.ZERO) >= 0,
             "Unsigned value was found to be negative. Value=" + i);
         assert i.compareTo(Uint8_MAX) < 0;
         return newLiteral(
-                OpType.Uint8,
-                i,
-                -1);
+            OpType.Uint8,
+            i,
+            -1);
     }
 
     public CalcReg newFloatLiteral(float f)
     {
         return newLiteral(
-                OpType.Real,
-                f,
-                -1);
+            OpType.Real,
+            f,
+            -1);
     }
 
     public CalcReg newDoubleLiteral(double d)
     {
         return newLiteral(
-                OpType.Double,
-                d,
-                -1);
+            OpType.Double,
+            d,
+            -1);
     }
 
     public CalcReg newVarbinaryLiteral(byte [] bytes)
@@ -809,9 +911,9 @@ public class CalcProgramBuilder
     public CalcReg newVarcharLiteral(String s)
     {
         return newLiteral(
-                OpType.Varchar,
-                s,
-                stringByteCount(s));
+            OpType.Varchar,
+            s,
+            stringByteCount(s));
     }
 
     /**
@@ -857,18 +959,18 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return
-            registerSets.newRegister(type,
-                null,
-                RegisterSetType.Input,
-                storageBytes);
+        return registerSets.newRegister(
+            type,
+            null,
+            RegisterSetType.Input,
+            storageBytes);
     }
 
     public CalcReg newInput(RegisterDescriptor desc)
     {
         return newInput(
-                desc.getType(),
-                desc.getBytes());
+            desc.getType(),
+            desc.getBytes());
     }
 
     /**
@@ -878,11 +980,11 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return
-            registerSets.newRegister(type,
-                null,
-                RegisterSetType.Local,
-                storageBytes);
+        return registerSets.newRegister(
+            type,
+            null,
+            RegisterSetType.Local,
+            storageBytes);
     }
 
     /**
@@ -891,8 +993,8 @@ public class CalcProgramBuilder
     public CalcReg newLocal(RegisterDescriptor desc)
     {
         return newLocal(
-                desc.getType(),
-                desc.getBytes());
+            desc.getType(),
+            desc.getBytes());
     }
 
     /**
@@ -902,26 +1004,26 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return
-            registerSets.newRegister(type,
-                null,
-                RegisterSetType.Status,
-                storageBytes);
+        return registerSets.newRegister(
+            type,
+            null,
+            RegisterSetType.Status,
+            storageBytes);
     }
 
     // ---------------------------------------
     // Instruction Creation
 
     /**
-     * For internal use only. Applications should call
-     * <code>instruction.add(builder, operand0, operand1, ...)</code>.
+     * For internal use only. Applications should call <code>
+     * instruction.add(builder, operand0, operand1, ...)</code>.
      *
      * @param instrDef Instruction defn
      * @param operands Operands
      */
     protected void addInstruction(
         InstructionDef instrDef,
-        Operand... operands)
+        Operand ... operands)
     {
         assertOperandsNotNull(operands);
         instructions.add(new Instruction(instrDef, operands));
@@ -956,26 +1058,26 @@ public class CalcProgramBuilder
      */
     static String formatComment(String comment)
     {
-        return
-            " /* "
+        return " /* "
 
             /* all 6 \'s are needed */
-            + comment.replaceAll("/\\*", "\\\\\\*").replaceAll("\\*/",
+            + comment.replaceAll("/\\*", "\\\\\\*").replaceAll(
+                "\\*/",
                 "\\*\\\\")
             + " */";
     }
 
     /**
-     * Asserts that the register is not declared as
-     * {@link RegisterSetType#Literal} or {@link RegisterSetType#Input}.
+     * Asserts that the register is not declared as {@link
+     * RegisterSetType#Literal} or {@link RegisterSetType#Input}.
      *
      * @param reg Register
      */
     protected void assertRegisterNotConstant(CalcReg reg)
     {
         compilationAssert(
-            reg.getRegisterType() != RegisterSetType.Literal
-                && ((CalcReg) reg).getRegisterType() != RegisterSetType.Input,
+            (reg.getRegisterType() != RegisterSetType.Literal)
+            && (((CalcReg) reg).getRegisterType() != RegisterSetType.Input),
             "Expected a non constant register. Constant registers are Literals and Inputs");
     }
 
@@ -998,7 +1100,8 @@ public class CalcProgramBuilder
      */
     protected void assertRegisterBool(CalcReg reg)
     {
-        compilationAssert(reg.getOpType() == OpType.Bool,
+        compilationAssert(
+            reg.getOpType() == OpType.Bool,
             "Expected a register of Boolean type. " + "Found "
             + reg.getOpType());
     }
@@ -1047,10 +1150,12 @@ public class CalcProgramBuilder
      */
     protected void assertNotDivideByZero(CalcReg reg)
     {
-        if (reg.getRegisterType() == RegisterSetType.Literal
+        if ((reg.getRegisterType() == RegisterSetType.Literal)
             && (reg.getValue() != null)
-            && (reg.getValue() instanceof java.lang.Integer)) {
-            compilationAssert(!reg.getValue().equals(0),
+            && (reg.getValue() instanceof java.lang.Integer))
+        {
+            compilationAssert(
+                !reg.getValue().equals(0),
                 "A literal register of Integer type and value=0 was found");
         }
     }
@@ -1110,7 +1215,8 @@ public class CalcProgramBuilder
         CalcReg outputRegister,
         CalcReg src)
     {
-        compilationAssert(outputRegister.getOpType() == src.getOpType(),
+        compilationAssert(
+            outputRegister.getOpType() == src.getOpType(),
             "Type Mismatch. Tried to MOVE " + src.getOpType()
             + " into a " + outputRegister.getOpType());
         compilationAssert(
@@ -1220,7 +1326,8 @@ public class CalcProgramBuilder
 
     public void addLabel(String label)
     {
-        compilationAssert(!labels.containsKey(label),
+        compilationAssert(
+            !labels.containsKey(label),
             "Label '" + label + "' already defined");
         int line = instructions.size();
         labels.put(
@@ -1229,6 +1336,8 @@ public class CalcProgramBuilder
     }
 
     // -- Inner classes -------------------------------------------------------
+
+    //~ Inner Interfaces -------------------------------------------------------
 
     /**
      * Represents an Operand in an opereation e.g. a register, line number or a
@@ -1314,9 +1423,8 @@ public class CalcProgramBuilder
 
         public String toString()
         {
-            return label != null ? label :
-                line != null ? line.toString() :
-                    "null";
+            return (label != null) ? label
+                : ((line != null) ? line.toString() : "null");
         }
 
         final public String getLabel()
@@ -1339,75 +1447,6 @@ public class CalcProgramBuilder
         {
             writer.print("@");
             writer.print(line.intValue());
-        }
-    }
-
-    /**
-     * Enumeration of the types supported by the calculator. These types map
-     * onto the {@link FennelStandardTypeDescriptor} values, and even have the
-     * same names and ordinals.
-     *
-     * @see CalcProgramBuilder#Uint4_MAX
-     * @see CalcProgramBuilder#Uint8_MAX
-     */
-    public enum OpType
-    {
-        Int1(FennelStandardTypeDescriptor.INT_8, "s1"),
-        Uint1(FennelStandardTypeDescriptor.UINT_8, "u1"),
-        Int2(FennelStandardTypeDescriptor.INT_16, "s2"),
-        Uint2(FennelStandardTypeDescriptor.UINT_16, "u2"),
-        Int4(FennelStandardTypeDescriptor.INT_32, "s4"),
-        Uint4(FennelStandardTypeDescriptor.UINT_32, "u4"),
-        Int8(FennelStandardTypeDescriptor.INT_64, "s8"),
-        Uint8(FennelStandardTypeDescriptor.UINT_64, "u8"),
-        Bool(FennelStandardTypeDescriptor.BOOL, "bo"),
-        Real(FennelStandardTypeDescriptor.REAL, "r"),
-        Double(FennelStandardTypeDescriptor.DOUBLE, "d"),
-        Char(FennelStandardTypeDescriptor.CHAR, "c"),
-        Varchar(FennelStandardTypeDescriptor.VARCHAR, "vc"),
-        Binary(FennelStandardTypeDescriptor.BINARY, "b"),
-        Varbinary(FennelStandardTypeDescriptor.VARBINARY, "vb");
-
-        private FennelStandardTypeDescriptor type;
-        private static final int ValueCount = values().length;
-        private final String shortName;
-
-        private OpType(FennelStandardTypeDescriptor type, String shortName)
-        {
-            this.shortName = shortName;
-            // Discard the type. It is there for doc reasons, but because of
-            // the class-loading process it may be null.
-            Util.discard(type);
-        }
-
-        public String toString()
-        {
-            return shortName;
-        }
-
-        private FennelStandardTypeDescriptor getType() {
-            if (type == null) {
-                type = (FennelStandardTypeDescriptor)
-                    FennelStandardTypeDescriptor.enumeration.getValue(
-                        ordinal() + 1);
-                assert type.getName().equals(shortName);
-            }
-            return type;
-        }
-
-        public boolean isExact()
-        {
-            return getType().isExact();
-        }
-
-        public boolean isApprox()
-        {
-            return getType().isNumeric() && !getType().isExact();
-        }
-
-        public boolean isNumeric()
-        {
-            return getType().isNumeric();
         }
     }
 
@@ -1436,7 +1475,9 @@ public class CalcProgramBuilder
         }
     }
 
-    /** Represents an instruction and its operands */
+    /**
+     * Represents an instruction and its operands
+     */
     class Instruction
     {
         private InstructionDef def;
@@ -1457,7 +1498,7 @@ public class CalcProgramBuilder
         final void print(PrintWriter writer)
         {
             writer.print(def.name);
-            if (null != operands && operands.length > 0) {
+            if ((null != operands) && (operands.length > 0)) {
                 writer.print(' ');
                 printOperands(writer, operands);
             }
@@ -1494,26 +1535,6 @@ public class CalcProgramBuilder
         public void setLineNumber(int lineNumber)
         {
             this.lineNumber = lineNumber;
-        }
-    }
-
-    /**
-     * Enumeration of register types
-     */
-    public enum RegisterSetType
-    {
-        Output('O'),
-        Input('I'),
-        Literal('C'),
-        Local('L'),
-        Status('S');
-
-        final char prefix;
-        static final int ValueCount = RegisterSetType.values().length;
-
-        RegisterSetType(char prefix)
-        {
-            this.prefix = prefix;
         }
     }
 
@@ -1556,7 +1577,8 @@ public class CalcProgramBuilder
             int storageBytes)
         {
             compilationAssert(opType != null, "null is an invalid OpType");
-            compilationAssert(registerType != null,
+            compilationAssert(
+                registerType != null,
                 "null is an invalid RegisterSetType");
 
             int set = registerType.ordinal();
@@ -1565,7 +1587,8 @@ public class CalcProgramBuilder
             }
 
             CalcReg newReg =
-                new CalcReg(opType,
+                new CalcReg(
+                    opType,
                     initValue,
                     registerType,
                     storageBytes,
@@ -1578,8 +1601,8 @@ public class CalcProgramBuilder
     /**
      * Definition for an instruction. An instruction can only do one thing --
      * add itself to a program -- so this class is basically just a functor. The
-     * concrete derived class must provide a name, and implement the
-     * {@link #add(CalcProgramBuilder, List)} method.
+     * concrete derived class must provide a name, and implement the {@link
+     * #add(CalcProgramBuilder, List)} method.
      */
     static class InstructionDef
     {
@@ -1604,28 +1627,26 @@ public class CalcProgramBuilder
         {
             add(
                 builder,
-                registers.toArray(
-                    new CalcReg[registers.size()]));
+                registers.toArray(new CalcReg[registers.size()]));
         }
 
         /**
          * Adds this instruction with a set of operands to a program.
          *
-         * <p>The default implementation casts each operand to a
-         * {@link CalcReg}, and calls
-         * {@link #add(CalcProgramBuilder, CalcReg[])}. If this instruction's
-         * operands are not registers, override this method.
+         * <p>The default implementation casts each operand to a {@link
+         * CalcReg}, and calls {@link #add(CalcProgramBuilder, CalcReg[])}. If
+         * this instruction's operands are not registers, override this method.
          *
          * @param builder Program builder
          * @param operands Operands
          */
         void add(
             CalcProgramBuilder builder,
-            Operand... operands)
+            Operand ... operands)
         {
-            CalcReg[] regs;
-            if (operands instanceof CalcReg[]) {
-                regs = (CalcReg[]) operands;
+            CalcReg [] regs;
+            if (operands instanceof CalcReg []) {
+                regs = (CalcReg []) operands;
             } else {
                 regs = new CalcReg[operands.length];
                 System.arraycopy(operands, 0, regs, 0, operands.length);
@@ -1635,10 +1656,10 @@ public class CalcProgramBuilder
 
         protected final void addInternal(
             CalcProgramBuilder builder,
-            Operand[] regs)
+            Operand [] regs)
         {
-            assert regs.length == regCount :
-                "Wrong number of params for instruction " + name;
+            assert regs.length == regCount : "Wrong number of params for instruction "
+                + name;
             builder.assertOperandsNotNull(regs);
             builder.addInstruction(this, regs);
         }
@@ -1648,7 +1669,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg... regs)
+            CalcReg ... regs)
         {
             addInternal(builder, regs);
         }
@@ -1671,7 +1692,7 @@ public class CalcProgramBuilder
 
         void add(
             CalcProgramBuilder builder,
-            CalcReg... regs)
+            CalcReg ... regs)
         {
             assert (this.regCount == regs.length);
             builder.assertRegisterNotConstant(regs[0]);
@@ -1695,7 +1716,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg... regs)
+            CalcReg ... regs)
         {
             assert (this.regCount == regs.length);
             assert (this.regCount > 1);
@@ -1726,7 +1747,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg... regs)
+            CalcReg ... regs)
         {
             assert (this.regCount == regs.length);
             builder.assertRegisterBool(regs[0]);
@@ -1755,7 +1776,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg... regs)
+            CalcReg ... regs)
         {
             assert (this.regCount == regs.length);
             assert (this.regCount > 1);
@@ -1787,7 +1808,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg... regs)
+            CalcReg ... regs)
         {
             assert (this.regCount == regs.length);
             builder.assertRegisterNotConstant(regs[0]);
@@ -1815,7 +1836,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg... regs)
+            CalcReg ... regs)
         {
             assert (this.regCount == regs.length);
             assert (this.regCount > 1);
@@ -1846,7 +1867,7 @@ public class CalcProgramBuilder
 
         void add(
             CalcProgramBuilder builder,
-            CalcReg... regs)
+            CalcReg ... regs)
         {
             assert this.regCount == regs.length : "Wrong number of params for instruction "
                 + name
@@ -1884,7 +1905,7 @@ public class CalcProgramBuilder
 
         void add(
             CalcProgramBuilder builder,
-            CalcReg... regs)
+            CalcReg ... regs)
         {
             add(builder, regs, name + regs.length);
         }
@@ -1906,7 +1927,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            CalcReg... regs)
+            CalcReg ... regs)
         {
             builder.assertRegisterNotConstant((CalcReg) regs[0]);
             CalcReg op2 = (CalcReg) regs[2];
@@ -1916,16 +1937,13 @@ public class CalcProgramBuilder
 
             // smart check: if a constant value that could be negative IS
             // negative, complain
-            if ((
-                    op2.getRegisterType()
-                    == RegisterSetType.Literal
-                )
-                && (
-                    (op2.getOpType() == OpType.Int4)
-                    || (op2.getOpType() == OpType.Int8)
-                   )
+            if ((op2.getRegisterType()
+                    == RegisterSetType.Literal)
+                && ((op2.getOpType() == OpType.Int4)
+                    || (op2.getOpType() == OpType.Int8))
                 && (op2.getValue() != null)
-                && (op2.getValue() instanceof java.lang.Integer)) {
+                && (op2.getValue() instanceof java.lang.Integer))
+            {
                 builder.compilationAssert(
                     ((java.lang.Integer) op2.getValue()).intValue() >= 0,
                     "Cannot shift negative amout of steps. Value="
@@ -1935,21 +1953,25 @@ public class CalcProgramBuilder
         }
     }
 
-    static class JumpInstructionDef extends InstructionDef {
+    static class JumpInstructionDef
+        extends InstructionDef
+    {
         JumpInstructionDef(
-            String name, int regCount)
+            String name,
+            int regCount)
         {
             super(name, regCount);
         }
 
         void add(
             CalcProgramBuilder builder,
-            Operand... operands)
+            Operand ... operands)
         {
             if (operands[0] instanceof Line) {
                 Line line = (Line) operands[0];
                 if (line.line != null) {
-                    builder.compilationAssert(line.line >= 0,
+                    builder.compilationAssert(
+                        line.line >= 0,
                         "Line can not be negative. Value=" + line);
                 }
             }
@@ -1975,7 +1997,8 @@ public class CalcProgramBuilder
             add(builder, new Line(line));
         }
 
-        void add(CalcProgramBuilder builder, String label, CalcReg reg) {
+        void add(CalcProgramBuilder builder, String label, CalcReg reg)
+        {
             builder.assertRegisterBool(reg);
             add(builder, new Line(label), reg);
         }
@@ -2012,8 +2035,7 @@ public class CalcProgramBuilder
             } else {
                 valueHash = value.hashCode();
             }
-            return
-                (valueHash * (OpType.ValueCount + 2))
+            return (valueHash * (OpType.ValueCount + 2))
                 + type.ordinal();
         }
 
@@ -2027,9 +2049,8 @@ public class CalcProgramBuilder
                 }
 
                 if (null != this.value) {
-                    return
-                        this.value.equals(that.value)
-                            && this.type == that.type;
+                    return this.value.equals(that.value)
+                        && (this.type == that.type);
                 }
             }
             return false;

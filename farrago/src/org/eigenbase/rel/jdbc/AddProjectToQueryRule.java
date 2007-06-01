@@ -43,7 +43,6 @@ import org.eigenbase.sql.pretty.*;
 class AddProjectToQueryRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     AddProjectToQueryRule()

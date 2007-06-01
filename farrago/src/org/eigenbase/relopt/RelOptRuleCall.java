@@ -34,7 +34,6 @@ import org.eigenbase.trace.*;
  */
 public abstract class RelOptRuleCall
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();

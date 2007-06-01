@@ -38,7 +38,6 @@ import org.eigenbase.relopt.*;
 public final class TableModificationRel
     extends TableModificationRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public TableModificationRel(

@@ -24,6 +24,7 @@ package org.eigenbase.rex;
 
 import java.util.*;
 
+
 /**
  * Enumeration of some important types of row-expression.
  *
@@ -127,8 +128,7 @@ public enum RexKind
     /**
      * A logical operator ({@link #And}, {@link #Or}, {@link #Not}).
      */
-    Logical(
-        new RexKind[] { And, Or, Not }),
+    Logical(new RexKind[] { And, Or, Not }),
 
     /**
      * The arithmetic division operator, "/".
@@ -163,8 +163,7 @@ public enum RexKind
      * An arithmetic operator ({@link #Divide}, {@link #Minus},
      * {@link #MinusPrefix}, {@link #Plus}, {@link #Times}).
      */
-    Arithmetic(
-        new RexKind[] { Divide, Minus, MinusPrefix, Plus, Times }),
+    Arithmetic(new RexKind[] { Divide, Minus, MinusPrefix, Plus, Times }),
 
     /**
      * The field access operator, ".".
@@ -183,8 +182,8 @@ public enum RexKind
     // REVIEW (jhyde, 2004/1/26) We should obsolete Substr. RexKind values are
     // so that the validator and optimizer can quickly recognize special
     // syntactic cetegories, and there's nothing particularly special about
-    // Substr. For the mapping of sql->rex, and rex->calc, just use its name
-    // or signature.
+    // Substr. For the mapping of sql->rex, and rex->calc, just use its name or
+    // signature.
     Substr,
 
     /**
@@ -225,9 +224,7 @@ public enum RexKind
     /**
      * A dynamic parameter.
      */
-    DynamicParam,
-    Cast,
-    Trim,
+    DynamicParam, Cast, Trim,
 
     /**
      * The LIKE operator.
@@ -254,11 +251,7 @@ public enum RexKind
      */
     Reinterpret;
 
-    //~ Instance fields --------------------------------------------------------
-
     private final Set<RexKind> otherKinds;
-
-    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a kind.
@@ -280,8 +273,6 @@ public enum RexKind
             otherKinds.addAll(other.otherKinds);
         }
     }
-
-    //~ Methods ----------------------------------------------------------------
 
     public boolean includes(RexKind kind)
     {

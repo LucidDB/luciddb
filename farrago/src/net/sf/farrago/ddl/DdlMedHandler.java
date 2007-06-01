@@ -57,7 +57,6 @@ import org.eigenbase.util.*;
 public class DdlMedHandler
     extends DdlHandler
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public DdlMedHandler(FarragoSessionDdlValidator validator)
@@ -156,7 +155,8 @@ public class DdlMedHandler
         FarragoMedDataWrapper wrapper;
         try {
             if (!FarragoPluginClassLoader.isLibraryClass(
-                    femWrapper.getLibraryFile())) {
+                    femWrapper.getLibraryFile()))
+            {
                 // convert library filename to absolute path, if necessary
                 String libraryFile = femWrapper.getLibraryFile();
 

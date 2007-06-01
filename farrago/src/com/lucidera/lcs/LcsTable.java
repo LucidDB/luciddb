@@ -41,7 +41,6 @@ import org.eigenbase.reltype.*;
 public class LcsTable
     extends MedAbstractColumnSet
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -76,19 +75,18 @@ public class LcsTable
                 getPreparingStmt().getRepos(),
                 getCwmColumnSet());
         double inputSelectivity = 1.0;
-        
-        return
-            new LcsRowScanRel(
-                cluster,
-                emptyInput,
-                this,
-                clusteredIndexes,
-                connection,
-                null,
-                true,
-                false,
-                new Integer[0],
-                inputSelectivity);
+
+        return new LcsRowScanRel(
+            cluster,
+            emptyInput,
+            this,
+            clusteredIndexes,
+            connection,
+            null,
+            true,
+            false,
+            new Integer[0],
+            inputSelectivity);
     }
 
     public LcsIndexGuide getIndexGuide()

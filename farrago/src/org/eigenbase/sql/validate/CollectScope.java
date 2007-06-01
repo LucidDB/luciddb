@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
 class CollectScope
     extends ListScope
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlValidatorScope usingScope;

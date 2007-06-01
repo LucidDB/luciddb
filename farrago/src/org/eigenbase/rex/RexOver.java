@@ -37,7 +37,6 @@ import org.eigenbase.util.*;
 public class RexOver
     extends RexCall
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RexWindow window;
@@ -102,10 +101,10 @@ public class RexOver
     public RexOver clone()
     {
         return new RexOver(
-                getType(),
-                getAggOperator(),
-                operands,
-                window);
+            getType(),
+            getAggOperator(),
+            operands,
+            window);
     }
 
     public <R> R accept(RexVisitor<R> visitor)
@@ -147,7 +146,8 @@ public class RexOver
             }
         }
         if ((expr != null)
-            && Finder.instance.containsOver(expr)) {
+            && Finder.instance.containsOver(expr))
+        {
             return true;
         }
         return false;

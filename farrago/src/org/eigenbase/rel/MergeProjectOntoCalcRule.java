@@ -40,7 +40,6 @@ import org.eigenbase.rex.*;
 public class MergeProjectOntoCalcRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final MergeProjectOntoCalcRule instance =

@@ -38,7 +38,6 @@ import org.eigenbase.reltype.*;
 public interface OJTypeFactory
     extends RelDataTypeFactory
 {
-
     //~ Methods ----------------------------------------------------------------
 
     OJClass toOJClass(

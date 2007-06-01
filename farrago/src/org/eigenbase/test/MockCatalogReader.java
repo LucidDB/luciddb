@@ -42,7 +42,6 @@ import org.eigenbase.util.*;
 public class MockCatalogReader
     implements SqlValidatorCatalogReader
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected final RelDataTypeFactory typeFactory;
@@ -81,9 +80,9 @@ public class MockCatalogReader
                 false,
                 new RelDataTypeField[] {
                     new RelDataTypeFieldImpl("STREET", 0, varchar20Type),
-                new RelDataTypeFieldImpl("CITY", 1, varchar20Type),
-                new RelDataTypeFieldImpl("ZIP", 1, intType),
-                new RelDataTypeFieldImpl("STATE", 1, varchar20Type)
+                    new RelDataTypeFieldImpl("CITY", 1, varchar20Type),
+                    new RelDataTypeFieldImpl("ZIP", 1, intType),
+                    new RelDataTypeFieldImpl("STATE", 1, varchar20Type)
                 },
                 RelDataTypeComparability.None);
 
@@ -176,9 +175,8 @@ public class MockCatalogReader
             // if it's not supplied, because SqlValidatorTest is effectively
             // using SALES as its default schema.
             String [] qualifiedName = { "SALES", names[0] };
-            return
-                tables.get(
-                    convertToVector(qualifiedName));
+            return tables.get(
+                convertToVector(qualifiedName));
         } else if (names.length == 2) {
             return tables.get(convertToVector(names));
         }
@@ -189,7 +187,8 @@ public class MockCatalogReader
     {
         if (typeName.equalsDeep(
                 addressType.getSqlIdentifier(),
-                false)) {
+                false))
+        {
             return addressType;
         } else {
             return null;
@@ -223,8 +222,7 @@ public class MockCatalogReader
             }
             ArrayList<SqlMonikerImpl> result = new ArrayList<SqlMonikerImpl>();
             for (String tableName : schema.tableNames) {
-                result.add(
-                    new SqlMonikerImpl(
+                result.add(new SqlMonikerImpl(
                         tableName,
                         SqlMonikerType.Table));
             }

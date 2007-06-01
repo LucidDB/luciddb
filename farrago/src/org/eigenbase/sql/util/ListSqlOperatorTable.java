@@ -37,7 +37,6 @@ import org.eigenbase.sql.*;
 public class ListSqlOperatorTable
     implements SqlOperatorTable
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final List<SqlOperator> operatorList = new ArrayList<SqlOperator>();
@@ -66,7 +65,8 @@ public class ListSqlOperatorTable
                 continue;
             }
             if (!opName.isSimple()
-                || !operator.isName(opName.getSimple())) {
+                || !operator.isName(opName.getSimple()))
+            {
                 continue;
             }
             SqlFunctionCategory functionCategory;

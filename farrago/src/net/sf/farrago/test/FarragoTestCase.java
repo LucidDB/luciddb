@@ -35,21 +35,21 @@ import junit.extensions.*;
 import junit.framework.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.core.CwmModelElement;
 import net.sf.farrago.db.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
+import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.jdbc.FarragoAbstractJdbcDriver;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.sql.*;
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util.property.*;
-import org.eigenbase.sql.SqlUtil;
 
 import sqlline.SqlLine;
 
@@ -65,7 +65,6 @@ import sqlline.SqlLine;
 public abstract class FarragoTestCase
     extends ResultSetTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -220,7 +219,7 @@ public abstract class FarragoTestCase
         Cleanup cleanup = CleanupFactory.getFactory().newCleanup("cleanup");
         try {
             cleanup.setUp();
-            cleanup.execute();  // let overrides see this call!
+            cleanup.execute(); // let overrides see this call!
         } finally {
             // NOTE:  bypass staticTearDown
             cleanup.tearDownImpl();
@@ -278,9 +277,10 @@ public abstract class FarragoTestCase
         Properties props = new Properties();
         props.put("user", FarragoCatalogInit.SA_USER_NAME);
         props.put("password", "mumble");
-        Connection newConnection = driver.connect(
-            driver.getUrlPrefix() + sessionName,
-            props);
+        Connection newConnection =
+            driver.connect(
+                driver.getUrlPrefix() + sessionName,
+                props);
         if (newConnection.getMetaData().supportsTransactions()) {
             newConnection.setAutoCommit(false);
         }
@@ -519,7 +519,8 @@ public abstract class FarragoTestCase
             return new FarragoJdbcEngineDriver();
         }
         Class<FarragoUnregisteredJdbcEngineDriver> clazz =
-            (Class<FarragoUnregisteredJdbcEngineDriver>) Class.forName(driverName);
+            (Class<FarragoUnregisteredJdbcEngineDriver>) Class.forName(
+                driverName);
         return clazz.newInstance();
     }
 
@@ -557,7 +558,9 @@ public abstract class FarragoTestCase
             OutputStream outputStream = openTestLogOutputStream(sqlFileSansExt);
             FilterOutputStream filterStream =
                 new ReplacingOutputStream(
-                    outputStream, "(0: jdbc(:[^:>]+)+:|(\\. )*\\.?)>", ">");
+                    outputStream,
+                    "(0: jdbc(:[^:>]+)+:|(\\. )*\\.?)>",
+                    ">");
             PrintStream printStream = new PrintStream(filterStream);
             System.setOut(printStream);
             System.setErr(printStream);
@@ -590,7 +593,7 @@ public abstract class FarragoTestCase
         // architecture
         addDiffMask(".*Row size.*exceeds maximum.*");
     }
-    
+
     //~ Inner Classes ----------------------------------------------------------
 
     private static class ShutdownThread
@@ -738,8 +741,7 @@ public abstract class FarragoTestCase
         protected boolean isBlessedSchema(CwmSchema schema)
         {
             String name = schema.getName();
-            return
-                name.equals("SALES")
+            return name.equals("SALES")
                 || name.equals("SQLJ")
                 || name.equals("INFORMATION_SCHEMA")
                 || name.startsWith("SYS_");
@@ -807,8 +809,9 @@ public abstract class FarragoTestCase
 
                 // NOTE:  don't use DatabaseMetaData.getSchemas since it doesn't
                 // work when Fennel is disabled
-                for (CwmModelElement obj :
-                    repos.getSelfAsCatalog().getOwnedElement())
+                for (
+                    CwmModelElement obj
+                    : repos.getSelfAsCatalog().getOwnedElement())
                 {
                     if (!(obj instanceof CwmSchema)) {
                         continue;
@@ -820,7 +823,8 @@ public abstract class FarragoTestCase
                     }
                 }
                 for (String name : list) {
-                    getStmt().execute("drop schema "
+                    getStmt().execute(
+                        "drop schema "
                         + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
                         + " cascade");
                 }
@@ -835,8 +839,10 @@ public abstract class FarragoTestCase
                 //TODO: handle client driver case
             } else {
                 List<String> list = new ArrayList<String>();
-                for (FemDataWrapper wrapper
-                    : repos.allOfClass(FemDataWrapper.class)) {
+                for (
+                    FemDataWrapper wrapper
+                    : repos.allOfClass(FemDataWrapper.class))
+                {
                     if (isBlessedWrapper(wrapper)) {
                         continue;
                     }
@@ -867,8 +873,10 @@ public abstract class FarragoTestCase
                 //TODO: handle client driver case
             } else {
                 List<String> list = new ArrayList<String>();
-                for (FemDataServer server
-                    : repos.allOfClass(FemDataServer.class)) {
+                for (
+                    FemDataServer server
+                    : repos.allOfClass(FemDataServer.class))
+                {
                     if (isBlessedServer(server)) {
                         continue;
                     }
@@ -914,14 +922,17 @@ public abstract class FarragoTestCase
      * <p>Lame implementation which buffers its input and applies replacement
      * only when {@link #close} is called.
      */
-    private static class ReplacingOutputStream extends FilterOutputStream
+    private static class ReplacingOutputStream
+        extends FilterOutputStream
     {
         private final OutputStream outputStream;
         private final String seekPattern;
         private final String replace;
 
         public ReplacingOutputStream(
-            OutputStream outputStream, String seekPattern, String replace)
+            OutputStream outputStream,
+            String seekPattern,
+            String replace)
         {
             super(new ByteArrayOutputStream());
             this.outputStream = outputStream;
@@ -929,7 +940,8 @@ public abstract class FarragoTestCase
             this.replace = replace;
         }
 
-        public void close() throws IOException
+        public void close()
+            throws IOException
         {
             super.close();
             final String s = ((ByteArrayOutputStream) this.out).toString();

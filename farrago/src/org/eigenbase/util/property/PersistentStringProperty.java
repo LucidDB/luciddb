@@ -39,7 +39,6 @@ import java.util.logging.*;
 public class PersistentStringProperty
     extends StringProperty
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     // NOTE jvs 2-Oct-2005:  have to avoid dragging in dependencies.

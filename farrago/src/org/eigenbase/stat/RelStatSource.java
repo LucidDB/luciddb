@@ -33,7 +33,6 @@ import org.eigenbase.sarg.*;
  */
 public interface RelStatSource
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

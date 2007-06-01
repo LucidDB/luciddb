@@ -37,7 +37,6 @@ import org.eigenbase.rex.*;
  */
 public interface OJRexImplementor
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

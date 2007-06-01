@@ -18,10 +18,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.lucidera.jdbc;
 
-import net.sf.farrago.jdbc.client.FarragoUnregisteredVjdbcHttpClientDriver;
+import net.sf.farrago.jdbc.client.*;
+
 
 /**
  * LucidDbHttpDriver is a JDBC driver for the LucidDB server for use by remote
@@ -33,7 +33,11 @@ import net.sf.farrago.jdbc.client.FarragoUnregisteredVjdbcHttpClientDriver;
 public class LucidDbHttpDriver
     extends FarragoUnregisteredVjdbcHttpClientDriver
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     static {
         new LucidDbHttpDriver().register();
     }
 }
+
+// End LucidDbHttpDriver.java

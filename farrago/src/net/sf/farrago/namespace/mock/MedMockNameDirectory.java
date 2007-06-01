@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.mock;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.namespace.*;
@@ -40,7 +41,6 @@ import net.sf.farrago.type.*;
 class MedMockNameDirectory
     extends MedAbstractNameDirectory
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     static final String COLUMN_NAME = "MOCK_COLUMN";
@@ -75,13 +75,12 @@ class MedMockNameDirectory
             return null;
         }
 
-        return
-            server.newColumnSet(
-                localName,
-                server.getProperties(),
-                typeFactory,
-                server.createMockRowType(typeFactory),
-                Collections.EMPTY_MAP);
+        return server.newColumnSet(
+            localName,
+            server.getProperties(),
+            typeFactory,
+            server.createMockRowType(typeFactory),
+            Collections.EMPTY_MAP);
     }
 
     // implement FarragoMedNameDirectory
@@ -90,10 +89,9 @@ class MedMockNameDirectory
     {
         if (scope.equals(FarragoMedMetadataQuery.OTN_SCHEMA)) {
             if (foreignName.equals(server.getForeignSchemaName())) {
-                return
-                    new MedMockNameDirectory(
-                        server,
-                        FarragoMedMetadataQuery.OTN_TABLE);
+                return new MedMockNameDirectory(
+                    server,
+                    FarragoMedMetadataQuery.OTN_TABLE);
             }
         }
         return null;

@@ -37,7 +37,6 @@ import org.eigenbase.sql.parser.impl.*;
  */
 public class SqlParser
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlParserImpl parser;

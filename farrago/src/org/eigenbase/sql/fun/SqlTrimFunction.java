@@ -27,6 +27,7 @@ import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 
+
 /**
  * Definition of the "TRIM" builtin SQL function.
  *
@@ -37,6 +38,35 @@ import org.eigenbase.sql.validate.*;
 public class SqlTrimFunction
     extends SqlFunction
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Defines the enumerated values "LEADING", "TRAILING", "BOTH".
+     */
+    public enum Flag
+        implements SqlLiteral.SqlSymbol
+    {
+        BOTH(1, 1), LEADING(1, 0), TRAILING(0, 1);
+
+        private final int left;
+        private final int right;
+
+        Flag(int left, int right)
+        {
+            this.left = left;
+            this.right = right;
+        }
+
+        public int getLeft()
+        {
+            return left;
+        }
+
+        public int getRight()
+        {
+            return right;
+        }
+    }
 
     //~ Constructors -----------------------------------------------------------
 
@@ -91,7 +121,9 @@ public class SqlTrimFunction
     }
 
     public SqlCall createCall(
-        SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands)
+        SqlLiteral functionQualifier,
+        SqlParserPos pos,
+        SqlNode ... operands)
     {
         assert functionQualifier == null;
         assert (3 == operands.length);
@@ -118,7 +150,8 @@ public class SqlTrimFunction
                     callBinding,
                     call.operands[i],
                     0,
-                    throwOnFailure)) {
+                    throwOnFailure))
+            {
                 if (throwOnFailure) {
                     throw callBinding.newValidationSignatureError();
                 }
@@ -131,43 +164,11 @@ public class SqlTrimFunction
             ops[i - 1] = call.operands[i];
         }
 
-        return
-            SqlTypeUtil.isCharTypeComparable(
-                validator,
-                scope,
-                ops,
-                throwOnFailure);
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Defines the enumerated values "LEADING", "TRAILING", "BOTH".
-     */
-    public enum Flag implements SqlLiteral.SqlSymbol
-    {
-        BOTH(1, 1),
-        LEADING(1, 0),
-        TRAILING(0, 1);
-
-        private final int left;
-        private final int right;
-
-        Flag(int left, int right)
-        {
-            this.left = left;
-            this.right = right;
-        }
-
-        public int getLeft()
-        {
-            return left;
-        }
-
-        public int getRight()
-        {
-            return right;
-        }
+        return SqlTypeUtil.isCharTypeComparable(
+            validator,
+            scope,
+            ops,
+            throwOnFailure);
     }
 }
 

@@ -35,7 +35,6 @@ import org.eigenbase.sql.validate.*;
 public class SqlStringContextVariable
     extends SqlFunction
 {
-
     //~ Constructors -----------------------------------------------------------
 
     protected SqlStringContextVariable(String name)

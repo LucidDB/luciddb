@@ -38,7 +38,6 @@ import org.eigenbase.rex.*;
 public class RelMdPercentageOriginalRows
     extends ReflectiveRelMetadataProvider
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public Double getPercentageOriginalRows(AggregateRelBase rel)
@@ -48,7 +47,7 @@ public class RelMdPercentageOriginalRows
         // percentage.  That's very much oversimplified.
 
         return RelMetadataQuery.getPercentageOriginalRows(
-                rel.getChild());
+            rel.getChild());
     }
 
     public Double getPercentageOriginalRows(UnionRelBase rel)

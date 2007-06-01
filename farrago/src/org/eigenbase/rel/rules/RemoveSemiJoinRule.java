@@ -39,7 +39,6 @@ import org.eigenbase.relopt.*;
 public class RemoveSemiJoinRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public RemoveSemiJoinRule()

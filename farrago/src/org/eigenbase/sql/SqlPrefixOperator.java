@@ -34,7 +34,6 @@ import org.eigenbase.util.*;
 public class SqlPrefixOperator
     extends SqlOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlPrefixOperator(
@@ -68,7 +67,8 @@ public class SqlPrefixOperator
         return "{0}{1}";
     }
 
-    protected RelDataType adjustType(SqlValidator validator,
+    protected RelDataType adjustType(
+        SqlValidator validator,
         SqlCall call,
         RelDataType type)
     {

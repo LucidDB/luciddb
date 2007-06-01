@@ -42,7 +42,6 @@ import org.eigenbase.relopt.*;
 class MedMdrJoinRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     MedMdrJoinRule()
@@ -54,7 +53,7 @@ class MedMdrJoinRule
                 JoinRel.class,
                 new RelOptRuleOperand[] {
                     new RelOptRuleOperand(RelNode.class, null),
-            new RelOptRuleOperand(MedMdrClassExtentRel.class, null)
+                    new RelOptRuleOperand(MedMdrClassExtentRel.class, null)
                 }));
     }
 
@@ -79,7 +78,8 @@ class MedMdrJoinRule
         }
 
         if ((joinRel.getJoinType() != JoinRelType.INNER)
-            && (joinRel.getJoinType() != JoinRelType.LEFT)) {
+            && (joinRel.getJoinType() != JoinRelType.LEFT))
+        {
             return;
         }
 
@@ -93,7 +93,8 @@ class MedMdrJoinRule
         // on right side, must join to reference field which refers to
         // left side type
         List<StructuralFeature> features =
-            JmiUtil.getFeatures(rightRel.mdrClassExtent.refClass,
+            JmiUtil.getFeatures(
+                rightRel.mdrClassExtent.refClass,
                 StructuralFeature.class,
                 false);
         Reference reference;

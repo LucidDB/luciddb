@@ -34,7 +34,6 @@ import net.sf.farrago.fennel.*;
 public class TestLeaks
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     private TestLeaks()

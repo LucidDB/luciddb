@@ -48,7 +48,6 @@ import org.eigenbase.util.*;
 public class FarragoCalcSystemTest
     extends FarragoTestCase
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlStdOperatorTable opTab =
@@ -60,8 +59,8 @@ public class FarragoCalcSystemTest
 
     // Table of operators to be tested using auto VM that
     // may not have been explicitly registered in the java and fennel calcs
-    private static Map<SqlOperator,Boolean> autoTab =
-        new HashMap<SqlOperator,Boolean>();
+    private static Map<SqlOperator, Boolean> autoTab =
+        new HashMap<SqlOperator, Boolean>();
 
     static {
         // TODO: Should also test these operators for java and fennel calcs
@@ -72,7 +71,9 @@ public class FarragoCalcSystemTest
         autoTab.put(SqlStdOperatorTable.selectOperator, Boolean.TRUE);
         autoTab.put(SqlStdOperatorTable.literalChainOperator, Boolean.TRUE);
         autoTab.put(SqlStdOperatorTable.isDistinctFromOperator, Boolean.TRUE);
-        autoTab.put(SqlStdOperatorTable.isNotDistinctFromOperator, Boolean.TRUE);
+        autoTab.put(
+            SqlStdOperatorTable.isNotDistinctFromOperator,
+            Boolean.TRUE);
         autoTab.put(SqlStdOperatorTable.overlapsOperator, Boolean.TRUE);
         autoTab.put(SqlStdOperatorTable.isUnknownOperator, Boolean.TRUE);
         autoTab.put(SqlStdOperatorTable.isNotUnknownOperator, Boolean.TRUE);
@@ -203,7 +204,8 @@ public class FarragoCalcSystemTest
         return wrappedSuite(suite);
     }
 
-    private static void addTestsForOp(SqlOperator op,
+    private static void addTestsForOp(
+        SqlOperator op,
         TestSuite suite,
         VirtualMachine vm)
         throws Exception
@@ -336,27 +338,29 @@ public class FarragoCalcSystemTest
 
         public String getAlterSystemCommand()
         {
-            return
-                "alter system set \"calcVirtualMachine\" = '"
+            return "alter system set \"calcVirtualMachine\" = '"
                 + "CALCVM_" + name + "'";
         }
 
         public boolean canImplement(SqlOperator op)
         {
             if (((this == Java) || (this == Auto))
-                && (javaTab.get(op) != null)) {
+                && (javaTab.get(op) != null))
+            {
                 return true;
             }
             if (((this == Fennel) || (this == Auto))
-                && (fennelTab.get(op) != null)) {
+                && (fennelTab.get(op) != null))
+            {
                 return true;
             }
-            if (this == Auto)  {
+            if (this == Auto) {
                 if (autoTab.get(op) != null) {
                     return true;
                 }
+
                 // This operator cannot be implemented at all!
-                assert(false) : op + " cannot be implemented";
+                assert (false) : op + " cannot be implemented";
             }
             return false;
         }

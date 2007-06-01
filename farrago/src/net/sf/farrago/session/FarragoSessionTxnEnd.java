@@ -27,7 +27,8 @@ package net.sf.farrago.session;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum FarragoSessionTxnEnd {
+public enum FarragoSessionTxnEnd
+{
     ROLLBACK, COMMIT
 }
 

@@ -22,18 +22,17 @@
 */
 package net.sf.farrago.test;
 
-import junit.framework.Test;
-import net.sf.farrago.cwm.core.CwmModelElement;
-import net.sf.farrago.cwm.relational.CwmCatalog;
-import net.sf.farrago.cwm.relational.CwmSchema;
-import net.sf.farrago.ddl.gen.DdlGenerator;
-import net.sf.farrago.ddl.gen.FarragoDdlGenerator;
-import net.sf.farrago.fem.med.FemDataServer;
-import net.sf.farrago.fem.med.FemDataWrapper;
-import org.eigenbase.test.DiffRepository;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import junit.framework.*;
+
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.ddl.gen.*;
+import net.sf.farrago.fem.med.*;
+
+import org.eigenbase.test.*;
+
 
 /**
  * Unit test cases for {@link FarragoDdlGenerator}.
@@ -44,7 +43,6 @@ import java.util.List;
 public class FarragoDdlGeneratorTest
     extends FarragoTestCase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public FarragoDdlGeneratorTest(String testName)
@@ -53,7 +51,7 @@ public class FarragoDdlGeneratorTest
         super(testName);
     }
 
-    //~ Helper methods ---------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     protected DdlGenerator newDdlGenerator()
     {
@@ -69,8 +67,6 @@ public class FarragoDdlGeneratorTest
     {
         return wrappedSuite(FarragoDdlGeneratorTest.class);
     }
-
-    //~ Testcase methods -------------------------------------------------------
 
     public void testExportSales()
     {
@@ -94,7 +90,6 @@ public class FarragoDdlGeneratorTest
      *
      * @param list List to populate
      * @param schemaName Name of schema
-     *
      * @param includeNonSchemaElements Whether to include elements which do not
      * belong to a schema
      */
@@ -118,15 +113,19 @@ public class FarragoDdlGeneratorTest
             }
         }
         if (includeNonSchemaElements) {
-            for (FemDataServer dataServer : repos.allOfType(FemDataServer.class)) {
+            for (
+                FemDataServer dataServer : repos.allOfType(FemDataServer.class))
+            {
                 list.add(dataServer);
             }
-            for (FemDataWrapper dataWrapper : repos.allOfType(FemDataWrapper.class)) {
+            for (
+                FemDataWrapper dataWrapper
+                : repos.allOfType(FemDataWrapper.class))
+            {
                 list.add(dataWrapper);
             }
         }
     }
-
 }
 
 // End FarragoDdlGeneratorTest.java

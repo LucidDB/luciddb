@@ -38,7 +38,6 @@ import java.util.*;
 public class RestartableCollectionIterator
     implements RestartableIterator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final Collection collection;

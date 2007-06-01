@@ -38,7 +38,6 @@ import org.eigenbase.reltype.*;
 public abstract class LcsIndexBitOpRel
     extends FennelMultipleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     final LcsTable lcsTable;
@@ -100,7 +99,7 @@ public abstract class LcsIndexBitOpRel
             names,
             new Object[] {
                 (startRidParamId == null) ? (Integer) 0 : startRidParamId,
-            (rowLimitParamId == null) ? (Integer) 0 : rowLimitParamId
+                (rowLimitParamId == null) ? (Integer) 0 : rowLimitParamId
             });
     }
 

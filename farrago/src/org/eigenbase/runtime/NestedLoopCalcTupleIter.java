@@ -38,7 +38,6 @@ package org.eigenbase.runtime;
 public abstract class NestedLoopCalcTupleIter
     extends CalcTupleIter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     protected Object rightIterator;

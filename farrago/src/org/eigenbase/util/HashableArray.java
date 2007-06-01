@@ -29,7 +29,6 @@ package org.eigenbase.util;
  */
 public class HashableArray
 {
-
     //~ Instance fields --------------------------------------------------------
 
     Object [] a;
@@ -52,8 +51,7 @@ public class HashableArray
     // override Object
     public boolean equals(Object o)
     {
-        return
-            (o instanceof HashableArray)
+        return (o instanceof HashableArray)
             && arraysAreEqual(this.a, ((HashableArray) o).a);
     }
 

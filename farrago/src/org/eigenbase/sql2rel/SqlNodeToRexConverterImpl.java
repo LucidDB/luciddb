@@ -45,7 +45,6 @@ import org.eigenbase.util.*;
 public class SqlNodeToRexConverterImpl
     implements SqlNodeToRexConverter
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlRexConvertletTable convertletTable;
@@ -99,8 +98,8 @@ public class SqlNodeToRexConverterImpl
                 type = validator.getValidatedNodeType(literal);
             }
             return rexBuilder.makeCast(
-                    type,
-                    rexBuilder.constantNull());
+                type,
+                rexBuilder.constantNull());
         }
 
         BitString bitString;
@@ -109,10 +108,9 @@ public class SqlNodeToRexConverterImpl
 
             // exact number
             BigDecimal bd = (BigDecimal) value;
-            return
-                rexBuilder.makeExactLiteral(
-                    bd,
-                    literal.createSqlType(typeFactory));
+            return rexBuilder.makeExactLiteral(
+                bd,
+                literal.createSqlType(typeFactory));
         case DOUBLE:
 
             // approximate type
@@ -124,7 +122,8 @@ public class SqlNodeToRexConverterImpl
             return rexBuilder.makeLiteral(((Boolean) value).booleanValue());
         case BINARY:
             bitString = (BitString) value;
-            Util.permAssert((bitString.getBitCount() % 8) == 0,
+            Util.permAssert(
+                (bitString.getBitCount() % 8) == 0,
                 "incomplete octet");
 
             // An even number of hexits (e.g. X'ABCD') makes whole number
@@ -134,34 +133,32 @@ public class SqlNodeToRexConverterImpl
         case SYMBOL:
             return rexBuilder.makeFlag(value);
         case TIMESTAMP:
-            return
-                rexBuilder.makeTimestampLiteral(
-                    (Calendar) value,
-                    ((SqlTimestampLiteral) literal).getPrec());
+            return rexBuilder.makeTimestampLiteral(
+                (Calendar) value,
+                ((SqlTimestampLiteral) literal).getPrec());
         case TIME:
-            return
-                rexBuilder.makeTimeLiteral(
-                    (Calendar) value,
-                    ((SqlTimeLiteral) literal).getPrec());
+            return rexBuilder.makeTimeLiteral(
+                (Calendar) value,
+                ((SqlTimeLiteral) literal).getPrec());
         case DATE:
             return rexBuilder.makeDateLiteral((Calendar) value);
 
-        case INTERVAL_YEAR_MONTH:
-            {
-                SqlIntervalLiteral.IntervalValue intervalValue =
-                    (SqlIntervalLiteral.IntervalValue) value;
-                long l = SqlParserUtil.intervalToMonths(intervalValue);
-                return rexBuilder.makeIntervalLiteral(l,
-                    intervalValue.getIntervalQualifier());
-            }
-        case INTERVAL_DAY_TIME:
-            {
-                SqlIntervalLiteral.IntervalValue intervalValue =
-                    (SqlIntervalLiteral.IntervalValue) value;
-                long l = SqlParserUtil.intervalToMillis(intervalValue);
-                return rexBuilder.makeIntervalLiteral(l,
-                    intervalValue.getIntervalQualifier());
-            }
+        case INTERVAL_YEAR_MONTH: {
+            SqlIntervalLiteral.IntervalValue intervalValue =
+                (SqlIntervalLiteral.IntervalValue) value;
+            long l = SqlParserUtil.intervalToMonths(intervalValue);
+            return rexBuilder.makeIntervalLiteral(
+                l,
+                intervalValue.getIntervalQualifier());
+        }
+        case INTERVAL_DAY_TIME: {
+            SqlIntervalLiteral.IntervalValue intervalValue =
+                (SqlIntervalLiteral.IntervalValue) value;
+            long l = SqlParserUtil.intervalToMillis(intervalValue);
+            return rexBuilder.makeIntervalLiteral(
+                l,
+                intervalValue.getIntervalQualifier());
+        }
         default:
             throw Util.unexpected(literal.getTypeName());
         }

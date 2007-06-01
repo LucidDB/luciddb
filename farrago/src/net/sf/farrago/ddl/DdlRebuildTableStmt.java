@@ -21,6 +21,8 @@
 */
 package net.sf.farrago.ddl;
 
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.defimpl.*;
@@ -32,21 +34,18 @@ import net.sf.farrago.session.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.pretty.*;
 
-import java.util.*;
-
 
 /**
- * DdlRebuildTableStmt represents an ALTER TABLE ... REBUILD statement.
- * The statement compacts data stored in a table's indexes by removing 
- * deleted entries.
- * 
+ * DdlRebuildTableStmt represents an ALTER TABLE ... REBUILD statement. The
+ * statement compacts data stored in a table's indexes by removing deleted
+ * entries.
+ *
  * @author John Pham
  * @version $Id$
  */
 public class DdlRebuildTableStmt
     extends DdlAlterStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private CwmTable table;
@@ -77,26 +76,27 @@ public class DdlRebuildTableStmt
     {
         FarragoRepos repos = session.getRepos();
         FarragoSessionIndexMap baseIndexMap = ddlValidator.getIndexMap();
-        FarragoDataWrapperCache wrapperCache = 
+        FarragoDataWrapperCache wrapperCache =
             ddlValidator.getDataWrapperCache();
         SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
-        
+
         // Create new index roots
-        Map<FemLocalIndex, Long> writeIndexMap = 
+        Map<FemLocalIndex, Long> writeIndexMap =
             new HashMap<FemLocalIndex, Long>();
-        for (FemLocalIndex index :
-            FarragoCatalogUtil.getTableIndexes(repos, table))
+        for (
+            FemLocalIndex index
+            : FarragoCatalogUtil.getTableIndexes(repos, table))
         {
             // Keep the old deletion index, because it will not be loaded
             if (FarragoCatalogUtil.isDeletionIndex(index)) {
                 continue;
             }
-            long newRoot = 
+            long newRoot =
                 baseIndexMap.createIndexStorage(wrapperCache, index, false);
             writeIndexMap.put(index, newRoot);
         }
-        
+
         // Reset current row counts, if applicable to the personality.
         //
         // REVIEW zfong 3/27/07 - Note that the update to the rowcounts below,
@@ -106,36 +106,34 @@ public class DdlRebuildTableStmt
         // middle of the alter table rebuild.  The alternative is to hold
         // the MDR lock for the duration of the entire alter table rebuild.
         // Or another would be to find a way to defer updating the rowcounts.
-        session.getPersonality().resetRowCounts(
-            (FemAbstractColumnSet) table);
-               
+        session.getPersonality().resetRowCounts((FemAbstractColumnSet) table);
+
         // Copy data from old roots to new roots
-        FarragoSessionIndexMap rebuildMap = 
+        FarragoSessionIndexMap rebuildMap =
             new RebuildTableIndexMap(baseIndexMap, writeIndexMap);
         session.setSessionIndexMap(rebuildMap);
         session.getSessionVariables().set(
-            FarragoDefaultSessionPersonality.CACHE_STATEMENTS, 
+            FarragoDefaultSessionPersonality.CACHE_STATEMENTS,
             Boolean.toString(false));
         session.getSessionVariables().set(
-            FarragoDefaultSessionPersonality.ENFORCE_IDENTITY_GENERATED_ALWAYS, 
+            FarragoDefaultSessionPersonality.ENFORCE_IDENTITY_GENERATED_ALWAYS,
             Boolean.toString(false));
-        FarragoSessionStmtContext stmtContext =
-            session.newStmtContext(null);
+        FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
         stmtContext.prepare(getRebuildDml(writer), true);
         stmtContext.execute();
-   
+
         FarragoReposTxnContext txn = repos.newTxnContext();
         try {
             txn.beginWriteTxn();
-          
-            for (FemLocalIndex index :
-                FarragoCatalogUtil.getTableIndexes(repos, table))
+
+            for (
+                FemLocalIndex index
+                : FarragoCatalogUtil.getTableIndexes(repos, table))
             {
-                
                 if (FarragoCatalogUtil.isDeletionIndex(index)) {
                     // Truncate the deletion index
                     baseIndexMap.dropIndexStorage(wrapperCache, index, true);
-                } else {  
+                } else {
                     // Let each personality decide how to update the index
                     session.getPersonality().updateIndexRoot(
                         index,
@@ -143,7 +141,7 @@ public class DdlRebuildTableStmt
                         baseIndexMap,
                         writeIndexMap.get(index));
                 }
-            }          
+            }
             txn.commit();
         } finally {
             txn.rollback();
@@ -165,25 +163,26 @@ public class DdlRebuildTableStmt
         return sql;
     }
 
-    //~ Inner classes ----------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * A special index map used by the rebuild table command. This index map 
+     * A special index map used by the rebuild table command. This index map
      * overrides index roots for writes, allowing the rebuild query:
-     * 
+     *
      * <pre>"insert into t select * from t"</pre>
-     * 
+     *
      * to copy data from old roots to new roots.
      */
-    private class RebuildTableIndexMap implements FarragoSessionIndexMap
+    private class RebuildTableIndexMap
+        implements FarragoSessionIndexMap
     {
         private FarragoSessionIndexMap internalMap;
         private Map<FemLocalIndex, Long> writeIndexMap;
 
         /**
-         * Constructs a RebuildTableIndexMap as a wrapper around a standard 
+         * Constructs a RebuildTableIndexMap as a wrapper around a standard
          * index map.
-         * 
+         *
          * @param internalMap the original index map
          * @param writeIndexMap a mapping of roots to be returned for writes
          */
@@ -196,11 +195,10 @@ public class DdlRebuildTableStmt
         }
 
         // implement FarragoSessionIndexMap
-        public FemLocalIndex getIndexById(long id) 
+        public FemLocalIndex getIndexById(long id)
         {
             return internalMap.getIndexById(id);
         }
-
 
         // implement FarragoSessionIndexMap
         public long getIndexRoot(FemLocalIndex index)
@@ -212,7 +210,7 @@ public class DdlRebuildTableStmt
         public long getIndexRoot(FemLocalIndex index, boolean write)
         {
             if (write) {
-                Long root =  writeIndexMap.get(index);
+                Long root = writeIndexMap.get(index);
                 if (root != null) {
                     return root;
                 }
@@ -240,7 +238,8 @@ public class DdlRebuildTableStmt
             FemLocalIndex index)
         {
             internalMap.createIndexStorage(
-                wrapperCache, index);
+                wrapperCache,
+                index);
         }
 
         // implement FarragoSessionIndexMap
@@ -250,7 +249,9 @@ public class DdlRebuildTableStmt
             boolean updateMap)
         {
             return internalMap.createIndexStorage(
-                wrapperCache, index, updateMap);
+                wrapperCache,
+                index,
+                updateMap);
         }
 
         // implement FarragoSessionIndexMap
@@ -276,7 +277,7 @@ public class DdlRebuildTableStmt
         {
             internalMap.onCommit();
         }
-        
+
         // implement FarragoSesssionIndexMap
         public void versionIndexRoot(
             FarragoDataWrapperCache wrapperCache,

@@ -57,7 +57,6 @@ import org.eigenbase.relopt.*;
 public final class TableAccessRel
     extends TableAccessRelBase
 {
-
     //~ Constructors -----------------------------------------------------------
 
     /**

@@ -34,7 +34,6 @@ import javax.jmi.reflect.*;
 public class JmiRestrictException
     extends RuntimeException
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RefObject obj;

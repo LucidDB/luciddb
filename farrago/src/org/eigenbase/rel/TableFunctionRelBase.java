@@ -21,13 +21,14 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.*;
+import java.util.*;
+
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 
-import java.util.*;
 
 /**
  * <code>TableFunctionRelBase</code> is an abstract base class for
@@ -39,7 +40,6 @@ import java.util.*;
 public abstract class TableFunctionRelBase
     extends AbstractRelNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final RexNode rexCall;
@@ -55,7 +55,7 @@ public abstract class TableFunctionRelBase
     /**
      * Creates a <code>TableFunctionRelBase</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param rexCall function invocation expression
      * @param rowType row type produced by function
@@ -115,8 +115,8 @@ public abstract class TableFunctionRelBase
     }
 
     /**
-     * @return set of mappings known for this table function, or
-     * null if unknown (not the same as empty!)
+     * @return set of mappings known for this table function, or null if unknown
+     * (not the same as empty!)
      */
     public Set<RelColumnMapping> getColumnMappings()
     {
@@ -124,10 +124,9 @@ public abstract class TableFunctionRelBase
     }
 
     /**
-     * Declares the column mappings associated with this function.
-     *
-     * REVIEW jvs 11-Aug-2006:  Should this be set only on construction,
-     * made part of digest, etc?
+     * Declares the column mappings associated with this function. REVIEW jvs
+     * 11-Aug-2006: Should this be set only on construction, made part of
+     * digest, etc?
      *
      * @param columnMappings new mappings to set
      */

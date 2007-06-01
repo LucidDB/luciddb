@@ -43,7 +43,6 @@ public interface Mapping
         Mappings.TargetMapping,
         Iterable<IntPair>
 {
-
     //~ Methods ----------------------------------------------------------------
 
     /**

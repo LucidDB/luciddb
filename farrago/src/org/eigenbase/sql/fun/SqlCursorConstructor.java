@@ -37,12 +37,12 @@ import org.eigenbase.sql.validate.*;
 public class SqlCursorConstructor
     extends SqlSpecialOperator
 {
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlCursorConstructor()
     {
-        super("CURSOR",
+        super(
+            "CURSOR",
             SqlKind.CursorConstructor,
             MaxPrec,
             false,

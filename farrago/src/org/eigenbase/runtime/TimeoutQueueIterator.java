@@ -60,7 +60,6 @@ import org.eigenbase.util.*;
  */
 public class TimeoutQueueIterator
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final QueueIterator queueIterator;
@@ -114,7 +113,8 @@ public class TimeoutQueueIterator
     public synchronized void start()
     {
         Util.pre(thread == null, "thread == null");
-        thread = new Thread() {
+        thread =
+            new Thread() {
                 public void run()
                 {
                     doWork();

@@ -37,7 +37,6 @@ import org.eigenbase.sql.type.*;
 class UnnestNamespace
     extends AbstractNamespace
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final SqlCall unnest;
@@ -69,10 +68,9 @@ class UnnestNamespace
         if (type.isStruct()) {
             return type;
         }
-        return
-            validator.getTypeFactory().createStructType(
-                new RelDataType[] { type },
-                new String[] { validator.deriveAlias(unnest, 0) });
+        return validator.getTypeFactory().createStructType(
+            new RelDataType[] { type },
+            new String[] { validator.deriveAlias(unnest, 0) });
     }
 
     /**

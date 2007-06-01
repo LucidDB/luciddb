@@ -32,7 +32,6 @@ package net.sf.farrago.runtime;
  */
 public class FennelRowCount
 {
-
     //~ Instance fields --------------------------------------------------------
 
     /**

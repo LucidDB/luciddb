@@ -41,7 +41,6 @@ import org.eigenbase.sql.parser.*;
 public class DdlSetPathStmt
     extends DdlSetContextStmt
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private List<SqlIdentifier> schemaList;
@@ -96,9 +95,9 @@ public class DdlSetPathStmt
                     FarragoSessionVariables sessionVariables =
                         ddlValidator.getStmtValidator().getSessionVariables();
                     String [] names =
-                        { sessionVariables.catalogName, id.getSimple() };
+                    { sessionVariables.catalogName, id.getSimple() };
                     SqlParserPos [] poses =
-                        { SqlParserPos.ZERO, id.getParserPosition() };
+                    { SqlParserPos.ZERO, id.getParserPosition() };
                     id.setNames(names, poses);
                 }
                 schemaList.add(id);

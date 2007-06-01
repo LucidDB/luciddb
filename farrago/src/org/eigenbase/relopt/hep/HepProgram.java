@@ -23,6 +23,7 @@ package org.eigenbase.relopt.hep;
 
 import java.util.*;
 
+
 /**
  * HepProgram specifies the order in which rules should be attempted by {@link
  * HepPlanner}. Use {@link HepProgramBuilder} to create a new instance of
@@ -37,7 +38,6 @@ import java.util.*;
  */
 public class HepProgram
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     /**

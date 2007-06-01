@@ -45,7 +45,6 @@ import org.eigenbase.sql.pretty.*;
 class AddFilterToQueryRule
     extends RelOptRule
 {
-
     //~ Constructors -----------------------------------------------------------
 
     AddFilterToQueryRule()

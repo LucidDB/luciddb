@@ -29,11 +29,11 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 
+
 /**
  * PushProjectPastSetOpRule implements the rule for pushing a {@link ProjectRel}
- * past a {@link SetOpRel}.  The children of the {@link SetOpRel} will
- * project only the {@link RexInputRef}s referenced in the original
- * {@link ProjectRel}.
+ * past a {@link SetOpRel}. The children of the {@link SetOpRel} will project
+ * only the {@link RexInputRef}s referenced in the original {@link ProjectRel}.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -47,6 +47,8 @@ public class PushProjectPastSetOpRule
      * Expressions that should be preserved in the projection
      */
     private Set<SqlOperator> preserveExprs;
+
+    //~ Constructors -----------------------------------------------------------
 
     //  ~ Constructors ---------------------------------------------------------
 
@@ -79,7 +81,7 @@ public class PushProjectPastSetOpRule
     {
         ProjectRel origProj = (ProjectRel) call.rels[0];
         SetOpRel setOpRel = (SetOpRel) call.rels[1];
-        
+
         // cannot push project past a distinct
         if (setOpRel.isDistinct()) {
             return;
@@ -94,9 +96,9 @@ public class PushProjectPastSetOpRule
             return;
         }
 
-        RelNode[] setOpInputs = setOpRel.getInputs();
+        RelNode [] setOpInputs = setOpRel.getInputs();
         int nSetOpInputs = setOpInputs.length;
-        RelNode[] newSetOpInputs = new RelNode[nSetOpInputs];
+        RelNode [] newSetOpInputs = new RelNode[nSetOpInputs];
 
         // project the input references, referenced in the original projection,
         // from each setop child
@@ -111,7 +113,7 @@ public class PushProjectPastSetOpRule
         // create a new setop whose children are the ProjectRels created above
         SetOpRel newSetOpRel =
             RelOptUtil.createNewSetOpRel(setOpRel, newSetOpInputs);
- 
+
         // put the original project on top of the new setop, converting it to
         // reference the modified projection list
         int [] adjustments = pushProject.getAdjustments();

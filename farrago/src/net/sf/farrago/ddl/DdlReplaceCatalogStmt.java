@@ -22,8 +22,7 @@
 package net.sf.farrago.ddl;
 
 /**
- * DdlReplaceCatalogStmt represents an ALTER SYSTEM REPLACE CATALOG 
- * statement.
+ * DdlReplaceCatalogStmt represents an ALTER SYSTEM REPLACE CATALOG statement.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -31,6 +30,8 @@ package net.sf.farrago.ddl;
 public class DdlReplaceCatalogStmt
     extends DdlStmt
 {
+    //~ Constructors -----------------------------------------------------------
+
     public DdlReplaceCatalogStmt()
     {
         super(null);

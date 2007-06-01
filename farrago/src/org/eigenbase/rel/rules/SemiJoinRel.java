@@ -42,7 +42,6 @@ import org.eigenbase.rex.*;
 public final class SemiJoinRel
     extends JoinRelBase
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private List<Integer> leftKeys;
@@ -105,8 +104,7 @@ public final class SemiJoinRel
     public double getRows()
     {
         // TODO:  correlation factor
-        return
-            RelMetadataQuery.getRowCount(left)
+        return RelMetadataQuery.getRowCount(left)
             * RexUtil.getSelectivity(condition);
     }
 
@@ -115,13 +113,12 @@ public final class SemiJoinRel
      */
     public RelDataType deriveRowType()
     {
-        return
-            deriveJoinRowType(
-                left.getRowType(),
-                null,
-                JoinRelType.INNER,
-                getCluster().getTypeFactory(),
-                null);
+        return deriveJoinRowType(
+            left.getRowType(),
+            null,
+            JoinRelType.INNER,
+            getCluster().getTypeFactory(),
+            null);
     }
 
     public List<Integer> getLeftKeys()
