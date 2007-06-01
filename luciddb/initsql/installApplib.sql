@@ -338,7 +338,7 @@ specific add_days_date
 deterministic
 contains sql
 return (
-  d + cast(cast(n as bigint)*24*60*60*1000 as interval day)
+  d + cast(cast(n as bigint)*24*60*60*1000 as interval day(10))
 );
 
 -- adds n number of days to a timestamp
@@ -348,7 +348,7 @@ specific add_days_timestamp
 deterministic
 contains sql
 return (
-  ts + cast(cast(n as bigint)*24*60*60*1000 as interval day)
+  ts + cast(cast(n as bigint)*24*60*60*1000 as interval day(10))
 );
 
 -- adds n number of hours to a timestamp
@@ -358,7 +358,7 @@ specific add_hours_timestamp
 deterministic
 contains sql
 return (
-  ts + cast(cast(n as bigint)*60*60*1000 as interval day to hour));
+  ts + cast(cast(n as bigint)*60*60*1000 as interval day(10) to hour));
 
 -- returns the difference in units of days between two dates
 create or replace function applib.days_diff(d1 date, d2 date)
