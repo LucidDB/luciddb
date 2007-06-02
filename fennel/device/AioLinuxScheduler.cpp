@@ -83,7 +83,8 @@ void AioLinuxScheduler::registerDevice(
 
 void AioLinuxScheduler::schedule(RandomAccessRequest &request)
 {
-    iocb *requests[request.bindingList.size()];
+    iocb *requestsArray[request.bindingList.size()];
+    iocb **requests = requestsArray;
     
     assert(isStarted());
 
@@ -96,14 +97,44 @@ void AioLinuxScheduler::schedule(RandomAccessRequest &request)
         RandomAccessRequestBinding *pBinding = bindingMutator.detach();
         requests[n] = pBinding;
     }
-    int rc = io_submit(context, n, requests);
-    // In case any requests failed, get the bookkeeping right to avoid
-    // further complications on shutdown.
-    for (int i = 0; i < rc; ++i) {
-        ++nRequestsPending;
+
+    if (n == 0) {
+        // just in case someone asks for a nop
+        return;
     }
-    if (rc != n) {
-        throw SysCallExcn("io_submit failed");
+
+    // io_submit is allowed to do less than we asked for, so
+    // we have to loop in case the OS is too busy
+    for (;;) {
+        int rc = io_submit(context, n, requests);
+        if (rc > 0) {
+            // keep track of the number successfully submitted
+            // (can't use += because nRequestsPending is
+            // an AtomicCounter)
+            for (int i = 0; i < rc; ++i) {
+                ++nRequestsPending;
+            }
+            if (rc == n) {
+                // we're done
+                break;
+            } else {
+                // need to resubmit some leftovers
+                requests += rc;
+                n -= rc;
+            }
+        } else {
+            assert (rc < 0);
+            if (rc != -EAGAIN) {
+                // hard error
+                throw SysCallExcn("io_submit failed");
+            }
+        }
+        
+        // try again in 1 millisecond
+        // REVIEW jvs 30-May-2007:  probably needs to be parameterized;
+        // and ideally, we would signal up to higher levels to
+        // stop being so aggressive about I/O requests
+        ::sleep(1);
     }
 }
 

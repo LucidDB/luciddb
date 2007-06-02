@@ -20,7 +20,7 @@ values(applib.days_diff(applib.add_days(current_date, 180), current_date));
 values(applib.days_diff(applib.add_days(current_timestamp, 180), 
   current_timestamp));
 
--- TODO: unresolved issue LER-1909
+-- LER-1909
 values(applib.hours_diff(applib.add_hours(current_timestamp, 91),
   current_timestamp));
 
@@ -68,3 +68,12 @@ select
 from
   table(applib.time_dimension(2001, 2, 20, 2001, 3, 11, 3))
 order by time_key;
+
+-- LER-5460, not specifying interval leading field precision defaults to 
+-- precision of 2
+create table t (ts timestamp, d date);
+insert into t values(timestamp'1970-1-1 12:00:00', date'1970-1-1');
+
+select applib.add_days(d, 365243), applib.add_days(d, -365243) from t;
+select applib.add_days(ts, 365243), applib.add_days(ts, -365243) from t;
+select applib.add_hours(ts, 8765832), applib.add_hours(ts, -8765832) from t;

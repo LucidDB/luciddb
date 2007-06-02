@@ -32,6 +32,10 @@
 #include <boost/test/test_tools.hpp>
 #include <strstream>
 
+#ifdef __MINGW32__
+#include <process.h>
+#endif
+
 using namespace fennel;
 
 Cache &CacheTestBase::getCache()
