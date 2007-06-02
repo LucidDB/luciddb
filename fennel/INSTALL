@@ -1,11 +1,11 @@
 ======================================================================
 PLATFORMS
 
-So far, Fennel development has been targeted to Linux x86 and Mingw
-(with a Cygwin build environment), so the code is unlikely to build or
-run without modification on any other platform.  If you are building
-for Mingw, read INSTALL.mingw also before attempting the instructions
-below.
+So far, Fennel development has been targeted to Linux x86 (both 32-bit
+and 64-bit) and Mingw (32-bit only, with a Cygwin build environment),
+so the code is unlikely to build or run without modification on any
+other platform.  If you are building for Mingw, read INSTALL.mingw
+also before attempting the instructions below.
 
 ======================================================================
 DEPENDENCIES
@@ -20,7 +20,7 @@ Fennel itself relies on the Boost library from http://www.boost.org
 (at least v1.33), and STLport from http://www.stlport.com (at least
 v4.6.2).  Optionally, Fennel can use the ICU library from
 http://oss.software.ibm.com/icu for i18n support (this doesn't work
-with mingw yet).
+with Mingw yet).
 
 Source archives for all of the above dependencies are included in the
 thirdparty directory of the full Eigenbase source distribution, as
@@ -32,6 +32,12 @@ download the dependencies yourself.
 To build and install the autotools versions known to work, cd to the
 thirdparty directory, run "make autotools", and follow the directions
 given.
+
+If you get link errors with a 64-bit build on a machine which also
+supports 32-bit build tools, you may need to add this to your
+environment:
+
+export LDFLAGS="-L/usr/local/lib64 -L/usr/lib64 -L/usr/X11R6/lib64 -L/lib64"
 
 The next section on automated configuration assumes that you have
 the thirdparty directory available.  If not, use the subsequent
