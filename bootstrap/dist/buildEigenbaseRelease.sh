@@ -108,7 +108,7 @@ echo 'release.gpl=true' > farrago/customBuild.properties
 
 # Append setting to pick up custom LucidDB release properties
 echo 'release.properties.source=${luciddb.dir}/src/FarragoRelease.properties' \
-    > farrago/customBuild.properties
+    >> farrago/customBuild.properties
 
 if [ $cygwin = "false" ]; then
 
