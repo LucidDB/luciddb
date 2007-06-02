@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2007 Disruptive Tech
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Portions Copyright (C) 2004-2007 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -355,6 +355,6 @@ void BTreeSearchExecStream::setAdditionalKeys()
     pSearchKey = &inputKeyData;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/ftrs/BTreeSearchExecStream.cpp#8 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/ftrs/BTreeSearchExecStream.cpp#9 $");
 
 // End BTreeSearchExecStream.cpp
