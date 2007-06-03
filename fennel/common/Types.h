@@ -278,13 +278,9 @@ static const SavepointId NULL_SVPT_ID = SavepointId(MAXU);
 static const TxnId IMPLICIT_TXN_ID = TxnId(0);
 
 /**
- * Symbolic value for first valid TxnId.  Note that we use a number above the
- * 32-bit ID range because some locks uses real TxnId's and others use thread
- * ID's, and we'd like to be able to tell them apart.  This won't work on a
- * platform which actually generates 64-bit thread ID's, which is conceivable
- * (like if the OS uses a pointer to a thread descriptor as an ID).
+ * Symbolic value for first valid TxnId.
  */
-static const TxnId FIRST_TXN_ID = TxnId(0x0000000100000000LL);
+static const TxnId FIRST_TXN_ID = TxnId(1);
 
 /**
  * Sentinel value for an invalid TxnId.
