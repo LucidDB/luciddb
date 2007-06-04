@@ -239,13 +239,18 @@ public class RelDecorrelator
     }
 
     /**
-     * Rewrite SortRel. 1. change the collations field to reference the new
-     * input.
+     * Rewrite SortRel.
      *
      * @param rel SortRel to be rewritten
      */
     public void decorrelateRel(SortRel rel)
     {
+        //
+        // Rewrite logic:
+        //
+        // 1. change the collations field to reference the new input.
+        //
+
         // SortRel itself should not reference cor vars.
         assert (!mapRefRelToCorVar.containsKey(rel));
 
@@ -294,14 +299,21 @@ public class RelDecorrelator
     }
 
     /**
-     * Rewrite AggregateRel. 1. Permute the group by keys to the front. 2. If
-     * the child of an AggregateRel is producing correlated variables, add them
-     * to the group list. 3. Change aggCalls to reference the new ProjectRel.
+     * Rewrite AggregateRel.
      *
      * @param rel the project rel to rewrite
      */
     public void decorrelateRel(AggregateRel rel)
     {
+        //
+        // Rewrite logic:
+        //
+        // 1. Permute the group by keys to the front.
+        // 2. If the child of an AggregateRel produces correlated variables,
+        //    add them to the group list.
+        // 3. Change aggCalls to reference the new ProjectRel.
+        //
+
         // AggregaterRel itself should not reference cor vars.
         assert (!mapRefRelToCorVar.containsKey(rel));
 
@@ -491,13 +503,18 @@ public class RelDecorrelator
     }
 
     /**
-     * Rewrite ProjectRel. 1. Pass along any correlated variables coming from
-     * the child.
+     * Rewrite ProjectRel.
      *
      * @param rel the project rel to rewrite
      */
     public void decorrelateRel(ProjectRel rel)
     {
+        //
+        // Rewrite logic:
+        //
+        // 1. Pass along any correlated variables coming from the child.
+        //
+
         RelNode oldChildRel = rel.getChild();
 
         RelNode newChildRel = mapOldToNewRel.get(oldChildRel);
@@ -774,18 +791,28 @@ public class RelDecorrelator
     }
 
     /**
-     * Rewrite FilterRel. 1. If a FilterRel references a correlated field in its
-     * filter condition, rewrite the FilterRel to be FilterRel JoinRel (cross
-     * product) OriginalFilterInput ValueGenerator (produces distinct sets of
-     * correlated variables) and rewrite the correlated fieldAccess in the
-     * filter condition to reference the JoinRel output. 2. If FilterRel does
-     * not reference correlated variables, simply rewrite the filter condition
-     * using new input.
+     * Rewrite FilterRel.
      *
      * @param rel the filter rel to rewrite
      */
     public void decorrelateRel(FilterRel rel)
     {
+        //
+        // Rewrite logic:
+        //
+        // 1. If a FilterRel references a correlated field in its filter
+        // condition, rewrite the FilterRel to be 
+        //   FilterRel
+        //     JoinRel(cross product)
+        //       OriginalFilterInput
+        //       ValueGenerator(produces distinct sets of correlated variables)
+        // and rewrite the correlated fieldAccess in the filter condition to
+        // reference the JoinRel output.
+        //
+        // 2. If FilterRel does not reference correlated variables, simply
+        // rewrite the filter condition using new input.
+        //
+
         RelNode oldChildRel = rel.getChild();
 
         RelNode newChildRel = mapOldToNewRel.get(oldChildRel);
@@ -836,16 +863,21 @@ public class RelDecorrelator
     }
 
     /**
-     * Rewrite CorrelatorRel into a left outer join. The original left input
-     * will be joined with the new right input that has generated correlated
-     * variables propagated up. For any generated cor vars that are not used in
-     * the join key, pass them along to be joined later with the CorrelatorRels
-     * that produce them.
+     * Rewrite CorrelatorRel into a left outer join.
      *
      * @param rel CorrelatorRel
      */
     public void decorrelateRel(CorrelatorRel rel)
     {
+        //
+        // Rewrite logic:
+        //
+        // The original left input will be joined with the new right input that
+        // has generated correlated variables propagated up. For any generated
+        // cor vars that are not used in the join key, pass them along to be
+        // joined later with the CorrelatorRels that produce them.
+        //
+
         // the right input to CorrelatorRel should produce correlated variables
         RelNode oldLeftRel = rel.getInputs()[0];
         RelNode oldRightRel = rel.getInputs()[1];
@@ -971,13 +1003,19 @@ public class RelDecorrelator
     }
 
     /**
-     * Rewrite JoinRel. 1. rewrite join condition. 2. map output positions and
-     * produce cor vars if any.
+     * Rewrite JoinRel.
      *
      * @param rel JoinRel
      */
     public void decorrelateRel(JoinRel rel)
     {
+        //
+        // Rewrite logic:
+        //
+        // 1. rewrite join condition.
+        // 2. map output positions and produce cor vars if any.
+        //
+
         RelNode oldLeftRel = rel.getInputs()[0];
         RelNode oldRightRel = rel.getInputs()[1];
 
@@ -1755,9 +1793,9 @@ public class RelDecorrelator
 
             currentRel = corRel;
 
-            // check for this pattern
+            // Check for this pattern.
             // The pattern matching could be simplified if rules can be applied
-            // during decorrelation,
+            // during decorrelation.
             //
             // CorrelateRel(left correlation, condition = true)
             //   LeftInputRel
@@ -1869,16 +1907,15 @@ public class RelDecorrelator
                     return;
                 }
 
-                // change the plan to this structure Note that the aggregateRel
-                // is removed
+                // Change the plan to this structure.
+                // Note that the aggregateRel is removed.
                 //
-                // ProjectRel-A' (replace corvar to input ref coming from the
-                // JoinRel) JoinRel (replace corvar to input ref coming from the
-                // JoinRel) LeftInputRel RightInputRel
+                // ProjectRel-A' (replace corvar to input ref from the JoinRel)
+                //   JoinRel (replace corvar to input ref from LeftInputRel)
+                //     LeftInputRel
+                //     RightInputRel(oreviously FilterInputRel)
 
-                // make the new join rel
-
-                // first change the filter condition into a join condition
+                // Change the filter condition into a join condition
                 joinCond =
                     removeCorrelationExpr(filterRel.getCondition(), false);
 
@@ -1895,14 +1932,14 @@ public class RelDecorrelator
                     return;
                 }
 
-                // change the plan to this structure Note that the aggregateRel
-                // is removed
+                // Change the plan to this structure.
                 //
-                // ProjectRel-A' (replace corvar to input ref coming from the
-                // JoinRel) JoinRel (left, condition = true) LeftInputRel
-                // AggregateRel(groupby(0) single_value(0), single_value(1)....)
-                // ProjectRel-B (everything from input plus literal true)
-                // ProjInputRel
+                // ProjectRel-A' (replace corvar to input ref from JoinRel)
+                //   JoinRel (left, condition = true)
+                //     LeftInputRel
+                //     AggregateRel(groupby(0), single_value(0), s_v(1)....)
+                //       ProjectRel-B (everything from input plus literal true)
+                //         ProjInputRel
 
                 // make the new projRel to provide a null indicator
                 rightInputRel =
@@ -2117,36 +2154,48 @@ public class RelDecorrelator
                     return;
                 }
 
-                // rewrite the above plan
+                // Rewrite the above plan:
                 //
-                // CorrelateRel(left correlation, condition = true) LeftInputRel
-                // ProjectRel-A (a RexNode) AggregateRel (groupby(0), agg0(),
-                // agg1()...) ProjectRel-B (may reference coVar) FilterRel
-                // (references corVar) RightInputRel (no correlated reference)
+                // CorrelateRel(left correlation, condition = true)
+                //   LeftInputRel
+                //   ProjectRel-A (a RexNode)
+                //     AggregateRel (groupby(0), agg0(),agg1()...)
+                //       ProjectRel-B (may reference coVar)
+                //         FilterRel (references corVar)
+                //           RightInputRel (no correlated reference)
                 //
-                // To this plan
+
+                // to this plan:
                 //
-                // ProjectRel-A' (all groupby keys, plus rewritten ProjExpr with a
-                // nullable cast) AggregateRel (groupby(all left input refs)
-                // agg0(rewritten expression), agg1()...) ProjectRel-B'
-                // (rewriten original projected exprs) JoinRel (replace corvar
-                // to input ref coming from the JoinRel) LeftInputRel
-                // RightInputRel
+                // ProjectRel-A' (all gby keys + rewritten nullable ProjExpr)
+                //   AggregateRel (groupby(all left input refs)
+                //                 agg0(rewritten expression),
+                //                 agg1()...)
+                //     ProjectRel-B' (rewriten original projected exprs)
+                //       JoinRel(replace corvar w/ input ref from LeftInputRel)
+                //         LeftInputRel
+                //         RightInputRel
                 //
+
                 // In the case where agg is count(*) or count($corVar), it is
-                // changed to count(nullIndicator). Note:  any non-nullable
-                // field from the RHS can be used as the indicator however a
-                // "true" field is added to the projection list from the RHS for
-                // simplicity to avoid searching for non-null fields.
+                // changed to count(nullIndicator).
+                // Note:  any non-nullable field from the RHS can be used as
+                // the indicator however a "true" field is added to the
+                // projection list from the RHS for simplicity to avoid
+                // searching for non-null fields.
                 //
-                // ProjectRel-A' (all groupby keys, plus rewritten ProjExpr with a
-                // nullable cast) AggregateRel (groupby(all left input refs)
-                // count(nullIndicator), other aggs...) ProjectRel-B' (all left
-                // input refs plus the rewritten original projected exprs)
-                // JoinRel (replace corvar to input ref coming from the JoinRel)
-                // LeftInputRel ProjectRel (everything from RightInputRel plus
-                // the nullIndicator "true") RightInputRel
+                // ProjectRel-A' (all gby keys + rewritten nullable ProjExpr)
+                //   AggregateRel (groupby(all left input refs),
+                //                 count(nullIndicator), other aggs...)
+                //     ProjectRel-B' (all left input refs plus
+                //                    the rewritten original projected exprs)
+                //       JoinRel(replace corvar to input ref from LeftInputRel)
+                //         LeftInputRel
+                //         ProjectRel (everything from RightInputRel plus
+                //                     the nullIndicator "true")
+                //           RightInputRel
                 //
+
                 // first change the filter condition into a join condition
                 joinCond =
                     removeCorrelationExpr(filterRel.getCondition(), false);
@@ -2178,34 +2227,45 @@ public class RelDecorrelator
                     return;
                 }
                 //
-                //rewrite the above plan
+                // Rewrite the above plan:
                 //
-                //CorrelateRel(left correlation, condition = true) LeftInputRel
-                //ProjectRel-A (a RexNode) AggregateRel (groupby(0), agg0(),
-                //agg1()...) ProjectRel-B (references coVar) RightInputRel (no
-                //correlated reference)
+                // CorrelateRel(left correlation, condition = true)
+                //   LeftInputRel
+                //   ProjectRel-A (a RexNode)
+                //     AggregateRel (groupby(0), agg0(), agg1()...)
+                //       ProjectRel-B (references coVar)
+                //         RightInputRel (no correlated reference)
                 //
-                //To this plan
+
+                // to this plan:
                 //
-                //ProjectRel-A' (all groupby keys, plus rewritten ProjExpr with a
-                //nullable cast) AggregateRel (groupby(all left input refs)
-                //agg0(rewritten expression), agg1()...) ProjectRel-B'
-                //(rewriten original projected exprs) JoinRel (LOJ cond = true)
-                //LeftInputRel RightInputRel
+                // ProjectRel-A' (all gby keys + rewritten nullable ProjExpr)
+                //   AggregateRel (groupby(all left input refs)
+                //                 agg0(rewritten expression),
+                //                 agg1()...)
+                //     ProjectRel-B' (rewriten original projected exprs)
+                //       JoinRel (LOJ cond = true)
+                //         LeftInputRel
+                //         RightInputRel
                 //
-                //In the case where agg is count($corVar), it is changed to
-                //count(nullIndicator). Note:  any non-nullable field from the
-                //RHS can be used as the indicator however a "true" field is
-                //added to the projection list from the RHS for simplicity to
-                //avoid searching for non-null fields.
+
+                // In the case where agg is count($corVar), it is changed to
+                // count(nullIndicator).
+                // Note:  any non-nullable field from the RHS can be used as
+                // the indicator however a "true" field is added to the
+                // projection list from the RHS for simplicity to avoid
+                // searching for non-null fields.
                 //
-                //ProjectRel-A' (all groupby keys, plus rewritten ProjExpr with a
-                //nullable cast) AggregateRel (groupby(all left input refs)
-                //count(nullIndicator), other aggs...) ProjectRel-B' (all left
-                //input refs plus the rewritten original projected exprs)
-                //JoinRel (replace corvar to input ref coming from the JoinRel)
-                //LeftInputRel RightInputRel' (everything from RightInputRel
-                //plus the nullIndicator "true") RightInputRel
+                // ProjectRel-A' (all gby keys + rewritten nullable ProjExpr)
+                //   AggregateRel (groupby(all left input refs),
+                //                 count(nullIndicator), other aggs...)
+                //     ProjectRel-B' (all left input refs plus
+                //                    the rewritten original projected exprs)
+                //       JoinRel(replace corvar to input ref from LeftInputRel)
+                //         LeftInputRel
+                //         ProjectRel (everything from RightInputRel plus
+                //                     the nullIndicator "true")
+                //           RightInputRel
             } else {
                 return;
             }
