@@ -484,6 +484,7 @@ create table null_uc_sk(
   constraint n_pkey_unique UNIQUE(pkey, colbigint)
 );
 
+!set showwarnings true
 insert into null_uc_sk select * from null_src;
 select * from null_uc_sk order by pkey, colbigint, colint;
 select * from null_uc_sk where pkey is null order by pkey, colbigint, colint;

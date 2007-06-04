@@ -168,6 +168,13 @@ public abstract class Bug
     public static final boolean FrgIntegrationFixed = false;
 
     /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-216">issue
+     * FRG-216: Java calc 'expression splitting' causes serious problems</a> is
+     * fixed.
+     */
+    public static final boolean Frg216Fixed = false;
+
+    /**
      * Whether <a href="http://issues.eigenbase.org/browse/FNL-54">issue FNL-54:
      * cast time to timestamp should initialize date to current_date</a> is
      * fixed.
