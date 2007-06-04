@@ -168,8 +168,11 @@ public class FarragoDdlGenerator
         sb.append(quote(wrapper.getName()));
         stmt.addStmt(sb.toString());
         sb = new StringBuilder();
-        sb.append(" LIBRARY ");
-        sb.append(literal(wrapper.getLibraryFile()));
+        // "LIBRARY" clause is optional
+        if (wrapper.getLibraryFile() != null) {
+            sb.append(" LIBRARY ");
+            sb.append(literal(wrapper.getLibraryFile()));
+        }
         sb.append(NL);
         sb.append(" LANGUAGE ");
         sb.append(wrapper.getLanguage());
@@ -326,10 +329,16 @@ public class FarragoDdlGenerator
         sb.append(quote(server.getName()));
         stmt.addStmt(sb.toString());
         sb = new StringBuilder();
-        sb.append(" TYPE ");
-        sb.append(literal(server.getType()));
-        sb.append(" VERSION ");
-        sb.append(literal(server.getVersion()));
+        // "TYPE" clause is optional
+        if (server.getType() != null) {
+	        sb.append(" TYPE ");
+	        sb.append(literal(server.getType()));
+        }
+        // "VERSION" clause is optional
+        if (server.getVersion() != null) {
+            sb.append(" VERSION ");
+            sb.append(literal(server.getVersion()));
+        }
         sb.append(NL);
         sb.append(" FOREIGN DATA WRAPPER ");
         sb.append(quote(server.getWrapper().getName()));
