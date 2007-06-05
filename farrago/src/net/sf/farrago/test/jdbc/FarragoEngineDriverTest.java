@@ -30,6 +30,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.test.*;
+import org.eigenbase.sql.parser.SqlParseException;
 
 
 /**
@@ -311,7 +312,7 @@ public class FarragoEngineDriverTest
         stmt.close();
         conn.close();
 
-        // test initial schema; could also be param on URI string
+        // test good initial schema; could also be param on URI string
         props.setProperty("schema", initialSchema);
         conn = driver.connect(driverURI, props);
         stmt = conn.createStatement();
@@ -323,6 +324,37 @@ public class FarragoEngineDriverTest
         }
         stmt.close();
         conn.close();
+
+        // test wrong initial schema; could also be param on URI string
+        props.setProperty("schema", "SAILS");
+        conn = driver.connect(driverURI, props);
+        stmt = conn.createStatement();
+        try {
+            stmt.executeQuery(query);
+            fail("query should have required the SALES schema");
+        } catch (SQLException e) {
+            assertExceptionMatches(e, ".*Table 'EMPS' not found");
+        }
+        stmt.close();
+        conn.close();
+
+        // test invalid initial schema; could also be param on URI string
+        props.setProperty("schema", "unquoted phrase");
+        try {
+            conn = driver.connect(driverURI, props);
+            fail("connection should fail with syntax error");
+        } catch (SQLException e) {
+            assertTrue("got " + e.getClass().getName()
+                + " but expected FarragoSqlException,",
+                e instanceof FarragoJdbcUtil.FarragoSqlException);
+            FarragoJdbcUtil.FarragoSqlException fse =
+                (FarragoJdbcUtil.FarragoSqlException)e;
+            Throwable orig = fse.getOriginalThrowable();
+            assertNotNull("null original throwable", orig);
+            assertTrue("got " + orig.getClass().getName()
+                + " but expected SqlParseException,",
+                orig instanceof SqlParseException);
+        }
     }
 
     /**
@@ -349,7 +381,7 @@ public class FarragoEngineDriverTest
             if (cnt++ > 0) {
                 buf.append(", ");
             }
-            String key = (String) enumer.nextElement();
+            Object key = enumer.nextElement();
             String val = (String) props.get(key);
             buf.append(key).append(" => ");
             buf.append("\"").append(val).append("\"");

@@ -120,6 +120,10 @@
 <text>Session killed</text>
 </exception>
 
+<exception id ="410021" name="JdbcConnSessionClosed">
+<text>Session closed</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Validator resources 420,000 - 430,000 -->
 <!-- ====================================================================== -->
@@ -893,6 +897,10 @@ Messages: {1}</text>
 
 <message name="MedJdbc_EXTENDED_OPTIONS_Description">
 <text>Whether driver-specific options should be accepted</text>
+</message>
+
+<message name="MedJdbc_SCHEMA_NAME_Description">
+<text>Artificial foreign schema name for servers which don't support schemas</text>
 </message>
 
 <!-- ====================================================================== -->
