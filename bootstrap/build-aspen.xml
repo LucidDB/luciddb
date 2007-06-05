@@ -42,22 +42,50 @@
 
 
 	<!-- continuous intregration targets -->
+
+	<!-- indirections from config-aspen.xml substitution targets -->
+	<target name="entry-target-aspen"
+	        depends="integration-build-and-test"
+	        description="Entry point for cruise control aspen project"/>
+	<target name="entry-target-aspen-opto"
+	        depends="integration-build-and-test-opto"
+	        description="Entry point for cruise control aspen-opto project"/>
+	
+	<!-- integration-build-and-test -->
 	<target name="integration-build-and-test"
 	        depends="integration-test"
 	        description="Build and test the Aspen project and its dependencies in a clean tree"/>
+	<target name="integration-build-and-test-opto"
+	        depends="integration-test-opto"
+	        description="Build and test the optimized Aspen project and its dependencies in a clean tree"/>
 
+	<!-- integration-test -->
 	<target name="integration-test" depends="integration-build">
 		<!-- clean build runs tests automagically -->
 	</target>
+	<target name="integration-test-opto" depends="integration-build-opto">
+		<!-- clean build runs tests automagically -->
+	</target>
 
+	<!-- integration-build -->
 	<target name="integration-build"
 	        depends="integration-copy,integration-farrago,integration-fennel,integration-thirdparty">
 		<antcall target="integration-configure-tests"/>
 		<antcall target="do-cleanbuild">
 			<param name="build.home" location="${integration.build.home}"/>
+			<param name="opto" value="--without-optimization"/>
+		</antcall>
+	</target>
+	<target name="integration-build-opto"
+	        depends="integration-copy,integration-farrago,integration-fennel,integration-thirdparty">
+		<antcall target="integration-configure-tests"/>
+		<antcall target="do-cleanbuild">
+			<param name="build.home" location="${integration.build.home}"/>
+			<param name="opto" value="--with-optimization"/>
 		</antcall>
 	</target>
 
+	<!-- integration-configure-tests -->
 	<target name="integration-configure-tests">
 		<chmod file="${integration.build.home}/aspen/aspen.properties" perm="u+w"/>
 		<replace file="${integration.build.home}/aspen/aspen.properties"
@@ -81,6 +109,7 @@ saffron.opt.allowInfiniteCostConverters=true
 </echo>
 	</target>
 
+	<!-- integration-copy -->
 	<target name="integration-copy" depends="sync">
 		<delete dir="${integration.build.home}/aspen"/>
 		<mkdir dir="${integration.build.home}/aspen"/>
@@ -160,6 +189,7 @@ saffron.opt.allowInfiniteCostConverters=true
                         <arg value="--with-tests"/>
                         <arg value="--skip-build-notes"/>
                         <arg value="--release"/>
+                        <arg value="${opto}"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
 		</exec>

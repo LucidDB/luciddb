@@ -10,18 +10,18 @@
 <!ENTITY open_default.build.home     "/home/cruise/work">
 <!ENTITY open_integration.build.home "/home/cruise/work/build">
 
-<!ENTITY aspen_p4port    "jhyde.dyndns.org:1666">
+<!ENTITY aspen_p4port    "perforce-office.kalucki.com:1666">
 <!ENTITY aspen_p4client  "cruise.nitpick">
 <!ENTITY aspen_p4user    "guest">
 
 <!ENTITY buildresultsbase "http://nitpick.kalucki.com:8083/cruisecontrol/buildresults">
 <!ENTITY mailhost         "mail.speakeasy.net">
 <!ENTITY reportsuccess    "always">
-<!ENTITY returnname       "Build Monkey-Part Deux-Folie de Deux-Pas de Deux-Les Deux Magots">
-<!ENTITY returnaddress    "buildmonkeypartdeux@disruptivetech.com">
+<!ENTITY returnname       "Build Monkey">
+<!ENTITY returnaddress    "buildmonkey@kalucki.com">
 <!ENTITY skipusers        "true">
 <!ENTITY spamwhilebroken  "true">
-<!ENTITY subjectprefix    "Continuous Integration: ">
+<!ENTITY subjectprefix    "ContInteg Nitp: ">
 <!ENTITY failureaddress   "the.team@disruptivetech.com">
 <!ENTITY emailmapper      "/home/cruise/work/bootstrap/p4email.txt">
 
@@ -37,7 +37,7 @@
 <!ENTITY build_interval         "3600">
 <!ENTITY build_interval_aspen   "300">
 
-<!ENTITY ant              "./doant.sh">
+<!ENTITY ant              "ant/bin/ant">
 
 <!ENTITY configSuffix     "">
 
