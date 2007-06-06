@@ -53,10 +53,10 @@
 	
 	<!-- integration-build-and-test -->
 	<target name="integration-build-and-test"
-	        depends="integration-test"
+	        depends="integration-test,integration-distbuild"
 	        description="Build and test the Aspen project and its dependencies in a clean tree"/>
 	<target name="integration-build-and-test-opto"
-	        depends="integration-test-opto"
+	        depends="integration-test-opto,integration-distbuild"
 	        description="Build and test the optimized Aspen project and its dependencies in a clean tree"/>
 
 	<!-- integration-test -->
@@ -82,6 +82,13 @@
 		<antcall target="do-cleanbuild">
 			<param name="build.home" location="${integration.build.home}"/>
 			<param name="opto" value="--with-optimization"/>
+		</antcall>
+	</target>
+
+	<!-- integration-distbuild -->
+	<target name="integration-distbuild">
+		<antcall target="do-distbuild">
+			<param name="build.home" location="${integration.build.home}"/>
 		</antcall>
 	</target>
 
@@ -190,6 +197,17 @@ saffron.opt.allowInfiniteCostConverters=true
                         <arg value="--skip-build-notes"/>
                         <arg value="--release"/>
                         <arg value="${opto}"/>
+			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
+			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
+		</exec>
+	</target>
+
+	<target name="do-distbuild">
+		<exec dir="${build.home}/aspen" executable="bash" failonerror="true">
+			<arg value="${build.home}/aspen/distBuild.sh"/>
+			<arg value="${build.home}/farrago"/>
+                        <arg value="--skip-init-build"/>
+                        <arg value="--skip-postgres"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
 		</exec>

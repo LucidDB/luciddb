@@ -24,7 +24,8 @@
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/farrago/..."/>
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/fennel/..."/>
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/thirdparty/..."/>
-			<timebuild time="0400"/> <!-- force build every four hours -->
+			<timebuild time="0400"/> <!-- force an extra build at 0400 hours, 4am -->
+			<filesystem folder="forcebuild"/>
 		</modificationset>
 
 
@@ -58,6 +59,7 @@
 			<artifactspublisher dir="&open_integration.build.home;/aspen/trace" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="trace"/>
 			<artifactspublisher dir="&open_integration.build.home;/aspen/testcases" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="testcases"/>
                         <artifactspublisher file="&open_integration.build.home;/aspen/classes/FarragoRelease.properties" dest="artifacts/ASPENTARGET&configSuffix;"/>
+                        <artifactspublisher file="&open_integration.build.home;/aspen/dist/SQLstream-1.1.0-linux-installer.bin" dest="artifacts/ASPENTARGET&configSuffix;"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/ASPENTARGET&configSuffix; &rsync_dest;"/>

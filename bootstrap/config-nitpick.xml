@@ -6,7 +6,7 @@
 <!ENTITY open_p4client   "cruise.nitpick">
 <!ENTITY open_p4user     "guest">
 <!ENTITY open_root       "//open/dt/dev">
-<!ENTITY open_propfile   "nitpick.perforce.properties">
+<!ENTITY open_propfile   "disruptive.perforce.properties">
 <!ENTITY open_default.build.home     "/home/cruise/work">
 <!ENTITY open_integration.build.home "/home/cruise/work/build">
 
@@ -21,7 +21,7 @@
 <!ENTITY returnaddress    "buildmonkey@kalucki.com">
 <!ENTITY skipusers        "true">
 <!ENTITY spamwhilebroken  "true">
-<!ENTITY subjectprefix    "ContInteg Nitp: ">
+<!ENTITY subjectprefix    "ContInteg Nitpick: ">
 <!ENTITY failureaddress   "the.team@disruptivetech.com">
 <!ENTITY emailmapper      "/home/cruise/work/bootstrap/p4email.txt">
 
