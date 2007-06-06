@@ -648,9 +648,12 @@ void LcsClusterAppendExecStreamTest::testMultiColNoDupNewRoot()
 */
 void LcsClusterAppendExecStreamTest::testMultiColNoDupOldRoot()
 {
-    // 1. load 10 rows
-    // 2. scan first 10 rows
-    // 3. load 10 more rows
+    // 1. load 15000 rows
+    // 2. scan first 15000 rows
+    // 3. load 15000 more rows
+    //
+    // 15000 rows with 12 cols is large enough to force a split of the
+    // cluster btree
 
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
@@ -659,12 +662,12 @@ void LcsClusterAppendExecStreamTest::testMultiColNoDupOldRoot()
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
 
-    testLoadMultiCol(10, 3, true,  pGenerator,"testMultiColNoDupOldRoot");
+    testLoadMultiCol(15000, 12, true,  pGenerator,"testMultiColNoDupOldRoot");
     resetExecStreamTest();
-    testScanMultiCol(10, 3, pRidGenerator, pResultGenerator);
+    testScanMultiCol(15000, 12, pRidGenerator, pResultGenerator);
 
     resetExecStreamTest();
-    testLoadMultiCol(10, 3, false,  pGenerator, "testMultiColNoDupOldRoot");
+    testLoadMultiCol(15000, 12, false,  pGenerator, "testMultiColNoDupOldRoot");
 }
 
 
