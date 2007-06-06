@@ -6,11 +6,11 @@
 <!ENTITY open_p4client   "cruise.chelmsford">
 <!ENTITY open_p4user     "guest">
 <!ENTITY open_root       "//open/dt/dev">
-<!ENTITY open_propfile   "disruptive.perforce.properties">
+<!ENTITY open_propfile   "UNUSED">
 <!ENTITY open_default.build.home     "/home/cruise/work">
 <!ENTITY open_integration.build.home "/home/cruise/work/build">
 
-<!ENTITY aspen_p4port    "marmite-office.kalucki.com:1666">
+<!ENTITY aspen_p4port    "perforce-office.kalucki.com:1666">
 <!ENTITY aspen_p4client  "cruise.chelmsford">
 <!ENTITY aspen_p4user    "guest">
 

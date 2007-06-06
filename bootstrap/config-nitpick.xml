@@ -6,7 +6,7 @@
 <!ENTITY open_p4client   "cruise.nitpick">
 <!ENTITY open_p4user     "guest">
 <!ENTITY open_root       "//open/dt/dev">
-<!ENTITY open_propfile   "disruptive.perforce.properties">
+<!ENTITY open_propfile   "UNUSED">
 <!ENTITY open_default.build.home     "/home/cruise/work">
 <!ENTITY open_integration.build.home "/home/cruise/work/build">
 
