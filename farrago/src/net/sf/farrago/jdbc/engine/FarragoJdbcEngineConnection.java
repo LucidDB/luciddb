@@ -75,7 +75,12 @@ public class FarragoJdbcEngineConnection
     {
         this(sessionFactory.newSession(url, info));
         this.sessionFactory = sessionFactory;
-        initConnection(info);
+        try {
+            initConnection(info);
+        } catch (SQLException e) {
+            close();        // prevent leak
+            throw e;
+        }
     }
 
     private FarragoJdbcEngineConnection(
