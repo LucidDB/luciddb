@@ -1,0 +1,16 @@
+-- $Id$
+-- Test DDL for character types
+
+create schema s;
+
+-- should succeed
+create table s.t1 (my_char char not null primary key);
+
+-- should fail
+create table s.t2 (my_char charactr not null primary key);
+
+-- should succeed
+create table s.t3 (my_char character not null primary key);
+
+drop schema s cascade;
+

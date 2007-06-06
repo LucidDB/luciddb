@@ -2843,13 +2843,11 @@ SqlIdentifier TypeName() :
 }
 {
     (
-        (
-            <CHARACTER> | <CHAR>
-            {
-                typeName = new SqlIdentifier(
-                    SqlTypeName.CHAR.name(), pos);
-            }
-        )
+        (<CHARACTER> | <CHAR>)
+        {
+            typeName = new SqlIdentifier(
+                SqlTypeName.CHAR.name(), pos);
+        }
         [
             <VARYING>
             {
