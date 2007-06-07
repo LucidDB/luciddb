@@ -115,6 +115,10 @@ bool LcsClusterNodeWriter::getLastClusterPageForWrite(
     pBlock = &(clusterLock.getNodeForWrite());
     firstRid = pBlock->firstRID;
 
+    // End the search so the BTreeWriter doesn't think it's positioned within
+    // the btree.  We'll position properly on the first monotonic insert.
+    bTreeWriter->endSearch();
+
     if (isTracingLevel(TRACE_FINE)) {
         FENNEL_TRACE(TRACE_FINE,
                      "Calling ClusterDump from getLastClusterPageForWrite");
