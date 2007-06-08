@@ -61,6 +61,8 @@
 0 rows affected.
 > alter table t1 rebuild;
 0 rows affected.
+> alter system deallocate old;
+0 rows affected.
 > select * from t1 order by c;
 +------------+
 | C          |
@@ -70,6 +72,8 @@
 +------------+
 
 > truncate table t1;
+0 rows affected.
+> alter system deallocate old;
 0 rows affected.
 > select * from t1 order by c;
 +------------+

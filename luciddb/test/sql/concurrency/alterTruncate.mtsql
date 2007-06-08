@@ -63,11 +63,13 @@
   @sync
   @sleep 2000
   alter table t1 rebuild;
+  alter system deallocate old;
   select * from t1 order by c;
   @sync
   @sync
   @sleep 2000
   truncate table t1;
+  alter system deallocate old;
   select * from t1 order by c;
   @sync
   @sync

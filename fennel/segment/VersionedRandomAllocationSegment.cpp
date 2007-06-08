@@ -946,8 +946,14 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
     }
 
     // Set the deallocationCsn so only the next newest old page and any
-    // pages older than it will be deallocated
-    TxnId deallocationCsn = nextNewestOldCsn + 1;
+    // pages older than it will be deallocated.  However, if the next newest
+    // and newest pages have the same csn (because the page was truncated
+    // and then versioned in the same txn), then set the deallocationCsn
+    // so neither page is deallocated.
+    TxnId deallocationCsn = nextNewestOldCsn;
+    if (nextNewestOldCsn == NULL_TXN_ID || newestOldCsn > nextNewestOldCsn) {
+        deallocationCsn++;
+    }
     assert(deallocationCsn < oldestActiveTxnId);
 
     return deallocationCsn;
