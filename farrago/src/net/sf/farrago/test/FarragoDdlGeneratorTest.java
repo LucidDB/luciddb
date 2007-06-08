@@ -68,6 +68,16 @@ public class FarragoDdlGeneratorTest
         return wrappedSuite(FarragoDdlGeneratorTest.class);
     }
 
+    /* (non-Javadoc)
+     * @see net.sf.farrago.test.FarragoTestCase#setUp()
+     */
+    @Override
+    protected void setUp() throws Exception
+    {
+        runCleanup();
+        super.setUp();
+    }
+
     public void testExportSales()
     {
         String output = exportSchema("SALES", true);
@@ -168,6 +178,15 @@ public class FarragoDdlGeneratorTest
         
         server.setVersion("TESTVERSION");
         ddlGenerator.generateCreate(server, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+
+        // now drop 'em
+        ddlGenerator.generateDrop(server, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+        
+        ddlGenerator.generateDrop(wrapper, stmt);
         appendStatementText(output, stmt);
         stmt.clear();
         
