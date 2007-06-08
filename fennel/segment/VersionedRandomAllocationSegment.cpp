@@ -900,13 +900,10 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
             anchorPageId = chainPageId;
         }
         if (pageEntry.allocationCsn < oldestActiveTxnId) {
-            if ((newestOldCsn == NULL_TXN_ID ||
-                pageEntry.allocationCsn > newestOldCsn))
+            if (newestOldCsn == NULL_TXN_ID ||
+                pageEntry.allocationCsn > newestOldCsn)
             {
                 if (newestOldCsn != NULL_TXN_ID) {
-                    assert(
-                        nextNewestOldCsn == NULL_TXN_ID ||
-                        nextNewestOldCsn < newestOldCsn);
                     nextNewestOldCsn = newestOldCsn;
                     nextNewestOldPageId = newestOldPageId;
                 }
@@ -916,9 +913,10 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
             // It's possible to have to have two page entries with the same
             // csn if a page is truncated and then versioned within the same
             // transaction.
-            } else if ((pageEntry.allocationCsn > nextNewestOldCsn) ||
-                (nextNewestOldCsn == NULL_TXN_ID &&
-                    pageEntry.allocationCsn != newestOldCsn))
+            } else if
+                (((nextNewestOldCsn == NULL_TXN_ID) ||
+                    (pageEntry.allocationCsn > nextNewestOldCsn)) &&
+                (pageEntry.allocationCsn != newestOldCsn))
             {
                 nextNewestOldCsn = pageEntry.allocationCsn;
                 nextNewestOldPageId = chainPageId;
@@ -931,6 +929,7 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
     // At least one page in the chain has to be old
     assert(newestOldPageId != NULL_PAGE_ID);
     assert(anchorPageId != NULL_PAGE_ID);
+    assert(nextNewestOldCsn == NULL_TXN_ID || nextNewestOldCsn < newestOldCsn);
 
     // If there is no next newest old page, then there's nothing to deallocate
     // in the page chain.  Add the pages we know are old to the
@@ -946,14 +945,8 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
     }
 
     // Set the deallocationCsn so only the next newest old page and any
-    // pages older than it will be deallocated.  However, if the next newest
-    // and newest pages have the same csn (because the page was truncated
-    // and then versioned in the same txn), then set the deallocationCsn
-    // so neither page is deallocated.
-    TxnId deallocationCsn = nextNewestOldCsn;
-    if (nextNewestOldCsn == NULL_TXN_ID || newestOldCsn > nextNewestOldCsn) {
-        deallocationCsn++;
-    }
+    // pages older than it will be deallocated
+    TxnId deallocationCsn = nextNewestOldCsn + 1;
     assert(deallocationCsn < oldestActiveTxnId);
 
     return deallocationCsn;
