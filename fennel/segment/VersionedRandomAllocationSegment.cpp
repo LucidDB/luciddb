@@ -357,7 +357,8 @@ void VersionedRandomAllocationSegment::chainPageEntries(
 void VersionedRandomAllocationSegment::updateAllocNodes(
     ModifiedPageEntryMap const &modifiedPageEntryMap,
     TxnId commitCsn,
-    bool commit)
+    bool commit,
+    SharedSegment pOrigSegment)
 {
     SXMutexExclusiveGuard mapGuard(mapMutex);
 
@@ -398,7 +399,8 @@ void VersionedRandomAllocationSegment::updateAllocNodes(
                 iPageInExtent,
                 pModEntry,
                 commitCsn,
-                commit);
+                commit,
+                pOrigSegment);
         } else if (
             (!commit &&
                 pModEntry->lastModType == ModifiedPageEntry::ALLOCATED) ||
@@ -411,7 +413,8 @@ void VersionedRandomAllocationSegment::updateAllocNodes(
                 iPageInExtent,
                 pModEntry,
                 commitCsn,
-                commit);
+                commit,
+                pOrigSegment);
             updateExtentEntry(
                 iSegAlloc,
                 extentNum,
@@ -424,7 +427,8 @@ void VersionedRandomAllocationSegment::updateAllocNodes(
                 iPageInExtent,
                 pModEntry,
                 commitCsn,
-                commit);
+                commit,
+                pOrigSegment);
         }
     }
 
@@ -450,7 +454,8 @@ void VersionedRandomAllocationSegment::updatePageEntry(
     uint iPageInExtent,
     SharedModifiedPageEntry pModEntry,
     TxnId commitCsn,
-    bool commit)
+    bool commit,
+    SharedSegment pOrigSegment)
 {
     // Update the extent allocation page, copying the contents from the
     // temporary page in the case of a commit and vice versa for a rollback.
@@ -470,6 +475,14 @@ void VersionedRandomAllocationSegment::updatePageEntry(
             commitCsn,
             pModEntry->ownerId);
     } else {
+        // In the case of a rollback of a newly allocated page, remove the
+        // page from the cache
+        if (!commit && pModEntry->lastModType == ModifiedPageEntry::ALLOCATED) {
+            SegmentAccessor segAccessor(pOrigSegment, pCache);
+            segAccessor.pCacheAccessor->discardPage(
+                pOrigSegment->translatePageId(pageId));
+        }
+
         copyPageEntryToTemp(extentPageId, pModNode->tempPageId, iPageInExtent);
     }
 

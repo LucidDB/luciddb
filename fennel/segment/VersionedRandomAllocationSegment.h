@@ -286,6 +286,9 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
      * if the pageEntry corresponds to a page allocation; otherwise, set to
      * NULL_TXN_ID
      *
+     * @param pOrigSegment the originating segment that modified the page
+     * entry that needs to be updated
+     *
      * @param commit true if the updates correspond to a commit
      */
     void updatePageEntry(
@@ -294,7 +297,8 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
         uint iPageInExtent,
         SharedModifiedPageEntry pModEntry,
         TxnId commitCsn,
-        bool commit);
+        bool commit,
+        SharedSegment pOrigSegment);
 
     /**
      * Copies a page entry from the temporary segment to the permanent one
@@ -638,12 +642,16 @@ public:
      * if the pageEntry corresponds to a page allocation; otherwise, set to
      * NULL_TXN_ID
      *
+     * @param pOrigSegment the originating segment that modified the allocation
+     * nodes that need to be updated
+     *
      * @param commit true if the updates correspond to a commit
      */
     void updateAllocNodes(
         ModifiedPageEntryMap const &modifiedPageEntryMap,
         TxnId commitCsn,
-        bool commit);
+        bool commit,
+        SharedSegment pOrigSegment);
 
     /**
      * Retrieves a batch of pageIds corresponding either to old snapshot
