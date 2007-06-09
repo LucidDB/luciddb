@@ -768,8 +768,11 @@ bool VersionedRandomAllocationSegment::getOldPageIds(
                 // Map the pageEntry to its pageId
                 PageId pageId = getLinearPageId(makePageNum(extentNum, j));
 
-                // Skip over pages that have no snapshots
-                if (pageEntry.versionChainPageId == pageId) {
+                // Skip over pages that have no snapshots, unless the page
+                // is deallocation-deferred
+                if (pageEntry.versionChainPageId == pageId &&
+                    !isDeallocatedPageOwnerId(pageEntry.ownerId))
+                {
                     continue;
                 }
 

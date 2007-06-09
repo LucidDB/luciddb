@@ -357,6 +357,30 @@ public:
                 (nDiskPages/(3*7) + ((nDiskPages % (3*7)) ? 1 : 0)) +
                 (nDiskPages/(3*5*7) + ((nDiskPages % (3*5*7)) ? 1 : 0));
         deallocateOldPages(TxnId(8), totalPages, nPages, 8, 8);
+
+        // Deallocate the first 100 pages.  They won't actually be freed but
+        // will be marked as deallocation-deferred.
+        currCsn = TxnId(9);
+        openStorage(DeviceMode::load);
+        for (int i = opaqueToInt(firstPageId);
+            i < 100 + opaqueToInt(firstPageId); i++)
+        {
+            pSnapshotRandomSegment->deallocatePageRange(PageId(i), PageId(i));
+        }
+        closeStorage();
+
+        // Deallocate old pages, but set the oldestActiveTxnId to TxnId(0) so
+        // no pages should actually be freed
+        deallocateOldPages(TxnId(0), nPages, nPages, 8, 8);
+
+        // Set the oldestActiveTnxId to TxnId(10) so all deallocation-deferred
+        // pages will be freed.  When computing the number of freed pages,
+        // take into account old pages that have already been deallocated
+        // above.
+        int nPagesFreed =
+            100 + 100/3 + 100/5 + 100/7 - 100/(3*5) - 100/(3*7) - 100/(5*7)
+            - 100/(3*5*7);
+        deallocateOldPages(TxnId(10), nPages, nPages - nPagesFreed, 1, 0);
     }
 
     void deallocateOldPages(
