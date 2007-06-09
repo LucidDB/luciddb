@@ -58,6 +58,7 @@ import org.eigenbase.sql.validate.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util.property.*;
+import org.eigenbase.resource.EigenbaseResource;
 
 import org.netbeans.mdr.handlers.*;
 
@@ -883,12 +884,17 @@ public class FarragoDatabase
                 }
             };
 
+        // sharing of executable statements depends on session personality
+        final boolean sharable = 
+            stmt.getSession().getPersonality().supportsFeature(
+                EigenbaseResource.instance().SharedStatementPlans);
+
         FarragoSessionExecutableStmt executableStmt;
         do {
             // prepare the statement, caching the results in codeCache;
             // note that executable statements are always sharable, so
             // don't pin them as exclusive
-            cacheEntry = codeCache.pin(sql, stmtFactory, false);
+            cacheEntry = codeCache.pin(sql, stmtFactory, !sharable);
             executableStmt =
                 (FarragoSessionExecutableStmt) cacheEntry.getValue();
 

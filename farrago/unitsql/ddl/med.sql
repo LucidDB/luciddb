@@ -318,6 +318,7 @@ create foreign table demo_schema.dept_changing
 server hsqldb_orig
 options (object 'DEPT');
 
+!set showwarnings true
 select * from demo_schema.dept_changing;
 
 create or replace server hsqldb_orig

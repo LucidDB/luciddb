@@ -97,6 +97,8 @@ Error: Mock foreign object "BACH_TABLE" not found (state=,code=0)
 > 
 > -- test create index on mock table
 > 
+> !set showwarnings true
+> 
 > create index mock_index on mock_empty_table(id);
 > 
 > insert into mock_empty_table values (5);

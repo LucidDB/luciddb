@@ -86,12 +86,11 @@ ${farrago.test.jvmargs}
   <!-- The version of ANT we require. -->
   <property name="required.ant.version" value="1.7.0"/>
 
+  <!-- ant.version not set in subant targets in 1.7.0, see issues.apache.org 42263 -->
+  <!-- using ant.version causes saffron cruisecontrol to fail, thus, a workaround -->
   <condition property="is.correct.ant.version">
-    <contains string="${ant.version}" substring="${required.ant.version}"/>
+    <antversion atleast="${required.ant.version}"/>
   </condition>
-  <fail unless="is.correct.ant.version"
-      message="Incorrect ant version '${ant.version}';
-require version '${required.ant.version}'."/>
 
   <!-- Files -->
 

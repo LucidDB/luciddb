@@ -95,6 +95,8 @@ options (foreign_table_name 'BACH_TABLE');
 
 -- test create index on mock table
 
+!set showwarnings true
+
 create index mock_index on mock_empty_table(id);
 
 insert into mock_empty_table values (5);

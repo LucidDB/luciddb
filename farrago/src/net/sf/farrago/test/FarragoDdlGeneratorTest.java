@@ -68,6 +68,16 @@ public class FarragoDdlGeneratorTest
         return wrappedSuite(FarragoDdlGeneratorTest.class);
     }
 
+    /* (non-Javadoc)
+     * @see net.sf.farrago.test.FarragoTestCase#setUp()
+     */
+    @Override
+    protected void setUp() throws Exception
+    {
+        runCleanup();
+        super.setUp();
+    }
+
     public void testExportSales()
     {
         String output = exportSchema("SALES", true);
@@ -125,6 +135,76 @@ public class FarragoDdlGeneratorTest
                 list.add(dataWrapper);
             }
         }
+    }
+    
+    /**
+     * Test DDL generation for objects that don't have all the optional
+     * clauses.
+     */
+    public void testDdlGeneration()
+    {
+        StringBuilder output = new StringBuilder();
+        
+        // Create a DDL Generator for this test
+        DdlGenerator ddlGenerator = newDdlGenerator();
+        
+        // Set up objects that do not include optional items
+        FemDataWrapper wrapper = repos.newFemDataWrapper();
+        wrapper.setName("TESTWRAPPER");
+        wrapper.setLanguage("JAVA");
+        FemDataServer server = repos.newFemDataServer();
+        server.setName("TESTSERVER");
+        server.setWrapper(wrapper);
+        
+        // Generate DDL for minimal objects
+        GeneratedDdlStmt stmt = new GeneratedDdlStmt();
+        ddlGenerator.generateCreate(wrapper, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+        ddlGenerator.generateCreate(server, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+        
+        // add an optional element
+        wrapper.setLibraryFile("net.sf.farrago.TestWrapper");
+        ddlGenerator.generateCreate(wrapper, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+        
+        server.setType("TESTTYPE");
+        ddlGenerator.generateCreate(server, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+        
+        server.setVersion("TESTVERSION");
+        ddlGenerator.generateCreate(server, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+
+        // now drop 'em
+        ddlGenerator.generateDrop(server, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+        
+        ddlGenerator.generateDrop(wrapper, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+        
+        getDiffRepos().assertEquals("output", "${output}", output.toString());
+    }
+
+    /**
+     * Appends all the statements in a {@link GeneratedDdlStmt} object to the
+     * end of a string.
+     * @param sb StringBuilder object to hold the text
+     * @param stmt GeneratedDdlStmt object we want the text for
+     */
+    private void appendStatementText(StringBuilder sb, GeneratedDdlStmt stmt)
+    {
+        for (String s : stmt.getStatementList()) {
+            sb.append(s);
+        }
+        sb.append("\n\n");
     }
 }
 

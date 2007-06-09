@@ -576,6 +576,11 @@ TBD: naming convention for extension features
     <text>Descending sort (ORDER BY DESC) not supported</text>
 </exception>
 
+<exception name="SharedStatementPlans">
+    <property name="FeatureDefinition">Eigenbase-defined</property>
+    <text>Sharing of cached statement plans not supported</text>
+</exception>
+
 <!-- ====================================================================== -->
 
 <!-- End of last error section ============================================ -->

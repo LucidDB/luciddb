@@ -526,6 +526,7 @@ Error: Cannot support JDBC type "VARCHAR" (ordinal 12, precision 2147483647, sca
 > server hsqldb_orig
 > options (object 'DEPT');
 > 
+> !set showwarnings true
 > select * from demo_schema.dept_changing;
 +---------+-------------+-----------+
 | DEPTNO  |    DNAME    |    LOC    |

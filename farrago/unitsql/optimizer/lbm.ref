@@ -677,6 +677,7 @@
 >   constraint n_pkey_unique UNIQUE(pkey, colbigint)
 > );
 > 
+> !set showwarnings true
 > insert into null_uc_sk select * from null_src;
 Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > select * from null_uc_sk order by pkey, colbigint, colint;
