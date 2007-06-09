@@ -20,7 +20,7 @@ Here are some of the main features which set LucidDB apart:
 </tr>
 
 <tr>
-<td rowspan=2><i>Storage</i></td> 
+<td rowspan=3><i>Storage</i></td> 
 <td>Column-store tables</td> 
 <td>Very high data compression rates for columns with many repeated values; 
 reduced I/O for queries which access only a subset of columns;
@@ -37,13 +37,24 @@ choose index type</td>
 </tr>
 
 <tr>
+<td>Page-level multi-versioning</td> 
+<td>
+Supports read/write concurrency with snapshot consistency, allowing
+readers to access a table while data is being bulk loaded or updated;
+versioning at page-level is much more efficient than transactional
+multi-versioning schemes such as row-level versioning or log-based
+page reconstruction
+</td>
+</tr>
+
+<tr>
 <td rowspan=2><i>Optimization</i></td> 
 <td>Star join optimization</td> 
 <td>Avoids reading fact table rows which are not needed by query</td>
 </tr>
 
 <tr>
-<td>Cost-based join ordering</td> 
+<td>Cost-based join ordering and index selection</td> 
 <td>No hints required</td>
 </tr>
 
@@ -77,7 +88,8 @@ their content as <em>foreign tables</em></td>
 
 <tr>
 <td>JDBC foreign data wrapper</td> 
-<td>Allows foreign tables in any JDBC data source to be queried via LucidDB</td>
+<td>Allows foreign tables in any JDBC data source to be queried via LucidDB,
+with filters pushed down to the source where possible</td>
 </tr>
 
 <tr>

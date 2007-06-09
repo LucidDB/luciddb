@@ -44,7 +44,7 @@ architecture for read-mostly database systems such as LucidDB.
 <p>
 
 In LucidDB, database tables are vertically partitioned and stored in a
-highly compressed form.  Vertical partitioning means that each block
+highly compressed form.  Vertical partitioning means that each page
 on disk stores values from only one column rather than entire rows; as
 a result, compression algorithms are much more effective because they
 can operate on homogeneous value domains, often with only a few
@@ -156,6 +156,10 @@ upsert.  All DML operations (including DELETE) are fully recoverable
 via table-level locking and page-level logging; for efficiency, no
 record-level logging or locking is needed.  Errors due to constraint
 violations can be written to a reject file without aborting the load.
+
+<li>Read/write concurrency with snapshot consistency:  readers 
+(e.g. report execution) are never locked out by bulk load,
+update, or deletion.
 
 <li>Sequence support: via the GENERATED clause in surrogate key
 column definitions.
