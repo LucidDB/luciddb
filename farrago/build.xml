@@ -938,6 +938,7 @@ ${farrago.test.jvmargs}
     <antcall target="compareCatalogExport"/>
     <antcall target="macker"/>
     <antcall target="checkSourceFilePreambles"/>
+    <antcall target="checkJavadoc"/>
   </target>
 
   <target name="checkTrace">
@@ -1150,6 +1151,22 @@ please disable it and try again.
     <exec os="Linux" dir="${farrago.dir}" failonerror="true"
       executable="${fennel.dir}/build/checkPreambleFarrago.sh">
     </exec>
+  </target>
+
+  <!-- Ensure that javadoc has no errors. -->
+  <target name="checkJavadoc">
+    <ant target="javadoc" output="javadoc.log"/>
+    <loadfile srcFile="javadoc.log" property="javadoc.warnings">
+      <filterchain>
+        <filterreader classname="org.apache.tools.ant.filters.LineContains">
+          <param type="contains" value="warnings"/>
+        </filterreader>
+        <striplinebreaks />
+      </filterchain>
+    </loadfile>
+    <fail if="javadoc.warnings"
+        message="Javadoc contained ${javadoc.warnings}; see javadoc.log for details"/>
+    <delete file="javadoc.log"/>
   </target>
 
   <!-- Beautify Farrago source code.  This currently requires
