@@ -73,7 +73,9 @@ public:
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 
     long getRowCount() const { return rowCount; }
-    vector<string>& getRowVector() { return rowStrings; }
+    const vector<string>& getRowVector() {
+        return const_cast<const vector<string>& >(rowStrings); 
+    }
     bool getRecvEOS() const { return recvEOS; }
 };
 
