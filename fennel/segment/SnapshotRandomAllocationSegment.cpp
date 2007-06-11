@@ -323,7 +323,8 @@ void SnapshotRandomAllocationSegment::commitChanges(TxnId commitCsn)
     pVersionedRandomSegment->updateAllocNodes(
         modPageEntries,
         commitCsn,
-        true);
+        true,
+        getTracingSegment());
     modPageEntries.clear();
 }
 
@@ -334,11 +335,9 @@ void SnapshotRandomAllocationSegment::rollbackChanges()
     pVersionedRandomSegment->updateAllocNodes(
         modPageEntries,
         NULL_TXN_ID,
-        false);
-
-    // In the case of a rollback, keep around the entries in the
-    // modPageEntries because we'll need to later use these entries to
-    // discard newly allocated pages from the cache.
+        false,
+        getTracingSegment());
+    modPageEntries.clear();
 }
 
 MappedPageListener *SnapshotRandomAllocationSegment::getMappedPageListener(
@@ -380,21 +379,6 @@ MappedPageListener
 *SnapshotRandomAllocationSegment::notifyAfterPageCheckpointFlush(
     CachePage &page)
 {
-    // In the case of rollback, for page allocations, we want to leave
-    // the page's listener mapped to this segment so it will be removed
-    // from the cache when the segment is destructed.
-    if (!modPageEntries.empty()) {
-        PageId pageId = DelegatingSegment::translateBlockId(page.getBlockId());
-        ModifiedPageEntryMapIter iter = modPageEntries.find(pageId);
-        if (iter != modPageEntries.end()) {
-            SharedModifiedPageEntry pModPageEntry = iter->second;
-            if (pModPageEntry->lastModType == ModifiedPageEntry::ALLOCATED) {
-                return NULL;
-            }
-        } else {
-            permAssert(false);
-        }
-    }
     return pVersionedRandomSegment;
 }
 

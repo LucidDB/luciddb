@@ -357,7 +357,8 @@ void VersionedRandomAllocationSegment::chainPageEntries(
 void VersionedRandomAllocationSegment::updateAllocNodes(
     ModifiedPageEntryMap const &modifiedPageEntryMap,
     TxnId commitCsn,
-    bool commit)
+    bool commit,
+    SharedSegment pOrigSegment)
 {
     SXMutexExclusiveGuard mapGuard(mapMutex);
 
@@ -398,7 +399,8 @@ void VersionedRandomAllocationSegment::updateAllocNodes(
                 iPageInExtent,
                 pModEntry,
                 commitCsn,
-                commit);
+                commit,
+                pOrigSegment);
         } else if (
             (!commit &&
                 pModEntry->lastModType == ModifiedPageEntry::ALLOCATED) ||
@@ -411,7 +413,8 @@ void VersionedRandomAllocationSegment::updateAllocNodes(
                 iPageInExtent,
                 pModEntry,
                 commitCsn,
-                commit);
+                commit,
+                pOrigSegment);
             updateExtentEntry(
                 iSegAlloc,
                 extentNum,
@@ -424,7 +427,8 @@ void VersionedRandomAllocationSegment::updateAllocNodes(
                 iPageInExtent,
                 pModEntry,
                 commitCsn,
-                commit);
+                commit,
+                pOrigSegment);
         }
     }
 
@@ -450,7 +454,8 @@ void VersionedRandomAllocationSegment::updatePageEntry(
     uint iPageInExtent,
     SharedModifiedPageEntry pModEntry,
     TxnId commitCsn,
-    bool commit)
+    bool commit,
+    SharedSegment pOrigSegment)
 {
     // Update the extent allocation page, copying the contents from the
     // temporary page in the case of a commit and vice versa for a rollback.
@@ -470,6 +475,14 @@ void VersionedRandomAllocationSegment::updatePageEntry(
             commitCsn,
             pModEntry->ownerId);
     } else {
+        // In the case of a rollback of a newly allocated page, remove the
+        // page from the cache
+        if (!commit && pModEntry->lastModType == ModifiedPageEntry::ALLOCATED) {
+            SegmentAccessor segAccessor(pOrigSegment, pCache);
+            segAccessor.pCacheAccessor->discardPage(
+                pOrigSegment->translatePageId(pageId));
+        }
+
         copyPageEntryToTemp(extentPageId, pModNode->tempPageId, iPageInExtent);
     }
 
@@ -755,8 +768,11 @@ bool VersionedRandomAllocationSegment::getOldPageIds(
                 // Map the pageEntry to its pageId
                 PageId pageId = getLinearPageId(makePageNum(extentNum, j));
 
-                // Skip over pages that have no snapshots
-                if (pageEntry.versionChainPageId == pageId) {
+                // Skip over pages that have no snapshots, unless the page
+                // is deallocation-deferred
+                if (pageEntry.versionChainPageId == pageId &&
+                    !isDeallocatedPageOwnerId(pageEntry.ownerId))
+                {
                     continue;
                 }
 
@@ -900,13 +916,10 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
             anchorPageId = chainPageId;
         }
         if (pageEntry.allocationCsn < oldestActiveTxnId) {
-            if ((newestOldCsn == NULL_TXN_ID ||
-                pageEntry.allocationCsn > newestOldCsn))
+            if (newestOldCsn == NULL_TXN_ID ||
+                pageEntry.allocationCsn > newestOldCsn)
             {
                 if (newestOldCsn != NULL_TXN_ID) {
-                    assert(
-                        nextNewestOldCsn == NULL_TXN_ID ||
-                        nextNewestOldCsn < newestOldCsn);
                     nextNewestOldCsn = newestOldCsn;
                     nextNewestOldPageId = newestOldPageId;
                 }
@@ -916,9 +929,10 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
             // It's possible to have to have two page entries with the same
             // csn if a page is truncated and then versioned within the same
             // transaction.
-            } else if ((pageEntry.allocationCsn > nextNewestOldCsn) ||
-                (nextNewestOldCsn == NULL_TXN_ID &&
-                    pageEntry.allocationCsn != newestOldCsn))
+            } else if
+                (((nextNewestOldCsn == NULL_TXN_ID) ||
+                    (pageEntry.allocationCsn > nextNewestOldCsn)) &&
+                (pageEntry.allocationCsn != newestOldCsn))
             {
                 nextNewestOldCsn = pageEntry.allocationCsn;
                 nextNewestOldPageId = chainPageId;
@@ -931,6 +945,7 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
     // At least one page in the chain has to be old
     assert(newestOldPageId != NULL_PAGE_ID);
     assert(anchorPageId != NULL_PAGE_ID);
+    assert(nextNewestOldCsn == NULL_TXN_ID || nextNewestOldCsn < newestOldCsn);
 
     // If there is no next newest old page, then there's nothing to deallocate
     // in the page chain.  Add the pages we know are old to the
@@ -946,14 +961,8 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
     }
 
     // Set the deallocationCsn so only the next newest old page and any
-    // pages older than it will be deallocated.  However, if the next newest
-    // and newest pages have the same csn (because the page was truncated
-    // and then versioned in the same txn), then set the deallocationCsn
-    // so neither page is deallocated.
-    TxnId deallocationCsn = nextNewestOldCsn;
-    if (nextNewestOldCsn == NULL_TXN_ID || newestOldCsn > nextNewestOldCsn) {
-        deallocationCsn++;
-    }
+    // pages older than it will be deallocated
+    TxnId deallocationCsn = nextNewestOldCsn + 1;
     assert(deallocationCsn < oldestActiveTxnId);
 
     return deallocationCsn;
