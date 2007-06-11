@@ -41,6 +41,7 @@ public class FarragoCacheEntry
     int pinCount;
     long memoryUsage;
     Thread constructionThread;
+    boolean isReusable;
 
     /**
      * The cache this entry is associated with
@@ -52,6 +53,8 @@ public class FarragoCacheEntry
     public FarragoCacheEntry(FarragoObjectCache parentCache)
     {
         this.parentCache = parentCache;
+        // assume reusable to start; we may change our minds later
+        isReusable = true;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -68,13 +71,21 @@ public class FarragoCacheEntry
         return value;
     }
 
+    // implement Entry
+    public boolean isReusable()
+    {
+        return isReusable;
+    }
+
     // implement UninitializedEntry
     public void initialize(
         Object value,
-        long memoryUsage)
+        long memoryUsage,
+        boolean isReusable)
     {
         this.value = value;
         this.memoryUsage = memoryUsage;
+        this.isReusable = isReusable;
     }
 
     // implement FarragoAllocation

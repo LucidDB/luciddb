@@ -471,7 +471,12 @@ public class FarragoRuntimeContext
 
                     long memUsage =
                         FarragoUtil.getFennelMemoryUsage(xmiFennelPlan);
-                    entry.initialize(streamGraph, memUsage);
+                    entry.initialize(streamGraph, memUsage, true);
+                }
+                
+                public boolean isStale(Object value)
+                {
+                    return false;
                 }
             };
 

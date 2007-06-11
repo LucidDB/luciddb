@@ -237,7 +237,14 @@ public class ReposDefaultValueFactory
         // TODO:  better memory usage estimate
         entry.initialize(
             exp,
-            3 * FarragoUtil.getStringMemoryUsage(defaultString));
+            3 * FarragoUtil.getStringMemoryUsage(defaultString),
+            true);
+    }
+                
+    // implement CachedObjectFactory
+    public boolean isStale(Object value)
+    {
+        return false;
     }
 }
 

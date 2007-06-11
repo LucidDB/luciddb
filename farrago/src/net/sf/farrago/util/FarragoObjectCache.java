@@ -38,6 +38,12 @@ import org.eigenbase.util.*;
  * <p>Key objects must implement hashCode/equals properly since
  * FarragoObjectCache is based on a HashMap internally.
  *
+ * <p>See {@link net.sf.farrago.test.FarragoObjectCacheTest} for examples
+ * of usage patterns.
+ *
+ * <p>Note that {@link #closeAllocation} should only be called with
+ * no entries pinned, no calls in progress, and no further calls planned.
+ *
  * @author John V. Sichi
  * @version $Id$
  */
@@ -103,9 +109,22 @@ public class FarragoObjectCache
      * calling the factory's initializeEntry method
      * @param exclusive if true, only reuse unpinned entries
      *
-     * @return pinned Entry
+     * @return pinned entry
      */
     public Entry pin(
+        Object key,
+        CachedObjectFactory factory,
+        boolean exclusive)
+    {
+        for (;;) {
+            Entry entry = tryPin(key, factory, exclusive);
+            if (entry != null) {
+                return entry;
+            }
+        }
+    }
+    
+    private Entry tryPin(
         Object key,
         CachedObjectFactory factory,
         boolean exclusive)
@@ -119,13 +138,48 @@ public class FarragoObjectCache
         // look up entry in map
         FarragoCacheEntry entry = null;
 
+        List<FarragoCacheEntry> staleList = null;
+
         synchronized (mapKeyToEntry) {
-            for (FarragoCacheEntry entry1 : mapKeyToEntry.getMulti(key)) {
+            List<FarragoCacheEntry> candidateList = mapKeyToEntry.getMulti(key);
+            Iterator<FarragoCacheEntry> iter = candidateList.iterator();
+            while (iter.hasNext()) {
+                FarragoCacheEntry entry1 = iter.next();
                 entry = entry1;
                 if (exclusive && (entry.pinCount != 0)) {
                     // this one's already in use by someone else
                     entry = null;
                 } else {
+                    Object value = entry.value;
+                    if (value != null) {
+                        if (!entry.isReusable() || factory.isStale(value)) {
+                            if (entry.pinCount == 0) {
+                                tracer.finer(
+                                    "found stale+unpinned cache entry:  "
+                                    + "adding to discard list");
+                                if (staleList == null) {
+                                    staleList =
+                                        new ArrayList<FarragoCacheEntry>();
+                                }
+                                staleList.add(entry);
+                                if (candidateList.size() > 1) {
+                                    // NOTE jvs 10-Jun-2007:  See
+                                    // comment with same date below for
+                                    // the reason behind this
+                                    // special case.
+                                    iter.remove();
+                                }
+                                victimPolicy.unregisterEntry(entry);
+                            } else {
+                                tracer.finer(
+                                    "found stale+pinned cache entry:  "
+                                    + "ignoring");
+                            }
+                            entry = null;
+                            continue;
+                        }
+                    }
+
                     tracer.finer("found cache entry");
 
                     // pin the entry so that it can't be discarded after map
@@ -134,6 +188,13 @@ public class FarragoObjectCache
                     victimPolicy.accessEntry(entry);
                     break;
                 }
+            }
+            if ((staleList != null) && (candidateList.size() == 1)) {
+                // NOTE jvs 10-Jun-2007:  This special case is required
+                // because of the non-uniform return behavior of
+                // MultiMap (singleton entries are returned via
+                // an immutable list).
+                mapKeyToEntry.remove(key);
             }
             if (entry == null) {
                 // create a new entry and add it to the map
@@ -149,8 +210,18 @@ public class FarragoObjectCache
             }
         }
 
-        // TODO jvs 15-July-2004:  break up this oversized method release map
-        // lock since construction work below may be time-consuming
+        if (staleList != null) {
+            // Put out the garbage.  We deferred this above due to
+            // synchronization requirements.
+            for (FarragoCacheEntry discard : staleList) {
+                discardEntry(discard);
+            }
+        }
+
+        // TODO jvs 15-July-2004:  break up this oversized method
+
+        // Note that we released map lock above since construction work below
+        // may be time-consuming
         boolean unpinEntry = false;
         try {
             synchronized (entry) {
@@ -160,6 +231,9 @@ public class FarragoObjectCache
                         boolean success = false;
                         try {
                             factory.initializeEntry(key, entry);
+                            // TODO jvs 10-Jun-2007:  assert that
+                            // new value is not stale-on-arrival?  Maybe
+                            // only when trace is on?
                             success = true;
                             tracer.finer("initialized new cache entry");
                         } finally {
@@ -200,6 +274,15 @@ public class FarragoObjectCache
                     }
 
                     if (entry.value != null) {
+                        if (!entry.isReusable()) {
+                            // Oops, we were waiting for something that
+                            // turned out not to be reusable.  We'll
+                            // have to retry from the top since the original
+                            // entry has already been returned as private
+                            // to the construction-initiating caller.
+                            unpinEntry = true;
+                            return null;
+                        }
                         if (tracer.isLoggable(Level.FINE)) {
                             tracer.fine(
                                 "returning entry with pin count = "
@@ -225,14 +308,17 @@ public class FarragoObjectCache
             }
         }
 
-        // REVIEW mberkowitz 1-Jul-2006: when (unpinEntry) this seems to
-        // return an unpinned entry and to account for its memory.
+        // NOTE jvs 10-Jun-2007:  We never get here with unpinEntry=true,
+        // because the only path above which sets it is one in which
+        // an exception gets thrown and not caught.
+        assert(!unpinEntry);
+
         if (tracer.isLoggable(Level.FINE)) {
             long cacheSize = bytesUsed + entry.memoryUsage;
             tracer.fine(
                 "returning new entry, pin count " + entry.pinCount
-                + ", size " + entry.memoryUsage + ", cache size " + cacheSize
-                + ", key " + entry.key);
+                + ", size " + entry.memoryUsage + ", cache size "
+                + cacheSize + ", key " + entry.key);
         }
         adjustMemoryUsage(entry.memoryUsage);
         return entry;
@@ -304,6 +390,15 @@ public class FarragoObjectCache
     }
 
     /**
+     * @return current number of bytes cached (regardless of whether
+     * they are pinned or not)
+     */
+    public long getBytesCached()
+    {
+        return bytesUsed;
+    }
+
+    /**
      * Unpins an entry returned by pin. After unpin, the caller should
      * immediately nullify its reference to the entry, its key, its value, and
      * any sub-objects so that they can be garbage collected.
@@ -327,40 +422,15 @@ public class FarragoObjectCache
     }
 
     /**
-     * Removes an entry from the cache, but does not close its value. The entry
-     * must be exclusive: pinned only by the caller.
-     *
-     * @return the former value of the entry.
-     */
-    public Object detach(Entry e)
-    {
-        FarragoCacheEntry entry = (FarragoCacheEntry) e;
-        Object val = entry.value;
-        synchronized (mapKeyToEntry) {
-            synchronized (e) {
-                if (tracer.isLoggable(Level.FINE)) {
-                    tracer.fine(
-                        "Detaching entry " + entry.key.toString()
-                        + ", size " + entry.memoryUsage);
-                }
-                assert (entry.pinCount == 1) : entry;
-                mapKeyToEntry.removeMulti(
-                    entry.getKey(),
-                    entry);
-                victimPolicy.unregisterEntry(entry);
-                bytesUsed -= entry.memoryUsage;
-                if (tracer.isLoggable(Level.FINER)) {
-                    tracer.finer("cache size now " + bytesUsed);
-                }
-                entry.value = null;
-            }
-        }
-        return val;
-    }
-
-    /**
      * Discards any entries associated with a key. If the bound value of an
      * entry is a ClosableObject, it will be closed.
+     *
+     *<p>
+     *
+     * REVIEW jvs 10-Jun-2007: This method is unsafe since the associated
+     * entries may still be pinned.  Code which is relying on it (such as
+     * FarragoDataWrapperCache) should probably be changed to use either a
+     * staleness test or a different key scheme.
      *
      * @param key key of the Entry to discard
      */
@@ -383,7 +453,9 @@ public class FarragoObjectCache
     }
 
     /**
-     * Discards all entries.
+     * Discards all entries.  May only be called at a time when
+     * no entries are currently pinned (otherwise assertion failures
+     * may result).
      */
     public void discardAll()
     {
@@ -440,7 +512,7 @@ public class FarragoObjectCache
     public static interface CachedObjectFactory
     {
         /**
-         * Initialize a cache entry.
+         * Initializes a cache entry.
          *
          * @param key key of the object to be constructed
          * @param entry to initialize by calling its initialize() method
@@ -448,6 +520,15 @@ public class FarragoObjectCache
         public void initializeEntry(
             Object key,
             UninitializedEntry entry);
+
+        /**
+         * Tests a cached object for staleness.
+         *
+         * @return true if object is stale, meaning it must not
+         * be returned from a pin call, and should be discarded from
+         * the cache when detected
+         */
+        public boolean isStale(Object value);
     }
 
     /**
@@ -463,10 +544,15 @@ public class FarragoObjectCache
          * from the cache
          * @param memoryUsage approximate total number of bytes of memory used
          * by entry (combination of key, value, and any sub-objects)
+         * @param isReusable whether the intialized entry is
+         * reusable; if false, the entry will be returned as private
+         * to the original caller of pin, and no other callers will
+         * ever be able to pin it
          */
         public void initialize(
             Object value,
-            long memoryUsage);
+            long memoryUsage,
+            boolean isReusable);
     }
 
     /**
@@ -483,6 +569,8 @@ public class FarragoObjectCache
         public Object getKey();
 
         public Object getValue();
+
+        public boolean isReusable();
     }
 }
 
