@@ -141,7 +141,9 @@ public:
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     
-    std::vector<std::string>& getRowVector() { return savedTuples; }
+    const std::vector<std::string>& getRowVector() { 
+        return const_cast<const std::vector<std::string>&>(savedTuples);
+    }
 
     /// Returns the number of rows emitted (which does not include rows still
     /// in the output buffer).

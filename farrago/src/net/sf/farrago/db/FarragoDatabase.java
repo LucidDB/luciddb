@@ -892,8 +892,7 @@ public class FarragoDatabase
         FarragoSessionExecutableStmt executableStmt;
         do {
             // prepare the statement, caching the results in codeCache;
-            // note that executable statements are always sharable, so
-            // don't pin them as exclusive
+            // pin them as sharable if the session personality supports it
             cacheEntry = codeCache.pin(sql, stmtFactory, !sharable);
             executableStmt =
                 (FarragoSessionExecutableStmt) cacheEntry.getValue();
