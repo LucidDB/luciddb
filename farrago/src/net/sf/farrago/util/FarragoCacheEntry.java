@@ -42,6 +42,7 @@ public class FarragoCacheEntry
     long memoryUsage;
     Thread constructionThread;
     boolean isReusable;
+    boolean isInitialized;
 
     /**
      * The cache this entry is associated with
@@ -53,7 +54,8 @@ public class FarragoCacheEntry
     public FarragoCacheEntry(FarragoObjectCache parentCache)
     {
         this.parentCache = parentCache;
-        // assume reusable to start; we may change our minds later
+        // assume reusable; but really, assertions below should guarantee that
+        // this is never even accessed until after initialize overwrites it
         isReusable = true;
     }
 
@@ -62,18 +64,22 @@ public class FarragoCacheEntry
     // implement Entry
     public Object getKey()
     {
+        // NOTE jvs 14-Jun-2007:  Don't assert isInitialized, since
+        // an entry gets its key set before initialization.
         return key;
     }
 
     // implement Entry
     public Object getValue()
     {
+        assert(isInitialized);
         return value;
     }
 
     // implement Entry
     public boolean isReusable()
     {
+        assert(isInitialized);
         return isReusable;
     }
 
@@ -83,14 +89,20 @@ public class FarragoCacheEntry
         long memoryUsage,
         boolean isReusable)
     {
-        this.value = value;
-        this.memoryUsage = memoryUsage;
+        // REVIEW jvs 15-Jun-2007: Order of initialization is important here
+        // due to access by unsynchronized code in FarragoObjectCache.  I'm not
+        // sure if that's safe on all architectures--could the lack of a read
+        // memory barrier cause the writes to get reordered?
+        this.isInitialized = true;
         this.isReusable = isReusable;
+        this.memoryUsage = memoryUsage;
+        this.value = value;
     }
 
     // implement FarragoAllocation
     public void closeAllocation()
     {
+        assert(isInitialized);
         parentCache.unpin(this);
     }
 
@@ -98,6 +110,14 @@ public class FarragoCacheEntry
     {
         return "FarragoCacheEntry: key=" + key + ", value=" + value
             + ", pinCount=" + pinCount;
+    }
+
+    /**
+     * @return whether {@link #initialize} has been called yet
+     */
+    boolean isInitialized()
+    {
+        return isInitialized;
     }
 }
 

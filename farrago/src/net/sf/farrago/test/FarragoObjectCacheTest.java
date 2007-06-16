@@ -351,7 +351,7 @@ public class FarragoObjectCacheTest extends TestCase
             // Should never exceed the limit.
             assertTrue(tiresCurrent <= MAX_TIRES);
             
-            // Should never reused previous car, since description is always
+            // Should never reuse previous car, since description is always
             // new.
             RentalCar car1 = a1.getCar();
             assertEquals(0, car1.getMileage());
@@ -383,11 +383,39 @@ public class FarragoObjectCacheTest extends TestCase
         // Let tearDown take care of cleanup verification.
     }
 
+
+    /**
+     * Tests a scenario where an exception is thrown during
+     * initialization.
+     */
+    public void testOneThreadFailedInitialization()
+    {
+        // Start a new agency which prohibits car sharing.
+        agency = new RentalCarAgency(true, MAX_TIRES);
+        
+        // Attempt to rent out a car.
+        String description = "Lemon-yellow Caddy";
+        try {
+            RentalCarAgreement a1 = agency.rentCar(description);
+            fail("Expected a lemon but got success instead");
+        } catch (LemonException ex) {
+            // Expected case.
+        } catch (Throwable t) {
+            fail("Expected a lemon but got something else instead");
+        }
+    }
+    
+    /**
+     * Tests a multi-threaded scenario with objects pinned exclusively.
+     */
     public void testMultipleThreadsExclusive()
     {
         runMultipleThreads(true);
     }
     
+    /**
+     * Tests a multi-threaded scenario with objects pinned as shared.
+     */
     public void testMultipleThreadsShared()
     {
         runMultipleThreads(false);
@@ -407,8 +435,8 @@ public class FarragoObjectCacheTest extends TestCase
                 "Economy 4-door (Smoking)",
                 "Compact 2-door",
                 "Compact 4-door",
-                "Sport 2-door",
-                "Minivan 8-door",
+                "Sporty Lemon 2-door",
+                "Minivan 8-door (w/Escape Pod)",
                 "SUV"
             });
         List<CustomerThread> threads = new ArrayList<CustomerThread>();
@@ -470,6 +498,14 @@ public class FarragoObjectCacheTest extends TestCase
         {
             this.description = description;
             nCarsCreated.incrementAndGet();
+            if (hasEscapePod()) {
+                // NOTE jvs 15-Jun-2007:  This mimics the pattern
+                // in SQL statement preparation where we do reentrant
+                // cache pins; incorrect nested synchronization in
+                // FarragoObjectCache can lead to deadlocks.
+                RentalCarAgreement rca = agency.rentCar("Mini");
+                agency.returnCar(rca);
+            }
         }
 
         /**
@@ -533,6 +569,27 @@ public class FarragoObjectCacheTest extends TestCase
         }
 
         /**
+         * @return whether this vehicle comes with an "escape pod"
+         * (another rental car inside of it!)
+         */
+        public boolean hasEscapePod()
+        {
+            return description.indexOf("Escape Pod") > -1;
+        }
+
+        /**
+         * Tests this car's quality after fabrication, throwing
+         * a {@link LemonException} if unacceptable.
+         */
+        public void assureQuality()
+        {
+            if (description.indexOf("Lemon") > -1) {
+                closeAllocation();
+                throw new LemonException();
+            }
+        }
+
+        /**
          * @return whether this car is absolutely too old to be in service as a
          * rental car any more
          */
@@ -545,6 +602,14 @@ public class FarragoObjectCacheTest extends TestCase
         public void closeAllocation()
         {
             nCarsDestroyed.incrementAndGet();
+        }
+    }
+
+    private class LemonException extends RuntimeException
+    {
+        LemonException()
+        {
+            super("Hoopty");
         }
     }
 
@@ -651,6 +716,7 @@ public class FarragoObjectCacheTest extends TestCase
             assert (key instanceof String);
             String description = (String) key;
             RentalCar car = new RentalCar(description);
+            car.assureQuality();
             // for now, all cars have four tires; "smoking" cars
             // can never be shared or even reused
             entry.initialize(car, 4, !car.isSmokingVehicle());
@@ -714,6 +780,8 @@ public class FarragoObjectCacheTest extends TestCase
 
         private boolean quit;
 
+        private boolean sawSmokingVehicle;
+        
         private List<String> carDescriptions;
 
         /**
@@ -746,7 +814,6 @@ public class FarragoObjectCacheTest extends TestCase
             int n = carDescriptions.size();
             int i = 0;
             int nIterations = 0;
-            boolean sawSmokingVehicle = false;
             for (;;) {
                 if (quit && (nIterations > 0)) {
                     assertTrue(sawSmokingVehicle);
@@ -754,34 +821,50 @@ public class FarragoObjectCacheTest extends TestCase
                     return;
                 }
                 String description = carDescriptions.get(i);
-                RentalCarAgreement rca = agency.rentCar(description);
+                RentalCarAgreement rca;
                 try {
-                    RentalCar car = rca.getCar();
-                    // Make sure we got the car we asked for.
-                    assertEquals(description, car.getDescription());
-                    // And make sure we didn't get some old junker.  Note
-                    // that there's some tolerance here between
-                    // isOld and isTooOld, since in the shared
-                    // case, one customer may rent the car just at the
-                    // same time as another one pushes it over the limit.
-                    assertFalse(car.isTooOld());
-                    if (car.isSmokingVehicle()) {
-                        // Smoking vehicles are never supposed to be
-                        // shared or reused, so the mileage should
-                        // always be zero when we get it.
-                        assertEquals(0, car.getMileage());
-                        sawSmokingVehicle = true;
-                    }
-                    // Now, take it for a test-drive.
-                    car.drive(100);
-                } finally {
-                    agency.returnCar(rca);
+                    rca = agency.rentCar(description);
+                } catch (LemonException ex) {
+                    // Tolerate failure.
+                    rca = null;
+                }
+                if (rca != null) {
+                    useCar(rca, description);
                 }
                 ++i;
                 if (i == n) {
                     ++nIterations;
                     i = 0;
                 }
+            }
+        }
+
+        private void useCar(
+            RentalCarAgreement rca,
+            String description)
+        {
+            try {
+                RentalCar car = rca.getCar();
+                // Make sure we got the car we asked for.
+                assertEquals(description, car.getDescription());
+                // And make sure we didn't get some old junker.  Note
+                // that there's some tolerance here between
+                // isOld and isTooOld, since in the shared
+                // case, one customer may rent the car just at the
+                // same time as another one pushes it over the limit.
+                assertFalse(car.isTooOld());
+                if (car.isSmokingVehicle()) {
+                    // Smoking vehicles are never supposed to be
+                    // shared or reused, so the mileage should
+                    // always be zero when we get it.
+                    assertEquals(0, car.getMileage());
+                    sawSmokingVehicle = true;
+                }
+                // Now, take it for a test-drive.
+                car.drive(100);
+            } finally {
+                // No matter what happens, don't leave it dangling.
+                agency.returnCar(rca);
             }
         }
     }
