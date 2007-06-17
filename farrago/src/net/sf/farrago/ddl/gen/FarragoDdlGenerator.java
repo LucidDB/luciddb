@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2007 Disruptive Tech
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Portions Copyright (C) 2003-2007 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -168,8 +168,11 @@ public class FarragoDdlGenerator
         sb.append(quote(wrapper.getName()));
         stmt.addStmt(sb.toString());
         sb = new StringBuilder();
-        sb.append(" LIBRARY ");
-        sb.append(literal(wrapper.getLibraryFile()));
+        // "LIBRARY" clause is optional
+        if (wrapper.getLibraryFile() != null) {
+            sb.append(" LIBRARY ");
+            sb.append(literal(wrapper.getLibraryFile()));
+        }
         sb.append(NL);
         sb.append(" LANGUAGE ");
         sb.append(wrapper.getLanguage());
@@ -326,10 +329,16 @@ public class FarragoDdlGenerator
         sb.append(quote(server.getName()));
         stmt.addStmt(sb.toString());
         sb = new StringBuilder();
-        sb.append(" TYPE ");
-        sb.append(literal(server.getType()));
-        sb.append(" VERSION ");
-        sb.append(literal(server.getVersion()));
+        // "TYPE" clause is optional
+        if (server.getType() != null) {
+	        sb.append(" TYPE ");
+	        sb.append(literal(server.getType()));
+        }
+        // "VERSION" clause is optional
+        if (server.getVersion() != null) {
+            sb.append(" VERSION ");
+            sb.append(literal(server.getVersion()));
+        }
         sb.append(NL);
         sb.append(" FOREIGN DATA WRAPPER ");
         sb.append(quote(server.getWrapper().getName()));

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2005-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2007 Disruptive Tech
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Portions Copyright (C) 2003-2007 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,6 +38,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -74,7 +75,12 @@ public class FarragoJdbcEngineConnection
     {
         this(sessionFactory.newSession(url, info));
         this.sessionFactory = sessionFactory;
-        initConnection(info);
+        try {
+            initConnection(info);
+        } catch (SQLException e) {
+            close();        // prevent leak
+            throw e;
+        }
     }
 
     private FarragoJdbcEngineConnection(
@@ -518,14 +524,30 @@ public class FarragoJdbcEngineConnection
         String initialSchema = info.getProperty("schema");
         if (initialSchema != null) {
             Statement stmt = this.createStatement();
-            ((FarragoJdbcEngineStatement) stmt).stmtContext.daemonize();
-            stmt.executeUpdate("set schema '" + initialSchema + "'");
+            try {
+                stmt.executeUpdate("set schema '" + initialSchema + "'");
+            } finally {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    // allow executeUpdate() exception to propagate
+                    Util.swallow(e, null);
+                }
+            }
         }
     }
 
     protected void validateSession()
         throws SQLException
     {
+        // REVIEW: hersker: 5/23/2007: if the session is closed, the
+        // "session" var is null, and the session.wasKilled(), below,
+        // will throw an NPE. Throwing "session closed" seems better.
+        if (isClosed()) {
+            throw FarragoJdbcEngineDriver.newSqlException(
+                FarragoResource.instance().JdbcConnSessionClosed.ex());
+        }
+
         // REVIEW: SWZ: 4/19/2006: Some DDL can cause a shutdown.  In that
         // event, the session is closed.  FarragoTestCase doesn't handle
         // this and attempts to use methods that call this validation method.

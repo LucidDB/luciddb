@@ -35,9 +35,15 @@ CHANGE HISTORY
 
 Changes since 0.6.0 include
 
+- 64-bit support
+- fixes for asynchronous I/O calls
+- fixes to support data files larger than 4 gigabytes
+- improvements in timestamp and interval data type support
 - read/write concurrency with snapshot consistency
 - cost-based index selection
-- new options for JDBC foreign data wrapper (FRG-267)
+- constant-reduction optimization for CURRENT_DATE, CURRENT_TIME, etc
+- new schema-selection property in JDBC URL's
+- new options for JDBC foreign data wrapper (FRG-267, schema mapping)
 - pushdown of filters into JDBC foreign data servers
 - fix for integer division behavior (round instead of truncate)
 - logging for export schema procedure now uses logDir parameter if set
@@ -47,11 +53,16 @@ Changes since 0.6.0 include
 - fix for btree split bug in incremental load
 - fixes for certain btree search bugs visible after upsert
 - disablement of suboptimal index-only scans
+- upgrade build to ant 1.7
+- fix for LDB-160 (ALTER TABLE REBUILD on table with GENERATED ALWAYS column)
 - fix for LDB-125 (flattened hierarchy cycle reporting)
-- fix for an obscure outer join optimization bug
+- fix for an obscure outer join optimization bug; fixes from findbugs
 - fix for cast of null values to/from certain datatypes
-- new applib routines (split strings, enforce row constraints)
+- new applib routines (split strings, enforce row constraints, julian
+  date conversion)
+- fixes for null input in applib
 - fix for error message localization setup
+- new session parameter for controlling whether DDL preparation does validation
 - fix for row filtering bug with clusters on multiple columns
 - upgrades of miscellaneous thirdparty libraries
 - new check on startup for incompatible catalog version

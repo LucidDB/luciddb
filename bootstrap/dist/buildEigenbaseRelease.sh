@@ -1,9 +1,9 @@
 #!/bin/bash
 # $Id$
 # Eigenbase master build script for creating release images
-# Copyright (C) 2005-2005 The Eigenbase Project
-# Copyright (C) 2005-2005 Disruptive Tech
-# Copyright (C) 2005-2005 LucidEra, Inc.
+# Copyright (C) 2005-2007 The Eigenbase Project
+# Copyright (C) 2005-2007 Disruptive Tech
+# Copyright (C) 2005-2007 LucidEra, Inc.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -106,6 +106,10 @@ fi
 # Create farrago/customBuild.properties to set GPL release flag
 echo 'release.gpl=true' > farrago/customBuild.properties
 
+# Append setting to pick up custom LucidDB release properties
+echo 'release.properties.source=${luciddb.dir}/src/FarragoRelease.properties' \
+    >> farrago/customBuild.properties
+
 if [ $cygwin = "false" ]; then
 
 # Build full source release first before projects get polluted by builds
@@ -168,6 +172,18 @@ jdbc.driver.version.major=$MAJOR
 jdbc.driver.version.minor=$MINOR
 jdbc.url.base=jdbc:farrago:
 jdbc.url.port.default=5433
+EOF
+cat > $OPEN_DIR/luciddb/src/FarragoRelease.properties <<EOF
+package.name=luciddb
+product.name=LucidDB
+product.version.major=$MAJOR
+product.version.minor=$MINOR
+product.version.point=$POINT
+jdbc.driver.name=LucidDbJdbcDriver
+jdbc.driver.version.major=$MAJOR
+jdbc.driver.version.minor=$MINOR
+jdbc.url.base=jdbc:luciddb:
+jdbc.url.port.default=5434
 EOF
 
 cd $OPEN_DIR/farrago

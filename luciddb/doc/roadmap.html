@@ -11,14 +11,11 @@
 
 <hr>
 
-<h3>First Release</h3>
+<h3>Current Release</h3>
 
-The very first open-source release (0.6) of LucidDB is available for
-download.  Following the "release early, release often" open-source
-motto, the focus is on showcasing the core technology even though
-there are many gaps and rough edges; also, not much tuning has been
-done yet.  Here are some of the major limitations you should be aware
-of:
+The current open-source release (0.7.0) of LucidDB is available for
+download.  It is packed with <a href="features.html">advanced
+features</a>; there are also some limitations you should be aware of:
 
 <ul>
 
@@ -26,8 +23,8 @@ of:
 
 <li>security features are incomplete
 
-<li>concurrency control supports at most one database-wide writer at a
-time; writer blocks readers on the same table
+<li>writers never block readers, but writers block other writers on
+the same table
 
 <li>all transactions are autocommit
 
@@ -61,15 +58,16 @@ listed here or items of your own.)
 
 <li>complete subquery support</li>
 
-<li>support for more outer join conditions</li>
+<li>support for arbitrary outer join conditions</li>
 
-<li>tablespaces, hot backup, and block-level versioning for better
-concurrency control and storage management</li>
+<li>tablespaces and hot backup</li>
+
+<li>point-in-time queries</li>
 
 <li>robust security</li>
 
 <li>optimizer improvements and executor performance enhancements,
-including parallelism</li>
+including parallelism and prefetch</li>
 
 <li>more management views and functions</li>
 
@@ -103,8 +101,6 @@ href="http://jakarta.apache.org/poi">POI</a>) and ETL functions</li>
 <li>ODBC driver</li>
 
 <li>fully cost-based optimization</li>
-
-<li>point-in-time queries</li>
 
 <li>user-defined types</li>
 

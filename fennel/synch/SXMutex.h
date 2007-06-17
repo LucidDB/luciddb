@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2007 Disruptive Tech
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Portions Copyright (C) 1999-2007 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,6 +25,7 @@
 #define Fennel_SXMutex_Included
 
 #include "fennel/synch/SynchMonitoredObject.h"
+#include "fennel/synch/LockHolderId.h"
 #include <boost/utility.hpp>
 
 FENNEL_BEGIN_NAMESPACE
@@ -36,6 +37,10 @@ FENNEL_BEGIN_NAMESPACE
 // Also, the boost implementation does not yet take advantage
 // of OS support for these primitives, so this custom implementation is
 // at least as efficient.
+
+// NOTE jvs 2-Jun-2007:  And it turns out that there were big problems
+// with boost::read_write_mutex, so it has been removed from the Boost
+// thread library, at least for now.
     
 /**
  * An SXMutex implements a standard readers/writers exclusion scheme: any
@@ -93,9 +98,7 @@ public:
 private:
     SchedulingPolicy schedulingPolicy;
     uint nShared,nExclusive,nExclusivePending;
-    TxnId exclusiveHolderId;
-
-    inline void normalizeTxnId(TxnId &txnId);
+    LockHolderId exclusiveHolderId;
 };
 
 /**

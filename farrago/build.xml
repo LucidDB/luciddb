@@ -2,10 +2,10 @@
 <!--
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2007 Disruptive Tech
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Portions Copyright (C) 2003-2007 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -86,12 +86,11 @@ ${farrago.test.jvmargs}
   <!-- The version of ANT we require. -->
   <property name="required.ant.version" value="1.7.0"/>
 
+  <!-- ant.version not set in subant targets in 1.7.0, see issues.apache.org 42263 -->
+  <!-- using ant.version causes saffron cruisecontrol to fail, thus, a workaround -->
   <condition property="is.correct.ant.version">
-    <contains string="${ant.version}" substring="${required.ant.version}"/>
+    <antversion atleast="${required.ant.version}"/>
   </condition>
-  <fail unless="is.correct.ant.version"
-      message="Incorrect ant version '${ant.version}';
-require version '${required.ant.version}'."/>
 
   <!-- Files -->
 
@@ -878,6 +877,10 @@ require version '${required.ant.version}'."/>
       target="${farrago.parser.sql.dir}/impl/CombinedParser.jj"
       outputfile="doc/combinedParserBnf.html"
       javacchome="${javacc.dir}"/>
+    <jjdoc
+      target="${farrago.parser.ddl.dir}/impl/CombinedParser.jj"
+      outputfile="doc/combinedDdlParserBnf.html"
+      javacchome="${javacc.dir}"/>
   </target>
 
   <!-- run all JUnit test cases (or a single test case chosen with -->
@@ -939,6 +942,7 @@ require version '${required.ant.version}'."/>
     <antcall target="compareCatalogExport"/>
     <antcall target="macker"/>
     <antcall target="checkSourceFilePreambles"/>
+    <antcall target="checkJavadoc"/>
   </target>
 
   <target name="checkTrace">
@@ -1153,6 +1157,34 @@ please disable it and try again.
     </exec>
   </target>
 
+  <!-- Ensure that javadoc has no warnings/errors. -->
+  <target name="checkJavadoc">
+    <record name="javadoc-complaints.log" action="start" 
+      emacsmode="true" loglevel="warn"/>
+    <antcall target="javadoc"/>
+    <record name="javadoc-complaints.log" action="stop"/>
+    <loadfile srcFile="javadoc-complaints.log" property="javadoc.complaints">
+      <filterchain>
+        <filterreader classname="org.apache.tools.ant.filters.LineContains">
+          <param type="negate" value="true"/>
+          <param type="contains" value="Error fetching URL"/>
+        </filterreader>
+        <striplinebreaks />
+      </filterchain>
+    </loadfile>
+    <fail if="javadoc.complaints"
+        message="Javadoc reported warnings or errors; see javadoc-complaints.log for details"/>
+    <delete file="javadoc-complaints.log"/>
+    <!-- Save disk space since we're just checking. -->
+    <antcall target="cleanJavadoc"/>
+  </target>
+
+  <target name="cleanJavadoc">
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${javadoc.dir}" includes="**/*"/>
+    </delete>
+  </target>
+
   <!-- Beautify Farrago source code.  This currently requires
        the commercial Triemax version of Jalopy, which needs to
        be installed manually under thirdparty/jalopy. -->
@@ -1181,9 +1213,7 @@ please disable it and try again.
 
   <!-- generate Farrago javadoc -->
   <target name="javadoc">
-    <delete includeEmptyDirs="true" quiet="true">
-      <fileset dir="${javadoc.dir}" includes="*"/>
-    </delete>
+    <antcall target="cleanJavadoc"/>
     <!-- remove stray package.html files under classes to avoid 'multiple
          sources of package comments' errors -->
     <delete includeEmptyDirs="false" quiet="true">
@@ -1283,7 +1313,7 @@ please disable it and try again.
 
   <!-- create the documentation tarball -->
   <target name="buildDoc"
-    depends="cleanExamples, createCatalog, buildExamples, javadoc">
+    depends="cleanExamples, createCatalog, buildExamples, javadoc, jjDoc">
     <delete file="${farrago.dir}/doc.tar" />
     <delete file="${farrago.dir}/doc.tar.gz" />
     <tar tarfile="${farrago.dir}/doc.tar">

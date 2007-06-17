@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2007 Disruptive Tech
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Portions Copyright (C) 2003-2007 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,6 +41,8 @@ public class FarragoCacheEntry
     int pinCount;
     long memoryUsage;
     Thread constructionThread;
+    boolean isReusable;
+    boolean isInitialized;
 
     /**
      * The cache this entry is associated with
@@ -52,6 +54,9 @@ public class FarragoCacheEntry
     public FarragoCacheEntry(FarragoObjectCache parentCache)
     {
         this.parentCache = parentCache;
+        // assume reusable; but really, assertions below should guarantee that
+        // this is never even accessed until after initialize overwrites it
+        isReusable = true;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -59,27 +64,45 @@ public class FarragoCacheEntry
     // implement Entry
     public Object getKey()
     {
+        // NOTE jvs 14-Jun-2007:  Don't assert isInitialized, since
+        // an entry gets its key set before initialization.
         return key;
     }
 
     // implement Entry
     public Object getValue()
     {
+        assert(isInitialized);
         return value;
+    }
+
+    // implement Entry
+    public boolean isReusable()
+    {
+        assert(isInitialized);
+        return isReusable;
     }
 
     // implement UninitializedEntry
     public void initialize(
         Object value,
-        long memoryUsage)
+        long memoryUsage,
+        boolean isReusable)
     {
-        this.value = value;
+        // REVIEW jvs 15-Jun-2007: Order of initialization is important here
+        // due to access by unsynchronized code in FarragoObjectCache.  I'm not
+        // sure if that's safe on all architectures--could the lack of a read
+        // memory barrier cause the writes to get reordered?
+        this.isInitialized = true;
+        this.isReusable = isReusable;
         this.memoryUsage = memoryUsage;
+        this.value = value;
     }
 
     // implement FarragoAllocation
     public void closeAllocation()
     {
+        assert(isInitialized);
         parentCache.unpin(this);
     }
 
@@ -87,6 +110,14 @@ public class FarragoCacheEntry
     {
         return "FarragoCacheEntry: key=" + key + ", value=" + value
             + ", pinCount=" + pinCount;
+    }
+
+    /**
+     * @return whether {@link #initialize} has been called yet
+     */
+    boolean isInitialized()
+    {
+        return isInitialized;
     }
 }
 

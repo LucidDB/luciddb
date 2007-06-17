@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
+// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2003-2007 Disruptive Tech
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Portions Copyright (C) 1999-2007 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -278,13 +278,9 @@ static const SavepointId NULL_SVPT_ID = SavepointId(MAXU);
 static const TxnId IMPLICIT_TXN_ID = TxnId(0);
 
 /**
- * Symbolic value for first valid TxnId.  Note that we use a number above the
- * 32-bit ID range because some locks uses real TxnId's and others use thread
- * ID's, and we'd like to be able to tell them apart.  This won't work on a
- * platform which actually generates 64-bit thread ID's, which is conceivable
- * (like if the OS uses a pointer to a thread descriptor as an ID).
+ * Symbolic value for first valid TxnId.
  */
-static const TxnId FIRST_TXN_ID = TxnId(0x0000000100000000LL);
+static const TxnId FIRST_TXN_ID = TxnId(1);
 
 /**
  * Sentinel value for an invalid TxnId.

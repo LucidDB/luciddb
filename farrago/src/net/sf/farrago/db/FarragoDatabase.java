@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2006 The Eigenbase Project
-// Copyright (C) 2003-2006 Disruptive Tech
-// Copyright (C) 2005-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2003-2007 Disruptive Tech
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Portions Copyright (C) 2003-2007 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -58,6 +58,7 @@ import org.eigenbase.sql.validate.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util.property.*;
+import org.eigenbase.resource.EigenbaseResource;
 
 import org.netbeans.mdr.handlers.*;
 
@@ -792,6 +793,7 @@ public class FarragoDatabase
     {
         final EigenbaseTimingTracer timingTracer =
             stmt.getStmtValidator().getTimingTracer();
+        final FarragoRepos stmtRepos = stmt.getRepos();
 
         // REVIEW jvs 27-Aug-2005:  what are the security implications of
         // EXPLAIN PLAN?
@@ -879,48 +881,38 @@ public class FarragoDatabase
                     long memUsage =
                         FarragoUtil.getStringMemoryUsage(sql)
                         + executableStmt.getMemoryUsage();
-                    entry.initialize(executableStmt, memUsage);
+                    entry.initialize(
+                        executableStmt,
+                        memUsage,
+                        stmt.mayCacheImplementation());
+                }
+                
+                public boolean isStale(Object value)
+                {
+                    FarragoSessionExecutableStmt executableStmt =
+                        (FarragoSessionExecutableStmt) value;
+                    return isExecutableStmtStale(
+                        stmtRepos,
+                        executableStmt);
                 }
             };
 
-        FarragoSessionExecutableStmt executableStmt;
-        do {
-            // prepare the statement, caching the results in codeCache;
-            // note that executable statements are always sharable, so
-            // don't pin them as exclusive
-            cacheEntry = codeCache.pin(sql, stmtFactory, false);
-            executableStmt =
-                (FarragoSessionExecutableStmt) cacheEntry.getValue();
+        // sharing of executable statements depends on session personality;
+        // default for vanilla Farrago personality is that statements
+        // are sharable
+        final boolean sharable = 
+            stmt.getSession().getPersonality().supportsFeature(
+                EigenbaseResource.instance().SharedStatementPlans);
 
-            // Sometimes the implementation of a statement cannot be shared, and
-            // must not be cached. Test this when the statement is prepared, and
-            // so already in the cache.
-            if (!stmt.mayCacheImplementation()) {
-                codeCache.detach(cacheEntry);
-
-                // does not close the FarragoSessionExecutableStmt
-                cacheEntry = null;
-            } else if (isStale(
-                    stmt.getRepos(),
-                    executableStmt))
-            {
-                cacheEntry.closeAllocation();
-                codeCache.discard(sql); // closes the
-                                        // FarragoSessionExecutableStmt
-                cacheEntry = null;
-                executableStmt = null;
-            }
-        } while (executableStmt == null);
-
-        if (cacheEntry != null) {
-            owner.addAllocation(cacheEntry);
-        } else {
-            owner.addAllocation(executableStmt);
-        }
+        // prepare the statement, caching the results in codeCache
+        cacheEntry = codeCache.pin(sql, stmtFactory, !sharable);
+        FarragoSessionExecutableStmt executableStmt =
+            (FarragoSessionExecutableStmt) cacheEntry.getValue();
+        owner.addAllocation(cacheEntry);
         return executableStmt;
     }
 
-    private boolean isStale(
+    private boolean isExecutableStmtStale(
         FarragoRepos repos,
         FarragoSessionExecutableStmt stmt)
     {

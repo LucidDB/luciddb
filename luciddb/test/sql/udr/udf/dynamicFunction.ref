@@ -64,7 +64,7 @@
 0: jdbc:luciddb:> -- get values again with dynamic_function specified
 0: jdbc:luciddb:> values (functest.get_var('ctx', 'var1'));
 <resultset>
-  <result EXPR$0="null"/>
+  <result EXPR$0="bar"/>
 </resultset>
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- set a new value and verify value is not retrieved from cache

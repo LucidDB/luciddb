@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2006 The Eigenbase Project
-// Copyright (C) 2006-2006 Disruptive Tech
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2007 Disruptive Tech
+// Copyright (C) 2006-2007 LucidEra, Inc.
+// Portions Copyright (C) 2003-2007 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,6 +30,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.test.*;
+import org.eigenbase.sql.parser.SqlParseException;
 
 
 /**
@@ -311,7 +312,7 @@ public class FarragoEngineDriverTest
         stmt.close();
         conn.close();
 
-        // test initial schema; could also be param on URI string
+        // test good initial schema; could also be param on URI string
         props.setProperty("schema", initialSchema);
         conn = driver.connect(driverURI, props);
         stmt = conn.createStatement();
@@ -323,6 +324,37 @@ public class FarragoEngineDriverTest
         }
         stmt.close();
         conn.close();
+
+        // test wrong initial schema; could also be param on URI string
+        props.setProperty("schema", "SAILS");
+        conn = driver.connect(driverURI, props);
+        stmt = conn.createStatement();
+        try {
+            stmt.executeQuery(query);
+            fail("query should have required the SALES schema");
+        } catch (SQLException e) {
+            assertExceptionMatches(e, ".*Table 'EMPS' not found");
+        }
+        stmt.close();
+        conn.close();
+
+        // test invalid initial schema; could also be param on URI string
+        props.setProperty("schema", "unquoted phrase");
+        try {
+            conn = driver.connect(driverURI, props);
+            fail("connection should fail with syntax error");
+        } catch (SQLException e) {
+            assertTrue("got " + e.getClass().getName()
+                + " but expected FarragoSqlException,",
+                e instanceof FarragoJdbcUtil.FarragoSqlException);
+            FarragoJdbcUtil.FarragoSqlException fse =
+                (FarragoJdbcUtil.FarragoSqlException)e;
+            Throwable orig = fse.getOriginalThrowable();
+            assertNotNull("null original throwable", orig);
+            assertTrue("got " + orig.getClass().getName()
+                + " but expected SqlParseException,",
+                orig instanceof SqlParseException);
+        }
     }
 
     /**
@@ -349,7 +381,7 @@ public class FarragoEngineDriverTest
             if (cnt++ > 0) {
                 buf.append(", ");
             }
-            String key = (String) enumer.nextElement();
+            Object key = enumer.nextElement();
             String val = (String) props.get(key);
             buf.append(key).append(" => ");
             buf.append("\"").append(val).append("\"");

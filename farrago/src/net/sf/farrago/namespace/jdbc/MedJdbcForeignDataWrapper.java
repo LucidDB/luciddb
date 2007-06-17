@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2007 Disruptive Tech
+// Copyright (C) 2005-2007 LucidEra, Inc.
+// Portions Copyright (C) 2003-2007 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,8 +30,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.resource.*;
-
-import org.eigenbase.util.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -98,9 +97,12 @@ public class MedJdbcForeignDataWrapper
             driverProps.putAll(serverProps);
             MedJdbcDataServer.removeNonDriverProps(driverProps);
             try {
-                Driver driver =
-                    loadDriverClass(
-                        wrapperProps.getProperty(PROP_DRIVER_CLASS_NAME));
+                final String className =
+                    serverProps.getProperty(
+                        PROP_DRIVER_CLASS_NAME,
+                        wrapperProps.getProperty(
+                            PROP_DRIVER_CLASS_NAME));
+                Driver driver = loadDriverClass(className);
                 driverArray = driver.getPropertyInfo(url, driverProps);
             } catch (Throwable ex) {
                 // Squelch it and move on.
@@ -134,6 +136,40 @@ public class MedJdbcForeignDataWrapper
             MedJdbcDataServer.PROP_EXT_OPTIONS,
             true,
             BOOLEAN_CHOICES_DEFAULT_FALSE);
+
+        // determine if need SCHEMA_NAME property (e.g. MySQL)
+        if (url != null) {
+            FarragoMedDataServer server = null;
+            try {
+                server = newServer("faux-mofid", chainedProps);
+                if (server instanceof MedJdbcDataServer) {
+                    MedJdbcDataServer mjds = (MedJdbcDataServer)server;
+                    String term = mjds.databaseMetaData.getSchemaTerm();
+                    if (mjds.useSchemaNameAsForeignQualifier
+                    || term == null
+                    || term.length() == 0) {
+                        // add optional SCHEMA_NAME property
+                        String[] list = null;
+                        if (mjds.supportsMetaData) {
+                            // collect names for list of choices
+                            list = getArtificialSchemas(mjds.databaseMetaData);
+                        }
+                        infoMap.addPropInfo(
+                            MedJdbcDataServer.PROP_SCHEMA_NAME,
+                            false,
+                            list);
+                    }
+                }
+            } catch (SQLException e) {
+                // swallow and ignore
+                Util.swallow(e, null);
+            } finally {
+                if (server != null) {
+                    server.releaseResources();
+                    server.closeAllocation();
+                }
+            }
+        }
 
         DriverPropertyInfo [] mapArray = infoMap.toArray();
         if (driverArray == null) {
@@ -170,12 +206,46 @@ public class MedJdbcForeignDataWrapper
     private Driver loadDriverClass(String driverClassName)
     {
         try {
-            return (Driver) Driver.class.forName(driverClassName).newInstance();
+            Class clazz = Class.forName(driverClassName);
+            return (Driver) clazz.newInstance();
         } catch (Exception ex) {
             throw FarragoResource.instance().JdbcDriverLoadFailed.ex(
                 driverClassName,
                 ex);
         }
+    }
+
+    // gets database names for use as SCHEMA_NAME values
+    private String[] getArtificialSchemas(DatabaseMetaData meta)
+        throws SQLException
+    {
+        // REVIEW hersker 2005-05-31:
+        // Testing with MySQL 5.0 shows that DatabaseMetaData.getSchemas()
+        // returns an empty ResultSet, but DatabaseMetadata.getCatalogs()
+        // returns database names that can be used as schema qualifiers.
+        // Other tested DBs (Oracle 10.2g, SQL Server 2005, PostgreSQL 8.0)
+        // do not need artificial schema names.
+        List<String> list = new ArrayList<String>();
+        ResultSet rs = meta.getCatalogs();
+        try {
+            while (rs.next()) {
+                String name = rs.getString(1);
+                list.add(name);
+            }
+        } finally {
+            if (rs != null) {
+                rs.close();
+            }
+        }
+
+        if (list.size() == 0) {
+            return null;
+        }
+
+        String[] schemas = new String[list.size()];
+        list.toArray(schemas);
+        Arrays.sort(schemas);
+        return schemas;
     }
 
     // implement FarragoMedDataWrapper

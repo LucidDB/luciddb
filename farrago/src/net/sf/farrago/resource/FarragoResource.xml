@@ -4,10 +4,10 @@
 <!--
   $Id$
   Farrago is an extensible data management system.
-  Copyright (C) 2005-2005 The Eigenbase Project
-  Copyright (C) 2004-2005 Disruptive Tech
-  Copyright (C) 2005-2005 LucidEra, Inc.
-  Portions Copyright (C) 2003-2005 John V. Sichi
+  Copyright (C) 2005-2007 The Eigenbase Project
+  Copyright (C) 2004-2007 Disruptive Tech
+  Copyright (C) 2005-2007 LucidEra, Inc.
+  Portions Copyright (C) 2003-2007 John V. Sichi
 
   This program is free software; you can redistribute it and/or
   modify it under the terms of the GNU General Public License
@@ -118,6 +118,10 @@
 
 <exception id ="410020" name="JdbcConnSessionKilled">
 <text>Session killed</text>
+</exception>
+
+<exception id ="410021" name="JdbcConnSessionClosed">
+<text>Session closed</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -893,6 +897,10 @@ Messages: {1}</text>
 
 <message name="MedJdbc_EXTENDED_OPTIONS_Description">
 <text>Whether driver-specific options should be accepted</text>
+</message>
+
+<message name="MedJdbc_SCHEMA_NAME_Description">
+<text>Artificial foreign schema name for servers which don't support schemas</text>
 </message>
 
 <!-- ====================================================================== -->
