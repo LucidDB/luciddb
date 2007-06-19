@@ -276,7 +276,8 @@ public:
     virtual bool isPageIdAllocated(PageId pageId) = 0;
     
     /**
-     * Determines whether a page can be updated in-place.
+     * Determines whether a page can be updated in-place, and if so, prepares
+     * the page for update
      *
      * @param pageId pageId of the page being modified
      *
@@ -303,6 +304,11 @@ public:
      * @param blockId block Id corresponding to the page to be discarded
      */
     virtual void discardCachePage(BlockId blockId);
+
+    /**
+     * @return true if the segment supports versioning
+     */
+    virtual bool isWriteVersioned();
 
     /**
      * Constructs a linear PageId based on a linear page number.

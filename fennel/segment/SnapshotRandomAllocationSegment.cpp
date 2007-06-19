@@ -453,6 +453,11 @@ void SnapshotRandomAllocationSegment::discardCachePage(BlockId blockId)
     // pages will be removed from the cache when they are actually freed.
 }
 
+bool SnapshotRandomAllocationSegment::isWriteVersioned()
+{
+    return true;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End SnapshotRandomAllocationSegment.cpp
