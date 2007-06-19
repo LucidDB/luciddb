@@ -326,6 +326,26 @@ public:
     }
 
     /**
+     * Upgrades from LOCKMODE_S (which caller must already have
+     * acquired) to LOCKMODE_X.  This is a WAIT operation if a page transfer
+     * is in progress.  It's assumed that there are no other threads holding
+     * a lock on the same page.
+     */
+    void upgrade(TxnId txnId)
+    {
+        StrictMutexGuard pageGuard(mutex);
+        while (isTransferInProgress()) {
+            waitForPendingIO(pageGuard);
+        }
+#ifdef DEBUG
+        getCache().getAllocator().setProtection(
+            pBuffer, getCache().getPageSize(), false);
+#endif
+        bool rc = lock.tryUpgrade(txnId);
+        assert(rc);
+    }
+
+    /**
      * Swaps this page's buffer with another page.  You almost certainly
      * shouldn't be calling this directly (see SegPageLock::swapBuffers).
      *

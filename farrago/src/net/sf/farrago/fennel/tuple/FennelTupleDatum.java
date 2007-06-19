@@ -129,7 +129,7 @@ public class FennelTupleDatum
      */
     public void setCapacity(int capacity)
     {
-        if (this.capacity != capacity) {
+        if ((this.capacity != capacity) || (initialBytes == null)) {
             initialBytes = new byte[capacity];
             this.capacity = capacity;
             rawBytes = initialBytes;

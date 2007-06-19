@@ -221,9 +221,13 @@ public abstract class FennelAttributeAccessor
             tupleAccessor.getCurrentTupleBuf().position(fixedOffset);
             value.setLength(value.getCapacity());
             int len = value.getLength();
+            // NOTE jvs 18-Jun-2007:  call setRawBytes unconditionally,
+            // otherwise a zero-length string gets converted into
+            // a null value.
+            byte [] rawBytes = value.setRawBytes();
             if (len > 0) {
                 tupleAccessor.getCurrentTupleBuf().get(
-                    value.setRawBytes(),
+                    rawBytes,
                     0,
                     value.getLength());
             }
@@ -467,16 +471,19 @@ public abstract class FennelAttributeAccessor
              value.getLength() + " bytes from offset " + offset + ", length " +
              value.getLength());
              */
+            // NOTE jvs 18-Jun-2007:  call setRawBytes unconditionally,
+            // otherwise a zero-length string gets converted into
+            // a null value.
+            byte [] rawBytes = value.setRawBytes();
             if (value.getLength() > 0) {
                 srcBuf.position(offset);
                 srcBuf.get(
-                    value.setRawBytes(),
+                    rawBytes,
                     0,
                     value.getLength());
             }
         }
     }
 }
-;
 
 // End FennelAttributeAccessor.java

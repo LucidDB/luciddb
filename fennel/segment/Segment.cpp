@@ -160,6 +160,11 @@ void Segment::discardCachePage(BlockId blockId)
     selfAccessor.pCacheAccessor->discardPage(blockId);
 }
 
+bool Segment::isWriteVersioned()
+{
+    return false;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End Segment.cpp

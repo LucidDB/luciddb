@@ -58,12 +58,31 @@ class SegPageLock : public boost::noncopyable
     LockMode lockMode;
     PageId lockedPageId;
     bool newPage;
+    bool isWriteVersioned;
 
     inline void resetPage()
     {
         pPage = NULL;
         lockedPageId = NULL_PAGE_ID;
         newPage = false;
+    }
+
+    inline LockMode getLockMode(LockMode origLockMode)
+    {
+        // If writes are versioned, then there's no need to apply an
+        // exclusive lock on the current version of the page.  When
+        // we need to modify the page, we'll create a new version of the
+        // page, which we'll exclusively lock.
+        if (isWriteVersioned) {
+            if (origLockMode == LOCKMODE_X || origLockMode == LOCKMODE_X_NOWAIT)
+            {
+                return
+                    (origLockMode == LOCKMODE_X) ?
+                        LOCKMODE_S : LOCKMODE_S_NOWAIT;
+            }
+        }
+
+        return origLockMode;
     }
 
 public:
@@ -91,6 +110,7 @@ public:
         assert(segmentAccessorInit.pSegment);
         assert(segmentAccessorInit.pCacheAccessor);
         segmentAccessor = segmentAccessorInit;
+        isWriteVersioned = segmentAccessor.pSegment->isWriteVersioned();
     }
 
     inline bool isLocked() const
@@ -160,17 +180,17 @@ public:
         PageId pageId,LockMode lockModeInit,
         bool readIfUnmapped = true)
     {
-        // if the page we want to lock is already locked, nothing needs to
-        // be done
-        if (isLocked() && pageId == lockedPageId) {
+        // if the page we want to lock is already locked in the desired
+        // mode, nothing needs to be done
+        if (isLocked() && pageId == lockedPageId && lockMode == lockModeInit) {
             return;
         }
         unlock();
-        lockMode = lockModeInit;
+        lockMode = getLockMode(lockModeInit);
         BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
         pPage = segmentAccessor.pCacheAccessor->lockPage(
             blockId,
-            lockModeInit,
+            lockMode,
             readIfUnmapped,
             segmentAccessor.pSegment->getMappedPageListener(blockId));
         lockedPageId = pageId;
@@ -181,14 +201,15 @@ public:
     {
         assert(lockModeInit < LOCKMODE_S_NOWAIT);
         BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
+        LockMode newLockMode = getLockMode(lockModeInit);
         CachePage *pNewPage = segmentAccessor.pCacheAccessor->lockPage(
             blockId,
-            lockModeInit,
+            newLockMode,
             true,
             segmentAccessor.pSegment->getMappedPageListener(blockId));
         assert(pNewPage);
         unlock();
-        lockMode = lockModeInit;
+        lockMode = newLockMode;
         pPage = pNewPage;
         lockedPageId = pageId;
     }
@@ -217,28 +238,42 @@ public:
 
     inline void updatePage()
     {
-        // if the page is new, we already have the page we want to update
-        if (newPage) {
-            return;
+        assert(isLocked());
+
+        // If the page is not newly allocated and can't be updated in-place,
+        // lock the page that will be updated
+        if (!newPage) {
+            PageId origPageId =
+                segmentAccessor.pSegment->translateBlockId(getPage().
+                    getBlockId());
+            PageId updatePageId =
+                segmentAccessor.pSegment->updatePage(origPageId);
+            if (updatePageId != NULL_PAGE_ID) {
+                lockUpdatePage(updatePageId);
+                return;
+            }
         }
-        // if the page cannot be updated in place, lock the page that will
-        // be updated
-        PageId origPageId =
-            segmentAccessor.pSegment->translateBlockId(getPage().getBlockId());
-        PageId updatePageId = segmentAccessor.pSegment->updatePage(origPageId);
-        if (updatePageId != NULL_PAGE_ID) {
-            lockUpdatePage(updatePageId);
+
+        // Either the page is new or the page can be updated in-place.
+        // If we haven't locked the page exclusively yet, upgrade the
+        // shared lock, forcing the upgrade to wait for pending IOs.
+        if (lockMode == LOCKMODE_S) {
+            assert(isWriteVersioned);
+            TxnId txnId = segmentAccessor.pCacheAccessor->getTxnId();
+            pPage->upgrade(txnId);
+            lockMode = LOCKMODE_X;
         }
     }
 
     inline void lockUpdatePage(PageId updatePageId)
     {
+        assert(isWriteVersioned);
         BlockId blockId =
             segmentAccessor.pSegment->translatePageId(updatePageId);
-        assert(lockMode == LOCKMODE_X);
+        assert(lockMode == LOCKMODE_S);
         CachePage *pNewPage = segmentAccessor.pCacheAccessor->lockPage(
             blockId,
-            lockMode,
+            LOCKMODE_X,
             true,
             segmentAccessor.pSegment->getMappedPageListener(blockId));
         assert(pNewPage);
@@ -250,6 +285,7 @@ public:
             segmentAccessor.pSegment->getUsablePageSize());
         PageId origPageId = lockedPageId;
         unlock();
+        lockMode = LOCKMODE_X;
         pPage = pNewPage;
         newPage = true;
         // keep track of the locked page based on the original pageId
@@ -301,11 +337,18 @@ public:
         // REVIEW jvs 31-Dec-2005:  This should really go through
         // the CacheAccessor interface.
         TxnId txnId = segmentAccessor.pCacheAccessor->getTxnId();
-        if (pPage->tryUpgrade(txnId)) {
-            lockMode = LOCKMODE_X;
+
+        // If we're versioning, defer upgrading the lock until
+        // we're actually going to be update the page.
+        if (isWriteVersioned) {
             return true;
+        } else {
+            if (pPage->tryUpgrade(txnId)) {
+                lockMode = LOCKMODE_X;
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 
     inline SharedCacheAccessor getCacheAccessor() const

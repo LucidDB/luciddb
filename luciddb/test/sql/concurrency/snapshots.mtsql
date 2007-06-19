@@ -7,6 +7,9 @@
 
   create table snapshot(a int unique, b int);
   insert into snapshot values(1, 0);
+  
+  -- fake stats to force index scans
+  call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'CONCURRENCY', 'SNAPSHOT', 1000);
 
 @end
 
@@ -14,6 +17,7 @@
 
 @thread cleanup
 
+  @sync
   @sync
   @sync
   @sync
@@ -33,12 +37,27 @@
 
   set schema 'concurrency';
 
+  -- Sync 1
   @sync
   insert into snapshot values(2, sys_boot.mgmt.sleep(5000));
+
+  -- Sync 2
   @sync
   insert into snapshot values(3, sys_boot.mgmt.sleep(5000));
+
+  -- Sync 3
   @sync
   insert into snapshot select a + 3, sys_boot.mgmt.sleep(1500) from snapshot;
+
+  -- Sync 4
+  -- give the select in the reader thread a chance to start, then insert;
+  -- the insert should not conflict with the shared locks held by the reader
+  -- thread
+  @sync
+  @sleep 2000
+  insert into snapshot values(7, 0);
+
+  -- Sync 5
   @sync
   @err insert into snapshot select 10 - a, sys_boot.mgmt.sleep(1500) from snapshot;
   @sync
@@ -52,35 +71,71 @@
 
   set schema 'concurrency';
 
+  -- Sync 1
   -- this should see only 1; do both a full table scan and an index scan
   @sync
   @sleep 1000
   select * from snapshot;
   select * from snapshot where a >= 0;
 
+  -- Sync 2
   -- this should see 1, 2
   @sync
   @sleep 1000
   select * from snapshot;
   select * from snapshot where a >= 0;
 
+  -- Sync 3
   -- this should see 1, 2, 3
   @sync
   @sleep 1000
   select * from snapshot;
   select * from snapshot where a >= 0;
 
-  -- this should see 1, 2, 3, 4, 5, 6
+  -- Sync 4
+  -- this will hold shared page locks; it should see 1, 2, 3, 4, 5, 6
+  @sync
+  select *, sys_boot.mgmt.sleep(1500) from snapshot;
+  insert into snapshot values(8, 0);
+
+  -- Sync 5
+  -- this should see 1, 2, 3, 4, 5, 6, 7, 8
   @sync
   @sleep 1000
   select * from snapshot;
   select * from snapshot where a >= 0;
 
-  -- this should still see 1, 2, 3, 4, 5, 6
+  -- Sync 6
+  -- this should still see 1, 2, 3, 4, 5, 6, 7, 8
   @sync
   select * from snapshot;
   select * from snapshot where a >= 0;
 
+  @sync
+
+@end
+
+--------------------------------------------------------------------------------
+
+@thread secondReader
+
+  set schema 'concurrency';
+
+  @sync
+  @sync
+  @sync
+
+  -- Sync 4
+  -- give the insert in the inserter thread a chance to finish but execute
+  -- before the select in the reader thread finishes; so we should see
+  -- 1, 2, 3, 4, 5, 6, 7
+  @sync
+  @sleep 4000
+  select * from snapshot;
+  select * from snapshot where a > 0;
+
+  @sync
+  @sync
   @sync
 
 @end

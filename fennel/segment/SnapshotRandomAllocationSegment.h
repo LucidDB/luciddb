@@ -132,8 +132,8 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
     PageId getAnchorPageId(PageId snapshotId);
 
     /**
-     * Determines whether a page corresponds to a newly allocated one
-     *
+     * Determines whether a snapshot page corresponds to a newly allocated one
+     *          
      * @param pageId pageId of the page in question
      *
      * @return true if the page is newly allocated; false otherwise
@@ -209,6 +209,7 @@ public:
     virtual bool canFlushPage(CachePage &page);
     virtual void notifyPageDirty(CachePage &page, bool bDataValid);
     virtual void discardCachePage(BlockId blockId);
+    virtual bool isWriteVersioned();
 };
 
 FENNEL_END_NAMESPACE

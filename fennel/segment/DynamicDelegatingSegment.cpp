@@ -165,6 +165,12 @@ void DynamicDelegatingSegment::delegatedCheckpoint(
     }
 }
 
+bool DynamicDelegatingSegment::isWriteVersioned()
+{
+    SharedSegment pDelegateSegment = delegateSegment.lock();
+    return pDelegateSegment->isWriteVersioned();
+}
+
 PageId DynamicDelegatingSegment::updatePage(
     PageId pageId,
     bool needsTranslation)
