@@ -25,6 +25,7 @@ package net.sf.farrago.type;
 import java.sql.*;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -113,6 +114,22 @@ public class FarragoParameterMetaData
         throws SQLException
     {
         return isFieldSigned(param);
+    }
+
+    //~ Java 1.6 extensions ---------------------------------------------------
+
+    // implement java.sql.Wrapper
+    public <T> T unwrap(Class<T> iface) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    // implement java.sql.Wrapper
+    public boolean isWrapperFor(Class<?> iface) throws SQLException
+    {
+        return false;
     }
 }
 

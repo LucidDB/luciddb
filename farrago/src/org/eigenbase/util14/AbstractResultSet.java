@@ -22,11 +22,15 @@
 */
 package org.eigenbase.util14;
 
+import org.eigenbase.util.Util;
+
 import java.math.*;
 
 import java.sql.*;
 
 import java.util.TimeZone;
+import java.io.Reader;
+import java.io.InputStream;
 
 
 /**
@@ -49,6 +53,7 @@ abstract public class AbstractResultSet
     //~ Instance fields --------------------------------------------------------
 
     protected boolean wasNull;
+    protected boolean isClosed = false;
     protected int fetchSize = 0;
 
     protected int maxRows;
@@ -176,6 +181,20 @@ abstract public class AbstractResultSet
     public void close()
         throws SQLException
     {
+        isClosed = true;
+    }
+
+    //~ Java 1.6 extensions ---------------------------------------------------
+    public boolean isClosed() throws SQLException
+    {
+        return isClosed;
+    }
+
+    public int getHoldability() throws SQLException
+    {
+        // TODO: return CLOSE_CURSORS_AT_COMMIT?
+        // FarragoJdbcEngineConnection.getHoldability() currently returns 0;
+        return 0;
     }
 
     //======================================================================
@@ -1082,6 +1101,67 @@ abstract public class AbstractResultSet
         return getUnicodeStream(findColumn(columnName));
     }
 
+    //~ Java 1.6 extensions ---------------------------------------------------
+    public Reader getNCharacterStream(int columnIndex) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public Reader getNCharacterStream(String columnLabel) throws SQLException
+    {
+        return getNCharacterStream(findColumn(columnLabel));
+    }
+
+    public String getNString(int columnIndex) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public String getNString(String columnLabel) throws SQLException
+    {
+        return getNString(findColumn(columnLabel));
+    }
+
+    public NClob getNClob(int columnIndex) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public NClob getNClob(String columnLabel) throws SQLException
+    {
+        return getNClob(findColumn(columnLabel));
+    }
+
+    public SQLXML getSQLXML(int columnIndex) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public SQLXML getSQLXML(String columnLabel) throws SQLException
+    {
+        return getSQLXML(findColumn(columnLabel));
+    }
+
+    public RowId getRowId(int columnIndex) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public RowId getRowId(String columnLabel) throws SQLException
+    {
+        return getRowId(findColumn(columnLabel));
+    }
+
     //======================================================================
     // Update methods for individual types; these are not supported
     //======================================================================
@@ -1432,6 +1512,269 @@ abstract public class AbstractResultSet
         throws SQLException
     {
         throw newUpdatabilityError();
+    }
+
+    //~ Java 1.6 extensions ---------------------------------------------------
+
+    public void updateNString(int columnIndex, String nString)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateNString(String columnLabel, String nString)
+        throws SQLException
+    {
+        updateNString(findColumn(columnLabel), nString);
+    }
+
+    public void updateBlob(int columnIndex, InputStream inputStream)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateBlob(String columnLabel, InputStream inputStream)
+        throws SQLException
+    {
+        updateBlob(findColumn(columnLabel), inputStream);
+    }
+
+    public void updateBlob(
+        int columnIndex,
+        InputStream inputStream,
+        long length) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateBlob(
+        String columnLabel,
+        InputStream inputStream,
+        long length) throws SQLException
+    {
+        updateBlob(findColumn(columnLabel), inputStream, length);
+    }
+
+    public void updateClob(int columnIndex, Reader reader)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateClob(String columnLabel, Reader reader)
+        throws SQLException
+    {
+        updateClob(findColumn(columnLabel), reader);
+    }
+
+    public void updateClob(int columnIndex, Reader reader, long length)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateClob(String columnLabel, Reader reader, long length)
+        throws SQLException
+    {
+        updateClob(findColumn(columnLabel), reader, length);
+    }
+
+    public void updateNClob(int columnIndex, Reader reader)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateNClob(String columnLabel, Reader reader)
+        throws SQLException
+    {
+        updateNClob(findColumn(columnLabel), reader);
+    }
+
+    public void updateNClob(int columnIndex, Reader reader, long length)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateNClob(String columnLabel, Reader reader, long length)
+        throws SQLException
+    {
+        updateNClob(findColumn(columnLabel), reader, length);
+    }
+
+    public void updateNClob(int columnIndex, NClob nClob) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateNClob(String columnLabel, NClob nClob)
+        throws SQLException
+    {
+        updateNClob(findColumn(columnLabel), nClob);
+    }
+
+    public void updateAsciiStream(int columnIndex, InputStream x)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateAsciiStream(String columnLabel, InputStream x)
+        throws SQLException
+    {
+        updateAsciiStream(findColumn(columnLabel), x);
+    }
+
+    public void updateAsciiStream(int columnIndex, InputStream x, long length)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateAsciiStream(
+        String columnLabel,
+        InputStream x,
+        long length) throws SQLException
+    {
+        updateAsciiStream(findColumn(columnLabel), x, length);
+    }
+
+    public void updateBinaryStream(int columnIndex, InputStream x)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateBinaryStream(String columnLabel, InputStream x)
+        throws SQLException
+    {
+        updateBinaryStream(findColumn(columnLabel), x);
+    }
+
+    public void updateBinaryStream(int columnIndex, InputStream x, long length)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateBinaryStream(
+        String columnLabel,
+        InputStream x,
+        long length) throws SQLException
+    {
+        updateBinaryStream(findColumn(columnLabel), x, length);
+    }
+
+    public void updateCharacterStream(int columnIndex, Reader x)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateCharacterStream(String columnLabel, Reader reader)
+        throws SQLException
+    {
+        updateCharacterStream(findColumn(columnLabel), reader);
+    }
+
+    public void updateCharacterStream(int columnIndex, Reader x, long length)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateCharacterStream(
+        String columnLabel,
+        Reader reader,
+        long length) throws SQLException
+    {
+        updateCharacterStream(findColumn(columnLabel), reader, length);
+    }
+
+    public void updateNCharacterStream(int columnIndex, Reader x)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateNCharacterStream(String columnLabel, Reader reader)
+        throws SQLException
+    {
+        updateNCharacterStream(findColumn(columnLabel), reader);
+    }
+
+    public void updateNCharacterStream(int columnIndex, Reader x, long length)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateNCharacterStream(
+        String columnLabel,
+        Reader reader,
+        long length) throws SQLException
+    {
+        updateNCharacterStream(findColumn(columnLabel), reader, length);
+    }
+
+    public void updateSQLXML(int columnIndex, SQLXML xmlObject)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateSQLXML(String columnLabel, SQLXML xmlObject)
+        throws SQLException
+    {
+        updateSQLXML(findColumn(columnLabel), xmlObject);
+    }
+
+    public void updateRowId(int columnIndex, RowId x) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void updateRowId(String columnLabel, RowId x) throws SQLException
+    {
+        updateRowId(findColumn(columnLabel), x);
     }
 
     //======================================================================

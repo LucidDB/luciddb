@@ -15,7 +15,7 @@ AM_INIT_AUTOMAKE(fennel, 0.7.0)
 dnl Define CXXFLAGS before AC_PROG_CXX to suppress the default autoconf
 dnl compiler options
 CXXFLAGS="-pipe -ftemplate-depth-64 \
--Wall -Wno-unused-parameter -Wno-sign-compare -Werror \
+-Wall -Wno-unused-parameter -Wno-sign-compare \
 -D_REENTRANT -D_STLP_USE_DYNAMIC_LIB=1 -D_STLP_NO_ANACHRONISMS=1 -DBOOST_NO_HASH=1"
 
 dnl Checks for programs.

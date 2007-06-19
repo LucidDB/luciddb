@@ -598,6 +598,104 @@ public class FarragoJdbcEngineConnection
         return new FleetingMedDataWrapperInfo(mofId, libraryName, options);
     }
 
+    //~ Java 1.6 extensions ---------------------------------------------------
+    public Blob createBlob() throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public Clob createClob() throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public NClob createNClob() throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public SQLXML createSQLXML() throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public boolean isValid(int timeout) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public void setClientInfo(
+        String name, String value) throws SQLClientInfoException
+    {
+        throw new SQLClientInfoException(
+            "not yet implemented",
+            null,
+            Util.needToImplement(this));
+    }
+
+    public void setClientInfo(Properties properties)
+        throws SQLClientInfoException
+    {
+        throw new SQLClientInfoException(
+            "not yet implemented",
+            null,
+            Util.needToImplement(this));
+    }
+
+    public String getClientInfo(String name) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public Properties getClientInfo() throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public Array createArrayOf(String typeName, Object[] elements)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public Struct createStruct(String typeName, Object[] attributes)
+        throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    // implement java.sql.Wrapper
+    public <T> T unwrap(Class<T> iface) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    // implement java.sql.Wrapper
+    public boolean isWrapperFor(Class<?> iface) throws SQLException
+    {
+        return false;
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**

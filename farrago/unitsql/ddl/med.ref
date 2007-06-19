@@ -352,7 +352,7 @@ Error: From line 1, column 19 to line 1, column 40: Table 'DEMO_IMPORT_SCHEMA.EM
 > limit to (dept, salgrade, space_ghost, green_lantern)
 > from server hsqldb_demo
 > into demo_import_schema;
-Error: One or more tables not found while importing foreign schema "SALES":  [SPACE_GHOST, GREEN_LANTERN] (state=,code=0)
+Error: One or more tables not found while importing foreign schema "SALES":  [GREEN_LANTERN, SPACE_GHOST] (state=,code=0)
 > 
 > -- test explicit exclusion
 > import foreign schema sales

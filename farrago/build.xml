@@ -885,6 +885,7 @@ ${farrago.test.jvmargs}
     <farrago.antFork target="forked_junit" classpathref="test.classpath">
       <jvmargs>
         <jvmarg line="-Xmx128m"/>
+        <jvmarg line="-Xss768k"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <syspropertyset>

@@ -28,6 +28,7 @@ import net.sf.farrago.jdbc.*;
 import net.sf.farrago.session.*;
 
 import org.eigenbase.util14.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -46,6 +47,7 @@ public class FarragoJdbcEngineStatement
     protected static final String ERRMSG_NOT_A_QUERY = "Not a query:  ";
     protected static final String ERRMSG_IS_A_QUERY =
         "Can't executeUpdate a query:  ";
+    protected static final String ERRMSG_CLOSED = "statement closed";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -471,6 +473,45 @@ public class FarragoJdbcEngineStatement
             return;
         }
         stmtContext.getWarningQueue().clearWarnings();
+    }
+
+    //~ Java 1.6 extensions ---------------------------------------------------
+
+    public boolean isClosed() throws SQLException
+    {
+        return stmtContext == null;
+    }
+
+    public void setPoolable(boolean poolable) throws SQLException
+    {
+        if (isClosed()) {
+            throw new SQLException(ERRMSG_CLOSED);
+        }
+        throw new SQLException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    public boolean isPoolable() throws SQLException
+    {
+        if (isClosed()) {
+            throw new SQLException(ERRMSG_CLOSED);
+        }
+        return false;
+    }
+
+    // implement java.sql.Wrapper
+    public <T> T unwrap(Class<T> iface) throws SQLException
+    {
+        throw new SQLException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    // implement java.sql.Wrapper
+    public boolean isWrapperFor(Class<?> iface) throws SQLException
+    {
+        return false;
     }
 }
 

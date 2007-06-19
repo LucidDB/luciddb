@@ -110,6 +110,22 @@ public class JdbcDataSource
     {
         return loginTimeout;
     }
+    
+    //~ Java 1.6 extensions ---------------------------------------------------
+
+    // implement java.sql.Wrapper
+    public <T> T unwrap(Class<T> iface) throws SQLException
+    {
+        throw new SQLFeatureNotSupportedException(
+            "not yet implemented",
+            Util.needToImplement(this));
+    }
+
+    // implement java.sql.Wrapper
+    public boolean isWrapperFor(Class<?> iface) throws SQLException
+    {
+        return false;
+    }
 }
 
 // End JdbcDataSource.java
