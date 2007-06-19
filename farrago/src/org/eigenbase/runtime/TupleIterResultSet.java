@@ -80,7 +80,6 @@ public class TupleIterResultSet
             final long noTimeout = 0;
             timeoutTupleIter.closeAllocation(noTimeout);
             timeoutTupleIter = null;
-            super.close();
         }
     }
 

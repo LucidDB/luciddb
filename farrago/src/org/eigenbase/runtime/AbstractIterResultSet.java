@@ -147,22 +147,6 @@ public abstract class AbstractIterResultSet
         return columnGetter.get(current, columnIndex);
     }
 
-    //~ Java 1.6 extensions ---------------------------------------------------
-
-    // implement java.sql.Wrapper
-    public <T> T unwrap(Class<T> iface) throws SQLException
-    {
-        throw new SQLFeatureNotSupportedException(
-            "not yet implemented",
-            Util.needToImplement(this));
-    }
-
-    // implement java.sql.Wrapper
-    public boolean isWrapperFor(Class<?> iface) throws SQLException
-    {
-        return false;
-    }
-
     //~ Inner Interfaces -------------------------------------------------------
 
     /**
@@ -370,22 +354,6 @@ public abstract class AbstractIterResultSet
 
         public boolean isWritable(int column)
             throws SQLException
-        {
-            return false;
-        }
-
-        //~ Java 1.6 extensions -----------------------------------------------
-
-        // implement java.sql.Wrapper
-        public <T> T unwrap(Class<T> iface) throws SQLException
-        {
-            throw new SQLException(
-                "not yet implemented",
-                Util.needToImplement(this));
-        }
-
-        // implement java.sql.Wrapper
-        public boolean isWrapperFor(Class<?> iface) throws SQLException
         {
             return false;
         }

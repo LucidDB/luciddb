@@ -34,7 +34,6 @@ import net.sf.farrago.session.*;
 
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.util.Util;
 
 
 /**
@@ -1007,76 +1006,6 @@ public class FarragoJdbcEngineDatabaseMetaData
         return queryBuilder.execute();
     }
 
-    //~ Java 1.6 extensions to DatabaseMetaData-------------------------------
-
-    public RowIdLifetime getRowIdLifetime() throws SQLException
-    {
-        throw new SQLFeatureNotSupportedException(
-            "not yet implemented",
-            Util.needToImplement(this));
-    }
-
-    public ResultSet getSchemas(String catalog, String schemaPattern)
-        throws SQLException
-    {
-        throw new SQLFeatureNotSupportedException(
-            "not yet implemented",
-            Util.needToImplement(this));
-    }
-
-    public boolean supportsStoredFunctionsUsingCallSyntax() throws SQLException
-    {
-        return false;
-    }
-
-    public boolean autoCommitFailureClosesAllResultSets() throws SQLException
-    {
-        return false;
-    }
-
-    public ResultSet getClientInfoProperties() throws SQLException
-    {
-        throw new SQLFeatureNotSupportedException(
-            "not yet implemented",
-            Util.needToImplement(this));
-    }
-
-    public ResultSet getFunctions(
-        String catalog,
-        String schemaPattern,
-        String functionNamePattern) throws SQLException
-    {
-        throw new SQLFeatureNotSupportedException(
-            "not yet implemented",
-            Util.needToImplement(this));
-    }
-
-    public ResultSet getFunctionColumns(
-        String catalog,
-        String schemaPattern,
-        String functionNamePattern,
-        String columnNamePattern) throws SQLException
-    {
-        throw new SQLFeatureNotSupportedException(
-            "not yet implemented",
-            Util.needToImplement(this));
-    }
-
-    // implement java.sql.Wrapper
-    public <T> T unwrap(Class<T> iface) throws SQLException
-    {
-        throw new SQLFeatureNotSupportedException(
-            "not yet implemented",
-            Util.needToImplement(this));
-    }
-
-    // implement java.sql.Wrapper
-    public boolean isWrapperFor(Class<?> iface) throws SQLException
-    {
-        return false;
-    }
-
-    
     /**
      * Creates a new QueryBuilder.
      */
