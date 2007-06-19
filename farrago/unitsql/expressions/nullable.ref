@@ -96,4 +96,10 @@
   <result EXPR$0="null"/>
 </resultset>
 > 
+> -- make sure empty string doesn't get converted back to null (FRG-275)
+> values ('');
+<resultset>
+  <result EXPR$0=""/>
+</resultset>
+> 
 > !quit

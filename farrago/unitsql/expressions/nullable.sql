@@ -35,3 +35,6 @@ values cast(cast(null as date) as varchar(30));
 values cast(cast(null as time) as varchar(30));
 values cast(cast(null as timestamp) as varchar(30));
 values cast(cast(null as double) as varchar(30));
+
+-- make sure empty string doesn't get converted back to null (FRG-275)
+values ('');
