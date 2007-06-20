@@ -133,6 +133,40 @@ public class LucidDbTestHarness extends TestCase
     }
 
     /**
+     * called from tclose.xml
+     */
+    public void testCloseConnections()
+    {
+        System.err.println("testCloseConnections");
+        Util.squelchConnection(connection);
+        connection = null;
+        stmt = null;
+
+        // TODO: this should go away after LDB-164
+        haveSavedParameters = false;
+
+        System.err.println("All connections closed");
+    }
+
+    /**
+     * called from tsetcf.xml
+     */
+    public void testSetCleanupFlag()
+    {
+        System.err.println("set LucidDbTestHarness needCleanup flag to true");
+        needCleanup = true;
+    }
+
+    /** 
+     * called from tunsetcf.xml
+     */
+    public void testUnsetCleanupFlag()
+    {
+        System.err.println("set LucidDbTestHarness needCleanup flag to false");
+        needCleanup = false;
+    }
+
+    /**
      * Shuts down LucidDB when running in engine mode.
      */
     public void shutdownEngine()

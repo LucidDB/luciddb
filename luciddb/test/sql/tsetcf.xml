@@ -1,0 +1,11 @@
+<project name="bh" default="setcf">
+  <target name="setcf">
+    <!-- set cleanup needed flag to true for LucidDbTestHarness -->
+    <test-suite name="setcf">
+      <custom-task>
+        <junit-utility testclass="com.lucidera.luciddb.test.LucidDbTestHarness"
+          methodnames="testSetCleanupFlag"/>
+      </custom-task>
+    </test-suite>
+  </target>
+</project>
