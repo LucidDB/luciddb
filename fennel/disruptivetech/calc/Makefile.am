@@ -31,20 +31,26 @@ ExtDynamicVariable.cpp \
 WinAggHistogramStrA.cpp \
 ExtWinAggFuncs.cpp
 
-#noinst_PROGRAMS =    \
-#testCalc tuple
+noinst_PROGRAMS =    \
+testCalc tuple
 
-#TESTS = $(noinst_PROGRAMS)
+#testCalc tuple testCalcExtended
 
-#testCalc_SOURCES=testCalc.cpp 
-#tuple_SOURCES= tuple.cpp
+TESTS = $(noinst_PROGRAMS)
 
-#LDADD = -L$(top_builddir)/calc      \
-#		-l$(CALC_LIB)       \
-#	-L$(top_builddir)/libfennel \
-#		-lfennel_tuple      \
-#		-lfennel_common     \
-#	$(EXTRA_LDFLAGS)
+testCalc_SOURCES=testCalc.cpp 
+#testCalcExtended_SOURCES=testCalcExtended.cpp 
+tuple_SOURCES= tuple.cpp
+
+#		-L$(top_builddir)/exec/.libs
+
+LDADD = -L$(top_builddir)/disruptivetech/calc      \
+		-l$(CALC_LIB)       \
+	-L$(top_builddir)/libfennel \
+		-lfennel_tuple      \
+		-lfennel_common     \
+		-lexec     \
+	$(EXTRA_LDFLAGS)
 
 DISABLED_TESTS= \
 testCalc.cpp \
