@@ -42,14 +42,14 @@ testCalc_SOURCES=testCalc.cpp
 #testCalcExtended_SOURCES=testCalcExtended.cpp 
 tuple_SOURCES= tuple.cpp
 
-#		-L$(top_builddir)/exec/.libs
-#		-lexec
 
 LDADD = -L$(top_builddir)/disruptivetech/calc      \
+		-L$(top_builddir)/exec/.libs \
 		-l$(CALC_LIB)       \
 	-L$(top_builddir)/libfennel \
 		-lfennel_tuple      \
 		-lfennel_common     \
+		-lexec	\
 	$(EXTRA_LDFLAGS)
 
 DISABLED_TESTS= \
