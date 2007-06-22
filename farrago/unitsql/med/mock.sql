@@ -241,3 +241,35 @@ order by schema_name;
 select * from table(sys_boot.mgmt.browse_foreign_schemas(
     'SYS_MOCK_FOREIGN_DATA_SERVER'))
 order by schema_name;
+
+
+-- test create or replace niceties
+
+-- should succeed
+create foreign data wrapper mock_flaky
+library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+language java
+options(simulate_bad_connection 'TRUE');
+
+-- should fail
+create server mock_bad_server
+foreign data wrapper mock_flaky;
+
+create or replace foreign data wrapper mock_flaky
+library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+language java
+options(simulate_bad_connection 'FALSE');
+
+-- should succeed
+create server mock_flaky_server
+foreign data wrapper mock_flaky;
+
+-- should succeed
+create or replace foreign data wrapper mock_flaky
+library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+language java
+options(simulate_bad_connection 'TRUE');
+
+-- should fail
+create or replace server mock_flaky_server
+foreign data wrapper mock_flaky;

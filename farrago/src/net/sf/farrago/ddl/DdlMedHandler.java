@@ -122,13 +122,28 @@ public class DdlMedHandler
             repos.allOfType(CwmCatalog.class),
             false);
 
-        try {
-            // validate that we can successfully initialize the server
-            validator.getDataWrapperCache().loadServerFromCatalog(femServer);
-        } catch (Throwable ex) {
-            throw res.ValidatorDefinitionInvalid.ex(
-                repos.getLocalizedObjectName(femServer),
-                ex);
+        // See http://issues.eigenbase.org/browse/FRG-276 for
+        // an enhancement related to providing more control here.
+        // For now, we avoid failing CREATE OR REPLACE FOREIGN WRAPPER
+        // just because a dependent foreign server can't be
+        // accessed.
+
+        // FIXME jvs 21-Jun-2007:  promote methods up to
+        // FarragoSessionDdlValidator level instead of downcasting.
+        DdlValidator ddlValidator = (DdlValidator) validator;
+        
+        if (!ddlValidator.isReplace()
+            || ddlValidator.isReplacingType(femServer))
+        {
+            try {
+                // validate that we can successfully initialize the server
+                validator.getDataWrapperCache().loadServerFromCatalog(
+                    femServer);
+            } catch (Throwable ex) {
+                throw res.ValidatorDefinitionInvalid.ex(
+                    repos.getLocalizedObjectName(femServer),
+                    ex);
+            }
         }
 
         // REVIEW jvs 18-April-2004:  This uses default charset/collation
