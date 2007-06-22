@@ -2,7 +2,7 @@ include $(top_srcdir)/am_include.mk
 
 noinst_LTLIBRARIES = libcalc.la
 
-CALC_LIB = calc
+CALC_LIB = fennel_dt_calc
 
 libcalc_la_SOURCES=  \
 BoolInstruction.cpp  \
@@ -39,13 +39,12 @@ TESTS = $(noinst_PROGRAMS)
 testCalc_SOURCES=testCalc.cpp 
 tuple_SOURCES= tuple.cpp
 
-LDADD = -L$(top_builddir)/disruptivetech/calc      \
-		-L$(top_builddir)/exec/.libs \
+LDADD = -L$(top_builddir)/disruptivetech/libfennel_dt      \
 		-l$(CALC_LIB)       \
 	-L$(top_builddir)/libfennel \
 		-lfennel_tuple      \
 		-lfennel_common     \
-		-lexec			\
+		-lfennel_exec		\
 	$(EXTRA_LDFLAGS)
 
 DISABLED_TESTS= \
