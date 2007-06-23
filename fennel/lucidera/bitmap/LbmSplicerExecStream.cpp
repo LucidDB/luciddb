@@ -306,6 +306,28 @@ bool LbmSplicerExecStream::findBTreeEntry(
                 bTreeTupleData, bitmapEntry, nIdxKeys);
             if (keyComp == 0) {
                 match = true;
+            } else {
+                // If there's a mismatch in the actual key values, then read 
+                // the next key and make sure the key values don't match
+                // before claiming that we don't have a matching entry.
+                // Since we're reading the greatest lower bound key value,
+                // we may miss a matching key if that entry contains a
+                // singleton rid.
+                match = bTreeWriter->searchNext();
+                if (match) {
+                    bTreeWriter->getTupleAccessorForRead().unmarshal(
+                        bTreeTupleData);
+                    keyComp = bitmapTupleDesc.compareTuplesKey(
+                        bTreeTupleData, bitmapEntry, nIdxKeys);
+                    if (keyComp == 0) {
+                        match = true;
+                    } else {
+                        // Reposition back to where we were before
+                        match = bTreeWriter->searchForKey(
+                            bitmapEntry, DUP_SEEK_BEGIN, false);
+                        assert(match == false);
+                    }
+                }
             }
         }
     }
