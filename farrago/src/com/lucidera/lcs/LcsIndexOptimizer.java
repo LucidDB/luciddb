@@ -1513,7 +1513,9 @@ public class LcsIndexOptimizer
         if (indexList.isEmpty()) {
             return null;
         } else {
-            Collections.sort(indexList, IndexPageCountComparator.instance);
+            Collections.sort(
+                indexList,
+                IndexPageCountComparator.instance);
             return indexList.get(0);
         }
     }
