@@ -1513,12 +1513,8 @@ public class LcsIndexOptimizer
         if (indexList.isEmpty()) {
             return null;
         } else {
-            TreeSet<FemLocalIndex> indexSet =
-                new TreeSet<FemLocalIndex>(new IndexPageCountComparator());
-
-            indexSet.addAll(indexList);
-
-            return indexSet.first();
+            Collections.sort(indexList, IndexPageCountComparator.instance);
+            return indexList.get(0);
         }
     }
 
@@ -1899,6 +1895,9 @@ public class LcsIndexOptimizer
     private static class IndexPageCountComparator
         implements Comparator<FemLocalIndex>
     {
+        static final IndexPageCountComparator instance =
+            new IndexPageCountComparator();
+        
         IndexPageCountComparator()
         {
         }
@@ -2325,7 +2324,7 @@ public class LcsIndexOptimizer
      * sorted by StorageId of the index that constitute the tuple.
      *
      */
-    public static class MappedFilterSelectivityComparator
+    private static class MappedFilterSelectivityComparator
         implements Comparator<IndexFilterTuple>
     {
         public MappedFilterSelectivityComparator()
