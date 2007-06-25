@@ -29,7 +29,6 @@
 
 #include "fennel/disruptivetech/calc/NativeInstruction.h"
 #include <math.h>
-#include "NoisyArithmetic.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -86,12 +85,9 @@ public:
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            // set result to NULL in case an exception is raised (TODO:review this!)
-            NativeNativeInstruction<TMPLT>::mResult->toNull();
             NativeNativeInstruction<TMPLT>::mResult->
-               value( Noisy<TMPLT>::add( pc-1,
-                    NativeInstruction<TMPLT>::mOp1->value(),
-                    NativeInstruction<TMPLT>::mOp2->value()));
+               value(NativeInstruction<TMPLT>::mOp1->value() + 
+                     NativeInstruction<TMPLT>::mOp2->value());
         }
     }
 
@@ -143,12 +139,9 @@ public:
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            // set result to NULL in case an exception is raised (TODO:review this!)
-            NativeNativeInstruction<TMPLT>::mResult->toNull();
-            NativeNativeInstruction<TMPLT>::mResult->
-               value( Noisy<TMPLT>::sub( pc-1,
-                    NativeInstruction<TMPLT>::mOp1->value(),
-                    NativeInstruction<TMPLT>::mOp2->value()));
+            NativeNativeInstruction<TMPLT>::mResult->value
+                (NativeInstruction<TMPLT>::mOp1->value() - 
+                 NativeInstruction<TMPLT>::mOp2->value());
         }
     }
 
@@ -200,12 +193,9 @@ public:
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            // set result to NULL in case an exception is raised (TODO:review this!)
-            NativeNativeInstruction<TMPLT>::mResult->toNull();
-            NativeNativeInstruction<TMPLT>::mResult->
-               value( Noisy<TMPLT>::mul( pc-1,
-                    NativeInstruction<TMPLT>::mOp1->value(),
-                    NativeInstruction<TMPLT>::mOp2->value()));
+            NativeNativeInstruction<TMPLT>::mResult->value
+               (NativeInstruction<TMPLT>::mOp1->value() * 
+                NativeInstruction<TMPLT>::mOp2->value());
         }
     }
 
@@ -258,8 +248,6 @@ public:
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-#if 0
-  JR 6/07, now thrown in NoisyArithmetic ...
             TMPLT o2 = NativeInstruction<TMPLT>::mOp2->value(); // encourage into register
             if (o2 == 0) {
                 // SQL99 Part 2 Section 6.26 General Rule 4
@@ -268,13 +256,8 @@ public:
                 // division by zero subclass 012
                 throw CalcMessage("22012", pc - 1); 
             }
-#endif
-            // set result to NULL in case an exception is raised (TODO:review this!)
-            NativeNativeInstruction<TMPLT>::mResult->toNull();
-            NativeNativeInstruction<TMPLT>::mResult->
-               value( Noisy<TMPLT>::div( pc-1,
-                    NativeInstruction<TMPLT>::mOp1->value(),
-                    NativeInstruction<TMPLT>::mOp2->value()));
+            NativeNativeInstruction<TMPLT>::mResult->value
+                (NativeInstruction<TMPLT>::mOp1->value() / o2);
         }
     }
 
@@ -326,11 +309,8 @@ public:
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            // set result to NULL in case an exception is raised (TODO:review this!)
-            NativeNativeInstruction<TMPLT>::mResult->toNull();
-            NativeNativeInstruction<TMPLT>::mResult->
-               value( Noisy<TMPLT>::neg( pc-1,
-                    NativeInstruction<TMPLT>::mOp1->value()));
+            NativeNativeInstruction<TMPLT>::mResult->value
+               (NativeInstruction<TMPLT>::mOp1->value() * -1);
         }
     }
     static char const * const longName() { return "NativeNeg"; }
@@ -407,7 +387,6 @@ public:
         if (NativeInstruction<TMPLT>::mOp1->isNull()) {
             NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            // TODO: have not implemented exceptions for this operation
             TMPLT tmp;
             NativeRoundHelp<TMPLT>::r
                  (tmp, NativeInstruction<TMPLT>::mOp1->value());

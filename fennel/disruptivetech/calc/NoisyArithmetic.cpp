@@ -44,7 +44,7 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-//#define NOISY_DISABLED    (1)
+#define NOISY_DISABLED    (1)
 
 /* TODO --- check these codes: 220 DATA_EXCEPTION */
 #define S_OVER    "22003"        /* NUMERIC_VALUE_OUT_OF_RANGE */
