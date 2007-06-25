@@ -33,6 +33,30 @@ delete from bench10k where
 
 select count(*) from bench10k;
 
+-- LER-5790
+truncate table bench10k;
+INSERT INTO bench10k
+SELECT "kseq","k2","k4","k5","k10","k25","k100","k1k","k10k","k40k","k100k","k250k","k500k"
+FROM ff_schema."bench10K";
+delete from bench10k where "kseq" <= 3824;
+delete from bench10k where "kseq" = 5008;
+delete from bench10k where "kseq" = 4000;
+delete from bench10k where "kseq" = 5001;
+delete from bench10k where "kseq" = 5002;
+-- following select should return no rows since those were deleted
+select * from bench10K where "kseq" in (3824, 4000, 5001, 5002, 5008);
+
+truncate table bench10k;
+INSERT INTO bench10k
+SELECT "kseq","k2","k4","k5","k10","k25","k100","k1k","k10k","k40k","k100k","k250k","k500k"
+FROM ff_schema."bench10K";
+delete from bench10k where "kseq" <= 3823;
+delete from bench10k where "kseq" = 5008;
+delete from bench10k where "kseq" in (3824, 5001, 5002);
+delete from bench10k where "kseq" in (4000, 4001);
+-- following select should return no rows since those were deleted
+select * from bench10K where "kseq" in (3824, 4000, 4001, 5001, 5002, 5008);
+
 delete from bench1m where "kseq" in 
 (select b1."kseq" from bench1m b1, bench1m b2
  where b1."k100" = 49 and b1."k250k" = b2."k500k");

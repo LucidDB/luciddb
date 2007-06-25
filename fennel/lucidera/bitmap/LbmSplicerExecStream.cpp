@@ -299,8 +299,32 @@ bool LbmSplicerExecStream::findBTreeEntry(
         bitmapEntry, DUP_SEEK_BEGIN, false);
     bTreeWriter->getTupleAccessorForRead().unmarshal(bTreeTupleData);
     if (match == false) {
+
         if (nIdxKeys == 0) {
+            // When inserting singleton rids, we don't have to match keys,
+            // but we need to make sure we find the bitmap entry with
+            // overlapping rids, if it exists.  First see if the greatest
+            // lower bound entry overlaps.  If it doesn't, try the next entry.
+            // If that doesn't overlap, go back to the greatest lower bound
+            // entry so we can splice the new rid to the end of that entry.
+            LcsRid newRid = *reinterpret_cast<LcsRid const *>
+                (bitmapEntry[0].pData);
+            if (!ridOverlaps(newRid, bTreeTupleData, false)) {
+                match = bTreeWriter->searchNext();
+                if (match) {
+                    bTreeWriter->getTupleAccessorForRead().unmarshal(
+                        bTreeTupleData);
+                    if (!ridOverlaps(newRid, bTreeTupleData, true)) {
+                        match = bTreeWriter->searchForKey(
+                            bitmapEntry, DUP_SEEK_BEGIN, false);
+                        assert(match == false);
+                        bTreeWriter->getTupleAccessorForRead().unmarshal(
+                            bTreeTupleData);
+                    }
+                }
+            }
             match = true;
+
         } else {
             int keyComp = bitmapTupleDesc.compareTuplesKey(
                 bTreeTupleData, bitmapEntry, nIdxKeys);
@@ -322,7 +346,9 @@ bool LbmSplicerExecStream::findBTreeEntry(
                     if (keyComp == 0) {
                         match = true;
                     } else {
-                        // Reposition back to where we were before
+                        // Reposition back to where we were before.  No need
+                        // to unmarshal the entry since we never read the
+                        // entry in the non-match case.
                         match = bTreeWriter->searchForKey(
                             bitmapEntry, DUP_SEEK_BEGIN, false);
                         assert(match == false);
@@ -334,30 +360,78 @@ bool LbmSplicerExecStream::findBTreeEntry(
     return match;
 }
 
+bool LbmSplicerExecStream::ridOverlaps(
+    LcsRid rid,
+    TupleData &bitmapTupleData,
+    bool firstByte)
+{
+    // Convert singletons to the rid range representing all bits in the byte
+    // corresponding to the singleton rid
+    LcsRid startRid =
+        LbmSegment::roundToByteBoundary(
+            *reinterpret_cast<LcsRid const *>(bitmapTupleData[0].pData));
+    uint rowCount;
+    if (firstByte) {
+       rowCount = LbmSegment::LbmOneByteSize;
+    } else {
+       rowCount = LbmEntry::getRowCount(bitmapTupleData);
+       if (rowCount == 1) {
+           rowCount = LbmSegment::LbmOneByteSize;
+        }
+    }
+    if (rid >= startRid && rid < startRid + rowCount) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 void LbmSplicerExecStream::findBetterEntry(TupleData const &bitmapEntry)
 {
-    // If there is a better entry, write out the existing one and set the
-    // current to the btree entry found
+    // If there is a better btree entry, write out the current entry and set
+    // the current entry to the btree entry found.  The btree entry is "better"
+    // if it's the entry that we should be splicing the new rid into.
+    //
+    // In other words, one of the following conditions must be true:
+    //
+    // 1) bTreeStartRid <= newRid < currentStartRid
+    // 2) currentStartRid < bTreeStartRid <= newRid
+    // 3) newRid <= bTreeStartRid < currentStartRid
+    //
+    // NOTE - condition 1 occurs when the current bitmap entry is split, and
+    // the current entry becomes the right portion of that bitmap entry.
+    // Also, conditions 1 and 3 can be combined into:
+    //
+    // currentStartRid > newRid && currentStartRid > bTreeStartRid
+
+    assert(computeRowCount);
     if (!isEmpty()) {
         if (findBTreeEntry(bitmapEntry, bTreeTupleData)) {
 
-            LcsRid btreeRid = *reinterpret_cast<LcsRid const *>
-                (bTreeTupleData[nIdxKeys].pData);
+            LcsRid bTreeRid =
+                LbmSegment::roundToByteBoundary(
+                    *reinterpret_cast<LcsRid const *> (
+                        bTreeTupleData[0].pData));
             LcsRid newRid = *reinterpret_cast<LcsRid const *>
-                (bitmapEntry[nIdxKeys].pData);
-            LcsRid currRid = pCurrentEntry->getStartRID();
+                (bitmapEntry[0].pData);
+            LcsRid currRid = 
+                LbmSegment::roundToByteBoundary(pCurrentEntry->getStartRID());
 
-            if ((currRid > newRid && currRid > btreeRid) ||
-                (newRid >= btreeRid && btreeRid > currRid))
+            if ((currRid > newRid && currRid > bTreeRid) ||
+                (newRid >= bTreeRid && bTreeRid > currRid)) 
             {
-                // if the current entry is a superset of the btree entry found,
-                // then ignore it
-                int rowCount = pCurrentEntry->getRowCount();
-                if ((btreeRid >= currRid) && (btreeRid < currRid + rowCount)) {
+                // If the current entry is a superset of the btree entry found,
+                // then ignore the btree entry, and continuing splicing into
+                // the current entry
+                uint rowCount = pCurrentEntry->getRowCount();
+                if (rowCount == 1) {
+                    rowCount = LbmSegment::LbmOneByteSize;
+                }
+                if ((bTreeRid >= currRid) && (bTreeRid < currRid + rowCount)) {
                     return;
                 }
 
-                // write out the current entry before we switch over to the
+                // Write out the current entry before we switch over to the
                 // new one
                 insertBitmapEntry();
                 currExistingEntry = true;

@@ -324,10 +324,26 @@ class LbmSplicerExecStream : public DiffluenceExecStream
         TupleData const &bitmapEntry, TupleData &bTreeTupleData);
 
     /**
+     * Determines whether a rid intersects the rid range spanned by a bitmap
+     * entry.  If the bitmap is a singleton, then the byte occupied by the
+     * singleton rid is used in determining intersection.
+     *
+     * @param rid the rid
+     * @param bitmapTupleData tupleData representing a bitmap entry
+     * @param firstByte if true, only consider overlap in the first byte of
+     * the bitmap
+     *
+     * @return true if the rid overlaps the bitmap entry
+     */
+    bool ridOverlaps(LcsRid rid, TupleData &bitmapTupleData, bool firstByte);
+
+    /**
      * Determines if there exists a better entry in the btree, corresponding
      * to the bitmap entry passed in, as compared to whatever is the current
      * bitmap entry.  If there is, the current entry is written to the btree,
      * and the current entry is set to the btree entry found.
+     *
+     * @param bitmapEntry tupleData corresponding to the entry to be spliced
      */
     void findBetterEntry(TupleData const &bitmapEntry);
 
