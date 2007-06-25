@@ -29,15 +29,15 @@
 #include "fennel/tuple/AttributeAccessor.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/common/TraceSource.h"
-#include "fennel/calc/BoolInstruction.h"
-#include "fennel/calc/BoolNativeInstruction.h"
-#include "fennel/calc/Calculator.h"
-#include "fennel/calc/IntegralNativeInstruction.h"
-#include "fennel/calc/JumpInstruction.h"
-#include "fennel/calc/NativeInstruction.h"
-#include "fennel/calc/NativeNativeInstruction.h"
-#include "fennel/calc/ReturnInstruction.h"
-#include "fennel/calc/ExtendedInstruction.h"
+#include "fennel/disruptivetech/calc/BoolInstruction.h"
+#include "fennel/disruptivetech/calc/BoolNativeInstruction.h"
+#include "fennel/disruptivetech/calc/Calculator.h"
+#include "fennel/disruptivetech/calc/IntegralNativeInstruction.h"
+#include "fennel/disruptivetech/calc/JumpInstruction.h"
+#include "fennel/disruptivetech/calc/NativeInstruction.h"
+#include "fennel/disruptivetech/calc/NativeNativeInstruction.h"
+#include "fennel/disruptivetech/calc/ReturnInstruction.h"
+#include "fennel/disruptivetech/calc/ExtendedInstruction.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
@@ -103,6 +103,7 @@ void convertDecimal(RegisterRef<int32_t>* resultReg,
 void convertStringToExactNumber(RegisterRef<int>* regOut,
                                 RegisterRef<char *>* regIn)
 {
+#if 0
     // TODO: Wrap this code in 
     uint srcL = regIn->getS();
     // TODO: Change the following proof-of-concept code into 
@@ -112,7 +113,13 @@ void convertStringToExactNumber(RegisterRef<int>* regOut,
     memcpy(nullTermStr, regIn->pointer(), srcL);
     regOut->value(strtol(nullTermStr, 0, 10));
     delete [] nullTermStr;
+#endif
     
+    const string &tString = regIn->valueToString();
+    const char *pString = tString;
+    assert( pString );
+    int iValue = atoi( pString );
+    regOut->value( iValue );
 }
 
 void convertExactNumberToString(RegisterRef<char *>* regOut,

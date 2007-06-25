@@ -2738,7 +2738,7 @@ unitTestWarnings()
     // Hack output tuple to something re-runable
     float horriblehack = 88;
     //reinterpret_cast<float *>(const_cast<PBuffer>(output[0].pData)) = &horriblehack;  /* JR 6/15.07 - no longer works */
-	output[0].pData = reinterpret_cast<const uint8_t *>( &horriblehack );
+    output[0].pData = reinterpret_cast<const uint8_t *>( &horriblehack );
 
     printf("Rerunning calculator\n");
     
