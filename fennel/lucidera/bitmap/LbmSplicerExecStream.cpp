@@ -290,23 +290,32 @@ bool LbmSplicerExecStream::existingEntry(TupleData const &bitmapEntry)
     return false;
 }
 
-bool LbmSplicerExecStream::findBTreeEntry(
+bool LbmSplicerExecStream::findMatchingBTreeEntry(
     TupleData const &bitmapEntry, TupleData &bTreeTupleData)
 {
-    // if an exact match isn't found, make sure we at least match the
-    // first part of the key up till the rid
     bool match = bTreeWriter->searchForKey(
         bitmapEntry, DUP_SEEK_BEGIN, false);
     bTreeWriter->getTupleAccessorForRead().unmarshal(bTreeTupleData);
+    return match;
+}
+
+bool LbmSplicerExecStream::findBTreeEntry(
+    TupleData const &bitmapEntry, TupleData &bTreeTupleData)
+{
+    // First do a greatest lower bound lookup into the btree, searching on
+    // both the actual key index values and the startRid
+    bool match = findMatchingBTreeEntry(bitmapEntry, bTreeTupleData);
+
     if (match == false) {
 
         if (nIdxKeys == 0) {
-            // When inserting singleton rids, we don't have to match keys,
-            // but we need to make sure we find the bitmap entry with
-            // overlapping rids, if it exists.  First see if the greatest
-            // lower bound entry overlaps.  If it doesn't, try the next entry.
-            // If that doesn't overlap, go back to the greatest lower bound
-            // entry so we can splice the new rid to the end of that entry.
+            // If there are no index keys, then we are splicing individual
+            // rids.  In that case, we should always be splicing into the
+            // best btree entry available.  First see if the greatest lower
+            // bound entry overlaps the rid we're looking for.  If it doesn't,
+            // try the next entry.  If that doesn't overlap, go back to the
+            // greatest lower bound entry so we can splice the new rid to
+            // the end of that entry.
             LcsRid newRid = *reinterpret_cast<LcsRid const *>
                 (bitmapEntry[0].pData);
             if (!ridOverlaps(newRid, bTreeTupleData, false)) {
@@ -326,6 +335,8 @@ bool LbmSplicerExecStream::findBTreeEntry(
             match = true;
 
         } else {
+            // If we didn't find a match on the index keys + startRid, try
+            // to at least match the index keys
             int keyComp = bitmapTupleDesc.compareTuplesKey(
                 bTreeTupleData, bitmapEntry, nIdxKeys);
             if (keyComp == 0) {
@@ -471,8 +482,9 @@ void LbmSplicerExecStream::insertBitmapEntry()
         if (computeRowCount || bTreeWriterMoved) {
             tempBTreeTupleData[nIdxKeys].pData =
                 (PConstBuffer) &currBTreeStartRid;
-            bool match = findBTreeEntry(tempBTreeTupleData, tempBTreeTupleData);
-            assert(match);
+            bool match =
+                findMatchingBTreeEntry(tempBTreeTupleData, tempBTreeTupleData);
+            permAssert(match);
         }
         FENNEL_TRACE(TRACE_FINE, "delete Tuple from BTree");
         FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(bTreeTupleData));

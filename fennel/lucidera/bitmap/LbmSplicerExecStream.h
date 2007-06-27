@@ -312,16 +312,39 @@ class LbmSplicerExecStream : public DiffluenceExecStream
     bool existingEntry(TupleData const &bitmapEntry);
 
     /**
-     * Searches the btree, looking for a bitmap entry
+     * Searches the btree, looking for the btree record matching the index
+     * keys and startRid of a specified bitmap entry
      *
-     * @param bitmapEntry entry being searched
+     * @param bitmapEntry entry for which we are trying to match
      * @param bTreeTupleData tuple data where the btree record will be
-     * returned
+     * returned if a matching entry is found; if a non-match is found, the
+     * tuple data contains the greatest lower bound btree entry found
      *
-     * @return true if entry found in btree
+     * @return true if a matching entry is found in the btree; false otherwise;
+     * (in this case, bTreeWriter is positioned at the location of the greatest
+     * lower bound btree entry corresponding to the bitmap entry)
+     */
+    bool findMatchingBTreeEntry(
+        TupleData const &bitmapEntry,
+        TupleData &bTreeTupleData);
+
+    /**
+     * Searches the btree, looking for the first btree record which overlaps
+     * with a given bitmap entry (or the insertion point for a new one if no
+     * existing match exists).
+     *
+     * @param bitmapEntry entry for which to find an overlap match
+     * @param bTreeTupleData tuple data where the btree record will be returned
+     * if a matching entry is found (otherwise invalid data references
+     * are returned here after search)
+     *
+     * @return true if entry found in btree; false if no entry found
+     * (in this case, bTreeWriter is positioned to correct location
+     * for inserting new entry)
      */
     bool findBTreeEntry(
-        TupleData const &bitmapEntry, TupleData &bTreeTupleData);
+        TupleData const &bitmapEntry,
+        TupleData &bTreeTupleData);
 
     /**
      * Determines whether a rid intersects the rid range spanned by a bitmap
