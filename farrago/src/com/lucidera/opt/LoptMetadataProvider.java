@@ -27,6 +27,7 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
@@ -152,11 +153,20 @@ public class LoptMetadataProvider
     {
         double sargableSelectivity =
             estimateRowScanSelectivity(rel, filter, true);
+        double inputSelectivity = rel.getInputSelectivity();
+        sargableSelectivity *= inputSelectivity;
 
         Double nRowsInTable = RelMetadataQuery.getRowCount(rel);
         if (nRowsInTable == null) {
             return null;
         }
+        
+        // The selectivity of the rowscan's inputs are reflected in
+        // "inputSelectivity," and the rowCount on the table reflects that
+        // selectivity.  However, for the purpose of this method, nRowsInTable
+        // is supposed to be the original, unfiltered rowCount.  Therefore,
+        // we need to divide out inputSelectivity from that rowCount.
+        nRowsInTable /= inputSelectivity;
 
         double sargableRowCount = sargableSelectivity * nRowsInTable;
 
@@ -497,6 +507,16 @@ public class LoptMetadataProvider
         }
 
         return selectivity;
+    }
+    
+    public Double getRowCount(LcsRowScanRel rel)
+    {
+        Double result = FarragoRelMetadataProvider.getRowCountStat(rel, repos);
+        if (result == null) {
+            return null;
+        }
+        // Include selectivity of inputs into the rowscan
+        return result * rel.getInputSelectivity();
     }
 
     public Double getRowCount(JoinRel rel)

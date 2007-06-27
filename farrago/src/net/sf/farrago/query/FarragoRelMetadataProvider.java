@@ -95,6 +95,11 @@ public class FarragoRelMetadataProvider
      */
     public RelStatSource getStatistics(RelNode rel)
     {
+        return getStatistics(rel, repos);
+    }
+  
+    private static RelStatSource getStatistics(RelNode rel, FarragoRepos repos)
+    {
         RelOptTable table = rel.getTable();
         if (table == null) {
             return null;
@@ -129,6 +134,25 @@ public class FarragoRelMetadataProvider
     }
 
     /**
+     * Retrieves the row count of a Farrago expression or null, using
+     * statistics stored in the catalog
+     * 
+     * @param rel the relational expression
+     * @param repos repository
+     * 
+     * @return the row count, or null if stats aren't available
+     */
+    public static Double getRowCountStat(RelNode rel, FarragoRepos repos)
+    {
+        Double result = null;
+        RelStatSource source = getStatistics(rel, repos);
+        if (source != null) {
+            result = source.getRowCount();
+        }
+        return result;
+    }
+    
+    /**
      * Retrieves the row count of a Farrago expression or null
      *
      * @param rel the relational expression
@@ -137,12 +161,7 @@ public class FarragoRelMetadataProvider
      */
     public Double getRowCount(RelNode rel)
     {
-        Double result = null;
-        RelStatSource source = getStatistics(rel);
-        if (source != null) {
-            result = source.getRowCount();
-        }
-        return result;
+        return getRowCountStat(rel, repos);
     }
 
     public Set<BitSet> getUniqueKeys(RelNode rel)

@@ -475,6 +475,27 @@ public class LoptMetadataTest
             Math.sqrt(tableRowCount * selectedRowCount),
             cost);
     }
+    
+    public void testCumulativeCostRowScanWithInputs()
+        throws Exception
+    {
+        // Make sure the cumulative cost reflects filtering cost, even
+        // when the filters are pushed down as inputs into the row scan
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleClass(LcsIndexAccessRule.class);
+        transformQuery(
+            programBuilder.createProgram(),
+            "select * from emps where age = 30");
+        RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
+
+        // Cumulative cost is the filtered table access since the
+        // predicate is sargable.
+        double tableRowCount = COLSTORE_EMPS_ROWCOUNT;
+        double selectedRowCount = tableRowCount * DEFAULT_SARGABLE_SELECTIVITY;
+        checkCost(
+            Math.sqrt(tableRowCount * selectedRowCount),
+            cost);
+    }
 
     public void testCumulativeCostFilteredProjection()
         throws Exception
@@ -783,6 +804,22 @@ public class LoptMetadataTest
         searchColumn(7, value, 0.3, 1.0);
 
         // TODO: in and not in operators, but does IN work?
+    }
+    
+    public void testRowCountRowScanWithInputs()
+        throws Exception
+    {
+        // Make sure the row count reflects the filters that are inputs
+        // into the row scan
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleClass(LcsIndexAccessRule.class);
+        transformQuery(
+            programBuilder.createProgram(),
+            "select * from emps where deptno = 10");
+
+        Double result = RelMetadataQuery.getRowCount(rootRel);
+        assertTrue(result != null);
+        assertEquals(COLSTORE_EMPS_ROWCOUNT * .01, result, EPSILON);
     }
 
     private void checkRowCountJoin(String sql, Double expected)
