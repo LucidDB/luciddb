@@ -33,15 +33,15 @@ ExtWinAggFuncs.cpp \
 NoisyArithmetic.cpp
 
 noinst_PROGRAMS =    \
-testNoisyArithmetic testCalc tuple
+testNoisyArithmetic testCalc testCalcExtString testCalcExtended tuple
 
 TESTS = $(noinst_PROGRAMS)
 $(noinst_PROGRAMS): $(noinst_LTLIBRARIES)
 
 testNoisyArithmetic_SOURCES=testNoisyArithmetic.cpp 
 testCalc_SOURCES=testCalc.cpp 
-#testCalcExtended_SOURCES=testCalcExtended.cpp 
-#testCalcExtString_SOURCES=testCalcExtString.cpp 
+testCalcExtended_SOURCES=testCalcExtended.cpp 
+testCalcExtString_SOURCES=testCalcExtString.cpp 
 tuple_SOURCES= tuple.cpp
 
 LDADD = -L$(top_builddir)/disruptivetech/calc \
@@ -52,9 +52,9 @@ LDADD = -L$(top_builddir)/disruptivetech/calc \
 		-lfennel_exec		\
 	$(EXTRA_LDFLAGS)
 
-DISABLED_TESTS= \
-testCalcExtended.cpp \
-testCalcExtString.cpp
+#DISABLED_TESTS=
+#testCalcExtended.cpp
+#testCalcExtString.cpp
 
 DESIGN_DOC=ExtendedInstructionHowTo.cpp
 EXTRA_DIST=$(DESIGN_DOC)
