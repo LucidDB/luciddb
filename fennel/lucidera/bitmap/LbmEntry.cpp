@@ -872,6 +872,12 @@ bool LbmEntry::adjustEntry(TupleData &inputTuple)
          * Adjust the startRID in the input tuple.
          */
         inputStartRID += numRIDsMoved;
+        // If the input tuple was a single overlapping byte, then nothing more
+        // needs to be merged from that tuple
+        if (inputTuple[inputTuple.size() -1].cbData == 0) {
+            assert(pFirstDesc == NULL);
+            return true;
+        }
     }
     return false;
 }

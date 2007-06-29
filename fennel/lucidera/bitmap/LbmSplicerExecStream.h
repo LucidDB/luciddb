@@ -23,6 +23,7 @@
 #define Fennel_LbmSplicerExecStream_Included
 
 #include "fennel/btree/BTreeWriter.h"
+#include "fennel/ftrs/BTreeExecStream.h"
 #include "fennel/exec/DiffluenceExecStream.h"
 #include "fennel/exec/DynamicParam.h"
 #include "fennel/tuple/TupleAccessor.h"

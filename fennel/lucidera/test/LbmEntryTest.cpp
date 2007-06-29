@@ -130,6 +130,7 @@ public:
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testRandom5);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testCombos);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testldb35);
+        FENNEL_UNIT_TEST_CASE(LbmEntryTest, testler5920);
 
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonInFront1);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonInFront2);
@@ -172,6 +173,7 @@ public:
     void testRandom5();
     void testCombos();
     void testldb35();
+    void testler5920();
     void testMergeSingletonInFront1();
     void testMergeSingletonInFront2();
     void testMergeSingletonMidSegment1();
@@ -661,6 +663,132 @@ void LbmEntryTest::testldb35()
             ", Expected = " << ridValues.size() << std::endl;
         BOOST_FAIL("");
     }
+
+    scratchAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
+}
+
+void LbmEntryTest::testler5920()
+{
+    std::vector<SharedLbmEntryInfo> entryList;
+    std::vector<LcsRid> ridValues;
+
+    // bitmap entries will be created without a leading key, so the
+    // first column is the startRid
+    // initialize scratch accessor for scratch buffers used to
+    // construct bitmaps
+    SegmentAccessor scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache, 10);
+    bufSize = scratchAccessor.pSegment->getUsablePageSize();
+    SegPageLock bufferLock;
+    bufferLock.accessSegment(scratchAccessor);
+    bufUsed = bufSize;
+
+    bitmapColSize = 16;
+    attrDesc_bitmap =
+        TupleAttributeDescriptor(
+            stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
+            true, bitmapColSize);
+    attrDesc_int64 =
+        TupleAttributeDescriptor(
+            stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+
+    entryTupleDesc.push_back(attrDesc_int64);
+    entryTupleDesc.push_back(attrDesc_bitmap);
+    entryTupleDesc.push_back(attrDesc_bitmap);
+    entryTuple.compute(entryTupleDesc);
+
+    SharedLbmEntryInfo pListElement = SharedLbmEntryInfo(new LbmEntryInfo());
+
+    // first entry -- full bitmap
+    
+    pListElement->pBuf = allocateBuf(bufferLock);
+    pListElement->entry.init(
+        pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
+    entryList.push_back(pListElement);
+    LcsRid rid = LcsRid(0);
+    ridValues.push_back(rid);
+    entryTuple[0].pData = (PConstBuffer) &rid;
+    entryTuple[1].cbData = 0;
+    entryTuple[1].pData = NULL;
+    entryTuple[2].cbData = 0;
+    entryTuple[2].pData = NULL;
+    entryList.back()->entry.setEntryTuple(entryTuple);
+    for (uint i = 0; i < bitmapColSize - 2; i++) {
+        rid = LcsRid((i + 1) * 8);
+        entryList.back()->entry.setRID(rid);
+        ridValues.push_back(rid);
+    }
+    LcsRid overlapStartRid = LcsRid((bitmapColSize - 2) * 8);
+
+    // second entry -- compressed bitmap that overlaps the last byte of the
+    // first entry
+
+    pListElement = SharedLbmEntryInfo(new LbmEntryInfo());
+    pListElement->pBuf = allocateBuf(bufferLock);
+    pListElement->entry.init(
+        pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
+    entryList.push_back(pListElement);
+    entryTuple[0].pData = (PConstBuffer) &overlapStartRid;
+    entryTuple[1].pData = NULL;
+    entryTuple[1].cbData = 0;
+    rid = LcsRid(overlapStartRid + 4);
+    ridValues.push_back(rid);
+    uint8_t byte =
+        (uint8_t) (1 << (opaqueToInt(rid) % LbmSegment::LbmOneByteSize));
+    rid = LcsRid(overlapStartRid + 5);
+    ridValues.push_back(rid);
+    byte |= (uint8_t) (1 << (opaqueToInt(rid) % LbmSegment::LbmOneByteSize));
+    entryTuple[2].pData = &byte;
+    entryTuple[2].cbData = 1;
+    entryList.back()->entry.setEntryTuple(entryTuple);
+
+    // third entry -- singleton
+
+    pListElement = SharedLbmEntryInfo(new LbmEntryInfo());
+    pListElement->pBuf = allocateBuf(bufferLock);
+    pListElement->entry.init(
+        pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
+    entryList.push_back(pListElement);
+    rid = LcsRid(overlapStartRid + 8 + 2);
+    ridValues.push_back(rid);
+    entryTuple[0].pData = (PConstBuffer) &rid;
+    entryTuple[1].pData = NULL;
+    entryTuple[1].cbData = 0;
+    entryTuple[2].pData = NULL;
+    entryTuple[2].cbData = 0;
+    entryList.back()->entry.setEntryTuple(entryTuple);
+
+    // produce the tuples corresponding to each LbmEntry
+    for (uint i = 0; i < entryList.size(); i++) {
+        entryList[i]->entryTuple = entryList[i]->entry.produceEntryTuple();
+    }
+
+    uint ridPos = 0;
+    PBuffer mergeBuf = allocateBuf(bufferLock);
+    LbmEntry mEntry;
+    mEntry.init(
+        mergeBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
+
+    mEntry.setEntryTuple(entryList[0]->entryTuple);
+
+    // merge the the overlapping byte; mergeEntry should return true
+    bool rc = mEntry.mergeEntry(entryList[1]->entryTuple);
+    BOOST_REQUIRE(rc);
+
+    // this merge should overflow the currentEntry
+    rc = mEntry.mergeEntry(entryList[2]->entryTuple);
+    BOOST_REQUIRE(!rc);
+    rc = compareExpected(mEntry, ridValues, ridPos);
+    BOOST_REQUIRE(rc);
+
+    // make sure the previous merge didn't add any extra rids
+    mEntry.setEntryTuple(entryList[2]->entryTuple);
+    rc = compareExpected(mEntry, ridValues, ridPos);
+    BOOST_REQUIRE(rc);
 
     scratchAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
 }
