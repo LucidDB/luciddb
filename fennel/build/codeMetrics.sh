@@ -2,7 +2,7 @@
 # Gather source code metrics such as lines of code
 # Run this against a pristine source tree (not after a build has polluted it)
 
-cd ${FENNEL_HOME}
+cd ..
 
 echo "*** Unique file extensions"
 for file in `find . -name '*\\.*' -a ! -type d -print`;
