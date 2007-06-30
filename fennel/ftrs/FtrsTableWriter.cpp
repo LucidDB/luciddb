@@ -138,6 +138,10 @@ inline void FtrsTableWriter::insertIntoIndex(
             }
             // couldn't update in place:  treat as a deletion+insertion instead
             indexWriter.pWriter->deleteCurrent();
+
+            // REVIEW jvs 26-Jun-2007:  doesn't insertTupleData below
+            // assume that the writer is still positioned?
+            // So why do we call endSearch here?
             indexWriter.pWriter->endSearch();
         } else {
             // REVIEW:  can this happen?  If so, should we insert?

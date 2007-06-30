@@ -93,4 +93,4 @@ public class FarragoMockPrincipal
     }
 }
 
-// End $file.name$
+// End FarragoMockPrincipal.java

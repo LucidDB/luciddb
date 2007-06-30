@@ -170,6 +170,31 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      */
     void deleteLogged(ByteInputStream &logStream);
 
+    /**
+     * Positions search key for insert, also detecting duplicate key values
+     *
+     * @param nodeAccessor node accessor for leaf node
+     *
+     * @return true if duplicate key found
+     */
+    bool positionSearchKey(BTreeNodeAccessor &nodeAccessor);
+
+    /**
+     * Checks to ensure that when monotonic insert mode is used,
+     * the keys really are increasing.  Note though that the check
+     * is only done for the 2nd and subsequent keys on a leaf page.
+     * I.e., the check is not done across page boundaries.
+     *
+     * @param nodeAccessor node accessor for leaf node
+     *
+     * @param pTupleBuffer tuple buffer for new key to be inserted
+     *
+     * @return true if new key is > previous key and it will be inserted
+     * in the last position in the node
+     */
+    bool checkMonotonicity(
+        BTreeNodeAccessor &nodeAccessor, PConstBuffer pTupleBuffer);
+
 public:
     /**
      * Creates a new BTreeWriter.
@@ -188,8 +213,10 @@ public:
     virtual ~BTreeWriter();
 
     /**
-     * Inserts a tuple from unmarshalled TupleData form.  See
-     * insertTupleFromBuffer for duplicate handling.
+     * Inserts a tuple from unmarshalled TupleData form; requires this writer
+     * to already be positioned to the correct location (the caller is trusted,
+     * with no verification).  See insertTupleFromBuffer for duplicate
+     * handling.
      *
      * @param tupleData tuple to be inserted
      *
@@ -240,31 +267,6 @@ public:
      * Releases any allocated scratch buffers.
      */
     void releaseScratchBuffers();
-
-    /**
-     * Positions search key for insert, also detecting duplicate key values
-     *
-     * @param nodeAccessor node accessor for leaf node
-     *
-     * @return true if duplicate key found
-     */
-    bool positionSearchKey(BTreeNodeAccessor &nodeAccessor);
-
-    /**
-     * Checks to ensure that when monotonic insert mode is used,
-     * the keys really are increasing.  Note though that the check
-     * is only done for the 2nd and subsequent keys on a leaf page.
-     * I.e., the check is not done across page boundaries.
-     *
-     * @param nodeAccessor node accessor for leaf node
-     *
-     * @param pTupleBuffer tuple buffer for new key to be inserted
-     *
-     * @return true if new key is > previous key and it will be inserted
-     * in the last position in the node
-     */
-    bool checkMonotonicity(
-        BTreeNodeAccessor &nodeAccessor, PConstBuffer pTupleBuffer);
 
     // implement LogicalTxnParticipant
     virtual LogicalTxnClassId getParticipantClassId() const;
