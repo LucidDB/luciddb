@@ -4,8 +4,8 @@
 
 cd ${FENNEL_HOME}
 
-echo "Unique file extensions"
-for file in `find . ! -type d -print`;
+echo "*** Unique file extensions"
+for file in `find . -name '*\\.*' -a ! -type d -print`;
 do
   echo ${file##*.}
 done | sort | uniq
