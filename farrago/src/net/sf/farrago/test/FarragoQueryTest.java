@@ -481,6 +481,77 @@ public class FarragoQueryTest
             FarragoSessionTxnEnd.COMMIT,
             listener.events.get(3));
     }
+    
+    /**
+     * Tests that ResultSet.getObject(int) implementation in farrago returns
+     *  a distinct object for a ZonelessDateTime type column in each new row.
+     *  
+     * @throws Exception
+     */
+    public void testDateTimeOverLocalJdbc()
+        throws Exception
+    {
+        String createStmt =
+            "create table sales.datetable" +
+            "(keycol int not null primary key, datecol date)";
+        
+        String dropStmt = " drop table sales.datetable";
+        
+        String insertStmt1 =
+            "insert into sales.datetable values(0, DATE '2007-07-07')";
+        
+        String insertStmt2 =
+            "insert into sales.datetable values(1, DATE '2007-07-08')";
+        
+        String selectStmt1 =
+            "select * from (values cast('2007-06-22' as date), cast('2007-06-23' as date))";
+
+        String selectStmt2 =
+            "select t.datecol from sales.datetable as t";
+
+        String selectStmt3 =
+            "select t.datecol from sales.datetable as t where 1 = 1";
+
+        stmt.executeUpdate(createStmt);
+        stmt.executeUpdate(insertStmt1);
+        stmt.executeUpdate(insertStmt2);
+
+        Object obj1, obj2;
+        
+        try {
+            // FarragoTupleIterResultSet with a CompoundTupleIter fetching
+            // from input iterators returning onw row each.
+            resultSet = stmt.executeQuery(selectStmt1);
+            resultSet.next();
+            obj1 = resultSet.getObject(1);
+            resultSet.next();
+            obj2 = resultSet.getObject(1);
+            assertFalse(obj1 == obj2);
+            resultSet.close();
+
+            // FennelOnlyResultSet
+            resultSet = stmt.executeQuery(selectStmt2);
+            resultSet.next();
+            obj1 = resultSet.getObject(1);
+            resultSet.next();
+            obj2 = resultSet.getObject(1);
+            assertFalse(obj1 == obj2);
+            resultSet.close();
+
+            // FarragoTupleIterResultSet
+            resultSet = stmt.executeQuery(selectStmt3);
+            resultSet.next();
+            obj1 = resultSet.getObject(1);
+            resultSet.next();
+            obj2 = resultSet.getObject(1);
+            assertFalse(obj1 == obj2);
+            resultSet.close();        
+        } finally {
+            resultSet.close();
+            stmt.executeUpdate(dropStmt);
+        }
+        
+    }
 
     //~ Inner Classes ----------------------------------------------------------
 

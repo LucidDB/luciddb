@@ -93,7 +93,7 @@ public class ZonelessTime
     // implement ZonelessDatetime
     public Object toJdbcObject()
     {
-        return getTempTime(getJdbcTime(DateTimeUtil.defaultZone));
+        return new Time(getJdbcTime(DateTimeUtil.defaultZone));
     }
 
     /**

@@ -23,6 +23,7 @@
 #define Fennel_LbmSplicerExecStream_Included
 
 #include "fennel/btree/BTreeWriter.h"
+#include "fennel/ftrs/BTreeExecStream.h"
 #include "fennel/exec/DiffluenceExecStream.h"
 #include "fennel/exec/DynamicParam.h"
 #include "fennel/tuple/TupleAccessor.h"
@@ -312,22 +313,61 @@ class LbmSplicerExecStream : public DiffluenceExecStream
     bool existingEntry(TupleData const &bitmapEntry);
 
     /**
-     * Searches the btree, looking for a bitmap entry
+     * Searches the btree, looking for the btree record matching the index
+     * keys and startRid of a specified bitmap entry
      *
-     * @param bitmapEntry entry being searched
+     * @param bitmapEntry entry for which we are trying to match
      * @param bTreeTupleData tuple data where the btree record will be
-     * returned
+     * returned if a matching entry is found; if a non-match is found, the
+     * tuple data contains the greatest lower bound btree entry found
      *
-     * @return true if entry found in btree
+     * @return true if a matching entry is found in the btree; false otherwise;
+     * (in this case, bTreeWriter is positioned at the location of the greatest
+     * lower bound btree entry corresponding to the bitmap entry)
+     */
+    bool findMatchingBTreeEntry(
+        TupleData const &bitmapEntry,
+        TupleData &bTreeTupleData);
+
+    /**
+     * Searches the btree, looking for the first btree record which overlaps
+     * with a given bitmap entry (or the insertion point for a new one if no
+     * existing match exists).
+     *
+     * @param bitmapEntry entry for which to find an overlap match
+     * @param bTreeTupleData tuple data where the btree record will be returned
+     * if a matching entry is found (otherwise invalid data references
+     * are returned here after search)
+     *
+     * @return true if entry found in btree; false if no entry found
+     * (in this case, bTreeWriter is positioned to correct location
+     * for inserting new entry)
      */
     bool findBTreeEntry(
-        TupleData const &bitmapEntry, TupleData &bTreeTupleData);
+        TupleData const &bitmapEntry,
+        TupleData &bTreeTupleData);
+
+    /**
+     * Determines whether a rid intersects the rid range spanned by a bitmap
+     * entry.  If the bitmap is a singleton, then the byte occupied by the
+     * singleton rid is used in determining intersection.
+     *
+     * @param rid the rid
+     * @param bitmapTupleData tupleData representing a bitmap entry
+     * @param firstByte if true, only consider overlap in the first byte of
+     * the bitmap
+     *
+     * @return true if the rid overlaps the bitmap entry
+     */
+    bool ridOverlaps(LcsRid rid, TupleData &bitmapTupleData, bool firstByte);
 
     /**
      * Determines if there exists a better entry in the btree, corresponding
      * to the bitmap entry passed in, as compared to whatever is the current
      * bitmap entry.  If there is, the current entry is written to the btree,
      * and the current entry is set to the btree entry found.
+     *
+     * @param bitmapEntry tupleData corresponding to the entry to be spliced
      */
     void findBetterEntry(TupleData const &bitmapEntry);
 

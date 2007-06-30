@@ -14,6 +14,7 @@ LcsClusterAppendExecStreamTest \
 LcsMultiClusterAppendTest \
 LcsRowScanExecStreamTest \
 LbmEntryTest \
+LbmSplicerExecStreamTest \
 LbmLoadBitmapTest \
 LbmSearchTest \
 LbmIntersectExecStreamTest \
@@ -34,6 +35,7 @@ LcsClusterAppendExecStreamTest_SOURCES=LcsClusterAppendExecStreamTest.cpp
 LcsMultiClusterAppendTest_SOURCES=LcsMultiClusterAppendTest.cpp
 LcsRowScanExecStreamTest_SOURCES=LcsRowScanExecStreamTest.cpp
 LbmEntryTest_SOURCES=LbmEntryTest.cpp
+LbmSplicerExecStreamTest_SOURCES=LbmSplicerExecStreamTest.cpp 
 LbmLoadBitmapTest_SOURCES=LbmLoadBitmapTest.cpp
 LbmSearchTest_SOURCES=LbmExecStreamTestBase.cpp LbmSearchTest.cpp
 LbmIntersectExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmIntersectExecStreamTest.cpp 

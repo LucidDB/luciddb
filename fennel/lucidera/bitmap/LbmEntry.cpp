@@ -795,8 +795,13 @@ bool LbmEntry::adjustEntry(TupleData &inputTuple)
          * Everything in the current entry remains the same, since only the
          * last byte is modified. Need to update the fields in inputTuple
          * to reflect that the current entry no longer contains the first
-         * byte.
+         * byte; unless the inputTuple only contains a single byte, in which
+         * case, there's nothing left in the tuple to merge.
          */
+        if (inputTuple[inputTuple.size() -1].cbData == 1) {
+            assert(inputTuple[inputTuple.size() - 2].pData == NULL);
+            return true;
+        }
 
         /*
          * First,

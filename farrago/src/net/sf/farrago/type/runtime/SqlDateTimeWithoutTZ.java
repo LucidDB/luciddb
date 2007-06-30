@@ -735,6 +735,12 @@ public abstract class SqlDateTimeWithoutTZ
             {
                 return;
             }
+
+            // REVIEW jvs 26-Jun-2007:  Here and elsewhere, should be
+            // using FarragoRuntimeContext's notion of the current
+            // timestamp; I think SQL:2003 requires the CURRENT_DATE
+            // per-execution snapshot semantics to apply here too.
+            
             currentDate = new ZonelessDate();
             currentDate.setZonelessTime(date.value.getTime());
         }

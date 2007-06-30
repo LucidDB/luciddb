@@ -50,6 +50,7 @@ class MedMockDataServer
 {
     //~ Static fields/initializers ---------------------------------------------
 
+    public static final String PROP_SIMULATE_BAD = "SIMULATE_BAD_CONNECTION";
     public static final String PROP_SCHEMA_NAME = "FOREIGN_SCHEMA_NAME";
     public static final String PROP_TABLE_NAME = "FOREIGN_TABLE_NAME";
     public static final String PROP_ROW_COUNT = "ROW_COUNT";
@@ -79,6 +80,14 @@ class MedMockDataServer
     void initialize()
         throws SQLException
     {
+        boolean simulateBadConnection =
+            getBooleanProperty(
+                wrapper.getProperties(),
+                PROP_SIMULATE_BAD,
+                false);
+        if (simulateBadConnection) {
+            throw new SQLException("Let's pretend something bad happened.");
+        }
     }
 
     // implement FarragoMedDataServer

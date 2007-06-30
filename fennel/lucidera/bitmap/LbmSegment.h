@@ -214,7 +214,7 @@ public:
      *
      * @param segDescByte the seg desc byte with segment length encoded.
      */
-    inline uint getSegLength(uint8_t segDescByte);
+    static inline uint getSegLength(uint8_t segDescByte);
 
     /**
      * Get the number of bytes to store the length of zero bytes.

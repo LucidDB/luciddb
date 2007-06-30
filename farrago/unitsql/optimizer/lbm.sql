@@ -519,5 +519,15 @@ explain plan for select a, count(*) from minus group by a;
 !set outputformat table
 select a, count(*) from minus group by a;
 
+-- LER-5800
+create table t1(a int);
+create index it1 on t1(a);
+create table t2(a int);
+insert into t2 values(2), (2), (2);
+insert into t1 values(null), (1), (1), (1), (2);
+insert into t1 select * from t2;
+insert into t1 values(2);
+select * from t1 order by a;
+
 -- cleanup
 drop server test_data cascade;

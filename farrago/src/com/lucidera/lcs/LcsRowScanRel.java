@@ -477,6 +477,11 @@ public class LcsRowScanRel
         }
         return RelFieldCollation.emptyCollationArray;
     }
+    
+    public double getInputSelectivity()
+    {
+        return inputSelectivity;
+    }
 }
 
 // End LcsRowScanRel.java

@@ -249,7 +249,7 @@ public abstract class RelMetadataQuery
      * expression are unique.
      *
      * @param rel the relational expression
-     * @param columns column mask representing the ssubset of columns for which
+     * @param columns column mask representing the subset of columns for which
      * uniqueness will be determined
      *
      * @return true or false depending on whether the columns are unique, or

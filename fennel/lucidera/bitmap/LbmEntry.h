@@ -202,16 +202,7 @@ class LbmEntry : public LbmSegment
      */
     uint getRowCount(PBuffer &lastSegDescByte, uint &lastZeroRIDs);
 
-    /**
-     * Get the number of rows encoded by a bitmap tuple.
-     *
-     * @param [in] inputTuple the input bitmap tuple to get row count for
-     *
-     * @return number of rows encoded by this entry.
-     */
-    uint getRowCount(TupleData const &inputTuple);
-
-    uint getCompressedRowCount(
+    static uint getCompressedRowCount(
         PBuffer pDescStart, PBuffer pDescEnd,
         PBuffer &lastSegDescByte, uint &lastZeroRIDs);
 
@@ -604,6 +595,15 @@ public:
      * @return number of rows encoded by this entry.
      */
     uint getRowCount();
+
+    /**
+     * Get the number of rows encoded by a bitmap tuple.
+     *
+     * @param [in] inputTuple the input bitmap tuple to get row count for
+     *
+     * @return number of rows encoded by this entry.
+     */
+    static uint getRowCount(TupleData const &inputTuple);
 
     /**
      * Determines if the bitmap entry contains a specified rid value

@@ -748,6 +748,29 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 | 1  | 8       |
 +----+---------+
 > 
+> -- LER-5800
+> create table t1(a int);
+> create index it1 on t1(a);
+> create table t2(a int);
+> insert into t2 values(2), (2), (2);
+> insert into t1 values(null), (1), (1), (1), (2);
+> insert into t1 select * from t2;
+> insert into t1 values(2);
+> select * from t1 order by a;
++----+
+| A  |
++----+
+|    |
+| 1  |
+| 1  |
+| 1  |
+| 2  |
+| 2  |
+| 2  |
+| 2  |
+| 2  |
++----+
+> 
 > -- cleanup
 > drop server test_data cascade;
 > 

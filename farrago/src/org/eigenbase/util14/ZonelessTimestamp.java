@@ -77,7 +77,7 @@ public class ZonelessTimestamp
     // implement ZonelessDatetime
     public Object toJdbcObject()
     {
-        return getTempTimestamp(getJdbcTimestamp(DateTimeUtil.defaultZone));
+        return new Timestamp(getJdbcTimestamp(DateTimeUtil.defaultZone));
     }
 
     /**
