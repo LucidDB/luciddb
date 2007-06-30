@@ -795,8 +795,13 @@ bool LbmEntry::adjustEntry(TupleData &inputTuple)
          * Everything in the current entry remains the same, since only the
          * last byte is modified. Need to update the fields in inputTuple
          * to reflect that the current entry no longer contains the first
-         * byte.
+         * byte; unless the inputTuple only contains a single byte, in which
+         * case, there's nothing left in the tuple to merge.
          */
+        if (inputTuple[inputTuple.size() -1].cbData == 1) {
+            assert(inputTuple[inputTuple.size() - 2].pData == NULL);
+            return true;
+        }
 
         /*
          * First,
@@ -872,12 +877,6 @@ bool LbmEntry::adjustEntry(TupleData &inputTuple)
          * Adjust the startRID in the input tuple.
          */
         inputStartRID += numRIDsMoved;
-        // If the input tuple was a single overlapping byte, then nothing more
-        // needs to be merged from that tuple
-        if (inputTuple[inputTuple.size() -1].cbData == 0) {
-            assert(pFirstDesc == NULL);
-            return true;
-        }
     }
     return false;
 }
