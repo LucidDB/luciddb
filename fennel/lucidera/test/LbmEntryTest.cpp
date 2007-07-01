@@ -25,6 +25,7 @@
 #include "fennel/lucidera/bitmap/LbmEntry.h"
 #include "fennel/cache/Cache.h"
 #include <stdarg.h>
+#include <hash_set>
 
 #include <boost/scoped_array.hpp>
 #include <boost/test/test_tools.hpp>
@@ -260,20 +261,13 @@ void LbmEntryTest::testRandom(
 
     // generate random rid values, ensuring that they are unique, then
     // sort them
-    LcsRid rid = LcsRid(rand() % nRows);
-    ridValues.push_back(rid);
-    for (uint i = 1; i < totalRids; ) {
-        rid = LcsRid(rand() % nRows);
-        uint j;
-        for (j = 0; j < i; j++) {
-            if (rid == ridValues[j]) {
-                break;
-            }
-        }
-        if (j >= i) {
-            ridValues.push_back(rid);
+    std::hash_set<uint64_t> ridsGenerated;
+    for (uint i = 0; i < totalRids; ) {
+        uint64_t rid = rand() % nRows;
+        if (ridsGenerated.find(rid) == ridsGenerated.end()) {
+            ridValues.push_back(LcsRid(rid));
+            ridsGenerated.insert(rid);
             i++;
-            continue;
         }
     }
     // sort the rid values
@@ -386,25 +380,17 @@ void LbmEntryTest::testMergeEntry(
         // not able to merge, so need to produce entry and compare against
         // expected rids before starting to merge on the next entry
         bool rc = compareExpected(mEntry, ridValues, ridPos);
-        if (!rc) {
-            BOOST_REQUIRE(rc);
-        }
+        BOOST_REQUIRE(rc);
         mEntry.setEntryTuple(entryList[i]->entryTuple);
     }
     // if this is the last remaining entry, compare it against
     // expected rid values
     if (ridPos < totalRids) {
         bool rc = compareExpected(mEntry, ridValues, ridPos);
-        if (!rc) {
-            BOOST_REQUIRE(rc);
-        }
+        BOOST_REQUIRE(rc);
     }
 
-    if (ridPos < totalRids) {
-        std::cout << "Mismatch in rid count. Actual = " << ridPos <<
-            ", Expected = " << totalRids << std::endl;
-        BOOST_FAIL("");
-    }
+    BOOST_REQUIRE(ridPos == totalRids);
 
     scratchAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
 }
@@ -644,25 +630,17 @@ void LbmEntryTest::testldb35()
         // not able to merge, so need to produce entry and compare against
         // expected rids before starting to merge on the next entry
         bool rc = compareExpected(mEntry, ridValues, ridPos);
-        if (!rc) {
-            BOOST_REQUIRE(rc);
-        }
+        BOOST_REQUIRE(rc);
         mEntry.setEntryTuple(entryList[i]->entryTuple);
     }
     // if this is the last remaining entry, compare it against
     // expected rid values
     if (ridPos < ridValues.size()) {
         bool rc = compareExpected(mEntry, ridValues, ridPos);
-        if (!rc) {
-            BOOST_REQUIRE(rc);
-        }
+        BOOST_REQUIRE(rc);
     }
 
-    if (ridPos < ridValues.size()) {
-        std::cout << "Mismatch in rid count. Actual = " << ridPos <<
-            ", Expected = " << ridValues.size() << std::endl;
-        BOOST_FAIL("");
-    }
+    BOOST_REQUIRE(ridPos == ridValues.size());
 
     scratchAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
 }
@@ -945,9 +923,7 @@ void LbmEntryTest::testMergeSingleton(
     for (uint i = 1; i < totalRids - nSingletons; i++) {
         bool rc = lbmEntry.setRID(ridValues[i]);
         // make sure there is enough space to fit the initial set of rids
-        if (!rc) {
-            BOOST_FAIL("Not enough room for initial rids");
-        }
+        BOOST_REQUIRE(rc);
     }
 
     std::vector<LcsRid> sortedRids;
@@ -972,13 +948,9 @@ void LbmEntryTest::testMergeSingleton(
         entryTuple[2].pData = NULL;
         entryTuple[1].cbData = 0;
         if (!lbmEntry.mergeEntry(entryTuple)) {
-            if (!split) {
-                BOOST_FAIL("split not allowed");
-            }
+            BOOST_REQUIRE(split);
             bool rc = compareExpected(lbmEntry, sortedRids, ridPos);
-            if (!rc) {
-                BOOST_REQUIRE(rc);
-            }
+            BOOST_REQUIRE(rc);
             lbmEntry.setEntryTuple(entryTuple);
             splitOccurred = true;
         }
@@ -987,20 +959,12 @@ void LbmEntryTest::testMergeSingleton(
     // compare the rids in the last entry
     if (ridPos < totalRids) {
         bool rc = compareExpected(lbmEntry, sortedRids, ridPos);
-        if (!rc) {
-            BOOST_REQUIRE(rc);
-        }
+        BOOST_REQUIRE(rc);
     }
 
-    if (ridPos < totalRids) {
-        std::cout << "Mismatch in rid count. Actual = " << ridPos <<
-            ", Expected = " << totalRids << std::endl;
-        BOOST_FAIL("");
-    }
+    BOOST_REQUIRE(ridPos == totalRids);
 
-    if (split && !splitOccurred) {
-        BOOST_FAIL("Split did not occur");
-    }
+    BOOST_REQUIRE(!(split && !splitOccurred));
 }
 
 void LbmEntryTest::testMergeSingletonInFront1()
