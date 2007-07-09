@@ -440,8 +440,31 @@ public class FarragoDdlGenerator
         boolean skipDefaults,
         boolean skipNullable)
     {
+        generateColumnsAndKeys(sb, columns, skipDefaults, skipNullable, null);
+    }
+
+    /**
+     * Generates the column and key definitions of a table as a SQL string
+     * (enclosed in parentheses unless there are no columns).
+     *
+     * @param sb receives generated string
+     * @param columns iterator over column definitions to generate
+     * @param skipDefaults whether to omit default value definitions
+     * @param skipNullable whether to omit NOT NULL constraint definitions
+     * @param imposedPrimaryKey if not null, use as PRIMARY KEY
+     * (ignoring PRIMARY KEY definition in the catalog)
+     */
+    public void generateColumnsAndKeys(
+        StringBuilder sb,
+        Iterator<CwmColumn> columns,
+        boolean skipDefaults,
+        boolean skipNullable,
+        List<String> imposedPrimaryKey)
+    {
+        // TODO jvs 8-Jul-2007:  UNIQUE constraints
+        
         boolean isLast = false;
-        List<String> pk = null;
+        List<String> pk = imposedPrimaryKey;
 
         if (columns.hasNext()) {
             sb.append(" (");
@@ -449,12 +472,14 @@ public class FarragoDdlGenerator
             while (columns.hasNext()) {
                 CwmColumn col = columns.next();
 
-                if (col instanceof FemStoredColumn) {
-                    if (hasPrimaryKeyConstraint((FemStoredColumn) col)) {
-                        if (pk == null) {
-                            pk = new ArrayList<String>();
+                if (imposedPrimaryKey == null) {
+                    if (col instanceof FemStoredColumn) {
+                        if (hasPrimaryKeyConstraint((FemStoredColumn) col)) {
+                            if (pk == null) {
+                                pk = new ArrayList<String>();
+                            }
+                            pk.add(col.getName());
                         }
-                        pk.add(col.getName());
                     }
                 }
 
