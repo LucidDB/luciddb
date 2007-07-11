@@ -692,10 +692,10 @@ public class LoptMetadataProvider
         }
 
         if (joinType.generatesNullsOnLeft()) {
-            rowCount = Math.max(rowCount, nRowsLeft);
+            rowCount = Math.max(rowCount, nRowsRight);
         }
         if (joinType.generatesNullsOnRight()) {
-            rowCount = Math.max(rowCount, nRowsRight);
+            rowCount = Math.max(rowCount, nRowsLeft);
         }
 
         return rowCount;
