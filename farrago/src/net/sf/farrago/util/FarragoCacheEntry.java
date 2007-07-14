@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.util;
 
+import java.util.concurrent.atomic.*;
+
 /**
  * FarragoCacheEntry implements the interfaces for a cache entry.
  *
@@ -39,7 +41,7 @@ public class FarragoCacheEntry
     Object key;
     Object value;
     int pinCount;
-    long memoryUsage;
+    AtomicLong memoryUsage;
     Thread constructionThread;
     boolean isReusable;
     boolean isInitialized;
@@ -57,6 +59,7 @@ public class FarragoCacheEntry
         // assume reusable; but really, assertions below should guarantee that
         // this is never even accessed until after initialize overwrites it
         isReusable = true;
+        memoryUsage = new AtomicLong();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -95,7 +98,7 @@ public class FarragoCacheEntry
         // memory barrier cause the writes to get reordered?
         this.isInitialized = true;
         this.isReusable = isReusable;
-        this.memoryUsage = memoryUsage;
+        this.memoryUsage.set(memoryUsage);
         this.value = value;
     }
 
