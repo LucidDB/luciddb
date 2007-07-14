@@ -277,13 +277,13 @@ public class FarragoObjectCache
         assert(!unpinEntry);
 
         if (tracer.isLoggable(Level.FINE)) {
-            long cacheSize = bytesUsed + entry.memoryUsage;
+            long cacheSize = bytesUsed + entry.memoryUsage.get();
             tracer.fine(
                 "returning new entry, pin count " + entry.pinCount
-                + ", size " + entry.memoryUsage + ", cache size "
+                + ", size " + entry.memoryUsage.get() + ", cache size "
                 + cacheSize + ", key " + entry.key);
         }
-        adjustMemoryUsage(entry.memoryUsage);
+        adjustMemoryUsage(entry.memoryUsage.get());
         return entry;
     }
 
@@ -407,7 +407,7 @@ public class FarragoObjectCache
                 victimPolicy.unregisterEntry(lruList);
                 mapKeyToEntry.removeMulti(entry.getKey(), entry);
                 discards.add(entry);
-                overdraft -= entry.memoryUsage;
+                overdraft -= entry.memoryUsage.get();
             }
         }
 
@@ -535,7 +535,7 @@ public class FarragoObjectCache
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine(
                     "Discarding entry " + entry.key.toString()
-                    + ", size " + entry.memoryUsage);
+                    + ", size " + entry.memoryUsage.get());
             }
 
             assert (entry.pinCount == 0) : "expected pin-count=0 for entry "
@@ -548,7 +548,7 @@ public class FarragoObjectCache
         }
 
         synchronized (mapKeyToEntry) {
-            bytesUsed -= entry.memoryUsage;
+            bytesUsed -= entry.memoryUsage.get();
         }
     }
 

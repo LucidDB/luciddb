@@ -255,7 +255,11 @@ public abstract class MedAbstractColumnSet
                             type.toString(),
                             targetField.getType().toString()));
                 }
-                rexNodeList.add(new RexInputRef(index, targetField.getType()));
+                rexNodeList.add(
+                    new RexInputRef(
+                        index,
+                        child.getRowType().getField(
+                            targetField.getName()).getType()));
             } else { // target field is not in child
                 rexNodeList.add(
                     rexBuilder.makeCast(

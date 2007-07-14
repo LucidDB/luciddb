@@ -32,6 +32,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/grant_select_for_schema.sql"/>
       </test>
 
+      <test name="replicateMondrian">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/replicate_mondrian.sql"/>
+      </test>
+
       <test name="exportSchemaToFile">
         <!-- LDB-148 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/gen/export_schema_to_file.sql"/>

@@ -1,0 +1,107 @@
+0: jdbc:luciddb:> -- test the replicate_mondrian UDP
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create the source star schema
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema mondrian_src;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table mondrian_src.d1(
+. . . . . . . . >     d1_key int not null primary key,
+. . . . . . . . >     d1_attr varchar(200));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table mondrian_src.d2(
+. . . . . . . . >     d2_key int not null primary key,
+. . . . . . . . >     d2_attr varchar(200));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table mondrian_src.f(
+. . . . . . . . >     f_key int not null primary key,
+. . . . . . . . >     d1_key int not null,
+. . . . . . . . >     d2_key int not null,
+. . . . . . . . >     m1 numeric(18,3),
+. . . . . . . . >     m2 bigint);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create an extra table in the source table so we can verify that
+0: jdbc:luciddb:> -- it does NOT get replicated
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table mondrian_src.extra(
+. . . . . . . . >     k int not null primary key);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- populate some data
+0: jdbc:luciddb:> insert into mondrian_src.d1 values (1, 'Parsley'), (2, 'Sage');
+0: jdbc:luciddb:> insert into mondrian_src.d2 values (1, 'Rosemary'), (2, 'Thyme');
+0: jdbc:luciddb:> insert into mondrian_src.f values (1, 1, 1, 5.2, 3), (2, 2, 1, 10.4, 7);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create a loopback link into the source schema
+0: jdbc:luciddb:> create server loopback_localdb
+. . . . . . . . > foreign data wrapper "LUCIDDB LOCAL"
+. . . . . . . . > options(
+. . . . . . . . >     url 'jdbc:luciddb:',
+. . . . . . . . >     user_name 'sa');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create the replication target schema
+0: jdbc:luciddb:> create schema mondrian_tgt;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call applib.replicate_mondrian(
+. . . . . . . . > '${FARRAGO_HOME}/../luciddb/test/sql/udr/udp/MondrianReplication.xml',
+. . . . . . . . > 'LOOPBACK_LOCALDB',
+. . . . . . . . > 'MONDRIAN_SRC',
+. . . . . . . . > 'MONDRIAN_TGT',
+. . . . . . . . > '${FARRAGO_HOME}/../luciddb/testlog/mondrian_replication_script.sql',
+. . . . . . . . > true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify data copy
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from mondrian_tgt.d1 order by d1_key;
++---------+----------+
+| D1_KEY  | D1_ATTR  |
++---------+----------+
+| 1       | Parsley  |
+| 2       | Sage     |
++---------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from mondrian_tgt.d2 order by d2_key;
++---------+-----------+
+| D2_KEY  |  D2_ATTR  |
++---------+-----------+
+| 1       | Rosemary  |
+| 2       | Thyme     |
++---------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from mondrian_tgt.f order by f_key;
++--------+---------+---------+---------+-----+
+| F_KEY  | D1_KEY  | D2_KEY  |   M1    | M2  |
++--------+---------+---------+---------+-----+
+| 1      | 1       | 1       | 5.200   | 3   |
+| 2      | 2       | 1       | 10.400  | 7   |
++--------+---------+---------+---------+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify that unreferenced table did NOT get copied:  should fail
+0: jdbc:luciddb:> select * from mondrian_tgt.extra;
+Error: From line 1, column 15 to line 1, column 32: Table 'MONDRIAN_TGT.EXTRA' not found (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify primary key creation:  should fail
+0: jdbc:luciddb:> insert into mondrian_tgt.d1 values (1, 'Fennel');
+Error: Unique constraint violation (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify indexing
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select index_name
+. . . . . . . . > from sys_boot.jdbc_metadata.index_info_view
+. . . . . . . . > where table_schem='MONDRIAN_TGT'
+. . . . . . . . > and table_name='D2'
+. . . . . . . . > order by index_name;
++------------------------------------------+
+|                INDEX_NAME                |
++------------------------------------------+
+|                                          |
+| D2_D2_ATTR_idx                           |
+| SYS$CLUSTERED_INDEX$D2$D2_ATTR           |
+| SYS$CLUSTERED_INDEX$D2$D2_KEY            |
+| SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$D2  |
+| SYS$DELETION_INDEX$D2                    |
++------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- preemptive cleanup since loopback links are pesky
+0: jdbc:luciddb:> drop server loopback_localdb cascade;
+0: jdbc:luciddb:> call sys_root.flush_code_cache();
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

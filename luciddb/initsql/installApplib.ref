@@ -894,4 +894,16 @@
 > reads sql data
 > external name  'applib.applibJar:com.lucidera.luciddb.applib.util.DropSchemaIfExistsUdp.execute';
 > 
+> -- UDP for replicating a Mondrian schema
+> create or replace procedure applib.replicate_mondrian(
+>     mondrian_schema_filename varchar(65535), 
+>     foreign_server_name varchar(128), 
+>     foreign_schema_name varchar(128), 
+>     local_schema_name varchar(128),
+>     script_file_name varchar(65535),
+>     copy_data boolean)
+> language java
+> modifies sql data
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.mondrian.ReplicateMondrianUdp.execute';
+> 
 > !quit

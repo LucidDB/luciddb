@@ -872,6 +872,25 @@ public class LoptMetadataTest
             "select * from t1, t2 where t1.a = t2.a and t2.b = 1",
             1000 * DEFAULT_SARGABLE_SELECTIVITY);
     }
+    
+    public void testRowCountLeftOuterJoinNoColStats()
+        throws Exception
+    {
+        checkRowCountJoin(
+            "select * from emps e left outer join depts d "+
+            "on e.deptno = d.deptno and d.dname = 'foo'",
+            (double) COLSTORE_EMPS_ROWCOUNT);
+    }
+    
+    public void testRowCountRightOuterJoinNoColStats()
+        throws Exception
+    {
+        checkRowCountJoin(
+            "select * from depts d right outer join emps e "+
+            "on e.deptno = d.deptno and d.dname = 'foo'",
+            (double) COLSTORE_EMPS_ROWCOUNT);
+        
+    }
 
     public void testRowCountJoinNonEquiJoin()
         throws Exception

@@ -265,6 +265,18 @@ Message: {3}</text>
 <text>Escape symbol must be a single character.</text>
 </exception>
 
+<exception id="900600" name="MondrianReplicationFailed">
+<text>Failed while replicating Mondrian schema.</text>
+</exception>
+
+<exception id="900610" name="SqlStatementExecutionFailed">
+<text>Failed while executing SQL statement:  [{0}]</text>
+</exception>
+
+<exception id="900620" name="MondrianSchemaMismatch">
+<text>Schema qualifier {0} specified for table {1} does not match local_schema_name parameter {2}</text>
+</exception>
+
 <!-- ====================================================================== -->
  Messages
 <!-- ====================================================================== -->

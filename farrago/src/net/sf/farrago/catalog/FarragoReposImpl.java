@@ -583,7 +583,7 @@ public abstract class FarragoReposImpl
      * requested, that requester will wait until the requested lock is
      * available. Locks are reentrant: a thread can take the same lock more than
      * once, but must make a matching number of calls to {@link #unlockRepos}
-     * iin order to release the lock. Upgrade and downgrade are not supported.
+     * in order to release the lock. Upgrade and downgrade are not supported.
      *
      * <p>This lock is independent of MDR transaction state (i.e. it can be held
      * even when no MDR transaction is in progress; an MDR transaction can be
@@ -594,7 +594,7 @@ public abstract class FarragoReposImpl
      *
      * @param lockLevel 1 for a shared lock, 2 for an exclusive lock
      */
-    void lockRepos(int lockLevel)
+    public void lockRepos(int lockLevel)
     {
         if (lockLevel == 1) {
             sxLock.readLock().lock();
@@ -611,7 +611,7 @@ public abstract class FarragoReposImpl
      *
      * @param lockLevel 1 for a shared lock, 2 for an exclusive lock
      */
-    void unlockRepos(int lockLevel)
+    public void unlockRepos(int lockLevel)
     {
         if (lockLevel == 1) {
             sxLock.readLock().unlock();
