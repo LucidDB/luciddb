@@ -99,11 +99,13 @@ public class TimeDimensionInternal extends GregorianCalendar
 
 
         long start = getTimeInMillis();
+        complete();
         this.startMonth = get(Calendar.MONTH);
         this.startYear = get(Calendar.YEAR);
         this.startDate = get(Calendar.DATE);
 
         set( endYear, endMonth-1, endDate );
+        complete();
         long end = getTimeInMillis();
 
         if( start > end ) {
@@ -168,13 +170,17 @@ public class TimeDimensionInternal extends GregorianCalendar
         this.firstOfMonthDate = new Date(getTimeInMillis());
 
         // set last date of quarter
-        roll(Calendar.MONTH, 2 - (this.startMonth % 3));
+        add(Calendar.MONTH, 2 - (this.startMonth % 3));
         set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH));
         complete();
         this.lastOfQuarterDate = new Date(getTimeInMillis());
 
         // set first date, week, day of quarter
-        roll(Calendar.MONTH, -2);
+        // set to minimum day first, so we won't get something unexpected from
+        // rolling back 2 months
+        set(Calendar.DAY_OF_MONTH, getActualMinimum(Calendar.DAY_OF_MONTH));
+        complete();
+        add(Calendar.MONTH, -2);
         set(Calendar.DAY_OF_MONTH, getActualMinimum(Calendar.DAY_OF_MONTH));
         complete();
         this.firstOfQuarterDate = new Date(getTimeInMillis());
@@ -187,12 +193,17 @@ public class TimeDimensionInternal extends GregorianCalendar
         this.firstOfYearDate = new Date(getTimeInMillis());
 
         // set last date of year
-        add(Calendar.YEAR, 1);        
-        add(Calendar.DATE, -1);
+        set(Calendar.DAY_OF_YEAR, getActualMaximum(Calendar.DAY_OF_YEAR));
+//         add(Calendar.YEAR, 1);        
+//         add(Calendar.DATE, -1);
+        complete();
         this.lastOfYearDate = new Date(getTimeInMillis());
 
         // set first date, week, day of fiscal quarter
         set( this.startYear, this.startMonth, this.startDate);
+        complete();
+        // set to minimum day first
+        set(Calendar.DAY_OF_MONTH, getActualMinimum(Calendar.DAY_OF_MONTH));
         complete();
         int fMth = (this.startMonth - this.fiscalYearStartMonth + 12) % 12;
         add(Calendar.MONTH, - (fMth % 3));
@@ -202,15 +213,19 @@ public class TimeDimensionInternal extends GregorianCalendar
         this.fiscalQuarterStartDay = get(Calendar.DAY_OF_YEAR);
 
         // set last date of fiscal quarter
-        add(Calendar.MONTH, 3);
-        add(Calendar.DATE, -1);
+        add(Calendar.MONTH, 2);
+        set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH));
+        complete();
+//        add(Calendar.DATE, -1);
         this.lastOfFiscalQuarterDate = new Date(getTimeInMillis());
 
         // set first date, week, day of fiscal year
         set(this.startYear, this.startMonth, this.startDate);
         complete();
         set(Calendar.MONTH, this.fiscalYearStartMonth);
+        complete();
         set(Calendar.DAY_OF_MONTH, getActualMinimum(Calendar.DAY_OF_MONTH));
+        complete();
         if (this.startMonth < this.fiscalYearStartMonth) {
             add(Calendar.YEAR, -1);
         }
@@ -218,8 +233,11 @@ public class TimeDimensionInternal extends GregorianCalendar
         this.fiscalYearStartDay = get(Calendar.DAY_OF_YEAR);
 
         // set last date of fiscal year
-        add(Calendar.YEAR, 1);
-        add(Calendar.DATE, -1);
+        add(Calendar.MONTH, 11);
+        set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH));
+        complete();
+//         add(Calendar.YEAR, 1);
+//         add(Calendar.DATE, -1);
         this.lastOfFiscalYearDate = new Date(getTimeInMillis());
 
         // set calendar back to start date
@@ -364,10 +382,12 @@ public class TimeDimensionInternal extends GregorianCalendar
         if (doy >= this.fiscalQuarterStartDay) {
             dofq = doy - this.fiscalQuarterStartDay + 1;
         } else {
+            long tempTime = getTimeInMillis();
             add(Calendar.YEAR, -1);
             dofq = getActualMaximum(Calendar.DAY_OF_YEAR) - 
                 this.fiscalQuarterStartDay + doy + 1;
-            add(Calendar.YEAR, 1);
+            setTimeInMillis(tempTime);
+            complete();
         }
         return dofq;
     }
@@ -452,23 +472,38 @@ public class TimeDimensionInternal extends GregorianCalendar
             int month = get(Calendar.MONTH);
 
             this.firstOfMonthDate.setTime(getTimeInMillis());
-            add(Calendar.MONTH, 1);
-            this.lastOfMonthDate.setTime(getTimeInMillis() - millisInADay);
-            add(Calendar.MONTH, -1);
+//            add(Calendar.MONTH, 1);
+            set(Calendar.DAY_OF_MONTH,
+                getActualMaximum(Calendar.DAY_OF_MONTH));
+            complete();
+            this.lastOfMonthDate.setTime(getTimeInMillis());
+//            add(Calendar.MONTH, -1);
+            setTimeInMillis(currentTime);
+            complete();
 
             if ((month % 3) == 0) {
                 if (month == 0) {
                     isFirstDayOfYear = true;
                     this.firstOfYearDate.setTime(currentTime);
-                    add(Calendar.YEAR, 1);
-                    this.lastOfYearDate.setTime(getTimeInMillis() - millisInADay);
-                    add(Calendar.YEAR, -1);
+//                    add(Calendar.YEAR, 1);
+                    set(Calendar.DAY_OF_YEAR,
+                        getActualMaximum(Calendar.DAY_OF_YEAR));
+                    complete();
+                    this.lastOfYearDate.setTime(getTimeInMillis());
+//                    add(Calendar.YEAR, -1);
+                    setTimeInMillis(currentTime);
+                    complete();
                 }
                 this.firstOfQuarterDate.setTime(currentTime);
                 this.quarterStartDay = get(Calendar.DAY_OF_YEAR);
-                add(Calendar.MONTH, 3);
-                this.lastOfQuarterDate.setTime(getTimeInMillis() - millisInADay);
-                add(Calendar.MONTH, -3);
+                add(Calendar.MONTH, 2);
+                set(Calendar.DAY_OF_MONTH, 
+                    getActualMaximum(Calendar.DAY_OF_MONTH));
+                complete();
+                this.lastOfQuarterDate.setTime(getTimeInMillis());
+//                add(Calendar.MONTH, -3);
+                setTimeInMillis(currentTime);
+                complete();
             }
 
             int fMonth = (month - this.fiscalYearStartMonth + 12) % 12;
@@ -479,14 +514,22 @@ public class TimeDimensionInternal extends GregorianCalendar
                     this.fiscalYearStartDay = get(Calendar.DAY_OF_YEAR);
                     add(Calendar.YEAR, 1);
                     this.lastOfFiscalYearDate.setTime(getTimeInMillis() - millisInADay);
-                    add(Calendar.YEAR, -1);
+//                    add(Calendar.YEAR, -1);
+                    setTimeInMillis(currentTime);
+                    complete();
                     
                 }
                 this.firstOfFiscalQuarterDate.setTime(currentTime);
                 this.fiscalQuarterStartDay = get(Calendar.DAY_OF_YEAR);
-                add(Calendar.MONTH, 3);
-                this.lastOfFiscalQuarterDate.setTime(getTimeInMillis() - millisInADay);
-                add(Calendar.MONTH, -3);
+//                add(Calendar.MONTH, 3);
+                add(Calendar.MONTH, 2);
+                set(Calendar.DAY_OF_MONTH, 
+                    getActualMaximum(Calendar.DAY_OF_MONTH));
+                complete();
+                this.lastOfFiscalQuarterDate.setTime(getTimeInMillis());
+//                add(Calendar.MONTH, -3);
+                setTimeInMillis(currentTime);
+                complete();
             }
         }
         // update first/last day of week

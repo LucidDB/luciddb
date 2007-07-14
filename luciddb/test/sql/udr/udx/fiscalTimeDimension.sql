@@ -91,3 +91,16 @@ order by time_key;
 
 select * from table(applib.fiscal_time_dimension(2016, 2, 27, 2016, 3, 12, 11))
 order by time_key;
+
+-- checks for problems with leap years and different fiscal start months
+select count(*), count(distinct time_key) from table(applib.fiscal_time_dimension(1995, 1,1,2010,12,31,2));
+select count(*), count(distinct time_key) from table(applib.fiscal_time_dimension(1995, 1,1,2010,12,31,3));
+select count(*), count(distinct time_key) from table(applib.fiscal_time_dimension(1995, 1,1,2010,12,31,4));
+select count(*), count(distinct time_key) from table(applib.fiscal_time_dimension(1995, 1,1,2010,12,31,5));
+select count(*), count(distinct time_key) from table(applib.fiscal_time_dimension(1995, 1,1,2010,12,31,6));
+select count(*), count(distinct time_key) from table(applib.fiscal_time_dimension(1995, 1,1,2010,12,31,7));
+select count(*), count(distinct time_key) from table(applib.fiscal_time_dimension(1995, 1,1,2010,12,31,8));
+select count(*), count(distinct time_key) from table(applib.fiscal_time_dimension(1995, 1,1,2010,12,31,9));
+select count(*), count(distinct time_key) from table(applib.fiscal_time_dimension(1995, 1,1,2010,12,31,10));
+select count(*), count(distinct time_key) from table(applib.fiscal_time_dimension(1995, 1,1,2010,12,31,11));
+select count(*), count(distinct time_key) from table(applib.fiscal_time_dimension(1995, 1,1,2010,12,31,12));
