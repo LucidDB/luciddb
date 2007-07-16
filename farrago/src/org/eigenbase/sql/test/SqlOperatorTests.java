@@ -214,11 +214,6 @@ public abstract class SqlOperatorTests
         };
     private static final boolean [] FalseTrue = new boolean[] { false, true };
 
-    // todo: log jira feature request to support time and timestamp with
-    // precision
-    private static final Boolean SupportDatetimeWithPrecision =
-        Util.deprecated(false, false);
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlOperatorTests(String testName)
@@ -726,7 +721,7 @@ public abstract class SqlOperatorTests
             "12:42:26",
             "TIME(0) NOT NULL");
 
-        if (SupportDatetimeWithPrecision) {
+        if (Bug.Frg282Fixed) {
             // test precision
             getTester().checkScalar(
                 "cast(TIME '12:42:25.34' as TIME(2))",
@@ -824,7 +819,7 @@ public abstract class SqlOperatorTests
             "12:42:25",
             "TIME(0) NOT NULL");
 
-        if (SupportDatetimeWithPrecision) {
+        if (Bug.Frg282Fixed) {
             getTester().checkScalar(
                 "cast('12:42:25.34' as TIME(2))",
                 "12:42:25.34",
@@ -876,7 +871,7 @@ public abstract class SqlOperatorTests
             "1945-02-24 12:42:25.0",
             "TIMESTAMP(0) NOT NULL");
 
-        if (SupportDatetimeWithPrecision) {
+        if (Bug.Frg282Fixed) {
             getTester().checkScalar(
                 "cast('1945-02-24 12:42:25.34' as TIMESTAMP(2))",
                 "1945-02-24 12:42:25.34",
@@ -1913,7 +1908,7 @@ public abstract class SqlOperatorTests
     public void testMinusIntervalOperator()
     {
         getTester().setFor(SqlStdOperatorTable.minusOperator);
-        
+
         // Intervals
         getTester().checkScalar(
             "interval '2' day - interval '1' day",
@@ -3456,9 +3451,6 @@ public abstract class SqlOperatorTests
      */
     public void testLiteralAtLimit()
     {
-        if (!Bug.FrgIntegrationFixed) {
-            return;
-        }
         final SqlTester tester = getTester();
         tester.setFor(SqlStdOperatorTable.castFunc);
         for (BasicSqlType type : SqlLimitsTest.getTypes()) {
@@ -3470,6 +3462,10 @@ public abstract class SqlOperatorTests
                 final String expr =
                     "CAST(" + literalString
                     + " AS " + type + ")";
+                if (type.getSqlTypeName() == SqlTypeName.VARBINARY &&
+                    !Bug.Frg283Fixed) {
+                    continue;
+                }
                 try {
                     tester.checkType(
                         expr,
@@ -3553,9 +3549,6 @@ public abstract class SqlOperatorTests
 
     public void testCastTruncates()
     {
-        if (!Bug.FrgIntegrationFixed) {
-            return;
-        }
         final SqlTester tester = getTester();
         tester.setFor(SqlStdOperatorTable.castFunc);
         tester.checkScalar(
@@ -3570,6 +3563,8 @@ public abstract class SqlOperatorTests
             "CAST(x'ABCDEF12' AS BINARY(2))",
             "ABCD",
             "BINARY(2) NOT NULL");
+
+        if (Bug.Frg283Fixed)
         tester.checkScalar(
             "CAST(x'ABCDEF12' AS VARBINARY(2))",
             "ABCD",

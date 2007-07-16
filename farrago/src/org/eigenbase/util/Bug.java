@@ -165,14 +165,26 @@ public abstract class Bug
      */
     public static final boolean Frg140Fixed = false;
 
-    public static final boolean FrgIntegrationFixed = false;
-
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-216">issue
      * FRG-216: Java calc 'expression splitting' causes serious problems</a> is
      * fixed.
      */
     public static final boolean Frg216Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-282">issue
+     * FRG-282: Support precision in TIME and TIMESTAMP data types</a> is
+     * fixed.
+     */
+    public static final boolean Frg282Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-283">issue
+     * FRG-283: Calc cannot cast VARBINARY values</a> is
+     * fixed.
+     */
+    public static final boolean Frg283Fixed = false;
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FNL-54">issue FNL-54:
