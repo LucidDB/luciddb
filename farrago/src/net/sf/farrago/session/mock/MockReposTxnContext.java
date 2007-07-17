@@ -40,6 +40,7 @@ public class MockReposTxnContext
 
     private boolean isRead;
     private boolean isWrite;
+    private boolean locked;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -64,7 +65,7 @@ public class MockReposTxnContext
 
     public void commit()
     {
-        isRead = isWrite = false;
+        isRead = isWrite = locked = false;
     }
 
     public boolean isReadTxnInProgress()
@@ -74,12 +75,27 @@ public class MockReposTxnContext
 
     public boolean isTxnInProgress()
     {
-        return isRead || isWrite;
+        return isRead || isWrite || locked ;
     }
 
     public void rollback()
     {
-        isRead = isWrite = false;
+        isRead = isWrite = locked = false;
+    }
+    public void beginLockedTxn(boolean readOnly)
+    {
+        assert !isRead && !isWrite && !locked;
+        locked = true;
+        if (readOnly) {
+            isRead = true;
+        } else {
+            isWrite = true;
+        }
+    }
+
+    public void unlockAfterTxn()
+    {
+        isRead = isWrite = locked = false;
     }
 }
 

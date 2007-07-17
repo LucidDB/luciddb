@@ -47,10 +47,10 @@ void WinAggHistogramStrA::addRow(RegisterRef<char*>* node)
     if (!node->isNull()) {
         StringDesc desc;
         desc.cbStorage = node->storage();
-        desc.cbData = node->length();
         desc.mType = node->type();
         desc.pData = new FixedBuffer[desc.cbStorage];
         desc.memCopyFrom(*( node->getBinding()));
+//        printf("WinAggHistogramStrA::addRow cbStorage=%d cbData=%d String=%s\n", node->storage(),desc.cbData, desc.pData);
         
         // Insert the value into the window
         (void) currentWindow.insert(desc);
@@ -73,17 +73,20 @@ void WinAggHistogramStrA::dropRow(RegisterRef<char*>* node)
         desc.cbData = node->length();
         desc.mType = node->type();
         desc.pData = reinterpret_cast<PBuffer>(node->pointer());
+//        printf("WinAggHistogramStrA::dropRow cbStorage=%d cbData=%d String=%s", 
+//               node->storage(),desc.cbData, desc.pData);
 
         // Search the window for matching entries.  It may return more than one but
         // we will only delete one.
         assert(!currentWindow.empty());
-        pair<winAggData::iterator, winAggData::iterator> entries =
+        pair<WinAggData::iterator, WinAggData::iterator> entries =
             currentWindow.equal_range(desc);
 
         assert(entries.first != entries.second);  // should at least be one
         assert(NULL != entries.first->pData);
         
         if (entries.first != entries.second) {
+//            printf("  erasing entry cbStorage=%d cbData=%d String=%s\n", entries.first->cbStorage,entries.first->cbData, entries.first->pData);
             if (NULL != entries.first->pData) {
                 delete [] entries.first->pData;
             }
@@ -98,11 +101,21 @@ void WinAggHistogramStrA::dropRow(RegisterRef<char*>* node)
     }
 }
 
+void WinAggHistogramStrA::setReturnReg(RegisterRef<char*>* dest, const StringDesc& src)
+{
+    char* pData = dest->pointer();
+    TupleStorageByteLength srcLength = src.stringLength();
+    assert( pData);
+    assert( srcLength <= dest->storage());
+    memcpy( pData, src.pointer(), srcLength);
+    dest->length( srcLength);
+}
+
+
 void WinAggHistogramStrA::getMin(RegisterRef<char*>* node)
 {
     if (0 != currentWindow.size()) {
-        StringDesc minStr = *(currentWindow.begin());
-        node->getBinding()->memCopyFrom(minStr);
+        setReturnReg( node, *(currentWindow.begin()));
     } else {
         // either all the rows added to the window had null
         // entries or there are no rows in the window.  Either
@@ -114,8 +127,7 @@ void WinAggHistogramStrA::getMin(RegisterRef<char*>* node)
 void WinAggHistogramStrA::getMax(RegisterRef<char*>* node)
 {
     if (0 != currentWindow.size()) {
-        StringDesc maxStr = *(--(currentWindow.end()));
-        node->getBinding(false)->memCopyFrom(maxStr);
+        setReturnReg( node, *(--(currentWindow.end())));
     } else {
         // either all the rows added to the window had null
         // entries or there are no rows in the window.  Either
@@ -129,8 +141,7 @@ void WinAggHistogramStrA::getFirstValue(RegisterRef<char*>* node)
     if (queue.empty()) {
         node->toNull();
     } else {
-        StringDesc const &str = queue.front();
-        node->getBinding(false)->memCopyFrom(str);
+        setReturnReg( node,queue.front()); 
     }
 }
 
@@ -140,11 +151,9 @@ void WinAggHistogramStrA::getLastValue(RegisterRef<char*>* node)
     if (queue.empty()) {
         node->toNull();
     } else {
-        StringDesc const &str = queue.back();
-        node->getBinding(false)->memCopyFrom(str);
+        setReturnReg( node, queue.back());
     }
 }
-
 
 FENNEL_END_CPPFILE("$Id$");
 
