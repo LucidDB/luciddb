@@ -61,6 +61,11 @@
                         <artifactspublisher file="&open_integration.build.home;/aspen/classes/FarragoRelease.properties" dest="artifacts/ASPENTARGET&configSuffix;"/>
                         <artifactspublisher file="&open_integration.build.home;/aspen/dist/SQLstream-1.1.0-linux-installer.bin" dest="artifacts/ASPENTARGET&configSuffix;"/>
 
+			<!-- Make an easy-to-find last-good-build installer. Places in top level dir, not in per-build dir.  -->
+			<onsuccess>
+				<execute command="cp &open_integration.build.home;/aspen/dist/SQLstream-1.1.0-linux-installer.bin artifacts/ASPENTARGET&configSuffix;"/>
+			</onsuccess>
+
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/ASPENTARGET&configSuffix; &rsync_dest;"/>
 

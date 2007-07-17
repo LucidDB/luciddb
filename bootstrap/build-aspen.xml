@@ -194,7 +194,6 @@ saffron.opt.allowInfiniteCostConverters=true
 			<arg value="${build.home}/aspen/initBuild.sh"/>
 			<arg value="${build.home}/farrago"/>
                         <arg value="--with-tests"/>
-                        <arg value="--skip-build-notes"/>
                         <arg value="--release"/>
                         <arg value="${opto}"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
