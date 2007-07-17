@@ -30,8 +30,8 @@
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/common/TraceSource.h"
 
-#include "fennel/calc/CalcCommon.h"
-#include "fennel/calc/InstructionCommon.h"  // required as we're manipulating instructions
+#include "fennel/disruptivetech/calc/CalcCommon.h"
+#include "fennel/disruptivetech/calc/InstructionCommon.h"  // required as we're manipulating instructions
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -44,6 +44,12 @@ using namespace std;
 using namespace fennel;
 
 char* ProgramName;
+
+// JR 6/15/07 this construct:
+//instP = new (Instruction *)[200];
+// no longer permitted as of GCC 4.0 - remove parens
+// so typedef an Instruction * and replace through-out file
+typedef Instruction *InstructionPtr;
 
 void
 fail(const char* str, int line) {
@@ -182,7 +188,8 @@ unitTestBool()
     bLiP = new RegisterRef<bool>*[registersize];
 
     // Set up the Calculator
-    Calculator c(0,0,0,0,0,0);
+    DynamicParamManager dpm;
+    Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
@@ -215,7 +222,7 @@ unitTestBool()
     // this level to allow printing of the program after execution, and other
     // debugging
     Instruction **instP;
-    instP = new (Instruction *)[200];
+    instP = new InstructionPtr[200];
     int pc=0, outC= 0;
 
     // not
@@ -703,7 +710,8 @@ unitTestLong()
     bLiteralBoolP = new RegisterRef<bool>*[registersize];
 
     // Set up the Calculator
-    Calculator c(0,0,0,0,0,0);
+    DynamicParamManager dpm;
+    Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
@@ -744,7 +752,7 @@ unitTestLong()
     // this level to allow printing of the program after execution, and other
     // debugging
     Instruction **instP;
-    instP = new (Instruction *)[200];
+    instP = new InstructionPtr[200];
     int pc=0, outC= 0, outBoolC = 0;
 
     StandardTypeDescriptorOrdinal isLong = STANDARD_TYPE_INT_32;
@@ -1412,7 +1420,8 @@ unitTestFloat()
     bOutP = new RegisterRef<bool>*[registersize];
 
     // Set up the Calculator
-    Calculator c(0,0,0,0,0,0);
+    DynamicParamManager dpm;
+    Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
@@ -1450,7 +1459,7 @@ unitTestFloat()
     // this level to allow printing of the program after execution, and other
     // debugging
     Instruction **instP;
-    instP = new (Instruction *)[200];
+    instP = new InstructionPtr[200];
     int pc=0, outC= 0, outBoolC = 0;
 
     StandardTypeDescriptorOrdinal isFloat = STANDARD_TYPE_REAL;
@@ -2104,7 +2113,8 @@ unitTestPointer()
     bLiP = new RegisterRef<bool>*[registersize];
 
     // Set up the Calculator
-    Calculator c(0,0,0,0,0,0);
+    DynamicParamManager dpm;
+    Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
@@ -2170,7 +2180,7 @@ unitTestPointer()
     // this level to allow printing of the program after execution, and other
     // debugging
     Instruction **instP;
-    instP = new (Instruction *)[200];
+    instP = new InstructionPtr[200];
     int pc = 0, outCp = 0, outL=0, outB = 0, localCp = 0;
     int nullRegister = registersize - 1;
     
@@ -2630,7 +2640,8 @@ unitTestWarnings()
     fLiP = new RegisterRef<float>*[registersize];
 
     // Set up the Calculator
-    Calculator c(0,0,0,0,0,0);
+    DynamicParamManager dpm;
+    Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
@@ -2663,7 +2674,7 @@ unitTestWarnings()
     // this level to allow printing of the program after execution, and other
     // debugging
     Instruction **instP;
-    instP = new (Instruction *)[200];
+    instP = new InstructionPtr[200];
     int pc = 0, outF = 0;
     
     StandardTypeDescriptorOrdinal isFloat = STANDARD_TYPE_REAL;
@@ -2726,7 +2737,8 @@ unitTestWarnings()
     // Out[0] is now null, due to the div by zero error
     // Hack output tuple to something re-runable
     float horriblehack = 88;
-    reinterpret_cast<float *>(const_cast<PBuffer>(output[0].pData)) = &horriblehack;
+    //reinterpret_cast<float *>(const_cast<PBuffer>(output[0].pData)) = &horriblehack;  /* JR 6/15.07 - no longer works */
+    output[0].pData = reinterpret_cast<const uint8_t *>( &horriblehack );
 
     printf("Rerunning calculator\n");
     
@@ -2875,7 +2887,8 @@ unitTestPointerCache()
     fLiP = new RegisterRef<double>*[registersize];
 
     // Set up the Calculator
-    Calculator c(0,0,0,0,0,0);
+    DynamicParamManager dpm;
+    Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
@@ -2908,7 +2921,7 @@ unitTestPointerCache()
     // this level to allow printing of the program after execution, and other
     // debugging
     Instruction **instP;
-    instP = new (Instruction *)[200];
+    instP = new InstructionPtr[200];
     int pc = 0, outF = 0, liF = 0;
     
     
@@ -2961,13 +2974,13 @@ unitTestPointerCache()
     outF = liF = 0;
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
         if (*(reinterpret_cast<double *>(const_cast<PBuffer>(output[outF++].pData)))
-            != reinterpret_cast<double>(i * 0.5)) {
+            != (i * 0.5) ) {
             fail("pointercache1", __LINE__);
         }
     }
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
         if ((*(reinterpret_cast<double *>(const_cast<PBuffer>(output[outF++].pData)))
-             - reinterpret_cast<double>(outF * 3.3 + 1)) > 0.000001) {
+             - (outF * 3.3 + 1)) > 0.000001) {
             fail("pointercache2", __LINE__);
         }
     }
@@ -2978,8 +2991,8 @@ unitTestPointerCache()
     // no reason to reset these pointers as they weren't re-pointed
     // or set to null
     for(i=0; i < registersize; i++) {
-        const_cast<PBuffer>(literal[i].pData) = NULL;
-        const_cast<PBuffer>(local[i].pData) = NULL;
+        literal[i].pData = NULL;
+        local[i].pData = NULL;
     }
 
     printf("Rerunning calculator\n");
@@ -2990,13 +3003,13 @@ unitTestPointerCache()
     outF = liF = 0;
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
         if (*(reinterpret_cast<double *>(const_cast<PBuffer>(output[outF++].pData)))
-            != reinterpret_cast<double>(i * 0.5)) {
+            != (i * 0.5)) {
             fail("pointercache3", __LINE__);
         }
     }
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
         if ((*(reinterpret_cast<double *>(const_cast<PBuffer>(output[outF++].pData)))
-             - reinterpret_cast<double>(outF * 3.3 + 1)) > 0.000001) {
+             - (outF * 3.3 + 1)) > 0.000001) {
             fail("pointercache4", __LINE__);
         }
     }
@@ -3187,7 +3200,8 @@ unitTestNullableLocal()
     bLiP = new RegisterRef<bool>*[registersize];
 
     // Set up the Calculator
-    Calculator c(0,0,0,0,0,0);
+    DynamicParamManager dpm;
+    Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
@@ -3236,7 +3250,7 @@ unitTestNullableLocal()
     // this level to allow printing of the program after execution, and other
     // debugging
     Instruction **instP;
-    instP = new (Instruction *)[200];
+    instP = new InstructionPtr[200];
     int pc = 0, outCp = 0, outB = 0;
     StandardTypeDescriptorOrdinal isVC = STANDARD_TYPE_VARCHAR;
     
@@ -3507,7 +3521,8 @@ unitTestStatusRegister()
     fStP = new RegisterRef<uint16_t>*[registersize];
 
     // Set up the Calculator
-    Calculator c(0,0,0,0,0,0);
+    DynamicParamManager dpm;
+    Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
@@ -3544,7 +3559,7 @@ unitTestStatusRegister()
     // this level to allow printing of the program after execution, and other
     // debugging
     Instruction **instP;
-    instP = new (Instruction *)[200];
+    instP = new InstructionPtr[200];
     int pc = 0, statusS = 0, liS = 0;
 
     StandardTypeDescriptorOrdinal isU_Int16 = STANDARD_TYPE_UINT_16;

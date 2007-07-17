@@ -29,28 +29,32 @@ StringToHex.cpp \
 ExtMath.cpp \
 ExtDynamicVariable.cpp \
 WinAggHistogramStrA.cpp \
-ExtWinAggFuncs.cpp
+ExtWinAggFuncs.cpp \
+NoisyArithmetic.cpp
 
-#noinst_PROGRAMS =    \
-#testCalc tuple
+noinst_PROGRAMS =    \
+testNoisyArithmetic testCalc testCalcExtString testCalcExtended tuple
 
-#TESTS = $(noinst_PROGRAMS)
+TESTS = $(noinst_PROGRAMS)
+$(noinst_PROGRAMS): $(noinst_LTLIBRARIES)
 
-#testCalc_SOURCES=testCalc.cpp 
-#tuple_SOURCES= tuple.cpp
+testNoisyArithmetic_SOURCES=testNoisyArithmetic.cpp 
+testCalc_SOURCES=testCalc.cpp 
+testCalcExtended_SOURCES=testCalcExtended.cpp 
+testCalcExtString_SOURCES=testCalcExtString.cpp 
+tuple_SOURCES= tuple.cpp
 
-#LDADD = -L$(top_builddir)/calc      \
-#		-l$(CALC_LIB)       \
-#	-L$(top_builddir)/libfennel \
-#		-lfennel_tuple      \
-#		-lfennel_common     \
-#	$(EXTRA_LDFLAGS)
+LDADD = -L$(top_builddir)/disruptivetech/calc \
+		-l$(CALC_LIB)       \
+	-L$(top_builddir)/libfennel \
+		-lfennel_tuple      \
+		-lfennel_common     \
+		-lfennel_exec		\
+	$(EXTRA_LDFLAGS)
 
-DISABLED_TESTS= \
-testCalc.cpp \
-testCalcExtString.cpp \
-testCalcExtended.cpp \
-tuple.cpp
+#DISABLED_TESTS=
+#testCalcExtended.cpp
+#testCalcExtString.cpp
 
 DESIGN_DOC=ExtendedInstructionHowTo.cpp
 EXTRA_DIST=$(DESIGN_DOC)

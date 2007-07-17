@@ -345,7 +345,12 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            value = (byte) NumberUtil.round(number.doubleValue());
+            if ( number instanceof Float || number instanceof Double ) {
+                value = (byte) NumberUtil.round(number.doubleValue());
+            }
+            else {
+                value = number.byteValue();
+            }
         }
 
         // implement NullablePrimitive
@@ -417,7 +422,12 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            value = (int) NumberUtil.round(number.doubleValue());
+            if ( number instanceof Float || number instanceof Double ) {
+                value = (int) NumberUtil.round(number.doubleValue());
+            }
+            else {
+                value = number.intValue();
+            }
         }
 
         // implement NullablePrimitive
@@ -441,7 +451,12 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            value = NumberUtil.round(number.doubleValue());
+            if ( number instanceof Float || number instanceof Double ) {
+                value = (long) NumberUtil.round(number.doubleValue());
+            }
+            else {
+                value = number.longValue();
+            }
         }
 
         // implement NullablePrimitive
@@ -491,7 +506,12 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            value = (short) NumberUtil.round(number.doubleValue());
+            if ( number instanceof Float || number instanceof Double ) {
+                value = (short) NumberUtil.round(number.doubleValue());
+            }
+            else {
+                value = number.shortValue();
+            }
         }
 
         // implement NullablePrimitive
