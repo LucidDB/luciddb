@@ -85,7 +85,7 @@
     </if>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${vi_flip.dir}"
       testscript="${testfile}"
@@ -130,12 +130,19 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete dir="${csv.dir}"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
     <delete dir="${bh.log.basedir}"/>
-    <delete dir="${csv.copy.dir}"/>
     <delete>
       <fileset dir="${vi_flip.dir}" includes="*.log"/>
     </delete>
-    <delete file="run.properties"/>
+    <delete file="creschema.sql"/>
+    <delete file="creschema.ref"/>
+    <delete dir="${csv.copy.dir}"/>
   </target>
 
   <target name="clean-csv" depends="clean">

@@ -43,7 +43,7 @@
     </if>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <ant dir="basic" target="test"/>
     <!-- ant dir="leaf" target="test"/ -->
     <!-- ant dir="rs" target="test"/ -->
@@ -60,15 +60,24 @@
   </target>
 
   <target name="clean">
-    <delete dir="${bh.log.basedir}"/>
+    <antcall target="clean-test"/>
+    <delete file="run.properties"/>
     <ant dir="basic" target="clean"/>
     <ant dir="populate" target="clean"/>
     <ant dir="tbs" target="clean"/>
     <ant dir="flip" target="clean"/>
     <ant dir="insert" target="clean"/>
     <ant dir="recovery" target="clean"/>
-    <delete file="run.properties"/>
   </target>
 
+  <target name="clean-test">
+    <delete dir="${bh.log.basedir}"/>
+    <ant dir="basic" target="clean-test"/>
+    <ant dir="populate" target="clean-test"/>
+    <ant dir="tbs" target="clean-test"/>
+    <ant dir="flip" target="clean-test"/>
+    <ant dir="insert" target="clean-test"/>
+    <ant dir="recovery" target="clean-test"/>
+  </target>
 
 </project>

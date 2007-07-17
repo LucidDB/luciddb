@@ -122,12 +122,12 @@
         <include name="*.log"/>
       </fileset>
       <fileset dir="${errlog.dir}"/>
+      <fileset dir="${csv.copy.dir}"/>
     </delete>
   </target>
   
   <target name="clean" depends="clean-test">
     <delete quiet="true" includeemptydirs="true">
-      <fileset dir="${csv.copy.dir}"/>
       <fileset dir="${udp.dir}">
         <include name="run.properties"/>
       </fileset>

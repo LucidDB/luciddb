@@ -87,7 +87,7 @@
     </if>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${dml_merge.dir}"
       testscript="${testfile}"
@@ -145,8 +145,14 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete dir="${csv.dir}"/>
+    <delete file="run.properties"/>
+  </target>
+
+
+  <target name="clean-test">
     <delete dir="${bh.log.basedir}"/>
-    <delete dir="${csv.copy.dir}"/>
     <delete>
       <fileset dir="${dml_merge.dir}">
         <include name="*.log"/>
@@ -154,12 +160,11 @@
         <include name="download.sql"/>
       </fileset>
     </delete>
-    <delete file="run.properties"/>
+    <delete dir="${csv.copy.dir}"/>
   </target>
 
   <target name="clean-csv">
     <antcall target="clean"/>
-    <delete dir="${csv.dir}"/>
   </target>
 
 </project>

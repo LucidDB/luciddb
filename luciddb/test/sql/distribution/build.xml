@@ -86,7 +86,7 @@
     </if>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${distribution.dir}"
       testscript="${testfile}"
@@ -135,18 +135,23 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete dir="${csv.dir}"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
     <delete>
       <fileset dir="${distribution.dir}">
         <include name="creschema.sql"/>
         <include name="creschema.ref"/>
       </fileset>
     </delete>
+    <delete dir="${bh.log.basedir}"/>
     <delete>
       <fileset dir="${distribution.dir}" includes="*.log"/>
     </delete>
-    <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
-    <delete file="run.properties"/>
   </target>
 
   <target name="clean-csv" depends="clean">

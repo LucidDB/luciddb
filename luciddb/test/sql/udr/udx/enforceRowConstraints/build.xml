@@ -105,7 +105,7 @@
     <mkdir dir="${log.dir}"/>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${rowconstraints.dir}"
       testscript="${testfile}"
@@ -113,11 +113,18 @@
   </target>
 
   <target name="clean">
-    <delete dir="${bh.log.basedir}"/>
+    <antcall target="clean-test"/>
+    <antcall target="cleanTestMsgCatalogs"/>
+    <delete dir="${csv.dir}"/>
     <delete file="run.properties"/>
+    <delete file="config.properties"/>
+  </target>
+
+  <target name="clean-test">
+    <delete dir="${bh.log.basedir}"/>
     <delete dir="${gensql.dir}"/>
-    <delete dir="${log.dir}"/>
     <delete dir="${csv.copy.dir}"/>
+    <delete dir="${log.dir}"/>
   </target>
 
   <!-- targets to be called for tests -->
@@ -130,7 +137,7 @@
   </target>
 
   <target name="cleanTestMsgCatalogs">
-    <delete>
+    <delete quiet="true">
       <fileset dir="${luciddb.plugin.dir}">
         <include name="TestMsgs.jar"/>
       </fileset>

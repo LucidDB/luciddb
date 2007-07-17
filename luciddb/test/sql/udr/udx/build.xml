@@ -62,7 +62,7 @@
     </if>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${udx.dir}"
       testscript="${testfile}"
@@ -70,11 +70,17 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete file="run.properties"/>
+    <ant dir="enforceRowConstraints" target="clean"/>
+  </target>
+
+  <target name="clean-test">
     <delete dir="${bh.log.basedir}"/>
     <delete>
       <fileset dir="${udx.dir}" includes="*.log"/>
     </delete>
-    <delete file="run.properties"/>
+    <ant dir="enforceRowConstraints" target="clean-test"/>
   </target>
 
 </project>

@@ -467,17 +467,38 @@ ${farrago.test.jvmargs}
     <delete quiet="true">
       <fileset dir="${classes.dir}" includes="**/*.class"/>
     </delete>
-    <ant dir="test/sql/shortreg" target="clean"/>
-    <ant dir="test/sql/txn" target="clean"/>
-    <ant dir="test/sql/company" target="clean"/>
-    <ant dir="test/sql/concurrency" target="clean"/>
-    <ant dir="test/sql/udr/udf" target="clean"/>
-    <ant dir="test/sql/udr/udx" target="clean"/>
-    <ant dir="test/sql/VI/tbs" target="clean"/>
+
+    <!-- call clean target in sub dirs -->
+    <ant dir="test/sql/bench" target="clean"/>    
     <ant dir="test/sql/calc" target="clean"/>
-    <ant dir="test/sql/flatfile-specific" target="clean"/>
+    <ant dir="test/sql/company" target="clean"/>
+    <ant dir="test/sql/compositekey" target="clean"/>
+    <ant dir="test/sql/concurrency" target="clean"/>
     <ant dir="test/sql/constraints" target="clean"/>
+    <ant dir="test/sql/conv_types" target="clean"/>
+    <ant dir="test/sql/datatypes" target="clean"/>
+    <ant dir="test/sql/distribution" target="clean"/>
+    <ant dir="test/sql/dml/delete" target="clean"/>
+    <ant dir="test/sql/dml/merge" target="clean"/>
+    <ant dir="test/sql/flatfile-specific" target="clean"/>
+    <ant dir="test/sql/hashjoin" target="clean"/>
+    <ant dir="test/sql/mbean" target="clean"/>
+    <ant dir="test/sql/mondrian" target="clean"/>
+    <ant dir="test/sql/numerics" target="clean"/>
+    <ant dir="test/sql/oracle-specific" target="clean"/>
+    <ant dir="test/sql/setops" target="clean"/>
+    <ant dir="test/sql/sfdc" target="clean"/>
+    <ant dir="test/sql/shortreg" target="clean"/>
+    <ant dir="test/sql/sqbm" target="clean"/>
+    <ant dir="test/sql/sqlserver-specific" target="clean"/>
+    <ant dir="test/sql/sys" target="clean"/>
+    <ant dir="test/sql/tpch" target="clean"/>
+    <ant dir="test/sql/txn" target="clean"/>
+    <ant dir="test/sql/udr/udf" target="clean"/>
     <ant dir="test/sql/udr/udp" target="clean"/>
+    <ant dir="test/sql/udr/udx" target="clean"/>
+    <ant dir="test/sql/VI" target="clean"/>
+
     <delete file="run.properties"/>
   </target>
 

@@ -132,7 +132,7 @@
     </if>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${datatypes.dir}"
       testscript="${testfile}"
@@ -156,10 +156,14 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
-    <delete file="run.properties"/>
     <delete file="config.properties"/>
   </target>
 
