@@ -382,10 +382,12 @@ public abstract class DiffTestCase
                     // no change
                 } else {
                     // a deletion: "<ds>,<de>d<as>"
-                    sw.append(String.valueOf(ds))
-                        .append(",")
-                        .append(String.valueOf(de))
-                        .append("d")
+                    sw.append(String.valueOf(ds));
+                    if (de > ds) {
+                        sw.append(",")
+                            .append(String.valueOf(de));
+                    }
+                    sw.append("d")
                         .append(String.valueOf(as - 1))
                         .append(TestUtil.NL);
                     for (int i = ds - 1; i < de; ++i) {
@@ -395,12 +397,14 @@ public abstract class DiffTestCase
             } else {
                 if (de == 0) {
                     // an addition: "<ds>a<as,ae>"
-                    sw.append(String.valueOf(ds))
+                    sw.append(String.valueOf(ds - 1))
                         .append("a")
-                        .append(String.valueOf(as))
-                        .append(",")
-                        .append(String.valueOf(ae))
-                        .append(TestUtil.NL);
+                        .append(String.valueOf(as));
+                    if (ae > as) {
+                        sw.append(",")
+                            .append(String.valueOf(ae));
+                    }
+                    sw.append(TestUtil.NL);
                     for (int i = as - 1; i < ae; ++i) {
                         sw.append("> ").append(lines2.get(i)).append(TestUtil.NL);
                     }

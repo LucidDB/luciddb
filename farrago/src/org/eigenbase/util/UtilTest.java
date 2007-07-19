@@ -443,14 +443,14 @@ public class UtilTest
             Arrays.asList(before), Arrays.asList(after));
         assertEquals(
             diff,
-            TestUtil.fold("2a2,2\n" +
+            TestUtil.fold("1a2\n" +
                 "> (they call her \"Polythene Pam\")\n" +
                 "3c4,5\n" +
                 "< She's the kind of a girl that makes The News of The World\n" +
                 "---\n" +
                 "> She's the kind of a girl that makes The Sunday Times\n" +
                 "> seem more interesting.\n" +
-                "5,5d6\n" +
+                "5d6\n" +
                 "< Yeah yeah yeah.\n"));
     }
 
