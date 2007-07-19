@@ -73,28 +73,21 @@
     </if>
 
     <!-- generate sql files -->
-    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <copy todir="${gensql.dir}" overwrite="true">
-          <fileset dir="${constraints.dir}" includes="*.tmpl"/>
-          <filterset>
-            <filter token="FFDIR" value="${ff.dir}"/>
-            <filter token="LOGDIR" value="${bh.log.basedir}"/>
-            <filter token="ERRLOGDIR" value="${errlog.dir}"/>
-          </filterset>
-          <globmapper from="*.tmpl" to="*"/>
-        </copy>
-        <copy todir="${gensql.dir}" overwrite="true">
-          <fileset dir="${constraints.dir}">
-            <include name="*.sql"/>
-            <include name="*.ref"/>
-          </fileset>
-        </copy>
-      </else>
-    </if>
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${constraints.dir}" includes="*.tmpl"/>
+      <filterset>
+        <filter token="FFDIR" value="${ff.dir}"/>
+        <filter token="LOGDIR" value="${bh.log.basedir}"/>
+        <filter token="ERRLOGDIR" value="${errlog.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${constraints.dir}">
+        <include name="*.sql"/>
+        <include name="*.ref"/>
+      </fileset>
+    </copy>
   </target>
 
   <target name="test" depends="clean-test,gen-all-sql">

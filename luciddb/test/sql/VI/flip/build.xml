@@ -66,23 +66,13 @@
       </else>
     </if>
     <!-- generate sql -->
-    <uptodate property="gensql.uptodate">
-      <srcfiles dir="${vi_flip.dir}" includes="*.tmpl"/>
-      <mapper type="glob" from="*.tmpl" to="*"/>
-    </uptodate>
-    <if>
-      <isset property="gensql.uptodate"/>
-      <then/>
-      <else>
-        <copy todir="${vi_flip.dir}" overwrite="true">
-          <fileset dir="${vi_flip.dir}" includes="*.tmpl"/>
-          <filterset>
-            <filter token="DIR" value="${csv.copy.dir}"/>
-          </filterset>
-          <globmapper from="*.tmpl" to="*"/>
-        </copy>
-      </else>
-    </if>
+    <copy todir="${vi_flip.dir}" overwrite="true">
+      <fileset dir="${vi_flip.dir}" includes="*.tmpl"/>
+      <filterset>
+        <filter token="DIR" value="${csv.copy.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
   </target>
 
   <target name="test" depends="clean-test,gen-all-sql">

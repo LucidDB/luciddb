@@ -75,26 +75,19 @@
     </copy>
 
     <!-- generate sql -->
-    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <copy todir="${gensql.dir}" overwrite="true">
-          <fileset dir="${oracle.dir}" includes="*.tmpl"/>
-          <globmapper from="*.tmpl" to="*"/>
-          <filterset>
-            <filtersfile file="config.properties"/>
-          </filterset>
-        </copy>
-        <copy todir="${gensql.dir}" overwrite="true">
-          <fileset dir="${oracle.dir}">
-            <include name="*.sql"/>
-            <include name="*.ref"/>
-          </fileset>
-        </copy>
-      </else>
-    </if>
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${oracle.dir}" includes="*.tmpl"/>
+      <globmapper from="*.tmpl" to="*"/>
+      <filterset>
+        <filtersfile file="config.properties"/>
+      </filterset>
+    </copy>
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${oracle.dir}">
+        <include name="*.sql"/>
+        <include name="*.ref"/>
+      </fileset>
+    </copy>
   </target>
 
   <target name="test" depends="clean-test,gen-all-sql">

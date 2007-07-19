@@ -77,29 +77,22 @@
     </if>
 
     <!-- generate sql -->
-    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <copy todir="${gensql.dir}" overwrite="true">
-          <fileset dir="${rowconstraints.dir}" includes="*.tmpl"/>
-          <filterset id="dir.filter">
-            <filter token="DIR" value="${csv.copy.dir}"/>
-            <filter token="LOGDIR" value="${log.dir}"/>
-            <filter token="PLUGINDIR" value="${luciddb.plugin.dir}"/>
-          </filterset>
-          <globmapper from="*.tmpl" to="*"/>
-        </copy>
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${rowconstraints.dir}" includes="*.tmpl"/>
+      <filterset id="dir.filter">
+        <filter token="DIR" value="${csv.copy.dir}"/>
+        <filter token="LOGDIR" value="${log.dir}"/>
+        <filter token="PLUGINDIR" value="${luciddb.plugin.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
 
-        <copy todir="${gensql.dir}" overwrite="true">
-          <fileset dir="${rowconstraints.dir}">
-            <include name="*.sql"/>
-            <include name="*.ref"/>
-          </fileset>
-        </copy>
-      </else>
-    </if>
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${rowconstraints.dir}">
+        <include name="*.sql"/>
+        <include name="*.ref"/>
+      </fileset>
+    </copy>
     
     <!-- create log directory -->
     <mkdir dir="${log.dir}"/>

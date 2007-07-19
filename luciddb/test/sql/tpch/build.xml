@@ -97,15 +97,9 @@
         <property file="run.properties"/>
       </else>
     </if>
+
     <!-- generate sql -->
-    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <foreach list="100M" param="datasize.param" target="gen-sql"/>
-      </else>
-    </if>
+    <foreach list="100M" param="datasize.param" target="gen-sql"/>
   </target>
 
   <target name="test" depends="clean-test,gen-all-sql">
