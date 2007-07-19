@@ -25,8 +25,12 @@ package org.eigenbase.test;
 import java.io.*;
 
 import java.util.regex.*;
+import java.util.*;
 
 import junit.framework.*;
+
+import org.incava.util.diff.Diff;
+import org.incava.util.diff.Difference;
 
 import org.eigenbase.util.*;
 
@@ -338,12 +342,116 @@ public abstract class DiffTestCase
         final String message =
             "diff detected at line " + lineNumber + " in " + logFile;
         if (verbose) {
+            String s = diff(refFile, logFile);
             Assert.assertEquals(
-                message + TestUtil.NL,
+                message + TestUtil.NL + s + TestUtil.NL,
                 fileContents(refFile),
                 fileContents(logFile));
+
         }
         Assert.fail(message);
+    }
+
+    /**
+     * Returns a string containing the difference between the contents of two
+     * files. The string has a similar format to the UNIX 'diff' utility.
+     */
+    private static String diff(File file1, File file2)
+    {
+        List<String> lines1 = fileLines(file1);
+        List<String> lines2 = fileLines(file2);
+        return diffLines(lines1, lines2);
+    }
+
+    /**
+     * Returns a string containing the difference between the two sets of lines.
+     */
+    public static String diffLines(List<String> lines1, List<String> lines2)
+    {
+        Diff differencer = new Diff(lines1, lines2);
+        List<Difference> differences = differencer.diff();
+        StringWriter sw = new StringWriter();
+        int offset = 0;
+        for (Difference d : differences) {
+            final int as = d.getAddedStart() + 1;
+            final int ae = d.getAddedEnd()  + 1;
+            final int ds = d.getDeletedStart() + 1;
+            final int de = d.getDeletedEnd() + 1;
+            if (ae == 0) {
+                if (de == 0) {
+                    // no change
+                } else {
+                    // a deletion: "<ds>,<de>d<as>"
+                    sw.append(String.valueOf(ds))
+                        .append(",")
+                        .append(String.valueOf(de))
+                        .append("d")
+                        .append(String.valueOf(as - 1))
+                        .append(TestUtil.NL);
+                    for (int i = ds - 1; i < de; ++i) {
+                        sw.append("< ").append(lines1.get(i)).append(TestUtil.NL);
+                    }
+                }
+            } else {
+                if (de == 0) {
+                    // an addition: "<ds>a<as,ae>"
+                    sw.append(String.valueOf(ds))
+                        .append("a")
+                        .append(String.valueOf(as))
+                        .append(",")
+                        .append(String.valueOf(ae))
+                        .append(TestUtil.NL);
+                    for (int i = as - 1; i < ae; ++i) {
+                        sw.append("> ").append(lines2.get(i)).append(TestUtil.NL);
+                    }
+                } else {
+                    // a change: "<ds>,<de>c<as>,<ae>
+                    sw.append(String.valueOf(ds));
+                    if (de > ds) {
+                        sw.append(",")
+                            .append(String.valueOf(de));
+                    }
+                    sw.append("c")
+                        .append(String.valueOf(as));
+                    if (ae > as) {
+                        sw.append(",")
+                            .append(String.valueOf(ae));
+                    }
+                    sw.append(TestUtil.NL);
+                    for (int i = ds - 1; i < de; ++i) {
+                        sw.append("< ").append(lines1.get(i)).append(TestUtil.NL);
+                    }
+                    sw.append("---").append(TestUtil.NL);
+                    for (int i = as - 1; i < ae; ++i) {
+                        sw.append("> ").append(lines2.get(i)).append(TestUtil.NL);
+                    }
+                    offset = offset + (ae - as) - (de - ds);
+                }
+            }
+        }
+        return sw.toString();
+    }
+
+    /**
+     * Returns a list of the lines in a given file.
+     *
+     * @param file File
+     * @return List of lines
+     */
+    private static List<String> fileLines(File file)
+    {
+        List<String> lines = new ArrayList<String>();
+        try {
+            LineNumberReader r = new LineNumberReader(new FileReader(file));
+            String line;
+            while ((line = r.readLine()) != null) {
+                lines.add(line);
+            }
+            return lines;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     /**
