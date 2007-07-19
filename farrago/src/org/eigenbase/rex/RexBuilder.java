@@ -57,9 +57,11 @@ public class RexBuilder
 
     //~ Constructors -----------------------------------------------------------
 
-    // REVIEW jvs 22-Jan-2005: I changed this constructor from protected to
-    // public so that unit tests needn't depend on oj.  If RexBuilder
-    // isn't supposed to be instantiated, then it should be declared abstrct.
+    /**
+     * Creates a RexBuilder.
+     *
+     * @param typeFactory Type factory
+     */
     public RexBuilder(RelDataTypeFactory typeFactory)
     {
         this.typeFactory = typeFactory;
@@ -87,16 +89,33 @@ public class RexBuilder
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns this RexBuilder's type factory
+     *
+     * @return type factory
+     */
     public RelDataTypeFactory getTypeFactory()
     {
         return typeFactory;
     }
 
+    /**
+     * Returns this RexBuilder's operator table
+     *
+     * @return operator table
+     */
     public SqlStdOperatorTable getOpTab()
     {
         return opTab;
     }
 
+    /**
+     * Creates an expression accessing a given named field from a record.
+     *
+     * @param expr Expression yielding a record
+     * @param fieldName Name of field in record
+     * @return Expression accessing a given named field
+     */
     public RexNode makeFieldAccess(
         RexNode expr,
         String fieldName)
@@ -111,6 +130,14 @@ public class RexBuilder
         return makeFieldAccessInternal(expr, field);
     }
 
+    /**
+     * Creates an expression accessing a field with a given ordinal from a
+     * record.
+     *
+     * @param expr Expression yielding a record
+     * @param i Ordinal of field
+     * @return Expression accessing given field
+     */
     public RexNode makeFieldAccess(
         RexNode expr,
         int i)
@@ -125,6 +152,13 @@ public class RexBuilder
         return makeFieldAccessInternal(expr, fields[i]);
     }
 
+    /**
+     * Creates an expression accessing a given field from a record.
+     *
+     * @param expr Expression yielding a record
+     * @param field Field
+     * @return Expression accessing given field
+     */
     private RexNode makeFieldAccessInternal(
         RexNode expr,
         final RelDataTypeField field)
@@ -285,6 +319,13 @@ public class RexBuilder
         return constantNull;
     }
 
+    /**
+     * Creates an expression referencing a correlation variable.
+     *
+     * @param type Type of variable
+     * @param name Name of variable
+     * @return Correlation variable
+     */
     public RexNode makeCorrel(
         RelDataType type,
         String name)
@@ -292,6 +333,13 @@ public class RexBuilder
         return new RexCorrelVariable(name, type);
     }
 
+    /**
+     * Creates an invocation of the NEW operator.
+     *
+     * @param type Type to be instantiated
+     * @param exprs Arguments to NEW operator
+     * @return Expression invoking NEW operator
+     */
     public RexNode makeNewInvocation(
         RelDataType type,
         RexNode [] exprs)
@@ -302,6 +350,13 @@ public class RexBuilder
             exprs);
     }
 
+    /**
+     * Creates a call to the CAST operator, expanding if possible.
+     *
+     * @param type Type to cast to
+     * @param exp Expression being cast
+     * @return Call to CAST operator
+     */
     public RexNode makeCast(
         RelDataType type,
         RexNode exp)
@@ -309,6 +364,13 @@ public class RexBuilder
         return makeAbstractCast(type, exp);
     }
 
+    /**
+     * Creates a call to the CAST operator.
+     *
+     * @param type Type to cast to
+     * @param exp Expression being cast
+     * @return Call to CAST operator
+     */
     public RexNode makeAbstractCast(
         RelDataType type,
         RexNode exp)
@@ -320,7 +382,7 @@ public class RexBuilder
     }
 
     /**
-     * Makes a reinterpret cast
+     * Makes a reinterpret cast.
      *
      * @param type type returned by the cast
      * @param exp expression to be casted
@@ -402,6 +464,13 @@ public class RexBuilder
         return new RexRangeRef(type, offset);
     }
 
+    /**
+     * Creates a referenence to a given field of the input record.
+     *
+     * @param type Type of field
+     * @param i Ordinal of field
+     * @return Reference to field
+     */
     public RexNode makeInputRef(
         RelDataType type,
         int i)
@@ -430,6 +499,17 @@ public class RexBuilder
             SqlTypeName.SYMBOL);
     }
 
+    /**
+     * Internal method to create a call to a literal. Code outside this package
+     * should call one of the type-specific methods such as
+     * {@link #makeDateLiteral(Calendar)}, {@link #makeLiteral(boolean)},
+     * {@link #makeLiteral(String)}.
+     *
+     * @param o Value of literal, must be appropriate for the type
+     * @param type Type of literal
+     * @param typeName SQL type of literal
+     * @return Literal
+     */
     protected RexLiteral makeLiteral(
         Comparable o,
         RelDataType type,
@@ -557,6 +637,13 @@ public class RexBuilder
         return makePreciseStringLiteral(s);
     }
 
+    /**
+     * Creates a character string literal with type CHAR and default
+     * charset and collation.
+     *
+     * @param s String value
+     * @return Character string literal
+     */
     protected RexLiteral makePreciseStringLiteral(String s)
     {
         Util.pre(s != null, "s != null");
@@ -661,6 +748,13 @@ public class RexBuilder
             : SqlTypeName.INTERVAL_DAY_TIME);
     }
 
+    /**
+     * Creates a reference to a dynamic parameter
+     *
+     * @param type Type of dynamic parameter
+     * @param index Index of dynamic parameter
+     * @return Expression referencing dynamic parameter
+     */
     public RexDynamicParam makeDynamicParam(
         RelDataType type,
         int index)
@@ -688,6 +782,17 @@ public class RexBuilder
             constantNull());
     }
 
+    /**
+     * Creates a literal whose value is NULL, with a particular type.
+     *
+     * <p>The typing is necessary because RexNodes are strictly typed. For
+     * example, in the Rex world the <code>NULL</code> parameter to
+     * <code>SUBSTRING(NULL FROM 2 FOR 4)</code> must have a valid VARCHAR
+     * type so that the result type can be determined.
+     *
+     * @param typeName Type to cast NULL to
+     * @return NULL literal of given type
+     */
     public RexNode makeNullLiteral(SqlTypeName typeName)
     {
         RelDataType type =
@@ -697,6 +802,21 @@ public class RexBuilder
         return makeCast(
             type,
             constantNull());
+    }
+
+    /**
+     * Creates a copy of an expression, which may have been created using
+     * a different RexBuilder and/or {@link RelDataTypeFactory}, using
+     * this RexBuilder.
+     *
+     * @see RelDataTypeFactory#copyType(RelDataType)
+     *
+     * @param expr Expression
+     * @return Copy of expression
+     */
+    public RexNode copy(RexNode expr)
+    {
+        return expr.accept(new RexCopier(this));
     }
 }
 
