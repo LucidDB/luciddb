@@ -423,4 +423,26 @@ Error: Let's pretend something bad happened. (state=,code=0)
 > foreign data wrapper mock_flaky;
 Error: Let's pretend something bad happened. (state=,code=0)
 > 
+> -- test table with no columns extracted
+> 
+> create server mock_no_columns_server
+> foreign data wrapper sys_mock_foreign
+> options (
+> foreign_schema_name 'MOCK_SCHEMA', 
+> foreign_table_name 'MOCK_TABLE',
+> extract_columns 'false',
+> executor_impl 'JAVA',
+> row_count '3');
+> 
+> create schema mock_no_columns_schema;
+> 
+> import foreign schema mock_schema
+> from server mock_no_columns_server
+> into mock_no_columns_schema;
+> 
+> -- should fail:  no columns
+> select * from mock_no_columns_schema.mock_table;
+Error: From line 1, column 15 to line 1, column 47: Table 'MOCK_NO_COLUMNS_SCHEMA.MOCK_TABLE' not found (state=,code=0)
+> 
+> 
 > !quit
