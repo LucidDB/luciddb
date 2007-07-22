@@ -1,0 +1,3 @@
+Notes about cleaning up .bcp files: 
+bench1M.bcp is a generated file (by the call to create foreign server) and should be cleaned up before running test. The reason is bench1M flatfile is synced from raksha without the associated .bcp file. When "create foreign server..." is called, it will create .bcp files for flatfiles which do not have corresponding .bcp file.
+If other flatfiles are added in a similar manner (without .bcp files), those generated .bcp files should also be cleaned up in the clean-test target.

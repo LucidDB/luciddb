@@ -78,7 +78,7 @@
     </copy>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${udf.dir}"
       testscript="${testfile}"
@@ -97,11 +97,18 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
     <delete dir="${bh.log.basedir}"/>
     <delete>
       <fileset dir="${udf.dir}" includes="*.log"/>
     </delete>
-    <delete file="run.properties"/>
+    <delete file="stdToDate.sql"/>
+    <delete file="stdToDate.ref"/>    
+    <delete dir="${csv.copy.dir}"/>
   </target>
 
 </project>

@@ -89,6 +89,31 @@ systems used as data sources.
 
 <hr>
 
+<h2>Page Versioning</h2>
+
+Although LucidDB is primarily intended as a read-only data warehouse,
+write operations are required for loading data into the warehouse.  To
+allow reads to continue during data loads and updates, LucidDB uses
+page versioning.  Data pages are read based on a snapshot of the data
+at the start of the initiating transaction.  When a page needs to be
+updated, a new version of the page is created and chained from the
+original page.  Each subsequent write transaction will create a new
+version of the page and add it to the existing page chain.  Therefore,
+long-running, read-only transactions can continue to read older
+snapshots while newer transactions will read more up-to-date
+snapshots.  Pages that are no longer in use can be reclaimed so the
+page chains don't grow forever.
+
+<p>
+
+By versioning at the page level, the overhead of locating the desired data
+snapshot is minimized.  LucidDB is able to quickly identify the appropriate
+page by walking through the page chain metadata.
+There's no need to manipulate data at the row-level, or to reconstruct a
+snapshot based on previously logged information.
+
+<hr>
+
 <h2>Query Optimization and Execution</h2>
 
 LucidDB's optimizer is designed with the assumptions of a data
@@ -104,13 +129,32 @@ hint-free planning.
 
 <p>
 
+In particular, cost-based analysis is used to determine the order in
+which joins are executed, as well as which bitmap indexes to use when
+applying table-level filters and star join optimizations.  The
+analysis uses data statistics gathered and stored as metadata in the
+system catalogs, allowing the optimizer to realistically compare one
+option versus another even when many joins are involved.  By using
+cost-based analysis in a targeted fashion for these complex areas,
+LucidDB is able to consider a large space of viable candidates for
+join and indexing combinations.  By using heuristics in other areas,
+LucidDB keeps optimization time to a minimum by avoiding an explosion
+in the search space.
+
+<p>
+
 The query executor includes a high-performance sorter, hash join, and
 hash aggregation.  All of these execution algorithms are optimized to
-take best advantage of available memory, but are also capable of
-multi-level disk-based partitioning for handling even the largest data
-sets.  The hash-based algorithms include adaptive skew-resistance and
-pre-filtering.  The only limit on the data size that can be
-processed is available temp disk space.
+take best advantage of available memory.  A built-in resource governor
+assigns memory, balancing between availability and the needs of
+various operations.  The resource governor uses statistics-based
+optimizer estimates for predicting which algorithms need the most
+memory to perform well, and distributes available memory accordingly.
+The execution algorithms are also capable of multi-level disk-based
+partitioning for handling even the largest data sets.  The hash-based
+algorithms include adaptive skew-resistance and pre-filtering.  The
+only limit on the data size that can be processed is available temp
+disk space.
 
 <hr>
 

@@ -73,31 +73,24 @@
     </if>
 
     <!-- generate sql files -->
-    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <copy todir="${gensql.dir}" overwrite="true">
-          <fileset dir="${constraints.dir}" includes="*.tmpl"/>
-          <filterset>
-            <filter token="FFDIR" value="${ff.dir}"/>
-            <filter token="LOGDIR" value="${bh.log.basedir}"/>
-            <filter token="ERRLOGDIR" value="${errlog.dir}"/>
-          </filterset>
-          <globmapper from="*.tmpl" to="*"/>
-        </copy>
-        <copy todir="${gensql.dir}" overwrite="true">
-          <fileset dir="${constraints.dir}">
-            <include name="*.sql"/>
-            <include name="*.ref"/>
-          </fileset>
-        </copy>
-      </else>
-    </if>
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${constraints.dir}" includes="*.tmpl"/>
+      <filterset>
+        <filter token="FFDIR" value="${ff.dir}"/>
+        <filter token="LOGDIR" value="${bh.log.basedir}"/>
+        <filter token="ERRLOGDIR" value="${errlog.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${constraints.dir}">
+        <include name="*.sql"/>
+        <include name="*.ref"/>
+      </fileset>
+    </copy>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${constraints.dir}"
       testscript="${testfile}"
@@ -168,18 +161,19 @@
     </if>
   </target>
 
-  <target name="clean" depends="clean-tmpfiles">
+  <target name="clean">
+    <antcall target="clean-test"/>
     <delete file="${constraints.dir}/run.properties"/>
     <delete dir="${ff.dir}"/>
   </target>
 
-  <target name="clean-tmpfiles">
+  <target name="clean-test">
+    <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
     <delete file="${ff.dir}/bench1M.bcp"/>
     <delete> 
       <fileset dir="${errlog.dir}" excludes="Summary.bcp"/>
     </delete>
-    <delete dir="${gensql.dir}"/>
   </target>
 
 </project>

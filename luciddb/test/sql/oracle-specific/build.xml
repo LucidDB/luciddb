@@ -75,29 +75,22 @@
     </copy>
 
     <!-- generate sql -->
-    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <copy todir="${gensql.dir}" overwrite="true">
-          <fileset dir="${oracle.dir}" includes="*.tmpl"/>
-          <globmapper from="*.tmpl" to="*"/>
-          <filterset>
-            <filtersfile file="config.properties"/>
-          </filterset>
-        </copy>
-        <copy todir="${gensql.dir}" overwrite="true">
-          <fileset dir="${oracle.dir}">
-            <include name="*.sql"/>
-            <include name="*.ref"/>
-          </fileset>
-        </copy>
-      </else>
-    </if>
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${oracle.dir}" includes="*.tmpl"/>
+      <globmapper from="*.tmpl" to="*"/>
+      <filterset>
+        <filtersfile file="config.properties"/>
+      </filterset>
+    </copy>
+    <copy todir="${gensql.dir}" overwrite="true">
+      <fileset dir="${oracle.dir}">
+        <include name="*.sql"/>
+        <include name="*.ref"/>
+      </fileset>
+    </copy>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${oracle.dir}"
       testscript="${testfile}"
@@ -105,8 +98,13 @@
   </target>
 
   <target name="clean">
-    <delete dir="${bh.log.basedir}"/>
+    <antcall target="clean-test"/>
     <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
+    <delete dir="${gensql.dir}"/>
+    <delete dir="${bh.log.basedir}"/>
     <delete file="config.properties"/>
   </target>
 
