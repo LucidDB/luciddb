@@ -32,6 +32,10 @@ import java.util.*;
  * use the additional methods {@link #putMulti} and {@link #getMulti}. Values
  * are returned in the order in which they were added.</p>
  *
+ *<p>
+ *
+ * TODO jvs 21-Jul-2007:  unit test for this class
+ *
  * @author jhyde
  * @version $Id$
  * @since May 18, 2003
@@ -78,6 +82,9 @@ public class MultiMap<K, V>
         } else if (o instanceof ValueList) {
             return (ValueList<V>) o;
         } else {
+            // FIXME jvs 21-Jul-2007:  This list is immutable, meaning callers
+            // have to avoid deleting from it.  That's inconsistent with
+            // ValueList, which goes to the effort to support deletion.
             return Collections.singletonList((V) o);
         }
     }
@@ -126,6 +133,10 @@ public class MultiMap<K, V>
                         put(
                             key,
                             list.get(0));
+                    } else if (list.isEmpty()) {
+                        // have just removed the last value belonging to this
+                        // key, so remove the key
+                        remove(key);
                     }
                     return true;
                 } else {
