@@ -32,30 +32,6 @@ WinAggHistogramStrA.cpp \
 ExtWinAggFuncs.cpp \
 NoisyArithmetic.cpp
 
-noinst_PROGRAMS =    \
-testNoisyArithmetic testCalc testCalcExtString testCalcExtended tuple
-
-TESTS = $(noinst_PROGRAMS)
-$(noinst_PROGRAMS): $(noinst_LTLIBRARIES)
-
-testNoisyArithmetic_SOURCES=testNoisyArithmetic.cpp 
-testCalc_SOURCES=testCalc.cpp 
-testCalcExtended_SOURCES=testCalcExtended.cpp 
-testCalcExtString_SOURCES=testCalcExtString.cpp 
-tuple_SOURCES= tuple.cpp
-
-LDADD = -L$(top_builddir)/disruptivetech/calc \
-		-l$(CALC_LIB)       \
-	-L$(top_builddir)/libfennel \
-		-lfennel_tuple      \
-		-lfennel_common     \
-		-lfennel_exec		\
-	$(EXTRA_LDFLAGS)
-
-#DISABLED_TESTS=
-#testCalcExtended.cpp
-#testCalcExtString.cpp
-
 DESIGN_DOC=ExtendedInstructionHowTo.cpp
 EXTRA_DIST=$(DESIGN_DOC)
 TAGS_DEPENDENCIES=$(DESIGN_DOC) $(DISABLED_TESTS)

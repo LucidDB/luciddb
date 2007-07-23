@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include <string>
 #include <boost/scoped_array.hpp>
+#include <boost/test/unit_test_suite.hpp>
 #include <limits>
 #include <iostream.h>
 #include <math.h>
@@ -831,4 +832,9 @@ int main(int argc, char *argv[])
 //    testConvertExactNumberToString(123, "123"); -- JR 6/07 removing this
     printf("all tests passed\n");
     exit(0);
+}
+
+boost::unit_test_framework::test_suite *init_unit_test_suite(int,char **)
+{
+    return NULL;
 }

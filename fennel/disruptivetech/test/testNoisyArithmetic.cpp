@@ -32,8 +32,9 @@
 #include <assert.h>
 #include <stdio.h>
 #include <sysexits.h>
+#include <boost/test/unit_test_suite.hpp>
 
-#include "NoisyArithmetic.h"
+#include "fennel/disruptivetech/calc/NoisyArithmetic.h"
 
 using namespace fennel;
 
@@ -504,5 +505,10 @@ return 0;	/* disabled for now */
 #include GENERATED_FILE
 #undef EXPR
     return 0;
+}
+
+boost::unit_test_framework::test_suite *init_unit_test_suite(int,char **)
+{
+    return NULL;
 }
 

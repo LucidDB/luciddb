@@ -33,6 +33,8 @@
 #include "fennel/disruptivetech/calc/CalcCommon.h"
 #include "fennel/disruptivetech/calc/InstructionCommon.h"  // required as we're manipulating instructions
 
+#include <boost/test/unit_test_suite.hpp>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
@@ -3648,3 +3650,7 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
+boost::unit_test_framework::test_suite *init_unit_test_suite(int,char **)
+{
+    return NULL;
+}
