@@ -455,6 +455,41 @@ public class UtilTest
     }
 
     /**
+     * Tests the {@link Util#toPosix(TimeZone, boolean)} method.
+     */
+    public void testPosixTimeZone()
+    {
+        // Pacific Standard Time. Effective 2007, the local time changes from
+        // PST to PDT at 02:00 LST to 03:00 LDT on the second Sunday in March
+        // and returns at 02:00 LDT to 01:00 LST on the first Sunday in
+        // November.
+        assertEquals("PST-8PDT,M3.2.0,M11.1.0",
+            Util.toPosix(TimeZone.getTimeZone("PST"), false));
+
+        assertEquals("PST-8PDT1,M3.2.0/2,M11.1.0/2",
+            Util.toPosix(TimeZone.getTimeZone("PST"), true));
+
+        // Tokyo has +ve offset, no DST
+        assertEquals("JST9",
+            Util.toPosix(TimeZone.getTimeZone("Asia/Tokyo"), true));
+
+        // Sydney, Australia lies ten hours east of GMT and makes a one hour
+        // shift forward during daylight savings. Being located in the southern
+        // hemisphere, daylight savings begins on the last Sunday in October at
+        // 2am and ends on the last Sunday in March at 3am.
+        // (Uses STANDARD_TIME time-transition mode.)
+        assertEquals("EST10EST1,M10.5.0/2,M3.5.0/3",
+            Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"), true));
+
+        // Paris, France. (Uses UTC_TIME time-transition mode.)
+        assertEquals("CET1CEST1,M3.5.0/2,M10.5.0/3",
+            Util.toPosix(TimeZone.getTimeZone("Europe/Paris"), true));
+
+        assertEquals("UTC0",
+            Util.toPosix(TimeZone.getTimeZone("UTC"), true));
+    }
+
+    /**
      * Runs the test suite.
      */
     public static void main(String [] args)

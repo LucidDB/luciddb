@@ -19,6 +19,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/test/TestBase.h"
 #include "fennel/disruptivetech/calc/SqlDate.h"
@@ -74,6 +75,7 @@ class SqlDateTest : virtual public TestBase, public TraceSource
     void testSqlStrToDate_Ascii();
     
     void testLocalTime();
+    void testCurrentTime();
     
 #ifdef HAVE_ICU
     string UnicodeToPrintable(const UnicodeString &s);
@@ -342,16 +344,43 @@ SqlDateTest::testSqlStrToDate_Ascii()
 
 
 void
-SqlDateTest::testLocalTime()
+SqlDateTest::testCurrentTime()
 {
 
     int64_t t = CurrentTime();
     int64_t ts = CurrentTimestamp();
 
-    cout << "Time = " << t << endl;
-    cout << "Time = " << ts << endl;
+    cout << "CurrentTime = " << t << endl;
+    cout << "CurrentTimestamp = " << ts << endl;
 }
 
+void
+SqlDateTest::testLocalTime()
+{
+    boost::local_time::time_zone_ptr tzPST(
+        new boost::local_time::posix_time_zone(
+            std::string("PST-8PDT,M3.2.0,M11.1.0")));
+    boost::local_time::time_zone_ptr tzUTC(
+        new boost::local_time::posix_time_zone(
+            std::string("UTC0")));
+    boost::local_time::time_zone_ptr tzJST(
+        new boost::local_time::posix_time_zone(
+            std::string("JST9")));
+
+    int64_t tPST = LocalTime(tzPST);
+    int64_t tJST = LocalTime(tzJST);
+    int64_t tUTC = LocalTime(tzUTC);
+    int64_t tsPST = LocalTimestamp(tzPST);
+    int64_t tsJST = LocalTimestamp(tzJST);
+    int64_t tsUTC = LocalTimestamp(tzUTC);
+
+    cout << "LocalTime(PST) = " << tPST << endl;
+    cout << "LocalTime(JST) = " << tJST << endl;
+    cout << "LocalTime(UTC) = " << tUTC << endl;
+    cout << "LocalTimestamp(PST) = " << tsPST << endl;
+    cout << "LocalTimestamp(JST) = " << tsJST << endl;
+    cout << "LocalTimestamp(UTC) = " << tsUTC << endl;
+}
 
 FENNEL_UNIT_TEST_SUITE(SqlDateTest);
 

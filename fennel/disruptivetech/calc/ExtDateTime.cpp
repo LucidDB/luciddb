@@ -25,6 +25,8 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+using namespace boost::local_time;
+
 void
 CastDateToStrA(
         RegisterRef<char*>* result,
@@ -88,7 +90,7 @@ CastTimestampToStrA(
 
 void
 CastStrAToDate(
-        RegisterRef<int64_t>* result, 
+        RegisterRef<int64_t>* result,
         RegisterRef<char*>* dateStr)
 {
     assert(result->type() == STANDARD_TYPE_INT_64);
@@ -103,7 +105,7 @@ CastStrAToDate(
 
 void
 CastStrAToTime(
-        RegisterRef<int64_t>* result, 
+        RegisterRef<int64_t>* result,
         RegisterRef<char*>* timeStr)
 {
     assert(result->type() == STANDARD_TYPE_INT_64);
@@ -118,7 +120,7 @@ CastStrAToTime(
 
 void
 CastStrAToTimestamp(
-        RegisterRef<int64_t>* result, 
+        RegisterRef<int64_t>* result,
         RegisterRef<char*>* timestampStr)
 {
     assert(result->type() == STANDARD_TYPE_INT_64);
@@ -133,7 +135,7 @@ CastStrAToTimestamp(
 
 // for debugging - see the millisec value passed through to fennel.
 void CastDateTimeToInt64(
-        RegisterRef<int64_t>* result, 
+        RegisterRef<int64_t>* result,
         RegisterRef<int64_t>* dtime )
 {
     assert(result->type() == STANDARD_TYPE_INT_64);
@@ -143,71 +145,103 @@ void CastDateTimeToInt64(
         result->toNull();
     } else {
         result->value(dtime->value());
-    }    
+    }
 }
 
 void CurrentTime(RegisterRef<int64_t>* result)
 {
     assert (result->type() == STANDARD_TYPE_INT_64);
-    result->value(CurrentTime());    
+    result->value(CurrentTime());
 }
 
 void CurrentTimestamp(RegisterRef<int64_t>* result)
 {
     assert (result->type() == STANDARD_TYPE_INT_64);
-    result->value(CurrentTimestamp());    
+    result->value(CurrentTimestamp());
 }
 
-void CurrentTime(RegisterRef<int64_t>* result,
-                 RegisterRef<int32_t>* precision)
+void CurrentTime(
+    RegisterRef<int64_t>* result,
+    RegisterRef<int32_t>* precision)
 {
     assert (result->type() == STANDARD_TYPE_INT_64);
     assert (precision->type() == STANDARD_TYPE_INT_32);
 
-    // precision is ignored for now   
+    // precision is ignored for now
     result->value(CurrentTime());
 }
 
-void CurrentTimestamp(RegisterRef<int64_t>* result, 
-                      RegisterRef<int32_t>* precision)
+void CurrentTimestamp(
+    RegisterRef<int64_t>* result,
+    RegisterRef<int32_t>* precision)
 {
     assert (result->type() == STANDARD_TYPE_INT_64);
     assert (precision->type() == STANDARD_TYPE_INT_32);
-    
+
     // precision is ignored for now
-    result->value(CurrentTimestamp());    
+    result->value(CurrentTimestamp());
 }
 
-void LocalTime(RegisterRef<int64_t>* result)
+void LocalTime(
+    RegisterRef<int64_t>* result,
+    RegisterRef<char *>* tz)
 {
     assert (result->type() == STANDARD_TYPE_INT_64);
-    result->value(LocalTime());    
+    assert (tz->type() == STANDARD_TYPE_CHAR);
+
+    time_zone_ptr tzPtr(
+        new posix_time_zone(
+            string(tz->pointer(), tz->stringLength())));
+
+    result->value(LocalTime(tzPtr));
 }
 
-void LocalTimestamp(RegisterRef<int64_t>* result)
+void LocalTimestamp(
+    RegisterRef<int64_t>* result,
+    RegisterRef<char *>* tz)
 {
     assert (result->type() == STANDARD_TYPE_INT_64);
-    result->value(LocalTimestamp());    
+    assert (tz->type() == STANDARD_TYPE_CHAR);
+
+    time_zone_ptr tzPtr(
+        new posix_time_zone(
+            string(tz->pointer(), tz->stringLength())));
+
+    result->value(LocalTimestamp(tzPtr));
 }
 
-void LocalTime(RegisterRef<int64_t>* result,
-                 RegisterRef<int32_t>* precision)
+void LocalTime(
+    RegisterRef<int64_t>* result,
+    RegisterRef<char *>* tz,
+    RegisterRef<int32_t>* precision)
 {
     assert (result->type() == STANDARD_TYPE_INT_64);
+    assert (tz->type() == STANDARD_TYPE_CHAR);
     assert (precision->type() == STANDARD_TYPE_INT_32);
 
-    // precision is ignored for now   
-    result->value(LocalTime());
-}
+    time_zone_ptr tzPtr(
+        new posix_time_zone(
+            string(tz->pointer(), tz->stringLength())));
 
-void LocalTimestamp(RegisterRef<int64_t>* result, 
-                      RegisterRef<int32_t>* precision)
-{
-    assert (result->type() == STANDARD_TYPE_INT_64);
-    assert (precision->type() == STANDARD_TYPE_INT_32);
-    
     // precision is ignored for now
-    result->value(LocalTimestamp());    
+    result->value(LocalTime(tzPtr));
+}
+
+void LocalTimestamp(
+    RegisterRef<int64_t>* result,
+    RegisterRef<char *>* tz,
+    RegisterRef<int32_t>* precision)
+{
+    assert (result->type() == STANDARD_TYPE_INT_64);
+    assert (tz->type() == STANDARD_TYPE_CHAR);
+    assert (precision->type() == STANDARD_TYPE_INT_32);
+
+    time_zone_ptr tzPtr(
+        new posix_time_zone(
+            string(tz->pointer(), tz->stringLength())));
+
+    // precision is ignored for now
+    result->value(LocalTimestamp(tzPtr));
 }
 
 
@@ -232,12 +266,17 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
     params_I64_C.push_back(STANDARD_TYPE_INT_64);
     params_I64_C.push_back(STANDARD_TYPE_CHAR);
 
+    vector<StandardTypeDescriptorOrdinal> params_I64_C_I32;
+    params_I64_C_I32.push_back(STANDARD_TYPE_INT_64);
+    params_I64_C_I32.push_back(STANDARD_TYPE_CHAR);
+    params_I64_C_I32.push_back(STANDARD_TYPE_INT_32);
+
     vector<StandardTypeDescriptorOrdinal> params_I64_I64;
     params_I64_I64.push_back(STANDARD_TYPE_INT_64);
     params_I64_I64.push_back(STANDARD_TYPE_INT_64);
 
     vector<StandardTypeDescriptorOrdinal> params_I64;
-    params_I64.push_back(STANDARD_TYPE_INT_64); 
+    params_I64.push_back(STANDARD_TYPE_INT_64);
 
     vector<StandardTypeDescriptorOrdinal> params_I64_I32;
     params_I64_I32.push_back(STANDARD_TYPE_INT_64);
@@ -298,20 +337,20 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<int64_t, int64_t>*) NULL,
              &CastDateTimeToInt64);
 
-    eit->add("LocalTime1", params_I64,
-             (ExtendedInstruction1<int64_t>*) NULL,
+    eit->add("LocalTime2", params_I64_C,
+             (ExtendedInstruction2<int64_t, char *>*) NULL,
              &LocalTime);
 
-    eit->add("LocalTimestamp1", params_I64,
-             (ExtendedInstruction1<int64_t>*) NULL,
+    eit->add("LocalTimestamp2", params_I64_C,
+             (ExtendedInstruction2<int64_t, char *>*) NULL,
              &LocalTimestamp);
 
-    eit->add("LocalTime2", params_I64_I32,
-             (ExtendedInstruction2<int64_t, int32_t>*) NULL,
+    eit->add("LocalTime3", params_I64_C_I32,
+             (ExtendedInstruction3<int64_t, char *, int32_t>*) NULL,
              &LocalTime);
 
-    eit->add("LocalTimestamp2", params_I64_I32,
-             (ExtendedInstruction2<int64_t, int32_t>*) NULL,
+    eit->add("LocalTimestamp3", params_I64_C_I32,
+             (ExtendedInstruction3<int64_t, char *, int32_t>*) NULL,
              &LocalTimestamp);
 
     eit->add("CurrentTime1", params_I64,
@@ -334,4 +373,4 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
 
 
 FENNEL_END_CPPFILE("$Id$");
-        
+
