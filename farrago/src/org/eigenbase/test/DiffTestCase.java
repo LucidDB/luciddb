@@ -196,11 +196,12 @@ public abstract class DiffTestCase
      * <p>NOTE: if you wrap the Writer returned by openTestLog() (e.g. with a
      * PrintWriter), be sure to flush the wrapping Writer before calling this
      * method.</p>
+     *
+     * @see #diffFile(File, File)
      */
     protected void diffTestLog()
         throws IOException
     {
-        int n = 0;
         assert (logOutputStream != null);
         logOutputStream.close();
         logOutputStream = null;
@@ -208,8 +209,24 @@ public abstract class DiffTestCase
         if (!refFile.exists()) {
             Assert.fail("Reference file " + refFile + " does not exist");
         }
+        diffFile(logFile, refFile);
+    }
 
-        // TODO:  separate utility method somewhere
+    /**
+     * Compares a log file with its reference log.
+     *
+     * <p>Usually, the log file and the reference log are in the same
+     * directory, one ending with '.log' and the other with '.ref'.
+     *
+     * <p>If the files are identical, removes logFile.
+     *
+     * @param logFile Log file
+     * @param refFile Reference log
+     */
+    protected void diffFile(File logFile, File refFile)
+        throws IOException
+    {
+        int n = 0;
         FileReader logReader = null;
         FileReader refReader = null;
         try {
@@ -460,8 +477,11 @@ public abstract class DiffTestCase
 
     /**
      * Returns the contents of a file as a string.
+     *
+     * @param file File
+     * @return Contents of the file
      */
-    private static String fileContents(File file)
+    protected static String fileContents(File file)
     {
         try {
             char [] buf = new char[2048];
