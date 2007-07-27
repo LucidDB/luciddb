@@ -187,6 +187,10 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      */
     void prepareResidualFilters(LcsRowScanExecStreamParams const &params);
 
+    /**
+     * Clears data structures used in residual filtering
+     */
+    void clearFilterData();
 
 public:
     virtual void prepare(LcsRowScanExecStreamParams const &params);

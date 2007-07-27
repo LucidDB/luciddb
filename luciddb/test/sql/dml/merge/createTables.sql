@@ -57,6 +57,21 @@ create table LOCATION (
 create schema s;
 set schema 's';
 
+create table BENCH1 (
+"kseq" bigint,
+"k2" bigint,
+"k4" bigint,
+"k5" bigint,
+"k10" bigint,
+"k25" bigint,
+"k100" bigint,
+"k1k" bigint,
+"k10k" bigint,
+"k40k" bigint,
+"k100k" bigint,
+"k250k" bigint,
+"k500k" bigint);
+
 create table BENCH10K (
 "kseq" bigint primary key,
 "k2" bigint,

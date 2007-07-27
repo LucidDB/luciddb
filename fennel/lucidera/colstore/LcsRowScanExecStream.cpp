@@ -177,6 +177,9 @@ void LcsRowScanExecStream::open(bool restart)
      * read from the 1st input
      */
     iFilterToInitialize = 0;
+    if (restart) {
+        clearFilterData();
+    }
 }
 
 void LcsRowScanExecStream::getResourceRequirements(
@@ -398,6 +401,11 @@ void LcsRowScanExecStream::closeImpl()
 {
     LcsRowScanBaseExecStream::closeImpl();
 
+    clearFilterData();
+}
+
+void LcsRowScanExecStream::clearFilterData()
+{
     for (uint i = 0; i < inAccessors.size()-1; i++) {
         filters[i]->filterData.clear();
     }
