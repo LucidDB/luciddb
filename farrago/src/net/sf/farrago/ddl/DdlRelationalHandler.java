@@ -22,25 +22,46 @@
 */
 package net.sf.farrago.ddl;
 
-import java.sql.*;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
-import java.util.*;
+import net.sf.farrago.catalog.FarragoCatalogUtil;
+import net.sf.farrago.cwm.core.CwmFeature;
+import net.sf.farrago.cwm.core.CwmModelElement;
+import net.sf.farrago.cwm.core.CwmStructuralFeature;
+import net.sf.farrago.cwm.keysindexes.CwmIndexedFeature;
+import net.sf.farrago.cwm.relational.CwmCatalog;
+import net.sf.farrago.cwm.relational.CwmColumn;
+import net.sf.farrago.cwm.relational.CwmTable;
+import net.sf.farrago.fem.med.FemBaseColumnSet;
+import net.sf.farrago.fem.med.FemDataServer;
+import net.sf.farrago.fem.med.FemDataWrapper;
+import net.sf.farrago.fem.med.FemLocalIndex;
+import net.sf.farrago.fem.med.FemLocalIndexColumn;
+import net.sf.farrago.fem.med.FemLocalTable;
+import net.sf.farrago.fem.med.FemViewColumn;
+import net.sf.farrago.fem.sql2003.FemAbstractAttribute;
+import net.sf.farrago.fem.sql2003.FemAbstractUniqueConstraint;
+import net.sf.farrago.fem.sql2003.FemKeyComponent;
+import net.sf.farrago.fem.sql2003.FemLocalSchema;
+import net.sf.farrago.fem.sql2003.FemLocalView;
+import net.sf.farrago.fem.sql2003.FemPrimaryKeyConstraint;
+import net.sf.farrago.namespace.FarragoMedDataServer;
+import net.sf.farrago.namespace.FarragoMedLocalDataServer;
+import net.sf.farrago.query.FarragoReentrantStmt;
+import net.sf.farrago.query.FarragoUnvalidatedDependencyException;
+import net.sf.farrago.session.FarragoSession;
+import net.sf.farrago.session.FarragoSessionAnalyzedSql;
+import net.sf.farrago.type.FarragoTypeFactory;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.query.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
-
-import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.sql.SqlKind;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -132,7 +153,20 @@ public class DdlRelationalHandler
                     repos.getLocalizedObjectName(table));
             }
         }
-
+        
+        // check that columns are distinct
+        List<CwmIndexedFeature> indexedFeatures = index.getIndexedFeature();
+        boolean[] includesColumn = new boolean[table.getFeature().size()];
+        for (CwmIndexedFeature column : indexedFeatures) {
+            int ordinal = ((FemAbstractAttribute)column.getFeature()).getOrdinal();
+            if (includesColumn[ordinal]) {
+                throw res.ValidatorIndexedColumnsNotDistinct.ex(
+                    repos.getLocalizedObjectName(index));
+            } else {
+                includesColumn[ordinal] = true;
+            }
+        }
+        
         // TODO:  verify columns distinct, total width acceptable, and all
         // columns indexable types
         if (index.getNamespace() != null) {
