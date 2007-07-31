@@ -2670,6 +2670,10 @@ public abstract class SqlOperatorTests
         getTester().checkNull("mod(cast(null as integer),2)");
         getTester().checkNull("mod(4,cast(null as tinyint))");
         getTester().checkNull("mod(4,cast(null as decimal(12,0)))");
+    }
+
+    public void testModFuncDivByZero()
+    {
         getTester().checkFails("mod(3,0)", divisionByZeroMessage, true);
     }
 
