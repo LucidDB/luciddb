@@ -32,6 +32,17 @@ create table t3(i int not null constraint lucy primary key);
 -- should fail
 create table t4(i int not null constraint lucy primary key);
 
+-- test column uniqueness in index
+create table t5(col1 int not null primary key, col2 int not null);
+-- should be successful
+create index i1 on t5(col1,col2);
+-- should fail
+create index i2 on t5(col1,col2,col1);
+
+-- test column uniqueness error when index is a primary key constraint
+-- should fail
+create table t6(col1 int not null, col2 int not null, primary key(col1,col1));
+
 -- FTRS-specific table validation rules
 
 -- should fail:  FTRS tables cannot have multiple clustered indexes

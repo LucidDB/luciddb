@@ -1114,6 +1114,14 @@ void VersionedRandomAllocationSegment::deallocatePageChain(
             nextPageId = pageEntry.versionChainPageId;
         }
     } while (nextPageId != anchorPageId);
+
+    // Update the last previous entry if needed
+    if (needsUpdate) {
+        updateTempPageEntry(
+            prevExtentPageId,
+            iPrevPageInExtent,
+            *pPrevPageEntry);
+    }
 }
 
 bool VersionedRandomAllocationSegment::uncommittedDeallocation(

@@ -174,9 +174,19 @@ void LcsRowScanExecStream::open(bool restart)
     ridReader.init(inAccessors[0], ridTupleData);
 
     /*
-     * read from the 1st input
+     * Read from the 1st input, but only if we're not doing a restart.
+     * Restarts can reuse the structures set up on the initial open
+     * because the current assumption is that the residual filter
+     * values don't change in between restarts.  If on restart, if a filter
+     * wasn't completely initialized, then reinitialize it.
      */
-    iFilterToInitialize = 0;
+    if (!restart) {
+        iFilterToInitialize = 0;
+    } else if (iFilterToInitialize < inAccessors.size() - 1) {
+        if (!filters[iFilterToInitialize]->filterDataInitialized) {
+            filters[iFilterToInitialize]->filterData.clear();
+        }
+    }
 }
 
 void LcsRowScanExecStream::getResourceRequirements(
@@ -244,7 +254,8 @@ bool LcsRowScanExecStream::initializeFiltersIfNeeded()
                 return false;
             }
         }
-    } 
+        filters[iFilterToInitialize]->filterDataInitialized = true;
+    }
     return true;
 }
 

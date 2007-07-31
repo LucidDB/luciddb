@@ -166,6 +166,7 @@ public:
         pScan = pScanInit;
         colOrd = colOrdInit;
         filters.hasResidualFilters = false;
+        filters.filterDataInitialized = false;
         allProj.push_back(0);
     }
 

@@ -36,6 +36,19 @@ Error: DDL validation error near line 2, column 14: Target schema "LOCALDB"."MIS
 > create table t4(i int not null constraint lucy primary key);
 Error: DDL validation error near line 1, column 56: Target schema "LOCALDB"."MISC" already contains PRIMARY KEY constraint "LUCY" with same name (state=,code=0)
 > 
+> -- test column uniqueness in index
+> create table t5(col1 int not null primary key, col2 int not null);
+> -- should be successful
+> create index i1 on t5(col1,col2);
+> -- should fail
+> create index i2 on t5(col1,col2,col1);
+Error: Cannot create index "MISC"."I2" because columns must be distinct. (state=,code=0)
+> 
+> -- test column uniqueness error when index is a primary key constraint
+> -- should fail
+> create table t6(col1 int not null, col2 int not null, primary key(col1,col1));
+Error: Cannot create index "SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T6" because columns must be distinct. (state=,code=0)
+> 
 > -- FTRS-specific table validation rules
 > 
 > -- should fail:  FTRS tables cannot have multiple clustered indexes

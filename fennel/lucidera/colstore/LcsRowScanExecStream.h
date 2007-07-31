@@ -187,7 +187,6 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      */
     void prepareResidualFilters(LcsRowScanExecStreamParams const &params);
 
-
 public:
     virtual void prepare(LcsRowScanExecStreamParams const &params);
     virtual void open(bool restart);

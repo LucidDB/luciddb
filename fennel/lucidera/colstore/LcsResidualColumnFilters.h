@@ -99,6 +99,11 @@ struct LcsResidualColumnFilters
     std::vector<SharedLcsResidualFilter> filterData;
 
     /**
+     * True if filterData vector has been initialized
+     */
+    bool filterDataInitialized;
+
+    /**
      * Values bitmap for compressed batch filtering.
      */
     boost::dynamic_bitset<> filteringBitmap;
