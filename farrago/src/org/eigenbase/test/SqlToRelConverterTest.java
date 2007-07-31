@@ -69,6 +69,22 @@ public class SqlToRelConverterTest
             "${plan}");
     }
 
+    public void testJoinOn()
+    {
+        check("SELECT * FROM emp JOIN dept on emp.deptno = dept.deptno", "${plan}");
+    }
+
+    public void testJoinUsing()
+    {
+        check("SELECT * FROM emp JOIN dept USING (deptno)", "${plan}");
+    }
+    public void testJoinUsingCompound()
+    {
+        check("SELECT * FROM emp LEFT JOIN (" +
+            "SELECT *, deptno * 5 as empno FROM dept) " +
+            "USING (deptno,empno)", "${plan}");
+    }
+
     public void testGroup()
     {
         check("select deptno from emp group by deptno",

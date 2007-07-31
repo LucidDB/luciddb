@@ -100,13 +100,22 @@ public class RexShuttle
         }
     }
 
+    /**
+     * Visits each of an array of expressions and returns an array of the
+     * results.
+     *
+     * @param exprs Array of expressions
+     * @param update If not null, sets this to true if any of the expressions
+     *   was modified
+     * @return Array of visited expressions
+     */
     protected RexNode [] visitArray(RexNode [] exprs, boolean [] update)
     {
         RexNode [] clonedOperands = new RexNode[exprs.length];
         for (int i = 0; i < exprs.length; i++) {
             RexNode operand = exprs[i];
             RexNode clonedOperand = operand.accept(this);
-            if (clonedOperand != operand) {
+            if (clonedOperand != operand && update != null) {
                 update[0] = true;
             }
             clonedOperands[i] = clonedOperand;

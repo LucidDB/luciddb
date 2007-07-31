@@ -2954,6 +2954,18 @@ public class CalcRexImplementorTableImpl
             // optional precision operand.
             regList.add(timeReg);
 
+            // The LocalTimestamp and LocalTime instructions take the POSIX 
+            // description of the timezone (e.g. "PST-8PDT,M4.1.0,M10.1.0")
+            // as an implicit first argument.
+            //
+            // Timezone is inherited from the JVM.
+            // You can override using '-Duser.timezone=...".
+            if (instruction.name.startsWith("Local")) {
+                String tzDesc = Util.toPosix(TimeZone.getDefault(), false);
+                regList.add(translator.implementNode(
+                    translator.rexBuilder.makeLiteral(tzDesc)));
+            }
+
             if (operand != null) {
                 regList.add(translator.implementNode(operand));
             }

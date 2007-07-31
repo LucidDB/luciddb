@@ -59,6 +59,16 @@ import sqlline.SqlLine;
  * implement the suite() method in order to get a database connection correctly
  * initialized. See FarragoQueryTest for an example.
  *
+ * <p>For SQL tests, FarragoTestCase writes the output from sqlline to a file
+ * called <code>&lt;<i>testname</i>&gt;.log</code>, and compares that output
+ * with a reference log file <code>&lt;<i>testname</i>&gt;.ref</code>.
+ *
+ * <p>It is also possible to have additional logfiles, for tests which generate
+ * output to files. FarragoTestCase scans the input .sql file for lines of the
+ * form
+ * <blockquote><code>##COMPARE &lt;file&gt;.log</code></blockquote>
+ * and for each such command, it compares file.log with file.ref.
+ *
  * @author John V. Sichi
  * @version $Id$
  */
@@ -517,10 +527,8 @@ public abstract class FarragoTestCase
         if (driverName == null) {
             return new FarragoJdbcEngineDriver();
         }
-        Class<FarragoUnregisteredJdbcEngineDriver> clazz =
-            (Class<FarragoUnregisteredJdbcEngineDriver>) Class.forName(
-                driverName);
-        return clazz.newInstance();
+        Class<?> clazz = Class.forName(driverName);
+        return (FarragoAbstractJdbcDriver) clazz.newInstance();
     }
 
     protected void runSqlLineTest(String sqlFile)
@@ -543,8 +551,11 @@ public abstract class FarragoTestCase
         PrintStream savedOut = System.out;
         PrintStream savedErr = System.err;
 
+        // get contents of file
+        String sqlFileContents = fileContents(new File(sqlFile));
+
         // read from the specified file
-        FileInputStream inputStream = new FileInputStream(sqlFile.toString());
+        InputStream inputStream = new FileInputStream(sqlFile);
 
         // to make sure the connection is closed properly, append the
         // !quit command
@@ -571,6 +582,25 @@ public abstract class FarragoTestCase
             printStream.close();
             if (shouldDiff()) {
                 diffTestLog();
+
+                // Execute any '##COMPARE <filename>' commands in the .sql file
+                int k;
+                while ((k = sqlFileContents.indexOf("##COMPARE ")) > 0) {
+                    sqlFileContents = sqlFileContents.substring(k);
+                    int n = sqlFileContents.indexOf(TestUtil.NL);
+                    String logFile =
+                        sqlFileContents.substring("##COMPARE ".length(), n);
+                    if (!logFile.endsWith(".log")) {
+                        throw new AssertionError(
+                            "Filename argument to '##COMPARE' must end " +
+                                "in '.log': " + logFile);
+                    }
+                    String refFile =
+                        logFile.substring(
+                            0,
+                            logFile.length() - ".log".length()) + ".ref";
+                    diffFile(new File(logFile), new File(refFile));
+                }
             }
         } finally {
             System.setOut(savedOut);

@@ -46,6 +46,9 @@ import org.eigenbase.util.*;
  * DefaultValueFactory looks up a default value stored in the catalog, parses
  * it, and converts it to an Expression. Processed expressions are cached for
  * use by subsequent calls. The CwmExpression's MofId is used as the cache key.
+ *
+ * @author John V. Sichi
+ * @version $Id$
  */
 public class ReposDefaultValueFactory
     implements DefaultValueFactory,
@@ -60,6 +63,11 @@ public class ReposDefaultValueFactory
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a ReposDefaultValueFactory.
+     *
+     * @param farragoPreparingStmt Statement preparation context
+     */
     public ReposDefaultValueFactory(FarragoPreparingStmt farragoPreparingStmt)
     {
         this.farragoPreparingStmt = farragoPreparingStmt;
@@ -185,6 +193,13 @@ public class ReposDefaultValueFactory
         return farragoPreparingStmt.expandInvocationExpression(rhs, invocation);
     }
 
+    /**
+     * Converts an expression definition from the repository into RexNode
+     * format.
+     *
+     * @param cwmExp Repository object representing an expression
+     * @return Rex expression
+     */
     private RexNode convertExpression(CwmExpression cwmExp)
     {
         if (cwmExp.getBody().equalsIgnoreCase("NULL")) {
@@ -200,7 +215,11 @@ public class ReposDefaultValueFactory
         RexNode parsedExp = (RexNode) cacheEntry.getValue();
         farragoPreparingStmt.getStmtValidator().getCodeCache().unpin(
             cacheEntry);
-        return parsedExp;
+
+        // The expression in the cache may have been created with a different
+        // type factory. Create a copy in the current type factory.
+        return farragoPreparingStmt.sqlToRelConverter.getRexBuilder().copy(
+            parsedExp);
     }
 
     private RexNode sequenceValue(FemSequenceGenerator sequence)
@@ -240,7 +259,7 @@ public class ReposDefaultValueFactory
             3 * FarragoUtil.getStringMemoryUsage(defaultString),
             true);
     }
-                
+
     // implement CachedObjectFactory
     public boolean isStale(Object value)
     {

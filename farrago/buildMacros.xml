@@ -328,6 +328,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement location="${jgraphaddons.dir}/lib/jgraphaddons.jar"/>
     <pathelement location="${jgrapht.dir}/lib/jgraph.jar"/>
+    <pathelement location="${diffj.dir}/share/diffj/diffj.jar"/>
   </path>
   <property name="farrago.javadoc.classpath" refid="farrago.javadoc.classpath"/>
 
