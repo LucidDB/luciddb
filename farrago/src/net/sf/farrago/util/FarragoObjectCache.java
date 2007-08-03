@@ -299,6 +299,7 @@ public class FarragoObjectCache
 
         synchronized (mapKeyToEntry) {
             List<FarragoCacheEntry> candidateList = mapKeyToEntry.getMulti(key);
+            int nCandidates = candidateList.size();
             Iterator<FarragoCacheEntry> iter = candidateList.iterator();
             while (iter.hasNext()) {
                 entry = iter.next();
@@ -323,7 +324,7 @@ public class FarragoObjectCache
                                         new ArrayList<FarragoCacheEntry>();
                                 }
                                 staleList.add(entry);
-                                if (candidateList.size() > 1) {
+                                if (nCandidates > 1) {
                                     // NOTE jvs 10-Jun-2007: See comment with
                                     // same date below for the reason behind
                                     // this special case.
@@ -349,7 +350,7 @@ public class FarragoObjectCache
                     break;
                 }
             }
-            if ((staleList != null) && (candidateList.size() == 1)) {
+            if ((staleList != null) && (nCandidates == staleList.size())) {
                 // NOTE jvs 10-Jun-2007: This special case is required because
                 // of the non-uniform return behavior of MultiMap (singleton
                 // entries are returned via an immutable list).
