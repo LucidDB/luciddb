@@ -1,0 +1,64 @@
+@nolockstep
+
+@setup
+
+  set schema 'rwconcur';
+
+  create table lineitem2 (
+    l_orderkey    integer,
+    l_partkey     integer not null,
+    l_suppkey     integer not null,
+    l_linenumber  integer,
+    l_quantity    decimal(15,2) not null,
+    l_extendedprice  decimal(15,2) not null,
+    l_discount    decimal(15,2) not null,
+    l_tax         decimal(15,2) not null,
+    l_returnflag  varchar(1) not null,
+    l_linestatus  varchar(1) not null,
+    l_shipdate    date not null,
+    l_commitdate  date not null,
+    l_receiptdate date not null,
+    l_shipinstruct varchar(25) not null, 
+    l_shipmode    varchar(10) not null,
+    l_comment      varchar(44) not null,
+    primary key(l_orderkey, l_linenumber)
+  );
+
+  insert into lineitem select * from "lineitem";
+
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+    set schema 'rwconcur';
+  @sync
+  @sync
+  @sync
+    truncate table lineitem;
+    drop table lineitem2;
+@end
+
+-----------------------------------------------------------
+
+@thread reader1
+    set schema 'rwconcur';
+  @sync
+    insert into lineitem2 select * from lineitem;
+  @sync
+    select count(*) from lineitem2;
+  @sync
+@end
+
+-----------------------------------------------------------
+
+@thread truncate
+    set schema 'rwconcur';
+  @sync
+    @sleep 200
+    truncate table lineitem;
+  @sync
+    select count(*) from lineitem;
+  @sync
+@end
+

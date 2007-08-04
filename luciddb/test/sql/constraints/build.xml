@@ -42,7 +42,7 @@
   <property name="gensql.dir" value="${constraints.dir}/gen"/>
 
   <!-- directory of flat files -->
-  <property name="ffsource.tpch.dir" value="${open.dir}/thirdparty/tpch/data"/>
+  <property name="ffsource.tpch.dir" value="${open.dir}/thirdparty/tpch/dataMultiProcess"/>
   <property name="ffsource.bench.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
   <property name="ff.dir" value="${constraints.dir}/ff" />
 
@@ -113,9 +113,11 @@
             <!-- copy bench over if raksha is available -->
             <if> 
               <isset property="raksha.available"/>
+              <then>
               <copy todir="${ff.dir}" verbose="true">
                 <fileset dir="${ffsource.bench.dir}" includes="bench1M.*"/>
               </copy>
+              </then>
             </if>
           </else>
         </if>
@@ -123,19 +125,14 @@
       <!-- else if ff dir not created yet -->
       <else>
         <condition property="db.created">
-          <and>
-            <available file="${ffsource.tpch.dir}/datasize" type="file"/>
-            <isfileselected file="${ffsource.tpch.dir}/datasize">
-              <contains text="100M" casesensitive="no"/>
-            </isfileselected>
-          </and>
+          <available file="${ffsource.tpch.dir}/100M" type="dir"/>
         </condition>
         
         <if>
           <istrue value="${db.created}"/>
           <then/>
           <else>
-            <exec executable="${thirdparty.dir}/tpch/createdb"
+            <exec executable="${thirdparty.dir}/tpch/createdbMultiProcess"
               dir="${thirdparty.dir}/tpch">
               <arg line="100M"/>
             </exec>
@@ -147,13 +144,13 @@
           <isset property="raksha.available"/>
           <then>
             <sync todir="${ff.dir}" verbose="true">
-              <fileset dir="${ffsource.tpch.dir}"/>
+              <fileset dir="${ffsource.tpch.dir}/100M"/>
               <fileset dir="${ffsource.bench.dir}" includes="bench1M.*"/>
             </sync>
           </then>
           <else>
             <sync todir="${ff.dir}" overwrite="false" verbose="true">
-              <fileset dir="${ffsource.tpch.dir}"/>
+              <fileset dir="${ffsource.tpch.dir}/100M"/>
             </sync>
           </else>
         </if>
@@ -165,6 +162,7 @@
     <antcall target="clean-test"/>
     <delete file="${constraints.dir}/run.properties"/>
     <delete dir="${ff.dir}"/>
+    <delete file="datasize"/>
   </target>
 
   <target name="clean-test">

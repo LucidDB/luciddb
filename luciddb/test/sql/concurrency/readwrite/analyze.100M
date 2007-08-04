@@ -1,0 +1,56 @@
+-- setup
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitem select * from "lineitem";
+600572 rows affected.
+-- end of setup
+
+-- thread cleanup
+> set schema 'rwconcur';
+0 rows affected.
+> truncate table lineitem;
+0 rows affected.
+> truncate table nation;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread analyze
+> set schema 'rwconcur';
+0 rows affected.
+> analyze table lineitem compute statistics for all columns;
+0 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 600572              |
++---------------------+
+
+-- end of thread analyze
+
+-- thread reader
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 600572              |
++---------------------+
+
+-- end of thread reader
+
+-- thread readwrite
+> set schema 'rwconcur';
+0 rows affected.
+> insert into nation select * from "nation";
+25 rows affected.
+> select count(*) from nation;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 25                  |
++---------------------+
+
+-- end of thread readwrite
+

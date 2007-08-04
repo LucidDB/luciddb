@@ -1,0 +1,73 @@
+@nolockstep
+
+@setup
+
+  set schema 'rwconcur';
+
+  insert into lineitem select * from "lineitem";
+  select count(*) from lineitem;
+  delete from lineitem where l_shipmode = 'TRUCK';
+  select count(*) from lineitem where l_shipmode = 'TRUCK';
+  select count(*) from lineitem;
+
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+    set schema 'rwconcur';
+    truncate table lineitem;
+@end
+
+-----------------------------------------------------------
+
+@thread rebuildLineItem
+
+  set schema 'rwconcur';
+
+  @sync
+  alter table lineitem rebuild;
+  @sync
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread readLineItem
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+    select count(*) from lineitem where l_shipmode = 'TRUCK';
+    select count(*) from lineitem;
+  @sleep 1000
+    select count(*) from lineitem where l_shipmode = 'TRUCK';
+    select count(*) from lineitem;
+  @sync
+    select count(*) from lineitem where l_shipmode = 'TRUCK';
+    select count(*) from lineitem;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread writeLineItem
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+    @err delete from lineitem where l_shipmode = 'RAIL';
+  @sync
+  @sync
+
+@end
+
+-----------------------------------------------------------
+

@@ -1,0 +1,69 @@
+@nolockstep
+
+@setup
+
+  set schema 'rwconcur';
+  insert into lineitem select * from "lineitem";
+  insert into orders select * from "orders";
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+    set schema 'rwconcur';
+    truncate table lineitem;
+    truncate table orders;
+@end
+
+-----------------------------------------------------------
+
+@thread deletelineitem
+    set schema 'rwconcur';
+  @sync
+    delete from lineitem where l_shipmode = 'TRUCK';
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+@thread selectlineitem
+    set schema 'rwconcur';
+  @sync
+  @sleep 200
+    select count(*) from lineitem where l_shipmode = 'TRUCK';
+  @sync
+    select count(*) from lineitem where l_shipmode = 'TRUCK';
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+@thread deleteorders
+    set schema 'rwconcur';
+  @sync
+    delete from orders where o_orderpriority = '2-HIGH';
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+@thread selectorders
+    set schema 'rwconcur';
+  @sync
+  @sleep 100
+    select count(*) from orders where o_orderpriority = '2-HIGH';
+  @sync
+    select count(*) from orders where o_orderpriority = '2-HIGH';
+  @sync
+
+@end
+
+------------------------------------------------------------

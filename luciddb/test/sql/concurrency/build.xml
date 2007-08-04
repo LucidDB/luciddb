@@ -169,6 +169,7 @@
     <antcall target="clean-test"/>
     <delete dir="${csv.dir}"/>
     <delete file="run.properties"/>
+    <ant dir="${concurrency.dir}/readwrite" target="clean"/>
   </target>
 
   <target name="clean-each">
@@ -193,6 +194,7 @@
       param="prop.source"
       target="clean-each"/>
     <delete file="config.properties"/>
+    <ant dir="${concurrency.dir}/readwrite" target="clean-test"/>
   </target>
 
 </project>
