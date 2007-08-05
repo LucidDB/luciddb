@@ -66,11 +66,31 @@ public class SwapJoinRule
      */
     public static RelNode swap(JoinRel join)
     {
-        // We cannot swap an asymmetric join
-        switch (join.getJoinType()) {
+        return swap(join, false);
+    }
+    
+    /**
+     * @param join join to be swapped
+     * @param swapOuterJoins whether outer joins should be swapped
+     * 
+     * @return swapped join if swapping possible; else null
+     */
+    public static RelNode swap(JoinRel join, boolean swapOuterJoins)
+    {
+        JoinRelType joinType = join.getJoinType();
+        switch (joinType) {
         case LEFT:
+            if (!swapOuterJoins) {
+                return null;
+            }
+            joinType = JoinRelType.RIGHT;
+            break;
         case RIGHT:
-            return null;
+            if (!swapOuterJoins) {
+                return null;
+            }
+            joinType = JoinRelType.LEFT;
+            break;
         }
         final RexBuilder rexBuilder = join.getCluster().getRexBuilder();
         final RelDataType leftRowType = join.getLeft().getRowType();
@@ -92,7 +112,7 @@ public class SwapJoinRule
                 join.getRight(),
                 join.getLeft(),
                 condition,
-                join.getJoinType(),
+                joinType,
                 Collections.EMPTY_SET,
                 join.isSemiJoinDone(),
                 join.isMultiJoinDone());

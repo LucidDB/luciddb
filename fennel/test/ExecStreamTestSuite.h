@@ -26,6 +26,7 @@
 
 #include "fennel/test/ExecStreamUnitTestBase.h"
 #include <boost/test/test_tools.hpp>
+#include <hash_set>
 
 using namespace fennel;
 
@@ -41,7 +42,11 @@ protected:
     void testCartesianJoinExecStream(uint nRowsLeft,uint nRowsRight);
     void testGroupAggExecStreamNrows(uint nrows);
     void testReshapeExecStream(
-        bool cast, bool filter, uint expectedNRows, int expectedStart);
+        bool cast, bool filter, uint expectedNRows, int expectedStart,
+        bool compareParam,
+        std::hash_set<int64_t> const &outputParams);
+    void testBTreeInsertExecStream(bool useDynamicBTree, uint nRows);
+    void testNestedLoopJoinExecStream(uint nRowsLeft, uint nRowsRight);
     
 public:
     /**
@@ -70,11 +75,25 @@ public:
             FENNEL_UNIT_TEST_CASE(
                 ExecStreamTestSuite,testReshapeExecStreamNoCastFilter);
             FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,testReshapeExecStreamDynamicParams);
+            FENNEL_UNIT_TEST_CASE(
                 ExecStreamTestSuite,
                 testSingleValueAggExecStream);
             FENNEL_UNIT_TEST_CASE(
                 ExecStreamTestSuite,
                 testMergeImplicitPullInputs);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testBTreeInsertExecStreamStaticBTree);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testBTreeInsertExecStreamDynamicBTree);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testNestedLoopJoinExecStream1);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testNestedLoopJoinExecStream2);
         }
     }
 
@@ -125,12 +144,42 @@ public:
 
     void testReshapeExecStreamCastFilter()
     {
-        testReshapeExecStream(true, true, 10, 500);
+        std::hash_set<int64_t> outputParams;
+        testReshapeExecStream(true, true, 10, 500, false, outputParams);
     }
 
     void testReshapeExecStreamNoCastFilter()
     {
-        testReshapeExecStream(false, false, 1000, 0);
+        std::hash_set<int64_t> outputParams;
+        testReshapeExecStream(false, false, 1000, 0, false, outputParams);
+    }
+
+    void testReshapeExecStreamDynamicParams()
+    {
+        std::hash_set<int64_t> outputParams;
+        outputParams.insert(0);
+        outputParams.insert(2);
+        testReshapeExecStream(true, false, 10, 500, true, outputParams);
+    }
+
+    void testBTreeInsertExecStreamStaticBTree()
+    {
+        testBTreeInsertExecStream(false, 1000);
+    }
+
+    void testBTreeInsertExecStreamDynamicBTree()
+    {
+        testBTreeInsertExecStream(true, 1000);
+    }
+
+    void testNestedLoopJoinExecStream1()
+    {
+        testNestedLoopJoinExecStream(10000, 5);
+    }
+
+    void testNestedLoopJoinExecStream2()
+    {
+        testNestedLoopJoinExecStream(5, 10000);
     }
 };
 

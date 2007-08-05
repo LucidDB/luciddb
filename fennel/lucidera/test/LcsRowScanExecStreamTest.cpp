@@ -34,6 +34,7 @@
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ValuesExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/cache/Cache.h"
 #include <stdarg.h>
 
@@ -236,6 +237,7 @@ void LcsRowScanExecStreamTest::loadOneCluster(
         lcsAppendParams.inputProj.push_back(i);
     }
     lcsAppendParams.pRootMap = 0;
+    lcsAppendParams.rootPageIdParamId = DynamicParamId(0);
     
     // setup temporary btree descriptor to get an empty page to start the btree
 

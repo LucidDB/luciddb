@@ -363,7 +363,7 @@ public class JavaRelImplementor
             assert (child == parent.getInputs()[ordinal]);
         }
         createFrame(parent, ordinal, child);
-        return visitChildInternal(child);
+        return visitChildInternal(child, ordinal);
     }
 
     protected void createFrame(RelNode parent, int ordinal, RelNode child)
@@ -384,8 +384,13 @@ public class JavaRelImplementor
             }
         }
     }
-
+    
     public Object visitChildInternal(RelNode child)
+    {
+        return visitChildInternal(child, 0);
+    }
+    
+    public Object visitChildInternal(RelNode child, int ordinal)
     {
         final CallingConvention convention = child.getConvention();
         if (!(child instanceof JavaRel)) {

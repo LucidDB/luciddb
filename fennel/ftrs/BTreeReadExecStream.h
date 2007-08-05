@@ -57,6 +57,7 @@ protected:
     SharedBTreeReader pReader;
     TupleProjectionAccessor projAccessor;
     TupleData tupleData;
+    TupleProjection outputProj;
     
 public:
     // implement ExecStream
@@ -64,6 +65,7 @@ public:
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);
+    virtual void open(bool restart);
     virtual void closeImpl();
 };
 

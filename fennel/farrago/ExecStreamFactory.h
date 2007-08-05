@@ -119,6 +119,7 @@ protected:
     virtual void visit(ProxySplitterStreamDef &);
     virtual void visit(ProxyValuesStreamDef &);
     virtual void visit(ProxyReshapeStreamDef &);
+    virtual void visit(ProxyNestedLoopJoinStreamDef &);
 
     // helpers for above visitors
 
@@ -202,6 +203,8 @@ public:
     void readAggStreamParams(
         SortedAggExecStreamParams &,
         ProxyAggStreamDef &);
+
+    DynamicParamId readDynamicParamId(const int val);
 };
 
 class ExecStreamSubFactory : public boost::noncopyable

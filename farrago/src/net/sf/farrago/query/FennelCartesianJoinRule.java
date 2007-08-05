@@ -98,16 +98,33 @@ public class FennelCartesianJoinRule
             return;
         }
 
+        leftRel =
+            mergeTraitsAndConvert(
+                joinRel.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
+                leftRel);
+        if (leftRel == null) {
+            return;
+        }
+
+        rightRel =
+            mergeTraitsAndConvert(
+                joinRel.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
+                rightRel);
+        if (rightRel == null) {
+            return;
+        }
+        
         // see if it makes sense to buffer the existing RHS; if not, try
         // the LHS, swapping the join operands if it does make sense to buffer
         // the LHS; but only if the join isn't a left outer join (since we
         // can't do cartesian right outer joins)
-        FennelBufferRel bufRel =
-            bufferRight(leftRel, rightRel, joinRel.getTraits());
+        FennelBufferRel bufRel = FennelRelUtil.bufferRight(leftRel, rightRel);
         if (bufRel != null) {
             rightRel = bufRel;
         } else if (joinType != JoinRelType.LEFT) {
-            bufRel = bufferRight(rightRel, leftRel, joinRel.getTraits());
+            bufRel = FennelRelUtil.bufferRight(rightRel, leftRel);
             if (bufRel != null) {
                 swapped = true;
                 leftRel = rightRel;
@@ -115,30 +132,12 @@ public class FennelCartesianJoinRule
             }
         }
 
-        RelNode fennelLeft =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                leftRel);
-        if (fennelLeft == null) {
-            return;
-        }
-
-        RelNode fennelRight =
-            mergeTraitsAndConvert(
-                joinRel.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                rightRel);
-        if (fennelRight == null) {
-            return;
-        }
-
         RelDataType joinRowType;
         if (swapped) {
             joinRowType =
                 JoinRel.deriveJoinRowType(
-                    fennelLeft.getRowType(),
-                    fennelRight.getRowType(),
+                    leftRel.getRowType(),
+                    rightRel.getRowType(),
                     joinType,
                     joinRel.getCluster().getTypeFactory(),
                     null);
@@ -148,8 +147,8 @@ public class FennelCartesianJoinRule
         FennelCartesianProductRel productRel =
             new FennelCartesianProductRel(
                 joinRel.getCluster(),
-                fennelLeft,
-                fennelRight,
+                leftRel,
+                rightRel,
                 joinType,
                 RelOptUtil.getFieldNameList(joinRowType));
 
@@ -182,71 +181,6 @@ public class FennelCartesianJoinRule
             newRel = productRel;
         }
         call.transformTo(newRel);
-    }
-
-    /**
-     * Returns a FennelBufferRel in the case where it makes sense to buffer the
-     * RHS into the cartesian product join. This is done by comparing the cost
-     * between the buffered and non-buffered cases.
-     *
-     * @param left left hand input into the cartesian join
-     * @param right right hand input into the cartesian join
-     * @param traits traits of the original join
-     *
-     * @return created FennelBufferRel if it makes sense to buffer the RHS
-     */
-    private FennelBufferRel bufferRight(
-        RelNode left,
-        RelNode right,
-        RelTraitSet traits)
-    {
-        RelNode fennelInput =
-            mergeTraitsAndConvert(
-                traits,
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                right);
-        FennelBufferRel bufRel =
-            new FennelBufferRel(right.getCluster(), fennelInput, false, true);
-
-        // if we don't have a rowcount for the LHS, then just go ahead and
-        // buffer
-        Double nRowsLeft = RelMetadataQuery.getRowCount(left);
-        if (nRowsLeft == null) {
-            return bufRel;
-        }
-
-        // If we know that the RHS is not capable of restart, then
-        // force buffering.
-        if (!FarragoRelMetadataQuery.canRestart(right)) {
-            return bufRel;
-        }
-
-        // Cost without buffering is:
-        // getCumulativeCost(LHS) +
-        //     getRowCount(LHS) * getCumulativeCost(RHS)
-        //
-        // Cost with buffering is:
-        // getCumulativeCost(LHS) + getCumulativeCost(RHS) +
-        //     getRowCount(LHS) * getNonCumulativeCost(buffering) * 3;
-        //
-        // The times 3 represents the overhead of caching.  The "3"
-        // is arbitrary at this point.
-        //
-        // To decide if buffering makes sense, take the difference between the
-        // two costs described above.
-        RelOptCost rightCost = RelMetadataQuery.getCumulativeCost(right);
-        RelOptCost noBufferPlanCost = rightCost.multiplyBy(nRowsLeft);
-
-        RelOptCost bufferCost = RelMetadataQuery.getNonCumulativeCost(bufRel);
-        bufferCost = bufferCost.multiplyBy(3);
-        RelOptCost bufferPlanCost = bufferCost.multiplyBy(nRowsLeft);
-        bufferPlanCost = bufferPlanCost.plus(rightCost);
-
-        if (bufferPlanCost.isLt(noBufferPlanCost)) {
-            return bufRel;
-        } else {
-            return null;
-        }
     }
 }
 

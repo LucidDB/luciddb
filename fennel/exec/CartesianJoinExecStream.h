@@ -46,14 +46,16 @@ struct CartesianJoinExecStreamParams : public ConfluenceExecStreamParams
 /**
  * CartesianJoinExecStream produces the Cartesian product of two input
  * streams.  The first input will be iterated only once, while the second
- * input will be opened and re-iterated for each tuple from the first
- * input.
+ * input will be opened and re-iterated for each tuple from the first input.
+ * Optionally, additional processing can be applied on the records read from
+ * the first input before iterating over the second input.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 class CartesianJoinExecStream : public ConfluenceExecStream
 {
+protected:
     bool leftOuter;
     bool rightInputEmpty;
     TupleData outputData;
@@ -61,6 +63,16 @@ class CartesianJoinExecStream : public ConfluenceExecStream
     SharedExecStreamBufAccessor pRightBufAccessor;
     SharedExecStream pRightInput;
     uint nLeftAttributes;
+
+    /** 
+     * @return true if the number of inputs to the stream is correct
+     */
+    virtual bool checkNumInputs();
+
+    /**
+     * Processes the left input after it has been read from the input stream
+     */
+    virtual void processLeftInput();
 
 public:
     // implement ExecStream

@@ -115,7 +115,7 @@ class FennelMergeRel
 
         for (int i = 0; i < inputs.length; i++) {
             FemExecutionStreamDef inputStream =
-                implementor.visitFennelChild((FennelRel) inputs[i]);
+                implementor.visitFennelChild((FennelRel) inputs[i], i);
             implementor.addDataFlowFromProducerToConsumer(
                 inputStream,
                 mergeStream);

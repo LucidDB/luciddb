@@ -139,12 +139,12 @@ public class FennelPullCorrelatorRel
         }
 
         FemExecutionStreamDef leftInput =
-            implementor.visitFennelChild((FennelRel) left);
+            implementor.visitFennelChild((FennelRel) left, 0);
         implementor.addDataFlowFromProducerToConsumer(
             leftInput,
             streamDef);
         FemExecutionStreamDef rightInput =
-            implementor.visitFennelChild((FennelRel) right);
+            implementor.visitFennelChild((FennelRel) right, 1);
         implementor.addDataFlowFromProducerToConsumer(
             rightInput,
             streamDef);

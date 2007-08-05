@@ -1118,6 +1118,7 @@ public class LcsIndexGuide
         //
         indexAccessor.setRootPageId(
             stmt.getIndexMap().getIndexRoot(index, write));
+        indexAccessor.setRootPageIdParamId(0);
 
         indexAccessor.setSegmentId(
             LcsDataServer.getIndexSegmentId(index));
@@ -1194,6 +1195,7 @@ public class LcsIndexGuide
             // the plan.
             clusterScan.setRootPageId(-1);
         }
+        clusterScan.setRootPageIdParamId(0);
 
         clusterScan.setSegmentId(LcsDataServer.getIndexSegmentId(index));
         clusterScan.setIndexId(JmiUtil.getObjectId(index));

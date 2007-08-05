@@ -39,11 +39,16 @@ struct BTreeInsertExecStreamParams
     : public BTreeExecStreamParams, public ConduitExecStreamParams
 {
     Distinctness distinctness;
+    bool monotonic;
 };
 
 /**
  * BTreeInsertExecStream inserts tuples into a BTree, reading them from an
- * upstream stream producer.
+ * upstream stream producer.  The BTree that's written into can optionally
+ * be created by the stream itself, in which case, the rootPageId of the
+ * dynamically created BTree is written into a dynamic parameter to be read
+ * by other streams.  In that case, the BTree is destroyed when the stream
+ * is closed.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -51,8 +56,17 @@ struct BTreeInsertExecStreamParams
 class BTreeInsertExecStream : public BTreeExecStream, public ConduitExecStream
 {
     Distinctness distinctness;
+    bool monotonic;
+    
+    void buildTree(bool restart);
+
+    void truncateTree(bool rootless);
     
 protected:
+    bool dynamicBTree;
+
+    bool truncateOnRestart;
+
     SharedBTreeWriter pWriter;
     
     virtual void closeImpl();
