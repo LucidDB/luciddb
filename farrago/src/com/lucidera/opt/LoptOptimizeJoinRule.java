@@ -1184,7 +1184,7 @@ outerLoop:
             multiJoin.getMultiJoinRel().getCluster().getRexBuilder();
 
         // swap the inputs if beneficial
-        if (swapInputs(multiJoin, left, right, condition)) {
+        if (swapInputs(left, right)) {
             LoptJoinTree tmp = right;
             right = left;
             left = tmp;
@@ -1265,61 +1265,33 @@ outerLoop:
     }
 
     /**
-     * Swaps the operands to a join, if in the join condition, the RHS
-     * references more columns than the right. This is done so queries like
-     * (select * from A,B where A.A between B.X and B.Y) will result in B being
-     * on the left. If both sides have the same number of references in the join
-     * condition, then the smaller input is put on the right.
+     * Swaps the operands to a join, so the smaller input is on the right.
+     * 
+     * <p>Note that unlike Broadbase, we do not swap if in the join condition,
+     * the RHS references more columns than the LHS. This can help for
+     * queries like (select * from A,B where A.A between B.X and B.Y).  By
+     * putting B on the left, that would result in a sargable predicate
+     * with two endpoints.  However, since {@link
+     * org.eigenbase.sarg.SargRexAnalyzer} currently
+     * doesn't handle these type of sargable predicates, there's no point in
+     * doing the swap for this reason.
      *
-     * @param multiJoin join factors being optimized
      * @param left left side of join tree
      * @param right right hand side of join tree
-     * @param condition join condition between left and right
      *
      * @return true if swapping should be done
      */
-    private boolean swapInputs(
-        LoptMultiJoin multiJoin,
-        LoptJoinTree left,
-        LoptJoinTree right,
-        RexNode condition)
+    private boolean swapInputs(LoptJoinTree left, LoptJoinTree right)
     {
         boolean swap = false;
-
-        // determine how many fields within the join condition each side
-        // of the join references
-        int nTotalFields = multiJoin.getNumTotalFields();
-        BitSet leftFields = new BitSet(nTotalFields);
-        multiJoin.setFieldBitmap(left, leftFields);
-
-        BitSet rightFields = new BitSet(nTotalFields);
-        multiJoin.setFieldBitmap(right, rightFields);
-
-        // all fields referenced in the join condition
-        BitSet filterRefs = new BitSet(nTotalFields);
-        condition.accept(new RelOptUtil.InputFinder(filterRefs));
-
-        // count how many fields each side of the join references by AND'ing
-        // the bits referenced in the filter with the bits corresponding to
-        // all fields on each side of the join
-        leftFields.and(filterRefs);
-        rightFields.and(filterRefs);
-
-        if (rightFields.cardinality() > leftFields.cardinality()) {
+        Double leftRowCount = RelMetadataQuery.getRowCount(left.getJoinTree());
+        Double rightRowCount =
+            RelMetadataQuery.getRowCount(right.getJoinTree());
+        if ((leftRowCount != null) && (rightRowCount != null)
+           && (leftRowCount < rightRowCount))
+        {
             swap = true;
-        } else if (rightFields.cardinality() == leftFields.cardinality()) {
-            Double leftRowCount =
-                RelMetadataQuery.getRowCount(left.getJoinTree());
-            Double rightRowCount =
-                RelMetadataQuery.getRowCount(right.getJoinTree());
-            if ((leftRowCount != null)
-                && (rightRowCount != null)
-                && (leftRowCount < rightRowCount))
-            {
-                swap = true;
-            }
         }
-
         return swap;
     }
 

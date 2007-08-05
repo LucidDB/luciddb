@@ -25,7 +25,6 @@ import com.lucidera.query.*;
 
 import java.util.*;
 
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
@@ -333,7 +332,7 @@ public class LcsRowScanRel
 
         for (int i = 0; i < newInputs.length; i++) {
             FemExecutionStreamDef inputStream =
-                implementor.visitFennelChild((FennelRel) newInputs[i]);
+                implementor.visitFennelChild((FennelRel) newInputs[i], i);
             implementor.addDataFlowFromProducerToConsumer(
                 inputStream,
                 scanStream);

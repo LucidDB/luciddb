@@ -43,6 +43,11 @@ public class SargRexAnalyzer
 
     private final SargFactory factory;
 
+    /**
+     * If true, conjuntions on the same input reference are disallowed, as
+     * well as all disjunctions.  Also, only a single range predicate is
+     * allowed.
+     */
     private final boolean simpleMode;
 
     private final Map<SqlOperator, CallConvertlet> convertletMap;
@@ -66,6 +71,18 @@ public class SargRexAnalyzer
     private List<SargBinding> sargBindingList;
 
     private Map<SargExpr, RexNode> sarg2RexMap;
+    
+    /**
+     * If >= 0, treat RexInputRefs whose index is within the range
+     * [lowerRexInputIdx, upperRexInputIdx) as coordinates in expressions
+     */
+    private int lowerRexInputIdx;
+    
+    /**
+     * If >= 0, treat RexInputRefs whose index is within the range
+     * [lowerRexInputIdx, upperRexInputIdx) as coordinates in expressions
+     */
+    private int upperRexInputIdx;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -73,8 +90,22 @@ public class SargRexAnalyzer
         SargFactory factory,
         boolean simpleMode)
     {
+        this(factory, simpleMode, -1, -1);
+    }
+    
+    SargRexAnalyzer(
+        SargFactory factory,
+        boolean simpleMode,
+        int lowerRexInputRef,
+        int upperRexInputRef)
+    {
         this.factory = factory;
         this.simpleMode = simpleMode;
+        this.lowerRexInputIdx = lowerRexInputRef;
+        this.upperRexInputIdx = upperRexInputRef;
+        assert(
+            (lowerRexInputIdx < 0 && upperRexInputIdx < 0) ||
+            (lowerRexInputIdx >= 0 && upperRexInputIdx >= 0));
 
         convertletMap = new HashMap<SqlOperator, CallConvertlet>();
 
@@ -192,8 +223,7 @@ public class SargRexAnalyzer
             // don't need this anymore
             // will be have new mapping put back if currSargExpr remain
             // unchanged.
-            sarg2RexMap.remove(currSargExpr);
-
+            sarg2RexMap.remove(currSargExpr);           
             recomp = false;
 
             // search the rest of the list to find SargExpr on the same col.
@@ -230,6 +260,7 @@ public class SargRexAnalyzer
             }
 
             if (recomp) {
+                assert(!simpleMode);
                 if (!testDynamicParamSupport(currSargExpr)) {
                     // Oops, we can't actually support the conjunction we
                     // recomposed.  Toss it.  (We could do a better job by at
@@ -273,24 +304,26 @@ public class SargRexAnalyzer
 
         // In simple mode, each input ref can only be referenced once, so
         // keep a list of them.  We also only allow one non-point expression.
-        List<RexInputRef> boundRefList = new ArrayList<RexInputRef>();
+        List<Integer> boundRefList = new ArrayList<Integer>();
         boolean rangeFound = false;
-
+        
         for (RexNode rexPred : rexCFList) {
             sargBinding = analyze(rexPred);
             if (sargBinding != null) {
                 if (simpleMode) {
                     RexInputRef inputRef = sargBinding.getInputRef();
-                    if (boundRefList.contains(inputRef)) {
+                    if (boundRefList.contains(inputRef.getIndex())) {
                         nonSargFilterList.add(rexPred);
+                        continue;
                     } else {
-                        boundRefList.add(inputRef);
+                        boundRefList.add(inputRef.getIndex());
                     }
                     SargIntervalSequence sargSeq =
                         sargBinding.getExpr().evaluate();
                     if (sargSeq.isRange()) {
                         if (rangeFound) {
                             nonSargFilterList.add(rexPred);
+                            continue;
                         } else {
                             rangeFound = true;
                         }
@@ -398,7 +431,7 @@ public class SargRexAnalyzer
         }
 
         RexNode newAndNode = sarg2RexMap.get(sargBindingList.get(0).getExpr());
-
+        
         for (int i = 1; i < sargBindingList.size(); i++) {
             RexNode nextNode =
                 sarg2RexMap.get(sargBindingList.get(i).getExpr());
@@ -604,6 +637,11 @@ public class SargRexAnalyzer
 
         public Void visitInputRef(RexInputRef inputRef)
         {
+            boolean coordinate = !isRealRexInputRef(inputRef);
+            if (coordinate) {
+                visitCoordinate(inputRef);
+                return null;
+            }
             variableSeen = true;
             if (boundInputRef == null) {
                 boundInputRef = inputRef;
@@ -615,6 +653,19 @@ public class SargRexAnalyzer
                 return null;
             }
             return null;
+        }
+        
+        private boolean isRealRexInputRef(RexInputRef inputRef)
+        {
+            if (lowerRexInputIdx < 0 && upperRexInputIdx < 0) {
+                return true;
+            }
+            int idx = inputRef.getIndex();
+            if (idx >= lowerRexInputIdx && idx < upperRexInputIdx) {
+                return false;
+            } else {
+                return true;
+            }
         }
 
         public Void visitLiteral(RexLiteral literal)

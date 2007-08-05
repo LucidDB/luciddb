@@ -25,6 +25,7 @@
 #define Fennel_BTreeExecStream_Included
 
 #include "fennel/exec/SingleOutputExecStream.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/btree/BTreeDescriptor.h"
 
@@ -71,6 +72,12 @@ struct BTreeParams
      * Map for looking up variable index roots, or NULL for permanent root.
      */
     BTreeOwnerRootMap *pRootMap;
+
+    /**
+     * Parameter id corresponding to the rootPageId when the btree is
+     * dynamically created during execution of the stream graph
+     */
+    DynamicParamId rootPageIdParamId;
 };
 
 /**
@@ -107,9 +114,10 @@ protected:
     BTreeOwnerRootMap *pRootMap;
     SharedBTreeAccessBase pBTreeAccessBase;
     SharedBTreeReader pBTreeReader;
+    DynamicParamId rootPageIdParamId;
     
     SharedBTreeReader newReader();
-    SharedBTreeWriter newWriter();
+    SharedBTreeWriter newWriter(bool monotonic = false);
 
     /**
      * Forgets the current reader or writer's search, releasing any page locks

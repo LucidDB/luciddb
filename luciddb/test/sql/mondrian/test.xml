@@ -20,7 +20,7 @@
       </test>
 
       <test name="loadfoodmart" nameOverride="true" 
-        requiresSuccess="createTables"> 
+        requiresSuccess="createTables" timeoutSeconds="3600"> 
         <junit-sql file="${open.dir}/luciddb/test/sql/mondrian/gen/sqlserver/load.sql"/>
       </test>
 

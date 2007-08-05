@@ -23,7 +23,6 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/ftrs/BTreeSortExecStream.h"
-#include "fennel/btree/BTreeBuilder.h"
 #include "fennel/btree/BTreeWriter.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
@@ -36,23 +35,14 @@ void BTreeSortExecStream::prepare(BTreeSortExecStreamParams const &params)
     assert(!params.pRootMap);
     
     BTreeInsertExecStream::prepare(params);
+    dynamicBTree = true;
+    truncateOnRestart = true;
 }
 
 // REVIEW:  do we ever want to save results on restart?
 void BTreeSortExecStream::open(bool restart)
 {
     sorted = false;
-    if (restart) {
-        truncateTree(false);
-    } else {
-        BTreeBuilder builder(
-            treeDescriptor,
-            treeDescriptor.segmentAccessor.pSegment);
-        builder.createEmptyRoot();
-        treeDescriptor.rootPageId = builder.getRootPageId();
-    }
-
-    // NOTE:  do this last so that rootPageId is available
     BTreeInsertExecStream::open(restart);
 }
 
@@ -105,28 +95,6 @@ ExecStreamResult BTreeSortExecStream::execute(
         }
     } while (pWriter->isPositioned());
     return EXECRC_EOS;
-}
-
-void BTreeSortExecStream::truncateTree(bool rootless)
-{
-    if (treeDescriptor.rootPageId == NULL_PAGE_ID) {
-        // nothing to do
-        assert(rootless);
-        return;
-    }
-    BTreeBuilder builder(
-        treeDescriptor,
-        treeDescriptor.segmentAccessor.pSegment);
-    builder.truncate(rootless);
-    if (rootless) {
-        treeDescriptor.rootPageId = NULL_PAGE_ID;
-    }
-}
-
-void BTreeSortExecStream::closeImpl()
-{
-    BTreeInsertExecStream::closeImpl();
-    truncateTree(true);
 }
 
 FENNEL_END_CPPFILE("$Id$");

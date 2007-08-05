@@ -725,7 +725,10 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'    LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 0]], joinType=[RIGHTSEMI])'
+'    LhxJoinRel(leftKeys=[[0, 0]], rightKeys=[[0, 1]], joinType=[LEFTSEMI])'
+'      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
+'        FennelRenameRel(fieldNames=[[$f0]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 '        LhxAggRel(groupCount=[1])'
@@ -733,9 +736,6 @@ Error: java.lang.AssertionError: Internal error: Identifier 'EMPS.DEPTNO' is not
 '            LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
 '              FennelRenameRel(fieldNames=[[$f0]])'
 '                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
-'      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
-'        FennelRenameRel(fieldNames=[[$f0]])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > explain plan without implementation for
 > select count(*)

@@ -98,6 +98,11 @@ public class FarragoVjdbcServer
         VJdbcConfiguration.init(vjdbcConfig);
         vjdbcConfig = VJdbcConfiguration.singleton();
 
+        // Set default timeout to 1 day (finite to avoid accumulation in
+        // long-running servers, but not too low; avoid hassle when connection
+        // pools aren't being used in clients).
+        vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(86400000);
+
         RmiConfiguration rmiConfig = new RmiConfiguration();
         vjdbcConfig.setRmiConfiguration(rmiConfig);
         rmiConfig.setPort(rmiRegistryPort);

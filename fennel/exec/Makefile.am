@@ -20,6 +20,7 @@ MergeExecStream.cpp \
 MockConsumerExecStream.cpp \
 MockProducerExecStream.cpp \
 MockResourceExecStream.cpp \
+NestedLoopJoinExecStream.cpp \
 ScratchBufferExecStream.cpp \
 SegBufferExecStream.cpp \
 SimpleExecStreamGovernor.cpp \

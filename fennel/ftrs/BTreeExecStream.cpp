@@ -34,6 +34,10 @@ void BTreeExecStream::prepare(BTreeExecStreamParams const &params)
     copyParamsToDescriptor(treeDescriptor,params,params.pCacheAccessor);
     scratchAccessor = params.scratchAccessor;
     pRootMap = params.pRootMap;
+    rootPageIdParamId = params.rootPageIdParamId;
+    if (rootPageIdParamId > DynamicParamId(0)) {
+        assert(treeDescriptor.rootPageId == NULL_PAGE_ID);
+    }
 }
 
 void BTreeExecStream::open(bool restart)
@@ -71,10 +75,10 @@ SharedBTreeReader BTreeExecStream::newReader()
     return pReader;
 }
 
-SharedBTreeWriter BTreeExecStream::newWriter()
+SharedBTreeWriter BTreeExecStream::newWriter(bool monotonic)
 {
     SharedBTreeWriter pWriter = SharedBTreeWriter(
-        new BTreeWriter(treeDescriptor,scratchAccessor));
+        new BTreeWriter(treeDescriptor,scratchAccessor,monotonic));
     pBTreeAccessBase = pBTreeReader = pWriter;
     return pWriter;
 }

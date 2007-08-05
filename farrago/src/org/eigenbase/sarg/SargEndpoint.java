@@ -59,9 +59,10 @@ public class SargEndpoint
     protected final RelDataType dataType;
 
     /**
-     * Coordinate for this endpoint, constrained to be either {@link RexLiteral}
-     * or {@link RexDynamicParam}, or null to represent infinity (positive or
-     * negative infinity is implied by boundType).
+     * Coordinate for this endpoint, constrained to be either
+     * {@link RexLiteral}, {@link RexInputRef}, {@link RexDynamicParam}, or
+     * null to represent infinity (positive or negative infinity is implied by
+     * boundType).
      */
     protected RexNode coordinate;
 
@@ -137,7 +138,9 @@ public class SargEndpoint
     {
         // validate the input
         assert (coordinate != null);
-        if (!(coordinate instanceof RexDynamicParam)) {
+        if (!(coordinate instanceof RexDynamicParam) &&
+            !(coordinate instanceof RexInputRef))
+        {
             assert (coordinate instanceof RexLiteral);
             RexLiteral literal = (RexLiteral) coordinate;
             if (!RexLiteral.isNullLiteral(literal)) {
@@ -156,9 +159,9 @@ public class SargEndpoint
     private void convertToTargetType()
     {
         if (!(coordinate instanceof RexLiteral)) {
-            // Dynamic parameters are always cast to the target type before
-            // comparison, so they are guaranteed not to need any special
-            // conversion logic.
+            // Dynamic parameters and RexInputRefs are always cast to the
+            // target type before comparison, so they are guaranteed not to
+            // need any special conversion logic.
             return;
         }
 
@@ -350,8 +353,8 @@ public class SargEndpoint
     }
 
     /**
-     * @return true if this endpoint represents infinity (either positive or
-     * negative); false if a finite coordinate
+     * @return false if this endpoint represents infinity (either positive or
+     * negative); true if a finite coordinate
      */
     public boolean isFinite()
     {
@@ -442,6 +445,20 @@ public class SargEndpoint
                 }
             } else {
                 // one is a dynamic param but the other isn't
+                return false;
+            }
+        } else if ((coordinate instanceof RexInputRef)
+            || (other.coordinate instanceof RexInputRef)) {
+            if ((coordinate instanceof RexInputRef)
+                && (other.coordinate instanceof RexInputRef)) {
+                // make sure it's the same RexInputRef
+                RexInputRef r1 = (RexInputRef) coordinate;
+                RexInputRef r2 = (RexInputRef) other.coordinate;
+                if (r1.getIndex() != r2.getIndex()) {
+                    return false;
+                }
+            } else {
+                // one is a RexInputRef but the other isn't
                 return false;
             }
         } else if (compareCoordinates(coordinate, other.coordinate) != 0) {

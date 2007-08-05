@@ -23,6 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/ftrs/BTreeInsertExecStream.h"
+#include "fennel/btree/BTreeBuilder.h"
 #include "fennel/btree/BTreeWriter.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
@@ -34,7 +35,10 @@ void BTreeInsertExecStream::prepare(BTreeInsertExecStreamParams const &params)
     BTreeExecStream::prepare(params);
     ConduitExecStream::prepare(params);
     distinctness = params.distinctness;
+    monotonic = params.monotonic;
 
+    dynamicBTree = (rootPageIdParamId > DynamicParamId(0));
+    truncateOnRestart = false;
     assert(treeDescriptor.tupleDescriptor == pInAccessor->getTupleDesc());
 }
 
@@ -57,11 +61,59 @@ void BTreeInsertExecStream::open(bool restart)
     BTreeExecStream::open(restart);
     ConduitExecStream::open(restart);
     
+    if (dynamicBTree) {
+        buildTree(restart);
+    }
+
     if (restart) {
         return;
     }
     
-    pWriter = newWriter();
+    if (rootPageIdParamId > DynamicParamId(0)) {
+        StandardTypeDescriptorFactory stdTypeFactory;
+        TupleAttributeDescriptor attrDesc =
+            TupleAttributeDescriptor(
+                stdTypeFactory.newDataType(STANDARD_TYPE_UINT_64));
+        pDynamicParamManager->createParam(rootPageIdParamId, attrDesc);
+        TupleDatum rootPageIdDatum;
+        rootPageIdDatum.pData = (PConstBuffer) &(treeDescriptor.rootPageId);
+        rootPageIdDatum.cbData = sizeof(PageId);
+        pDynamicParamManager->writeParam(rootPageIdParamId, rootPageIdDatum);
+    }
+
+    // NOTE: do this last so that rootPageId is available
+    pWriter = newWriter(monotonic);
+}
+
+void BTreeInsertExecStream::buildTree(bool restart)
+{
+    if (restart) {
+        if (truncateOnRestart) {
+            truncateTree(false);
+        }
+    } else {
+        BTreeBuilder builder(
+            treeDescriptor,
+            treeDescriptor.segmentAccessor.pSegment);
+        builder.createEmptyRoot();
+        treeDescriptor.rootPageId = builder.getRootPageId();
+    }
+}
+
+void BTreeInsertExecStream::truncateTree(bool rootless)
+{
+    if (treeDescriptor.rootPageId == NULL_PAGE_ID) {
+        // nothing to do
+        assert(rootless);
+        return;
+    }
+    BTreeBuilder builder(
+        treeDescriptor,
+        treeDescriptor.segmentAccessor.pSegment);
+    builder.truncate(rootless);
+    if (rootless) {
+        treeDescriptor.rootPageId = NULL_PAGE_ID;
+    }
 }
 
 ExecStreamResult BTreeInsertExecStream::execute(
@@ -69,6 +121,11 @@ ExecStreamResult BTreeInsertExecStream::execute(
 {
     ExecStreamResult rc = precheckConduitBuffers();
     if (rc != EXECRC_YIELD) {
+        if (rc == EXECRC_EOS) {
+            // Terminate search so other streams can read from the btree
+            pWriter->endSearch();
+            pOutAccessor->markEOS();
+        }
         return rc;
     }
 
@@ -94,6 +151,9 @@ void BTreeInsertExecStream::closeImpl()
     pWriter.reset();
     pBTreeAccessBase.reset();
     ConduitExecStream::closeImpl();
+    if (dynamicBTree) {
+        truncateTree(true);
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

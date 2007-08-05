@@ -36,6 +36,7 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
     
     leastUpper = true;
     outerJoin = params.outerJoin;
+    searchKeyParams = params.searchKeyParams;
 
     // TODO:  assert inputDesc is a prefix of BTree key
 
@@ -88,11 +89,19 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
             upperBoundAccessor.bind(inputAccessor, upperBoundProj);
             upperBoundDesc.projectFrom(inputDesc, upperBoundProj);
             upperBoundData.compute(upperBoundDesc);
+
+            assert(
+                searchKeyParams.size() == 0 ||
+                (searchKeyParams.size() >= (n-1)*2+1 &&
+                    searchKeyParams.size() <= n*2));
+        } else {
+            assert(searchKeyParams.size() == 0);
         }
         inputKeyAccessor.bind(inputAccessor,inputKeyProj);
         inputKeyDesc.projectFrom(inputDesc,inputKeyProj);
     } else {
         inputKeyDesc = inputDesc;
+        assert(searchKeyParams.size() == 0);
     }
     inputKeyData.compute(inputKeyDesc);
 
@@ -103,10 +112,22 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
     }
     
     preFilterNulls = false;
-    if (outerJoin && inputKeyDesc.containsNullable()) {
-        // When we're doing an outer join, the input keys have not had
-        // nulls eliminated yet, so we have to treat that case specially.
+    if ((outerJoin && inputKeyDesc.containsNullable()) ||
+        searchKeyParams.size() > 0)
+    {
+        // When we're doing an outer join or a lookup via dynamic parameters,
+        // the input keys have not had nulls eliminated yet, so we have to
+        // treat those cases specially.
         preFilterNulls = true;
+
+        // Setup a projection of the search key.  In the case of a dynamic
+        // parameter search, this will be done later when we read the
+        // parameters
+        if (searchKeyParams.size() == 0) {
+            for (uint i = 0; i < inputKeyData.size(); i++) {
+                searchKeyProj.push_back(i);
+            }
+        }
     }
     
     inputJoinAccessor.bind(inputAccessor,params.inputJoinProj);
@@ -116,18 +137,34 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
     
     TupleProjection readerKeyProj = treeDescriptor.keyProjection;
     readerKeyProj.resize(inputKeyDesc.size());
-    readerKeyAccessor.bind(
-        pReader->getTupleAccessorForRead(),
-        readerKeyProj);
     readerKeyData.compute(inputKeyDesc);
     
-    nJoinAttributes = params.outputTupleDesc.size() - projAccessor.size();
+    nJoinAttributes = params.outputTupleDesc.size() - params.outputProj.size();
 }
 
 void BTreeSearchExecStream::open(bool restart)
 {
+    // Read the parameter value of the btree's root page before
+    // initializing a btree reader
+    if (!restart && opaqueToInt(rootPageIdParamId) > 0) {
+        treeDescriptor.rootPageId =
+            *reinterpret_cast<PageId const *>(
+            pDynamicParamManager->getParam(rootPageIdParamId).getDatum().pData);
+    }
     BTreeReadExecStream::open(restart);
     ConduitExecStream::open(restart);
+    dynamicKeysRead = false;
+
+    if (restart) {
+        return;
+    }
+
+    // Bind the accessor now that we've initialized the btree reader
+    TupleProjection readerKeyProj = treeDescriptor.keyProjection;
+    readerKeyProj.resize(inputKeyDesc.size());
+    readerKeyAccessor.bind(
+        pReader->getTupleAccessorForRead(),
+        readerKeyProj);
 }
 
 ExecStreamResult BTreeSearchExecStream::execute(
@@ -184,17 +221,8 @@ bool BTreeSearchExecStream::innerSearchLoop()
         if (!pInAccessor->demandData()) {
             return false;
         }
-        TupleAccessor &inputAccessor =
-            pInAccessor->accessConsumptionTuple();
 
-        if (inputKeyAccessor.size()) {
-            // unmarshal just the key projection
-            inputKeyAccessor.unmarshal(inputKeyData);
-        } else {
-            // umarshal the whole thing as the key
-            inputAccessor.unmarshal(inputKeyData);
-        }
-
+        readSearchKey();
         readDirectives();
         setAdditionalKeys();
 
@@ -220,7 +248,7 @@ bool BTreeSearchExecStream::innerSearchLoop()
         }
 
         bool match = true;
-        if (preFilterNulls && (*pSearchKey).containsNull()) {
+        if (preFilterNulls && (*pSearchKey).containsNull(searchKeyProj)) {
             // null never matches when preFilterNulls is true;
             // TODO:  so don't bother searching, but need a way
             // to fake pReader->isPositioned()
@@ -230,15 +258,16 @@ bool BTreeSearchExecStream::innerSearchLoop()
                 // Searched past end of tree.
                 match = false;
             } else {
-                // Unmarshal upper bound key so we know where to stop
+                // Read the upper bound key so we know where to stop
                 // while scanning forward.
-                if (upperBoundDesc.size()) {
-                    upperBoundAccessor.unmarshal(upperBoundData);
+                readUpperBoundKey();
+                if (preFilterNulls &&
+                    upperBoundData.containsNull(searchKeyProj))
+                {
+                    match = false;
                 } else {
-                    upperBoundData = *pSearchKey;
+                    match = testInterval();
                 }
-            
-                match = testInterval();
             }
         }
             
@@ -265,6 +294,55 @@ bool BTreeSearchExecStream::innerSearchLoop()
     return true;
 }
 
+void BTreeSearchExecStream::readSearchKey()
+{
+    // Even if we're not going to be reading the key values from the input
+    // stream, we'll later need to read the directives, so we need to access
+    // the input stream tuple
+    TupleAccessor &inputAccessor =
+        pInAccessor->accessConsumptionTuple();
+
+    if (searchKeyParams.size() == 0) {
+        if (inputKeyAccessor.size()) {
+            // unmarshal just the key projection
+            inputKeyAccessor.unmarshal(inputKeyData);
+        } else {
+            // umarshal the whole thing as the key
+            inputAccessor.unmarshal(inputKeyData);
+        }
+    } else {
+        // When passing in key values through dynamic parameters, only one
+        // search range is allowed
+        assert(!dynamicKeysRead);
+
+        // NOTE zfong 5/22/07 - We are accessing the dynamic parameter values
+        // by reference rather than value.  Therefore, the underlying values
+        // are expected to be fixed for the duration of this search.  Likewise,
+        // in readUpperBoundKey().
+        uint nParams = searchKeyParams.size();
+        searchKeyProj.clear();
+        for (uint i = 0; i < nParams / 2; i++) {
+            inputKeyData[searchKeyParams[i].keyOffset] =
+                pDynamicParamManager->getParam(
+                    searchKeyParams[i].dynamicParamId).getDatum();
+            searchKeyProj.push_back(i);
+        }
+        // If there are an odd number of parameters, determine whether the
+        // next parameter corresponds to the lower or upper bound
+        if ((nParams%2) && searchKeyParams[nParams/2].keyOffset == nParams/2) {
+            inputKeyData[nParams/2] =
+                pDynamicParamManager->getParam(
+                    searchKeyParams[nParams/2].dynamicParamId).getDatum();
+            // The search key projection in the case of dynamic parameters
+            // consists of only the portion of the search key that corresponds
+            // to actual parameters supplied
+            searchKeyProj.push_back(nParams/2);
+        }
+
+        dynamicKeysRead = true;
+    }
+}
+
 void BTreeSearchExecStream::readDirectives()
 {
     if (!directiveAccessor.size()) {
@@ -284,6 +362,43 @@ void BTreeSearchExecStream::readDirectives()
         SearchEndpoint(*(directiveData[LOWER_BOUND_DIRECTIVE].pData));
     upperBoundDirective =
         SearchEndpoint(*(directiveData[UPPER_BOUND_DIRECTIVE].pData));
+}
+
+void BTreeSearchExecStream::readUpperBoundKey()
+{
+    if (searchKeyParams.size() == 0) {
+        if (upperBoundDesc.size()) {
+            upperBoundAccessor.unmarshal(upperBoundData);
+        } else {
+            upperBoundData = *pSearchKey;
+        }
+    } else {
+        // If there are an odd number of parameters, determine whether the
+        // first parameter in the second group of parameters corresponds
+        // to the lower or upper bound.  If there are an even number of 
+        // parameters, always read that first parameter.
+        uint nParams = searchKeyParams.size();
+        // The search key projection in the case of dynamic parameters
+        // consists of only the portion of the search key that corresponds
+        // to actual parameters supplied.  Since the lower and upper bound
+        // keys may have a different number of supplied parameters, we need
+        // to recreate the projection.
+        searchKeyProj.clear();
+        if (!(nParams%2) || searchKeyParams[nParams/2].keyOffset == nParams/2+1)
+        {
+            upperBoundData[0] =
+                pDynamicParamManager->getParam(
+                    searchKeyParams[nParams/2].dynamicParamId).getDatum();
+            searchKeyProj.push_back(0);
+        }
+        uint keySize = upperBoundData.size();
+        for (uint i = nParams/2 + 1; i < nParams; i++) {
+            upperBoundData[searchKeyParams[i].keyOffset - keySize] =
+                pDynamicParamManager->getParam(
+                    searchKeyParams[i].dynamicParamId).getDatum();
+            searchKeyProj.push_back(i - keySize);
+        }
+    }
 }
 
 bool BTreeSearchExecStream::testInterval()
@@ -355,6 +470,6 @@ void BTreeSearchExecStream::setAdditionalKeys()
     pSearchKey = &inputKeyData;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/ftrs/BTreeSearchExecStream.cpp#9 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End BTreeSearchExecStream.cpp

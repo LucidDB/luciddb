@@ -414,6 +414,11 @@ public class LucidDbSessionPersonality
 
         // Use hash join to implement set op: Except(minus).
         builder.addRuleInstance(new LhxMinusRule());
+        
+        // Use nested loop join if hash join can't be used
+        if (fennelEnabled) {
+            builder.addRuleInstance(new FennelNestedLoopJoinRule());
+        }
 
         // Extract join conditions again so that FennelCartesianJoinRule can do
         // its job.  Need to do this before converting filters to calcs, but

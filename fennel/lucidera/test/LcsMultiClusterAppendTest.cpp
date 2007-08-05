@@ -35,6 +35,7 @@
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/exec/SplitterExecStream.h"
 #include "fennel/exec/BarrierExecStream.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/cache/Cache.h"
 #include <stdarg.h>
 
@@ -165,6 +166,7 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
         }
         lcsAppendParams.overwrite = false;
         lcsAppendParams.pRootMap = 0;
+        lcsAppendParams.rootPageIdParamId = DynamicParamId(0);
     
         // setup temporary btree descriptor to get an empty page to start
         // the btree

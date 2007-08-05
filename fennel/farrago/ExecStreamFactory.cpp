@@ -42,6 +42,7 @@
 #include "fennel/exec/SortedAggExecStream.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ReshapeExecStream.h"
+#include "fennel/exec/NestedLoopJoinExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
 #include "fennel/tuple/TupleDescriptor.h"
@@ -168,18 +169,12 @@ void ExecStreamFactory::visit(ProxyCartesianProductStreamDef &streamDef)
 
 void ExecStreamFactory::visit(ProxyIndexLoaderDef &streamDef)
 {
-    // TODO
-#if 0    
-    BTreeLoader *pStream = new BTreeLoader();
-
-    BTreeLoaderParams *pParams = new BTreeLoaderParams();
-    readBTreeStreamParams(*pParams,streamDef);
-    pParams->distinctness = streamDef.getDistinctness();
-    pParams->pTempSegment = pDatabase->getTempSegment();
-
-    parts.setParts(pStream,pParams);
-#endif
-    permAssert(false);
+    BTreeInsertExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    readBTreeStreamParams(params, streamDef);
+    params.distinctness = streamDef.getDistinctness();
+    params.monotonic = streamDef.isMonotonic();
+    embryo.init(new BTreeInsertExecStream(), params);
 }
 
 void ExecStreamFactory::visit(ProxyIndexScanDef &streamDef)
@@ -282,11 +277,13 @@ void ExecStreamFactory::visit(ProxySortingStreamDef &streamDef)
     BTreeSortExecStreamParams params;
     readTupleStreamParams(params,streamDef);
     params.distinctness = streamDef.getDistinctness();
+    params.monotonic = false;
     params.pSegment = pDatabase->getTempSegment();
     params.rootPageId = NULL_PAGE_ID;
     params.segmentId = Database::TEMP_SEGMENT_ID;
     params.pageOwnerId = ANON_PAGE_OWNER_ID;
     params.pRootMap = NULL;
+    params.rootPageIdParamId = DynamicParamId(0);
     CmdInterpreter::readTupleProjection(
         params.keyProj,
         streamDef.getKeyProj());
@@ -362,7 +359,34 @@ void ExecStreamFactory::visit(ProxyReshapeStreamDef &streamDef)
     CmdInterpreter::readTupleProjection(
         params.outputProj, streamDef.getOutputProjection());
 
+    SharedProxyReshapeParameter dynamicParam = streamDef.getReshapeParameter();
+    for ( ; dynamicParam; ++dynamicParam) {
+        int offset = dynamicParam->getCompareOffset();
+        ReshapeParameter reshapeParam(
+            DynamicParamId(dynamicParam->getDynamicParamId()),
+            (offset < 0) ? MAXU : uint(offset),
+            dynamicParam->isOutputParam());
+        params.dynamicParameters.push_back(reshapeParam);
+    }
+
     embryo.init(new ReshapeExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyNestedLoopJoinStreamDef &streamDef)
+{
+    NestedLoopJoinExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    params.leftOuter = streamDef.isLeftOuter();
+
+    SharedProxyCorrelation dynamicParam = streamDef.getLeftJoinKey();
+    for ( ; dynamicParam; ++dynamicParam) {
+        NestedLoopJoinKey joinKey(
+            DynamicParamId(dynamicParam->getId()),
+            dynamicParam->getOffset());
+        params.leftJoinKeys.push_back(joinKey);
+    }
+
+    embryo.init(new NestedLoopJoinExecStream(), params);
 }
 
 void ExecStreamFactory::readExecStreamParams(
@@ -457,25 +481,48 @@ void ExecStreamFactory::readBTreeParams(
     BTreeParams &params,
     ProxyIndexAccessorDef &streamDef)
 {
-    params.segmentId = SegmentId(streamDef.getSegmentId());
-    params.pageOwnerId = PageOwnerId(streamDef.getIndexId());
-    assert(VALID_PAGE_OWNER_ID(params.pageOwnerId));
-    params.pSegment =
-        pDatabase->getSegmentById(
-            params.segmentId,
-            pStreamGraphHandle->pSegment);
+    params.rootPageIdParamId =
+        readDynamicParamId(streamDef.getRootPageIdParamId());
+    if (params.rootPageIdParamId > DynamicParamId(0) &&
+        streamDef.getRootPageId() == -1)
+    {
+        // In the case where the btree is dynamically created during
+        // runtime, the btree will be created in the temp segment
+        params.segmentId = Database::TEMP_SEGMENT_ID;
+        params.pageOwnerId = ANON_PAGE_OWNER_ID;
+        params.pSegment = pDatabase->getTempSegment();
+        params.rootPageId = NULL_PAGE_ID;
+        params.pRootMap = NULL;
+    } else {
+        params.segmentId = SegmentId(streamDef.getSegmentId());
+        params.pageOwnerId = PageOwnerId(streamDef.getIndexId());
+        assert(VALID_PAGE_OWNER_ID(params.pageOwnerId));
+        params.pSegment =
+            pDatabase->getSegmentById(
+                params.segmentId,
+                pStreamGraphHandle->pSegment);
+        if (streamDef.getRootPageId() != -1) {
+            params.rootPageId = PageId(streamDef.getRootPageId());
+            params.pRootMap = NULL;
+        } else {
+            params.rootPageId = NULL_PAGE_ID;
+            if (params.rootPageIdParamId == DynamicParamId(0)) {
+                params.pRootMap = pStreamGraphHandle;
+            }
+        }
+    }
     readTupleDescriptor(params.tupleDesc, streamDef.getTupleDesc());
     CmdInterpreter::readTupleProjection(
         params.keyProj,
         streamDef.getKeyProj());
 
-    if (streamDef.getRootPageId() != -1) {
-        params.rootPageId = PageId(streamDef.getRootPageId());
-        params.pRootMap = NULL;
-    } else {
-        params.rootPageId = NULL_PAGE_ID;
-        params.pRootMap = pStreamGraphHandle;
-    }
+}
+
+DynamicParamId ExecStreamFactory::readDynamicParamId(const int val)
+{
+    // NOTE: zero is a special code for no parameter id
+    uint (id) = (val < 0) ? 0 : (uint) val;
+    return (DynamicParamId) id;
 }
 
 void ExecStreamFactory::readBTreeReadStreamParams(
@@ -518,6 +565,14 @@ void ExecStreamFactory::readBTreeSearchStreamParams(
         CmdInterpreter::readTupleProjection(
             params.inputDirectiveProj,
             streamDef.getInputDirectiveProj());
+    }
+
+    SharedProxyCorrelation dynamicParam = streamDef.getSearchKeyParameter();
+    for ( ; dynamicParam; ++dynamicParam) {
+        BTreeSearchKeyParameter searchKeyParam(
+            DynamicParamId(dynamicParam->getId()),
+            dynamicParam->getOffset());
+        params.searchKeyParams.push_back(searchKeyParam);
     }
 }
 

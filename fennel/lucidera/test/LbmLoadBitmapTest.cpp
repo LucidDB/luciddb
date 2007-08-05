@@ -525,6 +525,7 @@ void LbmLoadBitmapTest::initBTreeParam(
 {
     param.pSegment = pRandomSegment;
     param.pRootMap = 0;
+    param.rootPageIdParamId = DynamicParamId(0);
 
     pBTreeDesc->segmentAccessor.pSegment = param.pSegment;
     pBTreeDesc->segmentAccessor.pCacheAccessor = pCache;

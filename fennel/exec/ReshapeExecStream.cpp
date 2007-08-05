@@ -26,6 +26,8 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ReshapeExecStream.h"
 
+#include <hash_set>
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 void ReshapeExecStream::prepare(ReshapeExecStreamParams const &params)
@@ -34,51 +36,131 @@ void ReshapeExecStream::prepare(ReshapeExecStreamParams const &params)
 
     TupleDescriptor const &inputDesc = pInAccessor->getTupleDesc();
     TupleAccessor &inputAccessor = pInAccessor->getConsumptionTupleAccessor();
+    dynamicParameters.assign(
+        params.dynamicParameters.begin(),
+        params.dynamicParameters.end());
 
     compOp = params.compOp;
     if (compOp != COMP_NOOP) {
-        // setup the comparison tuple descriptor
-        compTupleDesc.projectFrom(inputDesc, params.inputCompareProj);
-
-        // setup the projection of the columns for comparison
-        inputCompareProjAccessor.bind(inputAccessor, params.inputCompareProj);
-        inputCompareData.compute(compTupleDesc);
-
-        // unmarshal the comparison tuple passed in as a parameter
-        TupleAccessor tupleAccessor;
-        tupleAccessor.compute(compTupleDesc);
-        tupleAccessor.setCurrentTupleBuf(params.pCompTupleBuffer.get());
-        uint nBytes = tupleAccessor.getCurrentByteCount();
-        compTupleBuffer.reset(new FixedBuffer[nBytes]);
-        memcpy(compTupleBuffer.get(), params.pCompTupleBuffer.get(), nBytes);
-        tupleAccessor.setCurrentTupleBuf(compTupleBuffer.get());
-        paramCompareData.compute(compTupleDesc);
-        tupleAccessor.unmarshal(paramCompareData);
-
-        // setup a tuple projection to project the last key for use in
-        // non-equality comparisons
-        lastKey.push_back(paramCompareData.size() - 1);
-        lastKeyDesc.projectFrom(compTupleDesc, lastKey);
+        initCompareData(params, inputDesc, inputAccessor);
     }
 
-    // setup the output projection
+    // Setup the output projection that projects from the input tuple
     outputProjAccessor.bind(inputAccessor, params.outputProj);
     inputOutputDesc.projectFrom(inputDesc, params.outputProj);
+
+    // Setup the output descriptor and data
     outputDesc = pOutAccessor->getTupleDesc();
-    assert(inputOutputDesc.size() == outputDesc.size());
     outputData.compute(outputDesc);
 
+    // Determine how many of the dynamic parameters need to be written into
+    // the output tuple
+    uint numOutputDynParams = 0;
+    for (uint i = 0; i < dynamicParameters.size(); i++) {
+        if (dynamicParameters[i].outputParam) {
+            numOutputDynParams++;
+        }
+    }
+
+    // Setup the output descriptor and data that excludes dynamic parameters
+    // in the output tuple
+    assert(inputOutputDesc.size() == outputDesc.size() - numOutputDynParams);
+    TupleDescriptor partialOutputDesc;
+    if (numOutputDynParams == 0) {
+        partialOutputDesc = outputDesc;
+    } else if (inputOutputDesc.size() > 0) {
+        partialOutputDesc.resize(inputOutputDesc.size());
+        std::copy(
+            outputDesc.begin(),
+            outputDesc.end() - numOutputDynParams,
+            partialOutputDesc.begin());
+    }
+
     // determine if simple casting is required
-    castRequired = (inputOutputDesc != outputDesc);
+    castRequired = (inputOutputDesc != partialOutputDesc);
     if (castRequired) {
         TupleProjection proj;
         if (compOp == COMP_NE) {
             proj = params.inputCompareProj;
         }
-        assert(checkCastTypes(
-            proj, inputOutputDesc, pOutAccessor->getTupleDesc()));
+        assert(checkCastTypes(proj, inputOutputDesc, partialOutputDesc));
         inputOutputData.compute(inputOutputDesc);
     }
+}
+
+void ReshapeExecStream::initCompareData(
+    ReshapeExecStreamParams const &params,
+    TupleDescriptor const &inputDesc,
+    TupleAccessor const &inputAccessor)
+{
+    // Setup the comparison tuple descriptor
+    assert(params.inputCompareProj.size() > 0);
+    TupleProjection inputCompareProj = params.inputCompareProj;
+    compTupleDesc.projectFrom(inputDesc, inputCompareProj);
+
+    // Setup the projection of the columns for comparison
+    inputCompareProjAccessor.bind(inputAccessor, inputCompareProj);
+    inputCompareData.compute(compTupleDesc);
+
+    // Setup a descriptor that excludes the dynamic parameters that will
+    // be used in comparisons, if there are dynamic parameters.  The dynamic
+    // parameters appear at the end of the descriptor.
+    TupleDescriptor partialCompTupleDesc;
+    numCompDynParams = 0;
+    for (uint i = 0; i < dynamicParameters.size(); i++) {
+        if (!isMAXU(dynamicParameters[i].compareOffset)) {
+            numCompDynParams++;
+        }
+    }
+    if (numCompDynParams > 0) {
+        partialCompTupleDesc.resize(compTupleDesc.size() - numCompDynParams);
+        std::copy(
+            compTupleDesc.begin(),
+            compTupleDesc.end() - numCompDynParams,
+            partialCompTupleDesc.begin());
+    }
+
+    paramCompareData.compute(compTupleDesc);
+    if (numCompDynParams == 0) {
+        copyCompareTuple(
+            compTupleDesc,
+            paramCompareData,
+            params.pCompTupleBuffer.get());
+    } else if (partialCompTupleDesc.size() > 0) {
+        TupleData partialCompareData;
+        partialCompareData.compute(partialCompTupleDesc);
+        copyCompareTuple(
+            partialCompTupleDesc,
+            partialCompareData,
+            params.pCompTupleBuffer.get());
+
+        // Copy the partial tuple data to the tuple data that will
+        // be used in the actual comparisons
+        std::copy(
+            partialCompareData.begin(),
+            partialCompareData.end(),
+            paramCompareData.begin());
+    }
+
+    // Setup a tuple projection to project the last key for use in
+    // non-equality comparisons
+    lastKey.push_back(paramCompareData.size() - 1);
+    lastKeyDesc.projectFrom(compTupleDesc, lastKey);
+}
+
+void ReshapeExecStream::copyCompareTuple(
+    TupleDescriptor const &tupleDesc,
+    TupleData &tupleData,
+    PBuffer tupleBuffer)
+{
+    TupleAccessor tupleAccessor;
+    tupleAccessor.compute(tupleDesc);
+    tupleAccessor.setCurrentTupleBuf(tupleBuffer);
+    uint nBytes = tupleAccessor.getCurrentByteCount();
+    compTupleBuffer.reset(new FixedBuffer[nBytes]);
+    memcpy(compTupleBuffer.get(), tupleBuffer, nBytes);
+    tupleAccessor.setCurrentTupleBuf(compTupleBuffer.get());
+    tupleAccessor.unmarshal(tupleData);
 }
 
 bool ReshapeExecStream::checkCastTypes(
@@ -147,11 +229,17 @@ void ReshapeExecStream::open(bool restart)
 {
     ConduitExecStream::open(restart);
     producePending = false;
+    paramsRead = false;
 }
 
 ExecStreamResult ReshapeExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
+    if (!paramsRead) {
+        readDynamicParams();
+        paramsRead = true;
+    }
+
     ExecStreamResult rc = precheckConduitBuffers();
     if (rc != EXECRC_YIELD) {
         return rc;
@@ -195,6 +283,26 @@ ExecStreamResult ReshapeExecStream::execute(
     }
 
     return EXECRC_QUANTUM_EXPIRED;
+}
+
+void ReshapeExecStream::readDynamicParams()
+{
+    uint currCompIdx = paramCompareData.size() - numCompDynParams;
+    uint currOutputIdx = inputOutputDesc.size();
+    for (uint i = 0; i < dynamicParameters.size(); i++) {
+        if (!isMAXU(dynamicParameters[i].compareOffset)) {
+            TupleDatum const &param =
+                pDynamicParamManager->getParam(
+                    dynamicParameters[i].dynamicParamId).getDatum();
+            paramCompareData[currCompIdx++] = param;
+        }
+        if (dynamicParameters[i].outputParam) {
+            TupleDatum const &param =
+                pDynamicParamManager->getParam(
+                    dynamicParameters[i].dynamicParamId).getDatum();
+            outputData[currOutputIdx++] = param;
+        }
+    }
 }
 
 bool ReshapeExecStream::compareInput()

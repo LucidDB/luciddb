@@ -26,9 +26,35 @@
 
 #include "fennel/ftrs/BTreeReadExecStream.h"
 #include "fennel/exec/ConduitExecStream.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/common/SearchEndpoint.h"
 
 FENNEL_BEGIN_NAMESPACE
+
+/**
+ * Structure used to store information about dynamic parameters used in the
+ * btree search
+ */
+struct BTreeSearchKeyParameter
+{
+    /**
+     * Dynamic parameter id
+     */
+    DynamicParamId dynamicParamId;
+
+    /**
+     * Offset within the projected search key that this parameter maps to
+     */
+    uint keyOffset;
+
+    BTreeSearchKeyParameter(
+        DynamicParamId id,
+        uint offset) :
+        dynamicParamId(id),
+        keyOffset(offset)
+    {
+    }
+};
 
 /**
  * BTreeSearchExecStreamParams defines parameters for instantiating a
@@ -60,6 +86,12 @@ struct BTreeSearchExecStreamParams
      * interpreted as point searches.
      */
     TupleProjection inputDirectiveProj;
+
+    /**
+     * Dynamic parameter ids corresponding to search values, in the case where
+     * the search values are not passed in through the input stream
+     */
+    std::vector<BTreeSearchKeyParameter> searchKeyParams;
 };
 
 /**
@@ -96,10 +128,25 @@ protected:
     SearchEndpoint lowerBoundDirective;
     SearchEndpoint upperBoundDirective;
     bool leastUpper;
+    std::vector<BTreeSearchKeyParameter> searchKeyParams;
+    boost::scoped_array<FixedBuffer> searchKeyBuffer;
+    bool dynamicKeysRead;
+    TupleProjection searchKeyProj;
 
     bool innerSearchLoop();
     void readDirectives();
     bool testInterval();
+
+    /**
+     * Reads the search key either from the input stream or dynamic parameters
+     */
+    void readSearchKey();
+
+    /**
+     * Reads the upper bound key either from the input stream or dynamic
+     * parameters
+     */
+    void readUpperBoundKey();
 
     /**
      * Determines if the next key value is within the upper bound search

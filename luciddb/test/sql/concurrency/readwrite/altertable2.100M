@@ -1,0 +1,98 @@
+-- setup
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitem select * from "lineitem";
+600572 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 600572              |
++---------------------+
+
+> delete from lineitem where l_shipmode = 'TRUCK';
+85953 rows affected.
+> select count(*) from lineitem where l_shipmode = 'TRUCK';
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 514619              |
++---------------------+
+
+-- end of setup
+
+-- thread cleanup
+> set schema 'rwconcur';
+0 rows affected.
+> truncate table lineitem;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread rebuildLineItem
+> set schema 'rwconcur';
+0 rows affected.
+> alter table lineitem rebuild;
+0 rows affected.
+-- end of thread rebuildLineItem
+
+-- thread readLineItem
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from lineitem where l_shipmode = 'TRUCK';
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 514619              |
++---------------------+
+
+> select count(*) from lineitem where l_shipmode = 'TRUCK';
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 514619              |
++---------------------+
+
+> select count(*) from lineitem where l_shipmode = 'TRUCK';
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 514619              |
++---------------------+
+
+-- end of thread readLineItem
+
+-- thread writeLineItem
+> set schema 'rwconcur';
+0 rows affected.
+> delete from lineitem where l_shipmode = 'RAIL';
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.RWCONCUR.LINEITEM
+-- end of thread writeLineItem
+
