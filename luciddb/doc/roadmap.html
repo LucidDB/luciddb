@@ -13,7 +13,7 @@
 
 <h3>Current Release</h3>
 
-The current open-source release (0.7.0) of LucidDB is available for
+The current open-source release (0.7.1) of LucidDB is available for
 download.  It is packed with <a href="features.html">advanced
 features</a>; there are also some limitations you should be aware of:
 
@@ -28,7 +28,8 @@ the same table
 
 <li>all transactions are autocommit
 
-<li>outer join support is limited to equijoins
+<li>any join condition is now supported for LEFT/RIGHT OUTER JOIN, but
+FULL OUTER JOIN support is limited to equijoins
 
 <li>one single database-wide auto-extend tablespace
 
@@ -43,7 +44,7 @@ case-sensitive
 
 <li>no ODBC driver is provided (JDBC must be used to connect to LucidDB)
 
-<li>external user-defined routines must be written in Java
+<li>external user-defined routines are written in Java
 
 </ul>
 
@@ -57,8 +58,6 @@ listed here or items of your own.)
 <ul>
 
 <li>complete subquery support</li>
-
-<li>support for arbitrary outer join conditions</li>
 
 <li>tablespaces and hot backup</li>
 
@@ -109,6 +108,8 @@ href="http://jakarta.apache.org/poi">POI</a>) and ETL functions</li>
 <li>clustering</li>
 
 <li>support for both row-store and column-store tables in the same database
+
+<li>support for arbitrary FULL OUTER JOIN conditions</li>
 
 </ul>
 

@@ -1,4 +1,4 @@
-LucidDB Binary Release 0.7.0
+LucidDB Binary Release 0.7.1
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -32,6 +32,33 @@ http://issues.eigenbase.org
 
 ----------------------------------------------------------------------
 CHANGE HISTORY
+
+Changes since 0.7.0 include
+
+- new nested loop join feature improves non-equijoin support for
+  both inner and outer joins
+- fixes in calendar-related applib functions
+- VJDBC default connection timeout changed to 1 day
+- fixes in rowscan-level filtering when used on the right hand side
+  of a cartesian product
+- validate to prevent duplicate column references in 
+  index/constraint definitions
+- support for USING clause join conditions
+- fix some code caching issues (FRG-263 and others)
+- fixes for default value usage (FRG-285)
+- fixes for rounding/truncation problems with large BIGINT values
+  (avoid usage of intermediate floating point operations)
+- fixes for outer join and rowscan row count estimation
+- blackhawk and LucidDB test harness improvements
+- Mondrian source replication feature added
+- fixes for bitmap index corruption during incremental loads
+- fixes for retrieving distinct DATE/TIME/TIMESTAMP objects via local JDBC
+  driver
+- suppress revalidation of dependent servers from CREATE OR REPLACE
+  WRAPPER
+- fix accidental conversion from empty string to NULL (FRG-275)
+- avoid preemptive exclusive locking for snapshot-versioned pages
+- fix some snapshot-versioned page deallocation problems
 
 Changes since 0.6.0 include
 
