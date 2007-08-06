@@ -12,27 +12,27 @@
 
       <test-suite-call testfile="test-nightly-csvjdbc.xml">
         <test-suite-modifier value="csvjdbc"/>
-        <property name="foreign.db" value="ldb-csvjdbc"/>
+        <property name="foreign.db" value="csvjdbc"/>
       </test-suite-call>
 
       <test-suite-call testfile="test-nightly-flatfile.xml">
         <test-suite-modifier value="flatfile"/>
-        <property name="foreign.db" value="ldb-flatfile"/>
+        <property name="foreign.db" value="flatfile"/>
       </test-suite-call>
 
       <test-suite-call testfile="test-nightly-nondb.xml">
         <test-suite-modifier value="nondb"/>
-        <property name="foreign.db" value="ldb-nondb"/>
+        <property name="foreign.db" value="nondb"/>
       </test-suite-call>
 
       <test-suite-call testfile="test-nightly-oracle.xml">
         <test-suite-modifier value="oracle"/>
-        <property name="foreign.db" value="ldb-oracle"/>
+        <property name="foreign.db" value="oracle"/>
       </test-suite-call>
 
       <test-suite-call testfile="test-nightly-sqlserver.xml">
         <test-suite-modifier value="sqlserver"/>
-        <property name="foreign.db" value="ldb-sqlserver"/>
+        <property name="foreign.db" value="sqlserver"/>
       </test-suite-call>
 
       <cleanup-hook>

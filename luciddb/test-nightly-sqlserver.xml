@@ -19,7 +19,7 @@
       <test-suite-call testfile="test/sql/sqlserver-specific/test.xml"/>
       <test-suite-call testfile="test/sql/sys/test.xml">
         <test-suite-modifier value="sqlserver"/>
-        <property name="foreign.db" value="ldb-sqlserver"/>
+        <property name="foreign.db" value="sqlserver"/>
       </test-suite-call>
 
       <cleanup-hook>
