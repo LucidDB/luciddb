@@ -32,12 +32,15 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 
 
 /**
  * FennelReshapeRel represents the Fennel implementation of an execution stream
- * that does projections, simple casting, and simple filtering.
+ * that does projections, simple casting, and simple filtering.  Filtering
+ * can done against either literal values passed in through a stream parameter,
+ * or against dynamic parameters read during runtime.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -51,8 +54,10 @@ class FennelReshapeRel
     RelDataType outputRowType;
     CompOperatorEnum compOp;
     Integer [] filterOrdinals;
-    List<RexLiteral> literals;
-    RelDataType filterRowType;
+    List<RexLiteral> filterLiterals;  
+    FennelRelParamId [] dynamicParamIds;
+    Integer [] paramCompareOffsets;
+    BitSet paramOutput;
 
     RexNode condition;
 
@@ -64,11 +69,22 @@ class FennelReshapeRel
      * @param cluster RelOptCluster for this rel
      * @param child child input
      * @param projection ordinals of the columns to be projected from the input
-     * @param outputRowType row type of the output
+     * @param outputRowType row type of the output (includes dynamic parameters
+     * that are to be outputted) with dynamic parameters appearing at the
+     * end of the row
      * @param compOp comparison operator
-     * @param filterOrdinals ordinals corresponding to filter inputs
-     * @param literals list of literals to be used in the filtering
-     * @param filterRowType row type corresponding to the filter columns
+     * @param filterOrdinals ordinals corresponding to inputs that need to be
+     * filtered; they're filtered against either literals or dynamic parameters;
+     * in the case where dynamic parameters are being compared, the trailing
+     * ordinals represent the columns to be compared against the parameters
+     * @param filterLiterals list of literals to be compared against the
+     * leading columns specified by filterOrdinals
+     * @param dynamicParamIds dynamic parameters to be read by this rel
+     * @param paramCompareOffsets array of offsets within the input tuple that
+     * each dynamic parameter should be compared against; if the dynamic 
+     * parameter doesn't need to be compared, then the offset is set to -1
+     * @param paramOutput bitset indicating whether each dynamic parameter
+     * should be outputted
      */
     public FennelReshapeRel(
         RelOptCluster cluster,
@@ -77,16 +93,20 @@ class FennelReshapeRel
         RelDataType outputRowType,
         CompOperatorEnum compOp,
         Integer [] filterOrdinals,
-        List<RexLiteral> literals,
-        RelDataType filterRowType)
+        List<RexLiteral> filterLiterals,
+        FennelRelParamId [] dynamicParamIds,
+        Integer [] paramCompareOffsets,
+        BitSet paramOutput)
     {
         super(cluster, child);
         this.projection = projection;
         this.outputRowType = outputRowType;
         this.compOp = compOp;
         this.filterOrdinals = filterOrdinals;
-        this.literals = literals;
-        this.filterRowType = filterRowType;
+        this.filterLiterals = filterLiterals;
+        this.dynamicParamIds = dynamicParamIds;
+        this.paramCompareOffsets = paramCompareOffsets;
+        this.paramOutput = paramOutput;
 
         condition = null;
     }
@@ -104,8 +124,10 @@ class FennelReshapeRel
                 outputRowType,
                 compOp,
                 filterOrdinals,
-                new ArrayList<RexLiteral>(literals),
-                filterRowType);
+                new ArrayList<RexLiteral>(filterLiterals),
+                dynamicParamIds,
+                paramCompareOffsets,
+                paramOutput);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -130,23 +152,56 @@ class FennelReshapeRel
     // implement RelNode
     public double getRows()
     {
-        // reconstruct a RexNode filter based on the filter ordinals and
-        // the literals they're being compared against
-        if ((condition == null) && (filterOrdinals.length > 0)) {
+        // Reconstruct a RexNode filter containing all the filtering
+        // conditions
+        if (condition == null) {
             RexBuilder rexBuilder = getCluster().getRexBuilder();
             RelDataTypeField [] fields = getChild().getRowType().getFields();
             List<RexNode> filterList = new ArrayList<RexNode>();
-            for (int i = 0; i < filterOrdinals.length; i++) {
-                RexNode input =
-                    rexBuilder.makeInputRef(
-                        fields[filterOrdinals[i]].getType(),
-                        filterOrdinals[i]);
-                filterList.add(
-                    rexBuilder.makeCall(
-                        SqlStdOperatorTable.equalsOperator,
-                        input,
-                        literals.get(i)));
+            
+            if (filterLiterals.size() > 0) {
+                assert(filterLiterals.size() == filterOrdinals.length);
+                for (int i = 0; i < filterOrdinals.length; i++) {
+                    addFilter(
+                        filterOrdinals[i],
+                        fields,
+                        compOp,
+                        filterLiterals.get(i),
+                        (i == filterOrdinals.length - 1),
+                        filterList,
+                        rexBuilder);
+                }
             }
+             
+            int nFilterParams = 0;
+            for (int i = 0; i < paramCompareOffsets.length; i++) {               
+                if (paramCompareOffsets[i] >= 0) {
+                    nFilterParams++;
+                }
+            }
+            assert(
+                nFilterParams + filterLiterals.size() == filterOrdinals.length);
+            
+            // For the filters being compared to dynamic parameters, just
+            // use placeholder dynamic parameters in the filter expression
+            if (nFilterParams > 0) {
+                int count = 0;
+                for (int i = 0; i < paramCompareOffsets.length; i++) {               
+                    if (paramCompareOffsets[i] >= 0) {
+                        count++;
+                        addFilter(
+                            paramCompareOffsets[i],
+                            fields,
+                            compOp,
+                            rexBuilder.makeDynamicParam(
+                                fields[paramCompareOffsets[i]].getType(),
+                                0),
+                                (count == nFilterParams),
+                                filterList,
+                                rexBuilder);
+                    }
+                }
+            }         
             condition = RexUtil.andRexNodeList(rexBuilder, filterList);
         }
 
@@ -154,39 +209,85 @@ class FennelReshapeRel
             getChild(),
             condition);
     }
+    
+    private void addFilter(
+        Integer filterOrdinal,
+        RelDataTypeField [] fields,
+        CompOperatorEnum compOp,
+        RexNode filterOperand,
+        boolean lastFilter,
+        List<RexNode> filterList,
+        RexBuilder rexBuilder)
+    {
+        RexNode input =
+            rexBuilder.makeInputRef(
+                fields[filterOrdinal].getType(),
+                filterOrdinal);
+
+        SqlBinaryOperator sqlOp = null;
+        // The comparison operator is really only relevant to the last
+        // filter.  All preceeding filters are always equality.
+        if (!lastFilter || compOp == CompOperatorEnum.COMP_EQ) {
+            sqlOp = SqlStdOperatorTable.equalsOperator;
+        } else if (compOp == CompOperatorEnum.COMP_GE) {
+            sqlOp = SqlStdOperatorTable.greaterThanOrEqualOperator;
+        } else if (compOp == CompOperatorEnum.COMP_GT) {
+            sqlOp = SqlStdOperatorTable.greaterThanOperator;
+        } else if (compOp == CompOperatorEnum.COMP_LE) {
+            sqlOp = SqlStdOperatorTable.lessThanOrEqualOperator;
+        } else if (compOp == CompOperatorEnum.COMP_LT) {
+            sqlOp = SqlStdOperatorTable.lessThanOperator;
+        } else if (compOp == CompOperatorEnum.COMP_NE) {
+            sqlOp = SqlStdOperatorTable.notEqualsOperator;
+        }
+        filterList.add(
+            rexBuilder.makeCall(sqlOp, input, filterOperand));
+    }
 
     // override RelNode
     public void explain(RelOptPlanWriter pw)
     {
-        if (filterOrdinals.length == 0) {
-            pw.explain(
-                this,
-                new String[] { "child", "projection", "outputRowType" },
-                new Object[] {
-                    Arrays.asList(projection),
-                    outputRowType.getFullTypeString()
-                });
-        } else {
-            // need to include the output rowtype in the digest to properly
-            // handle casting
-            pw.explain(
-                this,
-                new String[] {
-                    "child",
-                    "projection",
-                    "filterOp",
-                    "filterOrdinals",
-                    "filterTuple",
-                    "outputRowType"
-                },
-                new Object[] {
-                    Arrays.asList(projection),
-                    compOp.toString(),
-                    Arrays.asList(filterOrdinals),
-                    literals.toString(),
-                    outputRowType.getFullTypeString()
-                });
+        int nTerms = 2;       
+        if (filterOrdinals.length > 0) {
+            nTerms += 2;
         }
+        if (filterLiterals.size() > 0) {
+            nTerms++;
+        }
+        if (dynamicParamIds.length > 0) {
+            nTerms += 2;
+        }
+        String [] nameList = new String[nTerms + 1];
+        Object [] objects = new Object[nTerms];
+        
+        nameList[0] = "child";
+        nameList[1] = "projection";
+        objects[0] = Arrays.asList(projection);
+        int idx = 2;
+        if (filterOrdinals.length > 0) {
+            objects[idx - 1] = compOp;
+            nameList[idx++] = "filterOp";
+            objects[idx - 1] = Arrays.asList(filterOrdinals);
+            nameList[idx++] = "filterOrdinals";
+            if (filterLiterals.size() > 0) {
+                objects[idx - 1] = filterLiterals;
+                nameList[idx++] = "filterTuple";
+            }
+        }
+        if (dynamicParamIds.length > 0) {
+            objects[idx - 1] = Arrays.asList(dynamicParamIds);
+            nameList[idx++] = "dynamicParameters";
+            objects[idx - 1] = Arrays.asList(paramCompareOffsets);
+            nameList[idx++] = "paramCompareOffsets";
+        }
+        // need to include the output rowtype in the digest to properly
+        // handle casting
+        objects[idx - 1] = outputRowType.getFullTypeString();
+        nameList[idx] = "outputRowType";
+        pw.explain(
+            this,
+            nameList,
+            objects);
     }
 
     public RelDataType deriveRowType()
@@ -219,17 +320,39 @@ class FennelReshapeRel
         streamDef.setInputCompareProjection(
             FennelRelUtil.createTupleProjection(repos, filterOrdinals));
 
-        if (filterOrdinals.length == 0) {
+        if (filterLiterals.size() == 0) {
             streamDef.setTupleCompareBytesBase64("");
         } else {
+            int nFilters = filterOrdinals.length;
+            RelDataType [] types = new RelDataType[nFilters];
+            String [] fieldNames = new String[nFilters];
+            RelDataTypeField [] inputFields =
+                getChild().getRowType().getFields();
+            for (int i = 0; i < nFilters; i++) {
+                types[i] = inputFields[filterOrdinals[i]].getType();
+                fieldNames[i] = inputFields[i].getName();
+            }
+            RelDataType filterRowType =
+                getCluster().getTypeFactory().createStructType(
+                    types,
+                    fieldNames);
             List<List<RexLiteral>> compareTuple =
                 new ArrayList<List<RexLiteral>>();
-            compareTuple.add(literals);
+            compareTuple.add(filterLiterals);
             streamDef.setTupleCompareBytesBase64(
                 FennelRelUtil.convertTuplesToBase64String(
                     filterRowType,
                     compareTuple));
         }
+
+        for (int i = 0; i < dynamicParamIds.length; i++) {
+            FemReshapeParameter reshapeParam = repos.newFemReshapeParameter();
+            reshapeParam.setDynamicParamId(
+                implementor.translateParamId(dynamicParamIds[i]).intValue());
+            reshapeParam.setCompareOffset(paramCompareOffsets[i]);
+            reshapeParam.setOutputParam(paramOutput.get(i));
+            streamDef.getReshapeParameter().add(reshapeParam);
+        }     
 
         return streamDef;
     }

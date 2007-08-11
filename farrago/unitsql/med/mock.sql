@@ -273,3 +273,24 @@ options(simulate_bad_connection 'TRUE');
 -- should fail
 create or replace server mock_flaky_server
 foreign data wrapper mock_flaky;
+
+-- test table with no columns extracted
+
+create server mock_no_columns_server
+foreign data wrapper sys_mock_foreign
+options (
+foreign_schema_name 'MOCK_SCHEMA', 
+foreign_table_name 'MOCK_TABLE',
+extract_columns 'false',
+executor_impl 'JAVA',
+row_count '3');
+
+create schema mock_no_columns_schema;
+
+import foreign schema mock_schema
+from server mock_no_columns_server
+into mock_no_columns_schema;
+
+-- should fail:  no columns
+select * from mock_no_columns_schema.mock_table;
+

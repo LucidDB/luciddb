@@ -410,7 +410,6 @@ public class FarragoObjectCacheTest extends TestCase
      */
     public void testMultipleThreadsExclusive()
     {
-        if (!Bug.Frg286Fixed) return;
         runMultipleThreads(true);
     }
 

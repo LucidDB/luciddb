@@ -91,8 +91,7 @@ public class FennelReshapeRule
         RexLocalRef condition = program.getCondition();
         CompOperatorEnum compOp = CompOperatorEnum.COMP_NOOP;
         Integer [] filterOrdinals = {};
-        List<RexLiteral> literals = new ArrayList<RexLiteral>();
-        RelDataType filterRowType = null;
+        List<RexLiteral> filterLiterals = new ArrayList<RexLiteral>();
 
         // check the condition
         if (condition != null) {
@@ -100,19 +99,18 @@ public class FennelReshapeRule
             List<Integer> filterList = new ArrayList<Integer>();
 
             List<CompOperatorEnum> op = new ArrayList<CompOperatorEnum>();
-            filterRowType =
-                isConditionSimple(
-                    calcRel,
-                    filterExprs,
-                    filterList,
-                    literals,
-                    op);
-            if (filterRowType == null) {
+            if (!isConditionSimple(
+                calcRel,
+                filterExprs,
+                filterList,
+                filterLiterals,
+                op))
+            {
                 return;
             }
 
             compOp = op.get(0);
-            filterOrdinals = filterList.toArray(new Integer[filterList.size()]);
+            filterOrdinals = filterList.toArray(new Integer[filterList.size()]);         
         }
 
         RelNode fennelInput =
@@ -134,8 +132,10 @@ public class FennelReshapeRule
                 outputRowType,
                 compOp,
                 filterOrdinals,
-                literals,
-                filterRowType);
+                filterLiterals,
+                new FennelRelParamId [] {},
+                new Integer [] {},
+                null);
 
         call.transformTo(reshapeRel);
     }
@@ -248,10 +248,9 @@ public class FennelReshapeRule
      * comparisons
      * @param op returns the operator to be used in the simple comparison
      *
-     * @return rowtype corresponding to the ordered list of filter columns, if
-     * the filter condition is simple
+     * @return true if the filter condition is simple
      */
-    private RelDataType isConditionSimple(
+    private boolean isConditionSimple(
         CalcRel calcRel,
         RexNode filterExprs,
         List<Integer> filterList,
@@ -267,84 +266,27 @@ public class FennelReshapeRule
         // by the analyzer, we can't process a subset using the reshape
         // exec stream
         if (rexAnalyzer.getNonSargFilterRexNode() != null) {
-            return null;
+            return false;
         }
 
-        CompOperatorEnum rangeOp = CompOperatorEnum.COMP_NOOP;
-        RexInputRef rangeRef = null;
-        RexLiteral rangeLiteral = null;
         List<RexInputRef> filterCols = new ArrayList<RexInputRef>();
-
-        for (SargBinding sargBinding : sargBindingList) {
-            SargIntervalSequence sargSeq = sargBinding.getExpr().evaluate();
-
-            if (sargSeq.isPoint()) {
-                filterCols.add(sargBinding.getInputRef());
-                List<SargInterval> sargIntervalList = sargSeq.getList();
-                assert (sargIntervalList.size() == 1);
-                SargInterval sargInterval = sargIntervalList.get(0);
-                SargEndpoint lowerBound = sargInterval.getLowerBound();
-                literals.add((RexLiteral) lowerBound.getCoordinate());
-            } else {
-                // if we have a range predicate, just keep track of it for now,
-                // since it needs to be put at the end of our lists
-                List<SargInterval> sargIntervalList = sargSeq.getList();
-                if (sargIntervalList.size() != 1) {
-                    return null;
-                }
-                SargInterval sargInterval = sargIntervalList.get(0);
-                SargEndpoint lowerBound = sargInterval.getLowerBound();
-                SargEndpoint upperBound = sargInterval.getUpperBound();
-
-                // check the upper bound first to avoid the null in the
-                // lower bound
-                if (upperBound.isFinite()) {
-                    rangeLiteral = (RexLiteral) upperBound.getCoordinate();
-                    if (upperBound.getStrictness() == SargStrictness.OPEN) {
-                        rangeOp = CompOperatorEnum.COMP_LT;
-                    } else {
-                        rangeOp = CompOperatorEnum.COMP_LE;
-                    }
-                } else if (lowerBound.isFinite()) {
-                    rangeLiteral = (RexLiteral) lowerBound.getCoordinate();
-                    if (lowerBound.getStrictness() == SargStrictness.OPEN) {
-                        rangeOp = CompOperatorEnum.COMP_GT;
-                    } else {
-                        rangeOp = CompOperatorEnum.COMP_GE;
-                    }
-                } else {
-                    return null;
-                }
-                assert (rangeRef == null);
-                rangeRef = sargBinding.getInputRef();
+        List<RexNode> filterOperands = new ArrayList<RexNode>();
+        if (FennelRelUtil.extractSimplePredicates(
+            sargBindingList,
+            filterCols,
+            filterOperands,
+            op))
+        {
+            for (RexInputRef filterCol : filterCols) {
+                filterList.add(filterCol.getIndex());
             }
-        }
-
-        // if there was a range filter, add it to the end of our lists
-        if (rangeRef == null) {
-            op.add(CompOperatorEnum.COMP_EQ);
+            for (RexNode operand : filterOperands) {
+                literals.add((RexLiteral) operand);
+            }
+            return true;
         } else {
-            filterCols.add(rangeRef);
-            literals.add(rangeLiteral);
-            op.add(rangeOp);
+            return false;
         }
-
-        int nFilters = filterCols.size();
-        RelDataType [] types = new RelDataType[nFilters];
-        String [] fieldNames = new String[nFilters];
-        RelDataTypeField [] inputFields =
-            calcRel.getChild().getRowType().getFields();
-        for (int i = 0; i < nFilters; i++) {
-            RexInputRef filter = filterCols.get(i);
-            int idx = filter.getIndex();
-            filterList.add(idx);
-            types[i] = filter.getType();
-            fieldNames[i] = inputFields[idx].getName();
-        }
-
-        return calcRel.getCluster().getTypeFactory().createStructType(
-            types,
-            fieldNames);
     }
 }
 

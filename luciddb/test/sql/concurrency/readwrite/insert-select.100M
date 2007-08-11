@@ -1,0 +1,320 @@
+-- setup
+> set schema 'rwconcur';
+0 rows affected.
+> alter system set "expectedConcurrentStatements" = 20;
+0 rows affected.
+-- end of setup
+
+-- thread cleanup
+> set schema 'rwconcur';
+0 rows affected.
+> truncate table Nation;
+0 rows affected.
+> truncate table Region;
+0 rows affected.
+> truncate table Part;
+0 rows affected.
+> truncate table Supplier;
+0 rows affected.
+> truncate table Customer;
+0 rows affected.
+> truncate table PartSupp;
+0 rows affected.
+> truncate table Orders;
+0 rows affected.
+> truncate table LineItem;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread writeNation
+> set schema 'rwconcur';
+0 rows affected.
+> insert into nation select * from "nation";
+25 rows affected.
+> select count(*) from nation;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 25                  |
++---------------------+
+
+-- end of thread writeNation
+
+-- thread writeRegion
+> set schema 'rwconcur';
+0 rows affected.
+> insert into region select * from "region";
+5 rows affected.
+> select count(*) from region;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 5                   |
++---------------------+
+
+-- end of thread writeRegion
+
+-- thread writePart
+> set schema 'rwconcur';
+0 rows affected.
+> insert into part select * from "part";
+20000 rows affected.
+> select count(*) from part;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 20000               |
++---------------------+
+
+-- end of thread writePart
+
+-- thread writeSupplier
+> set schema 'rwconcur';
+0 rows affected.
+> insert into supplier select * from "supplier";
+1000 rows affected.
+> select count(*) from supplier;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1000                |
++---------------------+
+
+-- end of thread writeSupplier
+
+-- thread writeCustomer
+> set schema 'rwconcur';
+0 rows affected.
+> insert into customer select * from "customer";
+15000 rows affected.
+> select count(*) from customer;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 15000               |
++---------------------+
+
+-- end of thread writeCustomer
+
+-- thread writePartSupp
+> set schema 'rwconcur';
+0 rows affected.
+> insert into partsupp select * from "partsupp";
+80000 rows affected.
+> select count(*) from partsupp;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 80000               |
++---------------------+
+
+-- end of thread writePartSupp
+
+-- thread writeOrders
+> set schema 'rwconcur';
+0 rows affected.
+> insert into orders select * from "orders";
+150000 rows affected.
+> select count(*) from orders;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 150000              |
++---------------------+
+
+-- end of thread writeOrders
+
+-- thread writeLineItem
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitem select * from "lineitem";
+600572 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 600572              |
++---------------------+
+
+-- end of thread writeLineItem
+
+-- thread readNation
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from nation;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from nation;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 25                  |
++---------------------+
+
+-- end of thread readNation
+
+-- thread readRegion
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from region;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from region;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 5                   |
++---------------------+
+
+-- end of thread readRegion
+
+-- thread readPart
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from part;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from part;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from part;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 20000               |
++---------------------+
+
+-- end of thread readPart
+
+-- thread readSupplier
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from supplier;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from supplier;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1000                |
++---------------------+
+
+-- end of thread readSupplier
+
+-- thread readCustomer
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from customer;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from customer;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from customer;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 15000               |
++---------------------+
+
+-- end of thread readCustomer
+
+-- thread readPartSupp
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from partsupp;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from partsupp;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 80000               |
++---------------------+
+
+-- end of thread readPartSupp
+
+-- thread readOrders
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from orders;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from orders;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from orders;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 150000              |
++---------------------+
+
+-- end of thread readOrders
+
+-- thread readLineItem
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 600572              |
++---------------------+
+
+-- end of thread readLineItem
+

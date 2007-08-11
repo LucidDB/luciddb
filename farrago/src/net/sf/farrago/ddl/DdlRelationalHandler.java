@@ -23,11 +23,11 @@
 package net.sf.farrago.ddl;
 
 import java.sql.*;
-
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
@@ -132,7 +132,20 @@ public class DdlRelationalHandler
                     repos.getLocalizedObjectName(table));
             }
         }
-
+        
+        // check that columns are distinct
+        List<CwmIndexedFeature> indexedFeatures = index.getIndexedFeature();
+        boolean[] includesColumn = new boolean[table.getFeature().size()];
+        for (CwmIndexedFeature column : indexedFeatures) {
+            int ordinal = ((FemAbstractAttribute)column.getFeature()).getOrdinal();
+            if (includesColumn[ordinal]) {
+                throw res.ValidatorIndexedColumnsNotDistinct.ex(
+                    repos.getLocalizedObjectName(index));
+            } else {
+                includesColumn[ordinal] = true;
+            }
+        }
+        
         // TODO:  verify columns distinct, total width acceptable, and all
         // columns indexable types
         if (index.getNamespace() != null) {

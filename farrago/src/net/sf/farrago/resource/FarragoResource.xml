@@ -296,7 +296,7 @@ column type family is {1} but default value type family is {2}</text>
 <text>Failed to validate definition for {0}</text>
 </exception>
 
-<exception id="420360" name="ValidatorDataServerTableInvalid">
+<exception id="420361" name="ValidatorDataServerTableInvalid">
 <text>Failed to validate data server definition for {0}</text>
 </exception>
 
@@ -650,6 +650,11 @@ column type family is {1} but default value type family is {2}</text>
     className="org.eigenbase.sql.validate.SqlValidatorException">
 <text>COLUMN_LIST parameters for {0} must be declared as java.util.List&lt;String&gt; in the external Java method {1}</text>
 </exception>
+
+<exception id="421110" name="ValidatorIndexedColumnsNotDistinct">
+<text>Cannot create {0} because columns must be distinct.</text>
+</exception>
+
 
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->

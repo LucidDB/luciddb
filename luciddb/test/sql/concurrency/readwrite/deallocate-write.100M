@@ -1,0 +1,307 @@
+-- setup
+> set schema 'rwconcur';
+0 rows affected.
+> alter system set "expectedConcurrentStatements" = 10;
+0 rows affected.
+> create table lineitem2 (
+> l_orderkey    integer,
+> l_partkey     integer not null,
+> l_suppkey     integer not null,
+> l_linenumber  integer,
+> l_quantity    decimal(15,2) not null,
+> l_extendedprice  decimal(15,2) not null,
+> l_discount    decimal(15,2) not null,
+> l_tax         decimal(15,2) not null,
+> l_returnflag  varchar(1) not null,
+> l_linestatus  varchar(1) not null,
+> l_shipdate    date not null,
+> l_commitdate  date not null,
+> l_receiptdate date not null,
+> l_shipinstruct varchar(25) not null,
+> l_shipmode    varchar(10) not null,
+> l_comment      varchar(44) not null,
+> primary key(l_orderkey, l_linenumber)
+> );
+0 rows affected.
+> create table lineitem3 (
+> l_orderkey    integer,
+> l_partkey     integer not null,
+> l_suppkey     integer not null,
+> l_linenumber  integer,
+> l_quantity    decimal(15,2) not null,
+> l_extendedprice  decimal(15,2) not null,
+> l_discount    decimal(15,2) not null,
+> l_tax         decimal(15,2) not null,
+> l_returnflag  varchar(1) not null,
+> l_linestatus  varchar(1) not null,
+> l_shipdate    date not null,
+> l_commitdate  date not null,
+> l_receiptdate date not null,
+> l_shipinstruct varchar(25) not null,
+> l_shipmode    varchar(10) not null,
+> l_comment      varchar(44) not null,
+> primary key(l_orderkey, l_linenumber)
+> );
+0 rows affected.
+> create table lineitem4 (
+> l_orderkey    integer,
+> l_partkey     integer not null,
+> l_suppkey     integer not null,
+> l_linenumber  integer,
+> l_quantity    decimal(15,2) not null,
+> l_extendedprice  decimal(15,2) not null,
+> l_discount    decimal(15,2) not null,
+> l_tax         decimal(15,2) not null,
+> l_returnflag  varchar(1) not null,
+> l_linestatus  varchar(1) not null,
+> l_shipdate    date not null,
+> l_commitdate  date not null,
+> l_receiptdate date not null,
+> l_shipinstruct varchar(25) not null,
+> l_shipmode    varchar(10) not null,
+> l_comment      varchar(44) not null,
+> primary key(l_orderkey, l_linenumber)
+> );
+0 rows affected.
+> create table lineitem5 (
+> l_orderkey    integer,
+> l_partkey     integer not null,
+> l_suppkey     integer not null,
+> l_linenumber  integer,
+> l_quantity    decimal(15,2) not null,
+> l_extendedprice  decimal(15,2) not null,
+> l_discount    decimal(15,2) not null,
+> l_tax         decimal(15,2) not null,
+> l_returnflag  varchar(1) not null,
+> l_linestatus  varchar(1) not null,
+> l_shipdate    date not null,
+> l_commitdate  date not null,
+> l_receiptdate date not null,
+> l_shipinstruct varchar(25) not null,
+> l_shipmode    varchar(10) not null,
+> l_comment      varchar(44) not null,
+> primary key(l_orderkey, l_linenumber)
+> );
+0 rows affected.
+> insert into lineitem select * from "lineitem1";
+60175 rows affected.
+> delete from lineitem where l_shipmode in('MAIL','TRUCK');
+17379 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 42796               |
++---------------------+
+
+> alter table lineitem rebuild;
+0 rows affected.
+> delete from lineitem;
+42796 rows affected.
+> alter table lineitem rebuild;
+0 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> insert into lineitem2 select * from "lineitem1";
+60175 rows affected.
+> select count(*) from lineitem2;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 60175               |
++---------------------+
+
+> insert into lineitem4 select * from "lineitem1";
+60175 rows affected.
+> delete from lineitem4 where l_shipmode in('MAIL','TRUCK');
+17379 rows affected.
+> select count(*) from lineitem4;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 42796               |
++---------------------+
+
+> alter table lineitem4 rebuild;
+0 rows affected.
+> select count(*) from lineitem4;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 42796               |
++---------------------+
+
+> insert into lineitem5 select * from "lineitem1";
+60175 rows affected.
+> delete from lineitem5 where l_shipmode in('MAIL','TRUCK');
+17379 rows affected.
+> select count(*) from lineitem5;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 42796               |
++---------------------+
+
+> alter table lineitem5 rebuild;
+0 rows affected.
+> select count(*) from lineitem5;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 42796               |
++---------------------+
+
+-- end of setup
+
+-- thread cleanup
+> set schema 'rwconcur';
+0 rows affected.
+> truncate table lineitem;
+0 rows affected.
+> drop table lineitem2;
+0 rows affected.
+> drop table lineitem3;
+0 rows affected.
+> drop table lineitem4;
+0 rows affected.
+> drop table lineitem5;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread deallocate
+> set schema 'rwconcur';
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 60340               |
++---------------------+
+
+-- end of thread deallocate
+
+-- thread insert
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitem select * from "lineitem2";
+60340 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 60340               |
++---------------------+
+
+-- end of thread insert
+
+-- thread delete
+> set schema 'rwconcur';
+0 rows affected.
+> delete from lineitem2;
+60175 rows affected.
+> select count(*) from lineitem2;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+-- end of thread delete
+
+-- thread merge
+> set schema 'rwconcur';
+0 rows affected.
+> merge into lineitem3 tgt
+> using lineitem2 as src
+> on tgt.l_orderkey = src.l_orderkey and
+> tgt.l_linenumber = src.l_linenumber
+> when matched then update set l_orderkey = src.l_orderkey
+> when not matched then insert (
+> l_orderkey    ,
+> l_partkey     ,
+> l_suppkey     ,
+> l_linenumber  ,
+> l_quantity    ,
+> l_extendedprice  ,
+> l_discount    ,
+> l_tax         ,
+> l_returnflag  ,
+> l_linestatus  ,
+> l_shipdate    ,
+> l_commitdate  ,
+> l_receiptdate ,
+> l_shipinstruct ,
+> l_shipmode    ,
+> l_comment)
+> values(
+> src.l_orderkey    ,
+> src.l_partkey     ,
+> src.l_suppkey     ,
+> src.l_linenumber  ,
+> src.l_quantity    ,
+> src.l_extendedprice  ,
+> src.l_discount    ,
+> src.l_tax         ,
+> src.l_returnflag  ,
+> src.l_linestatus  ,
+> src.l_shipdate    ,
+> src.l_commitdate  ,
+> src.l_receiptdate ,
+> src.l_shipinstruct ,
+> src.l_shipmode    ,
+> src.l_comment);
+60175 rows affected.
+> select count(*) from lineitem3;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 60175               |
++---------------------+
+
+-- end of thread merge
+
+-- thread mergeonself
+> set schema 'rwconcur';
+0 rows affected.
+> merge into lineitem4 tgt
+> using lineitem4 as src
+> on tgt.l_orderkey = src.l_orderkey and
+> tgt.l_linenumber = src.l_linenumber
+> when matched then
+> update set l_shipmode = 'JUNK';
+42796 rows affected.
+> select count(*) from lineitem4 where l_shipmode = 'JUNK';
++---------------------+
+| EXPR$0              |
++---------------------+
+| 42796               |
++---------------------+
+
+-- end of thread mergeonself
+
+-- thread insertrollback
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitem5 select * from "lineitem1";
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Unique constraint violation
+-- end of thread insertrollback
+
+-- thread readfromrollback
+> set schema 'rwconcur';
+0 rows affected.
+> select count(*) from lineitem5;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 42796               |
++---------------------+
+
+-- end of thread readfromrollback
+

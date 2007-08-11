@@ -1,0 +1,114 @@
+-- setup
+> set schema 'rwconcur';
+0 rows affected.
+> alter system set "expectedConcurrentStatements" = 10;
+0 rows affected.
+> create table lineitem2 (
+> l_orderkey    integer,
+> l_partkey     integer not null,
+> l_suppkey     integer not null,
+> l_linenumber  integer,
+> l_quantity    decimal(15,2) not null,
+> l_extendedprice  decimal(15,2) not null,
+> l_discount    decimal(15,2) not null,
+> l_tax         decimal(15,2) not null,
+> l_returnflag  varchar(1) not null,
+> l_linestatus  varchar(1) not null,
+> l_shipdate    date not null,
+> l_commitdate  date not null,
+> l_receiptdate date not null,
+> l_shipinstruct varchar(25) not null,
+> l_shipmode    varchar(10) not null,
+> l_comment      varchar(44) not null,
+> primary key(l_orderkey, l_linenumber)
+> );
+0 rows affected.
+> insert into lineitem select * from "lineitem";
+600572 rows affected.
+-- end of setup
+
+-- thread cleanup
+> set schema 'rwconcur';
+0 rows affected.
+> truncate table lineitem;
+0 rows affected.
+> drop table lineitem2;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread alter
+> set schema 'rwconcur';
+0 rows affected.
+> delete from lineitem where l_shipmode in ('TRUCK','MAIL');
+171907 rows affected.
+> alter table lineitem rebuild;
+0 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 428665              |
++---------------------+
+
+-- end of thread alter
+
+-- thread reader
+> set schema 'rwconcur';
+0 rows affected.
+> select * from lineitem, orders
+> where
+> l_orderkey = o_orderkey and
+> l_shipmode in ('TRUCK','MAIL');
++------------+------------+------------+--------------+-----------------+-----------------+-----------------+-----------------+--------------+--------------+------------+--------------+---------------+---------------------------+------------+----------------------------------------------+------------+------------+---------------+-----------------+-------------+-----------------+-----------------+----------------+---------------------------------------------------------------------------------+
+| L_ORDERKEY | L_PARTKEY  | L_SUPPKEY  | L_LINENUMBER | L_QUANTITY      | L_EXTENDEDPRICE | L_DISCOUNT      | L_TAX           | L_RETURNFLAG | L_LINESTATUS | L_SHIPDATE | L_COMMITDATE | L_RECEIPTDATE | L_SHIPINSTRUCT            | L_SHIPMODE | L_COMMENT                                    | O_ORDERKEY | O_CUSTKEY  | O_ORDERSTATUS | O_TOTALPRICE    | O_ORDERDATE | O_ORDERPRIORITY | O_CLERK         | O_SHIPPRIORITY | O_COMMENT                                                                       |
++------------+------------+------------+--------------+-----------------+-----------------+-----------------+-----------------+--------------+--------------+------------+--------------+---------------+---------------------------+------------+----------------------------------------------+------------+------------+---------------+-----------------+-------------+-----------------+-----------------+----------------+---------------------------------------------------------------------------------+
++------------+------------+------------+--------------+-----------------+-----------------+-----------------+-----------------+--------------+--------------+------------+--------------+---------------+---------------------------+------------+----------------------------------------------+------------+------------+---------------+-----------------+-------------+-----------------+-----------------+----------------+---------------------------------------------------------------------------------+
+
+-- end of thread reader
+
+-- thread inserter
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitem2 select * from lineitem;
+428665 rows affected.
+> select count(*) from lineitem2;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 428665              |
++---------------------+
+
+-- end of thread inserter
+
+-- thread failDelete
+> set schema 'rwconcur';
+0 rows affected.
+> delete from lineitem;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.RWCONCUR.LINEITEM
+-- end of thread failDelete
+
+-- thread failInsert
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitem select * from "lineitem";
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.RWCONCUR.LINEITEM
+-- end of thread failInsert
+
+-- thread failMerge
+> set schema 'rwconcur';
+0 rows affected.
+> merge into lineitem tgt
+> using lineitem as src
+> on tgt.l_orderkey = src.l_orderkey and
+> tgt.l_linenumber = src.l_linenumber
+> when matched then update set l_orderkey = 0;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.RWCONCUR.LINEITEM
+-- end of thread failMerge
+
+-- thread failRebuild
+> set schema 'rwconcur';
+0 rows affected.
+> alter table lineitem rebuild;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.RWCONCUR.LINEITEM
+-- end of thread failRebuild
+

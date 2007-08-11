@@ -50,23 +50,29 @@
 0: jdbc:luciddb:> explain plan excluding attributes for select * from emp,dept
 . . . . . . . . > where emp.deptno>dept.deptno and dept.dname='Marketing';
 'column0'
-'IterCalcRel'
-'  FennelToIteratorConverter'
-'    FennelCartesianProductRel'
-'      LcsRowScanRel'
-'      LcsRowScanRel'
-'        FennelValuesRel'
+'FennelToIteratorConverter'
+'  FennelNestedLoopJoinRel'
+'    LcsRowScanRel'
+'    FennelTempIdxSearchRel'
+'      FennelValuesRel'
+'    FennelIdxWriteRel'
+'      FennelSortRel'
+'        LcsRowScanRel'
+'          FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this shouldn't do it because the equi join is not accessible top level
 0: jdbc:luciddb:> explain plan excluding attributes for select * from emp,dept
 . . . . . . . . > where (emp.deptno=dept.deptno or dept.deptno > 5) and dept.dname='Marketing';
 'column0'
-'IterCalcRel'
-'  FennelToIteratorConverter'
-'    FennelCartesianProductRel'
-'      LcsRowScanRel'
-'      LcsRowScanRel'
-'        FennelValuesRel'
+'FennelToIteratorConverter'
+'  FennelNestedLoopJoinRel'
+'    LcsRowScanRel'
+'    IteratorToFennelConverter'
+'      IterCalcRel'
+'        FennelToIteratorConverter'
+'          FennelReshapeRel'
+'            LcsRowScanRel'
+'              FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this shouldn't do it because the filter condition is not accessible top level
 0: jdbc:luciddb:> explain plan excluding attributes for select * from emp,dept

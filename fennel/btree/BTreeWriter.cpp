@@ -84,18 +84,12 @@ uint BTreeWriter::insertTupleFromBuffer(
     // be inserting after where we are positioned except the first time
     // through or after a split, where we will need to do an initial search
     // to setup the appropriate position
-    //
-    // cannot support dups in monotonic mode because we cannot guarantee that
-    // duplicate inserts will insert at the end of all the duplicate keys
-    // if need to reposition after a split
-    assert(!(monotonic && (distinctness != DUP_FAIL)));
     if (monotonic) {
         if (isPositioned()) {
             ++iTupleOnLeaf;
             assert(checkMonotonicity(nodeAccessor, pTupleBuffer));
         } else {
-            bool duplicate = positionSearchKey(nodeAccessor);
-            permAssert(!duplicate);
+            positionSearchKey(nodeAccessor);
         }
     } else {
         bool duplicate = positionSearchKey(nodeAccessor);
@@ -689,8 +683,9 @@ bool BTreeWriter::positionSearchKey(BTreeNodeAccessor &nodeAccessor)
 {
     nodeAccessor.unmarshalKey(searchKeyData);
     pageStack.clear();
+    DuplicateSeek seekMode = (monotonic) ? DUP_SEEK_END : DUP_SEEK_ANY;
     bool duplicate = searchForKeyTemplate< true, std::vector<PageId> >(
-        searchKeyData,DUP_SEEK_ANY,true,pageStack);
+        searchKeyData,seekMode,true,pageStack);
     return duplicate;
 }
 
@@ -709,7 +704,7 @@ bool BTreeWriter::checkMonotonicity(
     nodeAccessor.unmarshalKey(searchKeyData);
     int keyComp = keyDescriptor.compareTuples(comparisonKeyData, searchKeyData);
 
-    return (keyComp < 0 && node.nEntries == iTupleOnLeaf);
+    return (keyComp <= 0 && node.nEntries == iTupleOnLeaf);
 }
 FENNEL_END_CPPFILE("$Id$");
 

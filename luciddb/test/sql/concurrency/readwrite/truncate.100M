@@ -1,0 +1,64 @@
+-- setup
+> set schema 'rwconcur';
+0 rows affected.
+> create table lineitem2 (
+> l_orderkey    integer,
+> l_partkey     integer not null,
+> l_suppkey     integer not null,
+> l_linenumber  integer,
+> l_quantity    decimal(15,2) not null,
+> l_extendedprice  decimal(15,2) not null,
+> l_discount    decimal(15,2) not null,
+> l_tax         decimal(15,2) not null,
+> l_returnflag  varchar(1) not null,
+> l_linestatus  varchar(1) not null,
+> l_shipdate    date not null,
+> l_commitdate  date not null,
+> l_receiptdate date not null,
+> l_shipinstruct varchar(25) not null,
+> l_shipmode    varchar(10) not null,
+> l_comment      varchar(44) not null,
+> primary key(l_orderkey, l_linenumber)
+> );
+0 rows affected.
+> insert into lineitem select * from "lineitem";
+600572 rows affected.
+-- end of setup
+
+-- thread cleanup
+> set schema 'rwconcur';
+0 rows affected.
+> truncate table lineitem;
+0 rows affected.
+> drop table lineitem2;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread reader1
+> set schema 'rwconcur';
+0 rows affected.
+> insert into lineitem2 select * from lineitem;
+600572 rows affected.
+> select count(*) from lineitem2;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 600572              |
++---------------------+
+
+-- end of thread reader1
+
+-- thread truncate
+> set schema 'rwconcur';
+0 rows affected.
+> truncate table lineitem;
+0 rows affected.
+> select count(*) from lineitem;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+-- end of thread truncate
+

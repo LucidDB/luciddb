@@ -352,44 +352,53 @@
 > explain plan for select f, d1 from f, d1
 >     where f.f_d1 = d1.d1_f or f.f_d2 = d1.d1_f;
 'column0'
-'IterCalcRel(expr#0..4=[{inputs}], expr#5=[=($t1, $t4)], expr#6=[=($t2, $t4)], expr#7=[OR($t5, $t6)], F=[$t0], D1=[$t3], $condition=[$t7])'
-'  FennelToIteratorConverter'
-'    FennelCartesianProductRel(leftouterjoin=[false])'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 3]], outputRowType=[RecordType(INTEGER F, INTEGER D1) NOT NULL])'
+'    FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[2, 1]], joinKeyParamIds=[[2, 1]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1, SYS$CLUSTERED_INDEX$F$F_D2]])'
-'      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
+'      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[=($t2, $t1)], expr#5=[=($t3, $t1)], expr#6=[OR($t4, $t5)], proj#0..1=[{exprs}], $condition=[$t6])'
+'        FennelReshapeRel(projection=[[0, 1]], dynamicParameters=[[1, 2]], paramCompareOffsets=[[-1, -1]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F, INTEGER F_D1, INTEGER F_D2) NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
 > 
 > -- filter involving > 2 tables
 > explain plan for select f, d1, d2 from f, d1, d2
 >     where f.f_d1 + d1.d1_f = d2.d2_f;
 'column0'
-'IterCalcRel(expr#0..5=[{inputs}], expr#6=[+($t3, $t1)], expr#7=[=($t6, $t5)], F=[$t2], D1=[$t0], D2=[$t4], $condition=[$t7])'
-'  FennelToIteratorConverter'
-'    FennelCartesianProductRel(leftouterjoin=[false])'
-'      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
-'      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelCartesianProductRel(leftouterjoin=[false])'
-'          LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1]])'
-'          LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]])'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 4, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2) NOT NULL])'
+'    FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[1, 3]], joinKeyParamIds=[[1, 2]])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1]])'
+'        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]])'
+'      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[+($t2, $t1)], expr#5=[=($t4, $t3)], proj#0..1=[{exprs}], $condition=[$t5])'
+'        FennelReshapeRel(projection=[[0, 1]], dynamicParameters=[[1, 2]], paramCompareOffsets=[[-1, -1]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F, INTEGER F_D1, INTEGER D2_F) NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
 > 
 > -- filter with 2 tables but both on one side of the comparison operator
 > explain plan for select f, d1 from f, d1
 >     where f.f_d1 + d1.d1_f = 0;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[+($t1, $t3)], expr#5=[0], expr#6=[=($t4, $t5)], F=[$t0], D1=[$t2], $condition=[$t6])'
-'  FennelToIteratorConverter'
-'    FennelCartesianProductRel(leftouterjoin=[false])'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D1) NOT NULL])'
+'    FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[1]], joinKeyParamIds=[[1]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1]])'
-'      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
+'      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[+($t2, $t1)], expr#4=[0], expr#5=[=($t3, $t4)], proj#0..1=[{exprs}], $condition=[$t5])'
+'        FennelReshapeRel(projection=[[0, 1]], dynamicParameters=[[1]], paramCompareOffsets=[[-1]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F, INTEGER F_D1) NOT NULL])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
 > 
 > -- non-equality operator
 > explain plan for select f, d1 from f, d1
 >     where f.f_d1 >= d1.d1_f;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[>=($t1, $t3)], F=[$t0], D1=[$t2], $condition=[$t4])'
-'  FennelToIteratorConverter'
-'    FennelCartesianProductRel(leftouterjoin=[false])'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D1) NOT NULL])'
+'    FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[1]], joinKeyParamIds=[[1]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1]])'
-'      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
+'      FennelTempIdxSearchRel(indexKeys=[[1]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], searchKeyParamIds=[[1]], keyOffsets=[[1]], rootPageIdParamId=[2])'
+'        FennelValuesRel(tuples=[[{ '(', null, ']', null }]])'
+'      FennelIdxWriteRel(discardDuplicates=[false], monotonicInserts=[true], rootPageIdParamId=[2], indexCols=[[1]])'
+'        FennelSortRel(key=[[1]], discardDuplicates=[false])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
 > 
 > -- all possible join combinations
 > explain plan for select f, d1, d2, d3

@@ -118,14 +118,16 @@ class MedMockNameDirectory
                 FarragoMedMetadataQuery.OTN_TABLE,
                 "Mock table",
                 new Properties());
-            sink.writeColumnDescriptor(
-                server.getForeignTableName(),
-                COLUMN_NAME,
-                0,
-                server.createMockColumnType(sink.getTypeFactory()),
-                "Mock column",
-                "0",
-                new Properties());
+            if (server.extractColumns) {
+                sink.writeColumnDescriptor(
+                    server.getForeignTableName(),
+                    COLUMN_NAME,
+                    0,
+                    server.createMockColumnType(sink.getTypeFactory()),
+                    "Mock column",
+                    "0",
+                    new Properties());
+            }
         }
         return true;
     }

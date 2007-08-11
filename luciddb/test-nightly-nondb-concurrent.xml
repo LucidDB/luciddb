@@ -12,6 +12,9 @@
 
       <!-- non-db dependent tests which don't rely on any external source -->
       <test-suite-call testfile="test/sql/concurrency/test.xml"/>
+      <test-suite-call testfile="test/sql/concurrency/readwrite/test.xml">
+        <property name="datasize" value="100M"/>
+      </test-suite-call>
 
       <cleanup-hook>
         <test-suite name="cleanup">

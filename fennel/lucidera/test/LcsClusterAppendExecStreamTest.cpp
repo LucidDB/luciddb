@@ -33,6 +33,7 @@
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ValuesExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/cache/Cache.h"
 #include "fennel/common/TraceSource.h"
 #include <stdarg.h>
@@ -216,6 +217,7 @@ void LcsClusterAppendExecStreamTest::testLoadSingleCol(
     lcsAppendParams.outputTupleDesc.push_back(attrDesc_int64);
 
     lcsAppendParams.pRootMap = 0;
+    lcsAppendParams.rootPageIdParamId = DynamicParamId(0);
 
     // Set up BTreeExecStreamParams using default values from BTreeDescriptor.
     lcsAppendParams.segmentId = btreeDescriptor.segmentId;
@@ -309,6 +311,7 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
         lcsAppendParams.inputProj.push_back(i);
     }
     lcsAppendParams.pRootMap = 0;
+    lcsAppendParams.rootPageIdParamId = DynamicParamId(0);
     
     // Set up BTreeExecStreamParams using default values from BTreeDescriptor.
     lcsAppendParams.segmentId = btreeDescriptor.segmentId;

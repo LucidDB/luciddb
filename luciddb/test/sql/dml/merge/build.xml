@@ -67,27 +67,18 @@
         <property file="run.properties"/>
       </else>
     </if>
+
     <!-- generate sql -->
-    <uptodate property="gensql.uptodate">
-      <srcfiles dir="${dml_merge.dir}" includes="*.tmpl"/>
-      <mapper type="glob" from="*.tmpl" to="*"/>
-    </uptodate>
-    <if>
-      <isset property="gensql.uptodate"/>
-      <then/>
-      <else>
-        <copy todir="${dml_merge.dir}" overwrite="true">
-          <fileset dir="${dml_merge.dir}" includes="*.tmpl"/>
-          <filterset>
-            <filter token="DIR" value="${csv.copy.dir}"/>
-          </filterset>
-          <globmapper from="*.tmpl" to="*"/>
-        </copy>
-      </else>
-    </if>
+    <copy todir="${dml_merge.dir}" overwrite="true">
+      <fileset dir="${dml_merge.dir}" includes="*.tmpl"/>
+      <filterset>
+        <filter token="DIR" value="${csv.copy.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${dml_merge.dir}"
       testscript="${testfile}"
@@ -145,8 +136,14 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete dir="${csv.dir}"/>
+    <delete file="run.properties"/>
+  </target>
+
+
+  <target name="clean-test">
     <delete dir="${bh.log.basedir}"/>
-    <delete dir="${csv.copy.dir}"/>
     <delete>
       <fileset dir="${dml_merge.dir}">
         <include name="*.log"/>
@@ -154,12 +151,11 @@
         <include name="download.sql"/>
       </fileset>
     </delete>
-    <delete file="run.properties"/>
+    <delete dir="${csv.copy.dir}"/>
   </target>
 
   <target name="clean-csv">
     <antcall target="clean"/>
-    <delete dir="${csv.dir}"/>
   </target>
 
 </project>

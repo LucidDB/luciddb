@@ -8,6 +8,11 @@ endif
 
 # NOTE:  tests are ordered roughly from fastest to slowest
 noinst_PROGRAMS= \
+testNoisyArithmetic \
+testCalc \
+testCalcExtString \
+testCalcExtended \
+tuple \
 CollectExecStreamTest \
 CalcAssemblerTest \
 CalcInstFactoryTest \
@@ -29,6 +34,16 @@ SqlStringAsciiTest \
 CorrelationJoinExecStreamTest
 
 TESTS = $(noinst_PROGRAMS)
+
+testNoisyArithmetic_SOURCES=testNoisyArithmetic.cpp 
+
+testCalc_SOURCES=testCalc.cpp 
+
+testCalcExtended_SOURCES=testCalcExtended.cpp 
+
+testCalcExtString_SOURCES=testCalcExtString.cpp 
+
+tuple_SOURCES=tuple.cpp
 
 CalcExecStreamTest_SOURCES=CalcExecStreamTest.cpp CalcExecStreamTestSuite.cpp
 
@@ -77,6 +92,7 @@ LDADD = \
 	-l$(TEST_LIB) \
 	-lfennel_dt_calc \
 	-lfennel_dt_xo \
+	-lfennel_ftrs \
 	-lfennel_db \
 	-lfennel_btree \
 	-lfennel_exec \

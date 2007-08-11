@@ -111,27 +111,14 @@
         <property file="run.properties"/>
       </else>
     </if>
+
     <!-- generate sql -->
-    <condition property="sql.generated">
-      <and>
-        <available file="${concurrency.dir}/fds/oraclecreserver.sql" type="file"/>
-        <available file="${concurrency.dir}/fds/sqlservercreserver.sql" type="file"/>
-        <available file="${concurrency.dir}/fds/flatfilecreserver.sql" type="file"/>
-        <available file="${concurrency.dir}/fds/csvjdbccreserver.sql" type="file"/>
-      </and>
-    </condition>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <foreach list="oracle,sqlserver,flatfile,csvjdbc"
-          param="prop.source"
-          target="gen-sql"/>
-      </else>
-    </if>
+    <foreach list="oracle,sqlserver,flatfile,csvjdbc"
+      param="prop.source"
+      target="gen-sql"/>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${concurrency.dir}"
       testscript="${testfile}"
@@ -179,12 +166,20 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete dir="${csv.dir}"/>
+    <delete file="run.properties"/>
+    <ant dir="${concurrency.dir}/readwrite" target="clean"/>
+  </target>
+
+  <target name="clean-each">
+    <delete file="${concurrency.dir}/fds/${prop.source}creserver.sql"/>
+    <delete file="${concurrency.dir}/fds/${prop.source}creserver.ref"/>
+  </target>
+
+  <target name="clean-test">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
-    <delete dir="${csv.copy.dir}"/>
-    <foreach list="oracle,sqlserver,flatfile,csvjdbc"
-      param="prop.source"
-      target="clean-each"/>
     <delete>
       <fileset dir="${concurrency.dir}" includes="*.log"/>
     </delete>
@@ -194,18 +189,12 @@
     <delete>
       <fileset dir="${concurrency.dir}/local" includes="*.log"/>
     </delete>
-    <delete file="run.properties"/>
+    <delete dir="${csv.copy.dir}"/>
+    <foreach list="oracle,sqlserver,flatfile,csvjdbc"
+      param="prop.source"
+      target="clean-each"/>
     <delete file="config.properties"/>
-  </target>
-
-  <target name="clean-each">
-    <delete file="${concurrency.dir}/fds/${prop.source}creserver.sql"/>
-    <delete file="${concurrency.dir}/fds/${prop.source}creserver.ref"/>
-  </target>
-
-  <target name="clean-csv">
-    <antcall target="clean"/>
-    <delete dir="${csv.dir}"/>
+    <ant dir="${concurrency.dir}/readwrite" target="clean-test"/>
   </target>
 
 </project>

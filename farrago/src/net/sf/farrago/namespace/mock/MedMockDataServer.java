@@ -59,10 +59,13 @@ class MedMockDataServer
     public static final String PROP_EXECUTOR_IMPL = "EXECUTOR_IMPL";
     public static final String PROPVAL_JAVA = "JAVA";
     public static final String PROPVAL_FENNEL = "FENNEL";
+    public static final String PROP_EXTRACT_COLUMNS = "EXTRACT_COLUMNS";
+    public static final boolean DEFAULT_EXTRACT_COLUMNS = true;
 
     //~ Instance fields --------------------------------------------------------
 
     private MedAbstractDataWrapper wrapper;
+    protected boolean extractColumns;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -73,6 +76,12 @@ class MedMockDataServer
     {
         super(serverMofId, props);
         this.wrapper = wrapper;
+
+        extractColumns =
+            getBooleanProperty(
+                props,
+                PROP_EXTRACT_COLUMNS,
+                DEFAULT_EXTRACT_COLUMNS);
     }
 
     //~ Methods ----------------------------------------------------------------

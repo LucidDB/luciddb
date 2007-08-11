@@ -31,10 +31,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void BTreeReadExecStream::prepare(BTreeReadExecStreamParams const &params)
 {
     BTreeExecStream::prepare(params);
-    pReader = newReader();
-    projAccessor.bind(
-        pReader->getTupleAccessorForRead(),
-        params.outputProj);
+    outputProj.assign(params.outputProj.begin(), params.outputProj.end());
     tupleData.compute(params.outputTupleDesc);
 }
 
@@ -49,6 +46,22 @@ void BTreeReadExecStream::getResourceRequirements(
     
     // TODO:  use opt to govern prefetch and come up with a good formula
     optQuantity = minQuantity;
+}
+
+void BTreeReadExecStream::open(bool restart)
+{
+    BTreeExecStream::open(restart);
+
+    if (restart) {
+        return;
+    }
+
+    // Create the reader here rather than during prepare, in case the btree
+    // was dynamically created during stream graph open
+    pReader = newReader();
+    projAccessor.bind(
+        pReader->getTupleAccessorForRead(),
+        outputProj);
 }
 
 // TODO: When not projecting anything away, we could do producer buffer

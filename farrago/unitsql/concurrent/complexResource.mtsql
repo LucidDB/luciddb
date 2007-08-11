@@ -122,7 +122,7 @@ alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 @sync
 
 -- give thread 1 a chance to fetch
-@sleep 5000
+@sleep 10000
 
 -- this should result in an error indicating there isn't enough cache resource
 @err select sys_boot.mgmt.sleep(1), count(*)

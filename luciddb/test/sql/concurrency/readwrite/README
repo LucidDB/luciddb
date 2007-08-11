@@ -1,0 +1,1 @@
+tpch-throughput.mtsql simulates the throughput test required by tpch. It should only be run manually since there are update streams running in parallel with query streams and the result is undeterministic.

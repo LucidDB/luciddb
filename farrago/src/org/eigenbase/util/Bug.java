@@ -187,13 +187,6 @@ public abstract class Bug
     public static final boolean Frg283Fixed = false;
 
     /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-286">issue
-     * FRG-286: intermittent failure in FarragoObjectCacheTest.testMultipleThreadsExclusive</a> is
-     * fixed.
-     */
-    public static final boolean Frg286Fixed = false;
-
-    /**
      * Whether <a href="http://issues.eigenbase.org/browse/FNL-54">issue FNL-54:
      * cast time to timestamp should initialize date to current_date</a> is
      * fixed.

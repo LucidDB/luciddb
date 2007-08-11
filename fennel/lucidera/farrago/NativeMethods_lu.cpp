@@ -67,13 +67,6 @@ class ExecStreamSubFactory_lu
         return val.at(0);
     }
 
-    DynamicParamId readDynamicParamId(const int val)
-    {
-        // NOTE: zero is a special code for no parameter id
-        uint id = (val < 0) ? 0 : (uint) val;
-        return (DynamicParamId) id;
-    }
-
     void readClusterScan(
         ProxyLcsRowScanStreamDef &streamDef,
         LcsRowScanBaseExecStreamParams &params)
@@ -226,7 +219,8 @@ class ExecStreamSubFactory_lu
         CmdInterpreter::readTupleProjection(
             params.outputProj, streamDef.getOutputProj());
         params.insertRowCountParamId =
-            readDynamicParamId(streamDef.getInsertRowCountParamId());
+            pExecStreamFactory->readDynamicParamId(
+                streamDef.getInsertRowCountParamId());
         params.createIndex = streamDef.isCreateIndex();
 
         pEmbryo->init(new LbmGeneratorExecStream(), params);
@@ -250,9 +244,11 @@ class ExecStreamSubFactory_lu
             params.bTreeParams.push_back(bTreeParams);
         }
         params.insertRowCountParamId =
-            readDynamicParamId(streamDef.getInsertRowCountParamId());
+            pExecStreamFactory->readDynamicParamId(
+                streamDef.getInsertRowCountParamId());
         params.writeRowCountParamId =
-            readDynamicParamId(streamDef.getWriteRowCountParamId());
+            pExecStreamFactory->readDynamicParamId(
+                streamDef.getWriteRowCountParamId());
         pEmbryo->init(new LbmSplicerExecStream(), params);
     }
 
@@ -263,10 +259,12 @@ class ExecStreamSubFactory_lu
         pExecStreamFactory->readBTreeSearchStreamParams(params, streamDef);
 
         params.rowLimitParamId =
-            readDynamicParamId(streamDef.getRowLimitParamId());
+            pExecStreamFactory->readDynamicParamId(
+                streamDef.getRowLimitParamId());
 
         params.startRidParamId =
-            readDynamicParamId(streamDef.getStartRidParamId());
+            pExecStreamFactory->readDynamicParamId(
+                streamDef.getStartRidParamId());
 
         pEmbryo->init(new LbmSearchExecStream(), params);
     }
@@ -278,7 +276,8 @@ class ExecStreamSubFactory_lu
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
 
         params.ridLimitParamId =
-            readDynamicParamId(streamDef.getRidLimitParamId());
+            pExecStreamFactory->readDynamicParamId(
+                streamDef.getRidLimitParamId());
         pEmbryo->init(new LbmChopperExecStream(), params);
     }
 
@@ -292,13 +291,16 @@ class ExecStreamSubFactory_lu
         pExecStreamFactory->createPrivateScratchSegment(params);
 
         params.startRidParamId = 
-            readDynamicParamId(streamDef.getConsumerSridParamId());
+            pExecStreamFactory->readDynamicParamId(
+                streamDef.getConsumerSridParamId());
 
         params.segmentLimitParamId =
-            readDynamicParamId(streamDef.getSegmentLimitParamId());
+            pExecStreamFactory->readDynamicParamId(
+                streamDef.getSegmentLimitParamId());
 
         params.ridLimitParamId =
-            readDynamicParamId(streamDef.getRidLimitParamId());
+            pExecStreamFactory->readDynamicParamId(
+                streamDef.getRidLimitParamId());
 
         params.maxRid = (LcsRid) 0;
 
@@ -328,9 +330,11 @@ class ExecStreamSubFactory_lu
         ProxyLbmBitOpStreamDef &streamDef, LbmBitOpExecStreamParams &params)
     {
         params.rowLimitParamId =
-            readDynamicParamId(streamDef.getRowLimitParamId());
+            pExecStreamFactory->readDynamicParamId(
+                streamDef.getRowLimitParamId());
         params.startRidParamId =
-            readDynamicParamId(streamDef.getStartRidParamId());
+            pExecStreamFactory->readDynamicParamId(
+                streamDef.getStartRidParamId());
     }
     
     // implement FemVisitor

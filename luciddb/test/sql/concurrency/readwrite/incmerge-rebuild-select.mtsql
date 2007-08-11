@@ -1,0 +1,539 @@
+
+@nolockstep
+
+@setup
+
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+  @sync
+  @sync
+  @sync
+  @sync
+  @sync
+  @sync
+  @sync
+  @sync
+    set schema 'rwconcur';
+    truncate table lineitem;
+    truncate table lineitemu1;
+@end
+
+-----------------------------------------------------------
+
+@thread select
+
+  set schema 'rwconcur';
+
+  @sync
+    select count(*) from lineitem;
+    @sleep 200
+    select count(*) from lineitem;
+  @sync
+    select count(*) from lineitem;
+    @sleep 200
+    select count(*) from lineitem;
+  @sync
+    select count(*) from lineitem;
+    select count(*) from lineitem where l_shipmode = 'TRUCK';
+    @sleep 200
+    select count(*) from lineitem;
+  @sync
+    select count(*) from lineitem;
+    @sleep 200
+    select count(*) from lineitem;
+  @sync
+    select count(*) from lineitem;
+    @sleep 200
+    select count(*) from lineitem;
+  @sync
+    select count(*) from lineitem;
+    @sleep 200
+    select count(*) from lineitem;
+  @sync
+    select count(*) from lineitem;
+    @sleep 200
+    select count(*) from lineitem;
+  @sync
+    select count(*) from lineitem;
+    @sleep 200
+    select count(*) from lineitem;
+  @sync
+    select count(*) from lineitem;
+    @sleep 200
+    select count(*) from lineitem;
+  @sync
+    select count(*) from lineitem;
+    @sleep 200
+    select count(*) from lineitem;
+  @sync
+    select count(*) from lineitem;
+
+@end
+
+-----------------------------------------------------------
+
+@thread insert
+  set schema 'rwconcur';
+
+  @sync
+    insert into lineitemu1 select * from "lineitem1";
+    insert into lineitemu1 select * from "lineitem2";
+    alter table lineitemu1 rebuild;
+  @sync
+    insert into lineitemu1 select * from "lineitem3";
+    alter table lineitemu1 rebuild;
+  @sync
+    insert into lineitemu1 select * from "lineitem4";
+    alter table lineitemu1 rebuild;
+  @sync
+    insert into lineitemu1 select * from "lineitem5";
+    alter table lineitemu1 rebuild;
+  @sync
+    insert into lineitemu1 select * from "lineitem6";
+    alter table lineitemu1 rebuild;
+  @sync
+    insert into lineitemu1 select * from "lineitem7";
+    alter table lineitemu1 rebuild;
+  @sync
+    insert into lineitemu1 select * from "lineitem8";
+    alter table lineitemu1 rebuild;
+  @sync
+    insert into lineitemu1 select * from "lineitem9";
+    alter table lineitemu1 rebuild;
+  @sync
+    insert into lineitemu1 select * from "lineitem10";
+    alter table lineitemu1 rebuild;
+  @sync
+  @sync
+@end
+-----------------------------------------------------------
+
+@thread incrementalMerge
+
+  set schema 'rwconcur';
+
+  @sync
+    insert into lineitem select * from "lineitem1";    
+  @sync
+    alter table lineitem rebuild;
+    merge into lineitem tgt
+    using lineitemu1 as src
+    on
+      tgt.l_orderkey = src.l_orderkey and
+      tgt.l_linenumber = src.l_linenumber
+    when matched then update set
+      l_orderkey = src.l_orderkey,   
+      l_partkey = src.l_partkey
+    when not matched then
+      insert(
+      l_orderkey    ,
+      l_partkey     ,
+      l_suppkey     ,
+      l_linenumber  ,
+      l_quantity    ,
+      l_extendedprice  ,
+      l_discount    ,
+      l_tax         ,
+      l_returnflag  ,
+      l_linestatus  ,
+      l_shipdate    ,
+      l_commitdate  ,
+      l_receiptdate ,
+      l_shipinstruct , 
+      l_shipmode    ,
+      l_comment) 
+      values(
+      src.l_orderkey    ,
+      src.l_partkey     ,
+      src.l_suppkey     ,
+      src.l_linenumber  ,
+      src.l_quantity    ,
+      src.l_extendedprice  ,
+      src.l_discount    ,
+      src.l_tax         ,
+      src.l_returnflag  ,
+      src.l_linestatus  ,
+      src.l_shipdate    ,
+      src.l_commitdate  ,
+      src.l_receiptdate ,
+      src.l_shipinstruct , 
+      src.l_shipmode    ,
+      src.l_comment); 
+  @sync
+    delete from lineitem where l_shipmode = 'TRUCK';
+    merge into lineitem tgt
+    using lineitemu1 as src
+    on
+      tgt.l_orderkey = src.l_orderkey and
+      tgt.l_linenumber = src.l_linenumber
+    when matched then update set
+      l_orderkey = src.l_orderkey,   
+      l_partkey = src.l_partkey
+    when not matched then
+      insert(
+      l_orderkey    ,
+      l_partkey     ,
+      l_suppkey     ,
+      l_linenumber  ,
+      l_quantity    ,
+      l_extendedprice  ,
+      l_discount    ,
+      l_tax         ,
+      l_returnflag  ,
+      l_linestatus  ,
+      l_shipdate    ,
+      l_commitdate  ,
+      l_receiptdate ,
+      l_shipinstruct , 
+      l_shipmode    ,
+      l_comment) 
+      values(
+      src.l_orderkey    ,
+      src.l_partkey     ,
+      src.l_suppkey     ,
+      src.l_linenumber  ,
+      src.l_quantity    ,
+      src.l_extendedprice  ,
+      src.l_discount    ,
+      src.l_tax         ,
+      src.l_returnflag  ,
+      src.l_linestatus  ,
+      src.l_shipdate    ,
+      src.l_commitdate  ,
+      src.l_receiptdate ,
+      src.l_shipinstruct , 
+      src.l_shipmode    ,
+      src.l_comment); 
+   @sync
+    alter table lineitem rebuild;
+    merge into lineitem tgt
+    using lineitemu1 as src
+    on
+      tgt.l_orderkey = src.l_orderkey and
+      tgt.l_linenumber = src.l_linenumber
+    when matched then update set
+      l_orderkey = src.l_orderkey,   
+      l_partkey = src.l_partkey
+    when not matched then
+      insert(
+      l_orderkey    ,
+      l_partkey     ,
+      l_suppkey     ,
+      l_linenumber  ,
+      l_quantity    ,
+      l_extendedprice  ,
+      l_discount    ,
+      l_tax         ,
+      l_returnflag  ,
+      l_linestatus  ,
+      l_shipdate    ,
+      l_commitdate  ,
+      l_receiptdate ,
+      l_shipinstruct , 
+      l_shipmode    ,
+      l_comment) 
+      values(
+      src.l_orderkey    ,
+      src.l_partkey     ,
+      src.l_suppkey     ,
+      src.l_linenumber  ,
+      src.l_quantity    ,
+      src.l_extendedprice  ,
+      src.l_discount    ,
+      src.l_tax         ,
+      src.l_returnflag  ,
+      src.l_linestatus  ,
+      src.l_shipdate    ,
+      src.l_commitdate  ,
+      src.l_receiptdate ,
+      src.l_shipinstruct , 
+      src.l_shipmode    ,
+      src.l_comment);     
+  @sync
+    delete from lineitem where l_shipmode <> 'TRUCK';
+    alter table lineitem rebuild;
+    analyze table lineitem compute statistics for all columns;
+    merge into lineitem tgt
+    using lineitemu1 as src
+    on
+      tgt.l_orderkey = src.l_orderkey and
+      tgt.l_linenumber = src.l_linenumber
+    when matched then update set
+      l_orderkey = src.l_orderkey,   
+      l_partkey = src.l_partkey
+    when not matched then
+      insert(
+      l_orderkey    ,
+      l_partkey     ,
+      l_suppkey     ,
+      l_linenumber  ,
+      l_quantity    ,
+      l_extendedprice  ,
+      l_discount    ,
+      l_tax         ,
+      l_returnflag  ,
+      l_linestatus  ,
+      l_shipdate    ,
+      l_commitdate  ,
+      l_receiptdate ,
+      l_shipinstruct , 
+      l_shipmode    ,
+      l_comment) 
+      values(
+      src.l_orderkey    ,
+      src.l_partkey     ,
+      src.l_suppkey     ,
+      src.l_linenumber  ,
+      src.l_quantity    ,
+      src.l_extendedprice  ,
+      src.l_discount    ,
+      src.l_tax         ,
+      src.l_returnflag  ,
+      src.l_linestatus  ,
+      src.l_shipdate    ,
+      src.l_commitdate  ,
+      src.l_receiptdate ,
+      src.l_shipinstruct , 
+      src.l_shipmode    ,
+      src.l_comment);     
+   @sync
+    alter table lineitem rebuild;
+    analyze table lineitem compute statistics for all columns;
+    merge into lineitem tgt
+    using lineitemu1 as src
+    on
+      tgt.l_orderkey = src.l_orderkey and
+      tgt.l_linenumber = src.l_linenumber
+    when matched then update set
+      l_orderkey = src.l_orderkey,   
+      l_partkey = src.l_partkey
+    when not matched then
+      insert(
+      l_orderkey    ,
+      l_partkey     ,
+      l_suppkey     ,
+      l_linenumber  ,
+      l_quantity    ,
+      l_extendedprice  ,
+      l_discount    ,
+      l_tax         ,
+      l_returnflag  ,
+      l_linestatus  ,
+      l_shipdate    ,
+      l_commitdate  ,
+      l_receiptdate ,
+      l_shipinstruct , 
+      l_shipmode    ,
+      l_comment) 
+      values(
+      src.l_orderkey    ,
+      src.l_partkey     ,
+      src.l_suppkey     ,
+      src.l_linenumber  ,
+      src.l_quantity    ,
+      src.l_extendedprice  ,
+      src.l_discount    ,
+      src.l_tax         ,
+      src.l_returnflag  ,
+      src.l_linestatus  ,
+      src.l_shipdate    ,
+      src.l_commitdate  ,
+      src.l_receiptdate ,
+      src.l_shipinstruct , 
+      src.l_shipmode    ,
+      src.l_comment);     
+   @sync
+    truncate table lineitem;
+    alter table lineitem rebuild;
+    merge into lineitem tgt
+    using lineitemu1 as src
+    on
+      tgt.l_orderkey = src.l_orderkey and
+      tgt.l_linenumber = src.l_linenumber
+    when matched then update set
+      l_orderkey = src.l_orderkey,   
+      l_partkey = src.l_partkey
+    when not matched then
+      insert(
+      l_orderkey    ,
+      l_partkey     ,
+      l_suppkey     ,
+      l_linenumber  ,
+      l_quantity    ,
+      l_extendedprice  ,
+      l_discount    ,
+      l_tax         ,
+      l_returnflag  ,
+      l_linestatus  ,
+      l_shipdate    ,
+      l_commitdate  ,
+      l_receiptdate ,
+      l_shipinstruct , 
+      l_shipmode    ,
+      l_comment) 
+      values(
+      src.l_orderkey    ,
+      src.l_partkey     ,
+      src.l_suppkey     ,
+      src.l_linenumber  ,
+      src.l_quantity    ,
+      src.l_extendedprice  ,
+      src.l_discount    ,
+      src.l_tax         ,
+      src.l_returnflag  ,
+      src.l_linestatus  ,
+      src.l_shipdate    ,
+      src.l_commitdate  ,
+      src.l_receiptdate ,
+      src.l_shipinstruct , 
+      src.l_shipmode    ,
+      src.l_comment);     
+   @sync
+    alter table lineitem rebuild;
+    merge into lineitem tgt
+    using lineitemu1 as src
+    on
+      tgt.l_orderkey = src.l_orderkey and
+      tgt.l_linenumber = src.l_linenumber
+    when matched then update set
+      l_orderkey = src.l_orderkey,   
+      l_partkey = src.l_partkey
+    when not matched then
+      insert(
+      l_orderkey    ,
+      l_partkey     ,
+      l_suppkey     ,
+      l_linenumber  ,
+      l_quantity    ,
+      l_extendedprice  ,
+      l_discount    ,
+      l_tax         ,
+      l_returnflag  ,
+      l_linestatus  ,
+      l_shipdate    ,
+      l_commitdate  ,
+      l_receiptdate ,
+      l_shipinstruct , 
+      l_shipmode    ,
+      l_comment) 
+      values(
+      src.l_orderkey    ,
+      src.l_partkey     ,
+      src.l_suppkey     ,
+      src.l_linenumber  ,
+      src.l_quantity    ,
+      src.l_extendedprice  ,
+      src.l_discount    ,
+      src.l_tax         ,
+      src.l_returnflag  ,
+      src.l_linestatus  ,
+      src.l_shipdate    ,
+      src.l_commitdate  ,
+      src.l_receiptdate ,
+      src.l_shipinstruct , 
+      src.l_shipmode    ,
+      src.l_comment);     
+  @sync
+    delete from lineitem where 1 = 1;
+    alter table lineitem rebuild;
+    merge into lineitem tgt
+    using lineitemu1 as src
+    on
+      tgt.l_orderkey = src.l_orderkey and
+      tgt.l_linenumber = src.l_linenumber
+    when matched then update set
+      l_orderkey = src.l_orderkey,   
+      l_partkey = src.l_partkey
+    when not matched then
+      insert(
+      l_orderkey    ,
+      l_partkey     ,
+      l_suppkey     ,
+      l_linenumber  ,
+      l_quantity    ,
+      l_extendedprice  ,
+      l_discount    ,
+      l_tax         ,
+      l_returnflag  ,
+      l_linestatus  ,
+      l_shipdate    ,
+      l_commitdate  ,
+      l_receiptdate ,
+      l_shipinstruct , 
+      l_shipmode    ,
+      l_comment) 
+      values(
+      src.l_orderkey    ,
+      src.l_partkey     ,
+      src.l_suppkey     ,
+      src.l_linenumber  ,
+      src.l_quantity    ,
+      src.l_extendedprice  ,
+      src.l_discount    ,
+      src.l_tax         ,
+      src.l_returnflag  ,
+      src.l_linestatus  ,
+      src.l_shipdate    ,
+      src.l_commitdate  ,
+      src.l_receiptdate ,
+      src.l_shipinstruct , 
+      src.l_shipmode    ,
+      src.l_comment);
+  @sync
+    delete from lineitem where 0 = 1;
+    alter table lineitem rebuild;
+    merge into lineitem tgt
+    using lineitemu1 as src
+    on
+      tgt.l_orderkey = src.l_orderkey and
+      tgt.l_linenumber = src.l_linenumber
+    when matched then update set
+      l_orderkey = src.l_orderkey,   
+      l_partkey = src.l_partkey
+    when not matched then
+      insert(
+      l_orderkey    ,
+      l_partkey     ,
+      l_suppkey     ,
+      l_linenumber  ,
+      l_quantity    ,
+      l_extendedprice  ,
+      l_discount    ,
+      l_tax         ,
+      l_returnflag  ,
+      l_linestatus  ,
+      l_shipdate    ,
+      l_commitdate  ,
+      l_receiptdate ,
+      l_shipinstruct , 
+      l_shipmode    ,
+      l_comment) 
+      values(
+      src.l_orderkey    ,
+      src.l_partkey     ,
+      src.l_suppkey     ,
+      src.l_linenumber  ,
+      src.l_quantity    ,
+      src.l_extendedprice  ,
+      src.l_discount    ,
+      src.l_tax         ,
+      src.l_returnflag  ,
+      src.l_linestatus  ,
+      src.l_shipdate    ,
+      src.l_commitdate  ,
+      src.l_receiptdate ,
+      src.l_shipinstruct , 
+      src.l_shipmode    ,
+      src.l_comment);       
+  @sync
+
+@end
+
+-----------------------------------------------------------
+

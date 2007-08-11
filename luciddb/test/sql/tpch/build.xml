@@ -45,8 +45,8 @@
   <property name="bh.log.basedir" value="${tpch.dir}/testlog" />
 
   <!-- directory of flat files -->
-  <property name="ffsource.dir" value="${open.dir}/thirdparty/tpch/data"/>
-  <property name="ff.copy.dir" value="${tpch.dir}/ff-copy"/>
+  <property name="ffsource.dir" value="${open.dir}/thirdparty/tpch/dataMultiProcess"/>
+  <property name="ff.dir" value="${tpch.dir}/ff"/>
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
@@ -70,7 +70,7 @@
         <globmapper from="*.tmpl" to="*"/>
       </compositemapper>
       <filterset>
-        <filter token="FFDIR" value="${ff.copy.dir}/${datasize.param}"/>
+        <filter token="FFDIR" value="${ff.dir}/${datasize.param}"/>
         <filter token="DIR" value="${gensql.dir}/${datasize.param}"/>
       </filterset>
     </copy>
@@ -97,18 +97,12 @@
         <property file="run.properties"/>
       </else>
     </if>
+
     <!-- generate sql -->
-    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <foreach list="100M" param="datasize.param" target="gen-sql"/>
-      </else>
-    </if>
+    <foreach list="100M" param="datasize.param" target="gen-sql"/>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${tpch.dir}"
       testscript="${testfile}"
@@ -117,38 +111,39 @@
 
   <target name="create-db">
     <condition property="db.created">
-      <and>
-        <available file="${ffsource.dir}/datasize" type="file"/>
-        <isfileselected file="${ffsource.dir}/datasize">
-          <contains text="${datasize}" casesensitive="no"/>
-        </isfileselected>
-      </and>
+      <available file="${ffsource.dir}/${datasize}" type="dir"/>
     </condition>
 
     <if>
       <istrue value="${db.created}"/>
       <then/>
       <else>
-        <exec executable="${thirdparty.dir}/tpch/createdb"
+        <exec executable="${thirdparty.dir}/tpch/createdbMultiProcess"
           dir="${thirdparty.dir}/tpch">
           <arg line="${datasize}"/>
         </exec>
       </else>
     </if>
 
-    <sync todir="${ff.copy.dir}/${datasize}" verbose="true">
-      <fileset dir="${ffsource.dir}"/>
+    <sync todir="${ff.dir}/${datasize}" verbose="true">
+      <fileset dir="${ffsource.dir}/${datasize}"/>
     </sync>
   </target>
 
   <target name="clean">
-    <delete dir="${bh.log.basedir}"/>
-    <delete dir="${gensql.dir}"/>
+    <antcall target="clean-test"/>
+    <delete dir="${ff.dir}"/>
+    <delete file="datasize"/>
     <delete file="run.properties"/>
   </target>
 
+  <target name="clean-test">
+    <delete dir="${bh.log.basedir}"/>
+    <delete dir="${gensql.dir}"/>
+  </target>
+
   <target name="clean-ff" depends="clean">
-    <delete dir="${ff.copy.dir}"/>
+    <delete dir="${ff.dir}"/>
   </target>
 
 </project>

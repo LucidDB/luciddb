@@ -127,7 +127,7 @@ protected:
         ExecStreamEmbryo &transformStreamEmbryo);
 
     /**
-     * Defines and prepares a graph consisting of two source streams
+     * Defines and prepares a graph consisting of a list of source streams
      * and one confluence stream.
      *
      * @param sourceStreamEmbryos list of embryonic source streams that
@@ -140,6 +140,22 @@ protected:
      */
     SharedExecStream prepareConfluenceGraph(
         std::vector<ExecStreamEmbryo> &sourceStreamEmbryos,
+        ExecStreamEmbryo &confluenceStreamEmbryo);
+
+    /**
+     * Defines and prepares a graph consisting of one or more source streams
+     * and one confluence stream.  Each source stream can be a list of streams.
+     *
+     * @param sourceStreamEmbryosList list of embryonic source streams which
+     * produce tuples
+     *
+     * @param confluenceStreamEmbryo embryonic confluence stream which processes
+     * tuples produced by the source streams
+     *
+     * @return output buffer stream
+     */
+    SharedExecStream prepareConfluenceGraph(
+        std::vector<std::vector<ExecStreamEmbryo> > &sourceStreamEmbryosList,
         ExecStreamEmbryo &confluenceStreamEmbryo);
 
     /**

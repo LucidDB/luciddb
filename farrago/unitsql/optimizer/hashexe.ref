@@ -238,10 +238,9 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[2, 3, 4, 0, 1]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO, INTEGER DEPTNOA, INTEGER DEPTNOB) NOT NULL])'
-'      LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[2, 2]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOB]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'    LhxJoinRel(leftKeys=[[2, 2]], rightKeys=[[0, 1]], joinType=[INNER])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOB]])'
 > 
 > select * from lhxemps, lhxdepts
 > where lhxemps.deptno = lhxdepts.deptnoA and lhxemps.deptno = lhxdepts.deptnoB
@@ -1147,11 +1146,14 @@
 > select * from lhxemps, lhxdepts
 > where lhxemps.deptno is not distinct from lhxdepts.deptnoA;
 'column0'
-'IterCalcRel(expr#0..4=[{inputs}], expr#5=[IS NULL($t2)], expr#6=[IS NULL($t3)], expr#7=[=($t2, $t3)], expr#8=[CASE($t5, $t6, $t6, $t5, $t7)], expr#9=[CAST($t8):BOOLEAN NOT NULL], proj#0..4=[{exprs}], $condition=[$t9])'
-'  FennelToIteratorConverter'
-'    FennelCartesianProductRel(leftouterjoin=[false])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOB]])'
+'FennelToIteratorConverter'
+'  FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[2]], joinKeyParamIds=[[1]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NULL($t2)], expr#4=[IS NULL($t0)], expr#5=[=($t2, $t0)], expr#6=[CASE($t3, $t4, $t4, $t3, $t5)], expr#7=[CAST($t6):BOOLEAN NOT NULL], proj#0..1=[{exprs}], $condition=[$t7])'
+'        FennelToIteratorConverter'
+'          FennelReshapeRel(projection=[[0, 1]], dynamicParameters=[[1]], paramCompareOffsets=[[-1]], outputRowType=[RecordType(INTEGER DEPTNOA, INTEGER DEPTNOB, INTEGER DEPTNO) NOT NULL])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOB]])'
 > 
 > --------------------
 > -- hash aggregate --

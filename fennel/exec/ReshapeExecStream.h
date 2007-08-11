@@ -26,11 +26,46 @@
 
 #include "fennel/common/FemEnums.h"
 #include "fennel/exec/ConduitExecStream.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/tuple/TupleProjectionAccessor.h"
 
 #include <boost/shared_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
+
+/**
+ * Structure used to store information about dynamic parameters used by
+ * the ReshapeExecStream
+ */
+struct ReshapeParameter
+{
+    /**
+     * Dynamic parameter id
+     */
+    DynamicParamId dynamicParamId;
+
+    /**
+     * Offset within the input tuple that this parameter should be compared
+     * against.  If no comparison needs to be done, the offset is set to MAXU.
+     */
+    uint compareOffset;
+
+    /**
+     * If true, append this parameter to the end of the output tuple, in the
+     * order of the parameter ids
+     */
+    bool outputParam;
+
+    ReshapeParameter(
+        DynamicParamId dynamicParamIdInit,
+        uint compareOffsetInit,
+        bool outputParamInit) :
+        dynamicParamId(dynamicParamIdInit),
+        compareOffset(compareOffsetInit),
+        outputParam(outputParamInit)
+    {
+    }
+};
 
 /**
  * ReshapeExecStreamParams defines parameters for ReshapeExecStream.
@@ -51,7 +86,9 @@ struct ReshapeExecStreamParams : public ConduitExecStreamParams
 
     /**
      * Optional tuple projection representing the columns to be compared
-     * against the comparison tuple
+     * against the comparison tuple and/or dynamic parameters.  The columns
+     * being compared against dynamic parameters appear at the end of
+     * the projection.
      */
     TupleProjection inputCompareProj;
 
@@ -59,6 +96,12 @@ struct ReshapeExecStreamParams : public ConduitExecStreamParams
      * Tuple projection of the output tuple from the input stream
      */
     TupleProjection outputProj;
+
+    /**
+     * Dynamic parameters used by this stream that are compared to the input
+     * row and/or written to the output tuple
+     */
+    std::vector<ReshapeParameter> dynamicParameters;
 };
 
 /**
@@ -73,6 +116,13 @@ struct ReshapeExecStreamParams : public ConduitExecStreamParams
  * type null -> type not null, iff there is a != null filter on the column
  * </code></pre>
  *
+ * In addition, input can be passed into the stream through dynamic parameters.
+ * Those dynamic parameters can be compared as well as written to the output
+ * stream.  Parameters written to the output stream are appended to the end
+ * of each input stream tuple in the order in which the parameters are
+ * specified.  They cannot be cast; so therefore their types must match the
+ * expected output types.
+ *
  * @author Zelaine Fong
  * @version $Id$
  */
@@ -82,6 +132,17 @@ class ReshapeExecStream : public ConduitExecStream
      * Comparison operator
      */
     CompOperator compOp;
+
+    /**
+     * Dynamic parameters
+     */
+    std::vector<ReshapeParameter> dynamicParameters;
+
+    /**
+     * True if the dynamic parameters have been read.  They are only read
+     * once when the stream is first executed
+     */
+    bool paramsRead;
 
     /**
      * TupleData corresponding to the comparison tuple that will be compared
@@ -110,6 +171,11 @@ class ReshapeExecStream : public ConduitExecStream
      * Tuple descriptor for the comparison tuple
      */
     TupleDescriptor compTupleDesc;
+
+    /**
+     * Number of dynamic parameters that are to be compared
+     */
+    uint numCompDynParams;
 
     /**
      * Tuple projection used in the case when the comparison is non-equality
@@ -158,6 +224,36 @@ class ReshapeExecStream : public ConduitExecStream
      */
     bool producePending;
 
+    /** 
+     * Initializes tuple descriptors and data that will be used in
+     * comparisons
+     *
+     * @param params stream parameters
+     *
+     * @param inputDesc descriptor of the input tuple stream
+     *
+     * @param inputAccessor accessor for the input tuple stream
+     */
+    void initCompareData(
+        ReshapeExecStreamParams const &params,
+        TupleDescriptor const &inputDesc,
+        TupleAccessor const &inputAccessor);
+
+    /**
+     * Copies the comparison tuple from the input buffer and unmarshals it
+     * into a specified TupleData
+     *
+     * @param tupleDesc TupleDescriptor corresponding to the TupleData
+     *
+     * @param tupleData TupleData that the tuple will be unmarshalled into
+     *
+     * @param tupleBuffer input tuple buffer
+     */
+    void copyCompareTuple(
+        TupleDescriptor const &tupleDesc,
+        TupleData &tupleData,
+        PBuffer tupleBuffer);
+
     /**
      * Verifies that in the case where simple casting is required, the
      * types of the input and output meet the restrictions on the type
@@ -185,6 +281,14 @@ class ReshapeExecStream : public ConduitExecStream
      * @return true if the column does have a null filter check on it
      */
     bool nullFilter(const TupleProjection &compareProj, uint colno);
+
+    /**
+     * Reads the dynamic parameters and setups the comparison and output
+     * tuple datas to point to the parameter tuple datas.  Note that the
+     * parameter values are accessed by reference, so it's expected that
+     * the parameter values will remain fixed during stream execution.
+     */
+    void readDynamicParams();
 
     /**
      * Compares input data against the base comparison tuple.

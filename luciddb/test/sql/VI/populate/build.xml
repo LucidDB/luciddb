@@ -116,21 +116,14 @@
         <property file="run.properties"/>
       </else>
     </if>
+
     <!-- generate sql -->
-    <available file="${gensql.dir}" type="dir"
-      property="sql.generated"/>
-    <if>
-      <isset property="sql.generated"/>
-      <then/>
-      <else>
-        <foreach list="oracle,sqlserver,flatfile,csvjdbc" 
-          param="prop.source"
-          target="gen-sql"/>
-      </else>
-    </if>
+    <foreach list="oracle,sqlserver,flatfile,csvjdbc" 
+      param="prop.source"
+      target="gen-sql"/>
   </target>
 
-  <target name="test" depends="gen-all-sql">
+  <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
       basedir="${vi_populate.dir}"
       testscript="${testfile}"
@@ -172,10 +165,15 @@
   </target>
 
   <target name="clean">
+    <antcall target="clean-test"/>
+    <delete dir="${csv.dir}"/>
+    <delete file="run.properties"/>
+  </target>
+
+  <target name="clean-test">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
-    <delete file="run.properties"/>
     <delete file="config.properties"/>
   </target>
 

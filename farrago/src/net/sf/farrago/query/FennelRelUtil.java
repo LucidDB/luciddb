@@ -39,6 +39,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -303,7 +304,7 @@ public abstract class FennelRelUtil
     /**
      * @return the preparing stmt that a relational expression belongs to
      */
-    public static FarragoPreparingStmt getPreparingStmt(FennelRel rel)
+    public static FarragoPreparingStmt getPreparingStmt(RelNode rel)
     {
         RelOptCluster cluster = rel.getCluster();
         RelOptPlanner planner = cluster.getPlanner();
@@ -727,7 +728,7 @@ public abstract class FennelRelUtil
         }
     }
 
-    public static FennelRelImplementor getRelImplementor(FennelRel rel)
+    public static FennelRelImplementor getRelImplementor(RelNode rel)
     {
         return (FennelRelImplementor) getPreparingStmt(rel).getRelImplementor(
             rel.getCluster().getRexBuilder());
@@ -828,6 +829,149 @@ public abstract class FennelRelUtil
                 RhBase64.DONT_BREAK_LINES);
 
         return base64;
+    }
+    
+    /**
+     * Extracts from a sargable predicate represented by a SargBinding list
+     * the column ordinals and operands in the individual sub-expressions,
+     * provided all but one of the filters is a equality predicate.  The one
+     * non-equality predicate must be a single range predicate.
+     * 
+     * @param sargBindingList filter represented as a SargBinding list
+     * @param filterCols returns the list of filter columns in the
+     * expression
+     * @param filterOperands returns the list of expressions that the filter
+     * columns are compared to
+     * @param op returns COMP_EQ if the predicates are all equality; otherwise,
+     * returns the value of the one non-equality predicate
+     * 
+     * @return true if all but one of the predicates is an equality predicate
+     * with the one non-equality predicate being a single range predicate
+     */
+    public static boolean extractSimplePredicates(
+        List<SargBinding> sargBindingList,
+        List<RexInputRef> filterCols,
+        List<RexNode> filterOperands,
+        List<CompOperatorEnum> op)
+    {
+        CompOperatorEnum rangeOp = CompOperatorEnum.COMP_NOOP;
+        RexInputRef rangeRef = null;
+        RexNode rangeOperand = null;
+
+        for (SargBinding sargBinding : sargBindingList) {
+            
+            SargIntervalSequence sargSeq = sargBinding.getExpr().evaluate();
+            
+            if (sargSeq.isPoint()) {
+                filterCols.add(sargBinding.getInputRef());
+                List<SargInterval> sargIntervalList = sargSeq.getList();
+                assert(sargIntervalList.size() == 1);
+                SargInterval sargInterval = sargIntervalList.get(0);
+                SargEndpoint lowerBound = sargInterval.getLowerBound();
+                filterOperands.add(lowerBound.getCoordinate());
+                
+            } else {
+                assert(rangeRef == null);
+                // if we have a range predicate, just keep track of it for now,
+                // since it needs to be put at the end of our lists
+                List<SargInterval> sargIntervalList = sargSeq.getList();
+                if (sargIntervalList.size() != 1) {
+                    return false;
+                }
+                SargInterval sargInterval = sargIntervalList.get(0);
+                SargEndpoint lowerBound = sargInterval.getLowerBound();
+                SargEndpoint upperBound = sargInterval.getUpperBound();
+                // check the upper bound first to avoid the null in the
+                // lower bound
+                if (upperBound.isFinite()) {
+                    rangeOperand = upperBound.getCoordinate();
+                    if (upperBound.getStrictness() == SargStrictness.OPEN) {
+                        rangeOp = CompOperatorEnum.COMP_LT;
+                    } else {
+                        rangeOp = CompOperatorEnum.COMP_LE;
+                    }
+                } else if (lowerBound.isFinite()) {
+                    rangeOperand = lowerBound.getCoordinate();
+                    if (lowerBound.getStrictness() == SargStrictness.OPEN) {
+                        rangeOp = CompOperatorEnum.COMP_GT;
+                    } else {
+                        rangeOp = CompOperatorEnum.COMP_GE;
+                    }
+                } else {
+                    return false;
+                }
+                rangeRef = sargBinding.getInputRef();
+            }
+        }
+        
+        // if there was a range filter, add it to the end of our lists
+        if (rangeRef == null) {
+            if (!filterCols.isEmpty()) {
+                op.add(CompOperatorEnum.COMP_EQ);
+            }
+        } else {
+            filterCols.add(rangeRef);
+            filterOperands.add(rangeOperand);
+            op.add(rangeOp);          
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Returns a FennelBufferRel in the case where it makes sense to buffer the
+     * RHS into the cartesian product join. This is done by comparing the cost
+     * between the buffered and non-buffered cases.
+     *
+     * @param left left hand input into the cartesian join
+     * @param right right hand input into the cartesian join
+     *
+     * @return created FennelBufferRel if it makes sense to buffer the RHS
+     */
+    public static FennelBufferRel bufferRight(RelNode left, RelNode right)
+    {
+        FennelBufferRel bufRel =
+            new FennelBufferRel(right.getCluster(), right, false, true);
+
+        // if we don't have a rowcount for the LHS, then just go ahead and
+        // buffer
+        Double nRowsLeft = RelMetadataQuery.getRowCount(left);
+        if (nRowsLeft == null) {
+            return bufRel;
+        }
+
+        // If we know that the RHS is not capable of restart, then
+        // force buffering.
+        if (!FarragoRelMetadataQuery.canRestart(right)) {
+            return bufRel;
+        }
+
+        // Cost without buffering is:
+        // getCumulativeCost(LHS) +
+        //     getRowCount(LHS) * getCumulativeCost(RHS)
+        //
+        // Cost with buffering is:
+        // getCumulativeCost(LHS) + getCumulativeCost(RHS) +
+        //     getRowCount(LHS) * getNonCumulativeCost(buffering) * 3;
+        //
+        // The times 3 represents the overhead of caching.  The "3"
+        // is arbitrary at this point.
+        //
+        // To decide if buffering makes sense, take the difference between the
+        // two costs described above.
+        RelOptCost rightCost = RelMetadataQuery.getCumulativeCost(right);
+        RelOptCost noBufferPlanCost = rightCost.multiplyBy(nRowsLeft);
+
+        RelOptCost bufferCost = RelMetadataQuery.getNonCumulativeCost(bufRel);
+        bufferCost = bufferCost.multiplyBy(3);
+        RelOptCost bufferPlanCost = bufferCost.multiplyBy(nRowsLeft);
+        bufferPlanCost = bufferPlanCost.plus(rightCost);
+
+        if (bufferPlanCost.isLt(noBufferPlanCost)) {
+            return bufRel;
+        } else {
+            return null;
+        }
     }
 }
 

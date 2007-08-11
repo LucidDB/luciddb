@@ -1,0 +1,147 @@
+@nolockstep
+
+@setup
+
+  set schema 'rwconcur';
+
+  alter system set "expectedConcurrentStatements" = 10;
+
+  create table lineitem2 (
+    l_orderkey    integer,
+    l_partkey     integer not null,
+    l_suppkey     integer not null,
+    l_linenumber  integer,
+    l_quantity    decimal(15,2) not null,
+    l_extendedprice  decimal(15,2) not null,
+    l_discount    decimal(15,2) not null,
+    l_tax         decimal(15,2) not null,
+    l_returnflag  varchar(1) not null,
+    l_linestatus  varchar(1) not null,
+    l_shipdate    date not null,
+    l_commitdate  date not null,
+    l_receiptdate date not null,
+    l_shipinstruct varchar(25) not null,
+    l_shipmode    varchar(10) not null,
+    l_comment      varchar(44) not null,
+    primary key(l_orderkey, l_linenumber)
+  );
+
+  insert into lineitem select * from "lineitem";
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+    set schema 'rwconcur';
+    truncate table lineitem;
+    drop table lineitem2;
+@end
+
+-----------------------------------------------------------
+
+@thread alter
+
+  set schema 'rwconcur';
+  delete from lineitem where l_shipmode in ('TRUCK','MAIL');
+
+  @sync
+  alter table lineitem rebuild;
+  select count(*) from lineitem;
+
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread reader
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+  select * from lineitem, orders
+  where
+    l_orderkey = o_orderkey and
+    l_shipmode in ('TRUCK','MAIL');
+
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread inserter
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+  insert into lineitem2 select * from lineitem;
+  select count(*) from lineitem2;
+
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread failDelete
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100 
+  @err delete from lineitem;
+
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread failInsert
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+  @err insert into lineitem select * from "lineitem";
+
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread failMerge
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+  @err merge into lineitem tgt
+  using lineitem as src
+  on tgt.l_orderkey = src.l_orderkey and
+  tgt.l_linenumber = src.l_linenumber
+  when matched then update set l_orderkey = 0;
+
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread failRebuild
+
+  set schema 'rwconcur';
+
+  @sync
+  @sleep 100
+  @err alter table lineitem rebuild;
+
+  @sync
+
+@end

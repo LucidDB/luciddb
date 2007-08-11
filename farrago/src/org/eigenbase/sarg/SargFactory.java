@@ -121,15 +121,35 @@ public class SargFactory
     }
 
     /**
-     * @param simpleMode if true, the analyzer restrictes the types of
-     * predicates it allows; only one predicate is allowed per RexInputRef, and
-     * only one range predicate is allowed
-     *
+     * @param simpleMode if true, the analyzer restricts the types of
+     * predicates it allows; the following are disallowed - conjuntions on the
+     * same RexInputRef, more than one range predicate, and all disjunctions
+     * 
      * @return new analyzer for rex expressions
      */
     public SargRexAnalyzer newRexAnalyzer(boolean simpleMode)
     {
         return new SargRexAnalyzer(this, simpleMode);
+    }
+    
+    /**
+     * @param lowerRexInputIdx if >= 0, treat RexInputRefs whose index is
+     * within the range [lowerRexInputIdx, upperRexInputIdx) as coordinates in
+     * expressions
+     * 
+     * @param upperRexInputIdx if >= 0, treat RexInputRefs whose index is
+     * within the range [lowerRexInputIdx, upperRexInputIdx) as coordinates in
+     * expressions
+     * 
+     * @return new analyzer for rex expressions
+     */
+    public SargRexAnalyzer newRexAnalyzer(
+        int lowerRexInputIdx,
+        int upperRexInputIdx)
+    {
+        return
+            new SargRexAnalyzer(
+                this, true, lowerRexInputIdx, upperRexInputIdx);
     }
 
     /**

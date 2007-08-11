@@ -33,8 +33,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void CartesianJoinExecStream::prepare(
     CartesianJoinExecStreamParams const &params)
 {
-    assert(inAccessors.size() == 2);
-    
+    assert(checkNumInputs());
     pLeftBufAccessor = inAccessors[0];
     assert(pLeftBufAccessor);
 
@@ -80,10 +79,14 @@ void CartesianJoinExecStream::prepare(
     ConfluenceExecStream::prepare(params);
 }
 
+bool CartesianJoinExecStream::checkNumInputs()
+{
+    return (inAccessors.size() == 2);
+}
+
 void CartesianJoinExecStream::open(bool restart)
 {
     ConfluenceExecStream::open(restart);
-    rightInputEmpty = true;
 }
 
 // trace buffer state
@@ -129,6 +132,8 @@ ExecStreamResult CartesianJoinExecStream::execute(
                 return EXECRC_BUF_UNDERFLOW;
             }
             pLeftBufAccessor->unmarshalTuple(outputData);
+            processLeftInput();
+            rightInputEmpty = true;
         }
         for (;;) {
             if (!pRightBufAccessor->isTupleConsumptionPending()) {
@@ -189,6 +194,10 @@ ExecStreamResult CartesianJoinExecStream::execute(
             }
         }
     }
+}
+
+void CartesianJoinExecStream::processLeftInput()
+{
 }
 
 FENNEL_END_CPPFILE("$Id$");

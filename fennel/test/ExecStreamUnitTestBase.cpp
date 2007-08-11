@@ -149,23 +149,43 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
     std::vector<ExecStreamEmbryo> &sourceStreamEmbryos,
     ExecStreamEmbryo &confluenceStreamEmbryo)
 {
+    std::vector<std::vector<ExecStreamEmbryo> > sourceStreamEmbryosList;
     std::vector<ExecStreamEmbryo>::iterator it;
-
+    std::vector<ExecStreamEmbryo> sourceStreamList;
     for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
-        ++it)
+        it++)
     {
-        pGraphEmbryo->saveStreamEmbryo(*it);
+        sourceStreamList.clear();
+        sourceStreamList.push_back(*it);
+        sourceStreamEmbryosList.push_back(sourceStreamList);
     }
+
+    return
+        prepareConfluenceGraph(sourceStreamEmbryosList, confluenceStreamEmbryo);
+}
+
+SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
+    std::vector<std::vector<ExecStreamEmbryo> > &sourceStreamEmbryosList,
+    ExecStreamEmbryo &confluenceStreamEmbryo)
+{
     pGraphEmbryo->saveStreamEmbryo(confluenceStreamEmbryo);
-    
-    for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
-        ++it)
-    {
+
+    for (int i = 0; i < sourceStreamEmbryosList.size(); i++) {
+        for (int j = 0; j < sourceStreamEmbryosList[i].size(); j++) {
+            pGraphEmbryo->saveStreamEmbryo(sourceStreamEmbryosList[i][j]);
+        }
+
+        // connect streams in each sourceStreamEmbryos list in a cascade
+        for (int j = 1; j < sourceStreamEmbryosList[i].size(); j++) {
+            pGraphEmbryo->addDataflow(
+                sourceStreamEmbryosList[i][j-1].getStream()->getName(),
+                sourceStreamEmbryosList[i][j].getStream()->getName());
+        }
         pGraphEmbryo->addDataflow(
-            (*it).getStream()->getName(),
+            sourceStreamEmbryosList[i].back().getStream()->getName(),
             confluenceStreamEmbryo.getStream()->getName());
     }
-
+    
     SharedExecStream pAdaptedStream =
         pGraphEmbryo->addAdapterFor(
             confluenceStreamEmbryo.getStream()->getName(), 0, 

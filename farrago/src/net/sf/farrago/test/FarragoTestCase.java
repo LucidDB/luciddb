@@ -860,6 +860,7 @@ public abstract class FarragoTestCase
             // NOTE:  don't use DatabaseMetaData.getSchemas since it doesn't
             // work when Fennel is disabled.  Also note that the
             // repository is not available when using a Client JDBC driver.
+            final FarragoRepos repos = getRepos();
             if (repos != null) {
                 for (
                     CwmModelElement obj
@@ -874,7 +875,7 @@ public abstract class FarragoTestCase
                         list.add(schemaName);
                     }
                 }
-            } else {
+            } else if (connection != null) {
                 ResultSet schemas = connection.getMetaData().getSchemas();
                 while(schemas.next()) {
                     String name = schemas.getString(1);
@@ -912,7 +913,7 @@ public abstract class FarragoTestCase
                     list.add(wrapper.isForeign() ? "foreign" : "local");
                     list.add(wrapper.getName());
                 }
-            } else {
+            } else if (stmt != null) {
                 if (stmt.execute("select \"name\",\"foreign\" from sys_fem.med.\"DataWrapper\"")) {
                     ResultSet rset = stmt.getResultSet();
                     while (rset.next()) {
@@ -960,8 +961,7 @@ public abstract class FarragoTestCase
                     }
                     list.add(server.getName());
                 }
-            }
-            else {
+            } else if (stmt != null) {
                 if (stmt.execute("select \"name\" from sys_fem.med.\"DataServer\"")) {
                     ResultSet rset = stmt.getResultSet();
                     while (rset.next()) {
@@ -1001,8 +1001,7 @@ public abstract class FarragoTestCase
                         + SqlUtil.eigenbaseDialect.quoteIdentifier(
                             authId.getName()));
                 }
-            }
-            else {
+            } else if (stmt != null) {
                 if (stmt.execute("select \"name\",\"mofClassName\" from sys_fem.\"Security\".\"AuthId\"")) {
                     ResultSet rset = stmt.getResultSet();
                     while (rset.next()) {

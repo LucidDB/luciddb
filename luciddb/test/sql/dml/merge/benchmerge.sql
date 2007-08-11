@@ -1,5 +1,18 @@
 set schema 's';
 
+-- merge entails a cartesian join
+merge into bench1 tr
+using bench1M as rf
+on tr."k2" = 0
+when matched then
+  update set "k2" = 3
+when not matched then
+  insert ("kseq","k4") values (rf."kseq",5);
+-- should be 1M + 1
+select count(*) from bench1;
+truncate table bench1;
+insert into bench1 select * from bench10k where "kseq" = 1;
+
 --
 -- 100K updates, no insert
 --
