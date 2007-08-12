@@ -262,8 +262,8 @@ ${farrago.test.jvmargs}
   <!-- temporarily added target for nightly test -->
   <target name="test-nondb-concurrency" depends="gen-properties">
     <property name="bh.filter.runDuration" value="short,medium,null"/>
-    <property name="foreign.db" value="ldb-nondb"/>
-    <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
+    <property name="foreign.db" value="nondb"/>
+    <property name="bh.log.gtlf.env.ForeignDb" value="ldb-nondb"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-nondb-concurrent"/>
     <property file="run.properties"/>
     <blackhawk.fork
@@ -276,8 +276,8 @@ ${farrago.test.jvmargs}
 
   <target name="test-nondb" depends="gen-properties">
     <property name="bh.filter.runDuration" value="short,medium,null"/>
-    <property name="foreign.db" value="ldb-nondb"/>
-    <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
+    <property name="foreign.db" value="nondb"/>
+    <property name="bh.log.gtlf.env.ForeignDb" value="ldb-nondb"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-nondb"/>
     <property file="run.properties"/>
     <blackhawk.fork
@@ -289,8 +289,8 @@ ${farrago.test.jvmargs}
 
   <target name="test-flatfile" depends="gen-properties">
     <property name="bh.filter.runDuration" value="short,medium,null"/>
-    <property name="foreign.db" value="ldb-flatfile"/>
-    <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
+    <property name="foreign.db" value="flatfile"/>
+    <property name="bh.log.gtlf.env.ForeignDb" value="ldb-flatfile"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-flatfile"/>
     <property file="run.properties"/>
     <blackhawk.fork
@@ -302,8 +302,8 @@ ${farrago.test.jvmargs}
 
   <target name="test-oracle" depends="gen-properties">
     <property name="bh.filter.runDuration" value="short,medium,null"/>
-    <property name="foreign.db" value="ldb-oracle"/>
-    <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
+    <property name="foreign.db" value="oracle"/>
+    <property name="bh.log.gtlf.env.ForeignDb" value="ldb-oracle"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-oracle"/>
     <property file="run.properties"/>
     <blackhawk.fork
@@ -315,8 +315,8 @@ ${farrago.test.jvmargs}
 
   <target name="test-sqlserver" depends="gen-properties">
     <property name="bh.filter.runDuration" value="short,medium,null"/>
-    <property name="foreign.db" value="ldb-sqlserver"/>
-    <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
+    <property name="foreign.db" value="sqlserver"/>
+    <property name="bh.log.gtlf.env.ForeignDb" value="ldb-sqlserver"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-sqlserver"/>
     <property file="run.properties"/>
     <blackhawk.fork
@@ -328,8 +328,8 @@ ${farrago.test.jvmargs}
 
   <target name="test-csvjdbc" depends="gen-properties">
     <property name="bh.filter.runDuration" value="short,medium,null"/>
-    <property name="foreign.db" value="ldb-csvjdbc"/>
-    <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
+    <property name="foreign.db" value="csvjdbc"/>
+    <property name="bh.log.gtlf.env.ForeignDb" value="ldb-csvjdbc"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-csvjdbc"/>
     <property file="run.properties"/>
     <blackhawk.fork

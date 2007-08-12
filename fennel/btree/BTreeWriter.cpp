@@ -233,16 +233,10 @@ void BTreeWriter::splitCurrentNode(
             pLockForNewTuple = &pageLock;
         }
     }
-    bool infinityKey = monotonic;
     if (pLockForNewTuple == &newPageLock) {
         iNewTuple -= node.nEntries;
-        BTreeNodeAccessor &nodeAccessor = getNodeAccessor(newNode);
-        if (newNode.rightSibling == NULL_PAGE_ID &&
-            iNewTuple == nodeAccessor.getKeyCount(newNode))
-        {
-            infinityKey = true;
-        }
     }
+
     // NOTE:  After this,  either the node or newNode reference may be
     // invalid, so don't use them.
     bool inserted = attemptInsertWithoutSplit(
@@ -289,12 +283,17 @@ void BTreeWriter::splitCurrentNode(
     // later inside of lockParentPage.  Note that this means rightNode needs to
     // remain locked for the duration, because searchKeyData will point into
     // it.
-    nodeAccessor.accessTuple(rightNode,rightNode.nEntries - 1);
+    uint nRightKeys = nodeAccessor.getKeyCount(rightNode);
+    nodeAccessor.accessTuple(rightNode,nRightKeys - 1);
     nodeAccessor.unmarshalKey(searchKeyData);
 
     // Now, lock parent page and find the position of the entry pointing
-    // to the original node (pre-split).
-    uint iPosition = lockParentPage(leftNode.height, infinityKey);
+    // to the original node (pre-split).  If that node is the rightmost node,
+    // then the position in the parent node corresponds to the infinity
+    // key, i.e., the last entry in the node.
+    bool rightMostNode = (rightNode.rightSibling == NULL_PAGE_ID);
+    assert(!monotonic || (monotonic && rightMostNode));
+    uint iPosition = lockParentPage(leftNode.height, rightMostNode);
 
     // TODO jvs 12-Feb-2006: The code below uses getEntryForRead, even though
     // we're actually going to write; should either rename that method or add a
@@ -334,7 +333,7 @@ void BTreeWriter::splitCurrentNode(
     splitCurrentNode(splitTupleBuffer.get(),cbTuple,iPosition);
 }
 
-uint BTreeWriter::lockParentPage(uint height, bool infinityKey)
+uint BTreeWriter::lockParentPage(uint height, bool rightMostNode)
 {
     assert(!pageStack.empty());
     pageId = pageStack.back();
@@ -402,9 +401,9 @@ uint BTreeWriter::lockParentPage(uint height, bool infinityKey)
         BTreeNode const &node = pageLock.getNodeForRead();
 
         BTreeNodeAccessor &nodeAccessor = getNodeAccessor(node);
-        if (infinityKey) {
-            // If the new key corresponds to the infinity entry, return the
-            // the position of the rightmost entry.
+        if (rightMostNode) {
+            // If the split node is the rightmost node, return the position of
+            // the rightmost entry in the parent node.
             iPosition = nodeAccessor.getKeyCount(node);
             break;
         }
