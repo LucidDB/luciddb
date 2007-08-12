@@ -127,7 +127,20 @@ class BTreeTest : virtual public SegStorageTestBase
     void marshalMultiKeyRecord();
     void unmarshalRecord(SharedByteInputStream pInputStream);
     
-    void testMultiKeySearches();
+    void testMultiKeySearches(uint nKey1, uint nKey2);
+
+    void testSmallMultiKeySearches()
+    {
+        // 200*4 records should be large enough to create several leaf pages
+        testMultiKeySearches(200, 4);
+    }
+
+    void testBigMultiKeySearches()
+    {
+        // 4*20000 should be large enough to force splits of interior
+        // btree nodes
+        testMultiKeySearches(4, 20000);
+    }
 
 public:
     explicit BTreeTest()
@@ -141,10 +154,11 @@ public:
         FENNEL_UNIT_TEST_CASE(BTreeTest,testRandomInserts);
         FENNEL_UNIT_TEST_CASE(BTreeTest,testMonotonicInserts);
 
-        // Since this testcase converts the single key descriptor into a
+        // Since these two testcases convert the single key descriptor into a
         // multi-key descriptor, any tests that require the single key
-        // descriptor should run before this one.
-        FENNEL_UNIT_TEST_CASE(BTreeTest,testMultiKeySearches);
+        // descriptor should run before these.
+        FENNEL_UNIT_TEST_CASE(BTreeTest,testSmallMultiKeySearches);
+        FENNEL_UNIT_TEST_CASE(BTreeTest,testBigMultiKeySearches);
         
         StandardTypeDescriptorFactory stdTypeFactory;
         TupleAttributeDescriptor attrDesc(
@@ -477,23 +491,27 @@ void BTreeTest::testInserts(InsertType insertType)
     }
 }
 
-void BTreeTest::testMultiKeySearches()
+void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
 {
-    // Add one additional key
+    // Reset the key to a descriptor with one key
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_32));
+    descriptor.tupleDescriptor.clear();
+    descriptor.tupleDescriptor.push_back(attrDesc);
+    descriptor.tupleDescriptor.push_back(attrDesc);
+    descriptor.keyProjection.clear();
+    descriptor.keyProjection.push_back(0);
+
+    // Add one additional key
     descriptor.tupleDescriptor.push_back(attrDesc);
     descriptor.keyProjection.push_back(1);
 
     tupleAccessor.compute(descriptor.tupleDescriptor);
     recordBuf.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
 
-    // 800 records should be large enough to create several leaf pages.
-    // The first index key will contain 200 distinct values with the second
-    // key sequencing from 0-3.
-    uint nKey1 = 200;
-    uint nKey2 = 4;
+    // The first index key will contain nKey1 distinct values with the second
+    // key sequencing from 0 to nKey2-1
     descriptor.rootPageId = NULL_PAGE_ID;
     BTreeBuilder builder(descriptor,pRandomSegment);
     

@@ -121,6 +121,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/stdToDate.sql"/>
       </test>
 
+      <test name="charToDatetime">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/charToDatetime.sql"/>
+      </test>
+
       <test name="datetimeAddSubtract" requiresRun="stdToDate">
         <!-- LER-1909 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udf/datetimeAddSubtract.sql"/>

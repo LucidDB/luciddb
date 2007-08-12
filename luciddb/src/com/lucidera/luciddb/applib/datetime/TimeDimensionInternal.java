@@ -239,20 +239,35 @@ public class TimeDimensionInternal extends GregorianCalendar
         set( this.startYear, this.startMonth, this.startDate );
         complete();
 
-        // set first/last dates for week 
+        // set first dates for week 
         int daysPastFirst = get( Calendar.DAY_OF_WEEK ) - getFirstDayOfWeek();
         if( daysPastFirst < 0 ) {
             daysPastFirst += 7;
         }
-        long firstOfWeek = getTimeInMillis() - daysPastFirst * millisInADay;
-        this.firstOfWeekDate = new Date( firstOfWeek );
+
+        add(Calendar.DAY_OF_MONTH, -(daysPastFirst));
+        long firstOfWeek = getTimeInMillis();
+        this.firstOfWeekDate = new Date(firstOfWeek);
         if (this.firstOfWeekDate.before(this.firstOfYearDate)) {
             this.firstOfWeekDate.setTime(this.firstOfYearDate.getTime());
         }
-        this.lastOfWeekDate = new Date(firstOfWeek + 6*millisInADay);
+
+        // set calendar back to start date
+        set( this.startYear, this.startMonth, this.startDate );
+        complete();
+        
+        // set last dates for week
+        int daysToLast = 6 - daysPastFirst;
+        add(Calendar.DAY_OF_MONTH, daysToLast);
+        long lastOfWeek = getTimeInMillis();
+        this.lastOfWeekDate = new Date(lastOfWeek);
         if (this.lastOfWeekDate.after(this.lastOfYearDate)) {
             this.lastOfWeekDate.setTime(this.lastOfYearDate.getTime());
         }
+        
+        // set calendar back to start date
+        set( this.startYear, this.startMonth, this.startDate );
+        complete();
 
         // set first/last fiscal dates of week
         this.firstOfFiscalWeekDate = new Date( firstOfWeek );
@@ -260,7 +275,7 @@ public class TimeDimensionInternal extends GregorianCalendar
             this.firstOfFiscalWeekDate.setTime(
                 this.firstOfFiscalYearDate.getTime());
         }
-        this.lastOfFiscalWeekDate = new Date( firstOfWeek + 6*millisInADay);
+        this.lastOfFiscalWeekDate = new Date(lastOfWeek);
         if (this.lastOfFiscalWeekDate.after(this.lastOfFiscalYearDate)) {
             this.lastOfFiscalWeekDate.setTime(
                 this.firstOfFiscalYearDate.getTime());
@@ -525,15 +540,27 @@ public class TimeDimensionInternal extends GregorianCalendar
             this.firstOfWeekDate.setTime(currentTime);
             int lastDayOfWeek = (((getFirstDayOfWeek()-1)+6)%7)+1;
             if (lastDayOfWeek >= currentDayOfWeek) {
-                this.lastOfWeekDate.setTime(currentTime + 
-                    (lastDayOfWeek - currentDayOfWeek)*millisInADay);
+                add(Calendar.DAY_OF_MONTH, (lastDayOfWeek - currentDayOfWeek));
+                this.lastOfWeekDate.setTime(getTimeInMillis());
+                // reset calendar back to current time
+                setTimeInMillis(currentTime);
+                complete();
             } else {
-                this.lastOfWeekDate.setTime(currentTime +
-                    (lastDayOfWeek - currentDayOfWeek + 7)*millisInADay);
+                add(
+                    Calendar.DAY_OF_MONTH, 
+                    (lastDayOfWeek - currentDayOfWeek + 7));
+                this.lastOfWeekDate.setTime(getTimeInMillis());
+                // reset calendar back to current time
+                setTimeInMillis(currentTime);
+                complete();
             }
         } else if (getFirstDayOfWeek() == currentDayOfWeek) {
             this.firstOfWeekDate.setTime(currentTime);
-            this.lastOfWeekDate.setTime(currentTime + 6*millisInADay);
+            add(Calendar.DAY_OF_MONTH, 6);
+            this.lastOfWeekDate.setTime(getTimeInMillis());
+            //reset calendar back to current time
+            setTimeInMillis(currentTime);
+            complete();
             // if last day of week is into the new year, set it to the last 
             // day of the year
             if (this.lastOfWeekDate.after(this.lastOfYearDate)) {
@@ -546,15 +573,25 @@ public class TimeDimensionInternal extends GregorianCalendar
             this.firstOfFiscalWeekDate.setTime(currentTime);
             int lastDayOfWeek = (((getFirstDayOfWeek()-1)+6)%7)+1;
             if (lastDayOfWeek >= currentDayOfWeek) {
-                this.lastOfFiscalWeekDate.setTime(currentTime +
-                    (lastDayOfWeek - currentDayOfWeek)*millisInADay);
+                add(Calendar.DAY_OF_MONTH, (lastDayOfWeek - currentDayOfWeek));
+                this.lastOfFiscalWeekDate.setTime(getTimeInMillis());
+                // reset calendar back to current time
+                setTimeInMillis(currentTime);
+                complete();
             } else {
-                this.lastOfFiscalWeekDate.setTime(currentTime +
-                    (lastDayOfWeek - currentDayOfWeek + 7)*millisInADay);
+                add(
+                    Calendar.DAY_OF_MONTH,
+                    (lastDayOfWeek - currentDayOfWeek + 7));
+                this.lastOfFiscalWeekDate.setTime(getTimeInMillis());
+                complete();
             }
         } else if (getFirstDayOfWeek() == currentDayOfWeek) {
             this.firstOfFiscalWeekDate.setTime(currentTime);
-            this.lastOfFiscalWeekDate.setTime(currentTime + 6*millisInADay);
+            add(Calendar.DAY_OF_MONTH, 6);
+            this.lastOfFiscalWeekDate.setTime(getTimeInMillis());
+            //reset calendar back to current time
+            setTimeInMillis(currentTime);
+            complete();
             if (this.lastOfFiscalWeekDate.after(this.lastOfFiscalYearDate)) {
                 this.lastOfFiscalWeekDate.setTime(
                     this.lastOfFiscalYearDate.getTime());
