@@ -200,6 +200,12 @@ public abstract class Bug
      */
     public static final boolean Frg254Fixed = false;
 
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FNL-66">issue
+     * FNL-66: Cinderella bug</a> is fixed.
+     */
+    public static final boolean Fnl66Fixed = false;
+
     // kkrueger
 
     // mberkowitz

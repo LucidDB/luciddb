@@ -764,15 +764,17 @@ public abstract class SqlOperatorTests
         // Note: Casting to time(0) should lose date info and fractional
         // seconds, then casting back to timestamp should initialize to
         // current_date.
-        getTester().checkScalar(
-            "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIME) as TIMESTAMP)",
-            today + " 12:42:25.0",
-            "TIMESTAMP(0) NOT NULL");
+        if (Bug.Fnl66Fixed) {
+            getTester().checkScalar(
+                "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIME) as TIMESTAMP)",
+                today + " 12:42:25.0",
+                "TIMESTAMP(0) NOT NULL");
 
-        getTester().checkScalar(
-            "cast(TIME '12:42:25.34' as TIMESTAMP)",
-            today + " 12:42:25.0",
-            "TIMESTAMP(0) NOT NULL");
+            getTester().checkScalar(
+                "cast(TIME '12:42:25.34' as TIMESTAMP)",
+                today + " 12:42:25.0",
+                "TIMESTAMP(0) NOT NULL");
+        }
 
         // timestamp <-> date
         getTester().checkScalar(
