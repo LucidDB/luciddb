@@ -1090,17 +1090,23 @@ public class FarragoDatabase
      * trace configuration file whenever it changes.
      */
     private class WatchdogTask
-        extends TimerTask
+        extends FarragoTimerTask
     {
         private long prevTraceConfigTimestamp;
 
         WatchdogTask()
         {
+            super(tracer);
             prevTraceConfigTimestamp = traceConfigFile.lastModified();
         }
 
-        // implement Runnable
-        public void run()
+        // implement FarragoTimerTask
+        protected void runTimer()
+        {
+            checkTraceConfig();
+        }
+
+        private void checkTraceConfig()
         {
             long traceConfigTimestamp = traceConfigFile.lastModified();
             if (traceConfigTimestamp == 0) {
@@ -1124,10 +1130,15 @@ public class FarragoDatabase
     }
 
     private class CheckpointTask
-        extends TimerTask
+        extends FarragoTimerTask
     {
-        // implement Runnable
-        public void run()
+        CheckpointTask()
+        {
+            super(tracer);
+        }
+        
+        // implement FarragoTimerTask
+        public void runTimer()
         {
             requestCheckpoint(true, true);
         }
