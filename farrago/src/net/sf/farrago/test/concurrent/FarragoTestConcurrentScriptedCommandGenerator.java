@@ -655,7 +655,9 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                     continue;
                 }
 
-                if (line.startsWith("select") || line.startsWith("explain")) {
+                if (line.startsWith("select") ||
+                    line.startsWith("values") ||
+                    line.startsWith("explain")) {
                     return true;
                 } else {
                     return false;
