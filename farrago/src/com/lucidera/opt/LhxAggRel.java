@@ -132,7 +132,7 @@ public class LhxAggRel
         aggStream.setCndGroupByKeys(cndGroupByKey);
 
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()),
+            implementor.visitFennelChild((FennelRel) getChild(), 0),
             aggStream);
 
         return aggStream;

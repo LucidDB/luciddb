@@ -104,7 +104,7 @@ class LcsIndexMergeRel
         // First obtain the child stream
         //
         FemExecutionStreamDef search =
-            implementor.visitFennelChild((FennelRel) getChild());
+            implementor.visitFennelChild((FennelRel) getChild(), 0);
 
         //
         // Chop the tuples so they fit in memory when expanded

@@ -315,7 +315,7 @@ public class FennelWindowRel
         final FemWindowStreamDef windowStreamDef =
             repos.newFemWindowStreamDef();
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()),
+            implementor.visitFennelChild((FennelRel) getChild(), 0),
             windowStreamDef);
 
         windowStreamDef.setFilter(outputProgram.getCondition() != null);

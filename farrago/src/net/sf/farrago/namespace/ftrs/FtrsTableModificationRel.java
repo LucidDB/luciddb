@@ -135,7 +135,7 @@ class FtrsTableModificationRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemExecutionStreamDef input =
-            implementor.visitFennelChild((FennelRel) getChild());
+            implementor.visitFennelChild((FennelRel) getChild(), 0);
         if (!(ftrsTable.getCwmColumnSet() instanceof CwmTable)) {
             // e.g. view update
             throw Util.needToImplement(ftrsTable.getCwmColumnSet());

@@ -199,7 +199,7 @@ public class FennelCalcRel
             implementor.getRepos().newFemCalcTupleStreamDef();
 
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()),
+            implementor.visitFennelChild((FennelRel) getChild(), 0),
             calcStream);
 
         calcStream.setFilter(program.getCondition() != null);
