@@ -138,7 +138,7 @@ public class LcsTableDeleteRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemExecutionStreamDef input =
-            implementor.visitFennelChild((FennelRel) getChild());
+            implementor.visitFennelChild((FennelRel) getChild(), 0);
 
         CwmTable table = (CwmTable) lcsTable.getCwmColumnSet();
         FarragoRepos repos = FennelRelUtil.getRepos(this);

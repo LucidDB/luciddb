@@ -47,15 +47,7 @@ public interface FennelRelImplementor
     /**
      * Converts a relational expression into a plan by calling its {@link
      * FennelRel#toStreamDef} method.
-     * 
-     * @param rel the relational expression
-     */
-    public FemExecutionStreamDef visitFennelChild(FennelRel rel);
-    
-    /**
-     * Converts a relational expression into a plan by calling its {@link
-     * FennelRel#toStreamDef} method.
-     * 
+     *
      * @param rel the relational expression
      * @param ordinal input position of the relational expression for its
      * parent
@@ -141,7 +133,7 @@ public interface FennelRelImplementor
      * based on the current scope.
      *
      * @param relParamId reserved ID to be translated
-     * @param streamDef the stream that either produces or consumes the 
+     * @param streamDef the stream that either produces or consumes the
      * dynamic parameter; or null if we don't need to keep track of that
      * information
      * @param streamType whether the streamDef produces or consumes the dynamic
@@ -153,7 +145,7 @@ public interface FennelRelImplementor
         FennelRelParamId relParamId,
         FemExecutionStreamDef streamDef,
         FennelDynamicParamId.StreamType streamType);
-    
+
     /**
      * Sets the format of error records for an execution stream.
      *

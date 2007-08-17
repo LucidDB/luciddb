@@ -36,7 +36,7 @@ import org.eigenbase.reltype.*;
 
 /**
  * FennelTempIdxSearchRel searches a temporary index that is built during
- * runtime using search keys read through dynamic parameters and search 
+ * runtime using search keys read through dynamic parameters and search
  * directives passed in through its input.
  *
  * @author Zelaine Fong
@@ -181,7 +181,7 @@ class FennelTempIdxSearchRel
             FennelRelUtil.createTupleProjection(repos, inputKeyProj));
         searchStream.setInputDirectiveProj(
             FennelRelUtil.createTupleProjection(repos, inputDirectiveProj));
-        
+
         // Indicate that the rootPageId parameter is consumed by this stream
         searchStream.setRootPageIdParamId(
             implementor.translateParamId(
@@ -189,7 +189,7 @@ class FennelTempIdxSearchRel
                 searchStream,
                 FennelDynamicParamId.StreamType.CONSUMER).intValue());
         searchStream.setRootPageId(-1);
-        
+
         RelDataType sourceRowType = sourceRel.getRowType();
         FemTupleDescriptor tupleDesc =
             FennelRelUtil.createTupleDescriptorFromRowType(
@@ -199,7 +199,7 @@ class FennelTempIdxSearchRel
         searchStream.setTupleDesc(tupleDesc);
         searchStream.setKeyProj(
             FennelRelUtil.createTupleProjection(repos, indexKeys));
-        
+
         Integer [] outputProj =
             FennelRelUtil.newIotaProjection(sourceRowType.getFieldCount());
         searchStream.setOutputProj(
@@ -210,7 +210,7 @@ class FennelTempIdxSearchRel
                 getCluster().getTypeFactory(),
                 sourceRowType);
         searchStream.setOutputDesc(outputDesc);
-        
+
         for (int i = 0; i < searchKeyParamIds.length; i++) {
             FemCorrelation searchKeyParam = repos.newFemCorrelation();
             searchKeyParam.setId(
@@ -220,7 +220,7 @@ class FennelTempIdxSearchRel
         }
 
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()),
+            implementor.visitFennelChild((FennelRel) getChild(), 0),
             searchStream);
 
         return searchStream;

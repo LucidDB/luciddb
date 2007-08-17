@@ -127,7 +127,7 @@ public class FennelRenameRel
     {
         // no implementation needed for the rename itself, since that is done
         // implicitly by the returned row type
-        return implementor.visitFennelChild((FennelRel) getChild());
+        return implementor.visitFennelChild((FennelRel) getChild(), 0);
     }
 }
 

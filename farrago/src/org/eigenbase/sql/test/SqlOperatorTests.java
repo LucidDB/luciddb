@@ -2674,7 +2674,17 @@ public abstract class SqlOperatorTests
         getTester().checkNull("mod(cast(null as integer),2)");
         getTester().checkNull("mod(4,cast(null as tinyint))");
         getTester().checkNull("mod(4,cast(null as decimal(12,0)))");
-        getTester().checkFails("mod(3,0)", divisionByZeroMessage, true);
+    }
+
+    public void testModFuncDivByZero()
+    {
+        // The extra CASE expression is to fool Janino.  It does constant
+        // reduction and will throw the divide by zero exception while
+        // compiling the expression.  The test frame work would then issue
+        // unexpected exception occured during "validation".  You cannot
+        // submit as non-runtime because the janino exception does not have
+        // error position information and the framework is unhappy with that.
+        getTester().checkFails("mod(3,case 'a' when 'a' then 0 end)", divisionByZeroMessage, true);
     }
 
     public void testLnFunc()

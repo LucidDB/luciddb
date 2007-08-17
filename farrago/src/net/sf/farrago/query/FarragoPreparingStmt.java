@@ -524,7 +524,7 @@ public class FarragoPreparingStmt
                         newRelImplementor(rootRel.getCluster().getRexBuilder());
                 }
                 FemExecutionStreamDef streamDef =
-                    relImplementor.visitFennelChild((FennelRel) rootRel);
+                    relImplementor.visitFennelChild((FennelRel) rootRel, 0);
                 streamName = streamDef.getName();
             }
 

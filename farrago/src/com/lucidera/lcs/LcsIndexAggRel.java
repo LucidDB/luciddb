@@ -69,7 +69,7 @@ public class LcsIndexAggRel
             repos.newFemLbmSortedAggStreamDef();
         defineAggStream(aggStream);
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()),
+            implementor.visitFennelChild((FennelRel) getChild(), 0),
             aggStream);
 
         return aggStream;

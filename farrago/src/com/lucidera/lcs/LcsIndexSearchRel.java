@@ -354,7 +354,7 @@ class LcsIndexSearchRel
                     implementor.translateParamId(rowLimitParamId));
 
             implementor.addDataFlowFromProducerToConsumer(
-                implementor.visitFennelChild((FennelRel) getChild()),
+                implementor.visitFennelChild((FennelRel) getChild(), 0),
                 newStream);
         } else {
             // pure scan

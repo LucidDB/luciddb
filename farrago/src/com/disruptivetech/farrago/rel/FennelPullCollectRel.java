@@ -92,7 +92,7 @@ public class FennelPullCollectRel
             repos.newFemCollectTupleStreamDef();
 
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()),
+            implementor.visitFennelChild((FennelRel) getChild(), 0),
             collectStreamDef);
 
         // The column containing the packaged multiset is always VARCHAR(4096)

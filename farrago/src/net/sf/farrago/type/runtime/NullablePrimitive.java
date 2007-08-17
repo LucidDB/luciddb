@@ -345,10 +345,9 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            if ( number instanceof Float || number instanceof Double ) {
+            if (number instanceof Float || number instanceof Double) {
                 value = (byte) NumberUtil.round(number.doubleValue());
-            }
-            else {
+            } else {
                 value = number.byteValue();
             }
         }
@@ -422,10 +421,9 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            if ( number instanceof Float || number instanceof Double ) {
+            if (number instanceof Float || number instanceof Double) {
                 value = (int) NumberUtil.round(number.doubleValue());
-            }
-            else {
+            } else {
                 value = number.intValue();
             }
         }
@@ -451,10 +449,9 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            if ( number instanceof Float || number instanceof Double ) {
+            if (number instanceof Float || number instanceof Double) {
                 value = (long) NumberUtil.round(number.doubleValue());
-            }
-            else {
+            } else {
                 value = number.longValue();
             }
         }
@@ -506,10 +503,9 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            if ( number instanceof Float || number instanceof Double ) {
+            if (number instanceof Float || number instanceof Double) {
                 value = (short) NumberUtil.round(number.doubleValue());
-            }
-            else {
+            } else {
                 value = number.shortValue();
             }
         }

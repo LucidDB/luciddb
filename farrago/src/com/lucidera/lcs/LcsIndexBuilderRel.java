@@ -90,7 +90,7 @@ class LcsIndexBuilderRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemExecutionStreamDef input =
-            implementor.visitFennelChild((FennelRel) getChild());
+            implementor.visitFennelChild((FennelRel) getChild(), 0);
         FarragoTypeFactory typeFactory = getFarragoTypeFactory();
 
         FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);

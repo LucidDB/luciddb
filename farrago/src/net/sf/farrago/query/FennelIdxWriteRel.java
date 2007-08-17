@@ -70,7 +70,7 @@ class FennelIdxWriteRel
         boolean discardDuplicates,
         boolean monotonicInserts,
         FennelRelParamId rootPageIdParamId,
-        Integer [] indexCols)        
+        Integer [] indexCols)
     {
         super(
             child.getCluster(),
@@ -151,7 +151,7 @@ class FennelIdxWriteRel
         indexWriter.setTupleDesc(tupleDesc);
         indexWriter.setKeyProj(
             FennelRelUtil.createTupleProjection(repos, indexCols));
-        
+
         // Indicate that the rootPageId parameter is produced by this stream
         indexWriter.setRootPageIdParamId(
             implementor.translateParamId(
@@ -159,9 +159,9 @@ class FennelIdxWriteRel
                 indexWriter,
                 FennelDynamicParamId.StreamType.PRODUCER).intValue());
         indexWriter.setRootPageId(-1);
-        
+
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()),
+            implementor.visitFennelChild((FennelRel) getChild(), 0),
             indexWriter);
 
         return indexWriter;
