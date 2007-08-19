@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module version="4" relativePaths="true" type="JAVA_MODULE">
   <component name="ModuleRootManager" />
-  <component name="NewModuleRootManager">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/../classes" />
     <exclude-output />
     <exclude-exploded />
@@ -16,6 +16,7 @@
     <orderEntry type="library" name="junit" level="project" />
     <orderEntry type="library" name="servlet" level="project" />
     <orderEntry type="library" name="resgen" level="project" />
+    <orderEntry type="library" name="diffj" level="project" />
     <orderEntryProperties />
   </component>
 </module>

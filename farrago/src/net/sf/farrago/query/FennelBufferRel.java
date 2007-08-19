@@ -118,7 +118,7 @@ class FennelBufferRel
             repos.newFemBufferingTupleStreamDef();
 
         FemExecutionStreamDef childInput =
-            implementor.visitFennelChild((FennelRel) getChild());
+            implementor.visitFennelChild((FennelRel) getChild(), 0);
         implementor.addDataFlowFromProducerToConsumer(
             childInput,
             streamDef);

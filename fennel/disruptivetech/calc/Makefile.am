@@ -29,28 +29,8 @@ StringToHex.cpp \
 ExtMath.cpp \
 ExtDynamicVariable.cpp \
 WinAggHistogramStrA.cpp \
-ExtWinAggFuncs.cpp
-
-#noinst_PROGRAMS =    \
-#testCalc tuple
-
-#TESTS = $(noinst_PROGRAMS)
-
-#testCalc_SOURCES=testCalc.cpp 
-#tuple_SOURCES= tuple.cpp
-
-#LDADD = -L$(top_builddir)/calc      \
-#		-l$(CALC_LIB)       \
-#	-L$(top_builddir)/libfennel \
-#		-lfennel_tuple      \
-#		-lfennel_common     \
-#	$(EXTRA_LDFLAGS)
-
-DISABLED_TESTS= \
-testCalc.cpp \
-testCalcExtString.cpp \
-testCalcExtended.cpp \
-tuple.cpp
+ExtWinAggFuncs.cpp \
+NoisyArithmetic.cpp
 
 DESIGN_DOC=ExtendedInstructionHowTo.cpp
 EXTRA_DIST=$(DESIGN_DOC)

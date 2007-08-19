@@ -214,11 +214,6 @@ public abstract class SqlOperatorTests
         };
     private static final boolean [] FalseTrue = new boolean[] { false, true };
 
-    // todo: log jira feature request to support time and timestamp with
-    // precision
-    private static final Boolean SupportDatetimeWithPrecision =
-        Util.deprecated(false, false);
-
     //~ Constructors -----------------------------------------------------------
 
     public SqlOperatorTests(String testName)
@@ -726,7 +721,7 @@ public abstract class SqlOperatorTests
             "12:42:26",
             "TIME(0) NOT NULL");
 
-        if (SupportDatetimeWithPrecision) {
+        if (Bug.Frg282Fixed) {
             // test precision
             getTester().checkScalar(
                 "cast(TIME '12:42:25.34' as TIME(2))",
@@ -769,15 +764,17 @@ public abstract class SqlOperatorTests
         // Note: Casting to time(0) should lose date info and fractional
         // seconds, then casting back to timestamp should initialize to
         // current_date.
-        getTester().checkScalar(
-            "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIME) as TIMESTAMP)",
-            today + " 12:42:25.0",
-            "TIMESTAMP(0) NOT NULL");
+        if (Bug.Fnl66Fixed) {
+            getTester().checkScalar(
+                "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIME) as TIMESTAMP)",
+                today + " 12:42:25.0",
+                "TIMESTAMP(0) NOT NULL");
 
-        getTester().checkScalar(
-            "cast(TIME '12:42:25.34' as TIMESTAMP)",
-            today + " 12:42:25.0",
-            "TIMESTAMP(0) NOT NULL");
+            getTester().checkScalar(
+                "cast(TIME '12:42:25.34' as TIMESTAMP)",
+                today + " 12:42:25.0",
+                "TIMESTAMP(0) NOT NULL");
+        }
 
         // timestamp <-> date
         getTester().checkScalar(
@@ -824,7 +821,7 @@ public abstract class SqlOperatorTests
             "12:42:25",
             "TIME(0) NOT NULL");
 
-        if (SupportDatetimeWithPrecision) {
+        if (Bug.Frg282Fixed) {
             getTester().checkScalar(
                 "cast('12:42:25.34' as TIME(2))",
                 "12:42:25.34",
@@ -876,7 +873,7 @@ public abstract class SqlOperatorTests
             "1945-02-24 12:42:25.0",
             "TIMESTAMP(0) NOT NULL");
 
-        if (SupportDatetimeWithPrecision) {
+        if (Bug.Frg282Fixed) {
             getTester().checkScalar(
                 "cast('1945-02-24 12:42:25.34' as TIMESTAMP(2))",
                 "1945-02-24 12:42:25.34",
@@ -2677,7 +2674,17 @@ public abstract class SqlOperatorTests
         getTester().checkNull("mod(cast(null as integer),2)");
         getTester().checkNull("mod(4,cast(null as tinyint))");
         getTester().checkNull("mod(4,cast(null as decimal(12,0)))");
-        getTester().checkFails("mod(3,0)", divisionByZeroMessage, true);
+    }
+
+    public void testModFuncDivByZero()
+    {
+        // The extra CASE expression is to fool Janino.  It does constant
+        // reduction and will throw the divide by zero exception while
+        // compiling the expression.  The test frame work would then issue
+        // unexpected exception occured during "validation".  You cannot
+        // submit as non-runtime because the janino exception does not have
+        // error position information and the framework is unhappy with that.
+        getTester().checkFails("mod(3,case 'a' when 'a' then 0 end)", divisionByZeroMessage, true);
     }
 
     public void testLnFunc()
@@ -3458,9 +3465,6 @@ public abstract class SqlOperatorTests
      */
     public void testLiteralAtLimit()
     {
-        if (!Bug.FrgIntegrationFixed) {
-            return;
-        }
         final SqlTester tester = getTester();
         tester.setFor(SqlStdOperatorTable.castFunc);
         for (BasicSqlType type : SqlLimitsTest.getTypes()) {
@@ -3472,6 +3476,10 @@ public abstract class SqlOperatorTests
                 final String expr =
                     "CAST(" + literalString
                     + " AS " + type + ")";
+                if (type.getSqlTypeName() == SqlTypeName.VARBINARY &&
+                    !Bug.Frg283Fixed) {
+                    continue;
+                }
                 try {
                     tester.checkType(
                         expr,
@@ -3555,9 +3563,6 @@ public abstract class SqlOperatorTests
 
     public void testCastTruncates()
     {
-        if (!Bug.FrgIntegrationFixed) {
-            return;
-        }
         final SqlTester tester = getTester();
         tester.setFor(SqlStdOperatorTable.castFunc);
         tester.checkScalar(
@@ -3572,6 +3577,8 @@ public abstract class SqlOperatorTests
             "CAST(x'ABCDEF12' AS BINARY(2))",
             "ABCD",
             "BINARY(2) NOT NULL");
+
+        if (Bug.Frg283Fixed)
         tester.checkScalar(
             "CAST(x'ABCDEF12' AS VARBINARY(2))",
             "ABCD",

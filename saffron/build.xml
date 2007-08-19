@@ -123,6 +123,7 @@
     <pathelement location="${tomcat.home}/common/lib/servlet.jar"/>
     <pathelement location="${weblogic.home}/lib/weblogic.jar"/>
     <pathelement location="${janino.dir}/lib/janino.jar"/>
+    <pathelement location="${diffj.dir}/share/diffj/diffj.jar"/>
     <pathelement location="${ant.home}/lib/ant.jar"/>
     <pathelement location="${ant.home}/lib/optional.jar"/>
     <pathelement location="${javahome.dir}/lib/tools.jar"/>

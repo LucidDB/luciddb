@@ -328,6 +328,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement location="${jgraphaddons.dir}/lib/jgraphaddons.jar"/>
     <pathelement location="${jgrapht.dir}/lib/jgraph.jar"/>
+    <pathelement location="${diffj.dir}/share/diffj/diffj.jar"/>
   </path>
   <property name="farrago.javadoc.classpath" refid="farrago.javadoc.classpath"/>
 
@@ -475,8 +476,11 @@ ${farrago.test.jvmargs}
 
   <!-- Customization for javac task for compiling client-side code -->
   <!-- NOTE jvs 2-Oct-2005:  We keep all client-side code 1.4-compatible -->
+  <!-- NOTE hersker 2007-06-06: the JDK 1.6 compiler actually enforces
+       the source="1.4" attribute, revealing that creeping generics have 
+       forced us to abandon 1.4-compatibility. -->
   <presetdef name="farrago.javaCompileClient">
-    <javac debug="on" deprecation="on" source="1.4" target="1.4"/>
+    <javac debug="on" deprecation="on" source="1.5" target="1.5"/>
   </presetdef>
 
   <!-- Customization for java task -->

@@ -174,6 +174,7 @@ ${farrago.test.jvmargs}
     <pathelement location="${sqlline.lib.dir}/sqlline.jar"/>
     <pathelement location="${sqlline.lib.dir}/jline.jar"/>
     <pathelement location="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
+    <pathelement location="${diffj.dir}/share/diffj/diffj.jar" />
   </path>
   <property name="farrago.build.3p.classpath"
     refid="farrago.build.3p.classpath"/>
@@ -210,6 +211,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${test.emma.classpath}" />
+    <pathelement location="${diffj.dir}/share/diffj/diffj.jar" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -375,15 +377,9 @@ ${farrago.test.jvmargs}
       <fileset dir="${farrago.dir}" includes="hs_err_pid*.log"/>
       <fileset dir="${farrago.src.dir}/net/sf/farrago/resource">
         <include name="*.java"/>
-        <!-- TODO jhyde 06-Apr-2005:  delete these after a while -->
-        <include name="FarragoResource_en_US.properties"/>
-        <include name="FarragoResource.properties"/>
       </fileset>
       <fileset dir="${farrago.src.dir}/org/eigenbase/resource">
         <include name="*.java"/>
-        <!-- TODO jhyde 06-Apr-2005:  delete these after a while -->
-        <include name="EigenbaseResource_en_US.properties"/>
-        <include name="EigenbaseResource.properties"/>
       </fileset>
       <fileset dir="${farrago.parser.ddl.dir}/impl" includes="*.java,*.jj"/>
       <fileset dir="${farrago.parser.sql.dir}/impl" includes="*.java,*.jj"/>
@@ -889,6 +885,7 @@ ${farrago.test.jvmargs}
     <farrago.antFork target="forked_junit" classpathref="test.classpath">
       <jvmargs>
         <jvmarg line="-Xmx128m"/>
+        <jvmarg line="-Xss768k"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <syspropertyset>

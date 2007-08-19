@@ -102,7 +102,7 @@ public class LcsNormalizerRel
         FemLbmNormalizerStreamDef normalizer =
             repos.newFemLbmNormalizerStreamDef();
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()),
+            implementor.visitFennelChild((FennelRel) getChild(), 0),
             normalizer);
 
         return normalizer;

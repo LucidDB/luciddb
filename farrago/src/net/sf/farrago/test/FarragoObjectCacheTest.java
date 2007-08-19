@@ -76,7 +76,7 @@ public class FarragoObjectCacheTest extends TestCase
     AtomicInteger nCarsCreated;
 
     AtomicInteger nCarsDestroyed;
-    
+
     /**
      * Creates a new FarragoObjectCacheTest object.
      */
@@ -97,7 +97,7 @@ public class FarragoObjectCacheTest extends TestCase
             agency.shutDown();
             agency = null;
         }
-        
+
         // First law of something-or-other.
         assertEquals(nCarsCreated.get(), nCarsDestroyed.get());
     }
@@ -171,7 +171,7 @@ public class FarragoObjectCacheTest extends TestCase
     {
         runOneThreadSequential("Sport 2-door", 300, false);
     }
-    
+
     /**
      * Tests a scenario where a car is rented, driven a long way, and then
      * returned, so that a subsequent rental request forces creation
@@ -181,7 +181,7 @@ public class FarragoObjectCacheTest extends TestCase
     {
         runOneThreadSequential("Sport 2-door", 10*MAX_MILEAGE, true);
     }
-    
+
     /**
      * Tests a scenario where a car is rented, smoked in, and then
      * returned, so that a subsequent rental request forces creation
@@ -215,7 +215,7 @@ public class FarragoObjectCacheTest extends TestCase
         // Rubber hits the road.
         car1.drive(milesToDrive);
         assertEquals(milesToDrive, car1.getMileage());
-        
+
         // Return the first car.
         agency.returnCar(a1);
 
@@ -320,7 +320,7 @@ public class FarragoObjectCacheTest extends TestCase
         long tiresAfterReturn2 = agency.getTiresInFleet();
         assertEquals(tiresAfterRent2, tiresAfterReturn2);
         assertEquals(0, nCarsDestroyed.get());
-        
+
         // Let tearDown take care of cleanup verification.
     }
 
@@ -350,7 +350,7 @@ public class FarragoObjectCacheTest extends TestCase
 
             // Should never exceed the limit.
             assertTrue(tiresCurrent <= MAX_TIRES);
-            
+
             // Should never reuse previous car, since description is always
             // new.
             RentalCar car1 = a1.getCar();
@@ -392,7 +392,7 @@ public class FarragoObjectCacheTest extends TestCase
     {
         // Start a new agency which prohibits car sharing.
         agency = new RentalCarAgency(true, MAX_TIRES);
-        
+
         // Attempt to rent out a car.
         String description = "Lemon-yellow Caddy";
         try {
@@ -404,7 +404,7 @@ public class FarragoObjectCacheTest extends TestCase
             fail("Expected a lemon but got something else instead");
         }
     }
-    
+
     /**
      * Tests a multi-threaded scenario with objects pinned exclusively.
      */
@@ -412,7 +412,7 @@ public class FarragoObjectCacheTest extends TestCase
     {
         runMultipleThreads(true);
     }
-    
+
     /**
      * Tests a multi-threaded scenario with objects pinned as shared.
      */
@@ -420,7 +420,7 @@ public class FarragoObjectCacheTest extends TestCase
     {
         runMultipleThreads(false);
     }
-    
+
     private void runMultipleThreads(boolean exclusive)
     {
         // Start a new agency with specified sharing mode.  Use a low limit for
@@ -472,8 +472,8 @@ public class FarragoObjectCacheTest extends TestCase
         for (CustomerThread thread : threads) {
             thread.assertSuccessful();
         }
-        
-        // No matter what, should never exceed limit on tires.  
+
+        // No matter what, should never exceed limit on tires.
         long tiresCurrent = agency.getTiresInFleet();
         assertTrue(tiresCurrent <= MAX_TIRES);
     }
@@ -620,7 +620,7 @@ public class FarragoObjectCacheTest extends TestCase
     private class RentalCarAgreement
     {
         RentalCar car;
-        
+
         FarragoObjectCache.Entry pinnedEntry;
 
         /**
@@ -728,7 +728,7 @@ public class FarragoObjectCacheTest extends TestCase
             // After enough miles, sell it to a used-car dealer.
             return ((RentalCar) value).isOld();
         }
-        
+
         /**
          * @return current number of tires on all cars in fleet
          * (regardless of whether those cars are currently rented out)
@@ -781,7 +781,7 @@ public class FarragoObjectCacheTest extends TestCase
         private boolean quit;
 
         private boolean sawSmokingVehicle;
-        
+
         private List<String> carDescriptions;
 
         /**

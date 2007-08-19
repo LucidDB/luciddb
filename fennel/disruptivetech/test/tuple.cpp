@@ -31,6 +31,7 @@
 #include "fennel/common/TraceSource.h"
 
 #include <boost/scoped_array.hpp>
+#include <boost/test/unit_test_suite.hpp>
 #include <limits>
 #include <iostream.h>
 
@@ -151,3 +152,9 @@ main(int argc, char *argv[])
   tupleFiddle();
   return 0;
 }
+
+boost::unit_test_framework::test_suite *init_unit_test_suite(int,char **)
+{
+    return NULL;
+}
+

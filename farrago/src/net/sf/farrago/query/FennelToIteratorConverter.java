@@ -524,7 +524,7 @@ public class FennelToIteratorConverter
         FennelRelImplementor implementor)
     {
         FemExecutionStreamDef rootStream =
-            implementor.visitFennelChild((FennelRel) getChild());
+            implementor.visitFennelChild((FennelRel) getChild(), 0);
         return rootStream;
     }
 

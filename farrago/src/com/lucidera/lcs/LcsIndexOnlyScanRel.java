@@ -251,7 +251,7 @@ public class LcsIndexOnlyScanRel
                 searchRel.lcsTable,
                 searchRel);
 
-        return implementor.visitFennelChild(minus);
+        return implementor.visitFennelChild(minus, 0);
     }
 
     public Integer [] getOutputProj()

@@ -97,7 +97,7 @@ public class FennelAggRel
         FemSortedAggStreamDef aggStream = repos.newFemSortedAggStreamDef();
         defineAggStream(aggStream);
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()),
+            implementor.visitFennelChild((FennelRel) getChild(), 0),
             aggStream);
 
         return aggStream;

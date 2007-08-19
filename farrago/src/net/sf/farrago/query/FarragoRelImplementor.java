@@ -70,11 +70,11 @@ public class FarragoRelImplementor
     // An ordered list representing the path from the root RelNode to the
     // current child RelNode being visited in the execution graph.
     private List<RelPathEntry> currRelPathList;
-    
+
     // Mapping from the different RelPathEntry lists to the dynamic parameters
     // accessible from the leaf RelNode in that RelPathEntry list
     private Map<List<RelPathEntry>, RelScope> relPathScopeMap;
-    
+
     private int nextTransformId;
 
     /**
@@ -151,7 +151,7 @@ public class FarragoRelImplementor
                 null,
                 FennelDynamicParamId.StreamType.UNKNOWN);
     }
-    
+
     public FennelDynamicParamId translateParamId(
         FennelRelParamId relParamId,
         FemExecutionStreamDef streamDef,
@@ -193,10 +193,10 @@ public class FarragoRelImplementor
             // Make a copy of the current list to store in the map,
             // since we'll continue adding and removing elements from the
             // current list
-            List<RelPathEntry> pathList = 
+            List<RelPathEntry> pathList =
                 new LinkedList<RelPathEntry>(currRelPathList);
             relPathScopeMap.put(pathList, scope);
-        }    
+        }
         scope.paramMap.put(relParamId, dynamicParamId);
         return dynamicParamId;
     }
@@ -217,12 +217,6 @@ public class FarragoRelImplementor
     }
 
     // implement FennelRelImplementor
-    public FemExecutionStreamDef visitFennelChild(FennelRel rel)
-    {
-        return visitFennelChild(rel, 0);
-    }
-    
-    // implement FennelRelImplementor
     public FemExecutionStreamDef visitFennelChild(FennelRel rel, int ordinal)
     {
         addRelPathEntry(rel, ordinal);
@@ -231,11 +225,11 @@ public class FarragoRelImplementor
         registerRelStreamDef(streamDef, rel, null);
         return streamDef;
     }
-    
+
     /**
      * Adds a RelPathEntry corresponding to a new RelNode to the current
      * RelPathEntry list
-     * 
+     *
      * @param rel the new RelNode
      * @param ordinal the input position of the RelNode
      */
@@ -244,7 +238,7 @@ public class FarragoRelImplementor
         RelPathEntry pathEntry = new RelPathEntry(rel, ordinal);
         currRelPathList.add(0, pathEntry);
     }
-    
+
     /**
      * Removes the RelPathEntry corresponding to the current RelNode being
      * visited from the current RelPathEntry list
@@ -284,7 +278,7 @@ public class FarragoRelImplementor
     public Object visitChildInternal(RelNode child, int ordinal)
     {
         addRelPathEntry(child, ordinal);
-        
+
         Object retObj;
         if (child instanceof FennelRel) {
             retObj = ((FennelRel) child).implementFennelChild(this);
@@ -292,8 +286,8 @@ public class FarragoRelImplementor
             retObj = super.visitChildInternal(child, ordinal);
         }
         removeRelPathEntry();
-        
-        return retObj;      
+
+        return retObj;
     }
 
     public Set<FemExecutionStreamDef> getStreamDefSet()
@@ -505,18 +499,18 @@ public class FarragoRelImplementor
     {
         RelNode relNode;
         int ordinal;
-        
+
         RelPathEntry(RelNode relNode, int ordinal)
         {
             this.relNode = relNode;
             this.ordinal = ordinal;
         }
-        
+
         public int hashCode()
         {
             return relNode.hashCode() + ordinal;
         }
-        
+
         public boolean equals(Object o)
         {
             RelPathEntry relPathEntry = (RelPathEntry) o;
@@ -524,9 +518,9 @@ public class FarragoRelImplementor
                 (relPathEntry.relNode == relNode &&
                     relPathEntry.ordinal == ordinal);
         }
-        
+
     }
-    
+
     private static class RelScope
     {
         Map<FennelRelParamId, FennelDynamicParamId> paramMap;

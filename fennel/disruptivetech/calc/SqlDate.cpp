@@ -39,39 +39,40 @@ FENNEL_BEGIN_NAMESPACE
 
 using namespace boost;
 using namespace boost::posix_time;
+using namespace boost::local_time;
 using namespace boost::gregorian;
 
 typedef boost::date_time::c_local_adjustor<boost::posix_time::ptime> local_adj;
 
 int DateToIsoString(char *dest, boost::posix_time::ptime t)
 { 
-  int y = t.date().year();
-  int m =  t.date().month();
-  int dy = t.date().day();
-  return snprintf(dest,11, "%4d-%02d-%02d", y,m, dy);
+    int y = t.date().year();
+    int m =  t.date().month();
+    int dy = t.date().day();
+    return snprintf(dest,11, "%4d-%02d-%02d", y,m, dy);
 }
 
 
 int TimeToIsoString(char *dest, boost::posix_time::ptime t)
 {
-  time_duration td = t.time_of_day();
-  int h = td.hours();
-  int m = td.minutes();
-  int s = td.seconds();
-  return snprintf(dest,9, "%02d:%02d:%02d", h, m, s);
+    time_duration td = t.time_of_day();
+    int h = td.hours();
+    int m = td.minutes();
+    int s = td.seconds();
+    return snprintf(dest,9, "%02d:%02d:%02d", h, m, s);
 }
 
 int TimestampToIsoString(char *dest, boost::posix_time::ptime t)
 {
-  time_duration td = t.time_of_day();
-  int h   = td.hours();
-  int min = td.minutes();
-  int s   = td.seconds();
+    time_duration td = t.time_of_day();
+    int h   = td.hours();
+    int min = td.minutes();
+    int s   = td.seconds();
 
-  int y   = t.date().year();
-  int mon = t.date().month();
-  int dy  = t.date().day();
-  return snprintf(dest,20, "%4d-%02d-%02d %02d:%02d:%02d", y,mon, dy, h, min, s);
+    int y   = t.date().year();
+    int mon = t.date().month();
+    int dy  = t.date().day();
+    return snprintf(dest,20, "%4d-%02d-%02d %02d:%02d:%02d", y,mon, dy, h, min, s);
 }
 
 int64_t milliseconds_per_day = 24 * 60 * 60 * 1000LL;
@@ -199,18 +200,22 @@ int64_t CurrentTimestamp()
     return (p - epoc).total_milliseconds();
 }
 
-int64_t LocalTime()
+int64_t LocalTime(boost::local_time::time_zone_ptr tzPtr)
 {
-    ptime p = second_clock::universal_time();
-    ptime plocal = local_adj::utc_to_local(p);
-    return plocal.time_of_day().total_milliseconds();
+    local_date_time plocal = local_microsec_clock::local_time(tzPtr);
+    return plocal.local_time().time_of_day().total_milliseconds();
 }
 
-int64_t LocalTimestamp()
+int64_t LocalTimestamp(boost::local_time::time_zone_ptr tzPtr)
 {
-    ptime p = microsec_clock::universal_time();
-    ptime plocal = local_adj::utc_to_local(p);
-    return (plocal - epoc).total_milliseconds();
+    // Create a local epoch. For PST, for example, the epoch is 1970/1/1 PST,
+    // which occurred 8 hrs after the UTC epoch.
+    date d(1970, 1, 1);           // could be static
+    time_duration td(0, 0, 0);    // could be static
+    local_date_time local_epoc(d, td, tzPtr, false);
+
+    local_date_time plocal = local_microsec_clock::local_time(tzPtr);
+    return (plocal - local_epoc).total_milliseconds();
 }
 
 

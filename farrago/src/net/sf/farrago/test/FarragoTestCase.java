@@ -59,6 +59,16 @@ import sqlline.SqlLine;
  * implement the suite() method in order to get a database connection correctly
  * initialized. See FarragoQueryTest for an example.
  *
+ * <p>For SQL tests, FarragoTestCase writes the output from sqlline to a file
+ * called <code>&lt;<i>testname</i>&gt;.log</code>, and compares that output
+ * with a reference log file <code>&lt;<i>testname</i>&gt;.ref</code>.
+ *
+ * <p>It is also possible to have additional logfiles, for tests which generate
+ * output to files. FarragoTestCase scans the input .sql file for lines of the
+ * form
+ * <blockquote><code>##COMPARE &lt;file&gt;.log</code></blockquote>
+ * and for each such command, it compares file.log with file.ref.
+ *
  * @author John V. Sichi
  * @version $Id$
  */
@@ -443,7 +453,6 @@ public abstract class FarragoTestCase
             + getClass().getName() + "." + getName());
         super.setUp();
         stmt = connection.createStatement();
-
         if (connection instanceof FarragoJdbcEngineConnection) {
             // discard any cached query plans (can't call
             // sys_boot.mgmt.flush_code_cache because it may not exist yet,
@@ -518,15 +527,14 @@ public abstract class FarragoTestCase
         if (driverName == null) {
             return new FarragoJdbcEngineDriver();
         }
-        Class<FarragoUnregisteredJdbcEngineDriver> clazz =
-            (Class<FarragoUnregisteredJdbcEngineDriver>) Class.forName(
-                driverName);
-        return clazz.newInstance();
+        Class<?> clazz = Class.forName(driverName);
+        return (FarragoAbstractJdbcDriver) clazz.newInstance();
     }
 
     protected void runSqlLineTest(String sqlFile)
         throws Exception
     {
+        tracer.finer("runSqlLineTest: Starting " + sqlFile);
         FarragoAbstractJdbcDriver driver = newJdbcEngineDriver();
         assert (sqlFile.endsWith(".sql"));
         File sqlFileSansExt =
@@ -543,8 +551,11 @@ public abstract class FarragoTestCase
         PrintStream savedOut = System.out;
         PrintStream savedErr = System.err;
 
+        // get contents of file
+        String sqlFileContents = fileContents(new File(sqlFile));
+
         // read from the specified file
-        FileInputStream inputStream = new FileInputStream(sqlFile.toString());
+        InputStream inputStream = new FileInputStream(sqlFile);
 
         // to make sure the connection is closed properly, append the
         // !quit command
@@ -571,12 +582,32 @@ public abstract class FarragoTestCase
             printStream.close();
             if (shouldDiff()) {
                 diffTestLog();
+
+                // Execute any '##COMPARE <filename>' commands in the .sql file
+                int k;
+                while ((k = sqlFileContents.indexOf("##COMPARE ")) > 0) {
+                    sqlFileContents = sqlFileContents.substring(k);
+                    int n = sqlFileContents.indexOf(TestUtil.NL);
+                    String logFile =
+                        sqlFileContents.substring("##COMPARE ".length(), n);
+                    if (!logFile.endsWith(".log")) {
+                        throw new AssertionError(
+                            "Filename argument to '##COMPARE' must end " +
+                                "in '.log': " + logFile);
+                    }
+                    String refFile =
+                        logFile.substring(
+                            0,
+                            logFile.length() - ".log".length()) + ".ref";
+                    diffFile(new File(logFile), new File(refFile));
+                }
             }
         } finally {
             System.setOut(savedOut);
             System.setErr(savedErr);
             inputStream.close();
         }
+        tracer.finer("runSqlLineTest: Completed " + sqlFile);
     }
 
     protected boolean shouldDiff()
@@ -741,6 +772,12 @@ public abstract class FarragoTestCase
         protected boolean isBlessedSchema(CwmSchema schema)
         {
             String name = schema.getName();
+            return isBlessedSchema(name);
+        }
+
+        protected boolean isBlessedSchema(String name)
+        {
+            tracer.finer("checking name: " + name);
             return name.equals("SALES")
                 || name.equals("SQLJ")
                 || name.equals("INFORMATION_SCHEMA")
@@ -759,7 +796,12 @@ public abstract class FarragoTestCase
          */
         protected boolean isBlessedServer(FemDataServer server)
         {
-            String name = server.getName();
+            return isBlessedServer(server.getName());
+        }
+
+        protected boolean isBlessedServer(String name)
+        {
+            tracer.finer("checking name: " + name);
             return name.equals("HSQLDB_DEMO")
                 || name.startsWith("SYS_");
         }
@@ -776,7 +818,12 @@ public abstract class FarragoTestCase
          */
         protected boolean isBlessedWrapper(FemDataWrapper wrapper)
         {
-            String name = wrapper.getName();
+            return isBlessedWrapper(wrapper.getName());
+        }
+
+        protected boolean isBlessedWrapper(String name)
+        {
+            tracer.finer("checking name: " + name);
             return name.startsWith("SYS_");
         }
 
@@ -792,23 +839,29 @@ public abstract class FarragoTestCase
          */
         protected boolean isBlessedAuthId(FemAuthId authId)
         {
-            String name = authId.getName();
+            return isBlessedAuthId(authId.getName());
+        }
+
+        protected boolean isBlessedAuthId(String name)
+        {
+            tracer.finest("checking name: " + name);
             return name.equals(FarragoCatalogInit.SYSTEM_USER_NAME)
                 || name.equals(FarragoCatalogInit.PUBLIC_ROLE_NAME)
                 || name.equals(FarragoCatalogInit.SA_USER_NAME);
         }
 
-        protected void dropSchemas()
-            throws Exception
-        {
-            final FarragoRepos repos = getRepos();
-            if (repos == null) {
-                //TODO: handle client driver case
-            } else {
-                List<String> list = new ArrayList<String>();
 
-                // NOTE:  don't use DatabaseMetaData.getSchemas since it doesn't
-                // work when Fennel is disabled
+        protected void dropSchemas() throws Exception
+        {
+            List<String> list = new ArrayList<String>();
+
+            tracer.fine("Dropping Schemas.");
+
+            // NOTE:  don't use DatabaseMetaData.getSchemas since it doesn't
+            // work when Fennel is disabled.  Also note that the
+            // repository is not available when using a Client JDBC driver.
+            final FarragoRepos repos = getRepos();
+            if (repos != null) {
                 for (
                     CwmModelElement obj
                     : repos.getSelfAsCatalog().getOwnedElement())
@@ -822,23 +875,34 @@ public abstract class FarragoTestCase
                         list.add(schemaName);
                     }
                 }
-                for (String name : list) {
-                    getStmt().execute(
-                        "drop schema "
-                        + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
-                        + " cascade");
+            } else if (connection != null) {
+                ResultSet schemas = connection.getMetaData().getSchemas();
+                while(schemas.next()) {
+                    String name = schemas.getString(1);
+                    if (!isBlessedSchema(name))
+                    {
+                        list.add(name);
+                    }
                 }
+            }
+
+            tracer.finer("Schema name list has " + list.size() + " entries");
+            for (String name : list) {
+                String dropStmt = "drop schema "
+                    + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
+                    + " cascade";
+                tracer.finer(dropStmt);
+                getStmt().execute(dropStmt);
             }
         }
 
         private void dropDataWrappers()
             throws Exception
         {
+            tracer.fine("Dropping DataWrappers.");
+            List<String> list = new ArrayList<String>();
             final FarragoRepos repos = getRepos();
-            if (repos == null) {
-                //TODO: handle client driver case
-            } else {
-                List<String> list = new ArrayList<String>();
+            if (repos != null) {
                 for (
                     FemDataWrapper wrapper
                     : repos.allOfClass(FemDataWrapper.class))
@@ -849,15 +913,31 @@ public abstract class FarragoTestCase
                     list.add(wrapper.isForeign() ? "foreign" : "local");
                     list.add(wrapper.getName());
                 }
-                Iterator<String> iter = list.iterator();
-                while (iter.hasNext()) {
-                    String wrapperType = iter.next();
-                    String name = iter.next();
-                    getStmt().execute(
-                        "drop " + wrapperType + " data wrapper "
-                        + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
-                        + " cascade");
+            } else if (stmt != null) {
+                if (stmt.execute("select \"name\",\"foreign\" from sys_fem.med.\"DataWrapper\"")) {
+                    ResultSet rset = stmt.getResultSet();
+                    while (rset.next()) {
+                        String name = rset.getString(1);
+                        if (isBlessedWrapper(name)) {
+                            continue;
+                        }
+                        String foreignFlag = rset.getString(2);
+                        list.add(foreignFlag.equals("true") ? "foreign" : "local");
+                        list.add(name);
+                    }
                 }
+            }
+
+            tracer.finer("Datawrapper name list has " + list.size() + " entries");
+            Iterator<String> iter = list.iterator();
+            while (iter.hasNext()) {
+                String wrapperType = iter.next();
+                String name = iter.next();
+                String sql = "drop " + wrapperType + " data wrapper "
+                    + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
+                    + " cascade";
+                tracer.finer(sql);
+                getStmt().execute(sql);
             }
         }
 
@@ -868,11 +948,10 @@ public abstract class FarragoTestCase
         private void dropDataServers()
             throws Exception
         {
+            tracer.fine("Dropping DataServers.");
+            List<String> list = new ArrayList<String>();
             final FarragoRepos repos = getRepos();
-            if (repos == null) {
-                //TODO: handle client driver case
-            } else {
-                List<String> list = new ArrayList<String>();
+            if (repos != null) {
                 for (
                     FemDataServer server
                     : repos.allOfClass(FemDataServer.class))
@@ -882,23 +961,36 @@ public abstract class FarragoTestCase
                     }
                     list.add(server.getName());
                 }
-                for (String name : list) {
-                    getStmt().execute(
-                        "drop server "
-                        + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
-                        + " cascade");
+            } else if (stmt != null) {
+                if (stmt.execute("select \"name\" from sys_fem.med.\"DataServer\"")) {
+                    ResultSet rset = stmt.getResultSet();
+                    while (rset.next()) {
+                        String name = rset.getString(1);
+                        if (isBlessedServer(name)) {
+                            continue;
+                        }
+                        list.add(name);
+                    }
                 }
+            }
+
+            tracer.finer("Dataserver name list has " + list.size() + " entries");
+            for (String name : list) {
+                String sql =  "drop server "
+                    + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
+                    + " cascade";
+                tracer.finer(sql);
+                getStmt().execute(sql);
             }
         }
 
         private void dropAuthIds()
             throws Exception
         {
+            tracer.fine("Dropping AuthIds.");
+            List<String> list = new ArrayList<String>();
             final FarragoRepos repos = getRepos();
-            if (repos == null) {
-                //TODO: handle client driver case
-            } else {
-                List<String> list = new ArrayList<String>();
+            if (repos != null) {
                 for (FemAuthId authId : repos.allOfType(FemAuthId.class)) {
                     if (isBlessedAuthId(authId)) {
                         continue;
@@ -909,9 +1001,25 @@ public abstract class FarragoTestCase
                         + SqlUtil.eigenbaseDialect.quoteIdentifier(
                             authId.getName()));
                 }
-                for (String name : list) {
-                    getStmt().execute("drop " + name);
+            } else if (stmt != null) {
+                if (stmt.execute("select \"name\",\"mofClassName\" from sys_fem.\"Security\".\"AuthId\"")) {
+                    ResultSet rset = stmt.getResultSet();
+                    while (rset.next()) {
+                        String name = rset.getString(1);
+                        String className = rset.getString(2);
+                        if (isBlessedAuthId(name)) {
+                            continue;
+                        }
+                        list.add(className + " " + name);
+                    }
                 }
+            }
+
+            tracer.finer("AuthId name list has " + list.size() + " entries");
+            for (String name : list) {
+                String sql = "drop " + name;
+                tracer.finer(sql);
+                getStmt().execute(sql);
             }
         }
     }

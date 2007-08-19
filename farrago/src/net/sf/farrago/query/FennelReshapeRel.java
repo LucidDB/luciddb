@@ -54,7 +54,7 @@ class FennelReshapeRel
     RelDataType outputRowType;
     CompOperatorEnum compOp;
     Integer [] filterOrdinals;
-    List<RexLiteral> filterLiterals;  
+    List<RexLiteral> filterLiterals;
     FennelRelParamId [] dynamicParamIds;
     Integer [] paramCompareOffsets;
     BitSet paramOutput;
@@ -81,7 +81,7 @@ class FennelReshapeRel
      * leading columns specified by filterOrdinals
      * @param dynamicParamIds dynamic parameters to be read by this rel
      * @param paramCompareOffsets array of offsets within the input tuple that
-     * each dynamic parameter should be compared against; if the dynamic 
+     * each dynamic parameter should be compared against; if the dynamic
      * parameter doesn't need to be compared, then the offset is set to -1
      * @param paramOutput bitset indicating whether each dynamic parameter
      * should be outputted
@@ -158,7 +158,7 @@ class FennelReshapeRel
             RexBuilder rexBuilder = getCluster().getRexBuilder();
             RelDataTypeField [] fields = getChild().getRowType().getFields();
             List<RexNode> filterList = new ArrayList<RexNode>();
-            
+
             if (filterLiterals.size() > 0) {
                 assert(filterLiterals.size() == filterOrdinals.length);
                 for (int i = 0; i < filterOrdinals.length; i++) {
@@ -172,21 +172,21 @@ class FennelReshapeRel
                         rexBuilder);
                 }
             }
-             
+
             int nFilterParams = 0;
-            for (int i = 0; i < paramCompareOffsets.length; i++) {               
+            for (int i = 0; i < paramCompareOffsets.length; i++) {
                 if (paramCompareOffsets[i] >= 0) {
                     nFilterParams++;
                 }
             }
             assert(
                 nFilterParams + filterLiterals.size() == filterOrdinals.length);
-            
+
             // For the filters being compared to dynamic parameters, just
             // use placeholder dynamic parameters in the filter expression
             if (nFilterParams > 0) {
                 int count = 0;
-                for (int i = 0; i < paramCompareOffsets.length; i++) {               
+                for (int i = 0; i < paramCompareOffsets.length; i++) {
                     if (paramCompareOffsets[i] >= 0) {
                         count++;
                         addFilter(
@@ -201,7 +201,7 @@ class FennelReshapeRel
                                 rexBuilder);
                     }
                 }
-            }         
+            }
             condition = RexUtil.andRexNodeList(rexBuilder, filterList);
         }
 
@@ -209,7 +209,7 @@ class FennelReshapeRel
             getChild(),
             condition);
     }
-    
+
     private void addFilter(
         Integer filterOrdinal,
         RelDataTypeField [] fields,
@@ -247,7 +247,7 @@ class FennelReshapeRel
     // override RelNode
     public void explain(RelOptPlanWriter pw)
     {
-        int nTerms = 2;       
+        int nTerms = 2;
         if (filterOrdinals.length > 0) {
             nTerms += 2;
         }
@@ -259,7 +259,7 @@ class FennelReshapeRel
         }
         String [] nameList = new String[nTerms + 1];
         Object [] objects = new Object[nTerms];
-        
+
         nameList[0] = "child";
         nameList[1] = "projection";
         objects[0] = Arrays.asList(projection);
@@ -302,7 +302,7 @@ class FennelReshapeRel
         FemReshapeStreamDef streamDef = repos.newFemReshapeStreamDef();
 
         FemExecutionStreamDef childInput =
-            implementor.visitFennelChild((FennelRel) getChild());
+            implementor.visitFennelChild((FennelRel) getChild(), 0);
         implementor.addDataFlowFromProducerToConsumer(
             childInput,
             streamDef);
@@ -352,7 +352,7 @@ class FennelReshapeRel
             reshapeParam.setCompareOffset(paramCompareOffsets[i]);
             reshapeParam.setOutputParam(paramOutput.get(i));
             streamDef.getReshapeParameter().add(reshapeParam);
-        }     
+        }
 
         return streamDef;
     }

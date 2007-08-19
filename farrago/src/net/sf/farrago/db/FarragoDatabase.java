@@ -388,7 +388,9 @@ public class FarragoDatabase
         try {
             // This will close (in reverse order) all the FarragoAllocations
             // opened by the constructor.
-            closeAllocation();
+            synchronized (this) {
+                closeAllocation();
+            }
             assertNoFennelHandles();
         } catch (Throwable ex) {
             warnOnClose(ex, suppressExcns);

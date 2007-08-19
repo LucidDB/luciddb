@@ -90,7 +90,7 @@ class FtrsIndexBuilderRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemExecutionStreamDef input =
-            implementor.visitFennelChild((FennelRel) getChild());
+            implementor.visitFennelChild((FennelRel) getChild(), 0);
         FarragoTypeFactory typeFactory = getFarragoTypeFactory();
         FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemTableWriterDef tableWriterDef = repos.newFemTableInserterDef();

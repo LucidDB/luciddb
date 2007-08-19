@@ -28,6 +28,7 @@
 // this include needs to come first, since some int64 macros in ICU conflicts
 // with the boost ones.  Fortunately ICU is smart enough.
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/date_time/c_local_time_adjustor.hpp>
 
@@ -42,7 +43,7 @@ FENNEL_BEGIN_NAMESPACE
 #error "endian not defined"
 #endif
 
-/** \file SqlDate.h 
+/** \file SqlDate.h
  *
  * SqlDate
  *
@@ -68,7 +69,7 @@ SqlDateToStr(char *dest,
              bool fixed = false,  // e.g. char, else variable (varchar)
              int padchar = ' ')
 {
-    using namespace boost::posix_time; 
+    using namespace boost::posix_time;
     using namespace boost::gregorian;
 
     typedef boost::date_time::c_local_adjustor<boost::posix_time::ptime> local_adj;
@@ -77,12 +78,13 @@ SqlDateToStr(char *dest,
             // ASCII
 
             // from_time_t isn't in the version of boost we're using. sigh.
+	    // FIXME: jhyde: No longer true. Let's use it.
             //          boost::posix_time::ptime t = boost::posix_time::from_time_t(d);
 
             // we could use the millisecond() duration constructor,
             // instead of time_duration(...), but the time_duration was
             // the only way i could find didn't use an explicit long
-            // parameter, instead of the type parameter, since 
+            // parameter, instead of the type parameter, since
             // int64_t == (long long) on (fc1) linux.
             boost::posix_time::ptime t = epoc + time_duration(0,0,0,d);
 
@@ -92,31 +94,31 @@ SqlDateToStr(char *dest,
             case SQLDATE:
                 len = DateToIsoString(buf, t);
                 if (len > destStorageBytes) {
-                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii => 
+                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii =>
                     // exception SQL99 22.1 22-001 "String Data Right truncation"
-                    throw "22001"; 
+                    throw "22001";
                 }
                 memcpy(dest,buf,len);
                 break;
             case SQLTIME:
                 len = TimeToIsoString(buf, t);
                 if (len > destStorageBytes) {
-                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii => 
+                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii =>
                     // exception SQL99 22.1 22-001 "String Data Right truncation"
-                    throw "22001"; 
+                    throw "22001";
                 }
-                memcpy(dest,buf,len); 
+                memcpy(dest,buf,len);
                 break;
             case SQLTIMESTAMP:
                 len = TimestampToIsoString(buf, t);
                 if (len > destStorageBytes) {
-                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii => 
+                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii =>
                     // exception SQL99 22.1 22-001 "String Data Right truncation"
-                    throw "22001"; 
+                    throw "22001";
                 }
                 memcpy(dest,buf,len);
                 break;
-            default: 
+            default:
                 throw std::logic_error("bad dateTimeType" + dateTimeType);
             }
 
@@ -136,14 +138,14 @@ SqlDateToStr(char *dest,
     } else {
         throw std::logic_error("no UTF8/16/32");
     }
-   
+
 }
 
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint, SqlDateTimeType dateTimeType>
 int64_t
 SqlStrToDate(char *src, int len)
 {
-    using namespace boost::posix_time; 
+    using namespace boost::posix_time;
     using namespace boost::gregorian;
 
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
@@ -167,13 +169,12 @@ SqlStrToDate(char *src, int len)
     } else {
         throw std::logic_error("no UTF8/16/32");
     }
-   
 }
 
 int64_t CurrentTime();
 int64_t CurrentTimestamp();
-int64_t LocalTime();
-int64_t LocalTimestamp();
+int64_t LocalTime(boost::local_time::time_zone_ptr tzPtr);
+int64_t LocalTimestamp(boost::local_time::time_zone_ptr tzPtr);
 
 FENNEL_END_NAMESPACE
 

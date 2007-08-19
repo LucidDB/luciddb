@@ -57,6 +57,9 @@ import org.eigenbase.sql.validate.*;
 
 /**
  * Miscellaneous utility functions.
+ *
+ * @author jhyde
+ * @version $Id$
  */
 public class Util
     extends Toolbox
@@ -1140,13 +1143,22 @@ public class Util
         }
     }
 
+    /**
+     * Returns whether an array of strings contains a given string among the
+     * first <code>length</code> entries.
+     *
+     * @param a Array of strings
+     * @param length Number of entries to search
+     * @param s String to seek
+     * @return Whether array contains the name
+     */
     public static boolean contains(
-        String [] names,
+        String [] a,
         int length,
         String s)
     {
         for (int i = 0; i < length; i++) {
-            if (names[i].equals(s)) {
+            if (a[i].equals(s)) {
                 return true;
             }
         }
@@ -1329,6 +1341,249 @@ public class Util
             sb.append(' ');
         }
         return sb.toString();
+    }
+
+    /**
+     * Converts a Java timezone to POSIX format, so that the boost C++ library
+     * can instantiate timezone objects.
+     *
+     * <p><a href="http://www.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap08.html">POSIX
+     * IEEE 1003.1</a> defines a format for timezone specifications.
+     *
+     * <p>The boost C++ library can read these specifications and instantiate
+     * <a href="http://www.boost.org/doc/html/date_time/local_time.html#date_time.local_time.posix_time_zone">
+     * posix_time_zone</a> objects from them. The purpose of this method,
+     * therefore, is to allow the C++ code such as the fennel calculator to
+     * use the same notion of timezone as Java code.
+     *
+     * <p>The format is as follows:
+     *
+     * <blockquote>
+     * "std offset dst [offset],start[/time],end[/time]"
+     * </blockquote>
+     *
+     * where:<ul>
+     * <li>'std' specifies the abbrev of the time zone.
+     * <li>'offset' is the offset from UTC,
+     *     and takes the form <code>[+|-]hh[:mm[:ss]] {h=0-23, m/s=0-59}</code>
+     * <li>'dst' specifies the abbrev of the time zone during daylight savings
+     *     time
+     * <li>The second offset is how many hours changed during DST. Default=1
+     * <li>'start' & 'end' are the dates when DST goes into (and out of)
+     *     effect. They can each be one of three forms:<ol>
+     *     <li>Mm.w.d {month=1-12, week=1-5 (5 is always last), day=0-6}
+     *     <li>Jn {n=1-365 Feb29 is never counted}
+     *     <li>n {n=0-365 Feb29 is counted in leap years}
+     *     </ol>
+     * <li>'time' has the same format as 'offset', and defaults to 02:00:00
+     *
+     * <p>For example:<ul>
+     * <li>"PST-8PDT01:00:00,M4.1.0/02:00:00,M10.1.0/02:00:00"; or more tersely
+     * <li>"PST-8PDT,M4.1.0,M10.1.0"
+     * </ul>
+     *
+     * <p>(Real format strings do not contain spaces; they are in the above
+     * template only for readability.)
+     *
+     * <p>Boost apparently diverges from the POSIX standard in how it treats
+     * the sign of timezone offsets. The POSIX standard states '<i>If
+     * preceded by a '-', the timezone shall be east of the Prime Meridian;
+     * otherwise, it shall be west</i>', yet boost requires the opposite.
+     * For instance, PST has offset '-8' above. This method generates timezone
+     * strings consistent with boost's expectations.
+     *
+     * @param tz Timezone
+     * @param verbose Whether to include fields which can be omitted because
+     *   they have their default values
+     * @return Timezone in POSIX format (offset sign reversed, per boost's
+     *   idiosyncracies)
+     */
+    public static String toPosix(TimeZone tz, boolean verbose)
+    {
+        StringBuilder buf = new StringBuilder();
+        buf.append(tz.getDisplayName(false, TimeZone.SHORT));
+        appendPosixTime(buf, tz.getRawOffset());
+        final int dstSavings = tz.getDSTSavings();
+        if (dstSavings == 0) {
+            return buf.toString();
+        }
+        buf.append(tz.getDisplayName(true, TimeZone.SHORT));
+        if (verbose || dstSavings != 3600000) {
+            // POSIX allows us to omit DST offset if it is 1:00:00
+            appendPosixTime(buf, dstSavings);
+        }
+        String patternString = ".*," +
+            "startMode=([0-9]*)," +
+            "startMonth=([0-9]*)," +
+            "startDay=([-0-9]*)," +
+            "startDayOfWeek=([0-9]*)," +
+            "startTime=([0-9]*)," +
+            "startTimeMode=([0-9]*)," +
+            "endMode=([0-9]*)," +
+            "endMonth=([0-9]*)," +
+            "endDay=([-0-9]*)," +
+            "endDayOfWeek=([0-9]*)," +
+            "endTime=([0-9]*)," +
+            "endTimeMode=([0-9]*).*";
+        Pattern pattern = Pattern.compile(patternString);
+        String tzString = tz.toString();
+        Matcher matcher = pattern.matcher(tzString);
+        if (!matcher.matches()) {
+            throw new AssertionError("tz.toString not of expected format: " +
+                tzString);
+        }
+        int j = 0;
+        int startMode = Integer.valueOf(matcher.group(++j));
+        int startMonth = Integer.valueOf(matcher.group(++j));
+        int startDay = Integer.valueOf(matcher.group(++j));
+        int startDayOfWeek = Integer.valueOf(matcher.group(++j));
+        int startTime = Integer.valueOf(matcher.group(++j));
+        int startTimeMode = Integer.valueOf(matcher.group(++j));
+        int endMode = Integer.valueOf(matcher.group(++j));
+        int endMonth = Integer.valueOf(matcher.group(++j));
+        int endDay = Integer.valueOf(matcher.group(++j));
+        int endDayOfWeek = Integer.valueOf(matcher.group(++j));
+        int endTime = Integer.valueOf(matcher.group(++j));
+        int endTimeMode = Integer.valueOf(matcher.group(++j));
+        appendPosixDaylightTransition(
+            tz, buf, startMode, startDay, startMonth, startDayOfWeek,
+            startTime, startTimeMode, verbose, false);
+        appendPosixDaylightTransition(
+            tz, buf, endMode, endDay, endMonth, endDayOfWeek,
+            endTime, endTimeMode, verbose, true);
+        return buf.toString();
+    }
+
+    /**
+     * Writes a daylight savings time transition to a POSIX timezone
+     * description.
+     *
+     * @param tz Timezone
+     * @param buf Buffer to append to
+     * @param mode Transition mode
+     * @param day Day of transition
+     * @param month Month of transition
+     * @param dayOfWeek Day of week of transition
+     * @param time Time of transition in millis
+     * @param timeMode Mode of time transition
+     * @param verbose Verbose
+     * @param isEnd Whether this transition is leaving DST
+     */
+    private static void appendPosixDaylightTransition(
+        TimeZone tz,
+        StringBuilder buf,
+        int mode,
+        int day,
+        int month,
+        int dayOfWeek,
+        int time,
+        int timeMode,
+        boolean verbose,
+        boolean isEnd)
+    {
+        buf.append(',');
+        int week = day;
+        switch (mode) {
+        case 1: // SimpleTimeZone.DOM_MODE
+            throw Util.needToImplement(0);
+
+        case 3: // SimpleTimeZone.DOW_GE_DOM_MODE
+            // If the day is 1, 8, 15, 22, we can translate this to case 2.
+            switch (day) {
+            case 1:
+                week = 1; // 1st week of month
+                break;
+            case 8:
+                week = 2; // 2nd week of month
+                break;
+            case 15:
+                week = 3; // 3rd week of month
+                break;
+            case 22:
+                week = 4; // 4th week of month
+                break;
+            default:
+                throw new AssertionError(
+                    "POSIX timezone format cannot represent " + tz);
+            }
+            // fall through
+
+        case 2: // SimpleTimeZone.DOW_IN_MONTH_MODE
+            buf.append('M');
+            buf.append(month + 1); // 1 <= m <= 12
+            buf.append('.');
+            if (week == -1) {
+                // java represents 'last week' differently from POSIX
+                week = 5;
+            }
+            buf.append(week); // 1 <= n <= 5, 5 means 'last'
+            buf.append('.');
+            buf.append(dayOfWeek - 1); // 0 <= d <= 6, 0=Sunday
+            break;
+
+        case 4: // SimpleTimeZone.DOW_LE_DOM_MODE
+            throw Util.needToImplement(0);
+        default:
+            throw new AssertionError("unexpected value: " + mode);
+        }
+        switch (timeMode) {
+        case 0: // SimpleTimeZone.WALL_TIME
+            break;
+        case 1: // SimpleTimeZone.STANDARD_TIME, e.g. Australia/Sydney
+            if (isEnd) {
+                time += tz.getDSTSavings();
+            }
+            break;
+        case 2: // SimpleTimeZone.UTC_TIME, e.g. Europe/Paris
+            time += tz.getRawOffset();
+            if (isEnd) {
+                time += tz.getDSTSavings();
+            }
+            break;
+        }
+        if (verbose || time != 7200000) {
+            // POSIX allows us to omit the time if it is 2am (the default)
+            buf.append('/');
+            appendPosixTime(buf, time);
+        }
+    }
+
+
+    /**
+     * Given a time expressed in milliseconds, append the time formatted as
+     * "hh[:mm[:ss]]".
+     *
+     * @param buf Buffer to append to
+     * @param millis Milliseconds
+     */
+    private static void appendPosixTime(StringBuilder buf, int millis)
+    {
+        if (millis < 0) {
+            buf.append('-');
+            millis = -millis;
+        }
+        int hours = millis / 3600000;
+        buf.append(hours);
+        millis -= (hours * 3600000);
+        if (millis == 0) {
+            return;
+        }
+        buf.append(':');
+        int minutes = millis / 60000;
+        if (minutes < 10) {
+            buf.append('0');
+        }
+        buf.append(minutes);
+        millis -= (minutes * 60000);
+        if (millis == 0) {
+            return;
+        }
+        buf.append(':');
+        int seconds = millis / 1000;
+        if (seconds < 10) {
+            buf.append('0');
+        }
+        buf.append(seconds);
     }
 
     /**
@@ -1584,7 +1839,8 @@ public class Util
      * Returns an exception indicating that we didn't expect to find this
      * enumeration here.
      *
-     * @see org.eigenbase.util.Util#unexpected
+     * @param value Enumeration value which was not expected
+     * @return an error, to be thrown
      */
     public static <E extends Enum<E>> Error unexpected(E value)
     {

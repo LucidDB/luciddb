@@ -1185,4 +1185,44 @@ ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PREC
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testJoinUsing">
+        <Resource name="sql">
+            <![CDATA[SELECT * FROM emp JOIN dept USING (deptno)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], NAME=[$10])
+  JoinRel(condition=[=($7, $9)], joinType=[inner])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testJoinUsingCompound">
+        <Resource name="sql">
+            <![CDATA[SELECT * FROM emp LEFT JOIN (SELECT *, deptno * 5 as empno FROM dept) USING (deptno,empno)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], NAME=[$10], EMPNO0=[$11])
+  JoinRel(condition=[AND(=($7, $9), =($0, $11))], joinType=[left])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
+    ProjectRel(DEPTNO=[$0], NAME=[$1], EMPNO=[*($0, 5)])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testJoinOn">
+        <Resource name="sql">
+            <![CDATA[SELECT * FROM emp JOIN dept on emp.deptno = dept.deptno]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], NAME=[$10])
+  JoinRel(condition=[=($7, $9)], joinType=[inner])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

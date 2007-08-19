@@ -186,7 +186,7 @@ public class LcsTableMergeRel
     {
         FennelRel childFennelRel = (FennelRel) getChild();
         FemExecutionStreamDef childInput =
-            implementor.visitFennelChild(childFennelRel);
+            implementor.visitFennelChild(childFennelRel, 0);
 
         CwmTable table = (CwmTable) lcsTable.getCwmColumnSet();
         FarragoRepos repos = FennelRelUtil.getRepos(this);

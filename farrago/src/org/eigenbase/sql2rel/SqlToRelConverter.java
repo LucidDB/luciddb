@@ -1694,18 +1694,30 @@ public class SqlToRelConverter
         case Using:
             SqlNodeList list = (SqlNodeList) condition;
             RexNode conditionExp = null;
-            for (int i = 0; i < list.size(); i++) {
-                final SqlNode columnName = list.get(i);
-                assert columnName instanceof SqlIdentifier;
-                RexNode exp = bb.convertExpression(columnName);
-                if (i == 0) {
-                    conditionExp = exp;
+            for (SqlNode columnName : list) {
+                final SqlIdentifier id = (SqlIdentifier) columnName;
+                String name = id.getSimple();
+                RelDataType leftRowType = leftRel.getRowType();
+                int leftField =
+                    SqlValidatorUtil.lookupField(leftRowType, name);
+                RexNode left = rexBuilder.makeInputRef(
+                    leftRowType.getFieldList().get(leftField).getType(),
+                    leftField);
+                RelDataType rightRowType = rightRel.getRowType();
+                int rightField =
+                    SqlValidatorUtil.lookupField(rightRowType, name);
+                RexNode right = rexBuilder.makeInputRef(
+                    rightRowType.getFieldList().get(rightField).getType(),
+                    rightField + leftRowType.getFieldList().size());
+                RexNode equalsCall = rexBuilder.makeCall(
+                    SqlStdOperatorTable.equalsOperator,
+                    left, right);
+                if (conditionExp == null) {
+                    conditionExp = equalsCall;
                 } else {
-                    conditionExp =
-                        rexBuilder.makeCall(
-                            SqlStdOperatorTable.andOperator,
-                            conditionExp,
-                            exp);
+                    conditionExp = rexBuilder.makeCall(
+                        SqlStdOperatorTable.andOperator,
+                        conditionExp, equalsCall);
                 }
             }
             assert conditionExp != null;

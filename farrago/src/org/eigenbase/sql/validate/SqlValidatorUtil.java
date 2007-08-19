@@ -114,7 +114,7 @@ public class SqlValidatorUtil
      *
      * @return Ordinal of field, or -1 if not found
      */
-    static int lookupField(
+    public static int lookupField(
         final RelDataType rowType,
         String columnName)
     {
