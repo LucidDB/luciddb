@@ -88,20 +88,15 @@ void JavaTraceTarget::notifyTrace(
     std::string source,TraceLevel level,std::string message)
 {
     JniEnvAutoRef pEnv;
-    // NOTE jvs 29-Oct-2006:  use a local frame so that this method
-    // can be used by long-running Fennel-spawned threads
-    // such as the StatsTimer.  (Without this, the local references
-    // created here become memory leaks.)
-    pEnv->PushLocalFrame(2);
-    try {
-        jstring javaSource = pEnv->NewStringUTF(source.c_str());
-        jstring javaMessage = pEnv->NewStringUTF(message.c_str());
-        pEnv->CallVoidMethod(javaTrace,methTrace,javaSource,level,javaMessage);
-    } catch (...) {
-        pEnv->PopLocalFrame(NULL);
-        throw;
-    }
-    pEnv->PopLocalFrame(NULL);
+
+    // NOTE jvs 21-Aug-2007:  use ref reapers here since this
+    // may be called over and over before control returns to Java
+    
+    jstring javaSource = pEnv->NewStringUTF(source.c_str());
+    JniLocalRefReaper javaSourceReaper(pEnv, javaSource);
+    jstring javaMessage = pEnv->NewStringUTF(message.c_str());
+    JniLocalRefReaper javaMessageReaper(pEnv, javaMessage);
+    pEnv->CallVoidMethod(javaTrace,methTrace,javaSource,level,javaMessage);
 }
 
 TraceLevel JavaTraceTarget::getSourceTraceLevel(std::string source)
