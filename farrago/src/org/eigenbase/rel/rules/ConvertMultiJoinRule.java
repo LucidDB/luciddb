@@ -91,12 +91,7 @@ public class ConvertMultiJoinRule
 
     public void onMatch(RelOptRuleCall call)
     {
-        // if JoinRel has already been converted to a MultiJoinRel,
-        // no need to convert it again
         JoinRel origJoinRel = (JoinRel) call.rels[0];
-        if (origJoinRel.isMultiJoinDone()) {
-            return;
-        }
 
         RelNode left = call.rels[1];
         RelNode right = call.rels[2];

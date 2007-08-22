@@ -53,8 +53,7 @@ public class AddRedundantSemiJoinRule
     public void onMatch(RelOptRuleCall call)
     {
         JoinRel origJoinRel = (JoinRel) call.rels[0];
-
-        if (origJoinRel.isSemiJoinDone() || origJoinRel.isMultiJoinDone()) {
+        if (origJoinRel.isSemiJoinDone()) {
             return;
         }
 
@@ -93,8 +92,7 @@ public class AddRedundantSemiJoinRule
                 origJoinRel.getCondition(),
                 JoinRelType.INNER,
                 Collections.EMPTY_SET,
-                true,
-                origJoinRel.isMultiJoinDone());
+                true);
 
         call.transformTo(newJoinRel);
     }

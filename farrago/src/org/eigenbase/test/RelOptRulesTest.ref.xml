@@ -61,7 +61,7 @@ ProjectRel(EXPR$0=[1])
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(EXPR$0=[1])
-  JoinRel(condition=[=($7, $9)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+  JoinRel(condition=[=($7, $9)], joinType=[inner], semiJoinDone=[true])
     SemiJoinRel(condition=[=($7, $9)], joinType=[inner])
       TableAccessRel(table=[[CATALOG, SALES, EMP]])
       TableAccessRel(table=[[CATALOG, SALES, DEPT]])

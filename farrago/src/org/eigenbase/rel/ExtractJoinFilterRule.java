@@ -82,8 +82,7 @@ public final class ExtractJoinFilterRule
                 joinRel.getCluster().getRexBuilder().makeLiteral(true),
                 joinRel.getJoinType(),
                 (Set<String>) Collections.EMPTY_SET,
-                joinRel.isSemiJoinDone(),
-                joinRel.isMultiJoinDone());
+                joinRel.isSemiJoinDone());
 
         RelNode filterRel =
             CalcRel.createFilter(

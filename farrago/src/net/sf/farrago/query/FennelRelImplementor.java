@@ -51,6 +51,21 @@ public interface FennelRelImplementor
      * @param rel the relational expression
      * @param ordinal input position of the relational expression for its
      * parent
+     * @param addToPathList if true, add this RelNode to the pathlist that
+     * keeps track of the RelNodes that lead up to this node
+     */
+    public FemExecutionStreamDef visitFennelChild(
+        FennelRel rel,
+        int ordinal,
+        boolean addToPathList);
+    
+    /**
+     * Converts a relational expression into a plan by calling its {@link
+     * FennelRel#toStreamDef} method.
+     *
+     * @param rel the relational expression
+     * @param ordinal input position of the relational expression for its
+     * parent
      */
     public FemExecutionStreamDef visitFennelChild(FennelRel rel, int ordinal);
 

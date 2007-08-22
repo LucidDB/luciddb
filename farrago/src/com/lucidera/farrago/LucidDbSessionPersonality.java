@@ -340,6 +340,10 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(new LoptOptimizeJoinRule());
         builder.addMatchOrder(HepMatchOrder.ARBITRARY);
 
+        // Do another round of filtering pushing, in the event that
+        // LoptOptimizeJoinRule has added filters on top of join nodes
+        applyPushDownFilterRules(builder);
+        
         // Push semijoins down to tables.  (The join part is a NOP for now,
         // but once we start taking more kinds of join factors, it won't be.)
         builder.addGroupBegin();

@@ -54,12 +54,6 @@ public final class JoinRel
     // semijoin optimizations, it's pretty much required.
     private final boolean semiJoinDone;
 
-    // Likewise for multiJoinDone.  This boolean indicates that this JoinRel
-    // has already been converted to a MultiJoinRel and now is being
-    // converted back to a JoinRel and therefore should not undergo another
-    // transformation back to a MultiJoinRel.
-    private final boolean multiJoinDone;
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -89,7 +83,6 @@ public final class JoinRel
             condition,
             joinType,
             variablesStopped,
-            false,
             false);
     }
 
@@ -106,11 +99,8 @@ public final class JoinRel
      * LHS and used by the RHS and are not available to nodes above this JoinRel
      * in the tree
      * @param semiJoinDone Whether this join has been translated to a semi-join
-     * @param multiJoinDone Whether this join has been translated to a
-     * multi-join
      *
      * @see #isSemiJoinDone()
-     * @see #isMultiJoinDone()
      */
     public JoinRel(
         RelOptCluster cluster,
@@ -119,8 +109,7 @@ public final class JoinRel
         RexNode condition,
         JoinRelType joinType,
         Set<String> variablesStopped,
-        boolean semiJoinDone,
-        boolean multiJoinDone)
+        boolean semiJoinDone)
     {
         super(
             cluster,
@@ -131,7 +120,6 @@ public final class JoinRel
             joinType,
             variablesStopped);
         this.semiJoinDone = semiJoinDone;
-        this.multiJoinDone = multiJoinDone;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -146,29 +134,26 @@ public final class JoinRel
                 condition.clone(),
                 joinType,
                 new HashSet<String>(variablesStopped),
-                isSemiJoinDone(),
-                isMultiJoinDone());
+                isSemiJoinDone());
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
     public void explain(RelOptPlanWriter pw)
     {
-        // NOTE jvs 14-Mar-2006: Do it this way so that semijoin/multijoin state
-        // don't clutter things up in optimizers that don't use semijoins or
-        // multijoins.
-        if (!semiJoinDone && !multiJoinDone) {
+        // NOTE jvs 14-Mar-2006: Do it this way so that semijoin state
+        // don't clutter things up in optimizers that don't use semijoins
+        if (!semiJoinDone) {
             super.explain(pw);
             return;
         }
         pw.explain(
             this,
             new String[] {
-                "left", "right", "condition", "joinType", "semiJoinDone",
-                "multiJoinDone"
+                "left", "right", "condition", "joinType", "semiJoinDone"
             },
             new Object[] {
-                joinType.name().toLowerCase(), semiJoinDone, multiJoinDone
+                joinType.name().toLowerCase(), semiJoinDone
             });
     }
 
@@ -180,15 +165,6 @@ public final class JoinRel
     public boolean isSemiJoinDone()
     {
         return semiJoinDone;
-    }
-
-    /**
-     * Returns whether this JoinRel has already been converted to a {@link
-     * org.eigenbase.rel.rules.MultiJoinRel}.
-     */
-    public boolean isMultiJoinDone()
-    {
-        return multiJoinDone;
     }
 }
 

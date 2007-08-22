@@ -587,6 +587,18 @@ explain plan for
             p.id = t.a
         order by sid;
 
+-- LER-6330
+explain plan for
+    select s1.sid, s2.sid
+        from product p1, sales s1, product p2, sales s2
+        where s1.product_id = p1.id and p1.size = 'S' and
+            s2.product_id = p2.id and p2.size = 'S';
+explain plan for
+    select s1.sid
+        from sales s1, customer c1, sales s2, customer c2
+        where s1.customer = c1.id and s2.customer = c2.id and c2.company = 'DEF'
+            and c1.id = c2.id;
+
 -- run the queries
 !set outputformat table
 select sid, p.id, s.quantity
@@ -639,6 +651,16 @@ select sid, s.quantity, t.c
     where
         s.product_id = p.id and p.size = 'S' and
         p.id = t.a
+    order by sid;
+select s1.sid s1id, s2.sid s2id
+    from product p1, sales s1, product p2, sales s2
+    where s1.product_id = p1.id and p1.size = 'S' and
+        s2.product_id = p2.id and p2.size = 'S'
+    order by s1id, s2id;
+select s1.sid
+    from sales s1, customer c1, sales s2, customer c2
+    where s1.customer = c1.id and s2.customer = c2.id and c2.company = 'DEF'
+        and c1.id = c2.id
     order by sid;
 
 -----------------------------------------
