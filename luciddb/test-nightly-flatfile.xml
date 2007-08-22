@@ -20,7 +20,7 @@
       <test-suite-call testfile="test/sql/flatfile-specific/test.xml"/>
       <test-suite-call testfile="test/sql/sys/test.xml">
         <test-suite-modifier value="oracle"/>
-        <property name="foreign.db" value="ldb-oracle"/>
+        <property name="foreign.db" value="oracle"/>
       </test-suite-call>
 
       <cleanup-hook>

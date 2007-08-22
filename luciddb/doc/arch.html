@@ -87,6 +87,12 @@ systems; LucidDB can be used as a data warehouse, data mart, or
 operational data store in tandem with the traditional transactional
 systems used as data sources.
 
+<p>
+
+<a target="_top"
+href="http://docs.eigenbase.org/LucidDbDataStorageAndAccess">More
+information</a> on data storage and access in LucidDB is available.
+
 <hr>
 
 <h2>Page Versioning</h2>
@@ -111,6 +117,12 @@ snapshot is minimized.  LucidDB is able to quickly identify the appropriate
 page by walking through the page chain metadata.
 There's no need to manipulate data at the row-level, or to reconstruct a
 snapshot based on previously logged information.
+
+<p>
+
+<a target="_top"
+href="http://docs.eigenbase.org/LucidDbConcurrencyControl">More
+information</a> on concurrency control in LucidDB is available.
 
 <hr>
 
@@ -208,7 +220,8 @@ update, or deletion.
 <li>Sequence support: via the GENERATED clause in surrogate key
 column definitions.
 
-<li>Application library: LucidDB comes with <em>applib</em>, a library
+<li>Application library: LucidDB comes with <a target="_top"
+href="http://docs.eigenbase.org/LucidDbAppLib">applib</a>, a library
 of commonly used ETL and analytical functions and transformation,
 e.g. a calendar table generator.
 
@@ -229,8 +242,11 @@ href="http://mondrian.sf.net">Mondrian</a> pure-Java OLAP engine,
 enabling direct in-process JDBC calls from Mondrian into LucidDB with
 no communications overhead.  And the SQL queries issued by Mondrian
 for implementing MDX statements from an OLAP client are of exactly the
-form LucidDB's optimizer was designed for.  And the LucidDB roadmap
+form LucidDB's optimizer was designed for.  Tthe LucidDB roadmap
 includes proposed features for tighter integration, such as unified
-metadata management and DDL statements for cube creation.
+metadata management and DDL statements for cube creation.  The first
+installment is available in the form of <a target="_top"
+href="http://docs.eigenbase.org/LucidDbMondrianReplication">Mondrian
+source replication</a> support.
 
 </body>

@@ -29,10 +29,16 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+
+#include <boost/test/unit_test_suite.hpp>
+
+// FIXME jvs 12-Aug-2007:  This file had compilation errors on Windows
+// so I disabled it for now.
+#ifndef __MINGW32__
+
 #include <assert.h>
 #include <stdio.h>
 #include <sysexits.h>
-#include <boost/test/unit_test_suite.hpp>
 
 #include "fennel/disruptivetech/calc/NoisyArithmetic.h"
 
@@ -507,8 +513,9 @@ return 0;	/* disabled for now */
     return 0;
 }
 
+#endif
+
 boost::unit_test_framework::test_suite *init_unit_test_suite(int,char **)
 {
     return NULL;
 }
-
