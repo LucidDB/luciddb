@@ -1663,7 +1663,10 @@ public class RelDecorrelator
         // override RexLiteral
         public RexNode visitLiteral(RexLiteral literal)
         {
-            if (projectPulledAboveLeftCorrelator && (nullIndicator != null)) {
+            // Use nullIndicator to decide whether to project null.
+            // Do nothing if the literal is null.
+            if (!RexUtil.isNull(literal) &&
+                projectPulledAboveLeftCorrelator && (nullIndicator != null)) {
                 return createCaseExpression(
                     nullIndicator,
                     rexBuilder.constantNull(),
