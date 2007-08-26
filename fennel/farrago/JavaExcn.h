@@ -32,6 +32,12 @@ FENNEL_BEGIN_NAMESPACE
 
 /**
  * Exception class for wrapping Java exceptions.
+ *
+ *<p>
+ *
+ * REVIEW jvs 23-Aug-2007:  If any code actually handles one of these
+ * and carries on, it may need to delete the local jthrowable reference
+ * to avoid a leak.
  */
 class JavaExcn : public FennelExcn
 {

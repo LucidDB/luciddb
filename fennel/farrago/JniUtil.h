@@ -41,6 +41,10 @@ class JniExceptionChecker
 {
     JNIEnv *pEnv;
 
+    /**
+     * Checks whether any Java exception has occurred, and if so throws
+     * it as a C++ exception.
+     */
     void checkExceptions();
 
 public:
@@ -483,14 +487,6 @@ public:
         return handleCount;
     }
 
-    /**
-     * Checks whether a Java exception has occurred, and if so throws
-     * it as a C++ exception.
-     *
-     * @param pEnv Java environment
-     */
-    static void checkException(JNIEnv *pEnv);
-    
     /**
      * Constructs a FemTupleDescriptor xmi string
      */
