@@ -1527,6 +1527,101 @@ Error: At line 2, column 28: Cannot apply '$SCALAR_QUERY' to arguments of type '
 |                   FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                    |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 > 
+> -- bug with RexShuttle.visitCall() during efficient decorrelation
+> -- ABS function input type is changed to integer nullable after decorrelation, so
+> -- should the return type of this function.
+> explain plan without implementation for
+> select sum((select abs(depts.deptno) from depts where depts.deptno = emps.deptno)) from emps;
++----------------------------------------------------------------------------------------+
+|                                        column0                                         |
++----------------------------------------------------------------------------------------+
+| ProjectRel(EXPR$0=[$0])                                                                |
+|   AggregateRel(groupCount=[0], agg#0=[SUM(0)])                                         |
+|     ProjectRel($f0=[$10])                                                              |
+|       CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                 |
+|         AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])                          |
+|           ProjectRel(EXPR$0=[ABS($0)])                                                 |
+|             FilterRel(condition=[=($0, $cor0.DEPTNO)])                                 |
+|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                          |
++----------------------------------------------------------------------------------------+
+> 
+> explain plan for
+> select sum((select abs(depts.deptno) from depts where depts.deptno = emps.deptno)) from emps;
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                               column0                                                                                                |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                            |
+|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                                                                             |
+|     FennelAggRel(groupCount=[0], agg#0=[SUM(0)])                                                                                                                                                     |
+|       IteratorToFennelConverter                                                                                                                                                                      |
+|         IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS NULL($t1)], expr#3=[null], expr#4=[CAST($t3):INTEGER], expr#5=[ABS($t1)], expr#6=[CAST($t5):INTEGER], expr#7=[CASE($t2, $t4, $t6)], $f0=[$t7])  |
+|           FennelToIteratorConverter                                                                                                                                                                  |
+|             LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                             |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])                                                                             |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                         |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+> 
+> -- Without bug fix, this will result in assertion failure for setNull() method in generated
+> -- java code for the cast expression.
+> select sum((select abs(depts.deptno) from depts where depts.deptno = emps.deptno)) from emps;
++---------+
+| EXPR$0  |
++---------+
+| 50      |
++---------+
+> 
+> -- bug with RexShuttle.visitLiteral() during efficient decorrelation
+> -- During efficient decorrelation, skip rewirting(with nullIndicator) for null literal
+> -- because the end result is the same: a null literal. In fact, rewrite attempts will 
+> -- result in incorrect types.
+> explain plan without implementation for 
+> select sum((select cast(null as integer) from depts where depts.deptno = emps.deptno)) from emps;
++----------------------------------------------------------------------------------------+
+|                                        column0                                         |
++----------------------------------------------------------------------------------------+
+| ProjectRel(EXPR$0=[$0])                                                                |
+|   AggregateRel(groupCount=[0], agg#0=[SUM(0)])                                         |
+|     ProjectRel($f0=[$10])                                                              |
+|       CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                 |
+|         AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])                          |
+|           ProjectRel(EXPR$0=[CAST(null):INTEGER])                                      |
+|             FilterRel(condition=[=($0, $cor0.DEPTNO)])                                 |
+|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                          |
++----------------------------------------------------------------------------------------+
+> 
+> explain plan for 
+> select sum((select cast(null as integer) from depts where depts.deptno = emps.deptno)) from emps;
++---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                            column0                                                                            |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                     |
+|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                                      |
+|     FennelAggRel(groupCount=[0], agg#0=[SUM(0)])                                                                                                              |
+|       IteratorToFennelConverter                                                                                                                               |
+|         IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS NULL($t1)], expr#3=[null], expr#4=[CAST($t3):INTEGER], expr#5=[CASE($t2, $t4, $t4)], $f0=[$t5])          |
+|           FennelToIteratorConverter                                                                                                                           |
+|             LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])                                                                                      |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])                                      |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])  |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+> 
+> -- Without bug fix, this will result in assertion failure for setNull() method in generated
+> -- java code for the incorrect cast expression(cast(null):null).
+> select sum((select cast(null as integer) from depts where depts.deptno = emps.deptno)) from emps;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+> select sum((select cast(cast(null as varchar(1)) as integer) from depts where depts.deptno = emps.deptno)) from emps;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+> 
 > -- 3.6 HAVING clause scalar subquery.
 > --
 > --     Note: SQL2003 seems to contradict itself wrt to aggregates in HAVING clause.
@@ -3280,109 +3375,113 @@ FROM `DEPTS2` (state=,code=0)
 > explain plan for
 > select empno, deptno from v1
 > where v1.empno = (select max(v2.empno) from v2 where v2.deptno = v1.deptno);
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                   column0                                                                                                    |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..2=[{inputs}], expr#3=[=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])                                                                                                               |
-|   FennelToIteratorConverter                                                                                                                                                                                  |
-|     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[RIGHTSEMI])                                                                                                                                  |
-|       FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[0]], joinKeyParamIds=[[1]])                                                                                                                   |
-|         FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                                       |
-|         IteratorToFennelConverter                                                                                                                                                                            |
-|           IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t1, $t2)], expr#4=[<($t0, $t3)], $f0=[$t0], $condition=[$t4])                                                                            |
-|             FennelToIteratorConverter                                                                                                                                                                        |
-|               FennelReshapeRel(projection=[[0]], dynamicParameters=[[1]], paramCompareOffsets=[[-1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL DEPTNO) NOT NULL])                    |
-|                 FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                                          |
-|                   LhxAggRel(groupCount=[1])                                                                                                                                                                  |
-|                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                                      |
-|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                                             |
-|       FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO, INTEGER $f1) NOT NULL])                                                            |
-|         LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                                         |
-|           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                                      |
-|           LhxAggRel(groupCount=[1], agg#0=[MAX(1)])                                                                                                                                                          |
-|             FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER $f0) NOT NULL])                                                                                    |
-|               LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])                                                                                                                                  |
-|                 FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])                                                                   |
-|                   LhxAggRel(groupCount=[1])                                                                                                                                                                  |
-|                     FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])                                                                                            |
-|                       LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[RIGHTSEMI])                                                                                                                |
-|                         FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[0]], joinKeyParamIds=[[1]])                                                                                                 |
-|                           FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                     |
-|                           IteratorToFennelConverter                                                                                                                                                          |
-|                             IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t1, $t2)], expr#4=[<($t0, $t3)], $f0=[$t0], $condition=[$t4])                                                          |
-|                               FennelToIteratorConverter                                                                                                                                                      |
-|                                 FennelReshapeRel(projection=[[0]], dynamicParameters=[[1]], paramCompareOffsets=[[-1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL DEPTNO) NOT NULL])  |
-|                                   FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                        |
-|                                     LhxAggRel(groupCount=[1])                                                                                                                                                |
-|                                       FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                    |
-|                                         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                           |
-|                         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                        |
-|                 FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER EMPNO, INTEGER DEPTNO) NOT NULL])                    |
-|                   LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                               |
-|                     LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$EMPS2$EMPNO]])                             |
-|                     LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                                |
-|                       IteratorToFennelConverter                                                                                                                                                              |
-|                         IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                                               |
-|                           FennelToIteratorConverter                                                                                                                                                          |
-|                             LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                                                    |
-|                               LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$DEPTS2$DEPTNO]])                                                     |
-|                               LhxAggRel(groupCount=[1])                                                                                                                                                      |
-|                                 FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                          |
-|                                   LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO]])                                                   |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                     column0                                                                                                      |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                        |
+|   FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO) NOT NULL])                                                                                    |
+|     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[RIGHTSEMI])                                                                                                                                      |
+|       FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[0]], joinKeyParamIds=[[1]])                                                                                                                       |
+|         FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                                           |
+|         IteratorToFennelConverter                                                                                                                                                                                |
+|           IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t1, $t2)], expr#4=[<($t0, $t3)], $f0=[$t0], $condition=[$t4])                                                                                |
+|             FennelToIteratorConverter                                                                                                                                                                            |
+|               FennelReshapeRel(projection=[[0]], dynamicParameters=[[1]], paramCompareOffsets=[[-1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL DEPTNO) NOT NULL])                        |
+|                 FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                                              |
+|                   LhxAggRel(groupCount=[1])                                                                                                                                                                      |
+|                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                                          |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                                                 |
+|       IteratorToFennelConverter                                                                                                                                                                                  |
+|         IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                                                                                           |
+|           FennelToIteratorConverter                                                                                                                                                                              |
+|             LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                                         |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                                      |
+|               LhxAggRel(groupCount=[1], agg#0=[MAX(1)])                                                                                                                                                          |
+|                 FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER $f0) NOT NULL])                                                                                    |
+|                   LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])                                                                                                                                  |
+|                     FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])                                                                   |
+|                       LhxAggRel(groupCount=[1])                                                                                                                                                                  |
+|                         FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])                                                                                            |
+|                           LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[RIGHTSEMI])                                                                                                                |
+|                             FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[0]], joinKeyParamIds=[[1]])                                                                                                 |
+|                               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                     |
+|                               IteratorToFennelConverter                                                                                                                                                          |
+|                                 IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t1, $t2)], expr#4=[<($t0, $t3)], $f0=[$t0], $condition=[$t4])                                                          |
+|                                   FennelToIteratorConverter                                                                                                                                                      |
+|                                     FennelReshapeRel(projection=[[0]], dynamicParameters=[[1]], paramCompareOffsets=[[-1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL DEPTNO) NOT NULL])  |
+|                                       FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                        |
+|                                         LhxAggRel(groupCount=[1])                                                                                                                                                |
+|                                           FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                    |
+|                                             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                           |
+|                             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                        |
+|                     FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER EMPNO, INTEGER DEPTNO) NOT NULL])                    |
+|                       LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                               |
+|                         LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$EMPS2$EMPNO]])                             |
+|                         LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                                |
+|                           IteratorToFennelConverter                                                                                                                                                              |
+|                             IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                                               |
+|                               FennelToIteratorConverter                                                                                                                                                          |
+|                                 LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                                                    |
+|                                   LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$DEPTS2$DEPTNO]])                                                     |
+|                                   LhxAggRel(groupCount=[1])                                                                                                                                                      |
+|                                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                          |
+|                                       LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO]])                                                   |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 > 
 > explain plan for
 > select * from v5;
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                   column0                                                                                                    |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..2=[{inputs}], expr#3=[=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])                                                                                                               |
-|   FennelToIteratorConverter                                                                                                                                                                                  |
-|     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[RIGHTSEMI])                                                                                                                                  |
-|       FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[0]], joinKeyParamIds=[[1]])                                                                                                                   |
-|         FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                                       |
-|         IteratorToFennelConverter                                                                                                                                                                            |
-|           IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t1, $t2)], expr#4=[<($t0, $t3)], $f0=[$t0], $condition=[$t4])                                                                            |
-|             FennelToIteratorConverter                                                                                                                                                                        |
-|               FennelReshapeRel(projection=[[0]], dynamicParameters=[[1]], paramCompareOffsets=[[-1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL DEPTNO) NOT NULL])                    |
-|                 FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                                          |
-|                   LhxAggRel(groupCount=[1])                                                                                                                                                                  |
-|                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                                      |
-|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                                             |
-|       FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO, INTEGER $f1) NOT NULL])                                                            |
-|         LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                                         |
-|           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                                      |
-|           LhxAggRel(groupCount=[1], agg#0=[MAX(1)])                                                                                                                                                          |
-|             FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER $f0) NOT NULL])                                                                                    |
-|               LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])                                                                                                                                  |
-|                 FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])                                                                   |
-|                   LhxAggRel(groupCount=[1])                                                                                                                                                                  |
-|                     FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])                                                                                            |
-|                       LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[RIGHTSEMI])                                                                                                                |
-|                         FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[0]], joinKeyParamIds=[[1]])                                                                                                 |
-|                           FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                     |
-|                           IteratorToFennelConverter                                                                                                                                                          |
-|                             IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t1, $t2)], expr#4=[<($t0, $t3)], $f0=[$t0], $condition=[$t4])                                                          |
-|                               FennelToIteratorConverter                                                                                                                                                      |
-|                                 FennelReshapeRel(projection=[[0]], dynamicParameters=[[1]], paramCompareOffsets=[[-1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL DEPTNO) NOT NULL])  |
-|                                   FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                        |
-|                                     LhxAggRel(groupCount=[1])                                                                                                                                                |
-|                                       FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                    |
-|                                         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                           |
-|                         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                        |
-|                 FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER EMPNO, INTEGER DEPTNO) NOT NULL])                    |
-|                   LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                               |
-|                     LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$EMPS2$EMPNO]])                             |
-|                     LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                                |
-|                       IteratorToFennelConverter                                                                                                                                                              |
-|                         IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                                               |
-|                           FennelToIteratorConverter                                                                                                                                                          |
-|                             LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                                                    |
-|                               LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$DEPTS2$DEPTNO]])                                                     |
-|                               LhxAggRel(groupCount=[1])                                                                                                                                                      |
-|                                 FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                          |
-|                                   LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO]])                                                   |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                     column0                                                                                                      |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                        |
+|   FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO) NOT NULL])                                                                                    |
+|     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[RIGHTSEMI])                                                                                                                                      |
+|       FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[0]], joinKeyParamIds=[[1]])                                                                                                                       |
+|         FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                                           |
+|         IteratorToFennelConverter                                                                                                                                                                                |
+|           IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t1, $t2)], expr#4=[<($t0, $t3)], $f0=[$t0], $condition=[$t4])                                                                                |
+|             FennelToIteratorConverter                                                                                                                                                                            |
+|               FennelReshapeRel(projection=[[0]], dynamicParameters=[[1]], paramCompareOffsets=[[-1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL DEPTNO) NOT NULL])                        |
+|                 FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                                              |
+|                   LhxAggRel(groupCount=[1])                                                                                                                                                                      |
+|                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                                          |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                                                 |
+|       IteratorToFennelConverter                                                                                                                                                                                  |
+|         IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                                                                                           |
+|           FennelToIteratorConverter                                                                                                                                                                              |
+|             LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                                         |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                                      |
+|               LhxAggRel(groupCount=[1], agg#0=[MAX(1)])                                                                                                                                                          |
+|                 FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER $f0) NOT NULL])                                                                                    |
+|                   LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])                                                                                                                                  |
+|                     FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])                                                                   |
+|                       LhxAggRel(groupCount=[1])                                                                                                                                                                  |
+|                         FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])                                                                                            |
+|                           LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[RIGHTSEMI])                                                                                                                |
+|                             FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[0]], joinKeyParamIds=[[1]])                                                                                                 |
+|                               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])                                     |
+|                               IteratorToFennelConverter                                                                                                                                                          |
+|                                 IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t1, $t2)], expr#4=[<($t0, $t3)], $f0=[$t0], $condition=[$t4])                                                          |
+|                                   FennelToIteratorConverter                                                                                                                                                      |
+|                                     FennelReshapeRel(projection=[[0]], dynamicParameters=[[1]], paramCompareOffsets=[[-1]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER NOT NULL DEPTNO) NOT NULL])  |
+|                                       FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                        |
+|                                         LhxAggRel(groupCount=[1])                                                                                                                                                |
+|                                           FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                    |
+|                                             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                           |
+|                             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                        |
+|                     FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER EMPNO, INTEGER DEPTNO) NOT NULL])                    |
+|                       LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                               |
+|                         LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$EMPS2$EMPNO]])                             |
+|                         LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                                |
+|                           IteratorToFennelConverter                                                                                                                                                              |
+|                             IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                                               |
+|                               FennelToIteratorConverter                                                                                                                                                          |
+|                                 LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                                                    |
+|                                   LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$DEPTS2$DEPTNO]])                                                     |
+|                                   LhxAggRel(groupCount=[1])                                                                                                                                                      |
+|                                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                          |
+|                                       LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO]])                                                   |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 > 
 > select empno, deptno from v1
 > where v1.empno = (select max(v2.empno) from v2 where v2.deptno = v1.deptno);

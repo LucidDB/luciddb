@@ -199,8 +199,8 @@ ProjectRel(NAME=[$1])
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(NAME=[$1])
-  JoinRel(condition=[=($0, $12)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
-    JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+  JoinRel(condition=[=($0, $12)], joinType=[inner], semiJoinDone=[true])
+    JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true])
       SemiJoinRel(condition=[=($0, $10)], joinType=[inner])
         SemiJoinRel(condition=[=($2, $10)], joinType=[inner])
           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
@@ -229,8 +229,8 @@ ProjectRel(NAME=[$1])
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(NAME=[$1])
-  JoinRel(condition=[=($10, $14)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
-    JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+  JoinRel(condition=[=($10, $14)], joinType=[inner], semiJoinDone=[true])
+    JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true])
       SemiJoinRel(condition=[=($2, $10)], joinType=[inner])
         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
         TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
@@ -257,7 +257,7 @@ ProjectRel(NAME=[$1])
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(NAME=[$1])
-  JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+  JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true])
     FilterRel(condition=[=($1, 'foo')])
       SemiJoinRel(condition=[=($2, $10)], joinType=[inner])
         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
@@ -330,7 +330,7 @@ ProjectRel(NAME=[$1])
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(NAME=[$1])
-  JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+  JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true])
     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
     TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
 ]]>
@@ -352,7 +352,7 @@ ProjectRel(NAME=[$1])
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(NAME=[$1])
-  JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+  JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true])
     FilterRel(condition=[=($1, 'foo')])
       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
     TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
@@ -377,8 +377,8 @@ ProjectRel(NAME=[$1])
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(NAME=[$1])
-  JoinRel(condition=[=($10, $14)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
-    JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+  JoinRel(condition=[=($10, $14)], joinType=[inner], semiJoinDone=[true])
+    JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true])
       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
       TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
@@ -403,8 +403,8 @@ ProjectRel(NAME=[$1])
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(NAME=[$1])
-  JoinRel(condition=[=($10, $14)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
-    JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+  JoinRel(condition=[=($10, $14)], joinType=[inner], semiJoinDone=[true])
+    JoinRel(condition=[=($2, $10)], joinType=[inner], semiJoinDone=[true])
       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
       FilterRel(condition=[=($1, 'foo')])
         TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
@@ -484,7 +484,7 @@ ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[$2], DEPTNO=[$3])
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(NAME=[$0], EXPR$1=[$1], EXPR$2=[$2], DEPTNO=[$3])
-  JoinRel(condition=[=($3, $4)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+  JoinRel(condition=[=($3, $4)], joinType=[inner], semiJoinDone=[true])
     ProjectRel(NAME=[$1], EXPR$1=[TRIM(FLAG(BOTH), ' ', $4)], EXPR$2=[*($6, 2)], DEPTNO=[$2])
       SemiJoinRel(condition=[=($2, $10)], joinType=[inner])
         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])

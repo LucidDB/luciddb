@@ -1052,10 +1052,16 @@ public abstract class FarragoCatalogUtil
             }
         }
 
-        int ordinal = 0;
-        for (FemColumnHistogramBar bar : bars) {
-            bar.setHistogram(histogram);
-            bar.setOrdinal(ordinal++);
+        // only update the bars corresponding to new bars; reused bars are
+        // already associated with the histogram
+        if (barCount > oldBarsCount) {
+            int ordinal = oldBarsCount;
+            Iterator iter = bars.listIterator(ordinal);
+            while (iter.hasNext()) {
+                FemColumnHistogramBar bar = (FemColumnHistogramBar) iter.next();
+                bar.setHistogram(histogram);
+                bar.setOrdinal(ordinal++);
+            }
         }
     }
 

@@ -219,13 +219,31 @@ public class FarragoRelImplementor
     // implement FennelRelImplementor
     public FemExecutionStreamDef visitFennelChild(FennelRel rel, int ordinal)
     {
-        addRelPathEntry(rel, ordinal);
+        return visitFennelChild(rel, ordinal, true);
+    }
+    
+    // implement FennelRelImplementor
+    public FemExecutionStreamDef visitFennelChild(
+        FennelRel rel,
+        int ordinal,
+        boolean addToPathList)
+    {
+        if (addToPathList) {
+            addRelPathEntry(rel, ordinal);
+        }
         FemExecutionStreamDef streamDef = toStreamDefImpl(rel);
-        removeRelPathEntry();
+        if (addToPathList) {
+            removeRelPathEntry();
+        }
         registerRelStreamDef(streamDef, rel, null);
         return streamDef;
     }
 
+    public List<RelPathEntry> getRelPathEntry()
+    {
+    	return currRelPathList;
+    }
+    
     /**
      * Adds a RelPathEntry corresponding to a new RelNode to the current
      * RelPathEntry list
@@ -495,7 +513,7 @@ public class FarragoRelImplementor
      * RelPathEntry keeps track of a RelNode and its input position within
      * that node's parent RelNode in the execution stream graph.
      */
-    private static class RelPathEntry
+    public static class RelPathEntry
     {
         RelNode relNode;
         int ordinal;

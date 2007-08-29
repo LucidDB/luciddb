@@ -114,8 +114,7 @@ public class SwapJoinRule
                 condition,
                 joinType,
                 Collections.EMPTY_SET,
-                join.isSemiJoinDone(),
-                join.isMultiJoinDone());
+                join.isSemiJoinDone());
         if (!join.getVariablesStopped().isEmpty()) {
             newJoin.setVariablesStopped(
                 new HashSet<String>(join.getVariablesStopped()));

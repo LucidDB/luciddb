@@ -422,12 +422,18 @@ std::string JniUtil::getXmi(const TupleDescriptor &tupleDescriptor)
     return s;
 }
 
-JniExceptionChecker::~JniExceptionChecker()
+void JniExceptionChecker::checkExceptions()
 {
     jthrowable excn = pEnv->ExceptionOccurred();
     if (excn) {
+        pEnv->ExceptionClear();
         throw JavaExcn(excn);
     }
+}
+
+JniExceptionChecker::~JniExceptionChecker()
+{
+    checkExceptions();
 }
 
 JniEnvAutoRef::JniEnvAutoRef()
@@ -469,29 +475,6 @@ void JniEnvRef::handleExcn(std::exception &ex)
     jthrowable t = (jthrowable)
         pEnv->NewObject(classSQLException,constructor,jMessage);
     pEnv->Throw(t);
-}
-
-JniLocalFrame::JniLocalFrame(JNIEnv *pEnvInit, jint capacity)
-{
-    pEnv = pEnvInit;
-    jint rc = pEnv->PushLocalFrame(capacity);
-
-    if (rc < 0) {
-        success = false;
-        jthrowable excn = pEnv->ExceptionOccurred();
-        if (excn) {
-            throw JavaExcn(excn);
-        }
-    } else {
-        success = true;
-    }
-}
-
-JniLocalFrame::~JniLocalFrame()
-{
-    if (success) {
-        pEnv->PopLocalFrame(NULL);
-    }
 }
 
 void JniPseudoUuidGenerator::generateUuid(PseudoUuid &pseudoUuid)

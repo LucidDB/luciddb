@@ -78,12 +78,23 @@ public class IteratorToFennelConverter
 
     //~ Instance fields --------------------------------------------------------
 
-    private int javaImplInvocationCount;
-    private int fennelImplInvocationCount;
+    /**
+     * The RelNode path that leads to this node when invoking this node
+     * to generate Java code
+     */
+    List<FarragoRelImplementor.RelPathEntry> javaRelPath;
+    
+    /**
+     * The RelNode path that leads to this node when invoking this node
+     * to setup the Fennel child streams
+     */
+    List<FarragoRelImplementor.RelPathEntry> fennelRelPath;
 
-    private Map<Integer, String> farragoTransformClassNameMap;
+    private Map<List<FarragoRelImplementor.RelPathEntry>, String>
+        farragoTransformClassNameMap;
 
-    private Map<Integer, List<ChildStream>> childStreamDefsMap;
+    private Map<List<FarragoRelImplementor.RelPathEntry>, List<ChildStream>>
+    	childStreamDefsMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -103,10 +114,12 @@ public class IteratorToFennelConverter
             new RelTraitSet(FENNEL_EXEC_CONVENTION),
             child);
 
-        farragoTransformClassNameMap = new HashMap<Integer, String>();
-        javaImplInvocationCount = 0;
-        fennelImplInvocationCount = 0;
-        childStreamDefsMap = new HashMap<Integer, List<ChildStream>>();
+        farragoTransformClassNameMap =
+            new HashMap<
+                List<FarragoRelImplementor.RelPathEntry>, String>();
+        childStreamDefsMap =
+            new HashMap<
+                List<FarragoRelImplementor.RelPathEntry>, List<ChildStream>>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -393,19 +406,22 @@ public class IteratorToFennelConverter
         return transformerDecl;
     }
 
-    protected void initJavaInvocation()
+    protected void initJavaInvocation(
+        List<FarragoRelImplementor.RelPathEntry> relPath)
     {
-        javaImplInvocationCount++;
-
         // init child stream defs for this invocation
+    	javaRelPath =
+            new LinkedList<FarragoRelImplementor.RelPathEntry>(relPath);
         childStreamDefsMap.put(
-            javaImplInvocationCount,
+            javaRelPath,
             new ArrayList<ChildStream>());
     }
 
-    protected void initFennelInvocation()
+    protected void initFennelInvocation(
+        List<FarragoRelImplementor.RelPathEntry> relPath)
     {
-        fennelImplInvocationCount++;
+        fennelRelPath =
+            new LinkedList<FarragoRelImplementor.RelPathEntry>(relPath);
     }
 
     // implement FennelRel
@@ -417,11 +433,11 @@ public class IteratorToFennelConverter
             throw cannotImplement();
         }
 
-        initJavaInvocation();
-
         // Cheeky! We happen to know it's a FarragoRelImplementor (for now).
         FarragoRelImplementor farragoRelImplementor =
             (FarragoRelImplementor) implementor;
+        
+        initJavaInvocation(farragoRelImplementor.getRelPathEntry());
 
         FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
 
@@ -478,29 +494,29 @@ public class IteratorToFennelConverter
         FemExecutionStreamDef childStreamDef,
         boolean implicit)
     {
-        assert (childStreamDefsMap.containsKey(javaImplInvocationCount));
+        assert (childStreamDefsMap.containsKey(javaRelPath));
 
         List<ChildStream> childStreamDefs =
-            childStreamDefsMap.get(javaImplInvocationCount);
+            childStreamDefsMap.get(javaRelPath);
         childStreamDefs.add(new ChildStream(childStreamDef, implicit));
     }
 
     protected void setFarragoTransformClassName(String className)
     {
-        assert (!farragoTransformClassNameMap.containsKey(
-            javaImplInvocationCount));
+        assert (!farragoTransformClassNameMap.containsKey(javaRelPath));
 
-        farragoTransformClassNameMap.put(javaImplInvocationCount, className);
+        farragoTransformClassNameMap.put(javaRelPath, className);
     }
 
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        initFennelInvocation();
+        FarragoRelImplementor farragoRelImplementor =
+            (FarragoRelImplementor) implementor;
+        initFennelInvocation(farragoRelImplementor.getRelPathEntry());
 
-        assert (farragoTransformClassNameMap.containsKey(
-            fennelImplInvocationCount));
-        assert (childStreamDefsMap.containsKey(fennelImplInvocationCount));
+        assert (farragoTransformClassNameMap.containsKey(fennelRelPath));
+        assert (childStreamDefsMap.containsKey(fennelRelPath));
 
         // A single instance of this class may appear in multiple
         // locations throughout a plan.  The methods implementFennelChild
@@ -508,10 +524,10 @@ public class IteratorToFennelConverter
         // following assumes that order in which toStreamDef is called
         // for each location is the same as that for implementFennelChild.
         String farragoTransformClassName =
-            farragoTransformClassNameMap.get(fennelImplInvocationCount);
+            farragoTransformClassNameMap.get(fennelRelPath);
 
         List<ChildStream> childStreams =
-            childStreamDefsMap.get(fennelImplInvocationCount);
+            childStreamDefsMap.get(fennelRelPath);
 
         FemJavaTransformStreamDef streamDef =
             newJavaTransformStreamDef(implementor);

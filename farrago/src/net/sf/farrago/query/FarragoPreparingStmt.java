@@ -460,7 +460,7 @@ public class FarragoPreparingStmt
             javaCodeDir = new FarragoFileAllocation(packageDir);
         }
 
-        packageDir.mkdir();
+        packageDir.mkdirs();
 
         BoundMethod boundMethod =
             super.compileAndBind(decl, parseTree, arguments);

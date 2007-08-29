@@ -348,6 +348,12 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(new PushSemiJoinPastJoinRule());
         builder.addGroupEnd();
 
+        // Do another round of filtering pushing, in the event that
+        // LoptOptimizeJoinRule has added filters on top of join nodes.
+        // Do this after pushing semijoins, in case those interfere with
+        // filter pushdowns.
+        applyPushDownFilterRules(builder);
+        
         // Convert semijoins to physical index access.
         // Do this immediately after LopOptimizeJoinRule and the PushSemiJoin
         // rules.

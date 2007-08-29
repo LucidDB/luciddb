@@ -32,7 +32,9 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.hep.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 
@@ -164,12 +166,9 @@ public class RelDecorrelator
         RexNode exp,
         boolean projectPulledAboveLeftCorrelator)
     {
-        assert (currentRel != null);
-        RelDataTypeFactory typeFactory =
-            currentRel.getCluster().getTypeFactory();
         RemoveCorrelationRexShuttle shuttle =
             new RemoveCorrelationRexShuttle(
-                typeFactory,
+                rexBuilder,
                 projectPulledAboveLeftCorrelator);
         return exp.accept(shuttle);
     }
@@ -179,12 +178,9 @@ public class RelDecorrelator
         boolean projectPulledAboveLeftCorrelator,
         RexInputRef nullIndicator)
     {
-        assert (currentRel != null);
-        RelDataTypeFactory typeFactory =
-            currentRel.getCluster().getTypeFactory();
         RemoveCorrelationRexShuttle shuttle =
             new RemoveCorrelationRexShuttle(
-                typeFactory,
+                rexBuilder,
                 projectPulledAboveLeftCorrelator,
                 nullIndicator);
         return exp.accept(shuttle);
@@ -195,12 +191,9 @@ public class RelDecorrelator
         boolean projectPulledAboveLeftCorrelator,
         Set<Integer> isCount)
     {
-        assert (currentRel != null);
-        RelDataTypeFactory typeFactory =
-            currentRel.getCluster().getTypeFactory();
         RemoveCorrelationRexShuttle shuttle =
             new RemoveCorrelationRexShuttle(
-                typeFactory,
+                rexBuilder,
                 projectPulledAboveLeftCorrelator,
                 isCount);
         return exp.accept(shuttle);
@@ -1500,59 +1493,60 @@ public class RelDecorrelator
         {
             RexInputRef newInputRef = getNewForOldInputRef(inputRef);
             return newInputRef;
-        }
+        }           
     }
 
     private class RemoveCorrelationRexShuttle
         extends RexShuttle
     {
+        RexBuilder rexBuilder;
         RelDataTypeFactory typeFactory;
         boolean projectPulledAboveLeftCorrelator;
         RexInputRef nullIndicator;
         Set<Integer> isCount;
-
+        
         public RemoveCorrelationRexShuttle(
-            RelDataTypeFactory typeFactory,
+            RexBuilder rexBuilder,
             boolean projectPulledAboveLeftCorrelator)
         {
-            this(typeFactory,
+            this(rexBuilder,
                 projectPulledAboveLeftCorrelator,
                 null, null);
         }
 
         public RemoveCorrelationRexShuttle(
-            RelDataTypeFactory typeFactory,
+            RexBuilder rexBuilder,
             boolean projectPulledAboveLeftCorrelator,
             RexInputRef nullIndicator)
         {
-            this(
-                typeFactory,
+            this(rexBuilder,
                 projectPulledAboveLeftCorrelator,
                 nullIndicator,
                 null);
         }
 
         public RemoveCorrelationRexShuttle(
-            RelDataTypeFactory typeFactory,
+            RexBuilder rexBuilder,
             boolean projectPulledAboveLeftCorrelator,
             Set<Integer> isCount)
         {
-            this(typeFactory,
+            this(rexBuilder,
                 projectPulledAboveLeftCorrelator,
                 null, isCount);
         }
 
         public RemoveCorrelationRexShuttle(
-            RelDataTypeFactory typeFactory,
+            RexBuilder rexBuilder,
             boolean projectPulledAboveLeftCorrelator,
             RexInputRef nullIndicator,
             Set<Integer> isCount)
         {
-            this.typeFactory = typeFactory;
             this.projectPulledAboveLeftCorrelator =
                 projectPulledAboveLeftCorrelator;
             this.nullIndicator = nullIndicator;
             this.isCount = isCount;
+            this.rexBuilder = rexBuilder;
+            this.typeFactory = rexBuilder.getTypeFactory();
         }
 
         private RexNode createCaseExpression(
@@ -1589,7 +1583,7 @@ public class RelDecorrelator
                         true),
                     lit);
 
-            // ELSE case (newInput AS newInputTypeNullable) END
+            // ELSE cast (newInput AS newInputTypeNullable) END
             caseOperands[2] =
                 rexBuilder.makeCast(
                     typeFactory.createTypeWithNullability(
@@ -1669,7 +1663,10 @@ public class RelDecorrelator
         // override RexLiteral
         public RexNode visitLiteral(RexLiteral literal)
         {
-            if (projectPulledAboveLeftCorrelator && (nullIndicator != null)) {
+            // Use nullIndicator to decide whether to project null.
+            // Do nothing if the literal is null.
+            if (!RexUtil.isNull(literal) &&
+                projectPulledAboveLeftCorrelator && (nullIndicator != null)) {
                 return createCaseExpression(
                     nullIndicator,
                     rexBuilder.constantNull(),
@@ -1680,7 +1677,42 @@ public class RelDecorrelator
 
         public RexNode visitCall(final RexCall call)
         {
-            RexNode newCall = super.visitCall(call);
+            RexNode newCall;
+            
+            boolean [] update = { false };
+            RexNode [] clonedOperands = visitArray(call.operands, update);
+            if (update[0]) {
+                // TODO: ideally this only need to be called if result type will change
+                // However, since it requires suport from type inference rules to tell
+                // whether a rule decides return type based on input types, for now all
+                // operators will be recreated if any operands changed.
+                
+                // Also certain operator types have the return type built into the operator
+                // definition, and there's no type inference rules, such as cast function
+                // with less than 2 operators.
+                // For those, use the current return type of the operator.
+                
+                SqlOperator operator = call.getOperator();
+                
+                boolean isSpecialCast = false;
+                if (operator instanceof SqlFunction) {
+                    SqlFunction function = (SqlFunction) operator;
+                    if (function.getKind() == SqlKind.Cast) {
+                        if (call.operands.length < 2) {
+                            isSpecialCast = true;
+                        }
+                    }
+                }
+                
+                if (!isSpecialCast) {
+                    newCall = rexBuilder.makeCall(operator, clonedOperands);
+                } else {
+                    newCall = rexBuilder.makeCall(call.getType(), operator, clonedOperands);                    
+                }
+            } else {
+                newCall = call;
+            }
+            
             if (projectPulledAboveLeftCorrelator && (nullIndicator != null)) {
                 return createCaseExpression(
                     nullIndicator,

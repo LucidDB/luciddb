@@ -331,8 +331,13 @@ public class LcsRowScanRel
             getIndexGuide().newRowScan(this, projectedColumns, residualColumns);
 
         for (int i = 0; i < newInputs.length; i++) {
+            // the first input into the rowscan was implicitly added so
+            // don't keep track of it in the RelNode pathlist; otherwise,
+            // it's out-of-sync with a RelNode pathlist that was created
+            // before the deletion index scan was added
             FemExecutionStreamDef inputStream =
-                implementor.visitFennelChild((FennelRel) newInputs[i], i);
+                implementor.visitFennelChild(
+                    (FennelRel) newInputs[i], i, (i != 0));
             implementor.addDataFlowFromProducerToConsumer(
                 inputStream,
                 scanStream);
