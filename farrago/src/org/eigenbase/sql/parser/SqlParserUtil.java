@@ -503,14 +503,14 @@ public final class SqlParserUtil
         return new ParsedCollation(charset, locale, strength);
     }
 
-    public static String [] toStringArray(List list)
+    public static String [] toStringArray(List<String> list)
     {
-        return (String []) list.toArray(emptyStringArray);
+        return list.toArray(new String[list.size()]);
     }
 
-    public static SqlNode [] toNodeArray(List list)
+    public static SqlNode [] toNodeArray(List<SqlNode> list)
     {
-        return (SqlNode []) list.toArray(SqlNode.emptyArray);
+        return list.toArray(new SqlNode[list.size()]);
     }
 
     public static String rightTrim(
