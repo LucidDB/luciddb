@@ -1682,16 +1682,6 @@ public class RelDecorrelator
             boolean [] update = { false };
             RexNode [] clonedOperands = visitArray(call.operands, update);
             if (update[0]) {
-                // TODO: ideally this only need to be called if result type will change
-                // However, since it requires suport from type inference rules to tell
-                // whether a rule decides return type based on input types, for now all
-                // operators will be recreated if any operands changed.
-                
-                // Also certain operator types have the return type built into the operator
-                // definition, and there's no type inference rules, such as cast function
-                // with less than 2 operators.
-                // For those, use the current return type of the operator.
-                
                 SqlOperator operator = call.getOperator();
                 
                 boolean isSpecialCast = false;
@@ -1705,8 +1695,22 @@ public class RelDecorrelator
                 }
                 
                 if (!isSpecialCast) {
+                    // TODO: ideally this only needs to be called if the result type
+                    // will also change. However, since that requires suport from
+                    // type inference rules to tell whether a rule decides return
+                    // type based on input types, for now all operators will be
+                    // recreated with new type if any operand changed, unless
+                    // the operator has "built-in" type.                 
                     newCall = rexBuilder.makeCall(operator, clonedOperands);
                 } else {
+                    // Use the current return type when creating a new call,
+                    // for operators with return type built into the operator
+                    // definition, and with no type inference rules, such as
+                    // cast function with less than 2 operands.
+
+                    // TODO: Comments in RexShuttle.visitCall() mention other
+                    // types in this catagory. Need to resolve those together
+                    // and preferrably in the base class RexShuttle.
                     newCall = rexBuilder.makeCall(call.getType(), operator, clonedOperands);                    
                 }
             } else {
