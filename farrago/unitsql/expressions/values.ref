@@ -144,6 +144,15 @@ Error: At line 1, column 9: Unknown identifier 'X' (state=,code=0)
 | 0       |
 +---------+
 > 
+> -- if type union results in loss of digits, verify that rounding occurs
+> values 100000.0, 0.555555555555555555;
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| 100000.0000000000000  |
+| 0.5555555555556       |
++-----------------------+
+> 
 > !set outputformat csv
 > 
 > values ('no'), ('yes'), ('maybe');
