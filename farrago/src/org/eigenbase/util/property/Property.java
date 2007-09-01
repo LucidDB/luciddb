@@ -211,7 +211,7 @@ public abstract class Property
      * @return true if the string is "1" or "true" or "yes", ignoring case and
      * any leading or trailing spaces
      */
-    protected static boolean toBoolean(final String value)
+    public static boolean toBoolean(final String value)
     {
         String trimmedLowerValue = value.toLowerCase().trim();
         return trimmedLowerValue.equals("1")

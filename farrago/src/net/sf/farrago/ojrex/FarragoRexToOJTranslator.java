@@ -27,6 +27,7 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
+import net.sf.farrago.query.FarragoRelImplementor;
 
 import openjava.mop.*;
 
@@ -94,7 +95,7 @@ public class FarragoRexToOJTranslator
      */
     public FarragoRexToOJTranslator(
         FarragoRepos repos,
-        JavaRelImplementor relImplementor,
+        FarragoRelImplementor relImplementor,
         RelNode contextRel,
         OJRexImplementorTable implementorTable,
         StatementList stmtList,
@@ -123,7 +124,7 @@ public class FarragoRexToOJTranslator
 
     public FarragoRexToOJTranslator(
         FarragoRepos repos,
-        JavaRelImplementor relImplementor,
+        FarragoRelImplementor relImplementor,
         RelNode contextRel,
         OJRexImplementorTable implementorTable,
         StatementList stmtList,
@@ -143,7 +144,8 @@ public class FarragoRexToOJTranslator
 
     //~ Methods ----------------------------------------------------------------
 
-    public RexToOJTranslator push(StatementList stmtList)
+    // override, with refined return type
+    public FarragoRexToOJTranslator push(StatementList stmtList)
     {
         // NOTE jvs 16-Oct-2006: The child translator inherits important state
         // like localRefMap.  (Otherwise common expressions would be translated
@@ -157,6 +159,12 @@ public class FarragoRexToOJTranslator
             memberList,
             getProgram(),
             localRefMap);
+    }
+
+    // override, and refine return type
+    public FarragoRelImplementor getRelImplementor()
+    {
+        return (FarragoRelImplementor) super.getRelImplementor();
     }
 
     public void addMember(MemberDeclaration member)

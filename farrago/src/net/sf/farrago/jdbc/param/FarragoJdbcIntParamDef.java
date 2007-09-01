@@ -80,11 +80,13 @@ class FarragoJdbcIntParamDef
 
     private long getLong(Object value)
     {
-        if (value instanceof Number) {
+        if (value instanceof Long) {
+            // Case "value instanceof Number" below is not sufficient for Long:
+            // conversion via double loses precision for values > 2^48. OK for
+            // other types, including int and float.
+            return ((Long) value).longValue();
+        } else if (value instanceof Number) {
             Number n = (Number) value;
-
-            // REVIEW jvs 13-Oct-2006:  going through double could lose
-            // precision for a very big long, right?
             return NumberUtil.round(n.doubleValue());
         } else if (value instanceof Boolean) {
             return (((Boolean) value).booleanValue() ? 1 : 0);
@@ -109,7 +111,18 @@ class FarragoJdbcIntParamDef
         } else {
             long n = getLong(x);
             checkRange(n, min, max);
-            return new Long(n);
+            switch (paramMetaData.type) {
+            case Types.TINYINT:
+                return new Byte((byte) n);
+            case Types.SMALLINT:
+                return new Short((short) n);
+            case Types.INTEGER:
+                return new Integer((int) n);
+            case Types.BIGINT:
+                return new Long(n);
+            default:
+                throw new AssertionError("bad type " + paramMetaData.type);
+            }
         }
     }
 }

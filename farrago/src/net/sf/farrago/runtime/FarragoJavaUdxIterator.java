@@ -218,7 +218,7 @@ public abstract class FarragoJavaUdxIterator
                         fields[i].getType(),
                         ParameterMetaData.parameterModeIn);
                 dynamicParamDefs[i] =
-                    FarragoJdbcParamDefFactory.newParamDef(
+                    FarragoJdbcParamDefFactory.INSTANCE.newParamDef(
                         fields[i].getName(),
                         paramMetaData,
                         false);

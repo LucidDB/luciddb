@@ -45,10 +45,10 @@ public class BasicSqlType
 
     //~ Instance fields --------------------------------------------------------
 
-    private final int precision;
-    private final int scale;
+    private int precision;
+    private int scale;
     private SqlCollation collation;
-    private Charset charset;
+    private SerializableCharset wrappedCharset;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -147,7 +147,7 @@ public class BasicSqlType
         } catch (CloneNotSupportedException e) {
             throw Util.newInternal(e);
         }
-        ret.charset = charset;
+        ret.wrappedCharset = SerializableCharset.forCharset(charset);
         ret.collation = collation;
         ret.computeDigest();
         return ret;
@@ -221,7 +221,7 @@ public class BasicSqlType
     public Charset getCharset()
         throws RuntimeException
     {
-        return charset;
+        return wrappedCharset == null ? null : wrappedCharset.getCharset();
     }
 
     // implement RelDataType
@@ -265,9 +265,9 @@ public class BasicSqlType
         if (!withDetail) {
             return;
         }
-        if (charset != null) {
+        if (wrappedCharset != null) {
             sb.append(" CHARACTER SET \"");
-            sb.append(charset.name());
+            sb.append(wrappedCharset.getCharset().name());
             sb.append("\"");
         }
         if (collation != null) {
@@ -361,6 +361,7 @@ public class BasicSqlType
             precision,
             scale);
     }
+
 }
 
 // End BasicSqlType.java

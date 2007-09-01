@@ -101,6 +101,5 @@ public class FarragoParamFieldMetaData
      */
     public String paramTypeStr;
 }
-;
 
 // End FarragoParamFieldMetaData.java

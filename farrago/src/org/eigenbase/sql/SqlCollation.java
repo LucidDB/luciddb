@@ -25,9 +25,11 @@ package org.eigenbase.sql;
 import java.nio.charset.*;
 
 import java.util.*;
+import java.io.Serializable;
 
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.SerializableCharset;
 import org.eigenbase.util.*;
 
 
@@ -39,7 +41,7 @@ import org.eigenbase.util.*;
  * @version $Id$
  * @since Mar 23, 2004
  */
-public class SqlCollation
+public class SqlCollation implements Serializable
 {
     //~ Enums ------------------------------------------------------------------
 
@@ -64,7 +66,7 @@ public class SqlCollation
     //~ Instance fields --------------------------------------------------------
 
     protected final String collationName;
-    protected final Charset charset;
+    protected final SerializableCharset wrappedCharset;
     protected final Locale locale;
     protected final String strength;
     private final Coercibility coercibility;
@@ -74,8 +76,8 @@ public class SqlCollation
     /**
      * Creates a Collation by its name and its coercibility
      *
-     * @param collation
-     * @param coercibility
+     * @param collation Collation specification
+     * @param coercibility Coercibility
      */
     public SqlCollation(
         String collation,
@@ -84,7 +86,9 @@ public class SqlCollation
         this.coercibility = coercibility;
         SqlParserUtil.ParsedCollation parseValues =
             SqlParserUtil.parseCollation(collation);
-        charset = parseValues.getCharset();
+        Charset charset = parseValues.getCharset();
+        this.wrappedCharset =
+            SerializableCharset.forCharset(charset);
         locale = parseValues.getLocale();
         strength = parseValues.getStrength();
         String c = charset.name().toUpperCase() + "$" + locale.toString();
@@ -98,7 +102,7 @@ public class SqlCollation
      * Creates a SqlCollation with the default collation name and the given
      * coercibility.
      *
-     * @param coercibility
+     * @param coercibility Coercibility
      */
     public SqlCollation(Coercibility coercibility)
     {
@@ -289,7 +293,7 @@ public class SqlCollation
 
     public Charset getCharset()
     {
-        return charset;
+        return wrappedCharset.getCharset();
     }
 
     public final String getCollationName()
