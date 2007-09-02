@@ -27,7 +27,6 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
-import net.sf.farrago.query.FarragoRelImplementor;
 
 import openjava.mop.*;
 
@@ -91,11 +90,10 @@ public class FarragoRexToOJTranslator
      * @param memberList member list for class-level state required by
      * @param program Program, may be null
      * @param localRefMap map from RexLocalRef index to name of method which
-     * computes it
      */
     public FarragoRexToOJTranslator(
         FarragoRepos repos,
-        FarragoRelImplementor relImplementor,
+        JavaRelImplementor relImplementor,
         RelNode contextRel,
         OJRexImplementorTable implementorTable,
         StatementList stmtList,
@@ -124,7 +122,7 @@ public class FarragoRexToOJTranslator
 
     public FarragoRexToOJTranslator(
         FarragoRepos repos,
-        FarragoRelImplementor relImplementor,
+        JavaRelImplementor relImplementor,
         RelNode contextRel,
         OJRexImplementorTable implementorTable,
         StatementList stmtList,
@@ -159,12 +157,6 @@ public class FarragoRexToOJTranslator
             memberList,
             getProgram(),
             localRefMap);
-    }
-
-    // override, and refine return type
-    public FarragoRelImplementor getRelImplementor()
-    {
-        return (FarragoRelImplementor) super.getRelImplementor();
     }
 
     public void addMember(MemberDeclaration member)
