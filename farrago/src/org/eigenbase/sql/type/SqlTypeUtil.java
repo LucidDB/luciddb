@@ -59,8 +59,8 @@ public abstract class SqlTypeUtil
      */
     public static boolean isCharTypeComparable(RelDataType [] argTypes)
     {
-        Util.pre(null != argTypes, "null!=argTypes");
-        Util.pre(2 <= argTypes.length, "2<=argTypes.length");
+        assert null != argTypes : "precondition failed";
+        assert 2 <= argTypes.length : "precondition failed";
 
         for (int j = 0; j < (argTypes.length - 1); j++) {
             RelDataType t0 = argTypes[j];
@@ -118,8 +118,8 @@ public abstract class SqlTypeUtil
         SqlNode [] operands,
         boolean throwOnFailure)
     {
-        Util.pre(null != operands, "null!=operands");
-        Util.pre(2 <= operands.length, "2<=operands.length");
+        assert null != operands : "precondition failed";
+        assert 2 <= operands.length : "precondition failed";
 
         if (!isCharTypeComparable(
                 deriveAndCollectTypes(validator, scope, operands)))
@@ -201,15 +201,15 @@ public abstract class SqlTypeUtil
      * Recreates a given RelDataType with nullablility iff any of a calls
      * operand types are nullable.
      */
-    public final static RelDataType makeNullableIfOperandsAre(
+    public static RelDataType makeNullableIfOperandsAre(
         final SqlValidator validator,
         final SqlValidatorScope scope,
         final SqlCall call,
         RelDataType type)
     {
-        for (int i = 0; i < call.operands.length; ++i) {
+        for (SqlNode operand : call.operands) {
             RelDataType operandType =
-                validator.deriveType(scope, call.operands[i]);
+                validator.deriveType(scope, operand);
 
             if (containsNullable(operandType)) {
                 RelDataTypeFactory typeFactory = validator.getTypeFactory();
@@ -224,7 +224,7 @@ public abstract class SqlTypeUtil
      * Recreates a given RelDataType with nullability iff any of the param
      * argTypes are nullable.
      */
-    public final static RelDataType makeNullableIfOperandsAre(
+    public static RelDataType makeNullableIfOperandsAre(
         final RelDataTypeFactory typeFactory,
         final RelDataType [] argTypes,
         RelDataType type)
@@ -240,8 +240,8 @@ public abstract class SqlTypeUtil
      */
     public static boolean containsNullable(RelDataType [] types)
     {
-        for (int i = 0; i < types.length; i++) {
-            if (containsNullable(types[i])) {
+        for (RelDataType type : types) {
+            if (containsNullable(type)) {
                 return true;
             }
         }
@@ -260,8 +260,7 @@ public abstract class SqlTypeUtil
         if (!type.isStruct()) {
             return false;
         }
-        for (RelDataTypeField field1 : type.getFieldList()) {
-            RelDataTypeField field = (RelDataTypeField) field1;
+        for (RelDataTypeField field : type.getFieldList()) {
             if (containsNullable(field.getType())) {
                 return true;
             }
@@ -307,8 +306,7 @@ public abstract class SqlTypeUtil
         SqlTypeName [] typeNames,
         RelDataType type)
     {
-        for (int i = 0; i < typeNames.length; i++) {
-            SqlTypeName typeName = typeNames[i];
+        for (SqlTypeName typeName : typeNames) {
             if (isOfSameTypeName(typeName, type)) {
                 return true;
             }
@@ -371,13 +369,9 @@ public abstract class SqlTypeUtil
      */
     public static boolean inSameFamilyOrNull(RelDataType t1, RelDataType t2)
     {
-        if (t1.getSqlTypeName() == SqlTypeName.NULL) {
-            return true;
-        }
-        if (t2.getSqlTypeName() == SqlTypeName.NULL) {
-            return true;
-        }
-        return t1.getFamily() == t2.getFamily();
+        return t1.getSqlTypeName() == SqlTypeName.NULL ||
+            t2.getSqlTypeName() == SqlTypeName.NULL ||
+            t1.getFamily() == t2.getFamily();
     }
 
     /**
@@ -500,9 +494,8 @@ public abstract class SqlTypeUtil
         case BIGINT:
             return Long.MAX_VALUE;
         default:
-            Util.permAssert(false, "invalid arg for SqlTypeUtil.maxValue");
+            throw Util.unexpected(type.getSqlTypeName());
         }
-        return 0;
     }
 
     /**
@@ -1132,6 +1125,33 @@ public abstract class SqlTypeUtil
                 collation);
         SqlValidatorUtil.checkCharsetAndCollateConsistentIfCharType(type);
         return type;
+    }
+
+    /**
+     * Returns whether two types are equal, ignoring nullability.
+     *
+     * <p>They need not come from the same factory.
+     *
+     * @param factory Type factory
+     * @param type1 First type
+     * @param type2 Second type
+     * @return whether types are equal, ignoring nullability
+     */
+    public static boolean equalSansNullability(
+        RelDataTypeFactory factory,
+        RelDataType type1,
+        RelDataType type2)
+    {
+        if (type1.equals(type2)) {
+            return true;
+        }
+        if (type1.isNullable() == type2.isNullable()) {
+            // If types have the same nullability and they weren't equal above,
+            // they must be different.
+            return false;
+        }
+        return type1.equals(
+            factory.createTypeWithNullability(type2, type1.isNullable()));
     }
 }
 

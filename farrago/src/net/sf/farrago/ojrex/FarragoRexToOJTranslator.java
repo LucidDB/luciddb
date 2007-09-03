@@ -90,7 +90,6 @@ public class FarragoRexToOJTranslator
      * @param memberList member list for class-level state required by
      * @param program Program, may be null
      * @param localRefMap map from RexLocalRef index to name of method which
-     * computes it
      */
     public FarragoRexToOJTranslator(
         FarragoRepos repos,
@@ -143,7 +142,8 @@ public class FarragoRexToOJTranslator
 
     //~ Methods ----------------------------------------------------------------
 
-    public RexToOJTranslator push(StatementList stmtList)
+    // override, with refined return type
+    public FarragoRexToOJTranslator push(StatementList stmtList)
     {
         // NOTE jvs 16-Oct-2006: The child translator inherits important state
         // like localRefMap.  (Otherwise common expressions would be translated

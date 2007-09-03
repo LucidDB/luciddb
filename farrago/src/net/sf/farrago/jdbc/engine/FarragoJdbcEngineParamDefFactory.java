@@ -53,7 +53,7 @@ public class FarragoJdbcEngineParamDefFactory
                 ParameterMetaData.parameterModeIn);
 
         FarragoJdbcParamDef param =
-            FarragoJdbcParamDefFactory.newParamDef(
+            FarragoJdbcParamDefFactory.INSTANCE.newParamDef(
                 paramName,
                 paramMetaData,
                 false);

@@ -15,33 +15,84 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 
-# Run a single Junit test case.
-# usage: junitSingle [-repeat] TEST [TARGET],
-#  where TEST is the name of a test class
-#  and TARGET is a target in build.xml.
-#  The -repeat option repeats the test until it fails.
-#  Unqualified test classes are assumed to live in package net.sf.farrago.test,
-#  or ${EIGEN_TEST_DEFAULT_PACKAGE} if it is set.
+function usage
+{
+    echo "junitSingle [options] TEST [TARGET]"
+    echo
+    echo "Run a single Junit test case,"
+    echo "where TEST is:"
+    echo "  - the fully-qualified name of a test class"
+    echo "       e.g. com.sqlstream.aspen.test.jdbc.Main"
+    echo "       Unqualified test classes are assumed to live in package
+    echo "       net.sf.farrago.test, or ${EIGEN_TEST_DEFAULT_PACKAGE} if it"
+    echo "       is set."
+    echo "  - or the relative path to a SQL test"
+    echo "       e.g. unitsql/jdbc/metadata.sql"
+    echo "  - or the pseudo-test 'UNITSQL' to run all SQL unit tests"
+    echo "       defined by 'fileset.unitsql' in build.xml"
+    echo "  - or the pseudo-test 'MTSQL' to run all concurrent SQL tests"
+    echo "       defined by 'fileset.concurrentsql' in build.xml"
+    echo
+    echo "and TARGET is a target in build.xml (default 'junit')."
+    echo "  Use "junit.client" target to run test through client driver,"
+    echo "     e.g. ./junitSingle unitsql/jdbc/metadata.sql junit.client"
+    echo
+    echo "Options:"
+    echo "  --repeat  Run the test repeatedly until it fails"
+    echo "  --help    Print this help"
+    echo "  --[no]build Whether to compile first. Default is to not compile."
+}
 
+# Parse flags
 once=true
-if [ "$1" == "-repeat" -o "$1" == "--repeat" ]; then
-    once=false;
-    shift;
+build=
+help=
+while [ $# -gt 0 ]; do
+    case "$1" in
+    -repeat|--repeat)
+        once=false
+        shift
+        ;;
+    --build)
+        build=true
+        shift
+        ;;
+    --nobuild)
+        build=
+        shift
+        ;;
+    --help)
+        help=true
+        shift
+        ;;
+    *)
+        break
+    esac
+done
+
+if [ "$help" ]; then
+    usage
+    exit 0
 fi
 
-if [ ! "$1" ]; then 
+if [ ! "$1" ]; then
     echo "Error: specify a .sql or .java filename or a test class name";
-    exit; 
+    usage
+    exit 1;
 fi
 test=$1
 
 if [ ! "$2" ]; then
-    target=junit
+    if [ "$build" ]; then
+        target="all junit"
+    else
+        target=junit
+    fi
 else
     target="$2"
 fi
@@ -50,11 +101,13 @@ if [ ! "$EIGEN_TEST_DEFAULT_PACKAGE" ]; then
     EIGEN_TEST_DEFAULT_PACKAGE=net.sf.farrago.test
 fi
 
-if [ -e "$test" -a ${test:0-5} == ".java" ]; then
-    # Interpret the argument as the name of a java source file.
-    # Convert it to the name of a java class.
-    # For example, "src/com/acme/foo/Bar.java" becomes "com.acme.foo.Bar".
-    junit_class=$(awk '
+function chooseCommand
+{
+    if [ -e "$test" -a ${test:0-5} == ".java" ]; then
+        # Interpret the argument as the name of a java source file.
+        # Convert it to the name of a java class.
+        # For example, "src/com/acme/foo/Bar.java" becomes "com.acme.foo.Bar".
+        junit_class=$(awk '
 /^package / {
   p = substr($2,0,length($2)-1);
 }
@@ -67,58 +120,66 @@ if [ -e "$test" -a ${test:0-5} == ".java" ]; then
     }
   }
 }' "$test")
-    command="ant -Djunit.class=$junit_class -Dfileset.unitsql='' $target"
-elif [ -e "$test" ]; then
-    # Interpret the argument as the name of an .sql script to run
+        command="ant -Djunit.class=$junit_class -Dfileset.unitsql='' $target"
+    elif [ -e "$test" ]; then
+        # Interpret the argument as the name of an .sql script to run
 
-    # Assume unitsql tests
-    junit_class=net.sf.farrago.test.FarragoSqlTest
-    fileset=fileset.unitsql
+        # Assume unitsql tests
+        junit_class=net.sf.farrago.test.FarragoSqlTest
+        fileset=fileset.unitsql
 
-    # if we're running regressionsql tests, use the right class and ant target
-    if [ ${test/*regressionsql*/x} == "x" ]; then
-	if [ "$target" == "jswat.junit" ]; then
-	    # REVIEW: it needs a jswat.junit.regressionsql target that sets
-	    # the necessary system properties for regressionsql tests.
-	    echo "build.xml does not support jswat on regressionsql"
-	    exit 1;
-	fi
-	target=regressionWithoutBuild
-	junit_class=net.sf.farrago.test.regression.FarragoSqlRegressionTest
-	fileset=fileset.regressionsql
-    elif [ ${test:0-6} == ".mtsql" ]; then
-	if [ "$target" == "jswat.junit" ]; then
-	    # REVIEW: it needs a jswat.junit.regressionsql target that sets
-	    # the necessary system properties for regressionsql tests.
-	    echo "build.xml does not support jswat on regressionsql"
-	    exit 1;
-	fi
-	target=regressionWithoutBuild
-	junit_class=net.sf.farrago.test.concurrent.FarragoTestConcurrentTest
-	fileset=fileset.concurrentsql
-    elif [ ${test:0-6} == ".lurql" ]; then
-        junit_class=com.lucidera.lurql.test.LurqlQueryTest
-        fileset=fileset.unitlurql
+        # if we're running regressionsql tests, use the right class and ant target
+        if [ ${test/*regressionsql*/x} == "x" ]; then
+            if [ "$target" == "jswat.junit" ]; then
+                # REVIEW: it needs a jswat.junit.regressionsql target that sets
+                # the necessary system properties for regressionsql tests.
+                echo "build.xml does not support jswat on regressionsql"
+                exit 1;
+            fi
+            target=regressionWithoutBuild
+            junit_class=net.sf.farrago.test.regression.FarragoSqlRegressionTest
+            fileset=fileset.regressionsql
+        elif [ ${test:0-6} == ".mtsql" ]; then
+            if [ "$target" == "jswat.junit" ]; then
+                # REVIEW: it needs a jswat.junit.regressionsql target that sets
+                # the necessary system properties for regressionsql tests.
+                echo "build.xml does not support jswat on regressionsql"
+                exit 1;
+            fi
+            target=regressionWithoutBuild
+            junit_class=net.sf.farrago.test.concurrent.FarragoTestConcurrentTest
+            fileset=fileset.concurrentsql
+        elif [ ${test:0-6} == ".lurql" ]; then
+            junit_class=com.lucidera.lurql.test.LurqlQueryTest
+            fileset=fileset.unitlurql
+        fi
+
+        command="ant -Djunit.class=$junit_class -D$fileset=$test $target"
+    else
+        # Interpret the argument as the name of a test case
+        if [ -z `echo $test | grep '\.'` ]; then
+            test=$EIGEN_TEST_DEFAULT_PACKAGE.$test
+        fi
+        command="ant -Djunit.class=$test -Dfileset.unitsql='' -Dfileset.unitlurql='' $target"
     fi
+}
 
-    command="ant -Djunit.class=$junit_class -D$fileset=$test $target"
-else
-    # Interpret the argument as the name of a test case
-    if [ -z `echo $test | grep '\.'` ]; then
-        test=$EIGEN_TEST_DEFAULT_PACKAGE.$test
-    fi
-    command="ant -Djunit.class=$test -Dfileset.unitsql='' -Dfileset.unitlurql='' $target"
-fi
-
+chooseCommand
 if $once; then
     $command;
 else
     count=1
-    echo Execution $count started at `date`
+    echo ::: Execution $count started at `date`
 
     while $command; do
         let count++;
-        echo Execution $count started at `date`
+        if [ "$target" = "all junit" ]; then
+            # save time by only building the first cycle
+            target=junit
+            chooseCommand
+        fi
+        echo
+        echo ::: Execution $count started at `date`
     done
 
     echo Failed on execution $count

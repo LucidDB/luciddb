@@ -98,7 +98,8 @@ public class FarragoJdbcParamDef
         }
     }
 
-    protected void checkRange(BigInteger value,
+    protected void checkRange(
+        BigInteger value,
         BigInteger min,
         BigInteger max)
     {
@@ -148,8 +149,8 @@ public class FarragoJdbcParamDef
     {
         // TODO: Change to use client resources
         return new EigenbaseException(
-            "Cannot assign NULL to non-nullable parameter of type"
-            + paramMetaData.paramTypeStr,
+            "Cannot assign NULL to parameter '" + paramName + "' of type "
+            + paramMetaData.paramTypeStr + " NOT NULL",
             null);
 
         //return FarragoResource.instance().ParameterValueNotNullable.ex(

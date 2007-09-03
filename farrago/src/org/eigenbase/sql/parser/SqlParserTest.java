@@ -2273,12 +2273,12 @@ public class SqlParserTest
     {
         // Correct syntax
         check(
-            "select count(z) over w as foo from Bids window w as (partition by y order by x rows between 2 preceding and 2 following)",
+            "select count(z) over w as foo from Bids window w as (partition by y + yy, yyy order by x rows between 2 preceding and 2 following)",
             TestUtil.fold(
                 new String[] {
                     "SELECT (COUNT(`Z`) OVER `W`) AS `FOO`",
                     "FROM `BIDS`",
-                    "WINDOW `W` AS (PARTITION BY `Y` ORDER BY `X` ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING)"
+                    "WINDOW `W` AS (PARTITION BY (`Y` + `YY`), `YYY` ORDER BY `X` ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING)"
                 }));
 
         check(
@@ -2295,6 +2295,11 @@ public class SqlParserTest
         checkFails(
             "select count(z) over w as foo from Bids window w as (order by x ^partition^ by y)",
             "(?s).*Encountered \"partition\".*");
+
+        // Cannot partition by subquery
+        checkFails(
+            "select sum(a) over (partition by ^(^select 1 from t), x) from t2",
+            "Query expression encountered in illegal context");
 
         // AND is required in BETWEEN clause of window frame
         checkFails(
