@@ -28,7 +28,7 @@ function usage
     echo "where TEST is:"
     echo "  - the fully-qualified name of a test class"
     echo "       e.g. com.sqlstream.aspen.test.jdbc.Main"
-    echo "       Unqualified test classes are assumed to live in package
+    echo "       Unqualified test classes are assumed to live in package"
     echo "       net.sf.farrago.test, or ${EIGEN_TEST_DEFAULT_PACKAGE} if it"
     echo "       is set."
     echo "  - or the relative path to a SQL test"
