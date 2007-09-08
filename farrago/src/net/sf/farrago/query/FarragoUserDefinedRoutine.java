@@ -106,13 +106,6 @@ public class FarragoUserDefinedRoutine
         this.preparingStmt = preparingStmt;
         this.routine = routine;
         this.returnType = returnType;
-
-        if ((preparingStmt != null)
-            && (routine != null)
-            && isDynamicFunction())
-        {
-            this.preparingStmt.disableStatementCaching();
-        }
     }
 
     //~ Methods ----------------------------------------------------------------

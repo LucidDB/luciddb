@@ -235,10 +235,6 @@ public class LucidDbSessionPersonality
         // may introduce new joins which need to be optimized further on.
         builder.addRuleInstance(RemoveDistinctAggregateRule.instance);
 
-        // Eliminate reducible constant expression.  TODO jvs 26-May-2006: do
-        // this again later wherever more such expressions may be reintroduced.
-        builder.addRuleClass(FarragoReduceExpressionsRule.class);
-
         // Now, pull join conditions out of joins, leaving behind Cartesian
         // products.  Why?  Because PushFilterRule doesn't start from
         // join conditions, only filters.  It will push them right back
@@ -326,6 +322,12 @@ public class LucidDbSessionPersonality
         subprogramBuilder.addRuleInstance(new MergeProjectRule(true));
         builder.addSubprogram(subprogramBuilder.createProgram());
 
+        // Eliminate reducible constant expression.  Do this after we've
+        // removed unnecessary projection expressions.
+        // TODO jvs 26-May-2006: do this again later wherever more such
+        // expressions may be reintroduced.
+        builder.addRuleClass(FarragoReduceExpressionsRule.class);
+        
         // Push projection information in the remaining projections that sit
         // on top of MultiJoinRels into the MultiJoinRels.  These aren't
         // handled by PullUpProjectsOnTopOfMultiJoinRule because these
