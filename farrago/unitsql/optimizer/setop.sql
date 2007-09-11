@@ -1,3 +1,6 @@
+-- $Id$
+-- Test queries for set operations (union, intersect, exception).
+
 -----------
 -- Setup --
 -----------
@@ -29,7 +32,7 @@ insert into emps2 values(NULL);
 insert into emps2 values(NULL);
 insert into emps2 values('abc');
 
-!set outputformat table
+!set outputformat csv
 
 ------------------
 -- set op tests --
@@ -52,10 +55,12 @@ select * from emps1 except select * from emps2 order by 1;
 explain plan for
 select * from emps1 except all select * from emps2 order by 1;
 
+!set outputformat table
 select * from emps1 union select * from emps2 order by 1;
 select * from emps1 union all select * from emps2 order by 1;
 select * from emps1 intersect select * from emps2 order by 1;
 select * from emps1 except select * from emps2 order by 1;
+!set outputformat csv
 
 -- set op tree
 explain plan for
@@ -148,3 +153,6 @@ explain plan for select * from s1 union all (select * from s2 where a = 1);
 !set outputformat table
 alter session implementation set default;
 drop schema lhx cascade;
+
+-- End setop.sql
+

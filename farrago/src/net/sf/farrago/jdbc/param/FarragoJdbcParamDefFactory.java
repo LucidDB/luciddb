@@ -26,17 +26,28 @@ import java.sql.*;
 
 
 /**
- * FarragoJdbcEngineParamDefFactory create a FarragoJdbcParamDef (refactored
- * from FarragoJdbcEngineParamDefFactory) This class is JDK 1.4 compatible.
+ * Factory for {@link FarragoJdbcParamDef} objects.
+ *
+ * <p>Refactored from FarragoJdbcEngineParamDefFactory.
+ *
+ * <p>This class is JDK 1.4 compatible.
  *
  * @author Angel Chang
  * @version $Id$
  */
 public class FarragoJdbcParamDefFactory
 {
+    public static final FarragoJdbcParamDefFactory INSTANCE =
+        new FarragoJdbcParamDefFactory();
+
+    // use the singleton
+    private FarragoJdbcParamDefFactory()
+    {
+    }
+
     //~ Methods ----------------------------------------------------------------
 
-    public static FarragoJdbcParamDef newParamDef(
+    public FarragoJdbcParamDef newParamDef(
         String paramName,
         FarragoParamFieldMetaData paramMetaData,
         boolean useFennelTuple)

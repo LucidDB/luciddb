@@ -94,10 +94,10 @@ JAVACODE String getPositionString()
 
 JAVACODE void checkQueryExpression(ExprContext exprContext)
 {
-    if ((exprContext == EXPR_ACCEPT_NONQUERY)
-        || (exprContext == EXPR_ACCEPT_SUBQUERY)
-        || (exprContext == EXPR_ACCEPT_CURSOR))
-    {
+    switch (exprContext) {
+    case ACCEPT_NONQUERY:
+    case ACCEPT_SUBQUERY:
+    case ACCEPT_CURSOR:
         throw SqlUtil.newContextException(
             getPos(),
             EigenbaseResource.instance().IllegalQueryExpression.ex());
@@ -106,7 +106,7 @@ JAVACODE void checkQueryExpression(ExprContext exprContext)
 
 JAVACODE void checkNonQueryExpression(ExprContext exprContext)
 {
-    if (exprContext == EXPR_ACCEPT_QUERY) {
+    if (exprContext == ExprContext.ACCEPT_QUERY) {
         throw SqlUtil.newContextException(
             getPos(),
             EigenbaseResource.instance().IllegalNonQueryExpression.ex());
@@ -386,10 +386,13 @@ SqlNode ParenthesizedExpression(ExprContext exprContext) :
     {
         // we've now seen left paren, so queries inside should
         // be allowed as subqueries
-        if (exprContext == EXPR_ACCEPT_SUBQUERY) {
-            exprContext = EXPR_ACCEPT_NONCURSOR;
-        } else if (exprContext == EXPR_ACCEPT_CURSOR) {
-            exprContext = EXPR_ACCEPT_ALL;
+        switch (exprContext) {
+        case ACCEPT_SUBQUERY:
+            exprContext = ExprContext.ACCEPT_NONCURSOR;
+            break;
+        case ACCEPT_CURSOR:
+            exprContext = ExprContext.ACCEPT_ALL;
+            break;
         }
     }
     e = OrderedQueryOrExpr(exprContext)
@@ -433,10 +436,13 @@ List ParenthesizedQueryOrCommaList(
     {
         // we've now seen left paren, so a query by itself should
         // be interpreted as a subquery
-        if (exprContext == EXPR_ACCEPT_SUBQUERY) {
-            firstExprContext = EXPR_ACCEPT_NONCURSOR;
-        } else if (exprContext == EXPR_ACCEPT_CURSOR) {
-            firstExprContext = EXPR_ACCEPT_ALL;
+        switch (exprContext) {
+        case ACCEPT_SUBQUERY:
+            firstExprContext = ExprContext.ACCEPT_NONCURSOR;
+            break;
+        case ACCEPT_CURSOR:
+            firstExprContext = ExprContext.ACCEPT_ALL;
+            break;
         }
     }
     e = OrderedQueryOrExpr(firstExprContext)
@@ -480,10 +486,13 @@ List FunctionParameterList(
     {
         // we've now seen left paren, so queries inside should
         // be allowed as subqueries
-        if (exprContext == EXPR_ACCEPT_SUBQUERY) {
-            firstExprContext = EXPR_ACCEPT_NONCURSOR;
-        } else if (exprContext == EXPR_ACCEPT_CURSOR) {
-            firstExprContext = EXPR_ACCEPT_ALL;
+        switch (exprContext) {
+        case ACCEPT_SUBQUERY:
+            firstExprContext = ExprContext.ACCEPT_NONCURSOR;
+            break;
+        case ACCEPT_CURSOR:
+            firstExprContext = ExprContext.ACCEPT_ALL;
+            break;
         }
     }
     [ <DISTINCT>
@@ -531,7 +540,7 @@ SqlNode SqlQueryEof() :
     SqlNode query;
 }
 {
-    query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY) (<EOF>) { return query; }
+    query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY) (<EOF>) { return query; }
 }
 
 /**
@@ -543,7 +552,7 @@ SqlNode SqlStmtEof() :
 }
 {
     (
-        stmt = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
+        stmt = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
         |
         stmt = SqlExplain()
         |
@@ -644,7 +653,7 @@ SqlNode SqlExplain() :
         }
     )
     <FOR> (
-        stmt = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
+        stmt = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
         | stmt = SqlInsert()
         | stmt = SqlDelete()
         | stmt = SqlUpdate()
@@ -734,7 +743,7 @@ SqlNode SqlProcedureCall() :
     }
     routineCall = NamedRoutineCall(
         SqlFunctionCategory.UserDefinedProcedure,
-        EXPR_ACCEPT_SUBQUERY)
+        ExprContext.ACCEPT_SUBQUERY)
     {
         return SqlStdOperatorTable.procedureCallOperator.createCall(
             callPos, routineCall);
@@ -795,7 +804,7 @@ SqlNode SqlInsert() :
         }
         <RPAREN>
     ]
-    source = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
+    source = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
         return new SqlInsert(
             SqlStdOperatorTable.insertOperator,
@@ -873,7 +882,7 @@ SqlNode SqlUpdate() :
     {
         targetColumnList.add(id);
     }
-    <EQ> exp = Expression(EXPR_ACCEPT_SUBQUERY)
+    <EQ> exp = Expression(ExprContext.ACCEPT_SUBQUERY)
     {
         // TODO:  support DEFAULT also
         sourceExpressionList.add(exp);
@@ -884,7 +893,7 @@ SqlNode SqlUpdate() :
         {
             targetColumnList.add(id);
         }
-        <EQ> exp = Expression(EXPR_ACCEPT_SUBQUERY)
+        <EQ> exp = Expression(ExprContext.ACCEPT_SUBQUERY)
         {
             sourceExpressionList.add(exp);
         }
@@ -924,7 +933,7 @@ SqlNode SqlMerge() :
 
     <USING> sourceTableRef = TableRef()
 
-    <ON> condition = Expression(EXPR_ACCEPT_SUBQUERY)
+    <ON> condition = Expression(ExprContext.ACCEPT_SUBQUERY)
 
     (
     LOOKAHEAD(2)
@@ -963,7 +972,7 @@ SqlNode WhenMatchedClause(SqlIdentifier table, SqlIdentifier alias) :
         updateExprList = new SqlNodeList(pos);
         updateColumnList.add(id);
     }
-    <EQ> exp = Expression(EXPR_ACCEPT_SUBQUERY)
+    <EQ> exp = Expression(ExprContext.ACCEPT_SUBQUERY)
     {
         updateExprList.add(exp);
     }
@@ -973,7 +982,7 @@ SqlNode WhenMatchedClause(SqlIdentifier table, SqlIdentifier alias) :
         {
             updateColumnList.add(id);
         }
-        <EQ> exp = Expression(EXPR_ACCEPT_SUBQUERY)
+        <EQ> exp = Expression(ExprContext.ACCEPT_SUBQUERY)
         {
             updateExprList.add(exp);
         }
@@ -1100,7 +1109,7 @@ SqlNode SelectExpression() :
         return new SqlIdentifier("*", pos);
     }
     |
-    e = Expression(EXPR_ACCEPT_SUBQUERY)
+    e = Expression(ExprContext.ACCEPT_SUBQUERY)
     {
         return e;
     }
@@ -1167,7 +1176,7 @@ SqlNode FromClause() :
         e2 = TableRef()
         (
             <ON> { pos = getPos(); }
-            condition = Expression(EXPR_ACCEPT_SUBQUERY) {
+            condition = Expression(ExprContext.ACCEPT_SUBQUERY) {
                 SqlParserPos onPos = pos.plus(getPos());
                 e = SqlStdOperatorTable.joinOperator.createCall(
                     e,
@@ -1264,7 +1273,7 @@ SqlNode TableRef() :
     |
         { boolean isLateral = false; }
         [<LATERAL> { isLateral = true;} ]
-        tableRef = ParenthesizedExpression(EXPR_ACCEPT_QUERY)
+        tableRef = ParenthesizedExpression(ExprContext.ACCEPT_QUERY)
         over = TableOverOpt()
         {
             if (over != null) {
@@ -1279,7 +1288,7 @@ SqlNode TableRef() :
         }
     |
         <UNNEST> { pos = getPos(); }
-        args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
+        args = ParenthesizedQueryOrCommaList(ExprContext.ACCEPT_SUBQUERY)
         {
             pos = pos.plus(getPos());
             tableRef = SqlStdOperatorTable.unnestOperator.createCall(
@@ -1334,7 +1343,7 @@ SqlNode TableFunctionCall() :
     ]
     {
     }
-    call = NamedRoutineCall(funcType, EXPR_ACCEPT_CURSOR)
+    call = NamedRoutineCall(funcType, ExprContext.ACCEPT_CURSOR)
     {
         return SqlStdOperatorTable.collectionTableOperator.createCall(
             pos, call);
@@ -1433,16 +1442,16 @@ SqlNode RowConstructor() :
         // fix unparse
         LOOKAHEAD(3)
         <LPAREN> { pos = getPos(); } <ROW>
-        valueList = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_NONCURSOR)
+        valueList = ParenthesizedQueryOrCommaList(ExprContext.ACCEPT_NONCURSOR)
         <RPAREN> { pos = pos.plus(getPos()); }
         |
         LOOKAHEAD(3)
         { pos = getPos(); }
         [
             <ROW>
-        ] valueList = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_NONCURSOR)
+        ] valueList = ParenthesizedQueryOrCommaList(ExprContext.ACCEPT_NONCURSOR)
         |
-        value = Expression(EXPR_ACCEPT_NONCURSOR)
+        value = Expression(ExprContext.ACCEPT_NONCURSOR)
         {
             // NOTE: A bare value here is standard SQL syntax, believe it or
             // not.  Taken together with multi-row table constructors, it leads
@@ -1471,7 +1480,7 @@ SqlNode WhereOpt() :
     SqlNode condition;
 }
 {
-    <WHERE> condition = Expression(EXPR_ACCEPT_SUBQUERY)
+    <WHERE> condition = Expression(ExprContext.ACCEPT_SUBQUERY)
     {
         return condition;
     }
@@ -1486,24 +1495,16 @@ SqlNode WhereOpt() :
  */
 SqlNode GroupByOpt() :
 {
-    List list;
+    SqlNodeList list;
     SqlNode e;
     SqlParserPos pos;
 }
 {
     LOOKAHEAD(4)
-    <GROUP> <BY> e = Expression(EXPR_ACCEPT_SUBQUERY)
+    <GROUP> { pos = getPos(); }
+    <BY> list = ExpressionCommaList(pos, ExprContext.ACCEPT_SUBQUERY)
     {
-        pos = getPos();
-        list = startList(e); }
-    (
-        // NOTE jvs 6-Feb-2004:  See comments at top of file for why
-        // hint is necessary here.
-        LOOKAHEAD(2)
-        <COMMA> e = Expression(EXPR_ACCEPT_SUBQUERY) { list.add(e); }
-    ) *
-    {
-        return new SqlNodeList(list, pos);
+        return list;
     }
     |
     <GROUP> <BY> <LPAREN> <RPAREN>
@@ -1517,6 +1518,40 @@ SqlNode GroupByOpt() :
 }
 
 /**
+ * Parses a list of expressions separated by commas.
+ */
+SqlNodeList ExpressionCommaList(
+    SqlParserPos pos,
+    ExprContext exprContext) :
+{
+    List list;
+    SqlNode e;
+}
+{
+    e = Expression(exprContext)
+    {
+        if (pos == null) {
+            pos = getPos();
+        }
+        pos = pos.plus(getPos());
+        list = startList(e);
+    }
+    (
+        // NOTE jvs 6-Feb-2004:  See comments at top of file for why
+        // hint is necessary here.
+        LOOKAHEAD(2)
+        <COMMA> e = Expression(ExprContext.ACCEPT_SUBQUERY)
+        {
+            list.add(e);
+            pos = pos.plus(getPos());
+        }
+    ) *
+    {
+        return new SqlNodeList(list, pos);
+    }
+}
+
+/**
  * Parses the optional HAVING clause for SELECT.
  */
 SqlNode HavingOpt() :
@@ -1524,7 +1559,7 @@ SqlNode HavingOpt() :
     SqlNode e;
 }
 {
-    <HAVING> e = Expression(EXPR_ACCEPT_SUBQUERY)
+    <HAVING> e = Expression(ExprContext.ACCEPT_SUBQUERY)
     {
         return e;
     }
@@ -1587,15 +1622,17 @@ SqlWindow WindowSpecification() :
     SqlLiteral allowPartial = null;
 }
 {
-    <LPAREN> { startPos = getPos(); }
+    <LPAREN> { startPos = pos = getPos(); }
     (
         id = SimpleIdentifier()
         |
         { id = null; }
     )
     (
-        <PARTITION> <BY> list = SimpleIdentifierCommaList()
-        { partitionList = new SqlNodeList(list, getPos()); }
+        <PARTITION>
+        { pos = getPos(); }
+        <BY>
+        partitionList = ExpressionCommaList(pos, ExprContext.ACCEPT_NONQUERY)
         |
         { partitionList = SqlNodeList.Empty; }
     )
@@ -1728,7 +1765,7 @@ SqlNode OrderItem() :
     SqlParserPos pos;
 }
 {
-    e = Expression(EXPR_ACCEPT_SUBQUERY)
+    e = Expression(ExprContext.ACCEPT_SUBQUERY)
     (
         <ASC>
         {
@@ -1758,7 +1795,7 @@ SqlNode SqlExpressionEof() :
     SqlNode e;
 }
 {
-    e = Expression(EXPR_ACCEPT_SUBQUERY) (<EOF>)
+    e = Expression(ExprContext.ACCEPT_SUBQUERY) (<EOF>)
     {
         return e;
     }
@@ -1785,7 +1822,7 @@ SqlNode QueryOrExpr(ExprContext exprContext) :
                 // whoops, expression we just parsed wasn't a query,
                 // but we're about to see something like UNION, so
                 // force an exception retroactively
-                checkNonQueryExpression(EXPR_ACCEPT_QUERY);
+                checkNonQueryExpression(ExprContext.ACCEPT_QUERY);
             }
         }
         op = BinaryQueryOperator()
@@ -1795,7 +1832,7 @@ SqlNode QueryOrExpr(ExprContext exprContext) :
             checkQueryExpression(exprContext);
 
         }
-        e = LeafQueryOrExpr(EXPR_ACCEPT_QUERY)
+        e = LeafQueryOrExpr(ExprContext.ACCEPT_QUERY)
         {
             list.add(new SqlParserUtil.ToTreeListItem(op, pos));
             list.add(e);
@@ -1895,7 +1932,7 @@ List Expression2(ExprContext exprContext) :
                         pos = getPos();
                     }
                 )
-                list2 = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_NONCURSOR)
+                list2 = ParenthesizedQueryOrCommaList(ExprContext.ACCEPT_NONCURSOR)
                 {
                     list.add(new SqlParserUtil.ToTreeListItem(op, pos));
                     pos = pos.plus(getPos());
@@ -1939,7 +1976,7 @@ List Expression2(ExprContext exprContext) :
                         <ASYMMETRIC>
                     ]
                 )
-                e = Expression3(EXPR_ACCEPT_SUBQUERY)
+                e = Expression3(ExprContext.ACCEPT_SUBQUERY)
                 {
                     list.add(new SqlParserUtil.ToTreeListItem(op, pos));
                     list.add(e);
@@ -1961,14 +1998,14 @@ List Expression2(ExprContext exprContext) :
                     |
                     <SIMILAR> <TO> { op = SqlStdOperatorTable.similarOperator; }
                 )
-                list2 = Expression2(EXPR_ACCEPT_SUBQUERY)
+                list2 = Expression2(ExprContext.ACCEPT_SUBQUERY)
                 {
                     list.add(new SqlParserUtil.ToTreeListItem(op, pos));
                     list.addAll(list2);
                 }
                 [
                     LOOKAHEAD(2)
-                    <ESCAPE> e = Expression3(EXPR_ACCEPT_SUBQUERY)
+                    <ESCAPE> e = Expression3(ExprContext.ACCEPT_SUBQUERY)
                     {
                         pos = getPos();
                         list.add(
@@ -1982,7 +2019,7 @@ List Expression2(ExprContext exprContext) :
                 {
                     checkNonQueryExpression(exprContext);
                 }
-                e = Expression3(EXPR_ACCEPT_SUBQUERY)
+                e = Expression3(ExprContext.ACCEPT_SUBQUERY)
                 {
                     list.add(new SqlParserUtil.ToTreeListItem(op, getPos()));
                     list.add(e);
@@ -2035,8 +2072,8 @@ SqlNode Expression3(ExprContext exprContext) :
     <ROW> <LPAREN> list = SimpleIdentifierCommaList() <RPAREN>
     {
         pos = getPos();
-        if (exprContext != EXPR_ACCEPT_ALL &&
-            exprContext != EXPR_ACCEPT_CURSOR)
+        if (exprContext != ExprContext.ACCEPT_ALL &&
+            exprContext != ExprContext.ACCEPT_CURSOR)
         {
             throw SqlUtil.newContextException(
                 pos,
@@ -2051,7 +2088,7 @@ SqlNode Expression3(ExprContext exprContext) :
         prefixRowOpPos = getPos();
         checkNonQueryExpression(exprContext);
     }
-    e = Expression3(EXPR_ACCEPT_SUBQUERY)
+    e = Expression3(ExprContext.ACCEPT_SUBQUERY)
     {
         SqlParserPos callPos = prefixRowOpPos.plus(e.getParserPosition());
         return op.createCall(callPos, e);
@@ -2181,16 +2218,16 @@ SqlNode AtomicRowExpression() :
         pos = getPos();
     }
     [
-        caseIdentifier = Expression(EXPR_ACCEPT_NONQUERY)
+        caseIdentifier = Expression(ExprContext.ACCEPT_NONQUERY)
     ]
     (
-        <WHEN> e = Expression(EXPR_ACCEPT_NONQUERY)
+        <WHEN> e = Expression(ExprContext.ACCEPT_NONQUERY)
         {  whenPos = getPos();whenList.add(e); }
-        <THEN> e = Expression(EXPR_ACCEPT_NONQUERY)
+        <THEN> e = Expression(ExprContext.ACCEPT_NONQUERY)
         {  thenPos = getPos();thenList.add(e); }
     ) +
     [
-        <ELSE> elseClause = Expression(EXPR_ACCEPT_NONQUERY)
+        <ELSE> elseClause = Expression(ExprContext.ACCEPT_NONQUERY)
     ]
     <END>
     {
@@ -2481,7 +2518,7 @@ SqlNode MultisetConstructor() :
     <MULTISET> { pos = getPos(); }
     <LPAREN>
     //by sub query "MULTISET(SELECT * FROM T)"
-    e = LeafQueryOrExpr(EXPR_ACCEPT_QUERY)
+    e = LeafQueryOrExpr(ExprContext.ACCEPT_QUERY)
     <RPAREN>
     {
         return SqlStdOperatorTable.multisetQueryConstructor.createCall(
@@ -2491,9 +2528,9 @@ SqlNode MultisetConstructor() :
     <MULTISET> { pos = getPos(); }
     //by enumeration "MULTISET[e0, e1, ..., eN]"
     <LBRACKET> //todo do trigraph aswell ??( ??)
-    e = Expression(EXPR_ACCEPT_NONQUERY) { args = startList(e); }
+    e = Expression(ExprContext.ACCEPT_NONQUERY) { args = startList(e); }
     (
-        <COMMA> e = Expression(EXPR_ACCEPT_NONQUERY) { args.add(e); }
+        <COMMA> e = Expression(ExprContext.ACCEPT_NONQUERY) { args.add(e); }
     ) *
     <RBRACKET>
     {
@@ -2734,7 +2771,7 @@ SqlNode NewSpecification() :
     routineCall =
     NamedRoutineCall(
         SqlFunctionCategory.UserDefinedConstructor,
-        EXPR_ACCEPT_SUBQUERY)
+        ExprContext.ACCEPT_SUBQUERY)
     {
         return SqlStdOperatorTable.newOperator.createCall(
             callPos, routineCall);
@@ -2980,15 +3017,15 @@ SqlNode CursorExpression(ExprContext exprContext) :
     <CURSOR>
     {
         pos = getPos();
-        if (exprContext != EXPR_ACCEPT_ALL &&
-            exprContext != EXPR_ACCEPT_CURSOR)
+        if (exprContext != ExprContext.ACCEPT_ALL &&
+            exprContext != ExprContext.ACCEPT_CURSOR)
         {
             throw SqlUtil.newContextException(
                 pos,
                 EigenbaseResource.instance().IllegalCursorExpression.ex());
         }
     }
-    e = Expression(EXPR_ACCEPT_QUERY)
+    e = Expression(ExprContext.ACCEPT_QUERY)
     {
         return SqlStdOperatorTable.cursorConstructor.createCall(
             pos, e);
@@ -3013,7 +3050,7 @@ SqlNode BuiltinFunctionCall() :
     //~ FUNCTIONS WITH SPECIAL SYNTAX ---------------------------------------
     (
         <CAST>
-        <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY) { args = startList(e); }
+        <LPAREN> e = Expression(ExprContext.ACCEPT_SUBQUERY) { args = startList(e); }
         <AS>
         (
             dt = DataType() { args.add(dt); }
@@ -3033,7 +3070,7 @@ SqlNode BuiltinFunctionCall() :
         unit = TimeUnit()
         { args = startList(new SqlIntervalQualifier(unit, null,getPos())); }
         <FROM>
-        e = Expression(EXPR_ACCEPT_SUBQUERY) { args.add(e); }
+        e = Expression(ExprContext.ACCEPT_SUBQUERY) { args.add(e); }
         <RPAREN>
         {
             return SqlStdOperatorTable.extractFunc.createCall(
@@ -3048,11 +3085,11 @@ SqlNode BuiltinFunctionCall() :
         }
         <LPAREN>
         // FIXME jvs 31-Aug-2006:  FRG-192:  This should be
-        // Expression(EXPR_ACCEPT_SUBQUERY), but that doesn't work
+        // Expression(ExprContext.ACCEPT_SUBQUERY), but that doesn't work
         // because it matches the other kind of IN.
         e = AtomicRowExpression() { args = startList(e); }
         <IN>
-        e = Expression(EXPR_ACCEPT_SUBQUERY) { args.add(e);}
+        e = Expression(ExprContext.ACCEPT_SUBQUERY) { args.add(e);}
         <RPAREN>
         {
             return SqlStdOperatorTable.positionFunc.createCall(
@@ -3066,7 +3103,7 @@ SqlNode BuiltinFunctionCall() :
             pos = getPos();
         }
         <LPAREN>
-        e = Expression(EXPR_ACCEPT_SUBQUERY)
+        e = Expression(ExprContext.ACCEPT_SUBQUERY)
         {
             args = startList(e);
         }
@@ -3088,7 +3125,7 @@ SqlNode BuiltinFunctionCall() :
             pos = getPos();
         }
         <LPAREN>
-        e = Expression(EXPR_ACCEPT_SUBQUERY)
+        e = Expression(ExprContext.ACCEPT_SUBQUERY)
         {
             args = startList(e);
         }
@@ -3110,23 +3147,23 @@ SqlNode BuiltinFunctionCall() :
             pos = getPos();
         }
         <LPAREN>
-        e = Expression(EXPR_ACCEPT_SUBQUERY)
+        e = Expression(ExprContext.ACCEPT_SUBQUERY)
         {
             args = startList(e);
         }
         <PLACING>
-        e = Expression(EXPR_ACCEPT_SUBQUERY)
+        e = Expression(ExprContext.ACCEPT_SUBQUERY)
         {
             args.add(e);
         }
         <FROM>
-        e = Expression(EXPR_ACCEPT_SUBQUERY)
+        e = Expression(ExprContext.ACCEPT_SUBQUERY)
         {
             args.add(e);
         }
         [
             <FOR>
-            e = Expression(EXPR_ACCEPT_SUBQUERY)
+            e = Expression(ExprContext.ACCEPT_SUBQUERY)
             {
                 args.add(e);
             }
@@ -3156,14 +3193,14 @@ SqlNode BuiltinFunctionCall() :
             pos = getPos();
         }
         <LPAREN>
-        e = Expression(EXPR_ACCEPT_SUBQUERY)
+        e = Expression(ExprContext.ACCEPT_SUBQUERY)
         { args = startList(e); }
         ( <FROM> | <COMMA>)
-        e = Expression(EXPR_ACCEPT_SUBQUERY)
+        e = Expression(ExprContext.ACCEPT_SUBQUERY)
         { args.add(e); }
         [
             (<FOR> | <COMMA>)
-            e = Expression(EXPR_ACCEPT_SUBQUERY)
+            e = Expression(ExprContext.ACCEPT_SUBQUERY)
             { args.add(e); }
         ]
         <RPAREN>
@@ -3205,7 +3242,7 @@ SqlNode BuiltinFunctionCall() :
                         SqlTrimFunction.Flag.LEADING, pos);
                 }
             ]
-            [ trimChars = Expression(EXPR_ACCEPT_SUBQUERY) ]
+            [ trimChars = Expression(ExprContext.ACCEPT_SUBQUERY) ]
             (
                 <FROM>
                 {
@@ -3227,7 +3264,7 @@ SqlNode BuiltinFunctionCall() :
                 }
             )
         ]
-        e = Expression(EXPR_ACCEPT_SUBQUERY)
+        e = Expression(ExprContext.ACCEPT_SUBQUERY)
         {
             args = startList(flag);
             args.add(trimChars);
@@ -3306,7 +3343,7 @@ SqlNode NamedFunctionCall() :
                 args = SqlParserUtil.emptyList;
                 pos = pos.plus(getPos());
             }
-            | args = FunctionParameterList(EXPR_ACCEPT_SUBQUERY)
+            | args = FunctionParameterList(ExprContext.ACCEPT_SUBQUERY)
             {
                 pos = pos.plus(getPos());
                 quantifier = (SqlLiteral) args.get(0);
@@ -3359,7 +3396,7 @@ SqlNode StandardFloorCeilOptions(SqlParserPos pos, boolean floorFlag) :
     boolean over = false;
 }
 {
-    args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
+    args = ParenthesizedQueryOrCommaList(ExprContext.ACCEPT_SUBQUERY)
     [
         <OVER>
         {
@@ -3513,7 +3550,7 @@ SqlNode JdbcFunctionCall() :
             { args = startList(new SqlIdentifier("*", starPos)); }
             | LOOKAHEAD(2) <LPAREN> <RPAREN>
             { args = SqlParserUtil.emptyList; }
-            | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
+            | args = ParenthesizedQueryOrCommaList(ExprContext.ACCEPT_SUBQUERY)
             { pos = pos.plusAll(args); }
         )
         <RBRACE>

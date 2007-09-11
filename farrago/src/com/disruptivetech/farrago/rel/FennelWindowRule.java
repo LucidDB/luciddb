@@ -263,8 +263,8 @@ public abstract class FennelWindowRule
         // functions.
         List<FennelWindowRel.Window> windowList =
             new ArrayList<FennelWindowRel.Window>();
-        final Map<RexNode, FennelWindowRel.RexWinAggCall> aggMap =
-            new HashMap<RexNode, FennelWindowRel.RexWinAggCall>();
+        final Map<RexOver, FennelWindowRel.RexWinAggCall> aggMap =
+            new HashMap<RexOver, FennelWindowRel.RexWinAggCall>();
         final RexProgram aggProgram =
             RexProgramBuilder.mergePrograms(
                 winAggRel.getProgram(),
@@ -296,13 +296,24 @@ public abstract class FennelWindowRule
         // program.
         for (RexNode agg : aggProgram.getExprList()) {
             if (agg instanceof RexOver) {
+                final RexOver over = (RexOver) agg;
                 FennelWindowRel.RexWinAggCall aggCall =
-                    addWindows(windowList, (RexOver) agg, inputProgramBuilder);
-                aggMap.put(agg, aggCall);
+                    addWindows(windowList, over, inputProgramBuilder);
+                aggMap.put(over, aggCall);
             }
         }
         inputProgramBuilder.eliminateUnused();
         final RexProgram inputProgram = inputProgramBuilder.getProgram();
+
+        // Partitioning expressions must be evaluated before rows enter the XO.
+        // If windows partition on expressions defined in inCalc, don't try to
+        // merge the expressions into the WinAgg XO: make inCalc its own XO.
+        if (inCalc != null
+            && isPartitioningOnCalcField(inCalc, windowList))
+        {
+            createRels(call, outCalc, winAggRel, null, inCalc);
+            return;
+        }
 
         // Now the windows are complete, compute their digests.
         for (FennelWindowRel.Window window : windowList) {
@@ -455,10 +466,36 @@ public abstract class FennelWindowRule
                 fennelInput,
                 outputProgram.getOutputRowType(),
                 inputProgram,
-                (FennelWindowRel.Window []) windowList.toArray(
+                windowList.toArray(
                     new FennelWindowRel.Window[windowList.size()]),
                 outputProgram);
         call.transformTo(fennelCalcRel);
+    }
+
+    /**
+     * Returns whether any of the partitions in <code>windowList</code> uses
+     * a field calculated in <code>inCalc</code>.
+     *
+     * @param inCalc Calculator relational expression
+     * @param windowList List of windows
+     * @return Whether any partition has a calculated field
+     */
+    private boolean isPartitioningOnCalcField(
+        CalcRel inCalc,
+        List<FennelWindowRel.Window> windowList)
+    {
+        int inputFieldCount =
+            inCalc.getProgram().getInputRowType().getFieldCount();
+        for (FennelWindowRel.Window window : windowList) {
+            for (FennelWindowRel.Partition p : window.getPartitionList()) {
+                for (Integer partitionKey : p.partitionKeys) {
+                    if (partitionKey.intValue() >= inputFieldCount) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private FennelWindowRel.RexWinAggCall addWindows(
@@ -469,7 +506,7 @@ public abstract class FennelWindowRule
         final RexWindow aggWindow = over.getWindow();
 
         // Look up or create a window.
-        Integer [] orderKeys = RexUtil.toOrdinalArray(aggWindow.orderKeys);
+        Integer [] orderKeys = getProjectOrdinals(programBuilder, aggWindow.orderKeys);
         FennelWindowRel.Window fennelWindow =
             lookupWindow(
                 windowList,
@@ -480,7 +517,7 @@ public abstract class FennelWindowRule
 
         // Lookup or create a partition within the window.
         Integer [] partitionKeys =
-            RexUtil.toOrdinalArray(aggWindow.partitionKeys);
+            getProjectOrdinals(programBuilder, aggWindow.partitionKeys);
         FennelWindowRel.Partition fennelPartition =
             fennelWindow.lookupOrCreatePartition(partitionKeys);
         Util.discard(fennelPartition);
@@ -493,6 +530,33 @@ public abstract class FennelWindowRule
             over.getAggOperator(),
             over.getOperands(),
             programBuilder);
+    }
+
+    /**
+     * Converts a list of expressions into a list of ordinals that these
+     * expressions are projected from a {@link RexProgramBuilder}. If an
+     * expression is not projected, adds it.
+     *
+     * @param programBuilder Program builder
+     * @param exprs List of expressions
+     * @return List of ordinals where expressions are projected
+     */
+    private Integer[] getProjectOrdinals(
+        RexProgramBuilder programBuilder,
+        RexNode[] exprs)
+    {
+        Integer [] newKeys = new Integer[exprs.length];
+        for (int i = 0; i < newKeys.length; i++) {
+            RexLocalRef operand = (RexLocalRef) exprs[i];
+            List<RexLocalRef> projectList = programBuilder.getProjectList();
+            int index = projectList.indexOf(operand);
+            if (index < 0) {
+                index = projectList.size();
+                programBuilder.addProject(operand, null);
+            }
+            newKeys[i] = index;
+        }
+        return newKeys;
     }
 
     private FennelWindowRel.Window lookupWindow(

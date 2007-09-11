@@ -262,15 +262,15 @@ DdlStmt DdlStmtEof() :
                 reposTxnContext.beginLockedTxn(false);
             }
             (
-                <CATALOG> expr = Expression(EXPR_ACCEPT_NONQUERY)
+                <CATALOG> expr = Expression(ExprContext.ACCEPT_NONQUERY)
                 {
                     ddlStmt = new DdlSetCatalogStmt(expr);
                 }
-                | <SCHEMA> expr = Expression(EXPR_ACCEPT_NONQUERY)
+                | <SCHEMA> expr = Expression(ExprContext.ACCEPT_NONQUERY)
                 {
                     ddlStmt = new DdlSetSchemaStmt(expr);
                 }
-                | <PATH> expr = Expression(EXPR_ACCEPT_NONQUERY)
+                | <PATH> expr = Expression(ExprContext.ACCEPT_NONQUERY)
                 {
                     ddlStmt = new DdlSetPathStmt(expr);
                 }
@@ -660,7 +660,7 @@ FemLocalView ViewDefinition() :
         defStart = getEndPos();
         farragoParser.getDdlValidator().setParserOffset(view, defStart);
     }
-    query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
+    query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
         defEnd = getEndPos();
 
@@ -754,7 +754,7 @@ FemUser UserDefinition() :
         // set the repos name attribute
         user.setName(userName.getSimple());
     }
-    <AUTHORIZATION> expr = Expression(EXPR_ACCEPT_NONQUERY)
+    <AUTHORIZATION> expr = Expression(ExprContext.ACCEPT_NONQUERY)
     {
         // TODO: Finalize the syntax for JAAS integration
         // user.setAuthenticationMethod =
@@ -1848,7 +1848,7 @@ SqlNode ConstructorAssignment() :
 }
 {
     <SET> <SELF> <DOT> attributeName = SimpleIdentifier()
-    <EQ> expr = Expression(EXPR_ACCEPT_NONQUERY) <SEMICOLON>
+    <EQ> expr = Expression(ExprContext.ACCEPT_NONQUERY) <SEMICOLON>
     {
         return opTab.equalsOperator.createCall(
             getPos(),
@@ -1962,7 +1962,7 @@ void SqlFunctionBody(FemRoutine routine) :
         // TODO jvs 24-Dec-2004: eventually allow subqueries and
         // non-functional routine bodies.
     }
-    expr = Expression(EXPR_ACCEPT_NONQUERY)
+    expr = Expression(ExprContext.ACCEPT_NONQUERY)
     {
         defEnd = getEndPos();
 

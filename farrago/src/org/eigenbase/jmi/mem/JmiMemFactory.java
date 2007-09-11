@@ -50,6 +50,15 @@ public abstract class JmiMemFactory
     private static final Float FloatZero = Float.valueOf(0);
     private static final Double DoubleZero = Double.valueOf(0);
 
+    private static final Map<String, MethodId> methodMap =
+        new HashMap<String, MethodId>();
+    static {
+        for (int i = 0; i < MethodId.values().length; i++) {
+            MethodId methodId = MethodId.values()[i];
+            methodMap.put(methodId.name(), methodId);
+        }
+    }
+
     //~ Enums ------------------------------------------------------------------
 
     /**
@@ -503,8 +512,9 @@ public abstract class JmiMemFactory
             // succession of candidate method names, we convert the method name
             // into an enum and use that enum to switch.
             String name = method.getName();
-            try {
-                MethodId methodId = MethodId.valueOf(MethodId.class, name);
+            MethodId methodId = methodMap.get(name);
+            if (methodId != null) {
+                // it's a standard method
                 switch (methodId) {
                 case toString:
 
@@ -612,10 +622,9 @@ public abstract class JmiMemFactory
                         (RefObject) args[0],
                         (Boolean) args[1]);
                 }
-            } catch (IllegalArgumentException e) {
-                // Method name is not one of the standard ones -- that's OK.
-                Util.swallow(e, null);
             }
+
+            // non-standard methods
             String getter = parseGetter(name);
             if (getter != null) {
                 assert args == null;

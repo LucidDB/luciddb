@@ -359,14 +359,45 @@ public abstract class DiffTestCase
         final String message =
             "diff detected at line " + lineNumber + " in " + logFile;
         if (verbose) {
-            String s = diff(refFile, logFile);
-            Assert.assertEquals(
-                message + TestUtil.NL + s + TestUtil.NL,
-                fileContents(refFile),
-                fileContents(logFile));
-
+            if (inIde()) {
+                // If we're in IntelliJ, it's worth printing the 'expected
+                // <...> actual <...>' string, becauase IntelliJ can format
+                // this intelligently. Otherwise, use the more concise
+                // diff format.
+                Assert.assertEquals(
+                    message,
+                    fileContents(refFile),
+                    fileContents(logFile));
+            } else {
+                String s = diff(refFile, logFile);
+                Assert.fail(
+                    message + TestUtil.NL + s + TestUtil.NL);
+            }
         }
         Assert.fail(message);
+    }
+
+    /**
+     * Returns whether this test is running inside the IntelliJ IDE.
+     *
+     * @return whether we're running in IntelliJ.
+     */
+    private static boolean inIde()
+    {
+        Throwable runtimeException = new Throwable();
+        runtimeException.fillInStackTrace();
+        final StackTraceElement [] stackTrace =
+            runtimeException.getStackTrace();
+        StackTraceElement lastStackTraceElement =
+            stackTrace[stackTrace.length - 1];
+
+        // Junit test launched from IntelliJ 6.0
+        if (lastStackTraceElement.getClassName().equals(
+            "com.intellij.rt.execution.junit.JUnitStarter") &&
+            lastStackTraceElement.getMethodName().equals("main")) {
+            return true;
+        }
+        return false;
     }
 
     /**

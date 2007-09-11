@@ -59,8 +59,8 @@ public abstract class SqlTypeUtil
      */
     public static boolean isCharTypeComparable(RelDataType [] argTypes)
     {
-        Util.pre(null != argTypes, "null!=argTypes");
-        Util.pre(2 <= argTypes.length, "2<=argTypes.length");
+        assert null != argTypes : "precondition failed";
+        assert 2 <= argTypes.length : "precondition failed";
 
         for (int j = 0; j < (argTypes.length - 1); j++) {
             RelDataType t0 = argTypes[j];
@@ -118,8 +118,8 @@ public abstract class SqlTypeUtil
         SqlNode [] operands,
         boolean throwOnFailure)
     {
-        Util.pre(null != operands, "null!=operands");
-        Util.pre(2 <= operands.length, "2<=operands.length");
+        assert null != operands : "precondition failed";
+        assert 2 <= operands.length : "precondition failed";
 
         if (!isCharTypeComparable(
                 deriveAndCollectTypes(validator, scope, operands)))
@@ -201,15 +201,15 @@ public abstract class SqlTypeUtil
      * Recreates a given RelDataType with nullablility iff any of a calls
      * operand types are nullable.
      */
-    public final static RelDataType makeNullableIfOperandsAre(
+    public static RelDataType makeNullableIfOperandsAre(
         final SqlValidator validator,
         final SqlValidatorScope scope,
         final SqlCall call,
         RelDataType type)
     {
-        for (int i = 0; i < call.operands.length; ++i) {
+        for (SqlNode operand : call.operands) {
             RelDataType operandType =
-                validator.deriveType(scope, call.operands[i]);
+                validator.deriveType(scope, operand);
 
             if (containsNullable(operandType)) {
                 RelDataTypeFactory typeFactory = validator.getTypeFactory();
@@ -224,7 +224,7 @@ public abstract class SqlTypeUtil
      * Recreates a given RelDataType with nullability iff any of the param
      * argTypes are nullable.
      */
-    public final static RelDataType makeNullableIfOperandsAre(
+    public static RelDataType makeNullableIfOperandsAre(
         final RelDataTypeFactory typeFactory,
         final RelDataType [] argTypes,
         RelDataType type)
@@ -240,8 +240,8 @@ public abstract class SqlTypeUtil
      */
     public static boolean containsNullable(RelDataType [] types)
     {
-        for (int i = 0; i < types.length; i++) {
-            if (containsNullable(types[i])) {
+        for (RelDataType type : types) {
+            if (containsNullable(type)) {
                 return true;
             }
         }
@@ -260,8 +260,7 @@ public abstract class SqlTypeUtil
         if (!type.isStruct()) {
             return false;
         }
-        for (RelDataTypeField field1 : type.getFieldList()) {
-            RelDataTypeField field = (RelDataTypeField) field1;
+        for (RelDataTypeField field : type.getFieldList()) {
             if (containsNullable(field.getType())) {
                 return true;
             }
@@ -307,8 +306,7 @@ public abstract class SqlTypeUtil
         SqlTypeName [] typeNames,
         RelDataType type)
     {
-        for (int i = 0; i < typeNames.length; i++) {
-            SqlTypeName typeName = typeNames[i];
+        for (SqlTypeName typeName : typeNames) {
             if (isOfSameTypeName(typeName, type)) {
                 return true;
             }
@@ -371,13 +369,9 @@ public abstract class SqlTypeUtil
      */
     public static boolean inSameFamilyOrNull(RelDataType t1, RelDataType t2)
     {
-        if (t1.getSqlTypeName() == SqlTypeName.NULL) {
-            return true;
-        }
-        if (t2.getSqlTypeName() == SqlTypeName.NULL) {
-            return true;
-        }
-        return t1.getFamily() == t2.getFamily();
+        return t1.getSqlTypeName() == SqlTypeName.NULL ||
+            t2.getSqlTypeName() == SqlTypeName.NULL ||
+            t1.getFamily() == t2.getFamily();
     }
 
     /**
@@ -500,9 +494,8 @@ public abstract class SqlTypeUtil
         case BIGINT:
             return Long.MAX_VALUE;
         default:
-            Util.permAssert(false, "invalid arg for SqlTypeUtil.maxValue");
+            throw Util.unexpected(type.getSqlTypeName());
         }
-        return 0;
     }
 
     /**
@@ -1132,6 +1125,240 @@ public abstract class SqlTypeUtil
                 collation);
         SqlValidatorUtil.checkCharsetAndCollateConsistentIfCharType(type);
         return type;
+    }
+
+    /**
+     * Returns whether two types are equal, ignoring nullability.
+     *
+     * <p>They need not come from the same factory.
+     *
+     * @param factory Type factory
+     * @param type1 First type
+     * @param type2 Second type
+     * @return whether types are equal, ignoring nullability
+     */
+    public static boolean equalSansNullability(
+        RelDataTypeFactory factory,
+        RelDataType type1,
+        RelDataType type2)
+    {
+        if (type1.equals(type2)) {
+            return true;
+        }
+        if (type1.isNullable() == type2.isNullable()) {
+            // If types have the same nullability and they weren't equal above,
+            // they must be different.
+            return false;
+        }
+        return type1.equals(
+            factory.createTypeWithNullability(type2, type1.isNullable()));
+    }
+
+    /**
+     * Adds a field to a record type at a specified position.
+     *
+     * <p>For example, if type is <code>(A integer, B boolean)</code>,
+     * and fieldType is <code>varchar(10)</code>, then
+     * <code>prepend(typeFactory, type, 0, "Z", fieldType)</code>
+     * will return <code>(Z varchar(10), A integer, B boolean)</code>.
+     *
+     * @param typeFactory Type factory
+     * @param type Record type
+     * @param at Ordinal to add field
+     * @param fieldName Name of new field
+     * @param fieldType Type of new field
+     * @return Extended record type
+     */
+    public static RelDataType addField(
+        RelDataTypeFactory typeFactory,
+        final RelDataType type,
+        final int at,
+        final String fieldName,
+        final RelDataType fieldType)
+    {
+        return typeFactory.createStructType(
+            new RelDataTypeFactory.FieldInfo()
+            {
+                public int getFieldCount()
+                {
+                    return type.getFieldCount() + 1;
+                }
+
+                public String getFieldName(int index)
+                {
+                    if (index == at) {
+                        return fieldName;
+                    }
+                    if (index > at) {
+                        --index;
+                    }
+                    return type.getFieldList().get(index).getName();
+                }
+
+                public RelDataType getFieldType(int index)
+                {
+                    if (index == at) {
+                        return fieldType;
+                    }
+                    if (index > at) {
+                        --index;
+                    }
+                    return type.getFieldList().get(index).getType();
+                }
+            }
+        );
+    }
+
+    /**
+     * Returns the ordinal of a given field in a record type, or -1 if the
+     * field is not found.
+     *
+     * @param type Record type
+     * @param fieldName Name of field
+     * @return Ordinal of field
+     */
+    public static int findField(RelDataType type, String fieldName)
+    {
+        List<RelDataTypeField> fields = type.getFieldList();
+        for (int i = 0; i < fields.size(); i++) {
+            RelDataTypeField field = fields.get(i);
+            if (field.getName().equals(fieldName)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Records a struct type with no fields.
+     *
+     * @param typeFactory Type factory
+     * @return Struct type with no fields
+     */
+    public static RelDataType createEmptyStructType(
+        RelDataTypeFactory typeFactory)
+    {
+        return typeFactory.createStructType(
+            new RelDataType[0], new String[0]);
+    }
+
+    /**
+     * Convenience class for building a struct type with several fields.
+     *
+     * <p>TypeBuilder is more convenient because it supports chained calls to
+     * add one field at a time. The chained syntax means that you can use a
+     * TypeBuilder in contexts where only an expression is allowed, for example
+     * in a field initializer. There are several overloadings of the
+     * <code>add</code> method for types which take different parameters, and
+     * you can explicitly state whether you want a field to be nullable.
+     *
+     * <p>For example, to create the type
+     *
+     * <blockquote><pre>
+     * (A BOOLEAN NOT NULL, B VARCHAR(10), C DECIMAL(6,2))
+     * </pre></blockquote>
+     *
+     * the code is
+     *
+     * <blockquote><pre>
+     * RelDataTypeFactory typeFactory;
+     * return new TypeBuilder(typeFactory)
+     *     .add("A", SqlTypeName.BOOLEAN, false)
+     *     .add("B", SqlTypeName.VARCHAR(10), true)
+     *     .add("C", SqlTypeName.DECIMAL, 6, 2, false)
+     *     .type();
+     * </pre></blockquote>
+     *
+     * <p>The equivalent conventional code is:
+     *
+     * <blockquote><pre>
+     * RelDataTypeFactory typeFactory;
+     * String[] names = {"A", "B", "C"};
+     * RelDataType[] types = {
+     *     typeFactory.createSqlType(SqlTypeName.BOOLEAN),
+     *     typeFactory.createTypeWithNullability(
+     *         typeFactory.createSqlType(SqlTypeName.VARCHAR, 10),
+     *         true),
+     *    typeFactory.createSqlType(SqlTypeName.DECIMAL, 6, 2)
+     * };
+     * return typeFactory.createStructType(names, types);
+     * </pre></blockquote>
+     */
+    public static class TypeBuilder
+    {
+        private final List<RelDataTypeFieldImpl> fieldList =
+            new ArrayList<RelDataTypeFieldImpl>();
+        private final RelDataTypeFactory typeFactory;
+
+        public TypeBuilder(RelDataTypeFactory typeFactory)
+        {
+            this.typeFactory = typeFactory;
+        }
+
+        public TypeBuilder add(
+            String name,
+            SqlTypeName typeName,
+            boolean nullable)
+        {
+            RelDataType type = typeFactory.createSqlType(typeName);
+            if (nullable) {
+                type = typeFactory.createTypeWithNullability(type, nullable);
+            }
+            fieldList.add(new RelDataTypeFieldImpl(name, -1, type));
+            return this;
+        }
+
+        public TypeBuilder add(
+            String name,
+            SqlTypeName typeName,
+            int precision,
+            boolean nullable)
+        {
+            RelDataType type = typeFactory.createSqlType(typeName, precision);
+            if (nullable) {
+                type = typeFactory.createTypeWithNullability(type, nullable);
+            }
+            fieldList.add(new RelDataTypeFieldImpl(name, -1, type));
+            return this;
+        }
+
+        public TypeBuilder add(
+            String name,
+            SqlTypeName typeName,
+            int precision,
+            int scale,
+            boolean nullable)
+        {
+            RelDataType type = typeFactory.createSqlType(typeName, precision, scale);
+            if (nullable) {
+                type = typeFactory.createTypeWithNullability(type, nullable);
+            }
+            fieldList.add(new RelDataTypeFieldImpl(name, -1, type));
+            return this;
+        }
+
+        public RelDataType type()
+        {
+            return typeFactory.createStructType(
+                new RelDataTypeFactory.FieldInfo()
+                {
+                    public int getFieldCount()
+                    {
+                        return fieldList.size();
+                    }
+
+                    public String getFieldName(int index)
+                    {
+                        return fieldList.get(index).getName();
+                    }
+
+                    public RelDataType getFieldType(int index)
+                    {
+                        return fieldList.get(index).getType();
+                    }
+                }
+            );
+        }
     }
 }
 

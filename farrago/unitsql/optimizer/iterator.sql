@@ -3,6 +3,7 @@
 -- and Iterator calling convention.
 
 set schema 'sales';
+!set outputformat csv
 
 -- NOTE: many of the union.sql and cartesians.sql queries are good tests
 --       of Fennel/Iterator conversion as well.
@@ -52,3 +53,6 @@ from (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0)
 select "View1"."Foo", "View2"."Foo" as "Foo0"
 from (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View1",
      (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View2";
+
+-- End iterator.sql
+

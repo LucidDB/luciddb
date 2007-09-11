@@ -24,6 +24,7 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 
+import java.io.Serializable;
 
 /**
  * Abstract base class for SQL implementations of {@link RelDataType}.
@@ -33,7 +34,7 @@ import org.eigenbase.reltype.*;
  */
 public abstract class AbstractSqlType
     extends RelDataTypeImpl
-    implements Cloneable
+    implements Cloneable, Serializable
 {
     //~ Instance fields --------------------------------------------------------
 
@@ -42,6 +43,13 @@ public abstract class AbstractSqlType
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates an AbstractSqlType.
+     *
+     * @param typeName Type name
+     * @param isNullable Whether nullable
+     * @param fields Fields of type, or null if not a record type
+     */
     protected AbstractSqlType(
         SqlTypeName typeName,
         boolean isNullable,
@@ -49,11 +57,7 @@ public abstract class AbstractSqlType
     {
         super(fields);
         this.typeName = typeName;
-        if (typeName == SqlTypeName.NULL) {
-            this.isNullable = true;
-        } else {
-            this.isNullable = isNullable;
-        }
+        this.isNullable = isNullable || (typeName == SqlTypeName.NULL);
     }
 
     //~ Methods ----------------------------------------------------------------

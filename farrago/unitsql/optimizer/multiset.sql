@@ -2,6 +2,7 @@
 -- Test multiset related queries
 
 set schema 'sales';
+!set outputformat csv
 
 -- force usage of Fennel calculator
 --alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
@@ -44,4 +45,5 @@ explain plan for values multiset[1] multiset union distinct multiset[2];
 -- explain plan for select collect(deptno), fusion(multiset[3]) from emps;
 
 
+-- End multiset.sql
 

@@ -345,7 +345,7 @@ public class SqlTypeAssignmentRules
             return true;
         }
 
-        HashSet rule = (HashSet) ruleset.get(to);
+        Set<SqlTypeName> rule = ruleset.get(to);
         if (null == rule) {
             // if you hit this assert, see the constructor of this class on how
             // to add new rule

@@ -4116,6 +4116,15 @@ public class SqlValidatorTest
             "Window 'W1' not found");
     }
 
+    public void testPartitionByExpr()
+    {
+        checkWinFuncExp("sum(sal) over (partition by empno + deptno order by empno range 5 preceding)",
+            null);
+
+        checkWinFuncExp("sum(sal) over (partition by empno + ename order by empno range 5 preceding)",
+            "(?s)Cannot apply '\\+' to arguments of type '<INTEGER> \\+ <VARCHAR\\(20\\)>'.*");
+    }
+
     public void testWindowClause()
     {
         // -----------------------------------

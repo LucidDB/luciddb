@@ -25,6 +25,7 @@ package org.eigenbase.reltype;
 import java.nio.charset.*;
 
 import java.util.*;
+import java.io.Serializable;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -54,6 +55,11 @@ public abstract class RelDataTypeImpl
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a RelDataTypeImpl.
+     *
+     * @param fields Array of fields
+     */
     protected RelDataTypeImpl(RelDataTypeField [] fields)
     {
         this.fields = fields;
@@ -62,6 +68,19 @@ public abstract class RelDataTypeImpl
         } else {
             fieldList = null;
         }
+    }
+
+    /**
+     * Default constructor, to allow derived classes such as
+     * {@link BasicSqlType} to be {@link Serializable}.
+     *
+     * <p>(The serialization specification says that a class can be
+     * serializable even if its base class is not serializable, provided that
+     * the base class has a public or protected zero-args constructor.)
+     */
+    protected RelDataTypeImpl()
+    {
+        this(null);
     }
 
     //~ Methods ----------------------------------------------------------------

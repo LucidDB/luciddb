@@ -44,38 +44,40 @@ public abstract class SqlAbstractParserImpl
     //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Accept any kind of expression in this context.
+     * @deprecated
      */
-    protected static final ExprContext EXPR_ACCEPT_ALL = new ExprContext();
+    protected static final ExprContext EXPR_ACCEPT_ALL =
+        ExprContext.ACCEPT_ALL;
 
     /**
-     * Accept any kin of expression in this context, with the exception of
-     * CURSOR constructors.
+     * @deprecated
      */
     protected static final ExprContext EXPR_ACCEPT_NONCURSOR =
-        new ExprContext();
+        ExprContext.ACCEPT_NONCURSOR;
 
     /**
-     * Accept only query expressions in this context.
+     * @deprecated
      */
-    protected static final ExprContext EXPR_ACCEPT_QUERY = new ExprContext();
+    protected static final ExprContext EXPR_ACCEPT_QUERY =
+        ExprContext.ACCEPT_QUERY;
 
     /**
-     * Accept only non-query expressions in this context.
+     * @deprecated
      */
-    protected static final ExprContext EXPR_ACCEPT_NONQUERY = new ExprContext();
+    protected static final ExprContext EXPR_ACCEPT_NONQUERY =
+        ExprContext.ACCEPT_NONQUERY;
 
     /**
-     * Accept only parenthesized queries or non-query expressions in this
-     * context.
+     * @deprecated
      */
-    protected static final ExprContext EXPR_ACCEPT_SUBQUERY = new ExprContext();
+    protected static final ExprContext EXPR_ACCEPT_SUBQUERY =
+        ExprContext.ACCEPT_SUBQUERY;
 
     /**
-     * Accept only CURSOR constructors, parenthesized queries, or non-query
-     * expressions in this context.
+     * @deprecated
      */
-    protected static final ExprContext EXPR_ACCEPT_CURSOR = new ExprContext();
+    protected static final ExprContext EXPR_ACCEPT_CURSOR =
+        ExprContext.ACCEPT_CURSOR;
 
     private static final Set<String> sql92ReservedWordSet;
 
@@ -332,6 +334,16 @@ public abstract class SqlAbstractParserImpl
         return sql92ReservedWordSet;
     }
 
+    /**
+     * Creates a call.
+     *
+     * @param funName Name of function
+     * @param pos Position in source code
+     * @param funcType Type of function
+     * @param functionQualifier Qualifier
+     * @param operands Operands to call
+     * @return Call
+     */
     protected SqlCall createCall(
         SqlIdentifier funName,
         SqlParserPos pos,
@@ -464,8 +476,40 @@ public abstract class SqlAbstractParserImpl
     /**
      * Type-safe enum for context of acceptable expressions.
      */
-    protected static class ExprContext
+    protected enum ExprContext
     {
+        /**
+         * Accept any kind of expression in this context.
+         */
+        ACCEPT_ALL,
+
+        /**
+         * Accept any kind of expression in this context, with the exception of
+         * CURSOR constructors.
+         */
+        ACCEPT_NONCURSOR,
+
+        /**
+         * Accept only query expressions in this context.
+         */
+        ACCEPT_QUERY,
+
+        /**
+         * Accept only non-query expressions in this context.
+         */
+        ACCEPT_NONQUERY,
+
+        /**
+         * Accept only parenthesized queries or non-query expressions in this
+         * context.
+         */
+        ACCEPT_SUBQUERY,
+
+        /**
+         * Accept only CURSOR constructors, parenthesized queries, or non-query
+         * expressions in this context.
+         */
+        ACCEPT_CURSOR;
     }
 
     /**
@@ -490,6 +534,11 @@ public abstract class SqlAbstractParserImpl
         private final Set<String> reservedWords = new HashSet<String>();
         private final String sql92ReservedWords;
 
+        /**
+         * Creates a MetadataImpl.
+         *
+         * @param sqlParser Parser
+         */
         public MetadataImpl(SqlAbstractParserImpl sqlParser)
         {
             initList(sqlParser, reservedFunctionNames, "ReservedFunctionName");
@@ -558,7 +607,7 @@ public abstract class SqlAbstractParserImpl
          * Uses reflection to invoke a method on this parser. The method must be
          * public and have no parameters.
          *
-         * @param parserImpl
+         * @param parserImpl Parser
          * @param name Name of method. For example "ReservedFunctionName".
          *
          * @return Result of calling method
