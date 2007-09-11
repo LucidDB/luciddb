@@ -31,6 +31,7 @@ select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
 -- group bys
 ------------
 
+!set outputformat csv
 explain plan with type for
 select deptno, count(distinct empno) from emps group by deptno order by 1,2;
 
@@ -196,6 +197,7 @@ select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
 -- group bys
 ------------
 
+!set outputformat csv
 explain plan with type for
 select deptno, count(distinct empno) from emps group by deptno order by deptno;
 

@@ -654,6 +654,8 @@ create index age_idx on person(age);
 -- fake row count so that index access is considered
 call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'PERSON', 100);
 
+!set outputformat csv
+
 -- index search
 explain plan for
 select id from person where id = 30;

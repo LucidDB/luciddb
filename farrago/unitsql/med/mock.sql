@@ -125,6 +125,7 @@ select * from mock_foreign_metadata_server.bach_schema.mock_table;
 -- should fail:  unknown table name
 select * from mock_foreign_metadata_server.mock_schema.bach_table;
 
+!set outputformat csv
 explain plan for select * from mock_fennel_table;
 
 explain plan for select * from mock_java_table;
@@ -132,6 +133,7 @@ explain plan for select * from mock_java_table;
 explain plan for select * from mock_empty_table;
 
 explain plan for insert into mock_empty_table values (5);
+!set outputformat table
 
 create schema mock_local_schema;
 

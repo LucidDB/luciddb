@@ -705,6 +705,7 @@
 | 31  |
 +-----+
 > 
+> !set outputformat csv
 > 
 > --
 > -- Test VARCHAR with NULL
@@ -714,13 +715,10 @@
 > 
 > -- verify creation of system-defined clustered index
 > !indexes LCSEMPS
-+------------+--------------+-------------+-------------+------------------+-----------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |            INDEX_NAME             | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+-----------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | RES          | LCSEMPS     | false       |                  |                                   | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | RES          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS        | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | RES          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$CITY  | 1     | 1                 | CITY         | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+-----------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+'TABLE_CAT','TABLE_SCHEM','TABLE_NAME','NON_UNIQUE','INDEX_QUALIFIER','INDEX_NAME','TYPE','ORDINAL_POSITION','COLUMN_NAME','ASC_ORD_DESC','CARDINALITY','PAGES','FILTER_CONDITION'
+'LOCALDB','RES','LCSEMPS','false','','','0','0','','','0','0',''
+'LOCALDB','RES','LCSEMPS','false','LOCALDB','SYS$DELETION_INDEX$LCSEMPS','3','','','A','0','0',''
+'LOCALDB','RES','LCSEMPS','true','LOCALDB','SYS$CLUSTERED_INDEX$LCSEMPS$CITY','1','1','CITY','A','0','0',''
 > 
 > -- Plans with NULL in the populating stream
 > insert into lcsemps select city from sales.emps;
@@ -734,91 +732,67 @@
 > 
 > explain plan for select * from lcsemps where city = 'Pescadero' 
 > or city = '' order by 1;
-+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                       column0                                                                       |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                           |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                               |
-|     LcsRowScanRel(table=[[LOCALDB, RES, LCSEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$CITY]], residual columns=[[0]])  |
-|       FennelValuesRel(tuples=[[{ '[', '', ']', '' }, { '[', 'Pescadero', ']', 'Pescadero' }]])                                                      |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, RES, LCSEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$CITY]], residual columns=[[0]])'
+'      FennelValuesRel(tuples=[[{ '[', '', ']', '' }, { '[', 'Pescadero', ']', 'Pescadero' }]])'
 > 
 > explain plan for select * from lcsemps where city = 'Pescadero' 
 > or city is null order by 1;
-+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                       column0                                                                       |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                           |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                               |
-|     LcsRowScanRel(table=[[LOCALDB, RES, LCSEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$CITY]], residual columns=[[0]])  |
-|       FennelValuesRel(tuples=[[{ '[', null, ']', null }, { '[', 'Pescadero', ']', 'Pescadero' }]])                                                  |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LcsRowScanRel(table=[[LOCALDB, RES, LCSEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$CITY]], residual columns=[[0]])'
+'      FennelValuesRel(tuples=[[{ '[', null, ']', null }, { '[', 'Pescadero', ']', 'Pescadero' }]])'
 > 
 > select * from lcsemps where city = 'Pescadero' or 
 > city = '' order by 1;
-+------------+
-|    CITY    |
-+------------+
-|            |
-| Pescadero  |
-+------------+
+'CITY'
+''
+'Pescadero'
 > 
 > select * from lcsemps where city = 'Pescadero' or 
 > city is null order by 1;
-+------------+
-|    CITY    |
-+------------+
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-|            |
-| Pescadero  |
-+------------+
+'CITY'
+''
+''
+''
+''
+''
+''
+''
+''
+'Pescadero'
 > 
 > -- Run analyze stats and make sure filters with lower selectivity are evaluated
 > -- first
 > analyze table t1 compute statistics for all columns;
 > 
 > explain plan for select * from t1 where a > 10 and c = 20;
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                           column0                                                                                           |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                                   |
-|   LcsRowScanRel(table=[[LOCALDB, RES, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A, SYS$CLUSTERED_INDEX$T1$B, SYS$CLUSTERED_INDEX$T1$C]], residual columns=[[2, 0]])  |
-|     FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])                                                                                                                                        |
-|     FennelValuesRel(tuples=[[{ '(', 10, '+', null }]])                                                                                                                                      |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, RES, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A, SYS$CLUSTERED_INDEX$T1$B, SYS$CLUSTERED_INDEX$T1$C]], residual columns=[[2, 0]])'
+'    FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
+'    FennelValuesRel(tuples=[[{ '(', 10, '+', null }]])'
 > explain plan for select * from t1 where c = 20 and a > 10;
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                           column0                                                                                           |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                                   |
-|   LcsRowScanRel(table=[[LOCALDB, RES, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A, SYS$CLUSTERED_INDEX$T1$B, SYS$CLUSTERED_INDEX$T1$C]], residual columns=[[2, 0]])  |
-|     FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])                                                                                                                                        |
-|     FennelValuesRel(tuples=[[{ '(', 10, '+', null }]])                                                                                                                                      |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, RES, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A, SYS$CLUSTERED_INDEX$T1$B, SYS$CLUSTERED_INDEX$T1$C]], residual columns=[[2, 0]])'
+'    FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }]])'
+'    FennelValuesRel(tuples=[[{ '(', 10, '+', null }]])'
 > 
 > explain plan for select * from t1 where (a > 1 and a < 30) and c in (5, 10);
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                           column0                                                                                           |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                                   |
-|   LcsRowScanRel(table=[[LOCALDB, RES, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A, SYS$CLUSTERED_INDEX$T1$B, SYS$CLUSTERED_INDEX$T1$C]], residual columns=[[2, 0]])  |
-|     FennelValuesRel(tuples=[[{ '[', 5, ']', 5 }, { '[', 10, ']', 10 }]])                                                                                                                    |
-|     FennelValuesRel(tuples=[[{ '(', 1, ')', 30 }]])                                                                                                                                         |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, RES, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A, SYS$CLUSTERED_INDEX$T1$B, SYS$CLUSTERED_INDEX$T1$C]], residual columns=[[2, 0]])'
+'    FennelValuesRel(tuples=[[{ '[', 5, ']', 5 }, { '[', 10, ']', 10 }]])'
+'    FennelValuesRel(tuples=[[{ '(', 1, ')', 30 }]])'
 > explain plan for select * from t1 where (c > 1 and c < 30) and a in (5, 10);
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                           column0                                                                                           |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                                   |
-|   LcsRowScanRel(table=[[LOCALDB, RES, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A, SYS$CLUSTERED_INDEX$T1$B, SYS$CLUSTERED_INDEX$T1$C]], residual columns=[[0, 2]])  |
-|     FennelValuesRel(tuples=[[{ '[', 5, ']', 5 }, { '[', 10, ']', 10 }]])                                                                                                                    |
-|     FennelValuesRel(tuples=[[{ '(', 1, ')', 30 }]])                                                                                                                                         |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, RES, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A, SYS$CLUSTERED_INDEX$T1$B, SYS$CLUSTERED_INDEX$T1$C]], residual columns=[[0, 2]])'
+'    FennelValuesRel(tuples=[[{ '[', 5, ']', 5 }, { '[', 10, ']', 10 }]])'
+'    FennelValuesRel(tuples=[[{ '(', 1, ')', 30 }]])'
 > 
 > !quit

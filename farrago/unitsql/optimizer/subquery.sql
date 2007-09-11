@@ -1,4 +1,8 @@
+-- $Id$
+-- Test plans for subqueries
+
 !set force on
+!set outputformat csv
 
 set schema 'sales';
 
@@ -1412,3 +1416,6 @@ drop table depts2;
 drop table depts3;
 drop table depts4;
 drop table depts5;
+
+-- End subquery.sql
+

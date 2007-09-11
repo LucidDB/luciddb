@@ -335,19 +335,22 @@ drop index multimulti_mixed_a;
 drop index multimulti_mixed_b;
 drop index multimulti_mixed_c;
 
+!set outputformat csv
 explain plan for
 select count(*) from multimulti where a1 = 11 and b1 = 12;
-
+!set outputformat table
 select count(*) from multimulti where a1 = 11 and b1 = 12;
 
+!set outputformat csv
 explain plan for
 select count(*) from multimulti where a1 = 21 and a2 = 24;
-
+!set outputformat table
 select count(*) from multimulti where a1 = 21 and a2 = 24;
 
+!set outputformat csv
 explain plan for
 select count(*) from multimulti where a1 = 31 and a3 = 37;
-
+!set outputformat table
 select count(*) from multimulti where a1 = 31 and a3 = 37;
 
 drop table multimulti;
@@ -531,3 +534,6 @@ select * from t1 order by a;
 
 -- cleanup
 drop server test_data cascade;
+
+-- End lbm.sql
+
