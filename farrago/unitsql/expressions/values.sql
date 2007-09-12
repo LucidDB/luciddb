@@ -65,6 +65,9 @@ values current_path;
 
 values (1/3);
 
+-- if type union results in loss of digits, verify that rounding occurs
+values 100000.0, 0.555555555555555555;
+
 !set outputformat csv
 
 values ('no'), ('yes'), ('maybe');

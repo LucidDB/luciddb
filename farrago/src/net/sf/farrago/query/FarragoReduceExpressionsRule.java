@@ -510,6 +510,14 @@ public class FarragoReduceExpressionsRule
                 // cache the plan if the function is dynamic
                 preparingStmt.disableStatementCaching();
             }
+            
+            // Row operator itself can't be reduced to a literal, but if
+            // the operands are constants, we still want to reduce those
+            if (callConstancy == Constancy.REDUCIBLE_CONSTANT &&
+                call.getOperator() instanceof SqlRowOperator)
+            {
+                callConstancy = Constancy.NON_CONSTANT;
+            }
 
             if (callConstancy == Constancy.NON_CONSTANT) {
                 // any REDUCIBLE_CONSTANT children are now known to be maximal

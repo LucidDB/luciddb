@@ -25,13 +25,14 @@ insert into t values(5, null, 'ghijkl', 'no match');
 -- the table
 
 create table smalltable(
-    s1 varchar(128) not null, s2 int, s3 varchar(128) not null,
+    s1 varchar(128) not null, s2 int, s3 varchar(128),
         s4 varchar(128) not null);
 insert into smalltable values('this is row 1', 1, 'abcdef', 'ghijkl');
 insert into smalltable values('this is row 2', 2, 'abcdef', 'ghijkl');
 insert into smalltable values('this is row 3', 3, 'abcdef', 'ghijkl');
 insert into smalltable values('this is row 4', 4, 'abcdef', 'ghijkl');
 insert into smalltable values('this is row 5', 5, 'abcdef', 'ghijkl');
+insert into smalltable values('this is row 6', 6, null, 'ghijkl');
 
 -- Create fake statistics.  The stats do not match the actual data in the
 -- tables and are meant to force the optimizer to choose semijoins

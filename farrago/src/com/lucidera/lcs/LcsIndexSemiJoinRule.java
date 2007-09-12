@@ -21,7 +21,6 @@
 package com.lucidera.lcs;
 
 import java.util.*;
-import java.util.logging.*;
 
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
@@ -33,8 +32,6 @@ import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.trace.*;
 
 
 /**
@@ -230,9 +227,17 @@ public class LcsIndexSemiJoinRule
                 projectRel);
 
         // create a distinct agg on top of the project to remove duplicate
-        // keys
-        AggregateRel distinctRel =
-            (AggregateRel) RelOptUtil.createDistinctRel(distInput);
+        // keys, unless they're already unique
+        RelNode distinctRel;
+        BitSet rightJoinCols = new BitSet();
+        for (int i = 0; i < rightOrdinals.length; i++) {
+            rightJoinCols.set(i);
+        }
+        if (RelMdUtil.areColumnsDefinitelyUnique(rightRel, rightJoinCols)) {
+            distinctRel = distInput;
+        } else {
+            distinctRel = RelOptUtil.createDistinctRel(distInput);
+        }
 
         // then sort the result so we will search the index in key order
         FennelSortRel sort =

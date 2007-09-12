@@ -43,7 +43,7 @@ import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
-
+import org.eigenbase.util14.*;
 
 /**
  * Converts a SQL parse tree (consisting of {@link org.eigenbase.sql.SqlNode}
@@ -1173,7 +1173,9 @@ public class SqlToRelConverter
 
         if (SqlTypeUtil.isExactNumeric(type)) {
             BigDecimal roundedValue =
-                ((BigDecimal) value).setScale(type.getScale());
+                NumberUtil.rescaleBigDecimal(
+                    (BigDecimal) value,
+                    type.getScale());
             return rexBuilder.makeExactLiteral(
                 roundedValue,
                 type);
