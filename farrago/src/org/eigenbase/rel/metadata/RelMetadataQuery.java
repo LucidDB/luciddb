@@ -109,7 +109,6 @@ public abstract class RelMetadataQuery
                 rel,
                 "getRowCount",
                 null);
-        assert (assertNonNegative(result));
         return validateResult(result);
     }
 
@@ -283,7 +282,6 @@ public abstract class RelMetadataQuery
                 rel,
                 "getPopulationSize",
                 new Object[] { groupKey });
-        assert (assertNonNegative(result));
         return validateResult(result);
     }
 
@@ -311,7 +309,6 @@ public abstract class RelMetadataQuery
                 rel,
                 "getDistinctRowCount",
                 new Object[] { groupKey, predicate });
-        assert (assertNonNegative(result));
         return validateResult(result);
     }
 
@@ -342,9 +339,14 @@ public abstract class RelMetadataQuery
             return result;
         }
 
-        // never let the result go below 1, as it will result in incorrect
+        // Never let the result go below 1, as it will result in incorrect
         // calculations if the rowcount is used as the denominator in a
-        // division expression
+        // division expression.  Also, cap the value at the max double value
+        // to avoid calculations using infinity.
+        if (result.isInfinite()) {
+            result = Double.MAX_VALUE;
+        }
+        assert(assertNonNegative(result));
         if (result < 1.0) {
             result = 1.0;
         }

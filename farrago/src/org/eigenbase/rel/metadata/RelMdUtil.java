@@ -300,6 +300,11 @@ public class RelMdUtil
         if ((domainSize == null) || (numSelected == null)) {
             return null;
         }
+   
+        // Cap the input sizes at MAX_VALUE to ensure that the calculations
+        // using these values return meaningful values
+        double dSize = capInfinity(domainSize);
+        double numSel = capInfinity(numSelected);
 
         // The formula for this is:
         // 1. Assume we pick 80 random values between 1 and 100.
@@ -318,17 +323,17 @@ public class RelMdUtil
         //  = e ^ (-k/n)
         // 6. Flipping it from number skipped to number visited, we get:
         double res =
-            (domainSize > 0)
-            ? ((1.0 - Math.exp(-1 * numSelected / domainSize)) * domainSize)
+            (dSize > 0)
+            ? ((1.0 - Math.exp(-1 * numSel / dSize)) * dSize)
             : 0;
 
         // fix the boundary cases
-        if (res > domainSize) {
-            res = domainSize;
+        if (res > dSize) {
+            res = dSize;
         }
 
-        if (res > numSelected) {
-            res = numSelected;
+        if (res > numSel) {
+            res = numSel;
         }
 
         if (res < 0) {
@@ -336,6 +341,18 @@ public class RelMdUtil
         }
 
         return res;
+    }
+    
+    /**
+     * Caps a double value at Double.MAX_VALUE if it's currently infinity
+     * 
+     * @param d the Double object
+     * 
+     * @return the double value if it's not infinity; else Double.MAX_VALUE
+     */
+    public static double capInfinity(Double d)
+    {
+        return (d.isInfinite() ? Double.MAX_VALUE : d.doubleValue());
     }
 
     /**
