@@ -336,36 +336,49 @@ bool LbmSplicerExecStream::findBTreeEntry(
 
         } else {
             // If we didn't find a match on the index keys + startRid, try
-            // to at least match the index keys
-            int keyComp = bitmapTupleDesc.compareTuplesKey(
-                bTreeTupleData, bitmapEntry, nIdxKeys);
-            if (keyComp == 0) {
-                match = true;
-            } else {
-                // If there's a mismatch in the actual key values, then read 
-                // the next key and make sure the key values don't match
-                // before claiming that we don't have a matching entry.
-                // Since we're reading the greatest lower bound key value,
-                // we may miss a matching key if that entry contains a
-                // singleton rid.
-                match = bTreeWriter->searchNext();
-                if (match) {
+            // to at least match the index keys.  However, we first need to
+            // read the next key and see if the next entry matches.  Since
+            // we're reading the greatest lower bound key value, we may miss a
+            // matching key if the next entry contains a singleton rid.
+            match = bTreeWriter->searchNext();
+            if (match) {
+                bTreeWriter->getTupleAccessorForRead().unmarshal(
+                    bTreeTupleData);
+                int keyComp =
+                    bitmapTupleDesc.compareTuplesKey(
+                        bTreeTupleData,
+                        bitmapEntry,
+                        nIdxKeys);
+                if (keyComp == 0) {
+                    match = true;
+                    assert(
+                        LbmSegment::roundToByteBoundary(
+                            *reinterpret_cast<LcsRid const *>(
+                                bTreeTupleData[nIdxKeys].pData)) ==
+                        LbmSegment::roundToByteBoundary(
+                            *reinterpret_cast<LcsRid const *>(
+                                bitmapEntry[nIdxKeys].pData)));
+                } else {
+                    // Reposition back to where we were before.
+                    match = bTreeWriter->searchForKey(
+                        bitmapEntry, DUP_SEEK_BEGIN, false);
+                    assert(match == false);
                     bTreeWriter->getTupleAccessorForRead().unmarshal(
                         bTreeTupleData);
-                    keyComp = bitmapTupleDesc.compareTuplesKey(
-                        bTreeTupleData, bitmapEntry, nIdxKeys);
-                    if (keyComp == 0) {
-                        match = true;
-                    } else {
-                        // Reposition back to where we were before.  No need
-                        // to unmarshal the entry since we never read the
-                        // entry in the non-match case.
-                        match = bTreeWriter->searchForKey(
-                            bitmapEntry, DUP_SEEK_BEGIN, false);
-                        assert(match == false);
-                    }
                 }
             }
+            if (!match) {
+                // Now that we've verified that the next entry doesn't
+                // match, see if the current one does
+                int keyComp =
+                    bitmapTupleDesc.compareTuplesKey(
+                        bTreeTupleData,
+                        bitmapEntry,
+                        nIdxKeys);
+                if (keyComp == 0) {
+                    match = true;
+                }
+            } 
         }
     }
     return match;
