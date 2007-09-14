@@ -411,9 +411,6 @@ void LbmSplicerExecStreamTest::testSpliceWithKeys(
             BOOST_CHECK_EQUAL(
                 opaqueToInt(ridsRead[i]),
                 opaqueToInt(rids[currIdx]));
-            if (opaqueToInt(ridsRead[i]) != opaqueToInt(rids[currIdx])) {
-                assert(false);
-            }
             currIdx++;
         }
         rc = reader.searchNext();
@@ -504,7 +501,7 @@ void LbmSplicerExecStreamTest::testLER6473()
         rid += 8;
         rids.push_back(rid);
         bool rc = lbmEntry.setRID(LcsRid(rid));
-        assert(rc);
+        BOOST_REQUIRE(rc);
     }
     tupleData = lbmEntry.produceEntryTuple();
     bufferSize = 0;
@@ -532,9 +529,6 @@ void LbmSplicerExecStreamTest::testLER6473()
             BOOST_CHECK_EQUAL(
                 opaqueToInt(ridsRead[i]),
                 opaqueToInt(rids[currIdx]));
-            if (opaqueToInt(ridsRead[i]) != opaqueToInt(rids[currIdx])) {
-                assert(false);
-            }
             currIdx++;
         }
         rc = reader.searchNext();
@@ -611,9 +605,9 @@ void LbmSplicerExecStreamTest::generateTupleInput(
         } else {
             lbmEntry.setEntryTuple(tupleData);
             bool rc = lbmEntry.setRID(LcsRid(rids[currRidIdx + 1]));
-            assert(rc);
+            BOOST_REQUIRE(rc);
             rc = lbmEntry.setRID(LcsRid(rids[currRidIdx + 2]));
-            assert(rc);
+            BOOST_REQUIRE(rc);
             tupleData = lbmEntry.produceEntryTuple();
             currRidIdx += 3;
         }
