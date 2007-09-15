@@ -291,10 +291,15 @@ bool LbmSplicerExecStream::existingEntry(TupleData const &bitmapEntry)
 }
 
 bool LbmSplicerExecStream::findMatchingBTreeEntry(
-    TupleData const &bitmapEntry, TupleData &bTreeTupleData)
+    TupleData const &bitmapEntry,
+    TupleData &bTreeTupleData,
+    bool leastUpper)
 {
-    bool match = bTreeWriter->searchForKey(
-        bitmapEntry, DUP_SEEK_BEGIN, false);
+    bool match =
+        bTreeWriter->searchForKey(
+            bitmapEntry,
+            DUP_SEEK_BEGIN,
+            leastUpper);
     bTreeWriter->getTupleAccessorForRead().unmarshal(bTreeTupleData);
     return match;
 }
@@ -304,7 +309,8 @@ bool LbmSplicerExecStream::findBTreeEntry(
 {
     // First do a greatest lower bound lookup into the btree, searching on
     // both the actual key index values and the startRid
-    bool match = findMatchingBTreeEntry(bitmapEntry, bTreeTupleData);
+    bool match =
+        findMatchingBTreeEntry(bitmapEntry, bTreeTupleData, (nIdxKeys > 0));
 
     if (match == false) {
 
@@ -335,22 +341,24 @@ bool LbmSplicerExecStream::findBTreeEntry(
             match = true;
 
         } else {
-            // If we didn't find a match on the index keys + startRid, try
-            // to at least match the index keys.  However, we first need to
-            // read the next key and see if the next entry matches.  Since
-            // we're reading the greatest lower bound key value, we may miss a
-            // matching key if the next entry contains a singleton rid.
-            match = bTreeWriter->searchNext();
-            if (match) {
-                bTreeWriter->getTupleAccessorForRead().unmarshal(
-                    bTreeTupleData);
+
+            // In the case where we have actual index keys, we've done a
+            // least upper bound search to locate the entry.  See if
+            // the keys without the startRid match.  If they do, then we've
+            // located a singleton rid that overlaps with the entry we're
+            // trying to splice.  If so, that is the entry we want to splice
+            // into.  Otherwise, the desired entry may be in front of the
+            // one we've located.  Therefore, we need to do a greatest lower
+            // bound search to locate that previous entry (since we don't have
+            // a BTreeReader::searchPrev method), and then compare the keys
+            // to see if we have a match.
+            if (!bTreeWriter->isSingular()) {
                 int keyComp =
                     bitmapTupleDesc.compareTuplesKey(
                         bTreeTupleData,
                         bitmapEntry,
                         nIdxKeys);
                 if (keyComp == 0) {
-                    match = true;
                     assert(
                         LbmSegment::roundToByteBoundary(
                             *reinterpret_cast<LcsRid const *>(
@@ -358,27 +366,23 @@ bool LbmSplicerExecStream::findBTreeEntry(
                         LbmSegment::roundToByteBoundary(
                             *reinterpret_cast<LcsRid const *>(
                                 bitmapEntry[nIdxKeys].pData)));
-                } else {
-                    // Reposition back to where we were before.
-                    match = bTreeWriter->searchForKey(
-                        bitmapEntry, DUP_SEEK_BEGIN, false);
-                    assert(match == false);
-                    bTreeWriter->getTupleAccessorForRead().unmarshal(
-                        bTreeTupleData);
+                    return true;
                 }
             }
-            if (!match) {
-                // Now that we've verified that the next entry doesn't
-                // match, see if the current one does
-                int keyComp =
-                    bitmapTupleDesc.compareTuplesKey(
-                        bTreeTupleData,
-                        bitmapEntry,
-                        nIdxKeys);
-                if (keyComp == 0) {
-                    match = true;
-                }
-            } 
+
+            // Position to the previous entry by doing a glb search
+            match =
+                bTreeWriter->searchForKey(bitmapEntry, DUP_SEEK_BEGIN, false);
+            assert(match == false);
+            bTreeWriter->getTupleAccessorForRead().unmarshal(bTreeTupleData);
+            int keyComp =
+                bitmapTupleDesc.compareTuplesKey(
+                    bTreeTupleData,
+                    bitmapEntry,
+                    nIdxKeys);
+            if (keyComp == 0) {
+                match = true;
+            }
         }
     }
     return match;
@@ -496,7 +500,10 @@ void LbmSplicerExecStream::insertBitmapEntry()
             tempBTreeTupleData[nIdxKeys].pData =
                 (PConstBuffer) &currBTreeStartRid;
             bool match =
-                findMatchingBTreeEntry(tempBTreeTupleData, tempBTreeTupleData);
+                findMatchingBTreeEntry(
+                    tempBTreeTupleData,
+                    tempBTreeTupleData,
+                    false);
             permAssert(match);
         }
         FENNEL_TRACE(TRACE_FINE, "delete Tuple from BTree");
