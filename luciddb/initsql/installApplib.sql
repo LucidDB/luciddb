@@ -9,16 +9,16 @@ options(0);
 
 -- UDFs
 -- define CharReplace functions
-create or replace function applib.char_replace(str varchar(128), oldC varchar(128), newC varchar(128)) 
-returns varchar(128)
+create or replace function applib.char_replace(str varchar(65535), oldC varchar(65535), newC varchar(65535)) 
+returns varchar(65535)
 language java
 deterministic
 no sql
 returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.CharReplaceUdf.execute';
 
-create or replace function applib.char_replace(str varchar(128), oldC integer, newC integer) 
-returns varchar(128)
+create or replace function applib.char_replace(str varchar(65535), oldC integer, newC integer) 
+returns varchar(65535)
 language java
 specific char_replace_int
 deterministic
@@ -73,7 +73,7 @@ returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.phone.CleanPhoneUdf.execute';
 
 -- define ContainsNumber function
-create or replace function applib.contains_number(str varchar(128))
+create or replace function applib.contains_number(str varchar(65535))
 returns boolean
 language java
 deterministic
@@ -221,8 +221,8 @@ returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.FiscalYearUdf.execute';
 
 -- define leftN functions
-create or replace function applib.leftn(str varchar(128), len integer)
-returns varchar(128)
+create or replace function applib.leftn(str varchar(65535), len integer)
+returns varchar(65535)
 language java
 deterministic
 no sql
@@ -238,8 +238,8 @@ no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.numeric.RandUdf.execute';
 
 -- define repeater function
-create or replace function applib.REPEATER(str varchar(128), times integer)
-returns varchar(128)
+create or replace function applib.REPEATER(str varchar(65535), times integer)
+returns varchar(65535)
 language java
 deterministic
 no sql
@@ -247,8 +247,8 @@ returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.RepeaterUdf.execute';
 
 -- define rightn function
-create or replace function applib.RIGHTN(str varchar(128), len integer)
-returns varchar(128)
+create or replace function applib.RIGHTN(str varchar(65535), len integer)
+returns varchar(65535)
 language java
 deterministic
 no sql
@@ -256,7 +256,7 @@ returns null on null input
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.RightNUdf.execute';
 
 -- define StrReplace function
-create or replace function applib.str_replace(inStr varchar(128), oldStr varchar(128), newStr varchar(128))
+create or replace function applib.str_replace(inStr varchar(65535), oldStr varchar(65535), newStr varchar(65535))
 returns varchar(128)
 language java
 deterministic
@@ -264,7 +264,7 @@ no sql
 external name "applib.applibJar:com.lucidera.luciddb.applib.string.StrReplaceUdf.execute";
 
 -- define convert_date function
-create or replace function applib.convert_date(str varchar(128), mask varchar(50), rej boolean)
+create or replace function applib.convert_date(str varchar(65535), mask varchar(65535), rej boolean)
 returns date
 language java
 specific convert_date_rejectable
@@ -272,7 +272,7 @@ deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertDateUdf.execute';
 
-create or replace function applib.convert_date(str varchar(128), mask varchar(50))
+create or replace function applib.convert_date(str varchar(65535), mask varchar(65535))
 returns date
 language java
 specific convert_date_not_rejectable
@@ -281,7 +281,7 @@ no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertDateUdf.execute';
 
 -- converts a string to a date, according to the specified format string
-create or replace function applib.char_to_date(format varchar(50), dateString varchar(128))
+create or replace function applib.char_to_date(format varchar(65535), dateString varchar(65535))
 returns date
 language java
 specific applib_std_char_to_date
@@ -289,7 +289,7 @@ deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_date';
 
-create or replace function applib.char_to_time(format varchar(50), timeString varchar(128))
+create or replace function applib.char_to_time(format varchar(65535), timeString varchar(65535))
 returns time
 language java
 specific applib_std_char_to_time
@@ -298,7 +298,7 @@ no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_time';
 
 create or replace function applib.char_to_timestamp(
-    format varchar(50), timestampString varchar(128))
+    format varchar(65535), timestampString varchar(65535))
 returns timestamp
 language java
 specific applib_std_char_to_timestamp
@@ -307,24 +307,24 @@ no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_timestamp';
 
 -- formats a string as a date, according to the specified format string
-create or replace function applib.date_to_char(format varchar(50), d date)
-returns varchar(128)
+create or replace function applib.date_to_char(format varchar(65535), d date)
+returns varchar(65535)
 language java
 specific applib_std_date_to_char
 deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.date_to_char';
 
-create or replace function applib.time_to_char(format varchar(50), t time)
-returns varchar(128)
+create or replace function applib.time_to_char(format varchar(65535), t time)
+returns varchar(65535)
 language java
 specific applib_std_time_to_char
 deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.time_to_char';
 
-create or replace function applib.timestamp_to_char(format varchar(50), ts timestamp)
-returns varchar(128)
+create or replace function applib.timestamp_to_char(format varchar(65535), ts timestamp)
+returns varchar(65535)
 language java
 specific applib_std_timestamp_to_char
 deterministic
