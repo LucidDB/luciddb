@@ -41,6 +41,9 @@ using namespace fennel;
 bool verbose = false;
 bool showProgram = true;
 
+/* --- defining this indicates we expect full arithmetic exceptions --- */
+// #define USING_NOISY_ARITHMETIC	(1)
+
 template <typename T>
 class RegisterTestInfo
 {
@@ -477,6 +480,10 @@ public:
             if (!mCalc.mWarnings.empty()) {
                 res = false;
                 fail(expoutstr.c_str(), "Calculator warnings");
+//TEMP LATER
+//for (uint i=0; i < mCalc.mWarnings.size(); i++) {
+//printf( "Calc warning [%s]\n", mCalc.mWarnings[i].str );
+//}
             }
         }
         else {
@@ -1216,17 +1223,35 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     // TODO: Overflows/Underflows (different for unsigned/signed)
 
     // Test ADD
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    const char *overflow = "22003";
+#endif
     addBinaryInstructions(instostr, "ADD", outreg, inregs);
     string addstr = string("ADD ") + typestr;
-    expectedCalcOut.add(addstr, (T) (min+min), pc++, __LINE__);    // I0 + I0 (min + min)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+	if (std::numeric_limits<T>::is_signed)
+    	expectedCalcOut.add(addstr, overflow, pc++, __LINE__);     // I0 + I0 (min + min)
+	else 
+		expectedCalcOut.add(addstr, (T) (min+min), pc++, __LINE__);// I0 + I0 (min + min)
+#else
+	expectedCalcOut.add(addstr, (T) (min+min), pc++, __LINE__);    // I0 + I0 (min + min)
+#endif
     expectedCalcOut.add(addstr, (T) (min+max), pc++, __LINE__);    // I0 + I1 (min + max)
     expectedCalcOut.add(addstr, pNULL,   pc++, __LINE__);          // I0 + I2 (min + NULL)
     expectedCalcOut.add(addstr, (T) (min+mid),  pc++, __LINE__);   // I0 + I3 (min + 10)
 
     expectedCalcOut.add(addstr, (T) (max+min), pc++, __LINE__);    // I1 + I0 (max + min)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(addstr, overflow, pc++, __LINE__);         // I1 + I1 (max + max)
+#else
     expectedCalcOut.add(addstr, (T) (max+max), pc++, __LINE__);    // I1 + I1 (max + max)
+#endif
     expectedCalcOut.add(addstr, pNULL,   pc++, __LINE__);          // I1 + I2 (max + NULL)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(addstr, overflow, pc++, __LINE__);         // I1 + I3 (max + 10)
+#else
     expectedCalcOut.add(addstr, (T) (max+mid), pc++, __LINE__);    // I1 + I3 (max + 10)
+#endif
 
     expectedCalcOut.add(addstr, pNULL, pc++, __LINE__);      // I2 + I0 (NULL + min)
     expectedCalcOut.add(addstr, pNULL, pc++, __LINE__);      // I2 + I1 (NULL + max)
@@ -1234,7 +1259,11 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     expectedCalcOut.add(addstr, pNULL, pc++, __LINE__);      // I2 + I3 (NULL + 10)
 
     expectedCalcOut.add(addstr, (T) (mid+min), pc++, __LINE__);    // I3 + I0 (10 + min)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(addstr, overflow, pc++, __LINE__);         // I3 + I1 (10 + max)
+#else
     expectedCalcOut.add(addstr, (T) (mid+max), pc++, __LINE__);    // I3 + I1 (10 + max)
+#endif
     expectedCalcOut.add(addstr, pNULL, pc++, __LINE__);            // I3 + I2 (10 + NULL)
     expectedCalcOut.add(addstr, (T) (mid+mid), pc++, __LINE__);    // I3 + I3 (10 + 10)
     
@@ -1242,11 +1271,23 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     addBinaryInstructions(instostr, "SUB", outreg, inregs);
     string substr = string("SUB ") + typestr;
     expectedCalcOut.add(substr, (T) (min-min), pc++, __LINE__);    // I0 - I0 (min - min)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(substr, overflow, pc++, __LINE__);         // I0 - I1 (min - max)
+#else
     expectedCalcOut.add(substr, (T) (min-max), pc++, __LINE__);    // I0 - I1 (min - max)
+#endif
     expectedCalcOut.add(substr, pNULL,   pc++, __LINE__);          // I0 - I2 (min - NULL)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(substr, overflow,  pc++, __LINE__);        // I0 - I3 (min - 10)
+#else
     expectedCalcOut.add(substr, (T) (min-mid),  pc++, __LINE__);   // I0 - I3 (min - 10)
+#endif
 
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(substr, overflow, pc++, __LINE__);         // I1 - I0 (max - min)
+#else
     expectedCalcOut.add(substr, (T) (max-min), pc++, __LINE__);    // I1 - I0 (max - min)
+#endif
     expectedCalcOut.add(substr, (T) (max-max), pc++, __LINE__);    // I1 - I1 (max - max)
     expectedCalcOut.add(substr, pNULL,   pc++, __LINE__);          // I1 - I2 (max - NULL)
     expectedCalcOut.add(substr, (T) (max-mid), pc++, __LINE__);    // I1 - I3 (max - 10)
@@ -1256,31 +1297,71 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     expectedCalcOut.add(substr, pNULL, pc++, __LINE__);      // I2 - I2 (NULL - NULL)
     expectedCalcOut.add(substr, pNULL, pc++, __LINE__);      // I2 - I3 (NULL - 10)
 
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(substr, overflow, pc++, __LINE__);         // I3 - I0 (10 - min)
+#else
     expectedCalcOut.add(substr, (T) (mid-min), pc++, __LINE__);    // I3 - I0 (10 - min)
+#endif
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(substr, overflow, pc++, __LINE__);    // I3 - I1 (10 - max)
+#else
     expectedCalcOut.add(substr, (T) (mid-max), pc++, __LINE__);    // I3 - I1 (10 - max)
+#endif
     expectedCalcOut.add(substr, pNULL, pc++, __LINE__);            // I3 - I2 (10 - NULL)
     expectedCalcOut.add(substr, (T) (mid-mid), pc++, __LINE__);    // I3 - I3 (10 - 10)
 
     // Test MUL
     addBinaryInstructions(instostr, "MUL", outreg, inregs);
     string mulstr = string("MUL ") + typestr;
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I0 * I0 (min * min)
+#else
     expectedCalcOut.add(mulstr, (T) (min*min), pc++, __LINE__);    // I0 * I0 (min * min)
+#endif
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I0 * I1 (min * max)
+#else
     expectedCalcOut.add(mulstr, (T) (min*max), pc++, __LINE__);    // I0 * I1 (min * max)
+#endif
     expectedCalcOut.add(mulstr, pNULL,   pc++, __LINE__);          // I0 * I2 (min * NULL)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(mulstr, overflow,  pc++, __LINE__);        // I0 * I3 (min * 10)
+#else
     expectedCalcOut.add(mulstr, (T) (min*mid),  pc++, __LINE__);   // I0 * I3 (min * 10)
+#endif
 
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I1 * I0 (max * min)
+#else
     expectedCalcOut.add(mulstr, (T) (max*min), pc++, __LINE__);    // I1 * I0 (max * min)
+#endif
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I1 * I1 (max * max)
+#else
     expectedCalcOut.add(mulstr, (T) (max*max), pc++, __LINE__);    // I1 * I1 (max * max)
+#endif
     expectedCalcOut.add(mulstr, pNULL,   pc++, __LINE__);          // I1 * I2 (max * NULL)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I1 * I3 (max * 10)
+#else
     expectedCalcOut.add(mulstr, (T) (max*mid), pc++, __LINE__);    // I1 * I3 (max * 10)
+#endif
 
     expectedCalcOut.add(mulstr, pNULL, pc++, __LINE__);      // I2 * I0 (NULL * min)
     expectedCalcOut.add(mulstr, pNULL, pc++, __LINE__);      // I2 * I1 (NULL * max)
     expectedCalcOut.add(mulstr, pNULL, pc++, __LINE__);      // I2 * I2 (NULL * NULL)
     expectedCalcOut.add(mulstr, pNULL, pc++, __LINE__);      // I2 * I3 (NULL * 10)
 
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I3 * I0 (10 * min)
+#else
     expectedCalcOut.add(mulstr, (T) (mid*min), pc++, __LINE__);    // I3 * I0 (10 * min)
+#endif
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I3 * I1 (10 * max)
+#else
     expectedCalcOut.add(mulstr, (T) (mid*max), pc++, __LINE__);    // I3 * I1 (10 * max)
+#endif
     expectedCalcOut.add(mulstr, pNULL, pc++, __LINE__);            // I3 * I2 (10 * NULL)
     expectedCalcOut.add(mulstr, (T) (mid*mid), pc++, __LINE__);    // I3 * I3 (10 * 10)
 
@@ -1291,9 +1372,21 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     if (min != zero)
         expectedCalcOut.add(divstr, (T) (min/min), pc++, __LINE__); // I0 / I0 (min / min)
     else expectedCalcOut.add(divstr, divbyzero, pc++, __LINE__);    // I0 / I0 (min / min)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(divstr, overflow, pc++, __LINE__);          // I0 / I1 (min / max)
+#else
     expectedCalcOut.add(divstr, (T) (min/max), pc++, __LINE__);     // I0 / I1 (min / max)
+#endif
     expectedCalcOut.add(divstr, pNULL,   pc++, __LINE__);           // I0 / I2 (min / NULL)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    const char *invalid = "22023";
+	if (min==0) 
+    	expectedCalcOut.add(divstr, invalid,  pc++, __LINE__);          // I0 / I3 (min / 10)
+	else
+    	expectedCalcOut.add(divstr, (T) (min/mid),  pc++, __LINE__);    // I0 / I3 (min / 10)
+#else
     expectedCalcOut.add(divstr, (T) (min/mid),  pc++, __LINE__);    // I0 / I3 (min / 10)
+#endif
 
     if (min != zero)
         expectedCalcOut.add(divstr, (T) (max/min), pc++, __LINE__); // I1 / I0 (max / min)
@@ -1317,10 +1410,25 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     // Test NEG
     addUnaryInstructions(instostr, "NEG", outreg, inregs);
     string negstr = string("NEG ") + typestr;
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(negstr, overflow, pc++, __LINE__);      // - I0 (- min)
+#else
     expectedCalcOut.add(negstr, (T) (-min), pc++, __LINE__);    // - I0 (- min)
+#endif
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+    expectedCalcOut.add(negstr, overflow, pc++, __LINE__);      // - I1 (- max)
+#else
     expectedCalcOut.add(negstr, (T) (-max), pc++, __LINE__);    // - I1 (- max)
+#endif
     expectedCalcOut.add(negstr, pNULL,      pc++, __LINE__);    // - I2 (- NULL)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+	if (std::numeric_limits<T>::is_signed)
+    	expectedCalcOut.add(negstr, (T) (-mid), pc++, __LINE__);// - I3 (- 10)
+	else
+    	expectedCalcOut.add(negstr, overflow, pc++, __LINE__);  // - I3 (- 10)
+#else
     expectedCalcOut.add(negstr, (T) (-mid), pc++, __LINE__);    // - I3 (- 10)
+#endif
 
     assert(outreg == static_cast<uint>(pc));
 
