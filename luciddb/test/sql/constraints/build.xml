@@ -98,36 +98,44 @@
   </target>
 
   <target name="create-db">
-    <available file="${ff.dir}" type="dir" property="ff.created"/>
     <available file="${ff.dir}/bench1m.csv" type="file" 
       property="bench.exists"/>
     <available file="${ffsource.bench.dir}" type="dir" 
       property="raksha.available"/>
+
+    <antcall target="create-db-local"/>
+
     <if>
-      <isset property="ff.created"/>
-      <then>
-        <if>
-          <isset property="bench.exists"/>
-          <then/>
+      <isset property="bench.exists"/>
+      <then/>
+      <else>
+        <!-- copy bench over if raksha is available -->
+        <if> 
+          <isset property="raksha.available"/>
+          <then>
+          <copy todir="${ff.dir}" verbose="true">
+            <fileset dir="${ffsource.bench.dir}" includes="bench1M.*"/>
+          </copy>
+          </then>
           <else>
-            <!-- copy bench over if raksha is available -->
-            <if> 
-              <isset property="raksha.available"/>
-              <then>
-              <copy todir="${ff.dir}" verbose="true">
-                <fileset dir="${ffsource.bench.dir}" includes="bench1M.*"/>
-              </copy>
-              </then>
-            </if>
+            <echo message="!! NO REMOTE CSV FILES !!"/>
           </else>
         </if>
-      </then>
-      <!-- else if ff dir not created yet -->
+      </else>
+    </if>
+
+  </target>
+
+  <target name="create-db-local">
+    <available file="${ff.dir}" type="dir" property="ff.created"/>
+    <condition property="db.created">
+      <available file="${ffsource.tpch.dir}/100M" type="dir"/>
+    </condition>
+
+    <if>
+      <isset property="ff.created"/>
+      <then/>
       <else>
-        <condition property="db.created">
-          <available file="${ffsource.tpch.dir}/100M" type="dir"/>
-        </condition>
-        
         <if>
           <istrue value="${db.created}"/>
           <then/>
@@ -138,25 +146,14 @@
             </exec>
           </else>
         </if>
-
-        <!-- sync bench only if raksha is mounted, not needed for sanity -->
-        <if>
-          <isset property="raksha.available"/>
-          <then>
-            <sync todir="${ff.dir}" verbose="true">
-              <fileset dir="${ffsource.tpch.dir}/100M"/>
-              <fileset dir="${ffsource.bench.dir}" includes="bench1M.*"/>
-            </sync>
-          </then>
-          <else>
-            <sync todir="${ff.dir}" overwrite="false" verbose="true">
-              <fileset dir="${ffsource.tpch.dir}/100M"/>
-            </sync>
-          </else>
-        </if>
+        <sync todir="${ff.dir}" verbose="true">
+          <fileset dir="${ffsource.tpch.dir}/100M"/>
+        </sync>
       </else>
     </if>
+
   </target>
+
 
   <target name="clean">
     <antcall target="clean-test"/>
