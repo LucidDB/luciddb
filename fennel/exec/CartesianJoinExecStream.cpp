@@ -135,6 +135,10 @@ ExecStreamResult CartesianJoinExecStream::execute(
             processLeftInput();
             rightInputEmpty = true;
         }
+        ExecStreamResult rc = preProcessRightInput();
+        if (rc != EXECRC_YIELD) {
+            return rc;
+        }
         for (;;) {
             if (!pRightBufAccessor->isTupleConsumptionPending()) {
                 if (pRightBufAccessor->getState() == EXECBUF_EOS) {
@@ -194,6 +198,11 @@ ExecStreamResult CartesianJoinExecStream::execute(
             }
         }
     }
+}
+
+ExecStreamResult CartesianJoinExecStream::preProcessRightInput()
+{
+    return EXECRC_YIELD;
 }
 
 void CartesianJoinExecStream::processLeftInput()

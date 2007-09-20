@@ -917,6 +917,17 @@
 | 3   | 3           | 100000  | 3  | 2    | 2   | 2   | 2   |
 +-----+-------------+---------+----+------+-----+-----+-----+
 > 
+> -- LHS of NLS is empty
+> select xid, xactDate, currency, amount as origAmount,
+>     toCurrency, toDate,
+>     cast(amount * rate as decimal(10,2)) as convertedAmount
+>     from (select * from xacts where currency = 'CNY') left outer join convRates
+>     on currency = fromCurrency and xactDate >= fromDate;
++------+-----------+-----------+-------------+-------------+---------+------------------+
+| XID  | XACTDATE  | CURRENCY  | ORIGAMOUNT  | TOCURRENCY  | TODATE  | CONVERTEDAMOUNT  |
++------+-----------+-----------+-------------+-------------+---------+------------------+
++------+-----------+-----------+-------------+-------------+---------+------------------+
+> 
 > ----------------------------------------
 > -- explain outputs for the above queries
 > ----------------------------------------
@@ -990,6 +1001,24 @@
 '        FennelValuesRel(tuples=[[{ '(', null, null, '+', null, null }]])'
 '      FennelIdxWriteRel(discardDuplicates=[false], monotonicInserts=[true], rootPageIdParamId=[3], indexCols=[[0, 4]])'
 '        FennelSortRel(key=[[0, 4]], discardDuplicates=[false])'
+'          LcsRowScanRel(table=[[LOCALDB, NLJ, CONVRATES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CONVRATES$FROMCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$FROMDATE, SYS$CLUSTERED_INDEX$CONVRATES$RATE, SYS$CLUSTERED_INDEX$CONVRATES$TOCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$TODATE]])'
+> explain plan for
+> select xid, xactDate, currency, amount as origAmount,
+>     toCurrency, toDate,
+>     cast(amount * rate as decimal(10,2)) as convertedAmount
+>     from (select * from xacts where currency = 'CNY') left outer join convRates
+>     on currency = fromCurrency and xactDate >= fromDate;
+'column0'
+'IterCalcRel(expr#0..8=[{inputs}], expr#9=[CAST($t2):CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#10=[Reinterpret($t1)], expr#11=[CAST($t10):DOUBLE NOT NULL], expr#12=[1E2], expr#13=[/INT($t11, $t12)], expr#14=[*($t13, $t6)], expr#15=[*($t14, $t12)], expr#16=[CAST($t15):BIGINT], expr#17=[true], expr#18=[Reinterpret($t16, $t17)], XID=[$t0], XACTDATE=[$t3], CURRENCY=[$t9], ORIGAMOUNT=[$t1], TOCURRENCY=[$t5], TODATE=[$t8], CONVERTEDAMOUNT=[$t18])'
+'  FennelToIteratorConverter'
+'    FennelNestedLoopJoinRel(joinType=[LEFT], leftJoinKeys=[[2, 3]], joinKeyParamIds=[[1, 2]])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 3]], outputRowType=[RecordType(INTEGER NOT NULL XID, DECIMAL(10, 2) NOT NULL AMOUNT, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY, DATE XACTDATE) NOT NULL])'
+'        LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$AMOUNT, SYS$CLUSTERED_INDEX$XACTS$CURRENCY, SYS$CLUSTERED_INDEX$XACTS$XACTDATE, SYS$CLUSTERED_INDEX$XACTS$XID]], residual columns=[[2]])'
+'          FennelValuesRel(tuples=[[{ '[', 'CNY', ']', 'CNY' }]])'
+'      FennelTempIdxSearchRel(indexKeys=[[0, 3]], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]], searchKeyParamIds=[[1, 1, 2]], keyOffsets=[[0, 2, 3]], rootPageIdParamId=[3])'
+'        FennelValuesRel(tuples=[[{ '(', null, null, ']', null, null }]])'
+'      FennelIdxWriteRel(discardDuplicates=[false], monotonicInserts=[true], rootPageIdParamId=[3], indexCols=[[0, 3]])'
+'        FennelSortRel(key=[[0, 3]], discardDuplicates=[false])'
 '          LcsRowScanRel(table=[[LOCALDB, NLJ, CONVRATES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CONVRATES$FROMCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$FROMDATE, SYS$CLUSTERED_INDEX$CONVRATES$RATE, SYS$CLUSTERED_INDEX$CONVRATES$TOCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$TODATE]])'
 > 
 > -- Index lookup + reshape
