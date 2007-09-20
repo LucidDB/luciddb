@@ -917,7 +917,7 @@
 | 3   | 3           | 100000  | 3  | 2    | 2   | 2   | 2   |
 +-----+-------------+---------+----+------+-----+-----+-----+
 > 
-> -- LHS of NLS is empty
+> -- LHS of NLJ is empty
 > select xid, xactDate, currency, amount as origAmount,
 >     toCurrency, toDate,
 >     cast(amount * rate as decimal(10,2)) as convertedAmount

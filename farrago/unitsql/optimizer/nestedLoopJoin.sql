@@ -326,7 +326,7 @@ select * from ints_notnullable i_nn left outer join ints_nullable i_n
         i_nn.c > i_n.c
     order by 1, 2, 3, 4, 5, 6, 7, 8;
 
--- LHS of NLS is empty
+-- LHS of NLJ is empty
 select xid, xactDate, currency, amount as origAmount,
     toCurrency, toDate,
     cast(amount * rate as decimal(10,2)) as convertedAmount
