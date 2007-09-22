@@ -93,9 +93,12 @@ public class LhxSemiJoinRule
         // match for any key pos.
         residualCondition =
             RelOptUtil.splitJoinCondition(
-                joinRel,
+                leftRel,
+                rightRel,
+                joinRel.getCondition(),
                 leftJoinKeys,
                 rightJoinKeys,
+                null,
                 null);
 
         // valid join keys should only reference input fields directly, i.e.
