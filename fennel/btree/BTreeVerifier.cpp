@@ -52,6 +52,7 @@ void BTreeVerifier::verify(bool strictInit, bool keysInit, bool leafInit)
     stats.nNonLeafNodes = 0;
     stats.nLeafNodes = 0;
     stats.nTuples = 0;
+    stats.nUniqueKeys = 0;
     PageId pageId = getRootPageId();
     do {
         expectedRightSibling = NULL_PAGE_ID;
@@ -101,6 +102,7 @@ PageId BTreeVerifier::verifyNode(
 
     // verify key ordering, including lower bound
     if (keys) {
+        bool countUniqueKeys = (node.height == 0);
         keyData = lowerBoundKey;
         uint nKeys = nodeAccessor.getKeyCount(node);
         for (uint i = 0; i < nKeys; ++i) {
@@ -115,6 +117,13 @@ PageId BTreeVerifier::verifyNode(
                 }
                 permAssert(c <= 0);
                 // TODO:  for unique, assert(c == 0)
+                
+                if (countUniqueKeys && c == -1) {
+                    // Only count differences in the first column of the key.
+                    stats.nUniqueKeys++;
+                }
+            } else if (countUniqueKeys) {
+                stats.nUniqueKeys++;
             }
             keyData = keyData2;
         }

@@ -782,7 +782,7 @@ public class LcsIndexGuide
     }
 
     protected FemLcsRowScanStreamDef newRowScan(
-        LcsRowScanRel rel,
+        LcsRowScanRelBase rel,
         Integer [] projectedColumns,
         Integer [] residualColumns)
     {
@@ -798,6 +798,7 @@ public class LcsIndexGuide
             FennelRelUtil.createTupleProjection(repos, clusterProjection));
         scanStream.setFullScan(rel.isFullScan);
         scanStream.setHasExtraFilter(rel.hasResidualFilter);
+        scanStream.setSamplingMode(TableSamplingModeEnum.SAMPLING_OFF);
         Integer [] clusterResidualColumns =
             computeProjectedColumns(residualColumns);
 

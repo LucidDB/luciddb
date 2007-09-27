@@ -83,6 +83,41 @@ create or replace view dba_columns as
 
 grant select on dba_columns to public;
 
+create or replace view dba_column_stats as
+  select
+    cast(table_cat as varchar(128)) as catalog_name,
+    cast(table_schem as varchar(128)) as schema_name,
+    cast(table_name as varchar(128)) as table_name,
+    cast(column_name as varchar(128)) as column_name,
+    "CARDINALITY" as distinct_value_count,
+    cardinality_estimated as is_distinct_value_count_estimated,
+    percent_sampled,
+    sample_size,
+    bar_count,
+    rows_per_bar,
+    rows_last_bar,
+    last_analyze_time
+  from
+    sys_boot.mgmt.histograms_view_internal
+;
+
+grant select on dba_column_stats to public;
+
+create or replace view dba_column_histograms as
+  select
+    cast(table_cat as varchar(128)) as catalog_name,
+    cast(table_schem as varchar(128)) as schema_name,
+    cast(table_name as varchar(128)) as table_name,
+    cast(column_name as varchar(128)) as column_name,
+    ordinal,
+    start_value,
+    value_count
+  from
+    sys_boot.mgmt.histogram_bars_view
+;
+
+grant select on dba_column_histograms to public;
+
 create or replace view dba_views as
   select
     catalog_name,

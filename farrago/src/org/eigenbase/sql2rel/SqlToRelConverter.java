@@ -1393,6 +1393,17 @@ public class SqlToRelConverter
                 datasetStack.push(sampleName);
                 convertFrom(bb, operands[0]);
                 datasetStack.pop();
+            } else if (sampleSpec instanceof SqlSampleSpec.SqlTableSampleSpec) {
+                SqlSampleSpec.SqlTableSampleSpec tableSampleSpec =
+                    (SqlSampleSpec.SqlTableSampleSpec)sampleSpec;
+                convertFrom(bb, operands[0]);
+                RelOptSamplingParameters params = 
+                    new RelOptSamplingParameters(
+                        tableSampleSpec.isBernoulli(),
+                        tableSampleSpec.getSamplePercentage(),
+                        tableSampleSpec.isRepeatable(),
+                        tableSampleSpec.getRepeatableSeed());
+                bb.setRoot(new SamplingRel(cluster, bb.root, params), false);
             } else {
                 throw Util.newInternal(
                     "unknown TABLESAMPLE type: " + sampleSpec);

@@ -453,6 +453,11 @@ public class RelStructuredTypeFlattener
         rewriteGeneric(rel);
     }
 
+    public void rewriteRel(SamplingRel rel)
+    {
+        rewriteGeneric(rel);
+    }
+
     public void rewriteRel(ProjectRel rel)
     {
         final List<RexNode> flattenedExpList = new ArrayList<RexNode>();
@@ -543,7 +548,7 @@ public class RelStructuredTypeFlattener
     {
         rel.flattenRel(this);
     }
-
+    
     public void rewriteGeneric(RelNode rel)
     {
         RelNode newRel = rel.clone();

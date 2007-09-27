@@ -163,6 +163,11 @@ public class LucidDbSessionPersonality
             return true;
         }
 
+        // LucidDB updates the catalog's row count field as DML is executed
+        if (feature == featureResource.PersonalityManagesRowCount) {
+            return true;
+        }
+        
         return super.supportsFeature(feature);
     }
 
@@ -230,6 +235,12 @@ public class LucidDbSessionPersonality
         // TODO:  loosen up once we make sure OptimizeJoinRule does
         // as well or better than the hand-coding.
         builder.addRuleByDescription("MedMdrJoinRule");
+        
+        // Convert SamplingRel/LcsRowScanRel into LcsSamplingRowScanRel
+        // early since sampling isn't compatible with index scans.  This 
+        // could come later, but MUST come before FennelBernoulliSamplingRule
+        // or else we lose system sampling.
+        builder.addRuleInstance(new LcsSamplingRowScanRule());
 
         // Eliminate AGG(DISTINCT x) now, because this transformation
         // may introduce new joins which need to be optimized further on.
@@ -494,6 +505,9 @@ public class LucidDbSessionPersonality
 
             // Requires CoerceInputsRule.
             builder.addRuleInstance(FennelUnionRule.instance);
+            
+            // Convert any left over SamplingRels.
+            builder.addRuleInstance(new FennelBernoulliSamplingRule());
         } else {
             builder.addRuleInstance(
                 new IterRules.HomogeneousUnionToIteratorRule());

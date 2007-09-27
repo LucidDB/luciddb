@@ -199,6 +199,13 @@ class ExecStreamSubFactory_lu
                                             streamDef.getOutputProj());
         params.isFullScan = streamDef.isFullScan();
         params.hasExtraFilter = streamDef.isHasExtraFilter();
+
+        params.samplingMode = streamDef.getSamplingMode();
+        params.samplingRate = streamDef.getSamplingRate();
+        params.samplingIsRepeatable = streamDef.isSamplingRepeatable();
+        params.samplingRepeatableSeed = streamDef.getSamplingRepeatableSeed();
+        params.samplingClumps = DEFAULT_SYSTEM_SAMPLING_CLUMPS;
+
         CmdInterpreter::readTupleProjection(params.residualFilterCols,
             streamDef.getResidualFilterColumns());
         pEmbryo->init(new LcsRowScanExecStream(), params);

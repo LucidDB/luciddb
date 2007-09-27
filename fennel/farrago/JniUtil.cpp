@@ -53,7 +53,6 @@ jmethodID JniUtil::methIterator = 0;
 jmethodID JniUtil::methGetJavaStreamHandle = 0;
 jmethodID JniUtil::methGetIndexRoot = 0;
 jmethodID JniUtil::methToString = 0;
-jmethodID JniUtil::methBase64Decode;
 jclass JniUtil::classRhBase64;
 jmethodID JniUtil::methRandomUUID;
 jclass JniUtil::classUUID;
@@ -63,6 +62,25 @@ jmethodID JniUtil::methFarragoTransformRestart = 0;
 jclass JniUtil::classFarragoTransformInputBinding = 0;
 jmethodID JniUtil::methFarragoTransformInputBindingCons = 0;
 jmethodID JniUtil::methFarragoRuntimeContextStatementClassForName = 0;
+jclass JniUtil::classLong;
+jclass JniUtil::classInteger;
+jclass JniUtil::classShort;
+jclass JniUtil::classDouble;
+jclass JniUtil::classFloat;
+jclass JniUtil::classBoolean;
+jmethodID JniUtil::methLongValueOf = 0;
+jmethodID JniUtil::methIntegerValueOf = 0;
+jmethodID JniUtil::methShortValueOf = 0;
+jmethodID JniUtil::methDoubleValueOf = 0;
+jmethodID JniUtil::methFloatValueOf = 0;
+jmethodID JniUtil::methBooleanValueOf = 0;
+jmethodID JniUtil::methLongValue = 0;
+jmethodID JniUtil::methIntValue = 0;
+jmethodID JniUtil::methShortValue = 0;
+jmethodID JniUtil::methDoubleValue = 0;
+jmethodID JniUtil::methFloatValue = 0;
+jmethodID JniUtil::methBooleanValue = 0;
+jmethodID JniUtil::methBase64Decode;
 
 AtomicCounter JniUtil::handleCount;
 
@@ -234,6 +252,46 @@ jint JniUtil::init(JavaVM *pVmInit)
         "(J)J");
     methToString = pEnv->GetMethodID(
         classObject,"toString","()Ljava/lang/String;");
+
+    jclass tempClassLong = pEnv->FindClass("java/lang/Long");
+    classLong = (jclass)pEnv->NewGlobalRef(tempClassLong);
+    methLongValueOf = 
+        pEnv->GetStaticMethodID(classLong, "valueOf", "(J)Ljava/lang/Long;");
+    methLongValue = pEnv->GetMethodID(classLong, "longValue", "()J");
+
+    jclass tempClassInteger = pEnv->FindClass("java/lang/Integer");
+    classInteger = (jclass)pEnv->NewGlobalRef(tempClassInteger);
+    methIntegerValueOf = 
+        pEnv->GetStaticMethodID(
+            classInteger, "valueOf", "(I)Ljava/lang/Integer;");
+    methIntValue = pEnv->GetMethodID(classInteger, "intValue", "()I");
+
+    jclass tempClassShort = pEnv->FindClass("java/lang/Short");
+    classShort = (jclass)pEnv->NewGlobalRef(tempClassShort);
+    methShortValueOf = 
+        pEnv->GetStaticMethodID(classShort, "valueOf", "(S)Ljava/lang/Short;");
+    methShortValue = pEnv->GetMethodID(classShort, "shortValue", "()S");
+
+    jclass tempClassDouble = pEnv->FindClass("java/lang/Double");
+    classDouble = (jclass)pEnv->NewGlobalRef(tempClassDouble);
+    methDoubleValueOf = 
+        pEnv->GetStaticMethodID(
+            classDouble, "valueOf", "(D)Ljava/lang/Double;");
+    methDoubleValue = pEnv->GetMethodID(classDouble, "doubleValue", "()D");
+
+    jclass tempClassFloat = pEnv->FindClass("java/lang/Float");
+    classFloat = (jclass)pEnv->NewGlobalRef(tempClassFloat);
+    methFloatValueOf = 
+        pEnv->GetStaticMethodID(classFloat, "valueOf", "(F)Ljava/lang/Float;");
+    methFloatValue = pEnv->GetMethodID(classFloat, "floatValue", "()F");
+
+    jclass tempClassBoolean = pEnv->FindClass("java/lang/Boolean");
+    classBoolean = (jclass)pEnv->NewGlobalRef(tempClassBoolean);
+    methBooleanValueOf = 
+        pEnv->GetStaticMethodID(
+            classBoolean, "valueOf", "(Z)Ljava/lang/Boolean;");
+    methBooleanValue = pEnv->GetMethodID(classBoolean, "booleanValue", "()Z");
+
     methBase64Decode = pEnv->GetStaticMethodID(
         classRhBase64,"decode","(Ljava/lang/String;)[B");
     methRandomUUID = pEnv->GetStaticMethodID(

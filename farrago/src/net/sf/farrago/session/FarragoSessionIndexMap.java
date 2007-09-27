@@ -24,6 +24,7 @@ package net.sf.farrago.session;
 
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 
 
@@ -133,7 +134,7 @@ public interface FarragoSessionIndexMap
      *
      * @return page count for the index
      */
-    public long computeIndexStats(
+    public FarragoMedLocalIndexStats computeIndexStats(
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index,
         boolean estimate);

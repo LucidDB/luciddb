@@ -21,6 +21,7 @@ exit 1; \
 noinst_LTLIBRARIES=libcommon.la
 libcommon_la_SOURCES=\
 Backtrace.cpp \
+BernoulliRng.cpp \
 ByteArrayInputStream.cpp \
 ByteArrayOutputStream.cpp \
 ByteBuffer.cpp \

@@ -112,28 +112,42 @@ public class FarragoColumnHistogram
             return;
         }
 
-        if (sequence == null) {
-            selectivity = 1.0;
-            Long valueCount = histogram.getDistinctValueCount();
-            cardinality =
-                (valueCount == null) ? null : Double.valueOf(valueCount);
+        Long valueCount = histogram.getDistinctValueCount();
+        if (valueCount == null) {
+            selectivity = (sequence == null) ? 1.0 : null;
+            cardinality = null;
             return;
         }
-
-        // TODO: return null when SargIntervals contain variables
+        
+        if (sequence == null) {
+            selectivity = 1.0;
+            cardinality = Double.valueOf(valueCount);
+            return;
+        }
 
         barCount = histogram.getBarCount();
         bars = histogram.getBar();
         assert (bars.size() == barCount) : "invalid histogram bar count";
 
         List<HistogramBarCoverage> coverages = getCoverage(sequence);
+        
+        if (coverages == null) {
+            selectivity = null;
+            cardinality = null;
+            return;
+        }
+        
         readCoverages(coverages);
     }
 
     /**
      * Computes the histogram bar coverage of an ordered sequence of intervals.
-     *
+     * Coverage can only be computed if the end points of each interval in
+     * the sequence are either literal or infinite.
+     * 
      * @param sequence sequence to lookup
+     * @return List of HistogramBarCoverage instance of null if coverage
+     *         cannot be computed.
      */
     private List<HistogramBarCoverage> getCoverage(
         SargIntervalSequence sequence)
@@ -146,6 +160,13 @@ public class FarragoColumnHistogram
 
         int minBar = 0;
         for (SargInterval interval : sequence.getList()) {
+            if (!checkEndpoint(interval.getLowerBound()) ||
+                !checkEndpoint(interval.getUpperBound()))
+            {
+                // Can't handle non-literal endpoints, signal the caller.
+                return null;
+            }
+            
             HistogramRange range = new HistogramRange(bars, interval, minBar);
             range.evaluate();
             if (range.isEmpty()) {
@@ -160,6 +181,21 @@ public class FarragoColumnHistogram
     }
 
     /**
+     * Check if the given SargEndpoint is infinite or is bounded by a literal
+     * expression.
+     * 
+     * @param endpoint the endpoint to evaluate
+     * @return true if the endpoint is infinite or bounded by a literal; false
+     *         otherwise
+     */
+    private boolean checkEndpoint(SargEndpoint endpoint)
+    {
+        return 
+            !endpoint.isFinite() || 
+            endpoint.getCoordinate() instanceof RexLiteral;
+    }
+    
+    /**
      * Reads collective coverages finally make estimates on requested
      * attributes. This implementation looks at each bar separately, estimating
      * how much of each bar is covered. It then accounts for that bar's
@@ -171,6 +207,8 @@ public class FarragoColumnHistogram
     {
         // determine a correction factor:
         //     actual values = sampled values * correction
+        // For computed statistics, the correction will be 1.0.  For estimated
+        // statistics it will be >= 1.0.
         Long histValues = histogram.getDistinctValueCount();
         Long sampleValues = 0L;
         for (FemColumnHistogramBar bar : bars) {

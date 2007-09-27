@@ -23,12 +23,17 @@
 #define Fennel_LcsRowScanExecStream_Included
 
 #include <boost/scoped_array.hpp>
+#include <boost/scoped_ptr.hpp>
 #include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/lucidera/colstore/LcsRowScanBaseExecStream.h"
 #include "fennel/lucidera/bitmap/LbmRidReader.h"
 #include "fennel/lucidera/colstore/LcsResidualColumnFilters.h"
+#include "fennel/common/BernoulliRng.h"
+#include "fennel/common/FemEnums.h"
 
 FENNEL_BEGIN_NAMESPACE
+
+#define DEFAULT_SYSTEM_SAMPLING_CLUMPS (10)
 
 /**
  * Parameters specific to the row scan execution stream, including the type
@@ -57,6 +62,35 @@ struct LcsRowScanExecStreamParams : public LcsRowScanBaseExecStreamParams
      * contains an array of column id corresponding to each filter column
      */
     TupleProjection residualFilterCols;
+
+    /**
+     * The configured sampling mode for this row scan: off, Bernoulli or 
+     * system.
+     */
+    TableSamplingMode samplingMode;
+
+    /**
+     * Percentage of rows to return as a sample.  Expressed as a fraction
+     * between 0.0 and 1.0.
+     */
+    float samplingRate;
+
+    /**
+     * Flag indicating whether sample results should be repeatable (assuming no
+     * changes to the structure or contents of the table.
+     */
+    bool samplingIsRepeatable;
+
+    /**
+     * Seed value for random number generators to be used for repeatable
+     * sampling.
+     */
+    int32_t samplingRepeatableSeed;
+
+    /**
+     * Number of sample clumps to produce during system-mode sampling.
+     */
+    int32_t samplingClumps;
 };
 
 /**
@@ -66,11 +100,6 @@ struct LcsRowScanExecStreamParams : public LcsRowScanBaseExecStreamParams
  */
 class LcsRowScanExecStream : public LcsRowScanBaseExecStream
 {
-    /**
-     * TupleData for tuple representing incoming stream of RIDs
-     */
-    TupleData inputTuple;
-
     /**
      * Tuple data for all columns read from all clusters, including    
      * filter columns
@@ -104,6 +133,12 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      */
     TupleData ridTupleData;
     
+    /**
+     * TupleData for tuple representing incoming row count (for system sampling
+     * only).
+     */
+    TupleData inputRowCountTuple;
+
     /**
      * Rid reader
      */
@@ -163,6 +198,61 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
     boost::scoped_array<LcsResidualColumnFilters *> filters;
 
     /**
+     * The number of residual column filters configured.
+     */
+    int32_t nFilters;
+
+    /**
+     * One of SAMPLING_OFF, SAMPLING_BERNOULLI or SAMPLING_SYSTEM.
+     */
+    TableSamplingMode samplingMode;
+
+    /**
+     * the sampling rate (0.0 to 1.0)
+     */
+    float samplingRate;
+
+    /**
+     * true if the sample should be repeatable
+     */
+    bool isSamplingRepeatable;
+
+    /**
+     * seed for repeatable sampling
+     */
+    int32_t repeatableSeed;
+
+    /**
+     * number of clumps for system sampling
+     */
+    int32_t samplingClumps;
+
+    /**
+     * size of each sampling clump
+     */
+    uint64_t clumpSize;
+
+    /**
+     * distance (in rows) between each clump
+     */
+    uint64_t clumpDistance;
+
+    /**
+     * position (0 to clumpSize) in current clump
+     */
+    uint64_t clumpPos;
+
+    /**
+     * position (clumpDistance to 0) in between clumps
+     */
+    uint64_t clumpSkipPos;
+
+    /**
+     * RNG for Bernoulli sampling.
+     */
+    boost::scoped_ptr<BernoulliRng> samplingRng;
+
+    /**
      * Builds outputProj from params.
      *
      * @param outputProj the projection to be built
@@ -186,6 +276,9 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      * @param params the LcsRowScanExecStreamParams
      */
     void prepareResidualFilters(LcsRowScanExecStreamParams const &params);
+
+
+    bool initializeSystemSampling();
 
 public:
     virtual void prepare(LcsRowScanExecStreamParams const &params);

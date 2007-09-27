@@ -54,6 +54,11 @@ struct BTreeStatistics
      * Number of leaf tuples in tree.
      */
     RecordNum nTuples;
+
+    /**
+     * Number of unique keys in tree.  Counts only the unique first keys.
+     */
+    RecordNum nUniqueKeys;
 };
 
 /**
@@ -151,7 +156,7 @@ public:
      * with all update operations completed; if false, violations which are
      * possible with incomplete update operations are ignored
      *
-     * @param keys whether to verify key ordering
+     * @param keys whether to verify key ordering (and count unique keys)
      *
      * @param leaf whether to traverse the leaf level
      */

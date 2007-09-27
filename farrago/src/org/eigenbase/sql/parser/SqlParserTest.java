@@ -1138,13 +1138,22 @@ public class SqlParserTest
 
         check(
             "select * "
-            + "from emp tablesample substitute('medium') as x "
+            + "from emp as x tablesample substitute('medium') "
             + "join dept tablesample substitute('lar' /* split */ 'ge') on x.deptno = dept.deptno",
             TestUtil.fold(
                 new String[] {
                     "SELECT *",
-                    "FROM `EMP` TABLESAMPLE SUBSTITUTE('MEDIUM') AS `X`",
+                    "FROM `EMP` AS `X` TABLESAMPLE SUBSTITUTE('MEDIUM')",
                     "INNER JOIN `DEPT` TABLESAMPLE SUBSTITUTE('LARGE') ON (`X`.`DEPTNO` = `DEPT`.`DEPTNO`)"
+                }));
+        
+        check(
+            "select * "
+            + "from emp as x tablesample bernoulli(50)",
+            TestUtil.fold(
+                new String[] {
+                    "SELECT *",
+                    "FROM `EMP` AS `X` TABLESAMPLE BERNOULLI(50.0)"
                 }));
     }
 

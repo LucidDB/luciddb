@@ -622,6 +622,20 @@ public class SqlValidatorImpl
             throw Util.newInternal("Not a query: " + node);
         }
 
+        if (node.isA(SqlKind.TableSample)) {
+            SqlNode[] operands = ((SqlCall)node).operands;
+            SqlSampleSpec sampleSpec = SqlLiteral.sampleValue(operands[1]);
+            if (sampleSpec instanceof SqlSampleSpec.SqlTableSampleSpec) {
+                validateFeature(
+                    EigenbaseResource.instance().SQLFeature_T613, 
+                    node.getParserPosition());
+            } else if (sampleSpec instanceof SqlSampleSpec.SqlSubstitutionSampleSpec) {
+                validateFeature(
+                    EigenbaseResource.instance().SQLFeatureExt_T613_Substitution,
+                    node.getParserPosition());
+            }
+        }
+        
         validateNamespace(ns);
         validateAccess(
             ns.getTable(),

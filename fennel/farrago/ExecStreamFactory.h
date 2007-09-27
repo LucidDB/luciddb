@@ -120,6 +120,7 @@ protected:
     virtual void visit(ProxyValuesStreamDef &);
     virtual void visit(ProxyReshapeStreamDef &);
     virtual void visit(ProxyNestedLoopJoinStreamDef &);
+    virtual void visit(ProxyBernoulliSamplingStreamDef &);
 
     // helpers for above visitors
 

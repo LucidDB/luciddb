@@ -29,6 +29,7 @@ import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.session.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
@@ -356,6 +357,18 @@ public abstract class FarragoTestUDR
         resultInserter.setDate(2, new java.sql.Date(millis), cal);
         resultInserter.setTime(3, new Time(millis), cal);
         resultInserter.executeUpdate();
+    }
+    
+    public static void setSessionVariable(String name, String value)
+    throws SQLException
+    {
+        try {
+            FarragoSession sess = FarragoUdrRuntime.getSession();
+            
+            sess.getSessionVariables().set(name, value);
+        } catch (Throwable e) {
+            throw new SQLException(e.getMessage());
+        }
     }
 }
 

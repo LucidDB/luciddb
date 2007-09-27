@@ -2678,7 +2678,7 @@ DdlImportForeignSchemaStmt ImportForeignSchemaStmt() :
     [
         (<LIMIT> <TO> | <EXCEPT> { exclude = true; })
         // TODO jvs 5-Aug-2005:  this is supposed to take compound
-        // identifiers, but it's useless because all the schema names
+        // identifiers, but it is useless because all the schema names
         // have to match foreignSchemaName
         (
             <LPAREN> roster = SimpleIdentifierCommaList() <RPAREN>
@@ -2897,7 +2897,7 @@ DdlStmt AnalyzeStmt() :
     DdlAnalyzeStmt stmt;
     CwmTable table;
     List columnNameList;
-    int percent;
+    SqlNumericLiteral percent;
 }
 {
     <TABLE> table = TableIdentifier()
@@ -2934,8 +2934,15 @@ DdlStmt AnalyzeStmt() :
         }
     )
     [
-        <SAMPLE> percent = UnsignedIntLiteral() <PERCENT>
+        <SAMPLE> percent = UnsignedNumericLiteral() <PERCENT>
         {
+            BigDecimal rate = percent.bigDecimalValue();
+            if (rate.compareTo(BigDecimal.ZERO) <= 0 ||
+                rate.compareTo(BigDecimal.valueOf(100L)) > 0)
+            {
+                throw new ParseException(
+                    EigenbaseResource.instance().InvalidSampleSize.str());
+            }
             stmt.setSamplePercent(percent);
         }
     ]
