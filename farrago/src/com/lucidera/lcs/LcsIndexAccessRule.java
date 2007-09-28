@@ -90,6 +90,20 @@ public class LcsIndexAccessRule
         //                 new RelOptRuleOperand(LcsIndexSearchRel.class, null)
         //     })})})
 
+        // TODO: SWZ 11-Sep-2007: This rule is not fired for 
+        // LcsSamplingRowScanRel.  It could be used without modification for 
+        // that RelNode type if either of the following is true:
+        // 1. Sampling mode is BERNOULLI sampling
+        // 2. Sampling mode is SYSTEM and no indexes will be applied (e.g., 
+        //    only residual filters)
+        // (Making this change would require changing the rule operands to
+        // take LcsRowScanRelBase and constructing the correct replacement
+        // subclass in considerIndex.)  Note that for system sampling, we 
+        // could go further and only apply residual filters even when indexes 
+        // are normally called for.  Not sure if the portion of the filter 
+        // that would have generated an index scan should become a residual 
+        // filter or not.
+        
         super(rule);
         description = "LcsIndexAccessRule: " + id;
     }

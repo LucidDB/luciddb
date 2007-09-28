@@ -90,13 +90,16 @@
 > call sys_boot.mgmt.stat_set_column_histogram(
 >     'LOCALDB','TPCD','CUSTOMER','F4',25,10,25,0,'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 > 
-> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| LOCALDB    | TPCD         | CUSTOMER    | F1           | 15000        | 10               | 100        | 15            | 15             |
-| LOCALDB    | TPCD         | CUSTOMER    | F4           | 25           | 10               | 100        | 15            | 15             |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+> select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+>   cardinality_estimated, percent_sampled, sample_size, bar_count, 
+>   rows_per_bar, rows_last_bar
+> from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | CARDINALITY_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 15000        | false                  | 10.0             | 1500         | 100        | 15            | 15             |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 25           | false                  | 10.0             | 1500         | 100        | 15            | 15             |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
 > select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
@@ -315,13 +318,16 @@
 > call sys_boot.mgmt.stat_set_column_histogram(
 >     'LOCALDB','TPCD','CUSTOMER','F1',15000,100,15000,0,'0123456789');
 > 
-> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| LOCALDB    | TPCD         | CUSTOMER    | F1           | 15000        | 100              | 100        | 150           | 150            |
-| LOCALDB    | TPCD         | CUSTOMER    | F4           | 25           | 10               | 100        | 15            | 15             |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+> select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+>   cardinality_estimated, percent_sampled, sample_size, bar_count, 
+>   rows_per_bar, rows_last_bar
+> from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | CARDINALITY_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| LOCALDB    | TPCD         | CUSTOMER    | F1           | 15000        | false                  | 100.0            | 15000        | 100        | 150           | 150            |
+| LOCALDB    | TPCD         | CUSTOMER    | F4           | 25           | false                  | 10.0             | 1500         | 100        | 15            | 15             |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
 > select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
@@ -544,6 +550,16 @@
 > create schema stat;
 > set schema 'stat';
 > 
+> -- create a backdoor to allow repeatable samples during estimation
+> create or replace procedure test_set_sess_var(
+>     in var_name varchar(2000),
+>     in var_value varchar(2000))
+> language java
+> contains sql
+> external name 'class net.sf.farrago.test.FarragoTestUDR.setSessionVariable';
+> 
+> call stat.test_set_sess_var('test.estimateStatsSeed', '112358');
+> 
 > -- create a few tables
 > create table depts(
 >     deptno integer not null primary key,
@@ -592,15 +608,18 @@
 | LOCALDB    | STAT         | DEPTS       | 0          |
 | LOCALDB    | STAT         | EMPS        | 0          |
 +------------+--------------+-------------+------------+
-> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 0            | 100              | 0          | 1             | 1              |
-| LOCALDB    | STAT         | DEPTS       | NAME         | 0            | 100              | 0          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | EMPNO        | 0            | 100              | 0          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | NAME         | 0            | 100              | 0          | 1             | 1              |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+> select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+>   cardinality_estimated, percent_sampled, sample_size, bar_count, 
+>   rows_per_bar, rows_last_bar
+> from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | CARDINALITY_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 0            | false                  | 100.0            | 0            | 0          | 1             | 1              |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 0            | false                  | 100.0            | 0            | 0          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 0            | false                  | 100.0            | 0            | 0          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | NAME         | 0            | false                  | 100.0            | 0            | 0          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
 > select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
@@ -633,15 +652,18 @@
 | LOCALDB    | STAT         | DEPTS       | 3          |
 | LOCALDB    | STAT         | EMPS        | 4          |
 +------------+--------------+-------------+------------+
-> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | EMPNO        | 3            | 100              | 4          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | NAME         | 4            | 100              | 4          | 1             | 1              |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+> select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+>   cardinality_estimated, percent_sampled, sample_size, bar_count, 
+>   rows_per_bar, rows_last_bar
+> from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | CARDINALITY_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 3            | false                  | 100.0            | 4            | 4          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | NAME         | 4            | false                  | 100.0            | 4            | 4          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
 > select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
@@ -687,15 +709,18 @@
 | LOCALDB    | STAT         | DEPTS       | 3          |
 | LOCALDB    | STAT         | EMPS        | 5          |
 +------------+--------------+-------------+------------+
-> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | EMPNO        | 4            | 100              | 5          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | NAME         | 5            | 100              | 5          | 1             | 1              |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+> select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+>   cardinality_estimated, percent_sampled, sample_size, bar_count, 
+>   rows_per_bar, rows_last_bar
+> from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | CARDINALITY_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 4            | false                  | 100.0            | 5            | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | NAME         | 5            | false                  | 100.0            | 5            | 5          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
 > select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
@@ -740,23 +765,26 @@
 | LOCALDB    | STAT         | DEPTS       | 3          |
 | LOCALDB    | STAT         | EMPS        | 5          |
 +------------+--------------+-------------+------------+
-> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | AGE          | 5            | 100              | 5          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | CITY         | 3            | 100              | 5          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | DEPTNO       | 3            | 100              | 5          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | EMPID        | 5            | 100              | 5          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | EMPNO        | 4            | 100              | 5          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | GENDER       | 3            | 100              | 5          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | MANAGER      | 2            | 100              | 5          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | NAME         | 5            | 100              | 5          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 4            | 100              | 5          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | SLACKER      | 3            | 100              | 5          | 1             | 1              |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+> select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+>   cardinality_estimated, percent_sampled, sample_size, bar_count, 
+>   rows_per_bar, rows_last_bar
+> from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | CARDINALITY_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | AGE          | 5            | false                  | 100.0            | 5            | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | CITY         | 3            | false                  | 100.0            | 5            | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 3            | false                  | 100.0            | 5            | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 5            | false                  | 100.0            | 5            | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 4            | false                  | 100.0            | 5            | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 3            | false                  | 100.0            | 5            | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 2            | false                  | 100.0            | 5            | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | NAME         | 5            | false                  | 100.0            | 5            | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 4            | false                  | 100.0            | 5            | 5          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 3            | false                  | 100.0            | 5            | 5          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
 > select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+----------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  |  START_VALUE   | VALUE_COUNT  |
@@ -843,23 +871,26 @@
 | LOCALDB    | STAT         | DEPTS       | 3          |
 | LOCALDB    | STAT         | EMPS        | 3          |
 +------------+--------------+-------------+------------+
-> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | AGE          | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | CITY         | 1            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | DEPTNO       | 2            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | EMPID        | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | EMPNO        | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | GENDER       | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | MANAGER      | 2            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | NAME         | 3            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 2            | 100              | 3          | 1             | 1              |
-| LOCALDB    | STAT         | EMPS        | SLACKER      | 2            | 100              | 3          | 1             | 1              |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+> select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+>   cardinality_estimated, percent_sampled, sample_size, bar_count, 
+>   rows_per_bar, rows_last_bar
+> from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | CARDINALITY_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | AGE          | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | CITY         | 1            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 2            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 2            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | NAME         | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 2            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 2            | false                  | 100.0            | 3            | 3          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
 > select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+--------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
@@ -905,12 +936,93 @@
 > --
 > -- 2.7 note: sampling has not been implemented, only test syntax
 > --
-> analyze table depts estimate statistics for all columns sample 10 percent;
+> analyze table depts estimate statistics for all columns sample 50 percent;
+> 
+> select * from sys_boot.mgmt.page_counts_view order by 1, 2, 3, 4;
++------------+--------------+-------------+-------------------------------------------------+--------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                   INDEX_NAME                    | PAGES  |
++------------+--------------+-------------+-------------------------------------------------+--------+
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$DEPTS_UNIQUE_NAME          | 1      |
+| LOCALDB    | STAT         | DEPTS       | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS      | 1      |
+| LOCALDB    | STAT         | EMPS        | EMPS_UX                                         | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1      |
+| LOCALDB    | STAT         | EMPS        | SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID  | 1      |
++------------+--------------+-------------+-------------------------------------------------+--------+
+> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
++------------+--------------+-------------+------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
++------------+--------------+-------------+------------+
+| LOCALDB    | STAT         | DEPTS       | 3          |
+| LOCALDB    | STAT         | EMPS        | 3          |
++------------+--------------+-------------+------------+
+> select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+>   cardinality_estimated, percent_sampled, sample_size, bar_count, 
+>   rows_per_bar, rows_last_bar
+> from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | CARDINALITY_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 3            | false                  | 50.0             | 2            | 2          | 1             | 1              |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 3            | false                  | 50.0             | 2            | 2          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | AGE          | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | CITY         | 1            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 2            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 2            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | NAME         | 3            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 2            | false                  | 100.0            | 3            | 3          | 1             | 1              |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 2            | false                  | 100.0            | 3            | 3          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+> select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 0        | 20           | 1            |
+| LOCALDB    | STAT         | DEPTS       | DEPTNO       | 1        | 30           | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 0        | Accounts     | 1            |
+| LOCALDB    | STAT         | DEPTS       | NAME         | 1        | Marketing    | 1            |
+| LOCALDB    | STAT         | EMPS        | AGE          | 0        | 25           | 1            |
+| LOCALDB    | STAT         | EMPS        | AGE          | 1        | 50           | 1            |
+| LOCALDB    | STAT         | EMPS        | AGE          | 2        | 55           | 1            |
+| LOCALDB    | STAT         | EMPS        | CITY         | 0        |              | 1            |
+| LOCALDB    | STAT         | EMPS        | CITY         | 1        |              | 0            |
+| LOCALDB    | STAT         | EMPS        | CITY         | 2        |              | 0            |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 0        | 10           | 1            |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 1        | 10           | 0            |
+| LOCALDB    | STAT         | EMPS        | DEPTNO       | 2        | 20           | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 0        | 1            | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 1        | 11           | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPID        | 2        | 30           | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 0        | 100          | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 1        | 120          | 1            |
+| LOCALDB    | STAT         | EMPS        | EMPNO        | 2        | 130          | 1            |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 0        |              | 1            |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 1        | F            | 1            |
+| LOCALDB    | STAT         | EMPS        | GENDER       | 2        | M            | 1            |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 0        | false        | 1            |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 1        | true         | 1            |
+| LOCALDB    | STAT         | EMPS        | MANAGER      | 2        | true         | 0            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 0        | Barney       | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 1        | Fred         | 1            |
+| LOCALDB    | STAT         | EMPS        | NAME         | 2        | Wilma        | 1            |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 0        |              | 1            |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 1        |              | 0            |
+| LOCALDB    | STAT         | EMPS        | PUBLIC_KEY   | 2        | 41626320     | 1            |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 0        |              | 1            |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 1        | true         | 1            |
+| LOCALDB    | STAT         | EMPS        | SLACKER      | 2        | true         | 0            |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+> 
+> -- Disable repeatable seed
+> call stat.test_set_sess_var('test.estimateStatsSeed', null);
+> 
+> drop schema stat cascade;
 > 
 > --
 > -- 2.8 analyze a foreign table
 > --
-> drop schema stat cascade;
 > create schema stat;
 > set schema 'stat';
 > 
@@ -942,14 +1054,17 @@
 +------------+--------------+-------------+------------+
 | LOCALDB    | STAT         | STAT_FILE   | 6          |
 +------------+--------------+-------------+------------+
-> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 6            | 100              | 6          | 1             | 1              |
-| LOCALDB    | STAT         | STAT_FILE   | ID           | 4            | 100              | 6          | 1             | 1              |
-| LOCALDB    | STAT         | STAT_FILE   | NAME         | 6            | 100              | 6          | 1             | 1              |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+> select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+>   cardinality_estimated, percent_sampled, sample_size, bar_count, 
+>   rows_per_bar, rows_last_bar
+> from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | CARDINALITY_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 6            | false                  | 100.0            | 6            | 6          | 1             | 1              |
+| LOCALDB    | STAT         | STAT_FILE   | ID           | 4            | false                  | 100.0            | 6            | 6          | 1             | 1              |
+| LOCALDB    | STAT         | STAT_FILE   | NAME         | 6            | false                  | 100.0            | 6            | 6          | 1             | 1              |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
 > select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
 +------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  |               START_VALUE                | VALUE_COUNT  |
@@ -973,6 +1088,8 @@
 | LOCALDB    | STAT         | STAT_FILE   | NAME         | 4        | Peter "peg leg", Jimmy & Samantha "Sam"  | 1            |
 | LOCALDB    | STAT         | STAT_FILE   | NAME         | 5        | Susan, Peter and Dave                    | 1            |
 +------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
+> 
+> drop table stat_file;
 > 
 > --
 > -- 2.9 A few more rows than histogram bars
@@ -1001,91 +1118,98 @@
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
 +------------+--------------+-------------+------------+
 | LOCALDB    | STAT         | HUNDRED     | 102        |
-| LOCALDB    | STAT         | STAT_FILE   | 6          |
 | LOCALDB    | STAT         | TEN         | 0          |
 +------------+--------------+-------------+------------+
-> select * from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | PERCENT_SAMPLED  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
-| LOCALDB    | STAT         | HUNDRED     | I            | 102          | 100              | 51         | 2             | 2              |
-| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 6            | 100              | 6          | 1             | 1              |
-| LOCALDB    | STAT         | STAT_FILE   | ID           | 4            | 100              | 6          | 1             | 1              |
-| LOCALDB    | STAT         | STAT_FILE   | NAME         | 6            | 100              | 6          | 1             | 1              |
-+------------+--------------+-------------+--------------+--------------+------------------+------------+---------------+----------------+
+> select table_cat, table_schem,table_name, column_name, "CARDINALITY",
+>   cardinality_estimated, percent_sampled, sample_size, bar_count, 
+>   rows_per_bar, rows_last_bar
+> from sys_boot.mgmt.histograms_view order by 1, 2, 3, 4;
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | CARDINALITY  | CARDINALITY_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  | BAR_COUNT  | ROWS_PER_BAR  | ROWS_LAST_BAR  |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
+| LOCALDB    | STAT         | HUNDRED     | I            | 102          | false                  | 100.0            | 102          | 51         | 2             | 2              |
++------------+--------------+-------------+--------------+--------------+------------------------+------------------+--------------+------------+---------------+----------------+
 > select * from sys_boot.mgmt.histogram_bars_view order by 1, 2, 3, 4, 5;
-+------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  |               START_VALUE                | VALUE_COUNT  |
-+------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
-| LOCALDB    | STAT         | HUNDRED     | I            | 0        | 0                                        | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 1        | 2                                        | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 2        | 4                                        | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 3        | 6                                        | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 4        | 8                                        | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 5        | 10                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 6        | 12                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 7        | 14                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 8        | 16                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 9        | 18                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 10       | 20                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 11       | 22                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 12       | 24                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 13       | 26                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 14       | 28                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 15       | 30                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 16       | 32                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 17       | 34                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 18       | 36                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 19       | 38                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 20       | 40                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 21       | 42                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 22       | 44                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 23       | 46                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 24       | 48                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 25       | 50                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 26       | 52                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 27       | 54                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 28       | 56                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 29       | 58                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 30       | 60                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 31       | 62                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 32       | 64                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 33       | 66                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 34       | 68                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 35       | 70                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 36       | 72                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 37       | 74                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 38       | 76                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 39       | 78                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 40       | 80                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 41       | 82                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 42       | 84                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 43       | 86                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 44       | 88                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 45       | 90                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 46       | 92                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 47       | 94                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 48       | 96                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 49       | 98                                       | 2            |
-| LOCALDB    | STAT         | HUNDRED     | I            | 50       | 100                                      | 2            |
-| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 0        | A                                        | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 1        | B                                        | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 2        | C                                        | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 3        | E                                        | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 4        | F                                        | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | EXTRA_FIELD  | 5        | G                                        | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | ID           | 0        | 123                                      | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | ID           | 1        | 123                                      | 0            |
-| LOCALDB    | STAT         | STAT_FILE   | ID           | 2        | 234                                      | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | ID           | 3        | 234                                      | 0            |
-| LOCALDB    | STAT         | STAT_FILE   | ID           | 4        | 456                                      | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | ID           | 5        | 789                                      | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | NAME         | 0        | "S,"                                     | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | NAME         | 1        | Amelia "meals" Maurice                   | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | NAME         | 2        | Grady O'Neil                             | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | NAME         | 3        | Jonathan Ackerman                        | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | NAME         | 4        | Peter "peg leg", Jimmy & Samantha "Sam"  | 1            |
-| LOCALDB    | STAT         | STAT_FILE   | NAME         | 5        | Susan, Peter and Dave                    | 1            |
-+------------+--------------+-------------+--------------+----------+------------------------------------------+--------------+
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+| LOCALDB    | STAT         | HUNDRED     | I            | 0        | 0            | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 1        | 2            | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 2        | 4            | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 3        | 6            | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 4        | 8            | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 5        | 10           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 6        | 12           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 7        | 14           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 8        | 16           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 9        | 18           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 10       | 20           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 11       | 22           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 12       | 24           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 13       | 26           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 14       | 28           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 15       | 30           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 16       | 32           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 17       | 34           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 18       | 36           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 19       | 38           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 20       | 40           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 21       | 42           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 22       | 44           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 23       | 46           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 24       | 48           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 25       | 50           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 26       | 52           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 27       | 54           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 28       | 56           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 29       | 58           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 30       | 60           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 31       | 62           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 32       | 64           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 33       | 66           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 34       | 68           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 35       | 70           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 36       | 72           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 37       | 74           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 38       | 76           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 39       | 78           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 40       | 80           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 41       | 82           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 42       | 84           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 43       | 86           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 44       | 88           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 45       | 90           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 46       | 92           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 47       | 94           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 48       | 96           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 49       | 98           | 2            |
+| LOCALDB    | STAT         | HUNDRED     | I            | 50       | 100          | 2            |
++------------+--------------+-------------+--------------+----------+--------------+--------------+
+> 
+> -------------------------------------------------------------------------------
+> -- Miscellaneous Tests
+> ------------------------------------------------------------------------------
+> 
+> --
+> -- Test fix for FRG-6448
+> --
+> 
+> !outputformat csv
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> create table frg6448 (id int primary key, val int not null);
+> create index frg6448_val_idx on frg6448(val);
+> insert into frg6448 values (1, 1), (2, 2), (3, 1), (4, 2), (5, 1), (6, 2);
+> analyze table frg6448 compute statistics for all columns;
+> 
+> explain plan for select * from frg6448 where val = ?;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, STAT, FRG6448]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$FRG6448$ID, SYS$CLUSTERED_INDEX$FRG6448$VAL]], residual columns=[[1]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[?0], expr#3=[']'], expr#4=[IS NOT NULL($t2)], expr#5=[AND($t4, $t4)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t2], $condition=[$t5])'
+'        IterOneRowRel'
+> 
+> !outputformat table
 > 
 > !quit

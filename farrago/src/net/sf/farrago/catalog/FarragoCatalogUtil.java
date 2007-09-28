@@ -989,14 +989,27 @@ public abstract class FarragoCatalogUtil
      *
      * @param columnSet the column set whose row count will be updated
      * @param rowCount number of rows returned by column set
+     * @param updateRowCount if true, the
+     *        {@link FemAbstractColumnSet#setRowCount(Long)} property is
+     *        updated.
+     * @param updateAnalyzeRowCount if true, the 
+     *        {@link FemAbstractColumnSet#setLastAnalyzeRowCount(Long)} 
+     *        property is updated
      */
     public static void updateRowCount(
         FemAbstractColumnSet columnSet,
-        Long rowCount)
+        Long rowCount,
+        boolean updateRowCount,
+        boolean updateAnalyzeRowCount)
     {
-        columnSet.setAnalyzeTime(createTimestamp());
-        columnSet.setRowCount(rowCount);
-        columnSet.setLastAnalyzeRowCount(rowCount);
+        if (updateAnalyzeRowCount) {
+            columnSet.setAnalyzeTime(createTimestamp());
+            columnSet.setLastAnalyzeRowCount(rowCount);
+        }
+        
+        if (updateRowCount) {
+            columnSet.setRowCount(rowCount);
+        }
     }
 
     /**
@@ -1019,7 +1032,9 @@ public abstract class FarragoCatalogUtil
         FarragoRepos repos,
         FemAbstractColumn column,
         Long distinctValues,
-        int samplePercent,
+        boolean distinctValuesEstimated,
+        float samplePercent,
+        long sampleSize,
         int barCount,
         long rowsPerBar,
         long rowsLastBar,
@@ -1033,7 +1048,9 @@ public abstract class FarragoCatalogUtil
 
         histogram.setAnalyzeTime(createTimestamp());
         histogram.setDistinctValueCount(distinctValues);
+        histogram.setDistinctValueCountEstimated(distinctValuesEstimated);
         histogram.setPercentageSampled(samplePercent);
+        histogram.setSampleSize(sampleSize);
         histogram.setBarCount(barCount);
 
         // TODO: make row count an attribute of bars

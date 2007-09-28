@@ -470,6 +470,27 @@ explain plan for select atoi('99') from sales.depts;
 -- with non-constant input
 explain plan for select atoi(name) from sales.depts;
 
+-- verify that UDX no-input rowcount is 1.0
+explain plan including all attributes for
+select * from table(ramp(5));
+
+-- verify that UDX one-input rowcount propagates through to output
+explain plan including all attributes for
+select v
+from table(stringify(
+    cursor(select * from sales.depts),
+    '|'));
+
+-- verify that UDX multi-input rowcount gets summed like UNION ALL
+explain plan including all attributes for
+select v
+from table(combineStringifyColumns(
+    cursor(select empno, name, deptno, gender from sales.emps),
+    row(empno, name, gender),
+    cursor(select empno, name, deptno, city from sales.emps),
+    row(empno, name, city),
+    '|'));
+
 !set outputformat table
 
 -- udx invocation

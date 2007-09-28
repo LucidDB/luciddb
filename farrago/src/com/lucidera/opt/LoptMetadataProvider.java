@@ -698,7 +698,7 @@ public class LoptMetadataProvider
             rowCount = Math.max(rowCount, nRowsLeft);
         }
 
-        return rowCount;
+        return RelMdUtil.capInfinity(rowCount);
     }
 
     /**

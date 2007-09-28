@@ -43,6 +43,7 @@
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ReshapeExecStream.h"
 #include "fennel/exec/NestedLoopJoinExecStream.h"
+#include "fennel/exec/BernoulliSamplingExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
 #include "fennel/tuple/TupleDescriptor.h"
@@ -388,6 +389,19 @@ void ExecStreamFactory::visit(ProxyNestedLoopJoinStreamDef &streamDef)
 
     embryo.init(new NestedLoopJoinExecStream(), params);
 }
+
+void ExecStreamFactory::visit(ProxyBernoulliSamplingStreamDef &streamDef)
+{
+    BernoulliSamplingExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+
+    params.samplingRate = streamDef.getSamplingRate();
+    params.isRepeatable = streamDef.isRepeatable();
+    params.repeatableSeed = streamDef.getRepeatableSeed();
+
+    embryo.init(new BernoulliSamplingExecStream(), params);
+}
+
 
 void ExecStreamFactory::readExecStreamParams(
     ExecStreamParams &params,

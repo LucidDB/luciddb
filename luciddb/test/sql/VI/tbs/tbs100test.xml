@@ -13,7 +13,7 @@
             <test-suite-modifier value="tbs100-test"/>
           </test-suite-call>
         </test-suite>
-        <ant dir="${open.dir}/luciddb/test/sql/VI/tbs" target="copy-csv"/>
+        <ant dir="${open.dir}/luciddb/test/sql/VI/tbs" target="copy-local-csv"/>
       </init-hook>
 
       <test name="creschema">

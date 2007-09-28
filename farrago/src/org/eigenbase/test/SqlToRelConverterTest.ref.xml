@@ -1117,7 +1117,7 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
     <TestCase name="testSampleQuery">
         <Resource name="sql">
             <![CDATA[select * from (
- select * from emp tablesample substitute('DATASET1') as e
+ select * from emp as e tablesample substitute('DATASET1')
  join dept on e.deptno = dept.deptno
 ) tablesample substitute('DATASET2')
 where empno > 5]]>
@@ -1222,6 +1222,74 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
   JoinRel(condition=[=($7, $9)], joinType=[inner])
     TableAccessRel(table=[[CATALOG, SALES, EMP]])
     TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSampleBernoulli">
+        <Resource name="sql">
+            <![CDATA[select * from emp tablesample bernoulli(50) where empno > 5]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
+  FilterRel(condition=[>($0, 5)])
+    SamplingRel(mode=[bernoulli], rate=[0.5], repeatableSeed=[-])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSampleBernoulliQuery">
+        <Resource name="sql">
+            <![CDATA[select * from (
+ select * from emp as e tablesample bernoulli(10) repeatable(1)
+ join dept on e.deptno = dept.deptno
+) tablesample bernoulli(50) repeatable(99)
+where empno > 5]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], NAME=[$10])
+  FilterRel(condition=[>($0, 5)])
+    SamplingRel(mode=[bernoulli], rate=[0.5], repeatableSeed=[99])
+      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], NAME=[$10])
+        JoinRel(condition=[=($7, $9)], joinType=[inner])
+          SamplingRel(mode=[bernoulli], rate=[0.1], repeatableSeed=[1])
+            TableAccessRel(table=[[CATALOG, SALES, EMP]])
+          TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSampleSystem">
+        <Resource name="sql">
+            <![CDATA[select * from emp tablesample system(50) where empno > 5]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
+  FilterRel(condition=[>($0, 5)])
+    SamplingRel(mode=[system], rate=[0.5], repeatableSeed=[-])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSampleSystemQuery">
+        <Resource name="sql">
+            <![CDATA[select * from (
+ select * from emp as e tablesample system(10) repeatable(1)
+ join dept on e.deptno = dept.deptno
+) tablesample system(50) repeatable(99)
+where empno > 5]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], NAME=[$10])
+  FilterRel(condition=[>($0, 5)])
+    SamplingRel(mode=[system], rate=[0.5], repeatableSeed=[99])
+      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], NAME=[$10])
+        JoinRel(condition=[=($7, $9)], joinType=[inner])
+          SamplingRel(mode=[system], rate=[0.1], repeatableSeed=[1])
+            TableAccessRel(table=[[CATALOG, SALES, EMP]])
+          TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
     </TestCase>

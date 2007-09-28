@@ -95,6 +95,26 @@ public abstract class TableFunctionRelBase
             };
     }
 
+    public double getRows()
+    {
+        // Calculate result as the sum of the input rowcount estimates,
+        // assuming there are any, otherwise use the superclass default.  So
+        // for a no-input UDX, behave like an AbstractRelNode; for a one-input
+        // UDX, behave like a SingleRel; for a multi-input UDX, behave like
+        // UNION ALL.  TODO jvs 10-Sep-2007: UDX-supplied costing metadata.
+        if (inputs.length == 0) {
+            return super.getRows();
+        }
+        double nRows = 0.0;
+        for (int i = 0; i < inputs.length; i++) {
+            Double d = RelMetadataQuery.getRowCount(inputs[i]);
+            if (d != null) {
+                nRows += d;
+            }
+        }
+        return nRows;
+    }
+
     public RexNode getCall()
     {
         // NOTE jvs 7-May-2006:  Within this rexCall, instances

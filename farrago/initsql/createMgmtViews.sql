@@ -242,6 +242,16 @@ grant select on session_parameters_view to public;
 -- Statistics
 --
 
+-- Get the row count of a table
+create or replace function stat_get_row_count(
+    catalog_name varchar(2000),
+    schema_name varchar(2000),
+    table_name varchar(2000))
+returns bigint
+language java
+contains sql
+external name 'class net.sf.farrago.syslib.FarragoStatsUDR.get_row_count';
+
 -- Set the row count of a table
 create or replace procedure stat_set_row_count(
     in catalog_name varchar(2000),
@@ -317,10 +327,13 @@ create or replace view histograms_view_internal as
         c.table_name,
         c.column_name,
         h."distinctValueCount" as "CARDINALITY",
+        h."distinctValueCountEstimated" as cardinality_estimated,
         h."percentageSampled" as percent_sampled,
+        h."sampleSize" as sample_size,
         h."barCount" as bar_count,
         h."rowsPerBar" as rows_per_bar,
         h."rowsLastBar" as rows_last_bar,
+        cast(h."analyzeTime" as timestamp) as last_analyze_time,
         h."mofId"
     from 
         sys_boot.jdbc_metadata.columns_view_internal c
@@ -337,10 +350,13 @@ create or replace view histograms_view as
         h.table_name,
         h.column_name,
         h."CARDINALITY",
+        h.cardinality_estimated,
         h.percent_sampled,
+        h.sample_size,
         h.bar_count,
         h.rows_per_bar,
-        h.rows_last_bar
+        h.rows_last_bar,
+        h.last_analyze_time
     from
         histograms_view_internal h
 ;

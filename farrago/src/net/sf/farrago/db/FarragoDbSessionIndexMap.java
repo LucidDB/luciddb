@@ -262,7 +262,7 @@ class FarragoDbSessionIndexMap
     }
 
     // implement FarragoSessionIndexMap
-    public long computeIndexStats(
+    public FarragoMedLocalIndexStats computeIndexStats(
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index,
         boolean estimate)

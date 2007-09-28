@@ -321,13 +321,17 @@ class LbmSplicerExecStream : public DiffluenceExecStream
      * returned if a matching entry is found; if a non-match is found, the
      * tuple data contains the greatest lower bound btree entry found
      *
+     * @param leastUpper if true, use a least upper bound search to locate
+     * the btree record
+     *
      * @return true if a matching entry is found in the btree; false otherwise;
      * (in this case, bTreeWriter is positioned at the location of the greatest
      * lower bound btree entry corresponding to the bitmap entry)
      */
     bool findMatchingBTreeEntry(
         TupleData const &bitmapEntry,
-        TupleData &bTreeTupleData);
+        TupleData &bTreeTupleData,
+        bool leastUpper);
 
     /**
      * Searches the btree, looking for the first btree record which overlaps

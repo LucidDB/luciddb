@@ -86,6 +86,14 @@ class NestedLoopJoinExecStream : public CartesianJoinExecStream
     virtual bool checkNumInputs();
 
     /**
+     * Creates temporary index used in nested loop join
+     *
+     * @return EXECRC_BUF_UNDERFLOW if request to create temporary index 
+     * hasn't been initiated yet
+     */
+    virtual ExecStreamResult preProcessRightInput();
+
+    /**
      * Passes join keys from the left input to the right input using dynamic
      * parameters
      */ 
@@ -95,7 +103,6 @@ public:
     // implement ExecStream
     virtual void prepare(NestedLoopJoinExecStreamParams const &params);
     virtual void open(bool restart);
-    virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 };
 
 FENNEL_END_NAMESPACE

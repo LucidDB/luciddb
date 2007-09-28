@@ -27,7 +27,6 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
 
@@ -76,10 +75,13 @@ public class LhxJoinRule
 
         nonEquiCondition =
             RelOptUtil.splitJoinCondition(
-                joinRel,
+                leftRel,
+                rightRel,
+                joinRel.getCondition(),
                 leftJoinKeys,
                 rightJoinKeys,
-                filterNulls);
+                filterNulls,
+                null);
 
         if ((nonEquiCondition != null)
             && (joinRel.getJoinType() != JoinRelType.INNER))
@@ -179,40 +181,13 @@ public class LhxJoinRule
                 null,
                 numBuildRows.longValue(),
                 cndBuildKey.longValue());
-
-        int newProjectOutputSize = outputProj.size();
-        RelDataTypeField [] joinOutputFields = rel.getRowType().getFields();
-
+        
         // Need to project the new output(left+key+right+key) to the original
         // join output(left+right).
         // The projection needs to happen before additional filtering since
         // filtering condition references the original output ordinals.
-        if (newProjectOutputSize < joinOutputFields.length) {
-            RexNode [] newProjectOutputFields =
-                new RexNode[newProjectOutputSize];
-            String [] newProjectOutputNames = new String[newProjectOutputSize];
-
-            for (int i = 0; i < newProjectOutputSize; i++) {
-                int fieldIndex = outputProj.get(i);
-
-                newProjectOutputFields[i] =
-                    rexBuilder.makeInputRef(
-                        joinOutputFields[fieldIndex].getType(),
-                        fieldIndex);
-                newProjectOutputNames[i] =
-                    joinOutputFields[fieldIndex].getName();
-            }
-
-            // Now let's create a project rel on the output of the join.
-            RelNode projectOutputRel =
-                CalcRel.createProject(
-                    rel,
-                    newProjectOutputFields,
-                    newProjectOutputNames);
-
-            rel = projectOutputRel;
-        }
-
+        rel = RelOptUtil.createProjectJoinRel(outputProj, rel);
+        
         transformCall(call, rel, nonEquiCondition);
     }
 

@@ -91,11 +91,15 @@ protected:
      * @param factor factor that determines the spread of random rid values
      * generated
      * @param nKeys number of keys in the index, excluding the startRid
+     * @param multipleSplices if true, splice one tuple at a time rather than
+     * passing multiple tuples into a single invocation of the splicer exec
+     * stream
      */
     void testSpliceWithKeys(
         uint numRows,
         uint factor,
-        uint nKeys);
+        uint nKeys,
+        bool multipleSplices);
 
     /**
      * Generate N unique, sorted, random rids between 0 and nRids*factor
@@ -111,20 +115,25 @@ protected:
         uint factor);
 
     /**
-     * Generates a buffer containing the tuples to be passed into the
+     * Generates a buffer containing one or more tuples to be passed into the
      * splicer.  Each tuple is either a singleton or a bitmap with 3 rids.
      * The method randomly picks between the two.
      *
      * @param rids rids that will be represented in the tuples generated
+     * @param currRidIdx index into the the rids vector corresponding to
+     * the next rid to be inserted into the tuple
      * @param buffer the buffer to be populated
      * @param bufferSize size of the buffer after it has been populated
      * @param nKeys number of keys in the index to be spliced
+     * @param oneTuple if true, generate only a single tuple
      */
     void generateTupleInput(
         std::vector<uint64_t> const &rids,
+        uint &currRidIdx,
         PBuffer buffer,
         uint &bufferSize,
-        uint nKeys);
+        uint nKeys,
+        bool oneTuple);
 
     /**
      * Splices a buffer of input into a btree, which may already have bitmap
@@ -180,6 +189,11 @@ public:
             LbmSplicerExecStreamTest, testSpliceWithKeysSmallSpread);
         FENNEL_UNIT_TEST_CASE(
             LbmSplicerExecStreamTest, testSpliceWithKeysLargeSpread);
+        FENNEL_UNIT_TEST_CASE(
+            LbmSplicerExecStreamTest, testMultipleSpliceWithKeysSmallSpread);
+        FENNEL_UNIT_TEST_CASE(
+            LbmSplicerExecStreamTest, testMultipleSpliceWithKeysLargeSpread);
+        FENNEL_UNIT_TEST_CASE(LbmSplicerExecStreamTest, testLER6473);
     }
 
     void testCaseSetUp();
@@ -190,6 +204,9 @@ public:
     void testSpliceWithKeys50();
     void testSpliceWithKeysSmallSpread();
     void testSpliceWithKeysLargeSpread();
+    void testMultipleSpliceWithKeysSmallSpread();
+    void testMultipleSpliceWithKeysLargeSpread();
+    void testLER6473();
 };
 
 void LbmSplicerExecStreamTest::testSpliceRids50()
@@ -209,17 +226,27 @@ void LbmSplicerExecStreamTest::testSpliceRidsSmallSets()
 
 void LbmSplicerExecStreamTest::testSpliceWithKeys50()
 {
-    testSpliceWithKeys(50, 16, 1);
+    testSpliceWithKeys(50, 16, 1, false);
 }
 
 void LbmSplicerExecStreamTest::testSpliceWithKeysSmallSpread()
 {
-    testSpliceWithKeys(50000, 8, 1);
+    testSpliceWithKeys(50000, 8, 1, false);
 }
 
 void LbmSplicerExecStreamTest::testSpliceWithKeysLargeSpread()
 {
-    testSpliceWithKeys(50000, 24, 1);
+    testSpliceWithKeys(50000, 24, 1, false);
+}
+
+void LbmSplicerExecStreamTest::testMultipleSpliceWithKeysSmallSpread()
+{
+    testSpliceWithKeys(5000, 8, 1, true);
+}
+
+void LbmSplicerExecStreamTest::testMultipleSpliceWithKeysLargeSpread()
+{
+    testSpliceWithKeys(10000, 24, 1, true);
 }
 
 void LbmSplicerExecStreamTest::testSpliceRids(
@@ -332,7 +359,8 @@ void LbmSplicerExecStreamTest::generateRidInput(
 void LbmSplicerExecStreamTest::testSpliceWithKeys(
     uint numRows,
     uint factor,
-    uint nKeys)
+    uint nKeys,
+    bool multipleSplices)
 {
     // Create the btree that the splicer will write into
     BTreeDescriptor bTreeDesc;
@@ -345,19 +373,27 @@ void LbmSplicerExecStreamTest::testSpliceWithKeys(
     // Generate tuples containing the rids generated
     boost::shared_array<FixedBuffer> buffer;
     buffer.reset(new FixedBuffer[(nKeys + 2) * numRows * 8]);
-    uint bufferSize = 0;
-    generateTupleInput(
-        rids,
-        buffer.get(),
-        bufferSize,
-        nKeys);
-    assert(bufferSize <= (nKeys + 2) * numRows * 8);
+    uint currRidIdx = 0;
+    do {
+        uint bufferSize = 0;
+        generateTupleInput(
+            rids,
+            currRidIdx,
+            buffer.get(),
+            bufferSize,
+            nKeys,
+            multipleSplices);
+        assert(bufferSize <= (nKeys + 2) * numRows * 8);
 
-    spliceInput(
-        buffer,
-        bufferSize,
-        numRows,
-        bTreeDesc);
+        spliceInput(
+            buffer,
+            bufferSize,
+            numRows,
+            bTreeDesc);
+
+        resetExecStreamTest();
+
+    } while (currRidIdx < rids.size());
 
     // Read the btree bitmap entries and confirm that they contain all 
     // of the rids that were inserted.
@@ -375,14 +411,129 @@ void LbmSplicerExecStreamTest::testSpliceWithKeys(
             BOOST_CHECK_EQUAL(
                 opaqueToInt(ridsRead[i]),
                 opaqueToInt(rids[currIdx]));
-            if (opaqueToInt(ridsRead[i]) != opaqueToInt(rids[currIdx])) {
-                assert(false);
-            }
             currIdx++;
         }
         rc = reader.searchNext();
     }
     BOOST_CHECK_EQUAL(currIdx, numRows);
+}
+
+void LbmSplicerExecStreamTest::testLER6473()
+{
+    TupleDescriptor tupleDesc;
+    initBTreeTupleDesc(tupleDesc, 1);
+
+    // Create the btree that the splicer will write into
+    BTreeDescriptor bTreeDesc;
+    createBTree(bTreeDesc, 1);
+
+    TupleAccessor tupleAccessor;
+    tupleAccessor.compute(tupleDesc);
+
+    // Key values are fixed
+    uint64_t keyVal = 1;
+    TupleData tupleData;
+    tupleData.compute(bTreeDesc.tupleDescriptor);
+    tupleData[0].pData = (PConstBuffer) &keyVal;
+
+    LbmEntry lbmEntry;
+    boost::scoped_array<FixedBuffer> entryBuf;
+    uint entryBufSize = tupleDesc[2].cbStorage + 8 + 8;
+    entryBuf.reset(new FixedBuffer[entryBufSize]);
+    lbmEntry.init(entryBuf.get(), NULL, entryBufSize, tupleDesc);
+
+    std::vector<uint64_t> rids;
+
+    // First create a bitmap entry at max capacity
+    uint64_t rid = 0;
+    tupleData[1].pData = (PConstBuffer) &rid;
+    tupleData[2].pData = NULL;
+    tupleData[2].cbData = 0;
+    tupleData[3].pData = NULL;
+    tupleData[3].cbData = 0;
+    lbmEntry.setEntryTuple(tupleData);
+    for ( ; ; rid += 16) {
+        bool rc = lbmEntry.setRID(LcsRid(rid));
+        if (!rc) {
+            break;
+        }
+        rids.push_back(rid);
+    }
+    tupleData = lbmEntry.produceEntryTuple();
+
+    boost::shared_array<FixedBuffer> buffer;
+    buffer.reset(new FixedBuffer[1024]);
+    uint bufferSize = 0;
+    tupleAccessor.marshal(tupleData, buffer.get() + bufferSize);
+    bufferSize += tupleAccessor.getCurrentByteCount();
+
+    // Then create a singleton that's further away 
+    rid += 64 + 1;
+    rids.push_back(rid);
+    tupleData[1].pData = (PConstBuffer) &rid;
+    tupleData[2].pData = NULL;
+    tupleData[2].cbData = 0;
+    tupleData[3].pData = NULL;
+    tupleData[3].cbData = 0;
+    lbmEntry.setEntryTuple(tupleData);
+    tupleData = lbmEntry.produceEntryTuple();
+    tupleAccessor.marshal(tupleData, buffer.get() + bufferSize);
+    bufferSize += tupleAccessor.getCurrentByteCount();
+
+    // Insert the two bitmap entries we've just created into the btree
+    spliceInput(
+        buffer,
+        bufferSize,
+        rids.size(),
+        bTreeDesc);
+    resetExecStreamTest();
+
+    // Now create a bitmap entry that overlaps with the singleton
+    rid += 1;
+    rids.push_back(rid);
+    tupleData[1].pData = (PConstBuffer) &rid;
+    tupleData[2].pData = NULL;
+    tupleData[2].cbData = 0;
+    tupleData[3].pData = NULL;
+    tupleData[3].cbData = 0;
+    lbmEntry.setEntryTuple(tupleData);
+    for (uint i = 0; i < 5; i++) {
+        rid += 8;
+        rids.push_back(rid);
+        bool rc = lbmEntry.setRID(LcsRid(rid));
+        BOOST_REQUIRE(rc);
+    }
+    tupleData = lbmEntry.produceEntryTuple();
+    bufferSize = 0;
+    tupleAccessor.marshal(tupleData, buffer.get() + bufferSize);
+    bufferSize += tupleAccessor.getCurrentByteCount();
+
+    // Splice that into the existing btree
+    spliceInput(
+        buffer,
+        bufferSize,
+        5,
+        bTreeDesc);
+
+    // Read the btree bitmap entries and confirm that they contain all 
+    // of the rids that were inserted.
+    BTreeReader reader(bTreeDesc);
+    bool rc = reader.searchFirst();
+    BOOST_REQUIRE(rc);
+    uint currIdx = 0;
+    while (rc) {
+        reader.getTupleAccessorForRead().unmarshal(tupleData);
+        std::vector<LcsRid> ridsRead;
+        LbmEntry::generateRIDs(tupleData, ridsRead);
+        for (uint i = 0; i < ridsRead.size(); i++) {
+            BOOST_CHECK_EQUAL(
+                opaqueToInt(ridsRead[i]),
+                opaqueToInt(rids[currIdx]));
+            currIdx++;
+        }
+        rc = reader.searchNext();
+    }
+    BOOST_CHECK_EQUAL(currIdx, rids.size());
 }
 
 void LbmSplicerExecStreamTest::generateRandomRids(
@@ -406,9 +557,11 @@ void LbmSplicerExecStreamTest::generateRandomRids(
 
 void LbmSplicerExecStreamTest::generateTupleInput(
     std::vector<uint64_t> const &rids,
+    uint &currRidIdx,
     PBuffer buffer,
     uint &bufferSize,
-    uint nKeys)
+    uint nKeys,
+    bool oneTuple)
 {
     TupleDescriptor tupleDesc;
     initBTreeTupleDesc(tupleDesc, nKeys);
@@ -431,10 +584,9 @@ void LbmSplicerExecStreamTest::generateTupleInput(
     entryBuf.reset(new FixedBuffer[entryBufSize]);
     lbmEntry.init(entryBuf.get(), NULL, entryBufSize, tupleDesc);
 
-    uint i = 0;
     uint numRids = rids.size();
-    while (i < numRids) {
-        tupleData[nKeys].pData = (PConstBuffer) &rids[i];
+    while (currRidIdx < numRids) {
+        tupleData[nKeys].pData = (PConstBuffer) &rids[currRidIdx];
         tupleData[nKeys + 1].pData = NULL;
         tupleData[nKeys + 1].cbData = 0;
         tupleData[nKeys + 2].pData = NULL;
@@ -443,25 +595,28 @@ void LbmSplicerExecStreamTest::generateTupleInput(
         // Randomly generate either singletons or bitmaps with 3 rids, except
         // when we're at the end of our rid list
         uint bitmapType;
-        if (i >= numRids - 3) {
+        if (currRidIdx >= numRids - 3) {
             bitmapType = 0;
         } else {
             bitmapType = rand() % 2;
         }
         if (bitmapType == 0) {
-            i++;
+            currRidIdx++;
         } else {
             lbmEntry.setEntryTuple(tupleData);
-            bool rc = lbmEntry.setRID(LcsRid(rids[i + 1]));
-            assert(rc);
-            rc = lbmEntry.setRID(LcsRid(rids[i + 2]));
-            assert(rc);
+            bool rc = lbmEntry.setRID(LcsRid(rids[currRidIdx + 1]));
+            BOOST_REQUIRE(rc);
+            rc = lbmEntry.setRID(LcsRid(rids[currRidIdx + 2]));
+            BOOST_REQUIRE(rc);
             tupleData = lbmEntry.produceEntryTuple();
-            i += 3;
+            currRidIdx += 3;
         }
 
         tupleAccessor.marshal(tupleData, buffer + bufferSize);
         bufferSize += tupleAccessor.getCurrentByteCount();
+        if (oneTuple) {
+            break;
+        }
     }
 }
 

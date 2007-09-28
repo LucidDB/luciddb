@@ -369,6 +369,7 @@ void LcsClusterAppendExecStreamTest::testScanSingleCol(
     LcsRowScanExecStreamParams scanParams;
     scanParams.hasExtraFilter = false;
     scanParams.isFullScan = true;
+    scanParams.samplingMode = SAMPLING_OFF;
 
     struct LcsClusterScanDef clusterScanDef;
 
@@ -436,6 +437,7 @@ void LcsClusterAppendExecStreamTest::testScanMultiCol(
     LcsRowScanExecStreamParams scanParams;
     scanParams.hasExtraFilter = false;
     scanParams.isFullScan = true;
+    scanParams.samplingMode = SAMPLING_OFF;
     struct LcsClusterScanDef clusterScanDef;
 
     for (i = 0; i < nCols; i++)

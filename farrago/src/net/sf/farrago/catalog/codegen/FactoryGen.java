@@ -23,7 +23,7 @@
 package net.sf.farrago.catalog.codegen;
 
 import java.io.*;
-
+import java.lang.reflect.*;
 import java.util.*;
 
 import javax.jmi.model.*;
@@ -34,8 +34,6 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
-
-import org.netbeans.api.mdr.*;
 import org.netbeans.lib.jmi.util.*;
 
 
@@ -50,6 +48,10 @@ import org.netbeans.lib.jmi.util.*;
  */
 public class FactoryGen
 {
+    //~ Static fields ----------------------------------------------------------
+    
+    private static final int MAX_LARGE_NUMERICS = 4;
+    
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -195,6 +197,9 @@ public class FactoryGen
             }
             Class classInterface =
                 JmiUtil.getJavaInterfaceForRefObject(refClass);
+            
+            validateClass(classInterface);
+            
             String unqualifiedInterfaceName =
                 ReflectUtil.getUnqualifiedClassName(classInterface);
             pw.print("    public ");
@@ -240,7 +245,71 @@ public class FactoryGen
                 packageAccessor + ".get" + subPackageName + "()");
         }
     }
-
+    
+    /**
+     * Validates the given class.  In particular, this method detects
+     * classes that can trigger intermittent bugs in Farrago's MDR
+     * implementation.
+     *
+     * @param classInterface class to validate
+     * @see #countLargeNumerics(Class)
+     */
+    private static void validateClass(Class classInterface)
+    {
+        int numLargeNumerics = countLargeNumerics(classInterface);
+        
+        if (numLargeNumerics > MAX_LARGE_NUMERICS) {
+            throw new RuntimeException(
+                classInterface.getName() + 
+                ": A maximum of 4 long and/or double attributes are allowed " +
+                "in any catalog class. See FRG-295.");
+        }
+    }
+    
+    /**
+     * Counts the number of attributes in the given class that are of type
+     * <tt>long</tt> or <tt>double</tt>.  The count includes attributes from
+     * super interfaces.  This method looks at only the methods whose names
+     * begin with "set" and are therefore mutators/setters.  Attributes of
+     * type {@link java.lang.Long} or {@link java.lang.Double} are not
+     * counted as large numberics (because they do not require extra operand
+     * stack space).
+     * 
+     * <p>This method can be removed when the corresponding bug in MDR is
+     * fixed.
+     * 
+     * @param classInterface a Farrago catalog interface class
+     * @return the number of longs and doubles in the class
+     * @see <a href="http://issues.eigenbase.org/browse/FRG-295">FRG-295</a>
+     */
+    private static int countLargeNumerics(Class classInterface)
+    {
+        if (classInterface == null || 
+            !classInterface.getName().startsWith("net.sf.farrago.fem"))
+        {
+            return 0;
+        }
+        
+        int numLargeNumerics = 0;
+        for(Class superInterface: classInterface.getInterfaces()) {
+            numLargeNumerics += countLargeNumerics(superInterface);
+        }
+        
+        for(Method method: classInterface.getDeclaredMethods()) {
+            if (method.getName().startsWith("set")) {
+                Class[] paramTypes = method.getParameterTypes();
+                if (paramTypes.length == 1 && 
+                    paramTypes[0] == long.class ||
+                    paramTypes[0] == double.class)
+                {
+                    numLargeNumerics++;
+                }
+            }
+        }
+        
+        return numLargeNumerics;
+    }
+    
     //~ Inner Classes ----------------------------------------------------------
 
     /**

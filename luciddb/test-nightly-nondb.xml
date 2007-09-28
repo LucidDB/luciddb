@@ -44,6 +44,7 @@
       <test-suite-call testfile="test/sql/VI/tbs/test-all.xml"/>
       <test-suite-call testfile="test/sql/distribution/test.xml"/>
       <test-suite-call testfile="test/sql/constraints/test.xml"/>
+      <test-suite-call testfile="test/sql/analyze/test.xml"/>
       <!-- non-db dependent tests which rely on mssql  -->
       <test-suite-call testfile="test/sql/mondrian/test-all.xml"/>
 

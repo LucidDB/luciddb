@@ -110,6 +110,17 @@ public class SqlValidatorFeatureTest
             EigenbaseResource.instance().SQLFeature_S271);
     }
 
+    public void testTablesample()
+    {
+        checkFeature(
+            "select name from dept tablesample bernoulli(50)",
+            EigenbaseResource.instance().SQLFeature_T613);
+
+        checkFeature(
+            "select name from dept tablesample substitute('sample_dept')",
+            EigenbaseResource.instance().SQLFeatureExt_T613_Substitution);
+    }
+    
     private void checkFeature(String sql, ResourceDefinition feature)
     {
         // Test once with feature enabled:  should pass

@@ -143,16 +143,19 @@
         </sync>
       </then>
       <else>
-        <!-- sync data.dir <-> csv-copy.dir -->
-        <sync todir="${csv.copy.dir}"
-          overwrite="true"
-          verbose="true"
-          failonerror="true">
-          <fileset dir="${data.dir}" includes="bench100.csv"/>
-        </sync>
         <echo message="!! NO REMOTE CSV FILES !!"/>
       </else>
     </if>
+  </target>
+
+  <target name="copy-local-csv">
+    <!-- sync data.dir <-> csv-copy.dir -->
+    <sync todir="${csv.copy.dir}"
+      overwrite="true"
+      verbose="true"
+      failonerror="true">
+      <fileset dir="${data.dir}" includes="bench100.csv"/>
+    </sync>
   </target>
 
   <target name="clean">

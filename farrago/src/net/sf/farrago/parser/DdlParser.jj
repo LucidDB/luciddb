@@ -46,6 +46,7 @@ import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 import org.eigenbase.resource.*;
 import net.sf.farrago.resource.*;
+import java.math.*;
 import java.util.*;
 import javax.jmi.reflect.*;
 import java.sql.*;

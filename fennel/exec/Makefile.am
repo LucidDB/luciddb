@@ -31,7 +31,8 @@ DiffluenceExecStream.cpp \
 SplitterExecStream.cpp \
 BarrierExecStream.cpp \
 ValuesExecStream.cpp \
-ReshapeExecStream.cpp
+ReshapeExecStream.cpp \
+BernoulliSamplingExecStream.cpp
 
 DESIGN_DOCS=\
 ExecStreamDesign.cpp \

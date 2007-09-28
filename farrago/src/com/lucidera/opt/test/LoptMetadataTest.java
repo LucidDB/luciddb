@@ -873,6 +873,45 @@ public class LoptMetadataTest
             1000 * DEFAULT_SARGABLE_SELECTIVITY);
     }
     
+    public void testRowCountJoinBigStats()
+        throws Exception
+    {
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
+        FarragoSession session = farragoConnection.getSession();
+
+        stmt.executeUpdate("create table b(a int)");
+        FarragoStatsUtil.setTableRowCount(
+            session, "", "", "B", Long.MAX_VALUE);
+        FarragoStatsUtil.createColumnHistogram(
+            session,
+            "",
+            "",
+            "B",
+            "A",
+            1,
+            1,
+            1,
+            0,
+            "0123456789");
+
+        // Join a table with a large number of rows but a single column
+        // value to itself 20 times.  The result count for the join
+        // should exceed the max value of a double so Double.MAX_VALUE
+        // should be returned.
+        checkRowCountJoin(
+            "select * from b b1, b b2, b b3, b b4, b b5, b b6, b b7, b b8, "+
+            "b b9, b b10, b b11, b b12, b b13, b b14, b b15, b b16, b b17, " +
+            "b b18, b b19, b b20 " +
+            "where b1.a = b2.a and b2.a = b3.a and b3.a = b4.a and " +
+            "b4.a = b5.a and b5.a = b6.a and b6.a = b7.a and b7.a = b8.a and " +
+            "b8.a = b9.a and b9.a = b10.a and b10.a = b11.a and " +
+            "b11.a = b12.a and b12.a = b13.a and b13.a = b14.a and " +
+            "b14.a = b15.a and b15.a = b16.a and b16.a = b17.a and " +
+            "b17.a = b18.a and b18.a = b19.a and b19.a = b20.a",
+            Double.MAX_VALUE);
+    }
+    
     public void testRowCountLeftOuterJoinNoColStats()
         throws Exception
     {

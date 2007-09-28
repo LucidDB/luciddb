@@ -87,9 +87,9 @@ class FarragoView
                     : "SELECT")
                 + " * FROM ("
                 + queryString
-                + ") TABLESAMPLE SUBSTITUTE ("
+                + ") AS x TABLESAMPLE SUBSTITUTE ("
                 + SqlUtil.eigenbaseDialect.quoteStringLiteral(datasetName)
-                + ") AS x";
+                + ")";
         }
         return expandView(queryString);
     }

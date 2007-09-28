@@ -231,6 +231,7 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
     LcsRowScanExecStreamParams scanParams;
     scanParams.hasExtraFilter = false;
     scanParams.isFullScan = true;
+    scanParams.samplingMode = SAMPLING_OFF;
     for (uint i = 0; i < nClusters; i++) {
         struct LcsClusterScanDef clusterScanDef;
 

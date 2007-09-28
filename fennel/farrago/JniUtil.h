@@ -343,6 +343,60 @@ public:
      */
     static jmethodID methFarragoRuntimeContextStatementClassForName;
 
+    /** java.lang.Long */
+    static jclass classLong;
+
+    /** java.lang.Integer */
+    static jclass classInteger;
+
+    /** java.lang.Short */
+    static jclass classShort;
+
+    /** java.lang.Double */
+    static jclass classDouble;
+
+    /** java.lang.Float */
+    static jclass classFloat;
+
+    /** java.lang.Boolean */
+    static jclass classBoolean;
+
+    /** java.lang.Long.valueOf(long) */
+    static jmethodID methLongValueOf;
+
+    /** java.lang.Integer.valueOf(int) */
+    static jmethodID methIntegerValueOf;
+
+    /** java.lang.Short.valueOf(short) */
+    static jmethodID methShortValueOf;
+
+    /** java.lang.Double.valueOf(double) */
+    static jmethodID methDoubleValueOf;
+
+    /** java.lang.Float.valueOf(float) */
+    static jmethodID methFloatValueOf;
+
+    /** java.lang.Boolean.valueOf(boolean) */
+    static jmethodID methBooleanValueOf;
+
+    /** java.lang.Long.longValue() */
+    static jmethodID methLongValue;
+
+    /** java.lang.Integer.intValue() */
+    static jmethodID methIntValue;
+
+    /** java.lang.Short.shortValue() */
+    static jmethodID methShortValue;
+
+    /** java.lang.Double.doubleValue() */
+    static jmethodID methDoubleValue;
+
+    /** java.lang.Float.floatValue() */
+    static jmethodID methFloatValue;
+
+    /** java.lang.Boolean.booleanValue() */
+    static jmethodID methBooleanValue;
+
     /**
      * Initializes JNI debugging.
      *
