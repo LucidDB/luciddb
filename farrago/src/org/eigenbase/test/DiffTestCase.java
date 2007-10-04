@@ -50,17 +50,17 @@ public abstract class DiffTestCase
     /**
      * Name of current .log file.
      */
-    private File logFile;
+    protected File logFile;
 
     /**
      * Name of current .ref file.
      */
-    private File refFile;
+    protected File refFile;
 
     /**
      * OutputStream for current test log.
      */
-    private OutputStream logOutputStream;
+    protected OutputStream logOutputStream;
 
     /**
      * Diff masks defined so far
